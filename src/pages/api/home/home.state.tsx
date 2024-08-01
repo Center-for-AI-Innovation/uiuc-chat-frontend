@@ -4,6 +4,11 @@ import { FolderInterface } from '@/types/folder'
 import { OpenAIModel, OpenAIModelID } from '@/types/openai'
 import { PluginKey } from '@/types/plugin'
 import { Prompt } from '@/types/prompt'
+import {
+  LLMProvider,
+  SupportedModels,
+  AllLLMProviders,
+} from '~/types/LLMProvider'
 
 export interface HomeInitialState {
   apiKey: string
@@ -12,7 +17,8 @@ export interface HomeInitialState {
   lightMode: 'light' | 'dark'
   messageIsStreaming: boolean
   modelError: ErrorMessage | null
-  models: OpenAIModel[]
+  // models: SupportedModelsObj
+  llmProviders: AllLLMProviders
   selectedModel: OpenAIModel | null
   folders: FolderInterface[]
   conversations: Conversation[]
@@ -38,6 +44,7 @@ export interface HomeInitialState {
   isRetrievalLoading: boolean | undefined
   documentGroups: Action[]
   tools: UIUCTool[]
+  webLLMModelIdLoading: { id: string | undefined, isLoading: boolean | undefined }
 }
 
 export const initialState: HomeInitialState = {
@@ -47,7 +54,8 @@ export const initialState: HomeInitialState = {
   lightMode: 'dark',
   messageIsStreaming: false,
   modelError: null,
-  models: [],
+  // models: {},
+  llmProviders: {} as AllLLMProviders,
   selectedModel: null,
   folders: [],
   conversations: [],
@@ -72,4 +80,5 @@ export const initialState: HomeInitialState = {
   isImg2TextLoading: false,
   documentGroups: [],
   tools: [],
+  webLLMModelIdLoading: { id: undefined, isLoading: undefined },
 }

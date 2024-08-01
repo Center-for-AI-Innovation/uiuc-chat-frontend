@@ -126,7 +126,12 @@ export default async function chat(req: NextRequest): Promise<NextResponse> {
   // Determine and validate the OpenAI key to use
   let key: string
   try {
-    key = await determineAndValidateOpenAIKey(openai_key, courseMetadata, model)
+    key = await determineAndValidateOpenAIKey(
+      openai_key,
+      courseMetadata,
+      model,
+      course_name,
+    )
   } catch (error) {
     return NextResponse.json(
       { error: (error as Error).message },
@@ -253,8 +258,7 @@ export default async function chat(req: NextRequest): Promise<NextResponse> {
 
   // Build the prompt
   const buildPromptResponse = await buildPrompt({
-    conversation: chatBody.conversation,
-    rawOpenaiKey: chatBody.key,
+    conversation: chatBody.conversation!,
     projectName: chatBody.course_name,
     courseMetadata: chatBody.courseMetadata,
   })

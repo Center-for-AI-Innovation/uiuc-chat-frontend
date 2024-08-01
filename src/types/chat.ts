@@ -1,13 +1,16 @@
 import { OpenAIModel } from './openai'
 import { CourseMetadata } from './courseMetadata'
 import { N8NParameter } from './tools'
+import { GenericSupportedModel, SupportedModels } from './LLMProvider'
+import { WebllmModel } from '~/utils/modelProviders/WebLLM'
+import { OllamaModel } from '~/utils/modelProviders/ollama'
 
 export interface Conversation {
   // NO KEY
   id: string
   name: string
   messages: Message[]
-  model: OpenAIModel // ! consider allowing null models: | null
+  model: OpenAIModel | OllamaModel | WebllmModel // ! consider allowing null models: | null
   prompt: string
   temperature: number
   folderId: string | null
@@ -85,10 +88,15 @@ export interface ContextWithMetadata {
 export type Role = 'assistant' | 'user' | 'system'
 
 export interface ChatBody {
-  conversation: Conversation
+  model?: GenericSupportedModel
+  messages?: Message[]
+  prompt?: string
+  temperature?: number
+  conversation?: Conversation
   key: string
   course_name: string
   stream: boolean
+  isImage?: boolean
   courseMetadata?: CourseMetadata
   // NO FOLDER ID
 }

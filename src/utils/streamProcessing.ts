@@ -58,6 +58,10 @@ export async function processChunkWithStateMachine(
   let { state, buffer } = stateMachineContext
   let processedChunk = ''
 
+  if (!chunk) {
+    return ''
+  }
+
   for (let i = 0; i < chunk.length; i++) {
     const char = chunk[i]!
     switch (state) {
@@ -302,6 +306,7 @@ export async function determineAndValidateOpenAIKey(
   openai_key: string | undefined,
   courseMetadata: CourseMetadata,
   modelId: string,
+  projectName: string,
 ): Promise<string> {
   const keyToUse =
     openai_key ||
@@ -311,7 +316,11 @@ export async function determineAndValidateOpenAIKey(
     )) as string)
 
   if (keyToUse) {
-    const isModelAvailable = await validateModelWithKey(keyToUse, modelId)
+    const isModelAvailable = await validateModelWithKey(
+      keyToUse,
+      modelId,
+      projectName,
+    )
     if (!isModelAvailable) {
       throw new Error('Model not available on the key supplied')
     }
@@ -330,7 +339,9 @@ export async function determineAndValidateOpenAIKey(
 export async function validateModelWithKey(
   apiKey: string,
   modelId: string,
+  projectName: string,
 ): Promise<boolean> {
+  // TODO: actually call the chat endpoint to see if models are working. Not /models
   try {
     const baseUrl = getBaseUrl()
     console.log('baseUrl:', baseUrl)
@@ -339,7 +350,7 @@ export async function validateModelWithKey(
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ key: apiKey }),
+      body: JSON.stringify({ openAIApiKey: apiKey, projectName }),
     })
 
     if (!response.ok) {

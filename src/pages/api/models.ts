@@ -1,113 +1,102 @@
-import {
-  OPENAI_API_HOST,
-  OPENAI_API_TYPE,
-  OPENAI_API_VERSION,
-  OPENAI_ORGANIZATION,
-} from '@/utils/app/const'
-
-import { OpenAIModel, OpenAIModelID, OpenAIModels } from '@/types/openai'
-import { decrypt, isEncrypted } from '~/utils/crypto'
+import { LLMProvider, ProviderNames } from '~/types/LLMProvider'
+import { getOllamaModels } from '~/utils/modelProviders/ollama'
+import { getOpenAIModels } from '~/utils/modelProviders/openai'
+import { getAzureModels } from '~/utils/modelProviders/azure'
+import { getAnthropicModels } from '~/utils/modelProviders/anthropic'
+import { webLLMModels } from '~/utils/modelProviders/WebLLM'
+import { parseOpenaiKey } from '~/utils/crypto'
 
 export const config = {
   runtime: 'edge',
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  let apiKey = ''
-  let apiType = OPENAI_API_TYPE
-  let endpoint = OPENAI_API_HOST
   try {
-    const { key } = (await req.json()) as {
-      key: string
-    }
-    apiKey = key ? key : (process.env.OPENAI_API_KEY as string)
-    // Check if the key starts with 'sk-' (indicating it's not encrypted)
-    if (key && isEncrypted(key)) {
-      // Decrypt the key
-      const decryptedText = await decrypt(
-        key,
-        process.env.NEXT_PUBLIC_SIGNING_KEY as string,
-      )
-      apiKey = decryptedText as string
-      // console.log('models.ts Decrypted api key: ', apiKey)
-    }
-    // console.log('models.ts Final openai key: ', apiKey)
-
-    if (apiKey && !apiKey.startsWith('sk-')) {
-      // console.log('setting azure variables')
-      apiType = 'azure'
-      endpoint = process.env.AZURE_OPENAI_ENDPOINT || OPENAI_API_HOST
+    const { projectName, openAIApiKey } = (await req.json()) as {
+      projectName: string
+      openAIApiKey?: string
     }
 
-    if (!apiKey) {
-      return new Response('Warning: OpenAI Key was not found', { status: 400 })
+    if (!projectName) {
+      return new Response('Missing project name', { status: 400 })
     }
 
-    let url = `${endpoint}/v1/models`
-    if (apiType === 'azure') {
-      url = `${endpoint}/openai/deployments?api-version=${OPENAI_API_VERSION}`
+    let apiKey: string | undefined
+    if (openAIApiKey) {
+      apiKey = await parseOpenaiKey(openAIApiKey)
     }
 
-    const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(apiType === 'openai' && {
-          Authorization: `Bearer ${apiKey}`,
-        }),
-        ...(apiType === 'azure' && {
-          'api-key': `${apiKey}`,
-        }),
-        ...(apiType === 'openai' &&
-          OPENAI_ORGANIZATION && {
-            'OpenAI-Organization': OPENAI_ORGANIZATION,
-          }),
-      },
-    })
+    // TODO: MOVE THESE TO DB INPUTS
+    // const AzureProvider: LLMProvider = {
+    //   provider: ProviderNames.Azure,
+    //   enabled: true,
+    //   apiKey: process.env.AZURE_API_KEY, // this is the azure api key
+    //   AzureDeployment: 'gpt-35-turbo-16k',
+    //   AzureEndpoint: 'https://uiuc-chat-canada-east.openai.azure.com/',
+    // }
 
-    if (response.status === 401) {
-      return new Response(response.body, {
-        status: 500,
-        headers: response.headers,
-      })
-    } else if (response.status !== 200) {
-      console.error(
-        `OpenAI API returned an error ${
-          response.status
-        }: ${await response.text()}`,
-      )
-      throw new Error('OpenAI API returned an error')
+    // const AnthropicProvider: LLMProvider = {
+    //   provider: ProviderNames.Anthropic,
+    //   enabled: true,
+    //   apiKey: process.env.ANTHROPIC_API_KEY, // this is the anthropic api key
+    //   AnthropicModel: 'claude-3-opus-20240229',
+    // }
+
+    const ollamaProvider: LLMProvider = {
+      provider: ProviderNames.Ollama,
+      enabled: true,
+      baseUrl: process.env.OLLAMA_SERVER_URL,
     }
 
-    const json = await response.json()
+    // TODO: update this to come from input.
+    const OpenAIProvider: LLMProvider = {
+      provider: ProviderNames.OpenAI,
+      enabled: true,
+      apiKey: apiKey,
+    }
 
-    const uniqueModels: string[] = Array.from(
-      new Set(json.data.map((model: any) => model.id)),
-    )
+    const WebLLMProvider: LLMProvider = {
+      provider: ProviderNames.WebLLM,
+      enabled: true,
+    }
 
-    // console.log('Unique models: ', uniqueModels)
+    const llmProviderKeys: LLMProvider[] = [
+      ollamaProvider,
+      OpenAIProvider,
+      WebLLMProvider,
+      // AzureProvider,
+      // AnthropicProvider,
+    ]
+    // END-TODO: MOVE THESE TO DB INPUTS
 
-    const models: OpenAIModel[] = uniqueModels
-      .map((modelId: string) => {
-        const model = json.data.find((m: any) => m.id === modelId)
-        if (!model) return undefined
+    const allLLMProviders: { [key in ProviderNames]?: LLMProvider } = {}
+    for (const llmProvider of llmProviderKeys) {
+      if (!llmProvider.enabled) {
+        continue
+      }
+      if (llmProvider.provider == ProviderNames.Ollama) {
+        allLLMProviders[llmProvider.provider] =
+          await getOllamaModels(llmProvider)
+      } else if (llmProvider.provider == ProviderNames.OpenAI) {
+        allLLMProviders[llmProvider.provider] = await getOpenAIModels(
+          llmProvider,
+          projectName,
+        )
+      } else if (llmProvider.provider == ProviderNames.Azure) {
+        allLLMProviders[llmProvider.provider] =
+          await getAzureModels(llmProvider)
+      } else if (llmProvider.provider == ProviderNames.Anthropic) {
+        allLLMProviders[llmProvider.provider] =
+          await getAnthropicModels(llmProvider)
+      } else if (llmProvider.provider == ProviderNames.WebLLM) {
+        llmProvider.models = webLLMModels
+        allLLMProviders[llmProvider.provider] = llmProvider
+      } else {
+        continue
+      }
+    }
 
-        for (const [key, value] of Object.entries(OpenAIModelID)) {
-          if (value === model.id) {
-            return {
-              id: model.id,
-              name: OpenAIModels[value].name,
-              maxLength: OpenAIModels[value].maxLength,
-              tokenLimit: OpenAIModels[value].tokenLimit,
-            }
-          }
-        }
-        return undefined
-      })
-      .filter((model): model is OpenAIModel => model !== undefined)
-
-    // console.log('Final list of Models: ', models)
-
-    return new Response(JSON.stringify(models), { status: 200 })
+    return new Response(JSON.stringify(allLLMProviders), { status: 200 })
   } catch (error) {
     console.error(error)
     return new Response('Error', { status: 500 })

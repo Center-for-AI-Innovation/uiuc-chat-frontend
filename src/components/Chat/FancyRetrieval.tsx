@@ -16,7 +16,6 @@ export const FancyRetrieval = () => {
   const {
     state: {
       selectedConversation,
-      models,
       defaultModelId,
       // showModelSettings,
       prompts,

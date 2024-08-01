@@ -1,27 +1,4 @@
 import React from 'react'
-// import Link from 'next/link'
-// import {
-// Montserrat,
-// Inter,
-// Rubik_Puddles,
-// Audiowide,
-// } from 'next/font/google'
-// import {
-// Card,
-// Image,
-// Text,
-// Badge,
-// MantineProvider,
-// Button,
-// Group,
-// Stack,
-// createStyles,
-// FileInput,
-// rem,
-// Title,
-// Flex,
-// } from '@mantine/core'
-// const rubikpuddles = Rubik_Puddles({ weight: '400', subsets: ['latin'] })
 
 export const LoadingSpinner = ({ size = 'md' }: { size?: string }) => {
   return (

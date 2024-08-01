@@ -25,38 +25,38 @@ const logConversationToSupabase = async (req: any, res: any) => {
     console.log('error form supabase:', error)
   }
 
-  console.log('👇👇👇👇👇👇👇👇👇👇👇👇👇')
-  console.log(
-    '2nd Latest message object (user)',
-    conversation.messages[conversation.messages.length - 2],
-  )
-  console.log(
-    'Latest message object (assistant)',
-    conversation.messages[conversation.messages.length - 1],
-  )
-  console.log('full convo id', conversation.id)
-  console.log(
-    'User message',
-    (
-      conversation.messages[conversation.messages.length - 2]
-        ?.content[0] as Content
-    ).text,
-  )
-  console.log(
-    'Assistant message',
-    conversation.messages[conversation.messages.length - 2]?.content,
-  )
-  console.log(
-    'Engineered prompt',
-    conversation.messages[conversation.messages.length - 2]!
-      .finalPromtEngineeredMessage,
-  )
-  console.log(
-    'System message',
-    conversation.messages[conversation.messages.length - 2]!
-      .latestSystemMessage,
-  )
-  console.log('👆👆👆👆👆👆👆👆👆👆👆👆👆')
+  // console.log('👇👇👇👇👇👇👇👇👇👇👇👇👇')
+  // console.log(
+  //   '2nd Latest message object (user)',
+  //   conversation.messages[conversation.messages.length - 2],
+  // )
+  // console.log(
+  //   'Latest message object (assistant)',
+  //   conversation.messages[conversation.messages.length - 1],
+  // )
+  // console.log('full convo id', conversation.id)
+  // console.log(
+  //   'User message',
+  //   (
+  //     conversation.messages[conversation.messages.length - 2]
+  //       ?.content[0] as Content
+  //   ).text,
+  // )
+  // console.log(
+  //   'Assistant message',
+  //   conversation.messages[conversation.messages.length - 2]?.content,
+  // )
+  // console.log(
+  //   'Engineered prompt',
+  //   conversation.messages[conversation.messages.length - 2]!
+  //     .finalPromtEngineeredMessage,
+  // )
+  // console.log(
+  //   'System message',
+  //   conversation.messages[conversation.messages.length - 2]!
+  //     .latestSystemMessage,
+  // )
+  // console.log('👆👆👆👆👆👆👆👆👆👆👆👆👆')
 
   // Log to Langsmith
   const rt = new RunTree({
@@ -91,7 +91,7 @@ const logConversationToSupabase = async (req: any, res: any) => {
   // End and submit the run
   rt.end()
   await rt.postRun()
-  console.log('✅✅✅✅✅✅✅✅ AFTER ALL LANGSMITH CALLS')
+  // console.log('✅✅✅✅✅✅✅✅ AFTER ALL LANGSMITH CALLS')
 
   return res.status(200).json({ success: true })
 }

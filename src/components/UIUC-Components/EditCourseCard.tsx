@@ -43,6 +43,7 @@ import { callSetCourseMetadata, uploadToS3 } from '~/utils/apiUtils'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { notifications } from '@mantine/notifications'
 import SetExampleQuestions from './SetExampleQuestions'
+import { AllLLMProviders } from '~/types/LLMProvider'
 
 const montserrat_light = Montserrat({
   weight: '400',
@@ -774,17 +775,25 @@ const PrivateOrPublicCourse = ({
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ key: apiKey }),
+        body: JSON.stringify({
+          openAIApiKey: apiKey,
+          projectName: course_name,
+        }),
       })
       if (res.ok) {
-        const allAvailableModels = (await res.json()) as OpenAIModel[]
-        setModels(allAvailableModels)
+        // TODO: eventually support multipe LLM providers for disabling models.
+        const allLLMProviders = (await res.json()) as AllLLMProviders
 
-        setSelectedModels(
-          allAvailableModels.filter(
-            (model) => !courseMetadata.disabled_models?.includes(model.id),
-          ),
-        )
+        // set OpenAI modles or empty
+        setModels(allLLMProviders.OpenAI?.models || [])
+
+        if (allLLMProviders.OpenAI?.models) {
+          setSelectedModels(
+            allLLMProviders.OpenAI.models.filter(
+              (model) => !courseMetadata.disabled_models?.includes(model.id),
+            ),
+          )
+        }
       } else {
         console.error(`Error fetching models: ${res.status}`)
       }
@@ -811,8 +820,6 @@ const PrivateOrPublicCourse = ({
         (model) => !mySelectedModels.includes(model),
       )
 
-      // console.log('being removed -- mySelectedModels', mySelectedModels)
-      // console.log('being removed -- myDisabledModels', myDisabledModels)
       setSelectedModels((prevModels) =>
         prevModels.filter((model) => model.id !== modelId),
       )
@@ -824,8 +831,6 @@ const PrivateOrPublicCourse = ({
         (model) => !mySelectedModels.includes(model),
       )
 
-      // console.log('being checked -- mySelectedModels', mySelectedModels)
-      // console.log('being checked -- myDisabledModels', myDisabledModels)
       if (model) {
         setSelectedModels((prevModels) => [...prevModels, model])
       }

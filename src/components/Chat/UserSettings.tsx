@@ -10,6 +10,9 @@ import { DocumentGroupsItem } from './DocumentGroupsItem'
 import { ToolsItem } from './ToolsItem'
 import { ModelParams } from './ModelParams'
 import { useTranslation } from 'react-i18next'
+import { prebuiltAppConfig } from '~/utils/modelProviders/ConfigWebLLM'
+import * as webllm from '@mlc-ai/web-llm'
+import { WebllmModel, webLLMModels } from '~/utils/modelProviders/WebLLM'
 
 const useStyles = createStyles((theme) => ({
   modalContent: {
@@ -42,6 +45,16 @@ const useStyles = createStyles((theme) => ({
     margin: '8px 0',
   },
 }))
+export const modelCached: WebllmModel[] = []
+
+const appConfig = prebuiltAppConfig
+// CHANGE THIS TO SEE EFFECTS OF BOTH, CODE BELOW DO NOT NEED TO CHANGE
+appConfig.useIndexedDBCache = false
+if (appConfig.useIndexedDBCache) {
+  console.debug('WebLLM: Using IndexedDB Cache')
+} else {
+  console.debug('WebLLM: Using Cache API')
+}
 
 export const UserSettings = () => {
   const {
@@ -54,27 +67,50 @@ export const UserSettings = () => {
   const { classes } = useStyles()
   const [opened, { open, close }] = useDisclosure(false)
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
-
+  const loadModelCache = async () => {
+    console.log('start loadingmodelcache')
+    const model = selectedConversation?.model
+    // if (
+    //   model &&
+    //   'name' in model &&
+    //   webLLMModels.some((m) => m.name === model.name)
+    // ) {
+    for (const model of webLLMModels) {
+      const theCachedModel = await webllm.hasModelInCache(
+        model.name,
+        appConfig,
+      )
+      if (theCachedModel) {
+        if (
+          !modelCached.some((cachedModel) => cachedModel.name === model.name)
+        ) {
+          modelCached.push(model)
+        }
+        // console.log('model is cached:', model.name)
+      }
+      console.log('hasModelInCache: ', modelCached)
+    }
+    // }
+  }
+  // if (selectedConversation && webLLMModels.some(m => m.name === selectedConversation.model.name)) {
+  //   loadModelCache();
+  // }
   useEffect(() => {
     if (showModelSettings) {
       open()
+      console.log('model cached', modelCached)
+      loadModelCache()
     } else {
       close()
     }
-  }, [showModelSettings, open, close])
+  }, [showModelSettings, open, close, loadModelCache])
 
   const handleClose = () => {
-    console.log('Closing settings modal')
     homeDispatch({ field: 'showModelSettings', value: false })
   }
 
   return (
-    <Modal.Root
-      opened={opened}
-      onClose={handleClose}
-      centered
-      size={isSmallScreen ? '95%' : '60%'}
-    >
+    <Modal.Root opened={opened} onClose={handleClose} centered size={'800px'}>
       <Modal.Overlay style={{ width: '100%', color: '#1d1f33' }} />
       <Modal.Content
         className={`${classes.modalContent} ${isSmallScreen ? 'p-2' : 'p-4'} overflow-x-hidden md:rounded-lg`}

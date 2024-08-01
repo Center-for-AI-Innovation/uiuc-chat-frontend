@@ -1,16 +1,20 @@
-// import { OPENAI_API_TYPE } from '../utils/app/const'
+import {
+  AllLLMProviders,
+  GenericSupportedModel,
+  SupportedModels,
+} from './LLMProvider'
 
 export interface OpenAIModel {
   id: string
   name: string
-  maxLength: number // maximum length of a message in characters... should deprecate
   tokenLimit: number
+  enabled: boolean
 }
 
 // Ordered list of preferred model IDs -- the first available model will be used as default
 export const preferredModelIds = [
-  'gpt-4o',
   'gpt-4o-mini',
+  'gpt-4o',
   'gpt-4-turbo-2024-04-09',
   'gpt-4-128k',
   'gpt-4-0125-preview',
@@ -21,19 +25,41 @@ export const preferredModelIds = [
   'gpt-3.5-turbo',
 ]
 
-export const selectBestModel = (models: OpenAIModel[]): OpenAIModel => {
-  const defaultModelId = OpenAIModelID.GPT_4o
+export const selectBestModel = (
+  allLLMProviders: AllLLMProviders,
+): GenericSupportedModel => {
+  // Use GPT-4o-mini if available, otherwise fallback to Llama 3.1 70b
 
-  // Find and return the first available preferred model
-  for (const preferredId of preferredModelIds) {
-    const model = models.find((m) => m.id === preferredId)
-    if (model) {
-      return model
+  if (allLLMProviders.OpenAI && allLLMProviders.OpenAI.models!.length > 0) {
+    const gpt4oMini = allLLMProviders.OpenAI.models!.find(
+      (model) => model.id === 'gpt-4o-mini',
+    )
+    if (gpt4oMini) {
+      return gpt4oMini
     }
   }
+  return {
+    id: 'llama3.1:70b',
+    name: 'Llama 3.1 70b',
+    tokenLimit: 128000,
+    enabled: true,
+  }
+  // const defaultModelId = OpenAIModelID.GPT_4o
+  // return OpenAIModels[defaultModelId]
+  // if (!models || !models.OpenAI) {
+  //   return OpenAIModels[defaultModelId]
+  // }
 
-  // Fallback to the first model in the list or the default model
-  return models[0] || OpenAIModels[defaultModelId]
+  // // Find and return the first available preferred model
+  // for (const preferredId of preferredModelIds) {
+  //   const model = models.OpenAI.find((m) => m.id === preferredId)
+  //   if (model) {
+  //     return model
+  //   }
+  // }
+
+  // // Fallback to the first model in the list or the default model
+  // return models.OpenAI[0] || OpenAIModels[defaultModelId]
 }
 
 export enum OpenAIModelID {
@@ -56,53 +82,53 @@ export const fallbackModelID = OpenAIModelID.GPT_4
 export const OpenAIModels: Record<OpenAIModelID, OpenAIModel> = {
   [OpenAIModelID.GPT_3_5]: {
     id: OpenAIModelID.GPT_3_5,
-    name: 'GPT-3.5 (16k)',
-    maxLength: 16385,
+    name: 'GPT-3.5',
     tokenLimit: 16385,
+    enabled: false,
   },
   [OpenAIModelID.GPT_4]: {
     id: OpenAIModelID.GPT_4,
-    name: 'GPT-4 (8k)',
-    maxLength: 8192,
+    name: 'GPT-4',
     tokenLimit: 8192,
+    enabled: false,
   },
   [OpenAIModelID.GPT_4_Turbo]: {
     id: OpenAIModelID.GPT_4_Turbo,
-    name: 'GPT-4 Turbo (128k)',
-    maxLength: 128000,
+    name: 'GPT-4 Turbo',
     tokenLimit: 128000,
+    enabled: false,
   },
   [OpenAIModelID.GPT_4o]: {
     id: OpenAIModelID.GPT_4o,
-    name: 'GPT-4o (128k)',
-    maxLength: 128000,
+    name: 'GPT-4o',
     tokenLimit: 128000,
+    enabled: false,
   },
   [OpenAIModelID.GPT_4o_mini]: {
     id: OpenAIModelID.GPT_4o_mini,
-    name: 'GPT-4o-mini (128k)',
-    maxLength: 128000,
+    name: 'GPT-4o-mini',
     tokenLimit: 128000,
+    enabled: false,
   },
 
   // ! Our hard-coded Azure implementation ONLY allows GPT-4, no other azure models on that deployment
   [OpenAIModelID.GPT_4_AZURE]: {
     id: OpenAIModelID.GPT_4_AZURE,
-    name: 'GPT-4 Turbo (128k)',
-    maxLength: 128000,
+    name: 'GPT-4 Turbo',
     tokenLimit: 128000,
+    enabled: false,
   },
   [OpenAIModelID.GPT_4_HACKATHON]: {
     id: OpenAIModelID.GPT_4_HACKATHON,
     name: 'GPT-4 Hackathon',
-    maxLength: 128000,
     tokenLimit: 128000,
+    enabled: false,
   },
   [OpenAIModelID.GPT_4_AZURE_04_09]: {
     id: OpenAIModelID.GPT_4_AZURE_04_09,
-    name: 'GPT-4 Turbo 0409 (128k)',
-    maxLength: 128000,
+    name: 'GPT-4 Turbo 0409',
     tokenLimit: 128000,
+    enabled: false,
   },
 }
 

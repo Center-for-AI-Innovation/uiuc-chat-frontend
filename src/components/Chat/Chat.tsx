@@ -69,9 +69,17 @@ import handleTools, {
   useFetchAllWorkflows,
 } from '~/utils/functionCalling/handleFunctionCalling'
 import { useFetchEnabledDocGroups } from '~/hooks/docGroupsQueries'
-import Link from 'next/link'
 import { CropwizardLicenseDisclaimer } from '~/pages/cropwizard-licenses'
 import Head from 'next/head'
+import ChatUI, { webLLMModels } from '~/utils/modelProviders/WebLLM'
+import { MLCEngine } from '@mlc-ai/web-llm'
+import * as webllm from '@mlc-ai/web-llm'
+import {
+  ModelRecord,
+  prebuiltAppConfig,
+} from '~/utils/modelProviders/ConfigWebLLM'
+import { WebllmModel } from '~/utils/modelProviders/WebLLM'
+import home from '~/pages/api/home'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -83,7 +91,7 @@ const DEFAULT_DOCUMENT_GROUP = {
   name: 'All Documents', // This value can be stored in an env variable
   checked: true,
 }
-
+export const modelCached: WebllmModel[] = []
 export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
   const { t } = useTranslation('chat')
   const clerk_obj = useUser()
@@ -93,6 +101,8 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
     // /CS-125/materials --> CS-125
     return router.asPath.slice(1).split('/')[0] as string
   }
+
+  const [chat_ui] = useState(new ChatUI(new MLCEngine()))
 
   const [inputContent, setInputContent] = useState<string>('')
 
@@ -131,7 +141,6 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
     state: {
       selectedConversation,
       conversations,
-      models,
       apiKey,
       pluginKeys,
       serverSideApiKeyIsSet,
@@ -146,10 +155,36 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
       isRetrievalLoading,
       documentGroups,
       tools,
+      webLLMModelIdLoading,
     },
     handleUpdateConversation,
     dispatch: homeDispatch,
   } = useContext(HomeContext)
+
+  useEffect(() => {
+    const loadModel = async () => {
+      if (selectedConversation && !chat_ui.isModelLoading()) {
+        homeDispatch({
+          field: 'webLLMModelIdLoading',
+          value: { id: selectedConversation.model.id, isLoading: true },
+        })
+        await chat_ui.loadModel(selectedConversation)
+        if (!chat_ui.isModelLoading()) {
+          console.log('Model has finished loading')
+          homeDispatch({
+            field: 'webLLMModelIdLoading',
+            value: { id: selectedConversation.model.id, isLoading: false },
+          })
+        }
+      }
+    }
+    if (
+      selectedConversation &&
+      webLLMModels.some((m) => m.name === selectedConversation.model.name)
+    ) {
+      loadModel()
+    }
+  }, [selectedConversation?.model.name, chat_ui])
 
   const [currentMessage, setCurrentMessage] = useState<Message>()
   const [autoScrollEnabled, setAutoScrollEnabled] = useState<boolean>(true)
@@ -332,12 +367,12 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
         )
 
         if (imgDescIndex !== -1) {
-          ;(message.content as Content[])[imgDescIndex] = {
+          ; (message.content as Content[])[imgDescIndex] = {
             type: 'text',
             text: `Image description: ${imgDesc}`,
           }
         } else {
-          ;(message.content as Content[]).push({
+          ; (message.content as Content[]).push({
             type: 'text',
             text: `Image description: ${imgDesc}`,
           })
@@ -362,8 +397,10 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
     if (getCurrentPageName() != 'gpt4') {
       homeDispatch({ field: 'isRetrievalLoading', value: true })
       // Extract text from all user messages in the conversation
-      const token_limit =
-        OpenAIModels[selectedConversation?.model.id as OpenAIModelID].tokenLimit
+      // CHeck models from home context
+      const token_limit = selectedConversation.model.tokenLimit
+      // const token_limit =
+      //   OpenAIModels[selectedConversation?.model.id as OpenAIModelID].tokenLimit
 
       // ! DISABLE MQR FOR NOW -- too unreliable
       // const useMQRetrieval = localStorage.getItem('UseMQRetrieval') === 'true'
@@ -416,8 +453,8 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
           message.contexts = []
           message.content = Array.isArray(message.content)
             ? message.content.filter(
-                (content) => content.type !== 'tool_image_url',
-              )
+              (content) => content.type !== 'tool_image_url',
+            )
             : message.content
 
           const updatedMessages = [...selectedConversation.messages]
@@ -486,22 +523,25 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
           (content) => content.image_url?.url as string,
         )
 
-        const toolResult = await handleTools(
-          message,
-          tools,
-          imageUrls,
-          imgDesc,
-          updatedConversation,
-          currentMessageIndex,
-          getOpenAIKey(courseMetadata),
-          getCurrentPageName(),
-          homeDispatch,
-        )
+        if (tools.length > 0) {
+          await handleTools(
+            message,
+            tools,
+            imageUrls,
+            imgDesc,
+            updatedConversation,
+            currentMessageIndex,
+            getOpenAIKey(courseMetadata),
+            getCurrentPageName(),
+            homeDispatch,
+          )
+        }
+
         // Update conversation from toolResult
         console.log('Tool result:', message.tools)
 
         const chatBody: ChatBody = {
-          conversation: updatedConversation,
+          conversation: updatedConversation!,
           key: getOpenAIKey(courseMetadata),
           course_name: getCurrentPageName(),
           courseMetadata: courseMetadata,
@@ -517,23 +557,74 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
           body: JSON.stringify(chatBody),
         })
         chatBody.conversation = await buildPromptResponse.json()
-        updatedConversation = chatBody.conversation
+        updatedConversation = chatBody.conversation!
+
+        console.log(
+          'Updated conversation (after build prompt):',
+          updatedConversation,
+        )
+
         // homeDispatch({
         //   field: 'selectedConversation',
         //   value: chatBody.conversation,
         // })
 
-        // Call the OpenAI API
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          signal: controller.signal,
-          body: JSON.stringify(chatBody),
-        })
+        let response:
+          | AsyncIterable<webllm.ChatCompletionChunk>
+          | Response
+          | undefined
+        let reader
+        console.log('Selected model:', selectedConversation.model)
 
-        if (!response.ok) {
+        if (
+          webLLMModels.some(
+            (model) => model.name === selectedConversation.model.name,
+          )
+        ) {
+          // Is WebLLM model
+          console.log('is model loading', chat_ui.isModelLoading())
+          // if (chat_ui.isModelLoading() == false) {
+          while (chat_ui.isModelLoading() == true) {
+            await new Promise(resolve => setTimeout(resolve, 10));
+          }
+          try {
+            response = await chat_ui.runChatCompletion(
+              chatBody.conversation!,
+              getCurrentPageName(),
+            )
+          } catch (error) {
+            errorToast({
+              title: 'Error running chat completion',
+              message:
+                (error as Error).message || 'An unexpected error occurred',
+            })
+          }
+          // }
+        } else if (selectedConversation.model.id === 'llama3.1:70b') {
+          console.log(
+            "In Chat.tsx Ollama, selectedConversation.model.name === 'llama3.1:70b'",
+          )
+          // Is Ollama model
+          response = await fetch('/api/chat/ollama', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ conversation: updatedConversation }),
+          })
+        } else {
+          // Call the OpenAI API
+          response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            signal: controller.signal,
+            body: JSON.stringify(chatBody),
+          })
+        }
+
+        if (response instanceof Response && !response.ok) {
           const final_response = await response.json()
           homeDispatch({ field: 'loading', value: false })
           homeDispatch({ field: 'messageIsStreaming', value: false })
@@ -572,16 +663,23 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
           })
           return
         }
-        const data = response.body
-        if (!data) {
-          homeDispatch({ field: 'loading', value: false })
-          homeDispatch({ field: 'messageIsStreaming', value: false })
-          // homeDispatch({ field: 'isRouting', value: undefined })
-          // homeDispatch({ field: 'isRunningTool', value: undefined })
-          // homeDispatch({ field: 'isImg2TextLoading', value: undefined })
-          // homeDispatch({ field: 'isRetrievalLoading', value: undefined })
-          return
+
+        let data
+        // TODO: check the reponse data
+        if (response instanceof Response) {
+          data = response.body
+          if (!data) {
+            homeDispatch({ field: 'loading', value: false })
+            homeDispatch({ field: 'messageIsStreaming', value: false })
+            // homeDispatch({ field: 'isRouting', value: undefined })
+            // homeDispatch({ field: 'isRunningTool', value: undefined })
+            // homeDispatch({ field: 'isImg2TextLoading', value: undefined })
+            // homeDispatch({ field: 'isRetrievalLoading', value: undefined })
+            return
+          }
+          reader = data.getReader()
         }
+
         if (!plugin) {
           if (updatedConversation.messages.length === 1) {
             const { content } = message
@@ -603,11 +701,12 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
           // homeDispatch({ field: 'isRunningTool', value: undefined })
           // homeDispatch({ field: 'isImg2TextLoading', value: undefined })
           // homeDispatch({ field: 'isRetrievalLoading', value: undefined })
-          const reader = data.getReader()
+
           const decoder = new TextDecoder()
           let done = false
           let isFirst = true
           let text = ''
+          let chunkValue
           let finalAssistantRespose = ''
           const citationLinkCache = new Map<number, string>()
           const stateMachineContext = { state: State.Normal, buffer: '' }
@@ -618,10 +717,38 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
                 done = true
                 break
               }
-              const { value, done: doneReading } = await reader.read()
-              done = doneReading
-              const chunkValue = decoder.decode(value)
-              text += chunkValue
+              if (response && 'next' in response) {
+                // Handle routing between WebLLM & OpenAI
+                // if (
+                //   // ['TinyLlama-1.1B', 'Llama-3-8B-Instruct-q4f32_1-MLC'].some(
+                //   //   (prefix) => selectedConversation.model.name.startsWith(prefix),
+                //   // )
+                //   webLLMModels.some(
+                //     (model) => model.name === selectedConversation.model.name,
+                //   )
+                // ) {
+                // WebLLM models
+                // @ts-ignore - iterator for WebLLM `AsyncIterable<ChatCompletionChunk>`
+                const iterator = response[Symbol.asyncIterator]()
+                const result = await iterator.next()
+                done = result.done
+                if (
+                  done ||
+                  result.value == undefined ||
+                  result.value.choices[0]?.delta.content == undefined
+                ) {
+                  // exit early
+                  continue
+                }
+                chunkValue = result.value.choices[0]?.delta.content
+                text += chunkValue
+              } else {
+                // OpenAI models
+                const { value, done: doneReading } = await reader!.read()
+                done = doneReading
+                chunkValue = decoder.decode(value)
+                text += chunkValue
+              }
 
               if (isFirst) {
                 // isFirst refers to the first chunk of data received from the API (happens once for each new message from API)
@@ -650,7 +777,6 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
                     updatedConversation.messages[lastMessageIndex]
                   const lastUserMessage =
                     updatedConversation.messages[lastMessageIndex - 1]
-
                   if (
                     lastMessage &&
                     lastUserMessage &&
@@ -658,6 +784,8 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
                   ) {
                     // Call the replaceCitationLinks method and await its result
                     // const updatedContent = await replaceCitationLinks(text, lastMessage, citationLinkCache);
+
+                    // TODO: handle this properly with WebLLM
                     const updatedContent = await processChunkWithStateMachine(
                       chunkValue,
                       lastUserMessage,
@@ -734,35 +862,45 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
             controller.abort()
           }
         } else {
-          const { answer } = await response.json()
-          const updatedMessages: Message[] = [
-            ...updatedConversation.messages,
-            { role: 'assistant', content: answer, contexts: message.contexts },
-          ]
-          updatedConversation = {
-            ...updatedConversation,
-            messages: updatedMessages,
+          // TODO: COME BACK AND FIX
+          if (response instanceof Response) {
+            const { answer } = await response.json()
+            const updatedMessages: Message[] = [
+              ...updatedConversation.messages,
+              {
+                role: 'assistant',
+                content: answer,
+                contexts: message.contexts,
+              },
+            ]
+            updatedConversation = {
+              ...updatedConversation,
+              messages: updatedMessages,
+            }
+            homeDispatch({
+              field: 'selectedConversation',
+              value: updatedConversation,
+            })
+            saveConversation(updatedConversation)
+            const updatedConversations: Conversation[] = conversations.map(
+              (conversation) => {
+                if (conversation.id === selectedConversation.id) {
+                  return updatedConversation
+                }
+                return conversation
+              },
+            )
+            if (updatedConversations.length === 0) {
+              updatedConversations.push(updatedConversation)
+            }
+            homeDispatch({
+              field: 'conversations',
+              value: updatedConversations,
+            })
+            saveConversations(updatedConversations)
+            homeDispatch({ field: 'loading', value: false })
+            homeDispatch({ field: 'messageIsStreaming', value: false })
           }
-          homeDispatch({
-            field: 'selectedConversation',
-            value: updatedConversation,
-          })
-          saveConversation(updatedConversation)
-          const updatedConversations: Conversation[] = conversations.map(
-            (conversation) => {
-              if (conversation.id === selectedConversation.id) {
-                return updatedConversation
-              }
-              return conversation
-            },
-          )
-          if (updatedConversations.length === 0) {
-            updatedConversations.push(updatedConversation)
-          }
-          homeDispatch({ field: 'conversations', value: updatedConversations })
-          saveConversations(updatedConversations)
-          homeDispatch({ field: 'loading', value: false })
-          homeDispatch({ field: 'messageIsStreaming', value: false })
         }
       }
     },
@@ -772,6 +910,7 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
       pluginKeys,
       selectedConversation,
       stopConversationRef,
+      chat_ui,
     ],
   )
 
@@ -786,7 +925,7 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
 
       if (imgDescIndex !== -1) {
         // Remove the existing image description
-        ;(currentMessage.content as Content[]).splice(imgDescIndex, 1)
+        ; (currentMessage.content as Content[]).splice(imgDescIndex, 1)
       }
 
       handleSend(currentMessage, 2, null, tools, enabledDocumentGroups)
@@ -879,13 +1018,13 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
 
   const statements =
     courseMetadata?.example_questions &&
-    courseMetadata.example_questions.length > 0
+      courseMetadata.example_questions.length > 0
       ? courseMetadata.example_questions
       : [
-          'Make a bullet point list of key takeaways from this project.',
-          'What are the best practices for [Activity or Process] in [Context or Field]?',
-          'Can you explain the concept of [Specific Concept] in simple terms?',
-        ]
+        'Make a bullet point list of key takeaways from this project.',
+        'What are the best practices for [Activity or Process] in [Context or Field]?',
+        'Can you explain the concept of [Specific Concept] in simple terms?',
+      ]
 
   // Add this function to create dividers with statements
   const renderIntroductoryStatements = () => {
@@ -1020,137 +1159,7 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
           <ChatNavbar bannerUrl={bannerUrl as string} isgpt4={true} />
         </div>
         <div className="mt-10 max-w-full flex-grow overflow-y-auto overflow-x-hidden">
-          {!(apiKey || serverSideApiKeyIsSet) ? (
-            <div className="absolute inset-0 mt-20 flex flex-col items-center justify-center">
-              <div className="backdrop-filter-[blur(10px)] rounded-box mx-auto max-w-4xl flex-col items-center border border-2 border-[rgba(255,165,0,0.8)] bg-[rgba(42,42,64,0.3)] p-10 text-2xl font-bold text-black dark:text-white">
-                <div className="mb-2 flex flex-col items-center text-center">
-                  <IconAlertTriangle
-                    size={'54'}
-                    className="mr-2 block text-orange-400 "
-                  />
-                  <div className="mt-4 text-left text-gray-100">
-                    {' '}
-                    {t(
-                      'Please set your OpenAI API key in the bottom left of the screen.',
-                    )}
-                    <div className="mt-2 font-normal">
-                      <Text size={'md'} className="text-gray-100">
-                        If you don&apos;t have a key yet, you can get one here:{' '}
-                        <a
-                          href="https://platform.openai.com/account/api-keys"
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-purple-500 hover:underline"
-                        >
-                          OpenAI API key{' '}
-                          <IconExternalLink
-                            className="mr-2 inline-block"
-                            style={{ position: 'relative', top: '-3px' }}
-                          />
-                        </a>
-                      </Text>
-                      <Text size={'md'} className="pt-10 text-gray-400">
-                        <IconLock className="mr-2 inline-block" />
-                        This key will live securely encrypted in your
-                        browser&apos;s cache. It&apos;s all client-side so our
-                        servers never see it.
-                      </Text>
-                      <Text size={'md'} className="pt-10 text-gray-400">
-                        <IconBrain className="mr-2 inline-block" />
-                        GPT 3.5 is default. For GPT-4 access, either complete
-                        one billing cycle as an OpenAI API customer or pre-pay a
-                        minimum of $0.50. See
-                        <a
-                          className="text-purple-500 hover:underline"
-                          href="https://help.openai.com/en/articles/7102672-how-can-i-access-gpt-4"
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          {' '}
-                          this documentation for details{' '}
-                          <IconExternalLink
-                            className="mr-2 inline-block"
-                            style={{ position: 'relative', top: '-3px' }}
-                          />
-                        </a>
-                      </Text>
-                      <Text size={'md'} className="pt-10 text-gray-400">
-                        <IconCreditCard className="mr-2 inline-block" />
-                        You only pay the standard OpenAI prices, per token read
-                        or generated by the model.
-                      </Text>
-                    </div>
-                  </div>
-                  <div className="absolute bottom-4 left-0 animate-ping flex-col place-items-start text-left">
-                    <IconArrowLeft
-                      size={'36'}
-                      className="transform text-purple-500 transition-transform duration-500 ease-in-out hover:-translate-x-1"
-                    />
-                    <div className="mt-4 text-left text-gray-100">
-                      {' '}
-                      {t(
-                        'Please set your OpenAI API key in the bottom left of the screen.',
-                      )}
-                      <div className="mt-2 font-normal">
-                        <Text size={'md'} className="text-gray-100">
-                          If you don&apos;t have a key yet, you can get one
-                          here:{' '}
-                          <a
-                            href="https://platform.openai.com/account/api-keys"
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-purple-500 hover:underline"
-                          >
-                            OpenAI API key{' '}
-                            <IconExternalLink
-                              className="mr-2 inline-block"
-                              style={{ position: 'relative', top: '-3px' }}
-                            />
-                          </a>
-                        </Text>
-                        <Text size={'md'} className="pt-10 text-gray-400">
-                          <IconLock className="mr-2 inline-block" />
-                          This key will live securely encrypted in your
-                          browser&apos;s cache. It&apos;s all client-side so our
-                          servers never see it.
-                        </Text>
-                        <Text size={'md'} className="pt-10 text-gray-400">
-                          <IconBrain className="mr-2 inline-block" />
-                          GPT 3.5 is default. For GPT-4 access, either complete
-                          one billing cycle as an OpenAI API customer or pre-pay
-                          a minimum of $0.50. See
-                          <a
-                            className="text-purple-500 hover:underline"
-                            href="https://help.openai.com/en/articles/7102672-how-can-i-access-gpt-4"
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            {' '}
-                            this documentation for details{' '}
-                            <IconExternalLink
-                              className="mr-2 inline-block"
-                              style={{ position: 'relative', top: '-3px' }}
-                            />
-                          </a>
-                        </Text>
-                        <Text size={'md'} className="pt-10 text-gray-400">
-                          <IconCreditCard className="mr-2 inline-block" />
-                          You only pay the standard OpenAI prices, per token
-                          read or generated by the model.
-                        </Text>
-                      </div>
-                    </div>
-                    <div className="absolute bottom-4 left-0 ml-4 mt-4 animate-ping flex-col place-items-start text-left">
-                      <IconArrowLeft
-                        size={'36'}
-                        className="mr-2 transform text-purple-500 transition-transform duration-500 ease-in-out hover:-translate-x-1"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : modelError ? (
+          {modelError ? (
             <ErrorMessageDiv error={modelError} />
           ) : (
             <>
@@ -1208,6 +1217,7 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
                 inputContent={inputContent}
                 setInputContent={setInputContent}
                 courseName={getCurrentPageName()}
+                chat_ui={chat_ui}
               />
             </>
           )}
@@ -1218,7 +1228,13 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
   Chat.displayName = 'Chat'
 })
 
-function errorToast({ title, message }: { title: string; message: string }) {
+export function errorToast({
+  title,
+  message,
+}: {
+  title: string
+  message: string
+}) {
   notifications.show({
     id: 'error-notification-reused',
     withCloseButton: true,

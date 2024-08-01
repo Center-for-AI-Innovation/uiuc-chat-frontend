@@ -16,6 +16,14 @@ const bundleAnalyzerConfig = {
 /** @type {import("next").NextConfig} */
 const config = {
   i18n: nextI18NextConfig.i18n,
+  webpack(config, { isServer, dev }) {
+    config.experiments = {
+      asyncWebAssembly: true,
+      layers: true,
+    }
+
+    return config
+  },
 
   /**
    * If you have `experimental: { appDir: true }` set, then you must comment the below `i18n` config
@@ -33,6 +41,11 @@ const config = {
       'images.unsplash.com',
       'github.com',
       'uiuc-chatbot.s3.us-east-1.amazonaws.com',
+      'images.squarespace-cdn.com',
+      'raw.githubusercontent.com',
+      'avatars.githubusercontent.com',
+      'anthropic.com',
+      'via.placeholder.com',
     ],
   },
   experimental: {

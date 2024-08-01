@@ -122,13 +122,11 @@ export async function POST(req: Request) {
     stream: false,
   })
 
-  if (
-    !response.choices ||
-    response.choices.length === 0 ||
-    !response.choices[0]?.message.tool_calls
-  ) {
+  if (!response.choices) {
     console.error('❌ ERROR --- No response from OpenAI!!')
     return new Response('No response from OpenAI', { status: 500 })
+  } else if (!response.choices[0]?.message.tool_calls) {
+    return new Response('No tools invoked by OpenAI', { status: 204 })
   } else {
     const tools = response.choices[0]?.message
       .tool_calls as ChatCompletionMessageToolCall[]

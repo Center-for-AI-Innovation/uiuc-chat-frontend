@@ -20,6 +20,7 @@ export const env = createEnv({
     NEXT_PUBLIC_POSTHOG_KEY: z.string().min(1),
     NEXT_PUBLIC_POSTHOG_HOST: z.string().min(1),
     NEXT_PUBLIC_MAGIC_BELL_API: z.string().min(1),
+    OLLAMA_SERVER_URL: z.string().url(),
     // NEXTAUTH_SECRET:
     //   process.env.NODE_ENV === "production"
     //     ? z.string().min(1)
@@ -64,5 +65,6 @@ export const env = createEnv({
     NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
     NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
     NEXT_PUBLIC_MAGIC_BELL_API: process.env.NEXT_PUBLIC_MAGIC_BELL_API,
+    OLLAMA_SERVER_URL: process.env.OLLAMA_SERVER_URL,
   },
 })

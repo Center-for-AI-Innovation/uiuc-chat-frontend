@@ -24,9 +24,9 @@
     },
     "plugins": [
       {
-        "name": "next",
-      },
-    ],
+        "name": "next"
+      }
+    ]
   },
   "include": [
     ".eslintrc.cjs",
@@ -37,7 +37,7 @@
     "**/*.mjs",
     "next-i18next.config.mjs",
     "src/app/api/chat/openaiFunctionCall",
-    ".next/types/**/*.ts",
+    ".next/types/**/*.ts"
   ],
   "exclude": ["node_modules"]
 }

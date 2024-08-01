@@ -32,9 +32,16 @@ export default async (req: Request): Promise<NextResponse> => {
 
     console.log('In build prompt fetch endpoint!!')
 
+    if (!conversation) {
+      console.error('No conversation provided')
+      return new NextResponse(
+        JSON.stringify({ error: 'No conversation provided' }),
+        { status: 400 },
+      )
+    }
+
     const updatedConversation = await buildPrompt({
       conversation,
-      rawOpenaiKey: key,
       projectName: course_name,
       courseMetadata,
     })
