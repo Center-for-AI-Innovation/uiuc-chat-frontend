@@ -30,8 +30,11 @@ export const selectBestModel = (
 ): GenericSupportedModel => {
   // Use GPT-4o-mini if available, otherwise fallback to Llama 3.1 70b
 
-  if (allLLMProviders.OpenAI && allLLMProviders.OpenAI.models!.length > 0) {
-    const gpt4oMini = allLLMProviders.OpenAI.models!.find(
+  if (
+    allLLMProviders?.OpenAI?.models &&
+    allLLMProviders.OpenAI.models.length > 0
+  ) {
+    const gpt4oMini = allLLMProviders.OpenAI.models.find(
       (model) => model.id === 'gpt-4o-mini',
     )
     if (gpt4oMini) {
