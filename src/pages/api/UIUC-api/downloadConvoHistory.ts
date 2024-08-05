@@ -9,7 +9,7 @@ export const downloadConversationHistory = async (
 ): Promise<DownloadResult> => {
   try {
     const response = await axios.get(
-      `https://flask-production-751b.up.railway.app/export-convo-history-csv?course_name=${courseName}`,
+      `https://flask-production-751b.up.railway.app/export-convo-history?course_name=${courseName}`,
       { responseType: 'blob' },
     )
 
