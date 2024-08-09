@@ -88,7 +88,7 @@ export default function Header({ isNavbar = false }: { isNavbar?: boolean }) {
         {/* Add some padding for separation */}
         <div style={{ paddingLeft: '0px', paddingRight: '10px' }}></div>
         {/* Mount the UserButton component */}
-        <UserButton afterSignOutUrl="/" />
+        <UserButton />
       </SignedIn>
       <SignedOut>
         {/* Signed out users get sign in button */}
@@ -220,7 +220,10 @@ export function LandingPageHeader({
           </MagicBell>
           {/* Add a bit of spacing with an empty div */}
           <div />
-          <UserButton afterSignOutUrl="/" />
+          {/* appearance={ } */}
+          <div style={{ all: 'unset' }}>
+            <UserButton />
+          </div>
         </SignedIn>
         <SignedOut>
           {/* Signed out users get sign in button */}

@@ -9,42 +9,58 @@
 //   return NextResponse.json(greeting);
 // }
 
-import { authMiddleware } from '@clerk/nextjs'
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 
-export default authMiddleware({
-  publicRoutes: (req) => {
-    if (req.nextUrl.pathname.startsWith('/api/chat-api/keys')) {
-      return false
-    }
-    // Check if the URL path starts with /api/chat-api/stream or is exactly '/'
-    if (
-      req.nextUrl.pathname.startsWith('/api/chat-api/stream') ||
-      req.nextUrl.pathname === '/' ||
-      req.nextUrl.pathname.startsWith('/api')
-    ) {
-      return true
-    }
+// Private by default, public routes are defined below (regex)
+const isPublicRoute = createRouteMatcher([
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/api(.*)',
+  '/', // landing page
+  '/:singleLevel([^/]+)', // single level path
+  '/:singleLevel([^/]+)/chat', // course chat pages
+])
 
-    // Check if the URL path matches the dynamic route pattern for course chat pages
-    const courseChatRegex = /^\/[^\/]+\/chat$/
-    if (courseChatRegex.test(req.nextUrl.pathname)) {
-      return true
-    }
-    const courseGPT4Regex = /^\/[^\/]+\/gpt4$/
-    if (courseGPT4Regex.test(req.nextUrl.pathname)) {
-      return true
-    }
-
-    // Check if the URL path has a single level
-    const singleLevelPathRegex = /^\/[^\/]+$/
-    if (singleLevelPathRegex.test(req.nextUrl.pathname)) {
-      return true
-    }
-
-    // Default to not public
-    return false
-  },
+export default clerkMiddleware((auth, request) => {
+  if (!isPublicRoute(request)) {
+    auth().protect()
+  }
 })
+
+// export default authMiddleware({
+//   publicRoutes: (req) => {
+//     if (req.nextUrl.pathname.startsWith('/api/chat-api/keys')) {
+//       return false
+//     }
+//     // Check if the URL path starts with /api/chat-api/stream or is exactly '/'
+//     if (
+//       req.nextUrl.pathname.startsWith('/api/chat-api/stream') ||
+//       req.nextUrl.pathname === '/' ||
+//       req.nextUrl.pathname.startsWith('/api')
+//     ) {
+//       return true
+//     }
+
+//     // Check if the URL path matches the dynamic route pattern for course chat pages
+//     const courseChatRegex = /^\/[^\/]+\/chat$/
+//     if (courseChatRegex.test(req.nextUrl.pathname)) {
+//       return true
+//     }
+//     const courseGPT4Regex = /^\/[^\/]+\/gpt4$/
+//     if (courseGPT4Regex.test(req.nextUrl.pathname)) {
+//       return true
+//     }
+
+//     // Check if the URL path has a single level
+//     const singleLevelPathRegex = /^\/[^\/]+$/
+//     if (singleLevelPathRegex.test(req.nextUrl.pathname)) {
+//       return true
+//     }
+
+//     // Default to not public
+//     return false
+//   },
+// })
 
 // Stop Middleware from running on static files
 export const config = {

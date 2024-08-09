@@ -3,10 +3,8 @@ import { MantineProvider } from '@mantine/core'
 import { Notifications } from '@mantine/notifications'
 import { Analytics } from '@vercel/analytics/react'
 import { appWithTranslation } from 'next-i18next'
-import { ClerkProvider } from '@clerk/nextjs'
+import { ClerkProvider, GoogleOneTap } from '@clerk/nextjs'
 import { dark } from '@clerk/themes'
-
-// import { api } from '~/utils/api'
 
 import '~/styles/globals.css'
 import Maintenance from '~/components/UIUC-Components/Maintenance'
@@ -61,9 +59,18 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
         <ClerkProvider
           appearance={{
             baseTheme: dark,
+            variables: {
+              // Thes FFFFFF are needed to make the text readable.
+              colorPrimary: '#FFFFFF',
+              colorNeutral: '#FFFFFF',
+              // colorText: '#FFFFFF',
+              // colorTextSecondary: '#FFFFFF',
+              // colorTextOnPrimaryBackground: '#FFFFFF',
+            },
           }}
           {...pageProps}
         >
+          <GoogleOneTap />
           <QueryClientProvider client={queryClient}>
             <MantineProvider
               withGlobalStyles

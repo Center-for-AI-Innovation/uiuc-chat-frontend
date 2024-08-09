@@ -1,15 +1,5 @@
-import { generateText, streamText } from 'ai'
-import { createOllama } from 'ollama-ai-provider'
-// import { openai } from '@ai-sdk/openai';
-import { OpenAIModel, OpenAIModelID, OpenAIModels } from '@/types/openai'
-import { decrypt, isEncrypted } from '~/utils/crypto'
-import {
-  AnthropicProvider,
-  LLMProvider,
-  ProviderNames,
-} from '~/types/LLMProvider'
+import { AnthropicProvider } from '~/types/LLMProvider'
 import Anthropic from '@anthropic-ai/sdk'
-import { API_KEY } from '@clerk/nextjs/dist/types/server'
 
 // anthropic model interface for dispay
 export interface AnthropicModel {

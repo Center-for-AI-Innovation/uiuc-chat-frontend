@@ -5,7 +5,6 @@ import { supabase } from '@/utils/supabaseClient'
 import { v4 as uuidv4 } from 'uuid'
 import posthog from 'posthog-js'
 import { NextRequest, NextResponse } from 'next/server'
-import { clerkClient } from '@clerk/nextjs'
 import { getAuth } from '@clerk/nextjs/server'
 import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
 
