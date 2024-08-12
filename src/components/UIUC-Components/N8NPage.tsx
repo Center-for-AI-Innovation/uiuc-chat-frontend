@@ -80,7 +80,7 @@ const accordionItems = [
           Once you have access, please{' '}
           <b>
             <a
-              href="https://primary-production-1817.up.railway.app/setup"
+              href="https://tools.uiuc.chat/setup"
               target="_blank"
               rel="noopener noreferrer"
               style={{ color: '#8B5CF6', textDecoration: 'underline' }}
@@ -446,7 +446,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                         <Button
                           onClick={(event) =>
                             window.open(
-                              `https://primary-production-1817.up.railway.app/workflows`,
+                              `https://tools.uiuc.chat/workflows`,
                               '_blank',
                             )
                           }
@@ -495,7 +495,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                               Once you have access, please{' '}
                               <b>
                                 <a
-                                  href="https://primary-production-1817.up.railway.app/setup"
+                                  href="https://tools.uiuc.chat/setup"
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   style={{
@@ -558,7 +558,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                                 <List.Item>
                                   Start by creating your first workflow on{' '}
                                   <a
-                                    href="https://primary-production-1817.up.railway.app/workflows"
+                                    href="https://tools.uiuc.chat/workflows"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-purple-500 hover:underline"
