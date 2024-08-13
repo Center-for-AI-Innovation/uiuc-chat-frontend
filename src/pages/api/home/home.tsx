@@ -90,6 +90,7 @@ const Home = () => {
 
   useEffect(() => {
     // Set model after we fetch available models
+    if (!llmProviders || Object.keys(llmProviders).length === 0) return
     const model = selectBestModel(llmProviders, selectedConversation)
 
     dispatch({
@@ -558,6 +559,7 @@ const Home = () => {
       })
     } else {
       const lastConversation = conversations[conversations.length - 1]
+      if (!llmProviders || Object.keys(llmProviders).length === 0) return
       const bestModel = selectBestModel(llmProviders, lastConversation)
       dispatch({
         field: 'selectedConversation',

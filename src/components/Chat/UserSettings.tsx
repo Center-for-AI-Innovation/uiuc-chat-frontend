@@ -50,11 +50,11 @@ export const modelCached: WebllmModel[] = []
 const appConfig = prebuiltAppConfig
 // CHANGE THIS TO SEE EFFECTS OF BOTH, CODE BELOW DO NOT NEED TO CHANGE
 appConfig.useIndexedDBCache = false
-if (appConfig.useIndexedDBCache) {
-  console.debug('WebLLM: Using IndexedDB Cache')
-} else {
-  console.debug('WebLLM: Using Cache API')
-}
+// if (appConfig.useIndexedDBCache) {
+//   console.debug('WebLLM: Using IndexedDB Cache')
+// } else {
+//   console.debug('WebLLM: Using Cache API')
+// }
 
 export const UserSettings = () => {
   const {

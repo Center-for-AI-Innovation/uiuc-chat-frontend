@@ -43,6 +43,7 @@ export const selectBestModel = (
   ) {
     const conversationModel = allModels.find((m) => m.id === convo.model.id)
     if (conversationModel) {
+      console.log('returning Conversation Model: ', conversationModel)
       return conversationModel
     }
   }
@@ -51,10 +52,12 @@ export const selectBestModel = (
   for (const preferredId of preferredModelIds) {
     const model = allModels.find((m) => m.id === preferredId)
     if (model) {
+      console.log('returning preferred model: ', model)
       return model
     }
   }
 
+  console.log('returning llama 3.1 at the end...')
   // If no preferred models are available, fallback to Llama 3.1 70b
   return {
     id: 'llama3.1:70b',
