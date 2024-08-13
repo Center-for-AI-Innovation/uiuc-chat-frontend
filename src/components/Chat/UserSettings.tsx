@@ -76,10 +76,7 @@ export const UserSettings = () => {
     //   webLLMModels.some((m) => m.name === model.name)
     // ) {
     for (const model of webLLMModels) {
-      const theCachedModel = await webllm.hasModelInCache(
-        model.name,
-        appConfig,
-      )
+      const theCachedModel = await webllm.hasModelInCache(model.name, appConfig)
       if (theCachedModel) {
         if (
           !modelCached.some((cachedModel) => cachedModel.name === model.name)
@@ -88,7 +85,7 @@ export const UserSettings = () => {
         }
         // console.log('model is cached:', model.name)
       }
-      console.log('hasModelInCache: ', modelCached)
+      // console.log('hasModelInCache: ', modelCached)
     }
     // }
   }
