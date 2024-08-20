@@ -35,7 +35,7 @@ export const getOllamaModels = async (
           id: model.name,
           name: newName ? newName : model.name,
           parameterSize: model.details.parameter_size,
-          tokenLimit: 4096,
+          tokenLimit: 128000,
           enabled: true,
         }
       })
