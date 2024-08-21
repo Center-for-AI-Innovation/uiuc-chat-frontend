@@ -411,8 +411,10 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
         homeDispatch({ field: 'isRetrievalLoading', value: false })
 
         // Action 3: Tool Execution
+        console.log('tools.length > 0', tools.length)
         if (tools.length > 0) {
           try {
+            console.log('INSIDE TOOLS in Chat.tsx')
             homeDispatch({ field: 'isRouting', value: true })
             // Check if any tools need to be run
             const uiucToolsToRun = await handleFunctionCall(
@@ -443,306 +445,305 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
           } finally {
             homeDispatch({ field: 'isRunningTool', value: false })
           }
+        }
 
-          const chatBody: ChatBody = constructChatBody(
-            updatedConversation,
-            getOpenAIKey(courseMetadata, apiKey),
-            courseName,
-            true,
-            courseMetadata,
+        const chatBody: ChatBody = constructChatBody(
+          updatedConversation,
+          getOpenAIKey(courseMetadata, apiKey),
+          courseName,
+          true,
+          courseMetadata,
+        )
+        // Action 4: Build Prompt - Put everything together into a prompt
+        const buildPromptResponse = await fetch('/api/buildPrompt', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(chatBody),
+        })
+        chatBody.conversation = await buildPromptResponse.json()
+        updatedConversation = chatBody.conversation!
+
+        homeDispatch({
+          field: 'selectedConversation',
+          value: chatBody.conversation,
+        })
+
+        // Action 5: Run Chat Completion based on model provider
+        let response:
+          | AsyncIterable<webllm.ChatCompletionChunk>
+          | Response
+          | undefined
+        let reader
+
+        if (
+          webLLMModels.some(
+            (model) => model.name === chatBody.conversation?.model.name,
           )
-          // Action 4: Build Prompt - Put everything together into a prompt
-          const buildPromptResponse = await fetch('/api/buildPrompt', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(chatBody),
-          })
-          chatBody.conversation = await buildPromptResponse.json()
-          updatedConversation = chatBody.conversation!
-
-          homeDispatch({
-            field: 'selectedConversation',
-            value: chatBody.conversation,
-          })
-
-          // Action 5: Run Chat Completion based on model provider
-          let response:
-            | AsyncIterable<webllm.ChatCompletionChunk>
-            | Response
-            | undefined
-          let reader
-
-          if (
-            webLLMModels.some(
-              (model) => model.name === chatBody.conversation?.model.name,
-            )
-          ) {
-            // Is WebLLM model
-            while (chat_ui.isModelLoading() == true) {
-              await new Promise((resolve) => setTimeout(resolve, 10))
-            }
-            try {
-              response = await chat_ui.runChatCompletion(
-                chatBody.conversation!,
-                getCurrentPageName(),
-              )
-            } catch (error) {
-              errorToast({
-                title: 'Error running chat completion',
-                message:
-                  (error as Error).message || 'An unexpected error occurred',
-              })
-            }
-          } else {
-            try {
-              // Route to the specific model provider
-              response = await routeModelRequest(chatBody, controller)
-            } catch (error) {
-              console.error('Error routing to model provider:', error)
-              errorToast({
-                title: 'Error routing to model provider',
-                message:
-                  (error as Error).message || 'An unexpected error occurred',
-              })
-            }
+        ) {
+          // Is WebLLM model
+          while (chat_ui.isModelLoading() == true) {
+            await new Promise((resolve) => setTimeout(resolve, 10))
           }
+          try {
+            response = await chat_ui.runChatCompletion(
+              chatBody.conversation!,
+              getCurrentPageName(),
+            )
+          } catch (error) {
+            errorToast({
+              title: 'Error running chat completion',
+              message:
+                (error as Error).message || 'An unexpected error occurred',
+            })
+          }
+        } else {
+          try {
+            // Route to the specific model provider
+            response = await routeModelRequest(chatBody, controller)
+          } catch (error) {
+            console.error('Error routing to model provider:', error)
+            errorToast({
+              title: 'Error routing to model provider',
+              message:
+                (error as Error).message || 'An unexpected error occurred',
+            })
+          }
+        }
 
-          if (response instanceof Response && !response.ok) {
-            const final_response = await response.json()
+        if (response instanceof Response && !response.ok) {
+          const final_response = await response.json()
+          homeDispatch({ field: 'loading', value: false })
+          homeDispatch({ field: 'messageIsStreaming', value: false })
+          console.error(
+            'Error calling the LLM:',
+            final_response.name,
+            final_response.message,
+          )
+          errorToast({
+            title: final_response.name,
+            message:
+              final_response.message ||
+              'There was an unexpected error calling the LLM. Try using a different model (via the Settings button in the header).',
+          })
+          return
+        }
+
+        let data
+        if (response instanceof Response) {
+          data = response.body
+          if (!data) {
             homeDispatch({ field: 'loading', value: false })
             homeDispatch({ field: 'messageIsStreaming', value: false })
-            console.error(
-              'Error calling the LLM:',
-              final_response.name,
-              final_response.message,
-            )
-            errorToast({
-              title: final_response.name,
-              message:
-                final_response.message ||
-                'There was an unexpected error calling the LLM. Try using a different model (via the Settings button in the header).',
-            })
+            return
+          }
+          reader = data.getReader()
+        }
+
+        if (!plugin) {
+          if (updatedConversation.messages.length === 1) {
+            const { content } = message
+            // Use only texts instead of content itself
+            const contentText = Array.isArray(content)
+              ? content.map((content) => content.text).join(' ')
+              : content
+            const customName =
+              contentText.length > 30
+                ? contentText.substring(0, 30) + '...'
+                : contentText
+            updatedConversation = {
+              ...updatedConversation,
+              name: customName,
+            }
+          }
+          homeDispatch({ field: 'loading', value: false })
+
+          const decoder = new TextDecoder()
+          let done = false
+          let isFirst = true
+          let text = ''
+          let chunkValue
+          let finalAssistantRespose = ''
+          const citationLinkCache = new Map<number, string>()
+          const stateMachineContext = { state: State.Normal, buffer: '' }
+          try {
+            // Action 6: Stream the LLM response, based on model provider.
+            while (!done) {
+              if (stopConversationRef.current === true) {
+                controller.abort()
+                done = true
+                break
+              }
+              if (response && 'next' in response) {
+                // Run WebLLM models
+                const iterator = (
+                  response as AsyncIterable<webllm.ChatCompletionChunk>
+                )[Symbol.asyncIterator]()
+                const result = await iterator.next()
+                done = result.done ?? false
+                if (
+                  done ||
+                  result.value == undefined ||
+                  result.value.choices[0]?.delta.content == undefined
+                ) {
+                  // exit early
+                  continue
+                }
+                chunkValue = result.value.choices[0]?.delta.content
+                text += chunkValue
+              } else {
+                // OpenAI models & Vercel AI SDK models
+                const { value, done: doneReading } = await reader!.read()
+                done = doneReading
+                chunkValue = decoder.decode(value)
+                text += chunkValue
+              }
+
+              if (isFirst) {
+                // isFirst refers to the first chunk of data received from the API (happens once for each new message from API)
+                isFirst = false
+                const updatedMessages: Message[] = [
+                  ...updatedConversation.messages,
+                  {
+                    role: 'assistant',
+                    content: chunkValue,
+                  },
+                ]
+                finalAssistantRespose += chunkValue
+                updatedConversation = {
+                  ...updatedConversation,
+                  messages: updatedMessages,
+                }
+                homeDispatch({
+                  field: 'selectedConversation',
+                  value: updatedConversation,
+                })
+              } else {
+                if (updatedConversation.messages.length > 0) {
+                  const lastMessageIndex =
+                    updatedConversation.messages.length - 1
+                  const lastMessage =
+                    updatedConversation.messages[lastMessageIndex]
+                  const lastUserMessage =
+                    updatedConversation.messages[lastMessageIndex - 1]
+                  if (
+                    lastMessage &&
+                    lastUserMessage &&
+                    lastUserMessage.contexts
+                  ) {
+                    // Handle citations via state machine
+                    finalAssistantRespose += await processChunkWithStateMachine(
+                      chunkValue,
+                      lastUserMessage,
+                      stateMachineContext,
+                      citationLinkCache,
+                    )
+
+                    // Update the last message with the new content
+                    const updatedMessages = updatedConversation.messages.map(
+                      (msg, index) =>
+                        index === lastMessageIndex
+                          ? { ...msg, content: finalAssistantRespose }
+                          : msg,
+                    )
+
+                    // Update the conversation with the new messages
+                    updatedConversation = {
+                      ...updatedConversation,
+                      messages: updatedMessages,
+                    }
+
+                    // Dispatch the updated conversation
+                    homeDispatch({
+                      field: 'selectedConversation',
+                      value: updatedConversation,
+                    })
+                  }
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error reading from stream:', error)
+            homeDispatch({ field: 'loading', value: false })
+            homeDispatch({ field: 'messageIsStreaming', value: false })
             return
           }
 
-          let data
-          if (response instanceof Response) {
-            data = response.body
-            if (!data) {
-              homeDispatch({ field: 'loading', value: false })
-              homeDispatch({ field: 'messageIsStreaming', value: false })
-              return
-            }
-            reader = data.getReader()
+          if (!done) {
+            throw new Error('LLM response stream ended before it was done.')
           }
 
-          if (!plugin) {
-            if (updatedConversation.messages.length === 1) {
-              const { content } = message
-              // Use only texts instead of content itself
-              const contentText = Array.isArray(content)
-                ? content.map((content) => content.text).join(' ')
-                : content
-              const customName =
-                contentText.length > 30
-                  ? contentText.substring(0, 30) + '...'
-                  : contentText
-              updatedConversation = {
-                ...updatedConversation,
-                name: customName,
-              }
+          try {
+            saveConversation(updatedConversation)
+            if (clerk_obj.isLoaded && clerk_obj.isSignedIn) {
+              const emails = extractEmailsFromClerk(clerk_obj.user)
+              updatedConversation.user_email = emails[0]
+              onMessageReceived(updatedConversation) // kastan here, trying to save message AFTER done streaming. This only saves the user message...
+            } else {
+              onMessageReceived(updatedConversation)
             }
+
+            const updatedConversations: Conversation[] = conversations.map(
+              (conversation) => {
+                if (conversation.id === selectedConversation.id) {
+                  return updatedConversation
+                }
+                return conversation
+              },
+            )
+            if (updatedConversations.length === 0) {
+              updatedConversations.push(updatedConversation)
+            }
+            homeDispatch({
+              field: 'conversations',
+              value: updatedConversations,
+            })
+            // console.log('updatedConversations: ', updatedConversations)
+            saveConversations(updatedConversations)
+            homeDispatch({ field: 'messageIsStreaming', value: false })
+          } catch (error) {
+            console.error('An error occurred: ', error)
+            controller.abort()
+          }
+        } else {
+          if (response instanceof Response) {
+            const { answer } = await response.json()
+            const updatedMessages: Message[] = [
+              ...updatedConversation.messages,
+              {
+                role: 'assistant',
+                content: answer,
+                contexts: message.contexts,
+              },
+            ]
+            updatedConversation = {
+              ...updatedConversation,
+              messages: updatedMessages,
+            }
+            homeDispatch({
+              field: 'selectedConversation',
+              value: updatedConversation,
+            })
+            saveConversation(updatedConversation)
+            const updatedConversations: Conversation[] = conversations.map(
+              (conversation) => {
+                if (conversation.id === selectedConversation.id) {
+                  return updatedConversation
+                }
+                return conversation
+              },
+            )
+            if (updatedConversations.length === 0) {
+              updatedConversations.push(updatedConversation)
+            }
+            homeDispatch({
+              field: 'conversations',
+              value: updatedConversations,
+            })
+            saveConversations(updatedConversations)
             homeDispatch({ field: 'loading', value: false })
-
-            const decoder = new TextDecoder()
-            let done = false
-            let isFirst = true
-            let text = ''
-            let chunkValue
-            let finalAssistantRespose = ''
-            const citationLinkCache = new Map<number, string>()
-            const stateMachineContext = { state: State.Normal, buffer: '' }
-            try {
-              // Action 6: Stream the LLM response, based on model provider.
-              while (!done) {
-                if (stopConversationRef.current === true) {
-                  controller.abort()
-                  done = true
-                  break
-                }
-                if (response && 'next' in response) {
-                  // Run WebLLM models
-                  const iterator = (
-                    response as AsyncIterable<webllm.ChatCompletionChunk>
-                  )[Symbol.asyncIterator]()
-                  const result = await iterator.next()
-                  done = result.done ?? false
-                  if (
-                    done ||
-                    result.value == undefined ||
-                    result.value.choices[0]?.delta.content == undefined
-                  ) {
-                    // exit early
-                    continue
-                  }
-                  chunkValue = result.value.choices[0]?.delta.content
-                  text += chunkValue
-                } else {
-                  // OpenAI models & Vercel AI SDK models
-                  const { value, done: doneReading } = await reader!.read()
-                  done = doneReading
-                  chunkValue = decoder.decode(value)
-                  text += chunkValue
-                }
-
-                if (isFirst) {
-                  // isFirst refers to the first chunk of data received from the API (happens once for each new message from API)
-                  isFirst = false
-                  const updatedMessages: Message[] = [
-                    ...updatedConversation.messages,
-                    {
-                      role: 'assistant',
-                      content: chunkValue,
-                    },
-                  ]
-                  finalAssistantRespose += chunkValue
-                  updatedConversation = {
-                    ...updatedConversation,
-                    messages: updatedMessages,
-                  }
-                  homeDispatch({
-                    field: 'selectedConversation',
-                    value: updatedConversation,
-                  })
-                } else {
-                  if (updatedConversation.messages.length > 0) {
-                    const lastMessageIndex =
-                      updatedConversation.messages.length - 1
-                    const lastMessage =
-                      updatedConversation.messages[lastMessageIndex]
-                    const lastUserMessage =
-                      updatedConversation.messages[lastMessageIndex - 1]
-                    if (
-                      lastMessage &&
-                      lastUserMessage &&
-                      lastUserMessage.contexts
-                    ) {
-                      // Handle citations via state machine
-                      finalAssistantRespose +=
-                        await processChunkWithStateMachine(
-                          chunkValue,
-                          lastUserMessage,
-                          stateMachineContext,
-                          citationLinkCache,
-                        )
-
-                      // Update the last message with the new content
-                      const updatedMessages = updatedConversation.messages.map(
-                        (msg, index) =>
-                          index === lastMessageIndex
-                            ? { ...msg, content: finalAssistantRespose }
-                            : msg,
-                      )
-
-                      // Update the conversation with the new messages
-                      updatedConversation = {
-                        ...updatedConversation,
-                        messages: updatedMessages,
-                      }
-
-                      // Dispatch the updated conversation
-                      homeDispatch({
-                        field: 'selectedConversation',
-                        value: updatedConversation,
-                      })
-                    }
-                  }
-                }
-              }
-            } catch (error) {
-              console.error('Error reading from stream:', error)
-              homeDispatch({ field: 'loading', value: false })
-              homeDispatch({ field: 'messageIsStreaming', value: false })
-              return
-            }
-
-            if (!done) {
-              throw new Error('LLM response stream ended before it was done.')
-            }
-
-            try {
-              saveConversation(updatedConversation)
-              if (clerk_obj.isLoaded && clerk_obj.isSignedIn) {
-                const emails = extractEmailsFromClerk(clerk_obj.user)
-                updatedConversation.user_email = emails[0]
-                onMessageReceived(updatedConversation) // kastan here, trying to save message AFTER done streaming. This only saves the user message...
-              } else {
-                onMessageReceived(updatedConversation)
-              }
-
-              const updatedConversations: Conversation[] = conversations.map(
-                (conversation) => {
-                  if (conversation.id === selectedConversation.id) {
-                    return updatedConversation
-                  }
-                  return conversation
-                },
-              )
-              if (updatedConversations.length === 0) {
-                updatedConversations.push(updatedConversation)
-              }
-              homeDispatch({
-                field: 'conversations',
-                value: updatedConversations,
-              })
-              // console.log('updatedConversations: ', updatedConversations)
-              saveConversations(updatedConversations)
-              homeDispatch({ field: 'messageIsStreaming', value: false })
-            } catch (error) {
-              console.error('An error occurred: ', error)
-              controller.abort()
-            }
-          } else {
-            if (response instanceof Response) {
-              const { answer } = await response.json()
-              const updatedMessages: Message[] = [
-                ...updatedConversation.messages,
-                {
-                  role: 'assistant',
-                  content: answer,
-                  contexts: message.contexts,
-                },
-              ]
-              updatedConversation = {
-                ...updatedConversation,
-                messages: updatedMessages,
-              }
-              homeDispatch({
-                field: 'selectedConversation',
-                value: updatedConversation,
-              })
-              saveConversation(updatedConversation)
-              const updatedConversations: Conversation[] = conversations.map(
-                (conversation) => {
-                  if (conversation.id === selectedConversation.id) {
-                    return updatedConversation
-                  }
-                  return conversation
-                },
-              )
-              if (updatedConversations.length === 0) {
-                updatedConversations.push(updatedConversation)
-              }
-              homeDispatch({
-                field: 'conversations',
-                value: updatedConversations,
-              })
-              saveConversations(updatedConversations)
-              homeDispatch({ field: 'loading', value: false })
-              homeDispatch({ field: 'messageIsStreaming', value: false })
-            }
+            homeDispatch({ field: 'messageIsStreaming', value: false })
           }
         }
       }

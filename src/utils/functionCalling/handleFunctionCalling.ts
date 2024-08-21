@@ -440,7 +440,7 @@ export async function fetchTools(
     limit = 10
   }
 
-  if (!api_key) {
+  if (!api_key || api_key === 'undefined') {
     const response = await fetch(
       `${base_url ? base_url : ''}/api/UIUC-api/tools/getN8nKeyFromProject?course_name=${course_name}`,
       {
@@ -451,6 +451,11 @@ export async function fetchTools(
       throw new Error('Network response was not ok')
     }
     api_key = await response.json()
+  }
+
+  if (!api_key || api_key === 'undefined') {
+    console.debug("No N8N API key found, can't fetch tools")
+    return []
   }
 
   const parsedPagination = pagination.toLowerCase() === 'true'
@@ -480,6 +485,7 @@ export const useFetchAllWorkflows = (
   if (!course_name && !api_key) {
     throw new Error('One of course_name OR api_key is required')
   }
+  // Note: api_key can still be 'undefined' here... but we'll fetch it inside fetchTools
 
   return useQuery({
     queryKey: ['tools', api_key],
