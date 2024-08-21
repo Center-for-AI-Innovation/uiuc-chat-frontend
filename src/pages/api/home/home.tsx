@@ -26,7 +26,6 @@ import { getSettings } from '@/utils/app/settings'
 import { type Conversation } from '@/types/chat'
 import { type KeyValuePair } from '@/types/data'
 import { type FolderInterface, type FolderType } from '@/types/folder'
-import { OpenAIModel, OpenAIModelID, selectBestModel } from '@/types/openai'
 import { type Prompt } from '@/types/prompt'
 
 import { Chat } from '@/components/Chat/Chat'
@@ -42,7 +41,8 @@ import { type CourseMetadata } from '~/types/courseMetadata'
 import { useUser } from '@clerk/nextjs'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import { useRouter } from 'next/router'
-import { VisionCapableModels } from '~/types/LLMProvider'
+import { selectBestModel, VisionCapableModels } from '~/types/LLMProvider'
+import { OpenAIModelID } from '~/utils/modelProviders/openai'
 
 const Home = () => {
   const { t } = useTranslation('chat')

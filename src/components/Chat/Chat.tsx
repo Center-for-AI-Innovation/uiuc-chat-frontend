@@ -1,14 +1,5 @@
 // src/components/Chat/Chat.tsx
-import {
-  IconArrowRight,
-  IconExternalLink,
-  IconAlertTriangle,
-  IconArrowLeft,
-  IconLock,
-  IconBrain,
-  IconCreditCard,
-  IconAlertCircle,
-} from '@tabler/icons-react'
+import { IconArrowRight, IconAlertCircle } from '@tabler/icons-react'
 import {
   type MutableRefObject,
   memo,
@@ -21,12 +12,10 @@ import {
 import { Button, Text } from '@mantine/core'
 import { useTranslation } from 'next-i18next'
 
-import { getEndpoint } from '@/utils/app/api'
 import { saveConversation, saveConversations } from '@/utils/app/conversation'
 import { throttle } from '@/utils/data/throttle'
 
 import {
-  type ContextWithMetadata,
   type ChatBody,
   type Conversation,
   type Message,
@@ -51,19 +40,13 @@ interface Props {
 }
 
 import { useRouter } from 'next/router'
-// import CustomBanner from '../UIUC-Components/CustomBanner'
-import { fetchContexts } from '~/pages/api/getContexts'
-import { fetchMQRContexts } from '~/pages/api/getContextsMQR'
-
 import { useUser } from '@clerk/nextjs'
 import { extractEmailsFromClerk } from '../UIUC-Components/clerkHelpers'
-import { type OpenAIModelID, OpenAIModels } from '~/types/openai'
 import ChatNavbar from '../UIUC-Components/navbars/ChatNavbar'
 // import { MainPageBackground } from '../UIUC-Components/MainPageBackground'
 import { notifications } from '@mantine/notifications'
 import { Montserrat } from 'next/font/google'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { fetchImageDescription } from '~/pages/api/UIUC-api/fetchImageDescription'
 import {
   State,
   constructChatBody,
@@ -75,7 +58,6 @@ import {
 import {
   handleFunctionCall,
   handleToolCall,
-  handleToolsServer,
   useFetchAllWorkflows,
 } from '~/utils/functionCalling/handleFunctionCalling'
 import { useFetchEnabledDocGroups } from '~/hooks/docGroupsQueries'
@@ -84,12 +66,7 @@ import Head from 'next/head'
 import ChatUI, { webLLMModels } from '~/utils/modelProviders/WebLLM'
 import { MLCEngine } from '@mlc-ai/web-llm'
 import * as webllm from '@mlc-ai/web-llm'
-import {
-  ModelRecord,
-  prebuiltAppConfig,
-} from '~/utils/modelProviders/ConfigWebLLM'
 import { WebllmModel } from '~/utils/modelProviders/WebLLM'
-import home from '~/pages/api/home'
 import { handleImageContent } from '~/utils/streamProcessing'
 
 const montserrat_med = Montserrat({

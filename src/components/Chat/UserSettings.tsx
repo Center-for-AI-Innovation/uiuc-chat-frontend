@@ -84,7 +84,7 @@ export const UserSettings = () => {
   useEffect(() => {
     if (showModelSettings) {
       open()
-      console.log('model cached', modelCached)
+      // console.log('model cached', modelCached)
       loadModelCache()
     } else {
       close()

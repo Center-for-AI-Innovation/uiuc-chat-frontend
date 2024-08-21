@@ -5,7 +5,6 @@ import { useCreateReducer } from '@/hooks/useCreateReducer'
 
 import { savePrompts } from '@/utils/app/prompts'
 
-import { OpenAIModels } from '@/types/openai'
 import { Prompt } from '@/types/prompt'
 
 import HomeContext from '~/pages/api/home/home.context'
@@ -19,6 +18,7 @@ import PromptbarContext from './PromptBar.context'
 import { PromptbarInitialState, initialState } from './Promptbar.state'
 
 import { v4 as uuidv4 } from 'uuid'
+import { OpenAIModels } from '~/utils/modelProviders/openai'
 
 const Promptbar = () => {
   const { t } = useTranslation('promptbar')

@@ -3,7 +3,6 @@ import {
   IconCircleCheck,
   IconDownload,
   IconExternalLink,
-  IconCircleDashed,
   IconSparkles,
   IconAlertTriangleFilled,
 } from '@tabler/icons-react'
@@ -11,46 +10,25 @@ import { forwardRef, useContext, useEffect, useState } from 'react'
 import { useMediaQuery } from '@mantine/hooks'
 import HomeContext from '~/pages/api/home/home.context'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { Group, Input, Select, Title, Text } from '@mantine/core'
+import { Group, Select, Title, Text } from '@mantine/core'
 import Link from 'next/link'
 import React from 'react'
-import {
-  OpenAIModel,
-  OpenAIModels,
-  preferredModelIds,
-  selectBestModel,
-} from '~/types/openai'
-import ChatUI, {
-  webLLMModels,
-  WebLLMLoadingState,
-} from '~/utils/modelProviders/WebLLM'
+import { OpenAIModel } from '~/utils/modelProviders/openai'
+import ChatUI, { webLLMModels } from '~/utils/modelProviders/WebLLM'
 import { modelCached } from './UserSettings'
 import Image from 'next/image'
-import { LLMProvider, ProviderNames } from '~/types/LLMProvider'
+import {
+  LLMProvider,
+  ProviderNames,
+  selectBestModel,
+} from '~/types/LLMProvider'
 import { SelectItemProps } from '@mantine/core'
 import {
   recommendedModelIds,
   warningLargeModelIds,
 } from '~/utils/modelProviders/ConfigWebLLM'
 import { LoadingSpinner } from '../UIUC-Components/LoadingSpinner'
-import chat from '~/pages/api/chat-api/chat'
 
-const ValueComponent = ({
-  value,
-  label,
-  modelType,
-}: SelectItemProps & { modelType: string }) => (
-  <div style={{ display: 'flex', alignItems: 'center' }}>
-    <Image
-      src={getModelLogo(modelType)}
-      alt={`${modelType} logo`}
-      width={20}
-      height={20}
-      style={{ marginRight: '8px' }}
-    />
-    <span>{label}</span>
-  </div>
-)
 interface ModelDropdownProps {
   title: string
   value: string | undefined

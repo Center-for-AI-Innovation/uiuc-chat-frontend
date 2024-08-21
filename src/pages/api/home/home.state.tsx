@@ -1,14 +1,10 @@
 import { Action, Conversation, Message, UIUCTool } from '@/types/chat'
 import { ErrorMessage } from '@/types/error'
 import { FolderInterface } from '@/types/folder'
-import { OpenAIModel, OpenAIModelID } from '@/types/openai'
+import { OpenAIModelID } from '~/utils/modelProviders/openai'
 import { PluginKey } from '@/types/plugin'
 import { Prompt } from '@/types/prompt'
-import {
-  LLMProvider,
-  SupportedModels,
-  AllLLMProviders,
-} from '~/types/LLMProvider'
+import { AnySupportedModel, AllLLMProviders } from '~/types/LLMProvider'
 
 export interface HomeInitialState {
   apiKey: string
@@ -17,9 +13,8 @@ export interface HomeInitialState {
   lightMode: 'light' | 'dark'
   messageIsStreaming: boolean
   modelError: ErrorMessage | null
-  // models: SupportedModelsObj
   llmProviders: AllLLMProviders
-  selectedModel: OpenAIModel | null
+  selectedModel: AnySupportedModel | null
   folders: FolderInterface[]
   conversations: Conversation[]
   selectedConversation: Conversation | undefined
@@ -38,13 +33,14 @@ export interface HomeInitialState {
   showModelSettings: boolean
   isImg2TextLoading: boolean
   isRouting: boolean | undefined
-  // routingResponse: RoutingResponse[] | undefined
-  // isPestDetectionLoading: boolean | undefined
   isRunningTool: boolean | undefined
   isRetrievalLoading: boolean | undefined
   documentGroups: Action[]
   tools: UIUCTool[]
-  webLLMModelIdLoading: { id: string | undefined, isLoading: boolean | undefined }
+  webLLMModelIdLoading: {
+    id: string | undefined
+    isLoading: boolean | undefined
+  }
 }
 
 export const initialState: HomeInitialState = {
@@ -54,7 +50,6 @@ export const initialState: HomeInitialState = {
   lightMode: 'dark',
   messageIsStreaming: false,
   modelError: null,
-  // models: {},
   llmProviders: {} as AllLLMProviders,
   selectedModel: null,
   folders: [],
@@ -74,7 +69,6 @@ export const initialState: HomeInitialState = {
   cooldown: 0,
   showModelSettings: false,
   isRouting: undefined,
-  // routingResponse: undefined,
   isRunningTool: undefined,
   isRetrievalLoading: undefined,
   isImg2TextLoading: false,

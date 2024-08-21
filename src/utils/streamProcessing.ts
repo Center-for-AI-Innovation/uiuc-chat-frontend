@@ -9,7 +9,6 @@ import {
 import { CourseMetadata } from '~/types/courseMetadata'
 import { decrypt } from './crypto'
 import { OpenAIError } from './server'
-import { OpenAIModelID } from '~/types/openai'
 import { NextRequest, NextResponse } from 'next/server'
 import { replaceCitationLinks } from './citations'
 import { fetchImageDescription } from '~/pages/api/UIUC-api/fetchImageDescription'
@@ -19,13 +18,14 @@ import {
   AllLLMProviders,
   AllSupportedModels,
   GenericSupportedModel,
-  SupportedModels,
+  AnySupportedModel,
   VisionCapableModels,
 } from '~/types/LLMProvider'
 import fetchMQRContexts from '~/pages/api/getContextsMQR'
 import fetchContexts from '~/pages/api/getContexts'
 import { OllamaModelIDs } from './modelProviders/ollama'
 import { webLLMModels } from './modelProviders/WebLLM'
+import { OpenAIModelID } from './modelProviders/openai'
 
 export const config = {
   runtime: 'edge',
@@ -332,11 +332,36 @@ export async function determineAndValidateModel(
   modelId: string,
   projectName: string,
 ): Promise<GenericSupportedModel> {
-  const availableModels = await fetchAvailableModels(
-    keyToUse,
-    modelId,
-    projectName,
-  )
+  // const availableModels = await fetchAvailableModels(
+  //   keyToUse,
+  //   projectName,
+  // )
+  const baseUrl = getBaseUrl()
+  console.log('baseUrl:', baseUrl)
+
+  // TODO refactor into a react query hook.
+  const response = await fetch(baseUrl + '/api/models', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ openAIApiKey: keyToUse, projectName }),
+  })
+
+  if (!response.ok) {
+    throw new OpenAIError(
+      `Failed to fetch models: ${response.statusText}`,
+      'api_error',
+      'key',
+      response.status.toString(),
+    )
+  }
+
+  const modelsWithProviders = (await response.json()) as AllLLMProviders
+  const availableModels = Object.values(modelsWithProviders)
+    .flatMap((provider) => provider?.models || [])
+    .filter((model) => model.enabled)
+
   // Check if availableModels doesn't contain modelId then return error otherwise Return model to use
   if (availableModels.find((model) => model.id === modelId)) {
     return availableModels.find(
@@ -344,11 +369,6 @@ export async function determineAndValidateModel(
     ) as GenericSupportedModel
   } else {
     // ❌ Model unavailable, tell them the available ones
-
-    // Filter out WebLLM models, those are
-    // const apiSupportedModels = Array.from(availableModels).filter(
-    //   (model) => !webLLMModels.some((webLLMModel) => webLLMModel.id === model.id),
-    // )
     throw new Error(
       `The requested model '${modelId}' is not available in this project. It has likely been restricted by the project's admins. You can enable this model on the admin page here: https://uiuc.chat/${projectName}/materials. These models are available to use: ${Array.from(
         availableModels,
@@ -361,50 +381,6 @@ export async function determineAndValidateModel(
         .map((model) => model.id)
         .join(', ')}`,
     )
-  }
-}
-
-/**
- * Calls the models API to validate if the provided model is available for the given key.
- * @param {string} apiKey - The API key to validate.
- * @param {string} modelId - The model identifier to check.
- * @returns {Promise<boolean>} A promise that resolves to a boolean indicating if the model is available.
- */
-export async function fetchAvailableModels(
-  apiKey: string | undefined,
-  modelId: string,
-  projectName: string,
-): Promise<SupportedModels> {
-  // TODO: actually call the chat endpoint to see if models are working. Not /models
-  try {
-    const baseUrl = getBaseUrl()
-    console.log('baseUrl:', baseUrl)
-    const response = await fetch(baseUrl + '/api/models', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ openAIApiKey: apiKey, projectName }),
-    })
-
-    if (!response.ok) {
-      throw new OpenAIError(
-        `Failed to fetch models: ${response.statusText}`,
-        'api_error',
-        'key',
-        response.status.toString(),
-      )
-    }
-
-    const modelsWithProviders = (await response.json()) as AllLLMProviders
-    const availableModels = Object.values(modelsWithProviders)
-      .flatMap((provider) => provider?.models || [])
-      .filter((model) => model.enabled)
-    console.log('AVAILABLE MODELS: ', availableModels)
-    return availableModels
-  } catch (error) {
-    console.error('Error validating model with key:', error)
-    throw error
   }
 }
 

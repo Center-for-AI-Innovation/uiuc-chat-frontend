@@ -24,7 +24,7 @@ import {
   IconLock,
   IconTrash,
 } from '@tabler/icons-react'
-import { OpenAIModel } from '@/types/openai'
+import { OpenAIModel } from '~/utils/modelProviders/openai'
 import {
   CourseMetadataOptionalForUpsert,
   type CourseMetadata,

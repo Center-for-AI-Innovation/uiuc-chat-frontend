@@ -1,5 +1,5 @@
 import { Message, type OpenAIChatMessage } from '@/types/chat'
-import { type OpenAIModel } from '@/types/openai'
+import { type OpenAIModel } from '~/utils/modelProviders/openai'
 
 import {
   AZURE_DEPLOYMENT_ID,

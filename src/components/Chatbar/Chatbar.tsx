@@ -13,7 +13,7 @@ import { exportData, importData } from '@/utils/app/importExport'
 
 import { Conversation } from '@/types/chat'
 import { LatestExportFormat, SupportedExportFormats } from '@/types/export'
-import { OpenAIModels } from '@/types/openai'
+import { OpenAIModels } from '~/utils/modelProviders/openai'
 import { PluginKey } from '@/types/plugin'
 
 import HomeContext from '~/pages/api/home/home.context'

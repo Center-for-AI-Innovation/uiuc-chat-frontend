@@ -40,7 +40,6 @@ import { CSSProperties } from 'react'
 
 import { fetchPresignedUrl, uploadToS3 } from 'src/utils/apiUtils'
 import { ImagePreview } from './ImagePreview'
-import { OpenAIModelID } from '~/types/openai'
 import { montserrat_heading } from 'fonts'
 import { useMediaQuery } from '@mantine/hooks'
 import ChatUI, {
@@ -48,6 +47,7 @@ import ChatUI, {
   webLLMModels,
 } from '~/utils/modelProviders/WebLLM'
 import { VisionCapableModels } from '~/types/LLMProvider'
+import { OpenAIModelID } from '~/utils/modelProviders/openai'
 
 const montserrat_med = Montserrat({
   weight: '500',

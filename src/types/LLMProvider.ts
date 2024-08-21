@@ -1,8 +1,13 @@
 import { OllamaModel, OllamaModels } from '~/utils/modelProviders/ollama'
-import { OpenAIModel, OpenAIModelID, OpenAIModels } from './openai'
 import { WebllmModel, webLLMModels } from '~/utils/modelProviders/WebLLM'
+import {
+  OpenAIModel,
+  OpenAIModelID,
+  OpenAIModels,
+} from '~/utils/modelProviders/openai'
 import { AnthropicModel } from '~/utils/modelProviders/anthropic'
 import { AzureModel } from '~/utils/modelProviders/azure'
+import { Conversation } from './chat'
 
 export enum ProviderNames {
   Ollama = 'Ollama',
@@ -12,12 +17,12 @@ export enum ProviderNames {
   WebLLM = 'WebLLM',
 }
 
-export type SupportedModels =
-  | OllamaModel[]
-  | OpenAIModel[]
-  | WebllmModel[]
-  | AnthropicModel[]
-  | AzureModel[]
+export type AnySupportedModel =
+  | OllamaModel
+  | OpenAIModel
+  | WebllmModel
+  | AnthropicModel
+  | AzureModel
 
 // Add other vision capable models as needed
 export const VisionCapableModels: Set<OpenAIModelID> = new Set([
@@ -61,7 +66,7 @@ export interface BaseLLMProvider {
   enabled: boolean
   baseUrl?: string
   apiKey?: string
-  models?: SupportedModels
+  models?: AnySupportedModel[]
   error?: string
 }
 
@@ -96,4 +101,51 @@ export type LLMProvider =
 
 export type AllLLMProviders = {
   [P in ProviderNames]?: LLMProvider & { provider: P }
+}
+
+// Ordered list of preferred model IDs -- the first available model will be used as default
+export const preferredModelIds = [
+  OpenAIModelID.GPT_4o_mini,
+  OpenAIModelID.GPT_4o,
+  OpenAIModelID.GPT_4_Turbo,
+  OpenAIModelID.GPT_4,
+  OpenAIModelID.GPT_3_5,
+]
+
+export const selectBestModel = (
+  allLLMProviders: AllLLMProviders,
+  convo?: Conversation,
+): GenericSupportedModel => {
+  const allModels = Object.values(allLLMProviders)
+    .flatMap((provider) => provider.models || [])
+    .filter((model) => model.enabled)
+
+  // First, try to use the model from the conversation if it exists and is valid
+  // if (
+  //   convo &&
+  //   convo.model &&
+  //   typeof convo.model === 'object' &&
+  //   'id' in convo.model
+  // ) {
+  //   const conversationModel = allModels.find((m) => m.id === convo.model.id)
+  //   if (conversationModel) {
+  //     return conversationModel
+  //   }
+  // }
+
+  // If the conversation model is not available or invalid, use the preferredModelIds
+  for (const preferredId of preferredModelIds) {
+    const model = allModels.find((m) => m.id === preferredId)
+    if (model) {
+      return model
+    }
+  }
+
+  // If no preferred models are available, fallback to Llama 3.1 70b
+  return {
+    id: 'llama3.1:70b',
+    name: 'Llama 3.1 70b',
+    tokenLimit: 128000,
+    enabled: true,
+  }
 }

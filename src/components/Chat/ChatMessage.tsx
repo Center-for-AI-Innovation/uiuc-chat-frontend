@@ -1,38 +1,18 @@
 // ChatMessage.tsx
-import {
-  Text,
-  Group,
-  createStyles,
-  Tooltip,
-  Paper,
-  Collapse,
-  Accordion,
-  Popover,
-  Button,
-  Badge,
-} from '@mantine/core'
+import { Text, createStyles, Badge } from '@mantine/core'
 import {
   IconCheck,
-  IconChevronDown,
   IconCopy,
   IconEdit,
   IconRobot,
   IconTrash,
   IconUser,
 } from '@tabler/icons-react'
-import {
-  FC,
-  Fragment,
-  memo,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from 'react'
+import { FC, memo, useContext, useEffect, useRef, useState } from 'react'
 
 import { useTranslation } from 'next-i18next'
 import { updateConversation } from '@/utils/app/conversation'
-import { Content, ContextWithMetadata, Message } from '@/types/chat'
+import { ContextWithMetadata, Message } from '@/types/chat'
 import HomeContext from '~/pages/api/home/home.context'
 import { CodeBlock } from '../Markdown/CodeBlock'
 import { MemoizedReactMarkdown } from '../Markdown/MemoizedReactMarkdown'
@@ -41,7 +21,6 @@ import rehypeMathjax from 'rehype-mathjax'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 
-import { ContextCards } from '~/components/UIUC-Components/ContextCards'
 import { ImagePreview } from './ImagePreview'
 import { LoadingSpinner } from '../UIUC-Components/LoadingSpinner'
 import { fetchPresignedUrl } from '~/utils/apiUtils'
