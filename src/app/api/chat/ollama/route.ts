@@ -25,13 +25,9 @@ export async function POST(req: Request) {
     // baseURL: `${ollamaProvider.baseUrl}/api`, // TODO use user-defiend base URL...
   })
 
-  // const new_messages = convertConversatonToVercelAISDKv3(conversation)
-  // console.log("conversation: ", conversation)
-  // console.log("new_messages below here")
-  // new_messages.forEach((message, index) => {
-  //   console.log(`Message ${index + 1}:`, message)
-  // })
-  // console.log("new_messages above here ^^^^^^^")
+  if (conversation.messages.length === 0) {
+    throw new Error('Conversation messages array is empty')
+  }
 
   const result = await streamText({
     model: ollama('llama3.1:70b'),

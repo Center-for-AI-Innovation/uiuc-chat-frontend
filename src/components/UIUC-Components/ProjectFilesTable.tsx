@@ -586,7 +586,9 @@ export function ProjectFilesTable({
                     }
                     searchable={!isLoadingDocumentGroups}
                     nothingFound={
-                      isLoadingDocumentGroups ? 'Loading...' : 'No Options'
+                      isLoadingDocumentGroups
+                        ? 'Loading...'
+                        : 'No groups... Start typing to create a new one ✨'
                     }
                     creatable
                     getCreateLabel={(query) => `+ Create "${query}"`}
@@ -1020,7 +1022,9 @@ export function ProjectFilesTable({
                         }
                         searchable={!isLoadingDocumentGroups}
                         nothingFound={
-                          isLoadingDocumentGroups ? 'Loading...' : 'No Options'
+                          isLoadingDocumentGroups
+                            ? 'Loading...'
+                            : 'No groups... Start typing to create a new one ✨'
                         }
                         creatable
                         getCreateLabel={(query) => `+ Create "${query}"`}

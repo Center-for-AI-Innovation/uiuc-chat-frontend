@@ -40,10 +40,14 @@ import { CSSProperties } from 'react'
 
 import { fetchPresignedUrl, uploadToS3 } from 'src/utils/apiUtils'
 import { ImagePreview } from './ImagePreview'
-import { OpenAIModelID, VisionCapableModels } from '~/types/openai'
+import { OpenAIModelID } from '~/types/openai'
 import { montserrat_heading } from 'fonts'
 import { useMediaQuery } from '@mantine/hooks'
-import ChatUI, { WebllmModel, webLLMModels } from '~/utils/modelProviders/WebLLM'
+import ChatUI, {
+  WebllmModel,
+  webLLMModels,
+} from '~/utils/modelProviders/WebLLM'
+import { VisionCapableModels } from '~/types/LLMProvider'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -184,10 +188,10 @@ export const ChatInput = ({
           imageUrls.length > 0
             ? imageUrls
             : await Promise.all(
-              imageFiles.map((file) =>
-                uploadImageAndGetUrl(file, courseName),
-              ),
-            )
+                imageFiles.map((file) =>
+                  uploadImageAndGetUrl(file, courseName),
+                ),
+              )
 
         // Construct image content for the message
         imageContent = imageUrlsToUse
@@ -595,8 +599,9 @@ export const ChatInput = ({
     if (textareaRef && textareaRef.current) {
       textareaRef.current.style.height = 'inherit'
       textareaRef.current.style.height = `${textareaRef.current?.scrollHeight}px`
-      textareaRef.current.style.overflow = `${textareaRef?.current?.scrollHeight > 400 ? 'auto' : 'hidden'
-        }`
+      textareaRef.current.style.overflow = `${
+        textareaRef?.current?.scrollHeight > 400 ? 'auto' : 'hidden'
+      }`
     }
   }, [content])
 
@@ -824,11 +829,12 @@ export const ChatInput = ({
             {/* Button 3: main input text area  */}
             <div
               className={`
-                ${VisionCapableModels.has(
-                selectedConversation?.model.id as OpenAIModelID,
-              )
-                  ? 'pl-8'
-                  : 'pl-1'
+                ${
+                  VisionCapableModels.has(
+                    selectedConversation?.model.id as OpenAIModelID,
+                  )
+                    ? 'pl-8'
+                    : 'pl-1'
                 }
                   `}
             >
@@ -906,11 +912,13 @@ export const ChatInput = ({
             tt={'capitalize'}
           >
             {selectedConversation?.model.name}
-            {(selectedConversation?.model && webLLMModels.some((m) => m.name === selectedConversation.model.name)) &&
+            {selectedConversation?.model &&
+              webLLMModels.some(
+                (m) => m.name === selectedConversation.model.name,
+              ) &&
               chat_ui?.isModelLoading() &&
               '  Please wait while the model is loading...'}
             {/* webLLMModels.some((m) => m.name === model.name) */}
-
           </Text>
         </div>
       </div>

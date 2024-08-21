@@ -36,6 +36,28 @@ export function useGetDocumentGroups(course_name: string) {
   })
 }
 
+async function fetchEnabledDocGroups(
+  course_name: string,
+): Promise<DocumentGroup[]> {
+  const response = await fetch('/api/documentGroups', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      action: 'fetchEnabledDocGroups',
+      courseName: course_name,
+    }),
+  })
+  if (!response.ok) {
+    throw new Error('Network response was not ok')
+  }
+  const data = await response.json()
+  const docGroups = data.documents
+
+  return docGroups as DocumentGroup[]
+}
+
 export function useFetchEnabledDocGroups(course_name: string) {
   // USAGE:
   // const {
@@ -47,27 +69,7 @@ export function useFetchEnabledDocGroups(course_name: string) {
 
   return useQuery({
     queryKey: ['documentGroups', course_name],
-    queryFn: async () => {
-      // try {
-      const response = await fetch('/api/documentGroups', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'fetchEnabledDocGroups',
-          courseName: course_name,
-        }),
-      })
-      // console.log('response: ', response)
-      if (!response.ok) {
-        throw new Error('Network response was not ok')
-      }
-      const data = await response.json()
-      const docGroups = data.documents
-
-      return docGroups as DocumentGroup[]
-    },
+    queryFn: () => fetchEnabledDocGroups(course_name),
   })
 }
 

@@ -1,4 +1,8 @@
-import { LLMProvider, ProviderNames } from '~/types/LLMProvider'
+import {
+  AllSupportedModels,
+  LLMProvider,
+  ProviderNames,
+} from '~/types/LLMProvider'
 import { getOllamaModels } from '~/utils/modelProviders/ollama'
 import { getOpenAIModels } from '~/utils/modelProviders/openai'
 import { getAzureModels } from '~/utils/modelProviders/azure'

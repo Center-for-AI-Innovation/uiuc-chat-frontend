@@ -64,7 +64,6 @@ export async function replaceCitationLinks(
       }
     }
   }
-  console.log('Chunk after replacement: ', content)
   return content
 }
 

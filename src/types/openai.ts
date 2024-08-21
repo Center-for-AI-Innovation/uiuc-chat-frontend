@@ -43,7 +43,6 @@ export const selectBestModel = (
   ) {
     const conversationModel = allModels.find((m) => m.id === convo.model.id)
     if (conversationModel) {
-      console.log('returning Conversation Model: ', conversationModel)
       return conversationModel
     }
   }
@@ -136,10 +135,3 @@ export const OpenAIModels: Record<OpenAIModelID, OpenAIModel> = {
     enabled: false,
   },
 }
-
-export const VisionCapableModels: Set<OpenAIModelID> = new Set([
-  OpenAIModelID.GPT_4_Turbo, // Add other vision capable models here as needed
-  OpenAIModelID.GPT_4_AZURE_04_09,
-  OpenAIModelID.GPT_4o,
-  OpenAIModelID.GPT_4o_mini,
-])

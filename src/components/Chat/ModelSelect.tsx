@@ -454,22 +454,15 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
     const [loadingModelId, setLoadingModelId] = useState<string | null>(null)
 
     const handleModelClick = (modelId: string) => {
-      console.debug('handleModelClick clicked:', modelId)
-      console.debug('handleModelClick avail models: ', llmProviders)
-
-      const allModels = [
-        ...(llmProviders.Ollama?.models || []),
-        ...(llmProviders.OpenAI?.models || []),
-        ...(llmProviders.WebLLM?.models || []),
-        // ...(llmProviders.Anthropic?.models || [])
-      ].filter((model) => model.enabled)
+      // Get list of models from all providers
+      const allModels = Object.values(llmProviders)
+        .flatMap((provider) => provider?.models || [])
+        .filter((model) => model.enabled)
 
       const model =
         Object.keys(allModels).reduce((foundModel: any, key: any) => {
-          // console.log('key:', key, 'models[key]:', models[key])
           return foundModel || allModels!.find((model) => model.id === modelId)
         }, undefined) || defaultModel
-      console.debug('handleModelClick SETTING IT TO: ', model)
 
       selectedConversation &&
         handleUpdateConversation(selectedConversation, {

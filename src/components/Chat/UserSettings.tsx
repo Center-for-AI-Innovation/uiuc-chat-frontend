@@ -68,13 +68,6 @@ export const UserSettings = () => {
   const [opened, { open, close }] = useDisclosure(false)
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const loadModelCache = async () => {
-    console.log('start loadingmodelcache')
-    const model = selectedConversation?.model
-    // if (
-    //   model &&
-    //   'name' in model &&
-    //   webLLMModels.some((m) => m.name === model.name)
-    // ) {
     for (const model of webLLMModels) {
       const theCachedModel = await webllm.hasModelInCache(model.name, appConfig)
       if (theCachedModel) {
@@ -83,15 +76,11 @@ export const UserSettings = () => {
         ) {
           modelCached.push(model)
         }
-        // console.log('model is cached:', model.name)
       }
       // console.log('hasModelInCache: ', modelCached)
     }
-    // }
   }
-  // if (selectedConversation && webLLMModels.some(m => m.name === selectedConversation.model.name)) {
-  //   loadModelCache();
-  // }
+
   useEffect(() => {
     if (showModelSettings) {
       open()

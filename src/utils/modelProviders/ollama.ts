@@ -8,7 +8,20 @@ export interface OllamaModel {
   enabled: boolean
 }
 
-const ollamaNames = new Map([['llama3.1:70b', 'Llama 3.1 70b']])
+export enum OllamaModelIDs {
+  // Use "official" IDs from the Ollama API. Human-readable names in 'OllamaModels' below.
+  LLAMA31_70b = 'llama3.1:70b',
+}
+
+export const OllamaModels: Record<OllamaModelIDs, OllamaModel> = {
+  [OllamaModelIDs.LLAMA31_70b]: {
+    id: OllamaModelIDs.LLAMA31_70b,
+    name: 'Llama 3.1 70b',
+    parameterSize: '70b',
+    tokenLimit: 128000,
+    enabled: true,
+  },
+}
 
 export const getOllamaModels = async (
   ollamaProvider: LLMProvider,
@@ -27,18 +40,13 @@ export const getOllamaModels = async (
     }
     const data = await response.json()
     const ollamaModels: OllamaModel[] = data.models
-      // @ts-ignore - todo fix implicit any type
-      .filter((model) => model.name.includes('llama3.1:70b'))
+      .filter((model: any) =>
+        Object.values(OllamaModelIDs).includes(model.model),
+      )
       .map((model: any): OllamaModel => {
-        const newName = ollamaNames.get(model.name)
-        return {
-          id: model.name,
-          name: newName ? newName : model.name,
-          parameterSize: model.details.parameter_size,
-          tokenLimit: 128000,
-          enabled: true,
-        }
+        return OllamaModels[model.model as OllamaModelIDs]
       })
+
     ollamaProvider.models = ollamaModels
     return ollamaProvider
   } catch (error: any) {
@@ -46,15 +54,3 @@ export const getOllamaModels = async (
     return ollamaProvider
   }
 }
-
-// export const getOllamaModels = async (
-//   ollamaProvider: LLMProvider,
-// ): Promise<LLMProvider> => {
-
-//   const response = await fetch(`/api/chat/ollama?ollamaProvider=${encodeURIComponent(JSON.stringify(ollamaProvider))}`)
-//   if (!response.ok) {
-//     ollamaProvider.error = `HTTP error! status: ${response.status}, message: ${response.statusText}`
-//     return ollamaProvider
-//   }
-//   return await response.json()
-// }

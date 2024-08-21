@@ -9,25 +9,23 @@ import { UIUCTool } from '~/types/chat'
 import type { ToolOutput } from '~/types/chat'
 import posthog from 'posthog-js'
 
-export default async function handleTools(
+export async function handleFunctionCall(
   message: Message,
   availableTools: UIUCTool[],
   imageUrls: string[],
   imageDescription: string,
   selectedConversation: Conversation,
-  currentMessageIndex: number,
   openaiKey: string,
-  projectName: string,
-  homeDispatch: Dispatch<ActionType<HomeInitialState>>,
-) {
+  base_url?: string,
+): Promise<UIUCTool[]> {
   try {
-    homeDispatch({ field: 'isRouting', value: true })
-
     // Convert UIUCTool to OpenAICompatibleTool
     const openAITools = getOpenAIToolFromUIUCTool(availableTools)
-    console.log('OpenAI compatible tools (handle tools): ', openAITools)
-
-    const response = await fetch('/api/chat/openaiFunctionCall', {
+    console.log('OpenAI compatible tools (handle tools): ', openaiKey)
+    const url = base_url
+      ? `${base_url}/api/chat/openaiFunctionCall`
+      : '/api/chat/openaiFunctionCall'
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -40,18 +38,24 @@ export default async function handleTools(
         openaiKey: openaiKey,
       }),
     })
+
     if (!response.ok) {
-      console.error(
-        'in HandleTools -- Error calling openaiFunctionCall: ',
-        response,
-      )
-      homeDispatch({ field: 'isRouting', value: false })
-      return
+      console.error('Error calling openaiFunctionCall: ', response)
+      return []
     }
+    const openaiFunctionCallResponse = await response.json()
+    console.log('OpenAI function call response: ', openaiFunctionCallResponse)
+    if (openaiFunctionCallResponse.message === 'No tools invoked by OpenAI') {
+      console.error('No tools invoked by OpenAI')
+      return []
+    }
+
     const openaiResponse: ChatCompletionMessageToolCall[] =
-      await response.json()
+      openaiFunctionCallResponse
+
     console.log('OpenAI tools to run: ', openaiResponse)
-    // map tool into UIUCTool, parse arguments
+
+    // Map tool into UIUCTool, parse arguments
     const uiucToolsToRun = openaiResponse.map((openaiTool) => {
       const uiucTool = availableTools.find(
         (availableTool) => availableTool.name === openaiTool.function.name,
@@ -61,74 +65,130 @@ export default async function handleTools(
       )
       return uiucTool
     })
+    message.tools = [...uiucToolsToRun]
+    selectedConversation.messages[selectedConversation.messages.length - 1] =
+      message
     console.log('UIUC tools to run: ', uiucToolsToRun)
 
-    // Update conversation with tools & arguments (for fast UI), then we'll actually call the tools below
-    homeDispatch({ field: 'isRouting', value: false })
-    message.tools = [...uiucToolsToRun]
-    selectedConversation.messages[currentMessageIndex] = message
-    homeDispatch({
-      field: 'selectedConversation',
-      value: selectedConversation,
-    })
+    return uiucToolsToRun
+  } catch (error) {
+    console.error(
+      'Error calling openaiFunctionCall from handleFunctionCall: ',
+      error,
+    )
+    return []
+  }
+}
 
+export async function handleToolCall(
+  uiucToolsToRun: UIUCTool[],
+  selectedConversation: Conversation,
+  projectName: string,
+  base_url?: string,
+) {
+  try {
     if (uiucToolsToRun.length > 0) {
       // Tool calling in Parallel here!!
+      console.log('Running tools in parallel')
       const toolResultsPromises = uiucToolsToRun.map(async (tool) => {
         try {
-          const toolOutput = await callN8nFunction(tool, projectName, undefined)
-          tool.output = toolOutput
-        } catch (error: unknown) {
-          console.error(
-            `Error running tool: ${error instanceof Error ? error.message : error}`,
+          const toolOutput = await callN8nFunction(
+            tool,
+            projectName,
+            undefined,
+            base_url,
           )
-          tool.error = `Error running tool: ${error instanceof Error ? error.message : error}`
+          // Add success output: update message with tool output, but don't add another tool.
+          // ✅ TOOL SUCCEEDED
+          selectedConversation.messages[
+            selectedConversation.messages.length - 1
+          ]!.tools!.find((t) => t.readableName === tool.readableName)!.output =
+            toolOutput
+        } catch (error: unknown) {
+          // ❌ TOOL ERRORED
+          console.error(`Error running tool: ${error}`)
+          // Add error output
+          selectedConversation.messages[
+            selectedConversation.messages.length - 1
+          ]!.tools!.find((t) => t.readableName === tool.readableName)!.error =
+            `Error running tool: ${error}`
         }
-        // update message with tool output, but don't add another tool.
-        selectedConversation.messages[currentMessageIndex]!.tools!.find(
-          (t) => t.readableName === tool.readableName,
-        )!.output = tool.output
-
-        selectedConversation.messages[currentMessageIndex] = message
-        homeDispatch({
-          field: 'selectedConversation',
-          value: selectedConversation,
-        })
       })
       await Promise.all(toolResultsPromises)
-
-      return null
     }
+    console.log(
+      'tool outputs:',
+      selectedConversation.messages[selectedConversation.messages.length - 1]!
+        .tools,
+    )
+    // return selectedConversation
   } catch (error) {
-    console.error('Error calling openaiFunctionCall: ', error)
+    console.error('Error running tools from handleToolCall: ', error)
+    throw error
   }
+}
+
+export async function handleToolsServer(
+  message: Message,
+  availableTools: UIUCTool[],
+  imageUrls: string[],
+  imageDescription: string,
+  selectedConversation: Conversation,
+  openaiKey: string,
+  projectName: string,
+  base_url?: string,
+): Promise<Conversation> {
+  try {
+    const uiucToolsToRun = await handleFunctionCall(
+      message,
+      availableTools,
+      imageUrls,
+      imageDescription,
+      selectedConversation,
+      openaiKey,
+      base_url,
+    )
+
+    if (uiucToolsToRun.length > 0) {
+      await handleToolCall(
+        uiucToolsToRun,
+        selectedConversation,
+        projectName,
+        base_url,
+      )
+    }
+
+    return selectedConversation
+  } catch (error) {
+    console.error('Error in handleToolsServer: ', error)
+  }
+  return selectedConversation
 }
 
 const callN8nFunction = async (
   tool: UIUCTool,
   projectName: string,
   n8n_api_key: string | undefined,
+  base_url?: string,
 ): Promise<ToolOutput> => {
-  console.debug('Calling n8n function with data: ', tool)
-
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), 20000)
+  const timeoutId = setTimeout(() => controller.abort(), 30000)
 
   // get n8n api key per project
   if (!n8n_api_key) {
-    const response = await fetch(
-      `/api/UIUC-api/tools/getN8nKeyFromProject?course_name=${projectName}`,
-      {
-        method: 'GET',
-      },
-    )
+    const url = base_url
+      ? `${base_url}/api/UIUC-api/tools/getN8nKeyFromProject?course_name=${projectName}`
+      : `/api/UIUC-api/tools/getN8nKeyFromProject?course_name=${projectName}`
+
+    const response = await fetch(url, {
+      method: 'GET',
+    })
     if (!response.ok) {
       throw new Error(
         'Unable to fetch current N8N API Key; the network response was not ok.',
       )
     }
     n8n_api_key = await response.json()
-    console.debug('⚠️ API Key from getN8nAPIKey: ', n8n_api_key)
   }
 
   // Run tool
@@ -138,7 +198,6 @@ const callN8nFunction = async (
     data: tool.aiGeneratedArgumentValues,
   })
 
-  console.debug('Calling n8n function with body: ', body)
   const timeStart = Date.now()
   const response: Response = await fetch(
     `https://flask-production-751b.up.railway.app/run_flow`,
@@ -154,7 +213,7 @@ const callN8nFunction = async (
   ).catch((error) => {
     if (error.name === 'AbortError') {
       throw new Error(
-        'Request timed out after 15 seconds, try "Regenerate Response" button',
+        'Request timed out after 30 seconds, try "Regenerate Response" button',
       )
     }
     throw error
@@ -179,12 +238,10 @@ const callN8nFunction = async (
   console.debug('N8n results data: ', resultData)
   const finalNodeType = resultData.lastNodeExecuted
 
-  // Check for N8N tool error, like invalid auth
+  // If N8N tool error ❌
   if (resultData.runData[finalNodeType][0]['error']) {
-    console.error(
-      'N8N tool error: ',
-      resultData.runData[finalNodeType][0]['error'],
-    )
+    const formatted_err_message = `${resultData.runData[finalNodeType][0]['error']['message']}. ${resultData.runData[finalNodeType][0]['error']['description']}`
+    console.error('N8N tool error: ', formatted_err_message)
     const err = resultData.runData[finalNodeType][0]['error']
 
     posthog.capture('tool_error', {
@@ -195,12 +252,12 @@ const callN8nFunction = async (
       toolInputs: tool.inputParameters,
       toolError: err,
     })
-    throw new Error(err.message)
+    throw new Error(formatted_err_message)
   }
 
   // -- PARSE TOOL OUTPUT --
 
-  // ERROR
+  // ERROR ❌
   if (
     !resultData.runData[finalNodeType][0].data ||
     !resultData.runData[finalNodeType][0].data.main[0][0].json
@@ -354,9 +411,6 @@ export function getUIUCToolFromN8n(workflows: N8nWorkflow[]): UIUCTool[] {
       })
     }
 
-    console.log('Extracted workflow: ', workflow)
-    console.log('Extracted workflow.createdAt: ', workflow.createdAt)
-
     extractedObjects.push({
       id: workflow.id,
       name: workflow.name.replace(/[^a-zA-Z0-9_-]/g, '_'),
@@ -374,6 +428,48 @@ export function getUIUCToolFromN8n(workflows: N8nWorkflow[]): UIUCTool[] {
   return extractedObjects
 }
 
+export async function fetchTools(
+  course_name: string,
+  api_key: string,
+  limit: number,
+  pagination: string,
+  full_details: boolean,
+  base_url?: string,
+) {
+  if (isNaN(limit) || limit <= 0) {
+    limit = 10
+  }
+
+  if (!api_key) {
+    const response = await fetch(
+      `${base_url ? base_url : ''}/api/UIUC-api/tools/getN8nKeyFromProject?course_name=${course_name}`,
+      {
+        method: 'GET',
+      },
+    )
+    if (!response.ok) {
+      throw new Error('Network response was not ok')
+    }
+    api_key = await response.json()
+  }
+
+  const parsedPagination = pagination.toLowerCase() === 'true'
+
+  const response = await fetch(
+    `https://flask-production-751b.up.railway.app/getworkflows?api_key=${api_key}&limit=${limit}&pagination=${parsedPagination}`,
+  )
+  if (!response.ok) {
+    // return res.status(response.status).json({ error: response.statusText })
+    throw new Error(`Unable to fetch n8n tools: ${response.statusText}`)
+  }
+
+  const workflows = await response.json()
+  if (full_details) return workflows[0]
+
+  const uiucTools = getUIUCToolFromN8n(workflows[0])
+  return uiucTools
+}
+
 export const useFetchAllWorkflows = (
   course_name?: string,
   api_key?: string,
@@ -387,45 +483,7 @@ export const useFetchAllWorkflows = (
 
   return useQuery({
     queryKey: ['tools', api_key],
-    queryFn: async (): Promise<UIUCTool[]> => {
-      if (isNaN(limit) || limit <= 0) {
-        limit = 10
-      }
-
-      if (!api_key) {
-        const response = await fetch(
-          `/api/UIUC-api/tools/getN8nKeyFromProject?course_name=${course_name}`,
-          {
-            method: 'GET',
-          },
-        )
-        if (!response.ok) {
-          throw new Error('Network response was not ok')
-        }
-        api_key = await response.json()
-        console.log('⚠️ API Key from getN8nAPIKey: ', api_key)
-      }
-
-      const parsedPagination = pagination.toLowerCase() === 'true'
-
-      console.log('About to fetch workflows. Key:', api_key)
-
-      //! console.log("Railway url: ", process.env.RAILWAY_URL) // undefined !!!
-
-      const response = await fetch(
-        `https://flask-production-751b.up.railway.app/getworkflows?api_key=${api_key}&limit=${limit}&pagination=${parsedPagination}`,
-      )
-      if (!response.ok) {
-        // return res.status(response.status).json({ error: response.statusText })
-        throw new Error(`Unable to fetch n8n tools: ${response.statusText}`)
-      }
-
-      const workflows = await response.json()
-      if (full_details) return workflows[0]
-
-      const uiucTools = getUIUCToolFromN8n(workflows[0])
-      console.log('All uiuc tools: ', uiucTools)
-      return uiucTools
-    },
+    queryFn: async (): Promise<UIUCTool[]> =>
+      fetchTools(course_name!, api_key!, limit, pagination, full_details),
   })
 }

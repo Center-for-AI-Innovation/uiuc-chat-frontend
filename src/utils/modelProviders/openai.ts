@@ -39,7 +39,7 @@ export const getOpenAIModels = async (
     const response = await client.models.list()
 
     if (!response.data) {
-      openAIProvider.error = `Error fectching models from OpenAI, unexpected response format. Response: ${response}`
+      openAIProvider.error = `Error fetching models from OpenAI, unexpected response format. Response: ${response}`
     }
 
     const disabledModels = await getDisabledOpenAIModels({ projectName })
