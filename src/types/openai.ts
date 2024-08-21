@@ -35,17 +35,17 @@ export const selectBestModel = (
     .filter((model) => model.enabled)
 
   // First, try to use the model from the conversation if it exists and is valid
-  if (
-    convo &&
-    convo.model &&
-    typeof convo.model === 'object' &&
-    'id' in convo.model
-  ) {
-    const conversationModel = allModels.find((m) => m.id === convo.model.id)
-    if (conversationModel) {
-      return conversationModel
-    }
-  }
+  // if (
+  //   convo &&
+  //   convo.model &&
+  //   typeof convo.model === 'object' &&
+  //   'id' in convo.model
+  // ) {
+  //   const conversationModel = allModels.find((m) => m.id === convo.model.id)
+  //   if (conversationModel) {
+  //     return conversationModel
+  //   }
+  // }
 
   // If the conversation model is not available or invalid, use the preferredModelIds
   for (const preferredId of preferredModelIds) {
