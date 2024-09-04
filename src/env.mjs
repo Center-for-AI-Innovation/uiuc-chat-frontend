@@ -7,19 +7,18 @@ export const env = createEnv({
    * isn't built with invalid env vars.
    */
   server: {
-    NODE_ENV: z.enum(['development', 'test', 'production']),
-    SUPABASE_URL: z.string().url(),
-    SUPABASE_SECRET: z.string().min(1),
-    S3_BUCKET_NAME: z.string().min(1),
+    // NODE_ENV: z.enum(['development', 'test', 'production']),
+    // SUPABASE_URL: z.string().url(),
+    // SUPABASE_SECRET: z.string().min(1),
+    // S3_BUCKET_NAME: z.string().min(1),
     AWS_KEY: z.string().min(1),
     AWS_SECRET: z.string().min(1),
     CLERK_SECRET_KEY: z.string().min(1),
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
-    EDGE_CONFIG: z.string().min(1),
-    NEXT_PUBLIC_POSTHOG_KEY: z.string().min(1),
-    NEXT_PUBLIC_POSTHOG_HOST: z.string().min(1),
-    NEXT_PUBLIC_MAGIC_BELL_API: z.string().min(1),
-    OLLAMA_SERVER_URL: z.string().url(),
+    // NEXT_PUBLIC_POSTHOG_KEY: z.string().min(1),
+    // NEXT_PUBLIC_POSTHOG_HOST: z.string().min(1),
+    // NEXT_PUBLIC_MAGIC_BELL_API: z.string().min(1),
+    // OLLAMA_SERVER_URL: z.string().url(),
     // NEXTAUTH_SECRET:
     //   process.env.NODE_ENV === "production"
     //     ? z.string().min(1)
@@ -51,21 +50,18 @@ export const env = createEnv({
    */
 
   runtimeEnv: {
-    NODE_ENV: process.env.NODE_ENV,
-    SUPABASE_URL: process.env.SUPABASE_URL,
-    SUPABASE_SECRET: process.env.SUPABASE_SECRET,
-    S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
+    // NODE_ENV: process.env.NODE_ENV,
+    // SUPABASE_URL: process.env.SUPABASE_URL,
+    // SUPABASE_SECRET: process.env.SUPABASE_SECRET,
+    // S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
     AWS_KEY: process.env.AWS_KEY,
     AWS_SECRET: process.env.AWS_SECRET,
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
       process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
     CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
-    EDGE_CONFIG: process.env.EDGE_CONFIG,
-    NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
-    NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
-    NEXT_PUBLIC_MAGIC_BELL_API: process.env.NEXT_PUBLIC_MAGIC_BELL_API,
-    OLLAMA_SERVER_URL: process.env.OLLAMA_SERVER_URL,
+    // NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
+    // NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+    // NEXT_PUBLIC_MAGIC_BELL_API: process.env.NEXT_PUBLIC_MAGIC_BELL_API,
+    // OLLAMA_SERVER_URL: process.env.OLLAMA_SERVER_URL,
   },
-
-
 })

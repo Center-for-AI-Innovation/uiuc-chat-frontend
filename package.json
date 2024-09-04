@@ -5,6 +5,7 @@
   "scripts": {
     "build": "next build",
     "dev": "infisical run --env=dev -- next dev",
+    "bd": "infisical run --env=dev -- next build",
     "lint": "next lint",
     "start": "next start",
     "format": "prettier --check --ignore-path .gitignore .",
