@@ -189,10 +189,13 @@ export default async function chat(req: NextRequest): Promise<NextResponse> {
       getBaseUrl(),
     )
   } catch (error) {
-    console.error('Error fetching tools:', error)
-    return NextResponse.json({ error: 'Error fetching tools' }, { status: 500 })
+    console.error('Error fetching tools.', error)
+    availableTools = []
+    return NextResponse.json(
+      { error: `Error fetching tools. ${error}` },
+      { status: 500 },
+    )
   }
-  console.log('Available tools: ', availableTools)
 
   // Fetch document groups
   let doc_groups: string[] = []

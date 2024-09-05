@@ -440,16 +440,25 @@ export async function fetchTools(
   }
 
   if (!api_key || api_key === 'undefined') {
-    const response = await fetch(
-      `${base_url ? base_url : ''}/api/UIUC-api/tools/getN8nKeyFromProject?course_name=${course_name}`,
-      {
-        method: 'GET',
-      },
-    )
-    if (!response.ok) {
-      throw new Error('Network response was not ok')
+    try {
+      const response = await fetch(
+        `${base_url ? base_url : ''}/api/UIUC-api/tools/getN8nKeyFromProject?course_name=${course_name}`,
+        {
+          method: 'GET',
+        },
+      )
+      if (response.status === 404) {
+        console.debug("No N8N API key found for the Project, can't fetch tools")
+        return []
+      }
+      if (!response.ok) {
+        throw new Error("Failed to fetch Project's N8N API key")
+      }
+      api_key = await response.json()
+    } catch (error) {
+      console.error('Error fetching N8N API key:', error)
+      return []
     }
-    api_key = await response.json()
   }
 
   if (!api_key || api_key === 'undefined') {
