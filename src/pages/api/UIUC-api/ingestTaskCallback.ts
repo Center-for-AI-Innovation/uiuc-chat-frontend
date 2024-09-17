@@ -20,10 +20,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       data = req.body // If it's already an object, use it directly
     }
 
-    console.log('Received callback data:', data) // Log the received data for debugging
-    console.log('req.headers', req.headers)
+    // console.log('Received callback data:', data) // Log the received data for debugging
+    // console.log('req.headers', req.headers)
     data = data.data
-    console.log('data after doing data.data here:', data) // Log the received data for debugging
+    // console.log('data after doing data.data here:', data) // Log the received data for debugging
 
     // Data:  {
     //   success_ingest: 'courses/t/8885632f-b519-4610-b888-744aa4c2066d-6.pdf',
@@ -38,7 +38,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       const { data: record, error: delErr } = await supabase
         .from('documents_in_progress')
         .delete()
-        .eq('beam_task_id', req.headers['beam-task-id'])
+        .eq('beam_task_id', req.headers['x-task-id'])
     }
     // If failure_ingest or Beam task is FAILED or TIMEOUT
     // assume failures if success is not explicity defined (above)
@@ -48,12 +48,12 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       //   req.headers['x-beam-task-status'] === 'FAILED' ||
       //   req.headers['x-beam-task-status'] === 'TIMEOUT'
       // )
-      console.log('Ingest Task failed or timed out. Data:', data)
+      console.error('Ingest Task failed or timed out. Data:', data)
       // Remove from in progress, add to failed
       const { data: record, error: delErr } = await supabase
         .from('documents_in_progress')
         .delete()
-        .eq('beam_task_id', req.headers['beam-task-id'])
+        .eq('beam_task_id', req.headers['x-task-id'])
         .select()
       // remove a few fields from record, the beam_task_id is not needed
       delete record![0].beam_task_id
