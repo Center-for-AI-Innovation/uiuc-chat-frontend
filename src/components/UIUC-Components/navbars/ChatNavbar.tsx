@@ -154,7 +154,7 @@ interface ChatNavbarProps {
 const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
   const { classes, theme } = useStyles()
   const router = useRouter()
-  const [activeLink, setActiveLink] = useState(router.asPath)
+  const [activeLink, setActiveLink] = useState<null | string>(null)
   const [opened, { toggle }] = useDisclosure(false)
   const [show, setShow] = useState(true)
   const [isAdminOrOwner, setIsAdminOrOwner] = useState(false)
@@ -171,6 +171,11 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
   }
 
   const [userEmail, setUserEmail] = useState('no_email')
+
+  useEffect(() => {
+    if (!router.isReady) return
+    setActiveLink(router.asPath.split('?')[0]!)
+  }, [router.asPath])
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -362,7 +367,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                           key={index}
                           href={item.link}
                           onClick={() => {
-                            setActiveLink(router.asPath)
+                            // setActiveLink(router.asPath.split('?')[0]!)
                             toggle()
                           }}
                           data-active={activeLink === item.link}
@@ -444,9 +449,6 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                       <Link
                         key={index}
                         href={item.link}
-                        onClick={() => {
-                          setActiveLink(router.asPath)
-                        }}
                         data-active={activeLink === item.link}
                         className={classes.link}
                         style={{ padding: '3px 12px' }}

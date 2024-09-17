@@ -127,16 +127,15 @@ const Navbar = ({
 }) => {
   const { classes, theme } = useStyles()
   const router = useRouter()
-  const [activeLink, setActiveLink] = useState(router.asPath)
+  const [activeLink, setActiveLink] = useState<null | string>(null)
   const [opened, { toggle, close }] = useDisclosure(false)
 
   useEffect(() => {
-    setActiveLink(router.asPath)
+    if (!router.isReady) return
+    setActiveLink(router.asPath.split('?')[0]!)
   }, [router.asPath])
 
   const handleLinkClick = (path: string) => {
-    setActiveLink(path)
-    // toggle()
     close() // This will always close the menu, regardless of screen size
   }
 
