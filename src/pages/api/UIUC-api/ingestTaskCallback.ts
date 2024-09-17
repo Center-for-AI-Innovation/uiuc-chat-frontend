@@ -24,6 +24,23 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     console.log('req.headers', req.headers)
     data = data.data
     console.log('data after doing data.data here:', data) // Log the received data for debugging
+    console.log('data after doing data.data here typeof:', typeof data) // Log the received data for debugging
+
+    // Parse data.data if it's a string
+    if (typeof data.data === 'string') {
+      try {
+        data = JSON.parse(data.data)
+      } catch (error) {
+        console.error('Error parsing data.data:', error)
+        // If parsing fails, use the original data
+        data = data.data
+      }
+    } else {
+      data = data.data
+    }
+
+    console.log('data after parsing:', data) // Log the parsed data for debugging
+    console.log('data after parsing typeof:', typeof data) // Log the parsed data for debugging
 
     // Data:  {
     //   success_ingest: 'courses/t/8885632f-b519-4610-b888-744aa4c2066d-6.pdf',
