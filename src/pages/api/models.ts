@@ -17,8 +17,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
 import { getNCSAHostedModels } from '~/utils/modelProviders/NCSAHosted'
 import { getOpenAIModels } from '~/utils/modelProviders/routes/openai'
-import { decryptKeyIfNeeded } from '~/utils/crypto'
 import { OpenAIModelID } from '~/utils/modelProviders/types/openai'
+import { ProjectWideLLMProviders } from '~/types/courseMetadata'
 
 export const config = {
   runtime: 'edge',
@@ -39,17 +39,18 @@ const handler = async (
       )
     }
 
-    // Fetch the project's API keys, filtering out all keys if requested
+    // Fetch the project's API keys
     let llmProviders = (await kv.get(
       `${projectName}-llms`,
-    )) as Partial<AllLLMProviders> & {
-      defaultModel?: string
-      defaultTemp?: number
+    )) as ProjectWideLLMProviders | null
+
+    if (!llmProviders) {
+      llmProviders = {} as ProjectWideLLMProviders
+    } else {
+      llmProviders = llmProviders as ProjectWideLLMProviders
     }
 
-    console.log('INITIAL -- llmProviders', llmProviders)
-
-    // Define a function to create a placeholder provider
+    // Define a function to create a placeholder provider with default values
     const createPlaceholderProvider = (
       providerName: ProviderNames,
     ): LLMProvider => ({
@@ -62,6 +63,7 @@ const handler = async (
     const allProviderNames = Object.values(ProviderNames)
     for (const providerName of allProviderNames) {
       if (!llmProviders[providerName]) {
+        // @ts-ignore -- I can't figure out why Ollama complains about undefined.
         llmProviders[providerName] = createPlaceholderProvider(providerName)
       }
     }
@@ -73,29 +75,6 @@ const handler = async (
     if (!llmProviders.defaultTemp) {
       llmProviders.defaultTemp = 0.1
     }
-
-    // Decrypt API keys
-    // const processProviders = async () => {
-    //   for (const providerName in llmProviders) {
-    //     if (providerName === 'defaultModel' || providerName === 'defaultTemp') {
-    //       continue
-    //     }
-
-    //     const typedProviderName = providerName as keyof AllLLMProviders
-    //     const provider = llmProviders[typedProviderName] as LLMProvider
-    //     if (provider && 'apiKey' in provider) {
-    //       llmProviders[typedProviderName] = {
-    //         ...provider,
-    //         apiKey:
-    //           (await decryptKeyIfNeeded(provider.apiKey!)) ?? provider.apiKey,
-    //       } as LLMProvider & { provider: typeof typedProviderName }
-    //     }
-    //   }
-    // }
-    // await processProviders()
-
-    // Cast llmProviders to AllLLMProviders now that we've ensured all providers are defined
-    llmProviders = llmProviders as AllLLMProviders
 
     const allLLMProviders: Partial<AllLLMProviders> = {}
 
@@ -139,17 +118,6 @@ const handler = async (
           console.warn(`Unhandled provider: ${providerName}`)
       }
     }
-
-    // Call MIGRATEALLKEYS.ts
-    // try {
-    //   await migrateAllKeys()
-    //   console.log('DONE MIGRATEALLKEYS:');
-    // } catch (error) {
-    //   console.error('Error calling MIGRATEALLKEYS:', error);
-    // }
-
-    // const openAIModels = Object.values(OpenAIModels)
-    // console.log("openAIModels", openAIModels)
 
     console.log('FINAL -- allLLMProviders', allLLMProviders)
     return NextResponse.json(allLLMProviders as AllLLMProviders, {

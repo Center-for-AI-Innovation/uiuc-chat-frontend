@@ -21,8 +21,8 @@ export type ProjectWideLLMProviders = {
   [P in ProviderNames]?: LLMProvider & { provider: P }
 } & {
   llmProviders?: LLMProvider[]
-  defaultModel: string
-  defaultTemp: number
+  defaultModel?: string
+  defaultTemp?: number
 }
 
 export interface CourseMetadataOptionalForUpsert {
