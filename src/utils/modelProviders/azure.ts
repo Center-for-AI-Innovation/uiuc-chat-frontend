@@ -125,7 +125,9 @@ export const getAzureModels = async (
             tokenLimit: predefinedModel.tokenLimit,
             azureDeploymentModelName: predefinedModel.azureDeploymentModelName,
             azureDeploymentID: model.id,
-            enabled: predefinedModel.enabled,
+            enabled:
+              azureProvider.models?.find((m) => m.id === predefinedModel.id)
+                ?.enabled ?? predefinedModel.enabled,
           })
         }
         return acc

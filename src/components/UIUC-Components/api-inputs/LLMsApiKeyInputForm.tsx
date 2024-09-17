@@ -406,6 +406,10 @@ export default function APIKeyInputForm() {
     },
   })
 
+  useEffect(() => {
+    console.log('form.state.isSubmitting', form.state.isSubmitting)
+  }, [form.state.isSubmitting])
+
   // if (isLoadingLLMProviders) {
   //   return (
   //     <div className="flex h-screen items-center justify-center">

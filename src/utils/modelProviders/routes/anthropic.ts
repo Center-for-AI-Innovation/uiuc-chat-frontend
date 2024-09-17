@@ -13,7 +13,7 @@ export const getAnthropicModels = async (
     return anthropicProvider
   }
 
-  // TODO: if no models, return default models
+  // if no models, return default models
   if (!anthropicProvider.models || anthropicProvider.models.length === 0) {
     anthropicProvider.models = Object.values(
       AnthropicModels,
