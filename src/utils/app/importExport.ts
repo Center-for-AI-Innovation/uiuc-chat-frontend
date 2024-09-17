@@ -30,39 +30,39 @@ export function isExportFormatV4(obj: any): obj is ExportFormatV4 {
 
 export const isLatestExportFormat = isExportFormatV4
 
-export function cleanData(data: SupportedExportFormats): LatestExportFormat {
-  if (isExportFormatV1(data)) {
-    return {
-      version: 4,
-      history: cleanConversationHistory(data),
-      folders: [],
-      prompts: [],
-    }
-  }
+// export function cleanData(data: SupportedExportFormats): LatestExportFormat {
+//   if (isExportFormatV1(data)) {
+//     return {
+//       version: 4,
+//       history: cleanConversationHistory(data),
+//       folders: [],
+//       prompts: [],
+//     }
+//   }
 
-  if (isExportFormatV2(data)) {
-    return {
-      version: 4,
-      history: cleanConversationHistory(data.history || []),
-      folders: (data.folders || []).map((chatFolder) => ({
-        id: chatFolder.id.toString(),
-        name: chatFolder.name,
-        type: 'chat',
-      })),
-      prompts: [],
-    }
-  }
+//   if (isExportFormatV2(data)) {
+//     return {
+//       version: 4,
+//       history: cleanConversationHistory(data.history || []),
+//       folders: (data.folders || []).map((chatFolder) => ({
+//         id: chatFolder.id.toString(),
+//         name: chatFolder.name,
+//         type: 'chat',
+//       })),
+//       prompts: [],
+//     }
+//   }
 
-  if (isExportFormatV3(data)) {
-    return { ...data, version: 4, prompts: [] }
-  }
+//   if (isExportFormatV3(data)) {
+//     return { ...data, version: 4, prompts: [] }
+//   }
 
-  if (isExportFormatV4(data)) {
-    return data
-  }
+//   if (isExportFormatV4(data)) {
+//     return data
+//   }
 
-  throw new Error('Unsupported data format')
-}
+//   throw new Error('Unsupported data format')
+// }
 
 function currentDate() {
   const date = new Date()
@@ -109,56 +109,56 @@ export const exportData = () => {
   URL.revokeObjectURL(url)
 }
 
-export const importData = (
-  data: SupportedExportFormats,
-): LatestExportFormat => {
-  const { history, folders, prompts } = cleanData(data)
+// export const importData = (
+//   data: SupportedExportFormats,
+// ): LatestExportFormat => {
+//   const { history, folders, prompts } = cleanData(data)
 
-  const oldConversations = localStorage.getItem('conversationHistory')
-  const oldConversationsParsed = oldConversations
-    ? JSON.parse(oldConversations)
-    : []
+//   const oldConversations = localStorage.getItem('conversationHistory')
+//   const oldConversationsParsed = oldConversations
+//     ? JSON.parse(oldConversations)
+//     : []
 
-  const newHistory: Conversation[] = [
-    ...oldConversationsParsed,
-    ...history,
-  ].filter(
-    (conversation, index, self) =>
-      index === self.findIndex((c) => c.id === conversation.id),
-  )
-  localStorage.setItem('conversationHistory', JSON.stringify(newHistory))
-  if (newHistory.length > 0) {
-    localStorage.setItem(
-      'selectedConversation',
-      JSON.stringify(newHistory[newHistory.length - 1]),
-    )
-  } else {
-    localStorage.removeItem('selectedConversation')
-  }
+//   const newHistory: Conversation[] = [
+//     ...oldConversationsParsed,
+//     ...history,
+//   ].filter(
+//     (conversation, index, self) =>
+//       index === self.findIndex((c) => c.id === conversation.id),
+//   )
+//   localStorage.setItem('conversationHistory', JSON.stringify(newHistory))
+//   if (newHistory.length > 0) {
+//     localStorage.setItem(
+//       'selectedConversation',
+//       JSON.stringify(newHistory[newHistory.length - 1]),
+//     )
+//   } else {
+//     localStorage.removeItem('selectedConversation')
+//   }
 
-  const oldFolders = localStorage.getItem('folders')
-  const oldFoldersParsed = oldFolders ? JSON.parse(oldFolders) : []
-  const newFolders: FolderInterface[] = [
-    ...oldFoldersParsed,
-    ...folders,
-  ].filter(
-    (folder, index, self) =>
-      index === self.findIndex((f) => f.id === folder.id),
-  )
-  localStorage.setItem('folders', JSON.stringify(newFolders))
+//   const oldFolders = localStorage.getItem('folders')
+//   const oldFoldersParsed = oldFolders ? JSON.parse(oldFolders) : []
+//   const newFolders: FolderInterface[] = [
+//     ...oldFoldersParsed,
+//     ...folders,
+//   ].filter(
+//     (folder, index, self) =>
+//       index === self.findIndex((f) => f.id === folder.id),
+//   )
+//   localStorage.setItem('folders', JSON.stringify(newFolders))
 
-  const oldPrompts = localStorage.getItem('prompts')
-  const oldPromptsParsed = oldPrompts ? JSON.parse(oldPrompts) : []
-  const newPrompts: Prompt[] = [...oldPromptsParsed, ...prompts].filter(
-    (prompt, index, self) =>
-      index === self.findIndex((p) => p.id === prompt.id),
-  )
-  localStorage.setItem('prompts', JSON.stringify(newPrompts))
+//   const oldPrompts = localStorage.getItem('prompts')
+//   const oldPromptsParsed = oldPrompts ? JSON.parse(oldPrompts) : []
+//   const newPrompts: Prompt[] = [...oldPromptsParsed, ...prompts].filter(
+//     (prompt, index, self) =>
+//       index === self.findIndex((p) => p.id === prompt.id),
+//   )
+//   localStorage.setItem('prompts', JSON.stringify(newPrompts))
 
-  return {
-    version: 4,
-    history: newHistory,
-    folders: newFolders,
-    prompts: newPrompts,
-  }
-}
+//   return {
+//     version: 4,
+//     history: newHistory,
+//     folders: newFolders,
+//     prompts: newPrompts,
+//   }
+// }

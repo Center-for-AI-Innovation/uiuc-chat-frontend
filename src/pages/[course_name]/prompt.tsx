@@ -8,7 +8,10 @@ import { useRouter } from 'next/router'
 import { useUser } from '@clerk/nextjs'
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
-import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
+import {
+  LoadingPlaceholderForAdminPages,
+  MainPageBackground,
+} from '~/components/UIUC-Components/MainPageBackground'
 import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 import {
   Button,
@@ -211,11 +214,7 @@ const CourseMain: NextPage = () => {
 
   // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
   if (!isLoaded || isLoading) {
-    return (
-      <MainPageBackground>
-        <LoadingSpinner />
-      </MainPageBackground>
-    )
+    return <LoadingPlaceholderForAdminPages />
   }
 
   if (!isSignedIn) {
@@ -267,7 +266,7 @@ const CourseMain: NextPage = () => {
   if (courseExists === false) {
     return (
       <MakeNewCoursePage
-        course_name={course_name as string}
+        project_name={course_name as string}
         current_user_email={user_emails[0] as string}
       />
     )
@@ -278,13 +277,13 @@ const CourseMain: NextPage = () => {
     reload: any,
     setMessages: any,
   ) => {
-    let newApiKey;
+    let newApiKey
     if (courseMetadata?.openai_api_key) {
-      newApiKey = courseMetadata.openai_api_key;
+      newApiKey = courseMetadata.openai_api_key
     }
-    setApiKey(newApiKey);
+    setApiKey(newApiKey)
 
-    console.log('apikey set to', apiKey);
+    console.log('apikey set to', apiKey)
     e.preventDefault()
 
     const systemPrompt = `
@@ -340,7 +339,7 @@ const CourseMain: NextPage = () => {
               shadow="xs"
               padding="none"
               radius="xl"
-              className="mt-[4%] w-[96%] md:w-[90%]"
+              className="mt-[2%] w-[96%] md:w-[90%]"
             >
               <Flex
                 direction={isSmallScreen ? 'column' : 'row'}
@@ -555,12 +554,12 @@ const CourseMain: NextPage = () => {
                                 }}
                                 className={`relative m-1 text-white hover:border-indigo-600 md:mr-2 ${montserrat_paragraph.variable} font-montserratParagraph`}
                                 onMouseEnter={(e) =>
-                                (e.currentTarget.style.background =
-                                  'linear-gradient(to right, #4f46e5, #2563eb, #6d28d9)')
+                                  (e.currentTarget.style.background =
+                                    'linear-gradient(to right, #4f46e5, #2563eb, #6d28d9)')
                                 }
                                 onMouseLeave={(e) =>
-                                (e.currentTarget.style.background =
-                                  'linear-gradient(to right, #6d28d9, #4f46e5, #2563eb)')
+                                  (e.currentTarget.style.background =
+                                    'linear-gradient(to right, #6d28d9, #4f46e5, #2563eb)')
                                 }
                               >
                                 <IconSparkles stroke={1} />

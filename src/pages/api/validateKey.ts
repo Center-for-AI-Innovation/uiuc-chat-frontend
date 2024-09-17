@@ -5,7 +5,7 @@ import {
   OPENAI_API_VERSION,
   OPENAI_ORGANIZATION,
 } from '@/utils/app/const'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import modelsHandler from './models'
 import { decrypt } from '~/utils/crypto'
 import { OpenAIError } from '~/utils/server'
@@ -44,11 +44,10 @@ const handler = async (req: Request): Promise<Response> => {
     let url = `${endpoint}/v1/chat/completions`
     if (apiType === 'azure') {
       try {
-        const modelsRequest = new Request(req.url, {
+        const modelsRequest = new NextRequest(req.url, {
           method: req.method,
           headers: req.headers,
           body: JSON.stringify({ key: apiKey }),
-          signal: req.signal,
         })
 
         const deploymentsResponse = await modelsHandler(modelsRequest)

@@ -32,7 +32,7 @@ export const ConversationComponent = ({ conversation }: Props) => {
     handleUpdateConversation,
   } = useContext(HomeContext)
 
-  const courseName = conversation.messages[0]?.contexts?.[0]?.['course_name ']
+  const courseName = conversation.projectName
 
   const { handleDeleteConversation } = useContext(ChatbarContext)
 

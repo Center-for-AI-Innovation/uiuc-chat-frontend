@@ -5,7 +5,7 @@ import {
   UserButton,
   useUser,
 } from '@clerk/nextjs'
-import { IconFile } from '@tabler/icons-react'
+import { IconClipboardText, IconFile } from '@tabler/icons-react'
 import MagicBell, {
   FloatingNotificationInbox,
 } from '@magicbell/magicbell-react'
@@ -104,6 +104,7 @@ import { createStyles, Group, rem } from '@mantine/core'
 import { extractEmailsFromClerk } from '../clerkHelpers'
 import { useEffect, useState } from 'react'
 import { usePostHog } from 'posthog-js/react'
+import { IconFilePlus } from '@tabler/icons-react'
 
 export function LandingPageHeader({
   forGeneralPurposeNotLandingpage = false,
@@ -124,21 +125,6 @@ export function LandingPageHeader({
         justifyContent: 'flex-end',
         padding: '1em',
       }
-
-  const items = [
-    // Header links
-    {
-      name: (
-        <span
-          className={`${montserrat_heading.variable} font-montserratHeading`}
-        >
-          New project
-        </span>
-      ),
-      icon: <FileIcon />,
-      link: `/new`,
-    },
-  ]
 
   const clerk_obj = useUser()
   const [userEmail, setUserEmail] = useState('no_email')
@@ -167,15 +153,35 @@ export function LandingPageHeader({
       <header style={headerStyle} className="py-16">
         {/* Skeleton placeholders for two icons */}
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          {forGeneralPurposeNotLandingpage === false &&
-            items.map((item, index) => (
-              <Link key={index} href={item.link} className={classes.link}>
+          {forGeneralPurposeNotLandingpage === false && (
+            <>
+              <Link href="/new" className={classes.link}>
                 <span style={{ display: 'flex', alignItems: 'center' }}>
-                  {item.icon}
-                  {item.name}
+                  <FileIcon />
+                  <span
+                    className={`${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    New project
+                  </span>
                 </span>
               </Link>
-            ))}
+              <Link
+                href="https://docs.uiuc.chat/"
+                className={classes.link}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span style={{ display: 'flex', alignItems: 'center' }}>
+                  <IconClipboardTexts />
+                  <span
+                    className={`${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    Docs
+                  </span>
+                </span>
+              </Link>
+            </>
+          )}
           <div
             className="skeleton-box"
             style={{ width: '35px', height: '35px', borderRadius: '50%' }}
@@ -193,15 +199,35 @@ export function LandingPageHeader({
   return (
     <header style={headerStyle}>
       <Group spacing={'xs'}>
-        {forGeneralPurposeNotLandingpage === false &&
-          items.map((item, index) => (
-            <Link key={index} href={item.link} className={classes.link}>
+        {forGeneralPurposeNotLandingpage === false && (
+          <>
+            <Link href="/new" className={classes.link}>
               <span style={{ display: 'flex', alignItems: 'center' }}>
-                {item.icon}
-                {item.name}
+                <FileIcon />
+                <span
+                  className={`${montserrat_heading.variable} font-montserratHeading`}
+                >
+                  New project
+                </span>
               </span>
             </Link>
-          ))}
+            <Link
+              href="https://docs.uiuc.chat/"
+              className={classes.link}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span style={{ display: 'flex', alignItems: 'center' }}>
+                <IconClipboardTexts />
+                <span
+                  className={`${montserrat_heading.variable} font-montserratHeading`}
+                >
+                  Docs
+                </span>
+              </span>
+            </Link>
+          </>
+        )}
         <SignedIn>
           {/* Docs: https://www.magicbell.com/docs/libraries/react#custom-themes */}
           <MagicBell
@@ -243,7 +269,19 @@ export function LandingPageHeader({
 }
 
 export function FileIcon() {
-  return <IconFile size={20} strokeWidth={2} style={{ marginRight: '5px' }} />
+  return (
+    <IconFilePlus size={20} strokeWidth={2} style={{ marginRight: '5px' }} />
+  )
+}
+
+export function IconClipboardTexts() {
+  return (
+    <IconClipboardText
+      size={20}
+      strokeWidth={2}
+      style={{ marginRight: '5px' }}
+    />
+  )
 }
 
 const HEADER_HEIGHT = rem(84)

@@ -14,7 +14,7 @@ const logConversationToSupabase = async (req: any, res: any) => {
         convo: conversation,
         convo_id: conversation.id,
         course_name: course_name,
-        user_email: conversation.user_email,
+        user_email: conversation.userEmail,
       },
     ],
     {

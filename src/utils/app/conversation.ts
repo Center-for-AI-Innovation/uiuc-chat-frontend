@@ -1,29 +1,86 @@
 // @utils/app/conversation
-import { Conversation } from '@/types/chat'
+import { Conversation, ConversationPage } from '@/types/chat'
 import posthog from 'posthog-js'
+import { cleanConversationHistory } from './clean'
 
-export const updateConversation = (
-  updatedConversation: Conversation,
-  allConversations: Conversation[],
-) => {
-  const updatedConversations = allConversations.map((c) => {
-    if (c.id === updatedConversation.id) {
-      return updatedConversation
+export async function fetchConversationHistory(
+  user_email: string,
+  searchTerm: string,
+  courseName: string,
+  pageParam: number,
+): Promise<ConversationPage> {
+  // console.log('fetchConversationHistory: ', user_email)
+  let finalResponse: ConversationPage = {
+    conversations: [],
+    nextCursor: null,
+  }
+  try {
+    const response = await fetch(
+      `/api/conversation?user_email=${user_email}&searchTerm=${searchTerm}&courseName=${courseName}&pageParam=${pageParam}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    )
+
+    if (!response.ok) {
+      throw new Error('Error fetching conversation history')
     }
 
-    return c
-  })
+    const { conversations, nextCursor } = await response.json()
 
-  saveConversation(updatedConversation)
-  saveConversations(updatedConversations)
+    finalResponse = cleanConversationHistory(conversations)
+    finalResponse.nextCursor = nextCursor
+  } catch (error) {
+    console.error('Error fetching conversation history:', error)
+  }
+  // console.log('finalResponse: ', finalResponse)
+  return finalResponse
+}
 
-  return {
-    single: updatedConversation,
-    all: updatedConversations,
+export const deleteConversationFromServer = async (id: string) => {
+  try {
+    const response = await fetch('/api/conversation', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id }),
+    })
+
+    if (!response.ok) {
+      throw new Error('Error deleting conversation')
+    }
+  } catch (error) {
+    console.error('Error deleting conversation:', error)
   }
 }
 
-export const saveConversation = (conversation: Conversation) => {
+export const deleteAllConversationsFromServer = async (
+  user_email: string,
+  course_name: string,
+) => {
+  console.log('deleteAllConversationsFromServer')
+  try {
+    const response = await fetch('/api/conversation', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ user_email, course_name }),
+    })
+
+    if (!response.ok) {
+      throw new Error('Error deleting conversation')
+    }
+  } catch (error) {
+    console.error('Error deleting conversation:', error)
+  }
+}
+
+export const saveConversationToLocalStorage = (conversation: Conversation) => {
   /*
   Save convo to local storage. If storage is full, clear the oldest conversation and try again.
   */
@@ -41,7 +98,7 @@ export const saveConversation = (conversation: Conversation) => {
         course_name:
           conversation.messages?.[0]?.contexts?.[0]?.course_name ||
           'Unknown Course',
-        user_email: conversation.user_email,
+        user_email: conversation.userEmail,
         inSaveConversation: true,
       })
 
@@ -85,7 +142,7 @@ export const saveConversations = (conversations: Conversation[]) => {
       course_name:
         conversations?.slice(-1)[0]?.messages?.[0]?.contexts?.[0]
           ?.course_name || 'Unknown Course',
-      user_email: conversations?.slice(-1)[0]?.user_email || 'Unknown Email',
+      user_email: conversations?.slice(-1)[0]?.userEmail || 'Unknown Email',
       inSaveConversations: true,
     })
 
@@ -133,3 +190,22 @@ export const saveConversations = (conversations: Conversation[]) => {
 //     localStorage.setItem('conversationHistory', JSON.stringify(conversations))
 //   }
 // }
+
+export async function saveConversationToServer(conversation: Conversation) {
+  try {
+    console.debug('Saving conversation to server:', conversation)
+    const response = await fetch('/api/conversation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ conversation }),
+    })
+    if (!response.ok) {
+      throw new Error('Error saving conversation')
+    }
+    return response.json()
+  } catch (error) {
+    console.error('Error saving conversation:', error)
+  }
+}

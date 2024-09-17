@@ -5,16 +5,14 @@ import { useDisclosure } from '@mantine/hooks'
 import Image from 'next/image'
 import { useEffect, useState, useContext, useRef } from 'react'
 import {
-  createStyles,
-  // Header,
-  Flex,
-  Container,
-  // Anchor,
-  Group,
   Burger,
+  Container,
+  createStyles,
+  Flex,
+  Group,
+  Paper,
   rem,
   Transition,
-  Paper,
 } from '@mantine/core'
 import { spotlight } from '@mantine/spotlight'
 import {
@@ -22,32 +20,20 @@ import {
   Folder,
   ReportAnalytics,
   ChartDots3,
-  // Settings,
   MessageCode,
 } from 'tabler-icons-react'
-import {
-  IconFileText,
-  // IconExternalLink,
-  IconRobot,
-  IconSettings,
-  IconTools,
-  // IconCloudUpload,
-  // IconSettings,
-} from '@tabler/icons-react'
+import { IconFileText, IconHome, IconSettings } from '@tabler/icons-react'
 import { useRouter } from 'next/router'
 import { montserrat_heading } from 'fonts'
 import { useUser } from '@clerk/nextjs'
-// import { getCoursesByOwnerOrAdmin } from '../getAllCourseMetaData'
 import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import HomeContext from '~/pages/api/home/home.context'
-import { ModelSelect } from '../../Chat/ModelSelect'
 import { UserSettings } from '../../Chat/UserSettings'
 import MagicBell, {
   FloatingNotificationInbox,
 } from '@magicbell/magicbell-react'
 import { usePostHog } from 'posthog-js/react'
-import { wrap } from 'module'
 
 const styles: Record<string, React.CSSProperties> = {
   logoContainerBox: {
@@ -161,18 +147,11 @@ const useStyles = createStyles((theme) => ({
 }))
 
 interface ChatNavbarProps {
-  course_name?: string
   bannerUrl?: string
   isgpt4?: boolean
-  className?: string
 }
 
-const ChatNavbar = ({
-  course_name = '',
-  bannerUrl = '',
-  isgpt4 = true,
-  className = '',
-}: ChatNavbarProps) => {
+const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
   const { classes, theme } = useStyles()
   const router = useRouter()
   const [activeLink, setActiveLink] = useState(router.asPath)
@@ -186,57 +165,39 @@ const ChatNavbar = ({
     dispatch: homeDispatch,
   } = useContext(HomeContext)
 
-  // const [modelName, setModelName] = useState(selectedConversation?.model.name)
-
-  // useEffect(() => {
-  //   console.log("&&&&&&&& IN ChatNavbar useEffect, selectedConversation is ", selectedConversation)
-  //   console.log("&&&&&&&& IN ChatNavbar useEffect, selectedConversation?.model.name is ", selectedConversation?.model.name)
-  //   setModelName(selectedConversation?.model.name)
-  // }, [selectedConversation])
-
-  // const modelSettingsContainer = useRef<HTMLDivElement | null>(null)
   const topBarRef = useRef<HTMLDivElement | null>(null)
   const getCurrentCourseName = () => {
     return router.asPath.split('/')[1]
   }
 
   const [userEmail, setUserEmail] = useState('no_email')
+
   useEffect(() => {
     const fetchCourses = async () => {
       if (clerk_user.isLoaded && clerk_user.isSignedIn) {
-        const emails = extractEmailsFromClerk(clerk_user.user)
-        const currUserEmail = emails[0]
-        setUserEmail(currUserEmail || 'no_email')
-        if (!currUserEmail) {
-          throw new Error('No email found for the user')
-        }
+        const currUserEmails = extractEmailsFromClerk(clerk_user.user)
         // Posthog identify
         posthog?.identify(clerk_user.user.id, {
-          email: currUserEmail || 'no_email',
+          email: currUserEmails[0] || 'no_email',
         })
+        setUserEmail(currUserEmails[0] || 'no_email')
 
         const response = await fetch(
-          `/api/UIUC-api/getAllCourseMetadata?currUserEmail=${currUserEmail}`,
+          `/api/UIUC-api/getCourseMetadata?course_name=${getCurrentCourseName()}`,
         )
-        const rawData = await response.json()
-        if (rawData) {
-          const currentCourseName = getCurrentCourseName()
-          if (currentCourseName) {
-            const courseData = rawData.find(
-              (course: { [key: string]: CourseMetadata }) =>
-                Object.keys(course)[0] === currentCourseName,
-            )
-            if (courseData) {
-              const courseMetadata = courseData[currentCourseName]
-              const isAdmin =
-                courseMetadata.course_owner === currUserEmail ||
-                (courseMetadata.course_admins &&
-                  courseMetadata.course_admins.includes(currUserEmail))
-              setIsAdminOrOwner(isAdmin)
-            } else {
-              setIsAdminOrOwner(false)
-            }
-          }
+        const courseMetadata = await response.json().then((data) => {
+          return data['course_metadata']
+        })
+
+        if (
+          currUserEmails.includes(courseMetadata.course_owner) ||
+          currUserEmails.some((email) =>
+            courseMetadata.course_admins?.includes(email),
+          )
+        ) {
+          setIsAdminOrOwner(true)
+        } else {
+          setIsAdminOrOwner(false)
         }
       }
     }
@@ -277,34 +238,34 @@ const ChatNavbar = ({
               <span
                 className={`${montserrat_heading.variable} font-montserratHeading`}
               >
-                Materials
+                Admin Dashboard
               </span>
             ),
             icon: <FolderIcon />,
             link: `/${getCurrentCourseName()}/materials`,
           },
-          {
-            name: (
-              <span
-                className={`${montserrat_heading.variable} font-montserratHeading`}
-              >
-                Analysis
-              </span>
-            ),
-            icon: <ReportIcon />,
-            link: `/${getCurrentCourseName()}/query-analysis`,
-          },
-          {
-            name: (
-              <span
-                className={`${montserrat_heading.variable} font-montserratHeading`}
-              >
-                Prompting
-              </span>
-            ),
-            icon: <SettingIcon />,
-            link: `/${getCurrentCourseName()}/prompt`,
-          },
+          // {
+          //   name: (
+          //     <span
+          //       className={`${montserrat_heading.variable} font-montserratHeading`}
+          //     >
+          //       Analysis
+          //     </span>
+          //   ),
+          //   icon: <ReportIcon />,
+          //   link: `/${getCurrentCourseName()}/query-analysis`,
+          // },
+          // {
+          //   name: (
+          //     <span
+          //       className={`${montserrat_heading.variable} font-montserratHeading`}
+          //     >
+          //       Prompting
+          //     </span>
+          //   ),
+          //   icon: <SettingIcon />,
+          //   link: `/${getCurrentCourseName()}/prompt`,
+          // },
         ]
       : []),
   ]
@@ -560,15 +521,12 @@ const ChatNavbar = ({
                   className={`${classes.link}`}
                   style={{ padding: '0px 10px', minWidth: '120px' }}
                   onClick={() => {
-                    console.log(
-                      'clicked model settings, toggling showModelSettings: ',
-                      showModelSettings,
-                    )
                     homeDispatch({
                       field: 'showModelSettings',
                       value: !showModelSettings,
                     })
                   }}
+                  aria-label={`Open or close show model settings.`}
                 >
                   <div
                     ref={topBarRef}
@@ -584,6 +542,7 @@ const ChatNavbar = ({
                         position: 'relative',
                         top: '-2px',
                         paddingLeft: '-3px',
+                        marginRight: '-8px',
                       }}
                     />
                     <span
@@ -649,7 +608,7 @@ const ChatNavbar = ({
                   {/* <div /> */}
                   {/* <div style={{ paddingLeft: '10px', paddingRight: '8px' }} /> */}
 
-                  {/* render the MagicBell untill userEmail is valid otherwise there is a warning message of userEmail */}
+                  {/* render the MagicBell until userEmail is valid otherwise there is a warning message of userEmail */}
                   {userEmail !== 'no_email' && (
                     <MagicBell
                       apiKey={process.env.NEXT_PUBLIC_MAGIC_BELL_API as string}
@@ -724,7 +683,7 @@ export function MessageChatIcon() {
 
 export function FolderIcon() {
   return (
-    <Folder
+    <IconHome
       size={20}
       strokeWidth={2}
       // color={'white'}

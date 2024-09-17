@@ -1,8 +1,10 @@
 import { Message, type OpenAIChatMessage } from '@/types/chat'
-import { type OpenAIModel } from '~/utils/modelProviders/openai'
+import {
+  OpenAIModels,
+  type OpenAIModel,
+} from '~/utils/modelProviders/types/openai'
 
 import {
-  AZURE_DEPLOYMENT_ID,
   OPENAI_API_HOST,
   OPENAI_API_TYPE,
   OPENAI_API_VERSION,
@@ -14,7 +16,14 @@ import {
   type ReconnectInterval,
   createParser,
 } from 'eventsource-parser'
-import { decrypt, isEncrypted } from '../crypto'
+import { decryptKeyIfNeeded } from '../crypto'
+import {
+  AllLLMProviders,
+  AzureProvider,
+  OpenAIProvider,
+  ProviderNames,
+} from '~/utils/modelProviders/LLMProvider'
+import { AzureModels } from '../modelProviders/azure'
 
 export class OpenAIError extends Error {
   type: string
@@ -30,64 +39,50 @@ export class OpenAIError extends Error {
   }
 }
 
-// missing course_name...
-// got search_query... from messages
-
 export const OpenAIStream = async (
   model: OpenAIModel,
   systemPrompt: string,
   temperature: number,
-  key: string,
+  llmProviders: AllLLMProviders,
   messages: OpenAIChatMessage[],
   stream: boolean,
 ) => {
-  // console.debug('In OpenAIStream, model: ', model)
-  // messages.forEach((message, index) => {
-  //   console.log(`Message ${index}:`, message.role, message.content)
-  // })
-  let apiKey = key
-  let apiType = OPENAI_API_TYPE
-  let endpoint = OPENAI_API_HOST
-  if (key && isEncrypted(key)) {
-    const decryptedText = await decrypt(
-      key,
-      process.env.NEXT_PUBLIC_SIGNING_KEY as string,
-    )
-    apiKey = decryptedText as string
-    // console.log('Decrypted api key for openai chat: ', apiKey)
-    // console.log('Decrypted api key for openai chat')
-  }
-  // else {
-  //   console.log('Using client key for openai chat: ', apiKey)
-  // }
+  // default to OpenAI not Azure
+  let apiType
+  let url
 
-  if (apiKey && !apiKey.startsWith('sk-')) {
-    console.log('setting azure variables')
-    apiType = 'azure'
-    endpoint = process.env.AZURE_OPENAI_ENDPOINT || OPENAI_API_HOST
-  }
+  // TODO: What if user brings their own OpenAI compatible models??
 
-  let url = `${endpoint}/v1/chat/completions`
-  if (apiType === 'azure') {
-    const deploymentName = model.id || process.env.AZURE_OPENAI_ENGINE
-    url = `${endpoint}/openai/deployments/${deploymentName}/chat/completions?api-version=${OPENAI_API_VERSION}`
-  }
+  let provider
+  if (llmProviders) {
+    if (
+      Object.values(OpenAIModels).some((oaiModel) => oaiModel.id === model.id)
+    ) {
+      // OPENAI
+      provider = llmProviders[ProviderNames.OpenAI] as OpenAIProvider
+      provider.apiKey = await decryptKeyIfNeeded(provider.apiKey!)
+      apiType = ProviderNames.OpenAI
+      url = `${OPENAI_API_HOST}/v1/chat/completions`
+    } else if (
+      Object.values(AzureModels).some((oaiModel) => oaiModel.id === model.id)
+    ) {
+      // AZURE
+      apiType = ProviderNames.Azure
+      provider = llmProviders[ProviderNames.Azure] as AzureProvider
+      provider.apiKey = await decryptKeyIfNeeded(provider.apiKey!)
 
-  // ! DEBUGGING to view the full message as sent to OpenAI.
-  // const final_request_to_openai = JSON.stringify({
-  //   ...(OPENAI_API_TYPE === 'openai' && { model: model.id }),
-  //   messages: [
-  //     {
-  //       role: 'system',
-  //       content: systemPrompt,
-  //     },
-  //     ...messages,
-  //   ],
-  //   max_tokens: 1000,
-  //   temperature: temperature,
-  //   stream: true,
-  // })
-  // console.debug("Final request sent to OpenAI ", JSON.stringify(JSON.parse(final_request_to_openai), null, 2))
+      provider.models?.forEach((m) => {
+        // find the model who's model.id matches model.id
+        if (m.id === model.id) {
+          url = `${provider!.AzureEndpoint}/openai/deployments/${m.azureDeploymentID}/chat/completions?api-version=${OPENAI_API_VERSION}`
+        }
+      })
+    } else {
+      throw new Error(
+        'Unsupported OpenAI or Azure configuration. Try a different model, or re-configure your OpenAI/Azure API keys.',
+      )
+    }
+  }
 
   const body = JSON.stringify({
     ...(OPENAI_API_TYPE === 'openai' && { model: model.id }),
@@ -98,23 +93,25 @@ export const OpenAIStream = async (
       },
       ...messages,
     ],
-    max_tokens: 1000,
+    max_tokens: 4000,
     temperature: temperature,
     stream: stream,
   })
-  // This could be logged and tracked better
-  // console.log("openai api body: ", body)
+
+  if (!url) {
+    throw new Error('URL is undefined')
+  }
 
   const res = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
-      ...(apiType === 'openai' && {
-        Authorization: `Bearer ${apiKey}`,
+      ...(apiType === ProviderNames.OpenAI && {
+        Authorization: `Bearer ${provider!.apiKey}`,
       }),
-      ...(apiType === 'azure' && {
-        'api-key': `${apiKey}`,
+      ...(apiType === ProviderNames.Azure && {
+        'api-key': `${provider!.apiKey}`,
       }),
-      ...(apiType === 'openai' &&
+      ...(apiType === ProviderNames.OpenAI &&
         OPENAI_ORGANIZATION && {
           'OpenAI-Organization': OPENAI_ORGANIZATION,
         }),

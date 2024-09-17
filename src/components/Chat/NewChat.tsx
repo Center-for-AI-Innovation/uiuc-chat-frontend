@@ -70,7 +70,7 @@
 // import { fetchContexts } from '~/pages/api/getContexts'
 // import { useUser } from '@clerk/nextjs'
 // import { extractEmailsFromClerk } from '../UIUC-Components/clerkHelpers'
-// import { type OpenAIModelID, OpenAIModels } from '~/utils/modelProviders/openai'
+// import { type OpenAIModelID, OpenAIModels } from '~/utils/modelProviders/types/openai'
 // import Navbar from '../UIUC-Components/Navbar'
 // import TopBarInChat from '../Chatbar/TopBarInChat'
 // // import { MainPageBackground } from '../UIUC-Components/MainPageBackground'
@@ -140,9 +140,8 @@ import { useTranslation } from 'next-i18next'
 
 import { getEndpoint } from '@/utils/app/api'
 import {
-  saveConversation,
+  saveConversationToLocalStorage,
   saveConversations,
-  updateConversation,
 } from '@/utils/app/conversation'
 import { throttle } from '@/utils/data/throttle'
 
@@ -173,7 +172,10 @@ import { useRouter } from 'next/router'
 import { fetchContexts } from '~/pages/api/getContexts'
 import { useUser } from '@clerk/nextjs'
 import { extractEmailsFromClerk } from '../UIUC-Components/clerkHelpers'
-import { type OpenAIModelID, OpenAIModels } from '~/utils/modelProviders/openai'
+import {
+  type OpenAIModelID,
+  OpenAIModels,
+} from '~/utils/modelProviders/types/openai'
 import TopBarInChat from '../Chatbar/TopBarInChat'
 // import { MainPageBackground } from '../UIUC-Components/MainPageBackground'
 import { notifications } from '@mantine/notifications'
@@ -283,10 +285,6 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
   // THIS IS WHERE MESSAGES ARE SENT.
   const handleSend = useCallback(
     async (message: Message, deleteCount = 0, plugin: Plugin | null = null) => {
-      // New way with React Context API
-      // TODO: MOVE THIS INTO ChatMessage
-      // console.log('IN handleSend: ', message)
-      // setSearchQuery(message.content)
       const searchQuery = Array.isArray(message.content)
         ? message.content.map((content) => content.text).join(' ')
         : message.content
@@ -343,6 +341,7 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
           course_name: getCurrentPageName(),
           stream: true,
           isImage: false,
+          // TODO: Add provider here... for the active model.
         }
         const endpoint = getEndpoint(plugin) // THIS is where we could support EXTREME prompt stuffing.
         let body
@@ -446,6 +445,7 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
               const updatedMessages: Message[] = [
                 ...updatedConversation.messages,
                 {
+                  id: message.id,
                   role: 'assistant',
                   content: chunkValue,
                   contexts: message.contexts,
@@ -481,11 +481,11 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
               })
             }
           }
-          saveConversation(updatedConversation)
+          saveConversationToLocalStorage(updatedConversation)
           // todo: add clerk user info to onMessagereceived for logging.
           if (clerk_obj.isLoaded && clerk_obj.isSignedIn) {
             const emails = extractEmailsFromClerk(clerk_obj.user)
-            updatedConversation.user_email = emails[0]
+            updatedConversation.userEmail = emails[0]
             onMessageReceived(updatedConversation) // kastan here, trying to save message AFTER done streaming. This only saves the user message...
           } else {
             onMessageReceived(updatedConversation)
@@ -509,7 +509,12 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
           const { answer } = await response.json()
           const updatedMessages: Message[] = [
             ...updatedConversation.messages,
-            { role: 'assistant', content: answer, contexts: message.contexts },
+            {
+              id: message.id,
+              role: 'assistant',
+              content: answer,
+              contexts: message.contexts,
+            },
           ]
           updatedConversation = {
             ...updatedConversation,
@@ -519,7 +524,7 @@ export const Chat = memo(({ stopConversationRef, courseMetadata }: Props) => {
             field: 'selectedConversation',
             value: updatedConversation,
           })
-          saveConversation(updatedConversation)
+          saveConversationToLocalStorage(updatedConversation)
           const updatedConversations: Conversation[] = conversations.map(
             (conversation) => {
               if (conversation.id === selectedConversation.id) {

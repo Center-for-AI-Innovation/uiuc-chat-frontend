@@ -13,6 +13,7 @@ import {
   Badge,
   Button,
   Group,
+  Flex,
 } from '@mantine/core'
 
 import { LandingPageHeader } from '~/components/UIUC-Components/navbars/GlobalHeader'
@@ -34,15 +35,14 @@ const Home: NextPage = () => {
       <LandingPageHeader />
 
       <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#0E1116]">
-        <div className="container flex flex-col items-center justify-center gap-8 px-4 py-16 ">
+        <div className="container flex w-full max-w-[95vw] flex-col items-center justify-center gap-4 px-4 py-8">
           <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
             UIUC.<span className="text-[hsl(280,100%,70%)]">chat</span>
           </h1>
-          <Container
-            size="lg"
+          <div className="w-full max-w-4xl">
+            {/* size="lg"
             py="l"
-            style={{ position: 'relative', minHeight: '100%' }}
-          >
+            style={{ position: 'relative', minHeight: '100%' }} */}
             <Title
               color="#57534e"
               order={2}
@@ -69,7 +69,7 @@ const Home: NextPage = () => {
               of PDFs, PowerPoint, Word, Excel and almost anything other
               document to chat with your knowledge base.
             </Text>
-          </Container>
+          </div>
 
           <ListProjectTable />
 

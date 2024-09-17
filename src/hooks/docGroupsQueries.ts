@@ -222,6 +222,7 @@ export function useAppendToDocGroup(
       queryClient.setQueryData(
         ['documentGroups', course_name],
         (old: DocumentGroup[] | undefined) => {
+          console.log('old doc groups: ', old)
           // Perform the optimistic update
           const updatedDocumentGroups = old?.map((docGroup) => {
             if (docGroup.name === appendedGroup) {

@@ -1,12 +1,7 @@
 // src/pages/api/UIUC-api/fetchImageDescription.ts
 
-import {
-  ChatBody,
-  Content,
-  Conversation,
-  ImageBody,
-  Message,
-} from '@/types/chat'
+import { Conversation, ImageBody } from '@/types/chat'
+import { AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
 
 export const config = {
   runtime: 'edge',
@@ -26,13 +21,13 @@ export const config = {
 export const fetchImageDescription = async (
   course_name: string,
   updatedConversation: Conversation,
-  apiKey: string,
+  llmProviders: AllLLMProviders,
   controller: AbortController,
 ): Promise<string> => {
   // Construct the body for the chat API request
   const imageBody: ImageBody = {
     conversation: updatedConversation,
-    key: apiKey,
+    llmProviders: llmProviders,
     course_name: course_name,
   }
 

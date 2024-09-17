@@ -17,6 +17,7 @@ import { showNotification } from '@mantine/notifications'
 import { type UserResource } from '@clerk/types'
 import { IconCheck, IconCopy, IconExternalLink } from '@tabler/icons-react'
 import { montserrat_heading } from 'fonts'
+import style from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark'
 
 const ApiKeyManagement = ({
   course_name,
@@ -251,7 +252,7 @@ const ApiKeyManagement = ({
       shadow="xs"
       padding="none"
       radius="xl"
-      style={{ maxWidth: '85%', width: '100%', marginTop: '4%' }}
+      style={{ maxWidth: '85%', width: '100%', marginTop: '2%' }}
     >
       <Flex
         direction={isSmallScreen ? 'column' : 'row'}
@@ -402,7 +403,7 @@ const ApiKeyManagement = ({
           }}
         >
           <div className="card flex h-full flex-col">
-            <Group position="center" m="3rem" variant="column">
+            <div className="flex w-full flex-col items-center px-3 pt-12">
               <Title
                 className={`label ${montserrat_heading.variable} font-montserratHeading`}
                 variant="gradient"
@@ -415,7 +416,7 @@ const ApiKeyManagement = ({
               {apiKey && (
                 <Input
                   value={apiKey}
-                  className="mt-4 w-[80%] min-w-[5rem]"
+                  className="mt-4 w-full"
                   radius={'xl'}
                   size={'md'}
                   readOnly
@@ -431,9 +432,17 @@ const ApiKeyManagement = ({
                     </Button>
                   }
                   rightSectionWidth={'auto'}
+                  styles={(theme) => ({
+                    input: {
+                      paddingRight: '90px',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                    },
+                  })}
                 />
               )}
-            </Group>
+            </div>
             {!apiKey && !loading && (
               <Button
                 onClick={handleGenerate}
@@ -441,18 +450,24 @@ const ApiKeyManagement = ({
                 size="lg"
                 radius={'xl'}
                 className="min-w-[5rem] self-center rounded-md bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none"
-                w={'50%'}
+                // w={'60%'}
               >
                 Generate API Key
               </Button>
             )}
             {apiKey && !loading && (
               <>
-                <Group position="center" variant="column" mt="1rem" mb={'3rem'}>
+                <Group
+                  position="center"
+                  variant="column"
+                  mt="1rem"
+                  mb={'3rem'}
+                  pt={'lg'}
+                >
                   <Button
                     onClick={handleRotate}
                     disabled={loading || apiKey === null}
-                    size="lg"
+                    size="md"
                     radius={'xl'}
                     className="min-w-[5rem] rounded-md bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none"
                     w={'auto'}
@@ -462,7 +477,7 @@ const ApiKeyManagement = ({
                   <Button
                     onClick={handleDelete}
                     disabled={loading || apiKey === null}
-                    size="lg"
+                    size="md"
                     radius={'xl'}
                     className="min-w-[5rem] rounded-md bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none"
                     w={'auto'}

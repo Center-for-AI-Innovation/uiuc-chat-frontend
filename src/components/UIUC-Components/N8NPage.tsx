@@ -8,14 +8,12 @@ import {
   Stack,
   Card,
   Group,
-  Accordion,
 } from '@mantine/core'
 
 import {
   IconAlertCircle,
   IconCheck,
   IconCircleCheck,
-  IconCircleCheckFilled,
   IconCircleDashed,
   IconExternalLink,
 } from '@tabler/icons-react'
@@ -23,7 +21,7 @@ import {
 import { CannotEditCourse } from './CannotEditCourse'
 import { type CourseMetadata } from '~/types/courseMetadata'
 
-import { MainPageBackground } from './MainPageBackground'
+import { LoadingPlaceholderForAdminPages } from './MainPageBackground'
 import { extractEmailsFromClerk } from './clerkHelpers'
 import { notifications } from '@mantine/notifications'
 import GlobalFooter from './GlobalFooter'
@@ -35,10 +33,8 @@ import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-import { LoadingSpinner } from './LoadingSpinner'
 import { useAuth, useUser } from '@clerk/nextjs'
 import { Montserrat } from 'next/font/google'
-import { boolean, set } from 'zod'
 import { useFetchAllWorkflows } from '~/utils/functionCalling/handleFunctionCalling'
 import { IntermediateStateAccordion } from './IntermediateStateAccordion'
 
@@ -51,79 +47,6 @@ const montserrat_med = Montserrat({
   weight: '500',
   subsets: ['latin'],
 })
-
-const accordionItems = [
-  {
-    key: 'setup-instructions',
-    title: (
-      <Title
-        style={{ margin: '0 auto', textAlign: 'left' }}
-        order={4}
-        size={'xl'}
-        className={`pb-3 pt-3 ${montserrat_paragraph.variable} font-montserratParagraph`}
-      >
-        Setup Instructions 🤠
-      </Title>
-    ),
-    content: (
-      <List
-        w={'80%'}
-        type="ordered"
-        withPadding
-        className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-      >
-        <List.Item>
-          Tool use via LLMs is invite-only to prevent abuse. Please shoot me an
-          email for access: kvday2@illinois.edu
-        </List.Item>
-        <List.Item>
-          Once you have access, please{' '}
-          <b>
-            <a
-              href="https://tools.uiuc.chat/setup"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: '#8B5CF6', textDecoration: 'underline' }}
-            >
-              login with this link
-            </a>
-            .
-          </b>
-        </List.Item>
-        <List.Item>
-          Inside n8n, <b>create an n8n API key and save it below</b>.
-        </List.Item>
-      </List>
-    ),
-    isLoading: false,
-    error: false,
-  },
-  {
-    key: 'usage-instructions',
-    title: (
-      <Title
-        style={{ margin: '0 auto', textAlign: 'left' }}
-        order={4}
-        size={'xl'}
-        className={`pb-3 pt-3 ${montserrat_paragraph.variable} font-montserratParagraph`}
-      >
-        Usage Instructions 🛠️
-      </Title>
-    ),
-    content: (
-      <List
-        w={'80%'}
-        type="ordered"
-        withPadding
-        className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-      >
-        <List.Item>Create your workflows here.</List.Item>
-      </List>
-    ),
-    isLoading: false,
-    error: false,
-  },
-]
 
 const MakeToolsPage = ({ course_name }: { course_name: string }) => {
   // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
@@ -339,11 +262,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
   }
 
   if (!isLoaded || !courseMetadata) {
-    return (
-      <MainPageBackground>
-        <LoadingSpinner />
-      </MainPageBackground>
-    )
+    return <LoadingPlaceholderForAdminPages />
   }
 
   // Check auth
@@ -391,7 +310,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
               shadow="xs"
               padding="none"
               radius="xl"
-              style={{ maxWidth: '85%', width: '100%', marginTop: '4%' }}
+              style={{ maxWidth: '85%', width: '100%', marginTop: '2%' }}
             >
               <Flex className="flex-col md:flex-row">
                 {/* // direction={isSmallScreen ? 'column' : 'row'}> */}

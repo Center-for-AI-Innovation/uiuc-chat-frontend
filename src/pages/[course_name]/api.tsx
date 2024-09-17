@@ -4,8 +4,7 @@ import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
-import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
-import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
+import { LoadingPlaceholderForAdminPages } from '~/components/UIUC-Components/MainPageBackground'
 import ApiKeyManagement from '~/components/UIUC-Components/ApiKeyManagament'
 import { CourseMetadata } from '~/types/courseMetadata'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
@@ -75,11 +74,7 @@ const ApiPage: NextPage = () => {
   }, [courseMetadata, user.isLoaded])
 
   if (isLoading || !user.isLoaded || courseName == null) {
-    return (
-      <MainPageBackground>
-        <LoadingSpinner />
-      </MainPageBackground>
-    )
+    return <LoadingPlaceholderForAdminPages />
   }
 
   if (!user || !user.isSignedIn) {

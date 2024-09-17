@@ -1,47 +1,51 @@
-import { useState } from 'react'
-
-import { useCallback, useContext, useEffect } from 'react'
-
+import { useState, useCallback, useContext, useEffect, Suspense } from 'react'
 import { useTranslation } from 'next-i18next'
-
 import { useCreateReducer } from '@/hooks/useCreateReducer'
-
 import { DEFAULT_SYSTEM_PROMPT, DEFAULT_TEMPERATURE } from '@/utils/app/const'
-import { saveConversation, saveConversations } from '@/utils/app/conversation'
-import { saveFolders } from '@/utils/app/folders'
-import { exportData, importData } from '@/utils/app/importExport'
-
+import { exportData } from '@/utils/app/importExport'
 import { Conversation } from '@/types/chat'
 import { LatestExportFormat, SupportedExportFormats } from '@/types/export'
-import { OpenAIModels } from '~/utils/modelProviders/openai'
+import { OpenAIModels } from '~/utils/modelProviders/types/openai'
 import { PluginKey } from '@/types/plugin'
 
 import HomeContext from '~/pages/api/home/home.context'
-
 import { ChatFolders } from './components/ChatFolders'
 import { ChatbarSettings } from './components/ChatbarSettings'
 import { Conversations } from './components/Conversations'
-
 import Sidebar from '../Sidebar'
 import ChatbarContext from './Chatbar.context'
 import { ChatbarInitialState, initialState } from './Chatbar.state'
-
 import { v4 as uuidv4 } from 'uuid'
 import router from 'next/router'
+import { useQueryClient } from '@tanstack/react-query'
+import {
+  useDeleteAllConversations,
+  useDeleteConversation,
+  useFetchConversationHistory,
+  useUpdateConversation,
+} from '~/hooks/conversationQueries'
+import { AnimatePresence, motion } from 'framer-motion'
+import { LoadingSpinner } from '../UIUC-Components/LoadingSpinner'
+import { useDebouncedState } from '@mantine/hooks'
+import posthog from 'posthog-js'
+import { saveConversationToServer } from '~/utils/app/conversation'
+import { downloadConversationHistoryUser } from '~/pages/api/UIUC-api/downloadConvoHistoryUser'
 
-import { ContextWithMetadata } from '@/types/chat'
-
-export const Chatbar = () => {
+export const Chatbar = ({
+  current_email,
+  courseName,
+}: {
+  current_email: string
+  courseName: string
+}) => {
   const { t } = useTranslation('sidebar')
-
   const chatBarContextValue = useCreateReducer<ChatbarInitialState>({
     initialState,
   })
-
-  const [showCurrentCourseOnly, setShowCurrentCourseOnly] = useState(false)
+  const [isExporting, setIsExporting] = useState<boolean>(false)
 
   const {
-    state: { conversations, showChatbar, defaultModelId, folders, pluginKeys },
+    state: { conversations, showChatbar, defaultModelId, folders },
     dispatch: homeDispatch,
     handleCreateFolder,
     handleNewConversation,
@@ -53,116 +57,188 @@ export const Chatbar = () => {
     dispatch: chatDispatch,
   } = chatBarContextValue
 
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useDebouncedState(
+    searchTerm,
+    500,
+  )
+
+  const queryClient = useQueryClient()
+  const deleteConversationMutation = useDeleteConversation(
+    current_email,
+    queryClient,
+    courseName,
+    searchTerm,
+  )
+
+  const deleteAllConversationMutation = useDeleteAllConversations(
+    queryClient,
+    current_email,
+    courseName,
+  )
+
   const handleApiKeyChange = useCallback(
     (apiKey: string) => {
       homeDispatch({ field: 'apiKey', value: apiKey })
-
       localStorage.setItem('apiKey', apiKey)
     },
     [homeDispatch],
   )
 
-  const handlePluginKeyChange = (pluginKey: PluginKey) => {
-    if (pluginKeys.some((key) => key.pluginId === pluginKey.pluginId)) {
-      const updatedPluginKeys = pluginKeys.map((key) => {
-        if (key.pluginId === pluginKey.pluginId) {
-          return pluginKey
-        }
+  const {
+    data: conversationHistory,
+    error: conversationHistoryError,
+    isLoading: isConversationHistoryLoading,
+    isFetched: isConversationHistoryFetched,
+    fetchNextPage: fetchNextPageConversationHistory,
+    hasNextPage: hasNextPageConversationHistory,
+    isFetchingNextPage: isFetchingNextPageConversationHistory,
+    refetch: refetchConversationHistory,
+  } = useFetchConversationHistory(
+    current_email,
+    debouncedSearchTerm,
+    courseName,
+  )
 
-        return key
-      })
+  const updateConversationMutation = useUpdateConversation(
+    current_email as string,
+    queryClient,
+    courseName,
+  )
 
-      homeDispatch({ field: 'pluginKeys', value: updatedPluginKeys })
+  const [convoMigrationLoading, setConvoMigrationLoading] =
+    useState<boolean>(false)
 
-      localStorage.setItem('pluginKeys', JSON.stringify(updatedPluginKeys))
-    } else {
-      homeDispatch({ field: 'pluginKeys', value: [...pluginKeys, pluginKey] })
+  useEffect(() => {
+    setDebouncedSearchTerm(searchTerm)
+  }, [searchTerm])
 
-      localStorage.setItem(
-        'pluginKeys',
-        JSON.stringify([...pluginKeys, pluginKey]),
-      )
-    }
-  }
-
-  const handleClearPluginKey = (pluginKey: PluginKey) => {
-    const updatedPluginKeys = pluginKeys.filter(
-      (key) => key.pluginId !== pluginKey.pluginId,
+  async function updateConversations(conversationHistory: Conversation[]) {
+    await Promise.all(
+      conversationHistory.map(async (conversation: Conversation) => {
+        conversation.userEmail = current_email
+        conversation.projectName = courseName
+        const response = await saveConversationToServer(conversation)
+        console.log('Response from saveConversationToServer: ', response)
+      }),
     )
+  }
 
-    if (updatedPluginKeys.length === 0) {
-      homeDispatch({ field: 'pluginKeys', value: [] })
-      localStorage.removeItem('pluginKeys')
-      return
+  useEffect(() => {
+    try {
+      if (
+        isConversationHistoryFetched &&
+        !isConversationHistoryLoading &&
+        conversationHistory
+      ) {
+        const allConversations = conversationHistory.pages
+          .flatMap((page) => (Array.isArray(page) ? page : []))
+          .filter((conversation) => conversation !== undefined)
+        homeDispatch({ field: 'conversations', value: allConversations })
+        // console.log('Dispatching conversations: ', allConversations)
+
+        const convoMigrationComplete = localStorage.getItem(
+          'convoMigrationComplete',
+        )
+        if (convoMigrationComplete === 'true') return
+
+        if (
+          convoMigrationComplete === null ||
+          convoMigrationComplete === undefined ||
+          convoMigrationComplete === 'false'
+        ) {
+          localStorage.setItem('convoMigrationComplete', 'false')
+          setConvoMigrationLoading(true)
+
+          if (
+            isConversationHistoryFetched &&
+            !isConversationHistoryLoading &&
+            allConversations &&
+            allConversations.length === 0 &&
+            localStorage.getItem('conversationHistory') != null &&
+            localStorage.getItem('conversationHistory') != undefined &&
+            localStorage.getItem('conversationHistory') != '[]'
+          ) {
+            posthog.capture('migration_started', {
+              distinctId: current_email,
+            })
+            console.log(
+              'Migrating conversations from local storage to supabase',
+            )
+            const conversationHistory = JSON.parse(
+              localStorage.getItem('conversationHistory') || '[]',
+            )
+            homeDispatch({ field: 'conversations', value: conversationHistory })
+            updateConversations(conversationHistory)
+            localStorage.setItem('convoMigrationComplete', 'true')
+            setTimeout(() => refetchConversationHistory(), 100)
+          } else {
+            console.log('No need to migrate conversations')
+          }
+        }
+      }
+    } catch (error: any) {
+      console.error('Error during conversation migration:', error)
+      posthog.capture('migration_error', {
+        distinctId: current_email,
+        error: error.message,
+      })
+    } finally {
+      setConvoMigrationLoading(false)
     }
+  }, [
+    conversationHistory,
+    isConversationHistoryFetched,
+    isConversationHistoryLoading,
+    homeDispatch,
+  ])
 
-    homeDispatch({ field: 'pluginKeys', value: updatedPluginKeys })
-
-    localStorage.setItem('pluginKeys', JSON.stringify(updatedPluginKeys))
+  const handleLoadMoreConversations = () => {
+    if (
+      hasNextPageConversationHistory &&
+      !isFetchingNextPageConversationHistory
+    ) {
+      fetchNextPageConversationHistory()
+    }
   }
 
-  const handleExportData = () => {
-    exportData()
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const bottom =
+      e.currentTarget.scrollHeight - e.currentTarget.scrollTop <=
+      e.currentTarget.clientHeight + 100
+    if (bottom) {
+      handleLoadMoreConversations()
+    }
   }
 
-  const handleImportConversations = (data: SupportedExportFormats) => {
-    const { history, folders, prompts }: LatestExportFormat = importData(data)
-    homeDispatch({ field: 'conversations', value: history })
-    homeDispatch({
-      field: 'selectedConversation',
-      value: history[history.length - 1],
-    })
-    homeDispatch({ field: 'folders', value: folders })
-    homeDispatch({ field: 'prompts', value: prompts })
-
-    window.location.reload()
+  const handleExportData = async () => {
+    if (courseName && current_email) {
+      setIsExporting(true)
+      try {
+        await downloadConversationHistoryUser(current_email, courseName)
+      } finally {
+        setIsExporting(false)
+      }
+    }
   }
 
   const handleClearConversations = () => {
-    defaultModelId &&
-      homeDispatch({
-        field: 'selectedConversation',
-        value: {
-          id: uuidv4(),
-          name: t('New Conversation'),
-          messages: [],
-          model: OpenAIModels[defaultModelId],
-          prompt: DEFAULT_SYSTEM_PROMPT,
-          temperature: DEFAULT_TEMPERATURE,
-          folderId: null,
-        },
-      })
-
-    homeDispatch({ field: 'conversations', value: [] })
-
-    localStorage.removeItem('conversationHistory')
-    localStorage.removeItem('selectedConversation')
-
-    const updatedFolders = folders.filter((f) => f.type !== 'chat')
-
-    homeDispatch({ field: 'folders', value: updatedFolders })
-    saveFolders(updatedFolders)
+    deleteAllConversationMutation.mutate()
+    handleNewConversation()
   }
 
   const handleDeleteConversation = (conversation: Conversation) => {
     const updatedConversations = conversations.filter(
       (c) => c.id !== conversation.id,
     )
-
     homeDispatch({ field: 'conversations', value: updatedConversations })
     chatDispatch({ field: 'searchTerm', value: '' })
-    saveConversations(updatedConversations)
+
+    deleteConversationMutation.mutate(conversation)
 
     if (updatedConversations.length > 0) {
-      const lastConversation =
-        updatedConversations[updatedConversations.length - 1]
+      const lastConversation = updatedConversations[0]
       if (lastConversation) {
-        homeDispatch({
-          field: 'selectedConversation',
-          value: lastConversation,
-        })
-
-        saveConversation(lastConversation)
+        homeDispatch({ field: 'selectedConversation', value: lastConversation })
       }
     } else {
       defaultModelId &&
@@ -178,7 +254,6 @@ export const Chatbar = () => {
             folderId: null,
           },
         })
-
       localStorage.removeItem('selectedConversation')
     }
   }
@@ -191,50 +266,11 @@ export const Chatbar = () => {
   const handleDrop = (e: any) => {
     if (e.dataTransfer) {
       const conversation = JSON.parse(e.dataTransfer.getData('conversation'))
-      handleUpdateConversation(conversation, { key: 'folderId', value: 0 })
+      handleUpdateConversation(conversation, { key: 'folderId', value: null })
       chatDispatch({ field: 'searchTerm', value: '' })
       e.target.style.background = 'none'
     }
   }
-
-  // SEARCH CONVO HISTORY (by message title, content and course-name)
-  // Also implements "Only show conversations from current course" toggle
-  useEffect(() => {
-    const currentCourseName = router.asPath.split('/')[1]
-
-    const filterBySearchTermOrCourse = (conversation: Conversation) => {
-      const courseMatch = conversation.messages[0]?.contexts?.some(
-        (context) => context['course_name '] === currentCourseName,
-      )
-      const searchTermMatch =
-        conversation.messages[0]?.contexts?.[0]?.['course_name ']
-          .toLocaleLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        conversation.messages.some((message) => {
-          if (typeof message.content === 'string') {
-            return message.content
-              .toLowerCase()
-              .includes(searchTerm.toLowerCase())
-          } else if (Array.isArray(message.content)) {
-            return message.content.some((content) =>
-              content.text?.toLowerCase().includes(searchTerm.toLowerCase()),
-            )
-          }
-          return false
-        })
-      const isMatch =
-        (showCurrentCourseOnly ? courseMatch : true) && searchTermMatch
-      return isMatch
-    }
-
-    const filteredConversations = conversations.filter(
-      filterBySearchTermOrCourse,
-    )
-    chatDispatch({
-      field: 'filteredConversations',
-      value: filteredConversations,
-    })
-  }, [searchTerm, conversations, showCurrentCourseOnly])
 
   return (
     <ChatbarContext.Provider
@@ -242,31 +278,76 @@ export const Chatbar = () => {
         ...chatBarContextValue,
         handleDeleteConversation,
         handleClearConversations,
-        handleImportConversations,
         handleExportData,
-        handlePluginKeyChange,
-        handleClearPluginKey,
         handleApiKeyChange,
+        isExporting,
       }}
     >
       <Sidebar<Conversation>
         side={'left'}
         isOpen={showChatbar}
         addItemButtonTitle={t('New chat')}
-        itemComponent={<Conversations conversations={filteredConversations} />}
-        folderComponent={<ChatFolders searchTerm={searchTerm} />}
-        items={filteredConversations}
+        itemComponent={
+          <Suspense
+            fallback={
+              <div>
+                Loading... <LoadingSpinner size="sm" />
+              </div>
+            }
+          >
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              {convoMigrationLoading ? (
+                <div className="flex justify-center py-4">
+                  <LoadingSpinner size="sm" />
+                </div>
+              ) : (
+                <>
+                  <Conversations
+                    conversations={conversations}
+                    onLoadMore={handleLoadMoreConversations}
+                  />
+                  <AnimatePresence>
+                    {isFetchingNextPageConversationHistory && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.5 }}
+                        className="flex justify-center py-4"
+                      >
+                        <LoadingSpinner size="sm" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </>
+              )}
+            </motion.div>
+          </Suspense>
+        }
+        folderComponent={
+          <ChatFolders
+            searchTerm={searchTerm}
+            currentEmail={current_email}
+            courseName={courseName}
+          />
+        }
+        folders={folders}
+        items={conversations}
         searchTerm={searchTerm}
         handleSearchTerm={(searchTerm: string) =>
           chatDispatch({ field: 'searchTerm', value: searchTerm })
         }
-        showCurrentCourseOnly={showCurrentCourseOnly}
-        onToggleCurrentCourseOnly={setShowCurrentCourseOnly}
         toggleOpen={handleToggleChatbar}
         handleCreateItem={handleNewConversation}
         handleCreateFolder={() => handleCreateFolder(t('New folder'), 'chat')}
         handleDrop={handleDrop}
         footerComponent={<ChatbarSettings />}
+        onScroll={handleScroll}
       />
     </ChatbarContext.Provider>
   )

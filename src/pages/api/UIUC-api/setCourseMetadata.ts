@@ -34,6 +34,9 @@ const setCourseMetadata = async (req: any, res: any) => {
   const disabled_models = JSON.parse(
     req.nextUrl.searchParams.get('disabled_models') || '[]',
   )
+  const project_description = JSON.parse(
+    req.nextUrl.searchParams.get('project_description') || '[]',
+  )
   try {
     const course_metadata: CourseMetadata = {
       is_private: is_private,
@@ -46,6 +49,7 @@ const setCourseMetadata = async (req: any, res: any) => {
       example_questions: example_questions,
       system_prompt: system_prompt,
       disabled_models: disabled_models,
+      project_description: project_description,
     }
     console.log('Right before setting course_metadata with: ', course_metadata)
     await kv.hset('course_metadatas', { [course_name]: course_metadata })

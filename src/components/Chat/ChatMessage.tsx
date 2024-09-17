@@ -11,8 +11,7 @@ import {
 import { FC, memo, useContext, useEffect, useRef, useState } from 'react'
 
 import { useTranslation } from 'next-i18next'
-import { updateConversation } from '@/utils/app/conversation'
-import { ContextWithMetadata, Message } from '@/types/chat'
+import { Content, ContextWithMetadata, Message } from '@/types/chat'
 import HomeContext from '~/pages/api/home/home.context'
 import { CodeBlock } from '../Markdown/CodeBlock'
 import { MemoizedReactMarkdown } from '../Markdown/MemoizedReactMarkdown'
@@ -287,12 +286,12 @@ export const ChatMessage: FC<Props> = memo(
         messages,
       }
 
-      const { single, all } = updateConversation(
-        updatedConversation,
-        conversations,
-      )
-      homeDispatch({ field: 'selectedConversation', value: single })
-      homeDispatch({ field: 'conversations', value: all })
+      // const { single, all } = updateConversation(
+      //   updatedConversation,
+      //   conversations,
+      // )
+      // homeDispatch({ field: 'selectedConversation', value: single })
+      // homeDispatch({ field: 'conversations', value: all })
     }
 
     const handlePressEnter = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -479,7 +478,7 @@ export const ChatMessage: FC<Props> = memo(
         } max-w-[100%]`}
         style={{ overflowWrap: 'anywhere' }}
       >
-        <div className="relative flex w-full px-2 py-4 text-base md:mx-[10%] md:max-w-[80%] md:gap-6 md:p-6 lg:mx-[15%] lg:max-w-[70%] lg:px-0">
+        <div className="relative flex w-full px-2 py-4 text-base md:mx-[5%] md:max-w-[90%] md:gap-6 md:p-6 lg:mx-[10%]">
           <div className="min-w-[40px] text-left">
             {message.role === 'assistant' ? (
               <>
@@ -491,9 +490,9 @@ export const ChatMessage: FC<Props> = memo(
             )}
           </div>
 
-          <div className="dark:prose-invert prose mt-[-2px] flex w-full max-w-full">
+          <div className="dark:prose-invert prose mt-[-2px] flex w-full max-w-full flex-wrap lg:w-[90%]">
             {message.role === 'user' ? (
-              <div className="flex w-full flex-row">
+              <div className="flex w-[90%] flex-row flex-wrap">
                 {isEditing ? (
                   <div className="flex w-full flex-col">
                     <textarea
@@ -534,10 +533,10 @@ export const ChatMessage: FC<Props> = memo(
                     </div>
                   </div>
                 ) : (
-                  <div className="dark:prose-invert prose w-4/5 flex-1 whitespace-pre-wrap">
+                  <div className="dark:prose-invert w-9/10 prose flex-1 whitespace-pre-wrap lg:mr-2">
                     {Array.isArray(message.content) ? (
                       <>
-                        <div className="flex w-full flex-col items-start space-y-2">
+                        <div className="mb-2 flex w-full flex-col items-start space-y-2">
                           {/* User message text for all messages */}
                           {message.content.map((content, index) => {
                             if (content.type === 'text') {
@@ -628,292 +627,257 @@ export const ChatMessage: FC<Props> = memo(
                               }
                             />
                           )}
-
-                          {/* Retrieval results for all messages */}
-                          {message.contexts && message.contexts.length > 0 && (
-                            <IntermediateStateAccordion
-                              accordionKey="retrieval loading"
-                              title="Retrieved documents"
-                              isLoading={false}
-                              error={false}
-                              content={`Found ${message.contexts?.length} document chunks.`}
-                            />
-                          )}
-
-                          {/* Retrieval loading state for last message */}
-                          {isRetrievalLoading &&
-                            (messageIndex ===
-                              (selectedConversation?.messages.length ?? 0) -
-                                1 ||
-                              messageIndex ===
-                                (selectedConversation?.messages.length ?? 0) -
-                                  2) && (
-                              <IntermediateStateAccordion
-                                accordionKey="retrieval loading"
-                                title="Retrieving documents"
-                                isLoading={isRetrievalLoading}
-                                error={false}
-                                content={`Found ${message.contexts?.length} document chunks.`}
-                              />
-                            )}
-
-                          {/* Tool Routing loading state for last message */}
-                          {isRouting &&
-                            (messageIndex ===
-                              (selectedConversation?.messages.length ?? 0) -
-                                1 ||
-                              messageIndex ===
-                                (selectedConversation?.messages.length ?? 0) -
-                                  2) && (
-                              <IntermediateStateAccordion
-                                accordionKey={`routing tools`}
-                                title={'Routing the request to relevant tools'}
-                                isLoading={isRouting}
-                                error={false}
-                                content={<></>}
-                              />
-                            )}
-
-                          {/* Tool input arguments state for last message */}
-                          {isRouting === false &&
-                            message.tools &&
-                            (messageIndex ===
-                              (selectedConversation?.messages.length ?? 0) -
-                                1 ||
-                              messageIndex ===
-                                (selectedConversation?.messages.length ?? 0) -
-                                  2) && (
-                              <>
-                                {message.tools.map((response, index) => (
-                                  <IntermediateStateAccordion
-                                    key={`routing-${index}`}
-                                    accordionKey={`routing-${index}`}
-                                    title={
-                                      <>
-                                        Routing the request to{' '}
-                                        <Badge
-                                          color="grape"
-                                          radius="md"
-                                          size="sm"
-                                        >
-                                          {response.readableName}
-                                        </Badge>
-                                      </>
-                                    }
-                                    isLoading={isRouting}
-                                    error={false}
-                                    content={
-                                      <>
-                                        Arguments :{' '}
-                                        {response.aiGeneratedArgumentValues
-                                          ?.image_urls ? (
-                                          <div>
-                                            <div className="flex overflow-x-auto">
-                                              {JSON.parse(
-                                                response
-                                                  .aiGeneratedArgumentValues
-                                                  .image_urls,
-                                              ).length > 0 ? (
-                                                JSON.parse(
-                                                  response
-                                                    .aiGeneratedArgumentValues
-                                                    .image_urls,
-                                                ).map(
-                                                  (
-                                                    imageUrl: string,
-                                                    index: number,
-                                                  ) => (
-                                                    <div
-                                                      key={index}
-                                                      className={
-                                                        classes.imageContainerStyle
-                                                      }
-                                                    >
-                                                      <div className="overflow-hidden rounded-lg shadow-lg">
-                                                        <ImagePreview
-                                                          src={imageUrl}
-                                                          alt={`Tool image argument ${index}`}
-                                                          className={
-                                                            classes.imageStyle
-                                                          }
-                                                        />
-                                                      </div>
-                                                    </div>
-                                                  ),
-                                                )
-                                              ) : (
-                                                <p>No arguments provided</p>
-                                              )}
-                                            </div>
-                                          </div>
-                                        ) : (
-                                          <pre>
-                                            {JSON.stringify(
-                                              response.aiGeneratedArgumentValues,
-                                              null,
-                                              2,
-                                            )}
-                                          </pre>
-                                        )}
-                                      </>
-                                    }
-                                  />
-                                ))}
-                              </>
-                            )}
-
-                          {/* Tool output states for last message */}
-                          {(messageIndex ===
-                            (selectedConversation?.messages.length ?? 0) - 1 ||
-                            messageIndex ===
-                              (selectedConversation?.messages.length ?? 0) -
-                                2) && (
-                            <>
-                              {message.tools?.map((response, index) => (
-                                <IntermediateStateAccordion
-                                  key={`tool-${index}`}
-                                  accordionKey={`tool-${index}`}
-                                  title={
-                                    <>
-                                      Tool output from{' '}
-                                      <Badge
-                                        color={response.error ? 'red' : 'grape'}
-                                        radius="md"
-                                        size="sm"
-                                      >
-                                        {response.readableName}
-                                      </Badge>
-                                    </>
-                                  }
-                                  isLoading={
-                                    response.output === undefined &&
-                                    response.error === undefined
-                                  }
-                                  error={response.error ? true : false}
-                                  content={
-                                    <>
-                                      {response.error ? (
-                                        <span>{response.error}</span>
-                                      ) : (
-                                        <>
-                                          <div
-                                            style={{
-                                              display: 'flex',
-                                              overflowX: 'auto',
-                                              gap: '10px',
-                                            }}
-                                          >
-                                            {response.output?.imageUrls &&
-                                              response.output?.imageUrls.map(
-                                                (imageUrl, index) => (
-                                                  <div
-                                                    key={index}
-                                                    className={
-                                                      classes.imageContainerStyle
-                                                    }
-                                                  >
-                                                    <div className="overflow-hidden rounded-lg shadow-lg">
-                                                      <ImagePreview
-                                                        src={imageUrl}
-                                                        alt={`Tool output image ${index}`}
-                                                        className={
-                                                          classes.imageStyle
-                                                        }
-                                                      />
-                                                    </div>
-                                                  </div>
-                                                ),
-                                              )}
-                                          </div>
-                                          <div>
-                                            {response.output?.text
-                                              ? response.output.text
-                                              : JSON.stringify(
-                                                  response.output?.data,
-                                                  null,
-                                                  2,
-                                                )}
-                                          </div>
-                                        </>
-                                      )}
-                                    </>
-                                  }
-                                />
-                              ))}
-                            </>
-                          )}
-                          {(() => {
-                            if (
-                              messageIsStreaming === undefined ||
-                              !messageIsStreaming
-                            ) {
-                              console.log(
-                                'isRouting: ',
-                                isRouting,
-                                'isRetrievalLoading: ',
-                                isRetrievalLoading,
-                                'isImg2TextLoading: ',
-                                isImg2TextLoading,
-                                'messageIsStreaming: ',
-                                messageIsStreaming,
-                                'loading: ',
-                                loading,
-                              )
-                            }
-                            return null
-                          })()}
-                          {!isRouting &&
-                            !isRetrievalLoading &&
-                            !isImg2TextLoading &&
-                            loading &&
-                            (messageIndex ===
-                              (selectedConversation?.messages.length ?? 0) -
-                                1 ||
-                              messageIndex ===
-                                (selectedConversation?.messages.length ?? 0) -
-                                  2) &&
-                            (!message.tools ||
-                              message.tools.every(
-                                (tool) =>
-                                  tool.output !== undefined ||
-                                  tool.error !== undefined,
-                              )) && (
-                              <>
-                                <div
-                                  style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    marginLeft: '10px',
-                                    marginTop: '10px',
-                                  }}
-                                >
-                                  <p
-                                    style={{
-                                      marginRight: '10px',
-                                      fontWeight: 'bold',
-                                      textShadow: '0 0 10px',
-                                    }}
-                                    className={`pulsate text-base ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                  >
-                                    Generating final response:
-                                  </p>
-                                  <LoadingSpinner size="xs" />
-                                </div>
-                              </>
-                            )}
                         </div>
                       </>
                     ) : (
-                      <>
-                        {message.content}
-                        {isRetrievalLoading &&
-                          (messageIndex ===
-                            (selectedConversation?.messages.length ?? 0) - 1 ||
-                            messageIndex ===
-                              (selectedConversation?.messages.length ?? 0) -
-                                2) && (
+                      <>{message.content}</>
+                    )}
+                    <div className="flex w-full flex-col items-start space-y-2">
+                      {/* Retrieval results for all messages */}
+                      {message.contexts && message.contexts.length > 0 && (
+                        <IntermediateStateAccordion
+                          accordionKey="retrieval loading"
+                          title="Retrieved documents"
+                          isLoading={false}
+                          error={false}
+                          content={`Found ${message.contexts?.length} document chunks.`}
+                        />
+                      )}
+
+                      {/* Retrieval loading state for last message */}
+                      {isRetrievalLoading &&
+                        (messageIndex ===
+                          (selectedConversation?.messages.length ?? 0) - 1 ||
+                          messageIndex ===
+                            (selectedConversation?.messages.length ?? 0) -
+                              2) && (
+                          <IntermediateStateAccordion
+                            accordionKey="retrieval loading"
+                            title="Retrieving documents"
+                            isLoading={isRetrievalLoading}
+                            error={false}
+                            content={`Found ${message.contexts?.length} document chunks.`}
+                          />
+                        )}
+
+                      {/* Tool Routing loading state for last message */}
+                      {isRouting &&
+                        (messageIndex ===
+                          (selectedConversation?.messages.length ?? 0) - 1 ||
+                          messageIndex ===
+                            (selectedConversation?.messages.length ?? 0) -
+                              2) && (
+                          <IntermediateStateAccordion
+                            accordionKey={`routing tools`}
+                            title={'Routing the request to relevant tools'}
+                            isLoading={isRouting}
+                            error={false}
+                            content={<></>}
+                          />
+                        )}
+
+                      {/* Tool input arguments state for last message */}
+                      {isRouting === false &&
+                        message.tools &&
+                        (messageIndex ===
+                          (selectedConversation?.messages.length ?? 0) - 1 ||
+                          messageIndex ===
+                            (selectedConversation?.messages.length ?? 0) -
+                              2) && (
+                          <>
+                            {message.tools.map((response, index) => (
+                              <IntermediateStateAccordion
+                                key={`routing-${index}`}
+                                accordionKey={`routing-${index}`}
+                                title={
+                                  <>
+                                    Routing the request to{' '}
+                                    <Badge color="grape" radius="md" size="sm">
+                                      {response.readableName}
+                                    </Badge>
+                                  </>
+                                }
+                                isLoading={isRouting}
+                                error={false}
+                                content={
+                                  <>
+                                    Arguments :{' '}
+                                    {response.aiGeneratedArgumentValues
+                                      ?.image_urls ? (
+                                      <div>
+                                        <div className="flex overflow-x-auto">
+                                          {JSON.parse(
+                                            response.aiGeneratedArgumentValues
+                                              .image_urls,
+                                          ).length > 0 ? (
+                                            JSON.parse(
+                                              response.aiGeneratedArgumentValues
+                                                .image_urls,
+                                            ).map(
+                                              (
+                                                imageUrl: string,
+                                                index: number,
+                                              ) => (
+                                                <div
+                                                  key={index}
+                                                  className={
+                                                    classes.imageContainerStyle
+                                                  }
+                                                >
+                                                  <div className="overflow-hidden rounded-lg shadow-lg">
+                                                    <ImagePreview
+                                                      src={imageUrl}
+                                                      alt={`Tool image argument ${index}`}
+                                                      className={
+                                                        classes.imageStyle
+                                                      }
+                                                    />
+                                                  </div>
+                                                </div>
+                                              ),
+                                            )
+                                          ) : (
+                                            <p>No arguments provided</p>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <pre>
+                                        {JSON.stringify(
+                                          response.aiGeneratedArgumentValues,
+                                          null,
+                                          2,
+                                        )}
+                                      </pre>
+                                    )}
+                                  </>
+                                }
+                              />
+                            ))}
+                          </>
+                        )}
+
+                      {/* Tool output states for last message */}
+                      {(messageIndex ===
+                        (selectedConversation?.messages.length ?? 0) - 1 ||
+                        messageIndex ===
+                          (selectedConversation?.messages.length ?? 0) - 2) && (
+                        <>
+                          {message.tools?.map((response, index) => (
+                            <IntermediateStateAccordion
+                              key={`tool-${index}`}
+                              accordionKey={`tool-${index}`}
+                              title={
+                                <>
+                                  Tool output from{' '}
+                                  <Badge
+                                    color={response.error ? 'red' : 'grape'}
+                                    radius="md"
+                                    size="sm"
+                                  >
+                                    {response.readableName}
+                                  </Badge>
+                                </>
+                              }
+                              isLoading={
+                                response.output === undefined &&
+                                response.error === undefined
+                              }
+                              error={response.error ? true : false}
+                              content={
+                                <>
+                                  {response.error ? (
+                                    <span>{response.error}</span>
+                                  ) : (
+                                    <>
+                                      <div
+                                        style={{
+                                          display: 'flex',
+                                          overflowX: 'auto',
+                                          gap: '10px',
+                                        }}
+                                      >
+                                        {response.output?.imageUrls &&
+                                          response.output?.imageUrls.map(
+                                            (imageUrl, index) => (
+                                              <div
+                                                key={index}
+                                                className={
+                                                  classes.imageContainerStyle
+                                                }
+                                              >
+                                                <div className="overflow-hidden rounded-lg shadow-lg">
+                                                  <ImagePreview
+                                                    src={imageUrl}
+                                                    alt={`Tool output image ${index}`}
+                                                    className={
+                                                      classes.imageStyle
+                                                    }
+                                                  />
+                                                </div>
+                                              </div>
+                                            ),
+                                          )}
+                                      </div>
+                                      <div>
+                                        {response.output?.text
+                                          ? response.output.text
+                                          : JSON.stringify(
+                                              response.output?.data,
+                                              null,
+                                              2,
+                                            )}
+                                      </div>
+                                    </>
+                                  )}
+                                </>
+                              }
+                            />
+                          ))}
+                        </>
+                      )}
+                      {(() => {
+                        if (
+                          messageIsStreaming === undefined ||
+                          !messageIsStreaming
+                        ) {
+                          // console.log(
+                          //   'isRouting: ',
+                          //   isRouting,
+                          //   'isRetrievalLoading: ',
+                          //   isRetrievalLoading,
+                          //   'isImg2TextLoading: ',
+                          //   isImg2TextLoading,
+                          //   'messageIsStreaming: ',
+                          //   messageIsStreaming,
+                          //   'loading: ',
+                          //   loading,
+                          // )
+                        }
+                        return null
+                      })()}
+                      {!isRouting &&
+                        !isRetrievalLoading &&
+                        !isImg2TextLoading &&
+                        loading &&
+                        (messageIndex ===
+                          (selectedConversation?.messages.length ?? 0) - 1 ||
+                          messageIndex ===
+                            (selectedConversation?.messages.length ?? 0) - 2) &&
+                        (!message.tools ||
+                          message.tools.every(
+                            (tool) =>
+                              tool.output !== undefined ||
+                              tool.error !== undefined,
+                          )) && (
+                          <>
                             <div
-                              style={{ display: 'flex', alignItems: 'center' }}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                marginLeft: '10px',
+                                marginTop: '10px',
+                              }}
                             >
                               <p
                                 style={{
@@ -921,20 +885,20 @@ export const ChatMessage: FC<Props> = memo(
                                   fontWeight: 'bold',
                                   textShadow: '0 0 10px',
                                 }}
-                                className={`pulsate ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                className={`pulsate text-base ${montserrat_paragraph.variable} font-montserratParagraph`}
                               >
-                                Retrieving relevant documents:
+                                Generating final response:
                               </p>
                               <LoadingSpinner size="xs" />
                             </div>
-                          )}
-                      </>
-                    )}
+                          </>
+                        )}
+                    </div>
                   </div>
                 )}
 
                 {!isEditing && (
-                  <div className="mb-10 ml-1 flex w-1/5 flex-col items-end justify-start gap-4 md:-mr-8 md:ml-0 md:flex-row md:items-start md:justify-end md:gap-1">
+                  <div className="w-1/10 mb-10 ml-1 flex flex-col items-end justify-start gap-4 md:-mr-8 md:ml-0 md:flex-row md:items-start md:justify-end md:gap-1">
                     <button
                       className={`invisible text-gray-500 hover:text-gray-700 focus:visible group-hover:visible dark:text-gray-400 dark:hover:text-gray-300 
                         ${Array.isArray(message.content) && message.content.some((content) => content.type === 'image_url') ? 'hidden' : ''}`}
@@ -952,10 +916,11 @@ export const ChatMessage: FC<Props> = memo(
                 )}
               </div>
             ) : (
-              <div className="flex max-w-[90%] flex-row overflow-hidden">
-                <div className="w-full max-w-full flex-1 overflow-hidden">
+              <div className="flex w-[90%] flex-row flex-wrap">
+                {/* <div className='overflow-hidden'> */}
+                <div className="w-9/10 max-w-9/10 flex-1 overflow-hidden lg:mr-2">
                   <MemoizedReactMarkdown
-                    className={`dark:prose-invert linkMarkDown supMarkdown codeBlock prose flex-1`}
+                    className={`dark:prose-invert linkMarkDown supMarkdown codeBlock prose mb-2 flex-1 flex-col items-start space-y-2`}
                     remarkPlugins={[remarkGfm, remarkMath]}
                     rehypePlugins={[rehypeMathjax]}
                     components={{
@@ -1008,7 +973,7 @@ export const ChatMessage: FC<Props> = memo(
                       p({ node, children }) {
                         return (
                           <p
-                            className={`text-base font-normal ${montserrat_paragraph.variable} pb-2 font-montserratParagraph`}
+                            className={`self-start text-base font-normal ${montserrat_paragraph.variable} pb-2 font-montserratParagraph`}
                           >
                             {children}
                           </p>
@@ -1118,9 +1083,6 @@ export const ChatMessage: FC<Props> = memo(
                       },
                       a({ node, className, children, ...props }) {
                         const { href, title } = props
-                        // console.log("href:", href);
-                        // console.log("title:", title);
-                        // console.log("children:", children);
                         const isCitationLink = /^\d+$/.test(
                           children[0] as string,
                         )
@@ -1152,22 +1114,26 @@ export const ChatMessage: FC<Props> = memo(
                       },
                     }}
                   >
-                    {`${message.content}${
-                      messageIsStreaming &&
-                      messageIndex ==
-                        (selectedConversation?.messages.length ?? 0) - 1
-                        ? '`▍`'
-                        : ''
-                    }`}
+                    {(() => {
+                      if (
+                        messageIsStreaming &&
+                        messageIndex ===
+                          (selectedConversation?.messages.length ?? 0) - 1
+                      ) {
+                        return `${message.content} ▍`
+                      }
+                      if (Array.isArray(message.content)) {
+                        return (message.content as Content[])
+                          .filter((content) => content.type === 'text')
+                          .map((content) => content.text)
+                          .join(' ')
+                      }
+                      return message.content as string
+                    })()}
                   </MemoizedReactMarkdown>
-                  {/* {message.contexts && message.contexts.length > 0 && (
-                    <Group variant="row" spacing="xs">
-                      <ContextCards contexts={message.contexts} />
-                    </Group>
-                  )} */}
                 </div>
-
-                <div className="ml-1 flex flex-col items-center justify-end gap-4 md:-mr-8 md:ml-0 md:flex-row md:items-start md:justify-start md:gap-1">
+                {/* <div className="ml-1 flex flex-col items-center justify-end gap-4 md:-mr-8 md:ml-0 md:flex-row md:items-start md:justify-start md:gap-1"> */}
+                <div className="w-1/10 mb-10 ml-1 flex flex-col items-end justify-start gap-4 md:-mr-8 md:ml-0 md:flex-row md:items-start md:justify-end md:gap-1">
                   {messagedCopied ? (
                     <IconCheck
                       size={20}

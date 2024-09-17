@@ -12,7 +12,7 @@ import { Key } from '../../Settings/Key'
 import { SidebarButton } from '../../Sidebar/SidebarButton'
 import ChatbarContext from '../Chatbar.context'
 import { ClearConversations } from './ClearConversations'
-import { PluginKeys } from './PluginKeys'
+// import { PluginKeys } from './PluginKeys'
 
 export const ChatbarSettings = () => {
   const { t } = useTranslation('sidebar')
@@ -31,9 +31,9 @@ export const ChatbarSettings = () => {
 
   const {
     handleClearConversations,
-    handleImportConversations,
     handleExportData,
     handleApiKeyChange,
+    isExporting,
   } = useContext(ChatbarContext)
 
   return (
@@ -42,19 +42,18 @@ export const ChatbarSettings = () => {
         <ClearConversations onClearConversations={handleClearConversations} />
       ) : null}
 
-      <Import onImport={handleImportConversations} />
-
       <SidebarButton
         text={t('Export history')}
         icon={<IconFileExport size={18} />}
         onClick={() => handleExportData()}
+        loading={isExporting}
       />
 
       {!serverSideApiKeyIsSet ? (
         <Key apiKey={apiKey} onApiKeyChange={handleApiKeyChange} />
       ) : null}
 
-      {!serverSidePluginKeysSet ? <PluginKeys /> : null}
+      {/* {!serverSidePluginKeysSet ? <PluginKeys /> : null} */}
 
       {/* Deprecate settings button for now... */}
       {/* <SidebarButton
