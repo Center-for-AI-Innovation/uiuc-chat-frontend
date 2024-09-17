@@ -9,12 +9,18 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       return res.status(405).json({ error: '❌❌ Request method not allowed' })
     }
     let data
-    try {
-      data = JSON.parse(req.body)
-    } catch (error) {
-      console.error('Error parsing JSON:', error)
-      return res.status(400).json({ error: 'Invalid JSON' })
+    if (typeof req.body === 'string') {
+      try {
+        data = JSON.parse(req.body)
+      } catch (error) {
+        console.error('Error parsing JSON:', error)
+        data = req.body // Use the raw body if parsing fails
+      }
+    } else {
+      data = req.body // If it's already an object, use it directly
     }
+
+    console.log('Received callback data:', data) // Log the received data for debugging
 
     // Data:  {
     //   success_ingest: 'courses/t/8885632f-b519-4610-b888-744aa4c2066d-6.pdf',
