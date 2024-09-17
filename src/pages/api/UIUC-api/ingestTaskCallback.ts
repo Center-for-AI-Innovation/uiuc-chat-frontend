@@ -22,7 +22,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     console.log('Received callback data:', data)
     console.log('req.headers', req.headers)
 
-    let parsedData =
+    const parsedData =
       typeof data.data === 'string' ? parseJSON(data.data) : data.data
     console.log('parsedData:', parsedData)
     console.log('parsedData typeof:', typeof parsedData)
