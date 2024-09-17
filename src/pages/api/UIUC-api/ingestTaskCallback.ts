@@ -18,14 +18,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       }
     }
 
+    // Somehow JSON.parse() does not do it recursively... idk.
     const data = typeof req.body === 'string' ? parseJSON(req.body) : req.body
-    console.log('Received callback data:', data)
-    console.log('req.headers', req.headers)
-
     const parsedData =
       typeof data.data === 'string' ? parseJSON(data.data) : data.data
-    console.log('parsedData:', parsedData)
-    console.log('parsedData typeof:', typeof parsedData)
 
     // Data:  {
     //   success_ingest: 'courses/t/8885632f-b519-4610-b888-744aa4c2066d-6.pdf',
