@@ -1,5 +1,6 @@
 import {
   AzureProvider,
+  preferredModelIds,
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { decryptKeyIfNeeded } from '../crypto'
@@ -134,6 +135,16 @@ export const getAzureModels = async (
       },
       [],
     )
+
+    // Sort the azureModels based on the preferredModelIds
+    azureModels.sort((a, b) => {
+      const indexA = preferredModelIds.indexOf(a.id as AzureModelID)
+      const indexB = preferredModelIds.indexOf(b.id as AzureModelID)
+      return (
+        (indexA === -1 ? Infinity : indexA) -
+        (indexB === -1 ? Infinity : indexB)
+      )
+    })
 
     azureProvider.models = azureModels
     return azureProvider
