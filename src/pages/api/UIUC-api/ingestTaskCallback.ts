@@ -20,10 +20,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       data = req.body // If it's already an object, use it directly
     }
 
-    // console.log('Received callback data:', data) // Log the received data for debugging
-    // console.log('req.headers', req.headers)
+    console.log('Received callback data:', data) // Log the received data for debugging
+    console.log('req.headers', req.headers)
     data = data.data
-    // console.log('data after doing data.data here:', data) // Log the received data for debugging
+    console.log('data after doing data.data here:', data) // Log the received data for debugging
 
     // Data:  {
     //   success_ingest: 'courses/t/8885632f-b519-4610-b888-744aa4c2066d-6.pdf',
@@ -39,10 +39,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         .from('documents_in_progress')
         .delete()
         .eq('beam_task_id', req.headers['x-task-id'])
-    }
-    // If failure_ingest or Beam task is FAILED or TIMEOUT
-    // assume failures if success is not explicity defined (above)
-    else {
+    } else {
+      // If failure_ingest or Beam task is FAILED or TIMEOUT
+      // assume failures if success is not explicity defined (above)
       //  if (
       //   data.failure_ingest ||
       //   req.headers['x-beam-task-status'] === 'FAILED' ||
@@ -60,7 +59,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       delete record![0].created_at
 
       // Add error message, either specific one or "timeout" from Beam body.
-      record![0].error = data.failure_ingest.error || req.body.error
+      record![0].error = data.failure_ingest.error
 
       await supabase.from('documents_failed').insert(record![0])
 
