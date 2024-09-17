@@ -22,25 +22,22 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     console.log('Received callback data:', data) // Log the received data for debugging
     console.log('req.headers', req.headers)
-    data = data.data
-    console.log('data after doing data.data here:', data) // Log the received data for debugging
-    console.log('data after doing data.data here typeof:', typeof data) // Log the received data for debugging
+    let parsedData = data.data
+    console.log('parsedData before parsing:', parsedData) // Log the data before parsing
+    console.log('parsedData before parsing typeof:', typeof parsedData) // Log the type before parsing
 
     // Parse data.data if it's a string
-    if (typeof data.data === 'string') {
+    if (typeof parsedData === 'string') {
       try {
-        data = JSON.parse(data.data)
+        parsedData = JSON.parse(parsedData)
       } catch (error) {
         console.error('Error parsing data.data:', error)
-        // If parsing fails, use the original data
-        data = data.data
+        // If parsing fails, keep the original string
       }
-    } else {
-      data = data.data
     }
 
-    console.log('data after parsing:', data) // Log the parsed data for debugging
-    console.log('data after parsing typeof:', typeof data) // Log the parsed data for debugging
+    console.log('parsedData after parsing:', parsedData) // Log the parsed data
+    console.log('parsedData after parsing typeof:', typeof parsedData) // Log the type after parsing
 
     // Data:  {
     //   success_ingest: 'courses/t/8885632f-b519-4610-b888-744aa4c2066d-6.pdf',
