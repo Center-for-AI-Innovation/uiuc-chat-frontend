@@ -8,36 +8,24 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       console.error('Request method not allowed')
       return res.status(405).json({ error: '❌❌ Request method not allowed' })
     }
-    let data
-    if (typeof req.body === 'string') {
+
+    const parseJSON = (str: string) => {
       try {
-        data = JSON.parse(req.body)
+        return JSON.parse(str)
       } catch (error) {
         console.error('Error parsing JSON:', error)
-        data = req.body // Use the raw body if parsing fails
+        return str
       }
-    } else {
-      data = req.body // If it's already an object, use it directly
     }
 
-    console.log('Received callback data:', data) // Log the received data for debugging
+    const data = typeof req.body === 'string' ? parseJSON(req.body) : req.body
+    console.log('Received callback data:', data)
     console.log('req.headers', req.headers)
-    let parsedData = data.data
-    console.log('parsedData before parsing:', parsedData) // Log the data before parsing
-    console.log('parsedData before parsing typeof:', typeof parsedData) // Log the type before parsing
 
-    // Parse data.data if it's a string
-    if (typeof parsedData === 'string') {
-      try {
-        parsedData = JSON.parse(parsedData)
-      } catch (error) {
-        console.error('Error parsing data.data:', error)
-        // If parsing fails, keep the original string
-      }
-    }
-
-    console.log('parsedData after parsing:', parsedData) // Log the parsed data
-    console.log('parsedData after parsing typeof:', typeof parsedData) // Log the type after parsing
+    let parsedData =
+      typeof data.data === 'string' ? parseJSON(data.data) : data.data
+    console.log('parsedData:', parsedData)
+    console.log('parsedData typeof:', typeof parsedData)
 
     // Data:  {
     //   success_ingest: 'courses/t/8885632f-b519-4610-b888-744aa4c2066d-6.pdf',
@@ -47,8 +35,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     // Data: { error: 'Task timed out' }
 
     // beam-task-status is SUCCESS (but ingest could have still failed)
-    if (data.success_ingest) {
-      console.debug('Ingest was SUCCESSFUL:', data)
+    if (parsedData.success_ingest) {
+      console.debug('Ingest was SUCCESSFUL:', parsedData)
       const { data: record, error: delErr } = await supabase
         .from('documents_in_progress')
         .delete()
@@ -61,7 +49,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       //   req.headers['x-beam-task-status'] === 'FAILED' ||
       //   req.headers['x-beam-task-status'] === 'TIMEOUT'
       // )
-      console.error('Ingest Task failed or timed out. Data:', data)
+      console.error('Ingest Task failed or timed out. Data:', parsedData)
       // Remove from in progress, add to failed
       const { data: record, error: delErr } = await supabase
         .from('documents_in_progress')
@@ -73,14 +61,14 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       delete record![0].created_at
 
       // Add error message, either specific one or "timeout" from Beam body.
-      record![0].error = data.failure_ingest.error
+      record![0].error = parsedData.failure_ingest.error
 
       await supabase.from('documents_failed').insert(record![0])
 
       return res.status(200).json({ message: 'Success' })
     }
     // else {
-    //   console.error(`No success/failure ingest in Beam callback data: ${data}`)
+    //   console.error(`No success/failure ingest in Beam callback data: ${parsedData}`)
     // }
 
     return res.status(200).json({ message: 'Success' })
