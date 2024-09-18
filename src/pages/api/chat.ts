@@ -27,6 +27,7 @@ import OpenAI from 'openai'
 export const config = {
   runtime: 'edge',
 }
+export const maxDuration = 60
 
 const handler = async (req: Request): Promise<NextResponse> => {
   try {

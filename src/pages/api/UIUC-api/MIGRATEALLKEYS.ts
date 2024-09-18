@@ -11,6 +11,7 @@ import { ProviderNames } from '~/utils/modelProviders/LLMProvider'
 import { encryptKeyIfNeeded } from '~/utils/crypto'
 
 export const runtime = 'edge'
+export const maxDuration = 60
 
 export default async function handler(
   req: NextRequest,
@@ -70,6 +71,9 @@ export const migrateAllKeys = async () => {
 
   console.log('Matching courses:', JSON.stringify(matchingCourses, null, 2))
 
+  let newlyMigratedCourses = 0
+  let alreadyMigratedCourses = 0
+
   // Step 3: Iterate through matching courses
   for (const courseObj of matchingCourses) {
     const [courseName, metadata] = Object.entries(courseObj)[0] ?? []
@@ -108,29 +112,42 @@ export const migrateAllKeys = async () => {
 
         // HERE WE UPSERT --
 
-        const final_LLMs = {
-          defaultModel: OpenAIModelID.GPT_4o_mini,
-          defaultTemp: 0.1,
-          [ProviderNames.OpenAI]: {
-            provider: ProviderNames.OpenAI,
-            enabled: true,
-            models: openAIModels,
-            apiKey: encryptedKey,
-          },
+        const llmProvidersInDB = await kv.get(`${courseName}-llms`)
+
+        if (!llmProvidersInDB) {
+          console.log('No LLMs in DB, setting new LLMs...')
+          const final_LLMs = {
+            defaultModel: OpenAIModelID.GPT_4o_mini,
+            defaultTemp: 0.1,
+            [ProviderNames.OpenAI]: {
+              provider: ProviderNames.OpenAI,
+              enabled: true,
+              models: openAIModels,
+              apiKey: encryptedKey,
+            },
+          }
+          console.log('Setting new LLMs:', final_LLMs)
+
+          await kv.set(`${courseName}-llms`, final_LLMs)
+          newlyMigratedCourses++
+        } else {
+          console.log('LLMs already exist in DB :)')
+          alreadyMigratedCourses++
         }
-        console.log('Final LLMs:', final_LLMs)
-
-        // kv.set(`${courseName}-llms`, final_LLMs)
-        await new Promise((resolve) => setTimeout(resolve, 101))
+        await new Promise((resolve) => setTimeout(resolve, 501))
       }
-      // dddd
 
-      console.log(`Successfully processed course: ${courseName}`)
+      console.log(
+        `Successfully processed course: ${courseName}. Newly migrated: ${newlyMigratedCourses}, already migrated: ${alreadyMigratedCourses}`,
+      )
     } catch (error) {
       console.error(`Error processing course ${courseName}:`, error)
     }
   }
 }
+
+// get all courses with legacy keys.
+// Ensure they have the new key. If not, migrate them.
 
 export const legacy___parseOpenaiKey = async (openaiKey: string) => {
   if (openaiKey && legacy___isEncrypted(openaiKey)) {
