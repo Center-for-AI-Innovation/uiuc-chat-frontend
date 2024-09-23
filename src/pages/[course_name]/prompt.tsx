@@ -43,6 +43,7 @@ import {
   IconLayoutSidebarRight,
   IconLayoutSidebarRightExpand,
   IconSparkles,
+  IconInfoCircle,
 } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import { useChat } from 'ai/react'
@@ -82,7 +83,6 @@ const CourseMain: NextPage = () => {
   const [checked3, setChecked3] = useState(false)
   const [checked4, setChecked4] = useState(false)
   const [checked5, setChecked5] = useState(false)
-
 
   const theme = useMantineTheme()
   const router = useRouter()
@@ -725,7 +725,7 @@ const CourseMain: NextPage = () => {
                         >
                           Add Instructions to System Prompt
                         </Title>
-                        <Checkbox
+                        {/* <Checkbox
                           label={`Add greetings at the beginning of the conversation.`}
                           // wrapperProps={{}}
                           // description="Course is private by default."
@@ -754,55 +754,122 @@ const CourseMain: NextPage = () => {
                           onChange={(event) =>
                             setChecked1(event.currentTarget.checked)
                           }
-                        />
-                        <Checkbox
-                          label={`Focus exclusively on document - based references—avoid incorporating knowledge from outside sources.Essential for legal and similar fields to maintain response quality.`}
-                          // wrapperProps={{}}
-                          // description="Course is private by default."
-                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                          // style={{ marginTop: '4rem' }}
-                          size="md"
-                          // bg='#020307'
-                          color="grape"
-                          // icon={CheckboxIcon}
-                          checked={checked2}
-                          onChange={(event) =>
-                            setChecked2(event.currentTarget.checked)
-                          }
-                        />
+                        /> */}
                         <Checkbox
                           label={
-                            <span>
-                              Guided Learning (No Direct Answers).
-                              <Tooltip label="This option ensures that the system provides guidance and learning opportunities without giving direct answers.">
-                                <span style={{ marginLeft: '5px', cursor: 'pointer' }}>▼</span>
+                            <span className="flex items-center">
+                              Document-Based References Only
+                              <Tooltip
+                                label={
+                                  <Text size="sm" color="gray.1">
+                                    Restricts the AI to use only information from the provided documents. Useful for maintaining accuracy in fields like legal research where external knowledge could be problematic.
+                                  </Text>
+                                }
+                                position="bottom"
+                                withArrow
+                                multiline
+                                styles={(theme) => ({
+                                  tooltip: {
+                                    backgroundColor: '#1A1B1E',
+                                    color: '#D1D1D1',
+                                    borderRadius: '4px',
+                                    maxWidth: '250px',
+                                    wordWrap: 'break-word',
+                                  },
+                                  arrow: {
+                                    backgroundColor: '#1A1B1E',
+                                  },
+                                })}
+                              >
+                                <span className="ml-2" aria-label="More information">
+                                  <IconInfoCircle size={16} />
+                                </span>
                               </Tooltip>
                             </span>
                           }
                           className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                          size="md"
+                          color="grape"
+                          checked={checked2}
+                          onChange={(event) => setChecked2(event.currentTarget.checked)}
+                        />
+
+                        <Checkbox
+                          label={
+                            <span className="flex items-center">
+                              Guided Learning
+                              <Tooltip
+                                label={
+                                  <Text size="sm" color="gray.1">
+                                    Enables a tutoring mode where the AI encourages independent problem-solving. It provides hints and asks questions instead of giving direct answers, promoting critical thinking and discovery.
+                                  </Text>
+                                }
+                                position="bottom"
+                                withArrow
+                                multiline
+                                styles={(theme) => ({
+                                  tooltip: {
+                                    backgroundColor: '#1A1B1E',
+                                    color: '#D1D1D1',
+                                    borderRadius: '4px',
+                                    maxWidth: '250px',
+                                    wordWrap: 'break-word',
+                                  },
+                                  arrow: {
+                                    backgroundColor: '#1A1B1E',
+                                  },
+                                })}
+                              >
+                                <span className="ml-2" aria-label="More information">
+                                  <IconInfoCircle size={16} />
+                                </span>
+                              </Tooltip>
+                            </span>
+                          }
+                          className="font-montserratParagraph"
                           size="md"
                           color="grape"
                           checked={checked4}
-                          onChange={(event) =>
-                            setChecked4(event.currentTarget.checked)
-                          }
+                          onChange={(event) => setChecked4(event.currentTarget.checked)}
                         />
+
                         <Checkbox
                           label={
-                            <span>
-                              Raw System Prompt Only.
-                              <Tooltip label="This option will provide the raw system prompt without any additional formatting or instructions.">
-                                <span style={{ marginLeft: '5px', cursor: 'pointer' }}>▼</span>
+                            <span className="flex items-center">
+                              Raw System Prompt Only
+                              <Tooltip
+                                label={
+                                  <Text size="sm" color="gray.1">
+                                    Uses only the custom system prompt you've provided, without additional formatting or citation instructions. This gives you full control over the AI's behavior and output structure.
+                                  </Text>
+                                }
+                                position="bottom"
+                                withArrow
+                                multiline
+                                styles={(theme) => ({
+                                  tooltip: {
+                                    backgroundColor: '#1A1B1E',
+                                    color: '#D1D1D1',
+                                    borderRadius: '4px',
+                                    maxWidth: '250px',
+                                    wordWrap: 'break-word',
+                                  },
+                                  arrow: {
+                                    backgroundColor: '#1A1B1E',
+                                  },
+                                })}
+                              >
+                                <span className="ml-2" aria-label="More information">
+                                  <IconInfoCircle size={16} />
+                                </span>
                               </Tooltip>
                             </span>
                           }
-                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                          className="font-montserratParagraph"
                           size="md"
                           color="grape"
                           checked={checked5}
-                          onChange={(event) =>
-                            setChecked5(event.currentTarget.checked)
-                          }
+                          onChange={(event) => setChecked5(event.currentTarget.checked)}
                         />
                         <Title
                           className={`label ${montserrat_heading.variable} font-montserratHeading`}
