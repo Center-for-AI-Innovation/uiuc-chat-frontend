@@ -590,26 +590,34 @@ const CourseMain: NextPage = () => {
                                 onClick={open}
                                 style={{
                                   minWidth: 'fit-content',
-                                  // marginTop: '15px',
-                                  paddingLeft: '8px',
                                   background:
-                                    'linear-gradient(to right, #6d28d9, #4f46e5, #2563eb)',
+                                    'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%)',
                                   transition: 'background 0.3s ease-in-out',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  padding: '0 8px',
+                                  backgroundSize: '100% 100%',
+                                  backgroundRepeat: 'no-repeat',
+                                  boxSizing: 'border-box',
+                                  border: 'none',
+                                  outline: 'none',
+                                  backgroundOrigin: 'border-box',
+                                  backgroundClip: 'border-box',
                                 }}
-                                className={`relative m-1 text-white hover:border-indigo-600 md:mr-2 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                className={`relative text-white md:mr-2 ${montserrat_paragraph.variable} font-montserratParagraph`}
                                 onMouseEnter={(e) =>
                                   (e.currentTarget.style.background =
-                                    'linear-gradient(to right, #4f46e5, #2563eb, #6d28d9)')
+                                    'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%)')
                                 }
                                 onMouseLeave={(e) =>
                                   (e.currentTarget.style.background =
-                                    'linear-gradient(to right, #6d28d9, #4f46e5, #2563eb)')
+                                    'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%)')
                                 }
                               >
-                                <IconSparkles stroke={1} />
+                                <IconSparkles stroke={1} style={{ marginRight: '4px' }} />
                                 Optimize System Prompt
                               </Button>
-
+                              
                               <Button
                                 className={`relative m-1 bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 ${montserrat_paragraph.variable} font-montserratParagraph`}
                                 type="submit"
