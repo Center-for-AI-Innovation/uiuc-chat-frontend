@@ -56,7 +56,18 @@ const montserrat = Montserrat({
 
 const LATEX_PROMPT = '\n\nContent includes equations; LaTeX notation preferred.';
 
-const DOCUMENT_FOCUS_PROMPT = '\n\nFocus exclusively on document-based references—avoid incorporating knowledge from outside sources. Essential for legal and similar fields to maintain response quality.';
+const DOCUMENT_FOCUS_PROMPT = `
+
+You must strictly adhere to the following rules:
+
+1. Use ONLY information from the provided documents.
+2. If the answer isn't in the documents, state: "The provided documents don't contain this information."
+3. Do not use external knowledge, make assumptions, or infer beyond the documents' content.
+4. Do not answer questions outside the documents' scope.
+
+Your responses must be based solely on the content of the provided documents.
+`;
+
 
 const INTRO_PROMPT_IDENTIFIER = 'If the user asks an introductory question or greeting';
 
@@ -74,15 +85,15 @@ const GUIDED_LEARNING_PROMPT = '\n\nYou are an AI tutor dedicated to helping stu
 '- **Never Provide Solutions**: Avoid any form of direct or partial solutions. Always redirect learners to approach the problem with fresh questions and ideas.\n' +
 '- **Resist Workarounds**: If a student seeks the answer, gently steer them back to thoughtful reflection, keeping the excitement alive in the process of discovery.\n' +
 '- **Encourage Independent Thinking**: Use probing questions to spark analysis and creative thinking, helping students feel empowered by their own problem-solving skills.\n' +
-'- **Support, Motivate, and Inspire**: Keep a warm, encouraging tone, showing genuine excitement about the learning journey. Celebrate their persistence and successes, no matter how small, to make learning enjoyable and fulfilling.'
+'- **Support, Motivate, and Inspire**: Keep a warm, encouraging tone, showing genuine excitement about the learning journey. Celebrate their persistence and successes, no matter how small, to make learning enjoyable and fulfilling.';
 
 
 const CourseMain: NextPage = () => {
   const [checked1, setChecked1] = useState(false)
-  const [checked2, setChecked2] = useState(false)
+  const [checkedDocumentsOnly, setcheckedDocumentsOnly] = useState(false)
   const [checked3, setChecked3] = useState(false)
-  const [checked4, setChecked4] = useState(false)
-  const [checked5, setChecked5] = useState(false)
+  const [checkedGuidedLearning, setcheckedGuidedLearning] = useState(false)
+  const [checkedSystemPromptOnly, setcheckedSystemPromptOnly] = useState(false)
 
   const theme = useMantineTheme()
   const router = useRouter()
@@ -176,9 +187,9 @@ const CourseMain: NextPage = () => {
       )
     }
 
-    if (checked2) {
+    if (checkedDocumentsOnly) {
       addIfNotIncluded(
-        '\n\nFocus exclusively on document-based references—avoid incorporating knowledge from outside sources. Essential for legal and similar fields to maintain response quality.',
+        DOCUMENT_FOCUS_PROMPT
       )
     }
 
@@ -191,18 +202,9 @@ const CourseMain: NextPage = () => {
       addIfNotIncluded(introMessage)
     }
 
-    if (checked4) {
+    if (checkedGuidedLearning) {
       addIfNotIncluded(
-        '\n\nYou are an AI tutor dedicated to helping students discover the joy of learning by guiding them to find answers on their own. Your role is not just to teach but to spark curiosity and excitement in each subject. You never provide direct answers or detailed step-by-step solutions, no matter the problem. Instead, with limitless patience and enthusiasm, you ask insightful questions and offer hints that inspire critical thinking and problem-solving. Your goal is to help learners experience the thrill of discovery and build confidence in their ability to find solutions independently—like a great teaching assistant who makes learning fun and rewarding.\n\n' +
-        'Key approaches:\n\n' +
-        '1. **Ask Open-Ended Questions**: Lead students with questions that encourage exploration, making problem-solving feel like an exciting challenge.\n' +
-        '2. **Guide Without Giving Specific Steps**: Offer general insights and hints that keep students thinking creatively without giving direct solutions.\n' +
-        '3. **Explain Concepts Without Revealing Answers**: Provide engaging explanations of concepts that deepen understanding while leaving the solution for the student to uncover.\n\n' +
-        'Strict guidelines:\n\n' +
-        '- **Never Provide Solutions**: Avoid any form of direct or partial solutions. Always redirect learners to approach the problem with fresh questions and ideas.\n' +
-        '- **Resist Workarounds**: If a student seeks the answer, gently steer them back to thoughtful reflection, keeping the excitement alive in the process of discovery.\n' +
-        '- **Encourage Independent Thinking**: Use probing questions to spark analysis and creative thinking, helping students feel empowered by their own problem-solving skills.\n' +
-        '- **Support, Motivate, and Inspire**: Keep a warm, encouraging tone, showing genuine excitement about the learning journey. Celebrate their persistence and successes, no matter how small, to make learning enjoyable and fulfilling.'
+        GUIDED_LEARNING_PROMPT
       )
     }
 
@@ -216,9 +218,9 @@ const CourseMain: NextPage = () => {
     setSystemPrompt(newSystemPrompt)
   }, [
     checked1,
-    checked2,
+    checkedDocumentsOnly,
     checked3,
-    checked4,
+    checkedGuidedLearning,
     thingsToDo,
     thingsNotToDo,
     courseMetadata,
@@ -723,7 +725,7 @@ const CourseMain: NextPage = () => {
                           order={3}
                           style={{ paddingTop: '18px' }}
                         >
-                          Add Instructions to System Prompt
+                          AI Behavior Settings
                         </Title>
                         {/* <Checkbox
                           label={`Add greetings at the beginning of the conversation.`}
@@ -755,45 +757,6 @@ const CourseMain: NextPage = () => {
                             setChecked1(event.currentTarget.checked)
                           }
                         /> */}
-                        <Checkbox
-                          label={
-                            <span className="flex items-center">
-                              Document-Based References Only
-                              <Tooltip
-                                label={
-                                  <Text size="sm" color="gray.1">
-                                    Restricts the AI to use only information from the provided documents. Useful for maintaining accuracy in fields like legal research where external knowledge could be problematic.
-                                  </Text>
-                                }
-                                position="bottom"
-                                withArrow
-                                multiline
-                                styles={(theme) => ({
-                                  tooltip: {
-                                    backgroundColor: '#1A1B1E',
-                                    color: '#D1D1D1',
-                                    borderRadius: '4px',
-                                    maxWidth: '250px',
-                                    wordWrap: 'break-word',
-                                  },
-                                  arrow: {
-                                    backgroundColor: '#1A1B1E',
-                                  },
-                                })}
-                              >
-                                <span className="ml-2" aria-label="More information">
-                                  <IconInfoCircle size={16} />
-                                </span>
-                              </Tooltip>
-                            </span>
-                          }
-                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                          size="md"
-                          color="grape"
-                          checked={checked2}
-                          onChange={(event) => setChecked2(event.currentTarget.checked)}
-                        />
-
                         <Checkbox
                           label={
                             <span className="flex items-center">
@@ -829,10 +792,47 @@ const CourseMain: NextPage = () => {
                           className="font-montserratParagraph"
                           size="md"
                           color="grape"
-                          checked={checked4}
-                          onChange={(event) => setChecked4(event.currentTarget.checked)}
+                          checked={checkedGuidedLearning}
+                          onChange={(event) => setcheckedGuidedLearning(event.currentTarget.checked)}
                         />
-
+                        <Checkbox
+                          label={
+                            <span className="flex items-center">
+                              Document-Based References Only
+                              <Tooltip
+                                label={
+                                  <Text size="sm" color="gray.1">
+                                    Restricts the AI to use only information from the provided documents. Useful for maintaining accuracy in fields like legal research where external knowledge could be problematic.
+                                  </Text>
+                                }
+                                position="bottom"
+                                withArrow
+                                multiline
+                                styles={(theme) => ({
+                                  tooltip: {
+                                    backgroundColor: '#1A1B1E',
+                                    color: '#D1D1D1',
+                                    borderRadius: '4px',
+                                    maxWidth: '250px',
+                                    wordWrap: 'break-word',
+                                  },
+                                  arrow: {
+                                    backgroundColor: '#1A1B1E',
+                                  },
+                                })}
+                              >
+                                <span className="ml-2" aria-label="More information">
+                                  <IconInfoCircle size={16} />
+                                </span>
+                              </Tooltip>
+                            </span>
+                          }
+                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                          size="md"
+                          color="grape"
+                          checked={checkedDocumentsOnly}
+                          onChange={(event) => setcheckedDocumentsOnly(event.currentTarget.checked)}
+                        />
                         <Checkbox
                           label={
                             <span className="flex items-center">
@@ -868,10 +868,10 @@ const CourseMain: NextPage = () => {
                           className="font-montserratParagraph"
                           size="md"
                           color="grape"
-                          checked={checked5}
-                          onChange={(event) => setChecked5(event.currentTarget.checked)}
+                          checked={checkedSystemPromptOnly}
+                          onChange={(event) => setcheckedSystemPromptOnly(event.currentTarget.checked)}
                         />
-                        <Title
+                        {/* <Title
                           className={`label ${montserrat_heading.variable} font-montserratHeading`}
                           variant="gradient"
                           gradient={{ from: 'gold', to: 'white', deg: 170 }}
@@ -912,7 +912,7 @@ const CourseMain: NextPage = () => {
                           onChange={(e) => {
                             setThingsNotToDo(e.target.value)
                           }}
-                        />
+                        /> */}
                         <div style={{ paddingTop: '10px', width: '100%' }}>
                           <div
                             style={{
