@@ -227,17 +227,17 @@ const Home = ({
   }, [course_metadata, apiKey])
 
   // ---- Set up conversations and folders ----
-  useEffect(() => {
-    // console.log("In useEffect for selectedConversation, home.tsx, selectedConversation: ", selectedConversation)
-    // ALWAYS make a new convo if current one isn't empty
-    if (!selectedConversation) return
-    if (hasMadeNewConvoAlready) return
-    setHasMadeNewConvoAlready(true)
+  // useEffect(() => {
+  //   // console.log("In useEffect for selectedConversation, home.tsx, selectedConversation: ", selectedConversation)
+  //   // ALWAYS make a new convo if current one isn't empty
+  //   if (!selectedConversation) return
+  //   if (hasMadeNewConvoAlready) return
+  //   setHasMadeNewConvoAlready(true)
 
-    // if (selectedConversation?.messages.length > 0) {
-    handleNewConversation()
-    // }
-  }, [selectedConversation, conversations])
+  //   // if (selectedConversation?.messages.length > 0) {
+  //   handleNewConversation()
+  //   // }
+  // }, [selectedConversation, conversations])
 
   // useEffect(() => {
   //   if (isConversationHistoryFetched && !isLoadingConversationHistory) {
@@ -313,8 +313,11 @@ const Home = ({
   }
 
   // This will ONLY update the react context and not the server
-  const handleNewConversation = () => {
+  const handleDuplicateRequest = () => {
     if (selectedConversation?.messages.length === 0) return
+  }
+
+  const handleNewConversation = () => {
     const lastConversation = conversations[conversations.length - 1]
 
     // Determine the model to use for the new conversation
@@ -585,18 +588,22 @@ const Home = ({
       if (selectedConversation) {
         const parsedSelectedConversation: Conversation =
           JSON.parse(selectedConversation)
-        const cleanedSelectedConversation = cleanSelectedConversation(
-          parsedSelectedConversation,
-        )
-
-        dispatch({
-          field: 'selectedConversation',
-          value: cleanedSelectedConversation,
-        })
+        if (parsedSelectedConversation.projectName === course_name) {
+          const cleanedSelectedConversation = cleanSelectedConversation(
+            parsedSelectedConversation,
+          )
+          dispatch({
+            field: 'selectedConversation',
+            value: cleanedSelectedConversation,
+          })
+        } else {
+          handleNewConversation()
+        }
       } else {
         if (!llmProviders || Object.keys(llmProviders).length === 0) return
         handleNewConversation()
       }
+      // handleNewConversation()
       setIsInitialSetupDone(true)
     }
 
@@ -646,7 +653,7 @@ const Home = ({
             <div className="fixed top-0 w-full sm:hidden">
               <Navbar
                 selectedConversation={selectedConversation}
-                onNewConversation={handleNewConversation}
+                onNewConversation={handleDuplicateRequest}
               />
             </div>
 
