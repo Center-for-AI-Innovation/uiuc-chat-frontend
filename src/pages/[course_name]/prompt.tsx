@@ -50,10 +50,36 @@ const montserrat = Montserrat({
   subsets: ['latin'],
 })
 
+const LATEX_PROMPT = '\n\nContent includes equations; LaTeX notation preferred.';
+
+const DOCUMENT_FOCUS_PROMPT = '\n\nFocus exclusively on document-based references—avoid incorporating knowledge from outside sources. Essential for legal and similar fields to maintain response quality.';
+
+const INTRO_PROMPT_IDENTIFIER = 'If the user asks an introductory question or greeting';
+
+const getIntroMessage = (courseMetadata: CourseMetadata | null, course_name: string) => 
+  courseMetadata?.course_intro_message
+    ? `\n\n${courseMetadata.course_intro_message} ${INTRO_PROMPT_IDENTIFIER} along the lines of 'hello' or 'what can you do?' or 'What's in here ?' or 'what is ${course_name}?' or similar, then please respond with a warm welcome to ${course_name}, the AI ${course_name} assistant chatbot. Tell them that you can answer questions using the entire knowledge base of Extension. Feel free to ask!`
+    : `\n\n${INTRO_PROMPT_IDENTIFIER} along the lines of 'hello' or 'what can you do?' or 'What's in here ?' or 'what is ${course_name}?' or similar, then please respond with a warm welcome to ${course_name}, the AI ${course_name} assistant chatbot. Tell them that you can answer questions using the entire knowledge base of the project: ${course_name}. Feel free to ask!`;
+
+const GUIDED_LEARNING_PROMPT = '\n\nYou are an AI tutor dedicated to helping students discover the joy of learning by guiding them to find answers on their own. Your role is not just to teach but to spark curiosity and excitement in each subject. You never provide direct answers or detailed step-by-step solutions, no matter the problem. Instead, with limitless patience and enthusiasm, you ask insightful questions and offer hints that inspire critical thinking and problem-solving. Your goal is to help learners experience the thrill of discovery and build confidence in their ability to find solutions independently—like a great teaching assistant who makes learning fun and rewarding.\n\n' +
+'Key approaches:\n\n' +
+'1. **Ask Open-Ended Questions**: Lead students with questions that encourage exploration, making problem-solving feel like an exciting challenge.\n' +
+'2. **Guide Without Giving Specific Steps**: Offer general insights and hints that keep students thinking creatively without giving direct solutions.\n' +
+'3. **Explain Concepts Without Revealing Answers**: Provide engaging explanations of concepts that deepen understanding while leaving the solution for the student to uncover.\n\n' +
+'Strict guidelines:\n\n' +
+'- **Never Provide Solutions**: Avoid any form of direct or partial solutions. Always redirect learners to approach the problem with fresh questions and ideas.\n' +
+'- **Resist Workarounds**: If a student seeks the answer, gently steer them back to thoughtful reflection, keeping the excitement alive in the process of discovery.\n' +
+'- **Encourage Independent Thinking**: Use probing questions to spark analysis and creative thinking, helping students feel empowered by their own problem-solving skills.\n' +
+'- **Support, Motivate, and Inspire**: Keep a warm, encouraging tone, showing genuine excitement about the learning journey. Celebrate their persistence and successes, no matter how small, to make learning enjoyable and fulfilling.'
+
+
 const CourseMain: NextPage = () => {
   const [checked1, setChecked1] = useState(false)
   const [checked2, setChecked2] = useState(false)
   const [checked3, setChecked3] = useState(false)
+  const [checked4, setChecked4] = useState(false)
+  const [checked5, setChecked5] = useState(false)
+
 
   const theme = useMantineTheme()
   const router = useRouter()
@@ -143,23 +169,38 @@ const CourseMain: NextPage = () => {
 
     if (checked1) {
       addIfNotIncluded(
-        '\nContent includes equations; LaTeX notation preferred.',
+        '\n\nContent includes equations; LaTeX notation preferred.',
       )
     }
 
     if (checked2) {
       addIfNotIncluded(
-        '\nFocus exclusively on document-based references—avoid incorporating knowledge from outside sources. Essential for legal and similar fields to maintain response quality.',
+        '\n\nFocus exclusively on document-based references—avoid incorporating knowledge from outside sources. Essential for legal and similar fields to maintain response quality.',
       )
     }
 
     const introMessage =
       checked3 && courseMetadata?.course_intro_message
-        ? `\n${courseMetadata.course_intro_message} If the user asks an introductory question or greeting along the lines of 'hello' or 'what can you do?' or 'What's in here ?' or 'what is ${course_name}?' or similar, then please respond with a warm welcome to ${course_name}, the AI ${course_name} assistant chatbot. Tell them that you can answer questions using the entire knowledge base of Extension. Feel free to ask!`
-        : `\nIf the user asks an introductory question or greeting along the lines of 'hello' or 'what can you do?' or 'What's in here ?' or 'what is ${course_name}?' or similar, then please respond with a warm welcome to ${course_name}, the AI ${course_name} assistant chatbot. Tell them that you can answer questions using the entire knowledge base of the project: ${course_name}. Feel free to ask!`
+        ? `\n\n${courseMetadata.course_intro_message} If the user asks an introductory question or greeting along the lines of 'hello' or 'what can you do?' or 'What's in here ?' or 'what is ${course_name}?' or similar, then please respond with a warm welcome to ${course_name}, the AI ${course_name} assistant chatbot. Tell them that you can answer questions using the entire knowledge base of Extension. Feel free to ask!`
+        : `\n\nIf the user asks an introductory question or greeting along the lines of 'hello' or 'what can you do?' or 'What's in here ?' or 'what is ${course_name}?' or similar, then please respond with a warm welcome to ${course_name}, the AI ${course_name} assistant chatbot. Tell them that you can answer questions using the entire knowledge base of the project: ${course_name}. Feel free to ask!`
 
     if (checked3) {
       addIfNotIncluded(introMessage)
+    }
+
+    if (checked4) {
+      addIfNotIncluded(
+        '\n\nYou are an AI tutor dedicated to helping students discover the joy of learning by guiding them to find answers on their own. Your role is not just to teach but to spark curiosity and excitement in each subject. You never provide direct answers or detailed step-by-step solutions, no matter the problem. Instead, with limitless patience and enthusiasm, you ask insightful questions and offer hints that inspire critical thinking and problem-solving. Your goal is to help learners experience the thrill of discovery and build confidence in their ability to find solutions independently—like a great teaching assistant who makes learning fun and rewarding.\n\n' +
+        'Key approaches:\n\n' +
+        '1. **Ask Open-Ended Questions**: Lead students with questions that encourage exploration, making problem-solving feel like an exciting challenge.\n' +
+        '2. **Guide Without Giving Specific Steps**: Offer general insights and hints that keep students thinking creatively without giving direct solutions.\n' +
+        '3. **Explain Concepts Without Revealing Answers**: Provide engaging explanations of concepts that deepen understanding while leaving the solution for the student to uncover.\n\n' +
+        'Strict guidelines:\n\n' +
+        '- **Never Provide Solutions**: Avoid any form of direct or partial solutions. Always redirect learners to approach the problem with fresh questions and ideas.\n' +
+        '- **Resist Workarounds**: If a student seeks the answer, gently steer them back to thoughtful reflection, keeping the excitement alive in the process of discovery.\n' +
+        '- **Encourage Independent Thinking**: Use probing questions to spark analysis and creative thinking, helping students feel empowered by their own problem-solving skills.\n' +
+        '- **Support, Motivate, and Inspire**: Keep a warm, encouraging tone, showing genuine excitement about the learning journey. Celebrate their persistence and successes, no matter how small, to make learning enjoyable and fulfilling.'
+      )
     }
 
     if (thingsToDo) {
@@ -174,6 +215,7 @@ const CourseMain: NextPage = () => {
     checked1,
     checked2,
     checked3,
+    checked4,
     thingsToDo,
     thingsNotToDo,
     courseMetadata,
@@ -727,6 +769,40 @@ const CourseMain: NextPage = () => {
                           checked={checked2}
                           onChange={(event) =>
                             setChecked2(event.currentTarget.checked)
+                          }
+                        />
+                        <Checkbox
+                          label={
+                            <span>
+                              Guided Learning (No Direct Answers).
+                              <Tooltip label="This option ensures that the system provides guidance and learning opportunities without giving direct answers.">
+                                <span style={{ marginLeft: '5px', cursor: 'pointer' }}>▼</span>
+                              </Tooltip>
+                            </span>
+                          }
+                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                          size="md"
+                          color="grape"
+                          checked={checked4}
+                          onChange={(event) =>
+                            setChecked4(event.currentTarget.checked)
+                          }
+                        />
+                        <Checkbox
+                          label={
+                            <span>
+                              Raw System Prompt Only.
+                              <Tooltip label="This option will provide the raw system prompt without any additional formatting or instructions.">
+                                <span style={{ marginLeft: '5px', cursor: 'pointer' }}>▼</span>
+                              </Tooltip>
+                            </span>
+                          }
+                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                          size="md"
+                          color="grape"
+                          checked={checked5}
+                          onChange={(event) =>
+                            setChecked5(event.currentTarget.checked)
                           }
                         />
                         <Title
