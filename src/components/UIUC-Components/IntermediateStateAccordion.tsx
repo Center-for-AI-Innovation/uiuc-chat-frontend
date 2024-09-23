@@ -25,14 +25,7 @@ export const IntermediateStateAccordion = ({
 }) => {
   // console.log('IntermediateStateAccordion, key:', accordionKey, 'isLoading:', isLoading, 'error:', error, 'default value:', defaultValue)
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        // width: '70%',
-      }}
-      className="w-[100%]"
-    >
+    <div className="xl:w-8/10 mx-auto w-full lg:mx-0 lg:w-3/4">
       <Accordion
         variant="separated"
         radius={'lg'}

@@ -18,18 +18,27 @@ import {
   UIUCTool,
 } from '@/types/chat'
 import { NextResponse } from 'next/server'
-import { parseOpenaiKey } from '~/utils/crypto'
+import { decryptKeyIfNeeded } from '~/utils/crypto'
+import { ProviderNames } from '~/utils/modelProviders/LLMProvider'
+import { AzureModels } from '~/utils/modelProviders/azure'
+import { OpenAIModels } from '~/utils/modelProviders/types/openai'
+import OpenAI from 'openai'
 
 export const config = {
   runtime: 'edge',
 }
+export const maxDuration = 60
 
 const handler = async (req: Request): Promise<NextResponse> => {
   try {
-    const { conversation, key, course_name, courseMetadata, stream } =
-      (await req.json()) as ChatBody
-
-    const openAIKey = await parseOpenaiKey(key)
+    const {
+      conversation,
+      key,
+      course_name,
+      courseMetadata,
+      stream,
+      llmProviders,
+    } = (await req.json()) as ChatBody
 
     if (!conversation) {
       console.error(
@@ -57,12 +66,14 @@ const handler = async (req: Request): Promise<NextResponse> => {
       conversation.messages[conversation.messages.length - 1]!
         .latestSystemMessage,
     )
+
     const apiStream = await OpenAIStream(
       conversation.model,
       conversation.messages[conversation.messages.length - 1]!
         .latestSystemMessage!,
       conversation.temperature,
-      openAIKey,
+      llmProviders!,
+      // openAIKey,
       // @ts-ignore -- I think the types are fine.
       messagesToSend, //old: conversation.messages
       stream,
@@ -174,7 +185,7 @@ export const buildPrompt = async ({
   
 Priorities for building prompt w/ limited window: 
 1. ✅ most recent user text input & images/img-description (depending on model support for images)
-1.5. Last 1 or 2 convo history. At least the user message and the AI response. Key for follow-up questions.
+1.5. ❌ Last 1 or 2 convo history. At least the user message and the AI response. Key for follow-up questions.
 2. ✅ image description
 3. ✅ tool result
 4. ✅ query_topContext
@@ -193,7 +204,7 @@ Priorities for building prompt w/ limited window:
 
   // do these things in parallel -- await at end
   const allPromises = []
-  // allPromises.push(parseOpenaiKey(rawOpenaiKey))
+  // allPromises.push(decryptKeyIfNeeded(rawOpenaiKey))
   allPromises.push(_getLastUserTextInput({ conversation }))
   allPromises.push(_getLastToolResult({ conversation }))
   allPromises.push(_getSystemPrompt({ courseMetadata, conversation }))

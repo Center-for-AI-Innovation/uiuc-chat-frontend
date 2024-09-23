@@ -205,6 +205,7 @@ const EmailChipsComponent = ({
       example_questions: undefined,
       system_prompt: undefined,
       disabled_models: undefined,
+      project_description: undefined,
     }
     onEmailAddressesChange &&
       onEmailAddressesChange(updatedMetadata, course_name)

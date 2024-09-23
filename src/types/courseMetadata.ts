@@ -1,5 +1,7 @@
 // all values are email addresses
 
+import { LLMProvider, ProviderNames } from '../utils/modelProviders/LLMProvider'
+
 // courseMetadata.ts
 export interface CourseMetadata {
   is_private: boolean
@@ -9,9 +11,18 @@ export interface CourseMetadata {
   example_questions: string[] | undefined
   banner_image_s3: string | undefined
   course_intro_message: string | undefined
-  openai_api_key: string | undefined
   system_prompt: string | undefined
-  disabled_models: string[] | undefined
+  openai_api_key: string | undefined // TODO: remove
+  disabled_models: string[] | undefined // TODO: remove
+  project_description: string | undefined
+}
+
+export type ProjectWideLLMProviders = {
+  [P in ProviderNames]?: LLMProvider & { provider: P }
+} & {
+  llmProviders?: LLMProvider[]
+  defaultModel?: string
+  defaultTemp?: number
 }
 
 export interface CourseMetadataOptionalForUpsert {
@@ -25,4 +36,5 @@ export interface CourseMetadataOptionalForUpsert {
   openai_api_key: string | undefined
   system_prompt: string | undefined
   disabled_models: string[] | undefined
+  project_description: string | undefined
 }

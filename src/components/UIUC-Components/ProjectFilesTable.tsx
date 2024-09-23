@@ -409,12 +409,12 @@ export function ProjectFilesTable({
         withCloseButton: true,
         // onClose: () => console.debug('unmounted'),
         // onOpen: () => console.debug('mounted'),
-        autoClose: 12000,
+        autoClose: 5000,
         // position="top-center",
         title: was_error ? 'Error deleting file' : 'Deleting file...',
         message: was_error
           ? "An error occurred while deleting the file. Please try again and I'd be so grateful if you email kvday2@illinois.edu to report this bug."
-          : 'The file is being deleted in the background. Refresh the page to see the changes.',
+          : 'The file is being deleted in the background.',
         icon: was_error ? <IconAlertTriangle /> : <IconCheck />,
         styles: {
           root: {

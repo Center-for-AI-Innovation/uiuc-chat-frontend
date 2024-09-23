@@ -12,7 +12,7 @@
 // import tiktokenModel from '@dqbd/tiktoken/encoders/cl100k_base.json'
 // import { Tiktoken, init } from '@dqbd/tiktoken/lite/init'
 // import { getStuffedPrompt, getSystemPrompt } from './contextStuffingHelper'
-// import { OpenAIModelID, OpenAIModels } from '~/utils/modelProviders/openai'
+// import { OpenAIModelID, OpenAIModels } from '~/utils/modelProviders/types/openai'
 // import { NextResponse } from 'next/server'
 // // import { buildPrompt } from '~/utils/buildPrompt'
 

@@ -1,13 +1,14 @@
 import { type NextPage } from 'next'
 import MakeNewCoursePage from '~/components/UIUC-Components/MakeNewCoursePage'
-import MakeNomicVisualizationPage from '~/components/UIUC-Components/MakeQueryAnalysisPage'
 import React, { useEffect, useState } from 'react'
 import { Montserrat } from 'next/font/google'
 import { useRouter } from 'next/router'
 import { useUser } from '@clerk/nextjs'
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
-import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
-import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
+import {
+  LoadingPlaceholderForAdminPages,
+  MainPageBackground,
+} from '~/components/UIUC-Components/MainPageBackground'
 import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 import { Title } from '@mantine/core'
 import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
@@ -62,12 +63,8 @@ const ToolsPage: NextPage = () => {
   }, [router.isReady])
 
   // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
-  if (!isLoaded || isLoading) {
-    return (
-      <MainPageBackground>
-        <LoadingSpinner />
-      </MainPageBackground>
-    )
+  if (!isLoaded || isLoading || courseExists === null) {
+    return <LoadingPlaceholderForAdminPages />
   }
 
   if (!isSignedIn) {
@@ -78,6 +75,16 @@ const ToolsPage: NextPage = () => {
   const user_emails = extractEmailsFromClerk(user)
 
   // if their account is somehow broken (with no email address)
+
+  // Don't edit certain special pages (no context allowed)
+  if (
+    course_name.toLowerCase() == 'gpt4' ||
+    course_name.toLowerCase() == 'global' ||
+    course_name.toLowerCase() == 'extreme'
+  ) {
+    return <CannotEditGPT4Page course_name={course_name as string} />
+  }
+
   if (user_emails.length == 0) {
     return (
       <MainPageBackground>
@@ -99,27 +106,10 @@ const ToolsPage: NextPage = () => {
     )
   }
 
-  // Don't edit certain special pages (no context allowed)
-  if (
-    course_name.toLowerCase() == 'gpt4' ||
-    course_name.toLowerCase() == 'global' ||
-    course_name.toLowerCase() == 'extreme'
-  ) {
-    return <CannotEditGPT4Page course_name={course_name as string} />
-  }
-
-  if (courseExists === null) {
-    return (
-      <MainPageBackground>
-        <LoadingSpinner />
-      </MainPageBackground>
-    )
-  }
-
   if (courseData === null) {
     return (
       <MakeNewCoursePage
-        course_name={course_name as string}
+        project_name={course_name as string}
         current_user_email={user_emails[0] as string}
       />
     )

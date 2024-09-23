@@ -18,18 +18,24 @@ import {
   AllLLMProviders,
   AllSupportedModels,
   GenericSupportedModel,
-  AnySupportedModel,
+  NCSAHostedProvider,
+  OllamaProvider,
   VisionCapableModels,
-} from '~/types/LLMProvider'
+} from '~/utils/modelProviders/LLMProvider'
 import fetchMQRContexts from '~/pages/api/getContextsMQR'
 import fetchContexts from '~/pages/api/getContexts'
 import { OllamaModelIDs } from './modelProviders/ollama'
 import { webLLMModels } from './modelProviders/WebLLM'
-import { OpenAIModelID } from './modelProviders/openai'
+import { OpenAIModelID } from './modelProviders/types/openai'
+import { v4 as uuidv4 } from 'uuid'
+import { AzureModelID } from './modelProviders/azure'
+import { AnthropicModelID } from './modelProviders/types/anthropic'
+import { NCSAHostedModelID } from './modelProviders/NCSAHosted'
 
 export const config = {
   runtime: 'edge',
 }
+export const maxDuration = 60
 
 /**
  * Enum representing the possible states of the state machine used in processing text chunks.
@@ -539,6 +545,7 @@ export function constructChatBody(
   course_name: string,
   stream: boolean,
   courseMetadata?: CourseMetadata,
+  llmProviders?: AllLLMProviders,
 ): ChatBody {
   return {
     conversation: conversation,
@@ -546,6 +553,7 @@ export function constructChatBody(
     course_name: course_name,
     stream: stream,
     courseMetadata: courseMetadata,
+    llmProviders: llmProviders,
   }
 }
 
@@ -630,6 +638,7 @@ export async function handleStreamingResponse(
       }
       // Append the processed response to the conversation
       conversation.messages.push({
+        id: uuidv4(),
         role: 'assistant',
         content: fullAssistantResponse,
       })
@@ -758,7 +767,7 @@ export async function updateConversationInDatabase(
   posthog.capture('stream_api_conversation_updated', {
     distinct_id: req.headers.get('x-forwarded-for') || req.ip,
     conversation_id: conversation.id,
-    user_id: conversation.user_email,
+    user_id: conversation.userEmail,
   })
 }
 
@@ -780,21 +789,20 @@ export async function handleImageContent(
   course_name: string,
   updatedConversation: Conversation,
   searchQuery: string,
-  courseMetadata: CourseMetadata,
-  apiKey: string,
+  llmProviders: AllLLMProviders,
   controller: AbortController,
 ) {
-  const key =
-    courseMetadata?.openai_api_key && courseMetadata?.openai_api_key != ''
-      ? courseMetadata.openai_api_key
-      : apiKey
-  console.log('fetching image description for message: ', message)
+  // TODO: bring back client-side API keys.
+  // const key =
+  //   courseMetadata?.openai_api_key && courseMetadata?.openai_api_key != ''
+  //     ? courseMetadata.openai_api_key
+  //     : apiKey
   let imgDesc = ''
   try {
     imgDesc = await fetchImageDescription(
       course_name,
       updatedConversation,
-      key,
+      llmProviders,
       controller,
     )
 
@@ -847,11 +855,11 @@ export const routeModelRequest = async (
   const selectedConversation = chatBody.conversation!
 
   posthog.capture('LLM Invoked', {
-    distinct_id: selectedConversation.user_email
-      ? selectedConversation.user_email
+    distinct_id: selectedConversation.userEmail
+      ? selectedConversation.userEmail
       : 'anonymous',
-    user_id: selectedConversation.user_email
-      ? selectedConversation.user_email
+    user_id: selectedConversation.userEmail
+      ? selectedConversation.userEmail
       : 'anonymous',
     conversation_id: selectedConversation.id,
     model_id: selectedConversation.model.id,
@@ -859,22 +867,68 @@ export const routeModelRequest = async (
 
   let response: Response
   if (
+    Object.values(NCSAHostedModelID).includes(
+      selectedConversation.model.id as any,
+    )
+  ) {
+    // NCSA Hosted LLMs
+
+    const newChatBody = chatBody!.llmProviders!.NCSAHosted as NCSAHostedProvider
+    newChatBody.baseUrl = process.env.OLLAMA_SERVER_URL // inject proper baseURL
+    console.log('IN NCSA hosted router....', newChatBody)
+
+    response = await fetch('/api/chat/ollama', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+
+      body: JSON.stringify({
+        conversation: selectedConversation,
+        ollamaProvider: newChatBody,
+      }),
+    })
+  } else if (
     Object.values(OllamaModelIDs).includes(selectedConversation.model.id as any)
   ) {
-    // Model is Ollama
-    const url = baseUrl ? `${baseUrl}/api/chat/ollama` : '/api/chat/ollama'
-    // Is Ollama model
+    console.log(
+      'IN NCSA OLLAMA ROUTER SIDE....',
+      chatBody!.llmProviders!.Ollama,
+    )
+
+    // Ollama model
+    response = await fetch('/api/chat/ollama', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        conversation: selectedConversation,
+        ollamaProvider: chatBody!.llmProviders!.Ollama as OllamaProvider,
+      }),
+    })
+  } else if (
+    Object.values(AnthropicModelID).includes(
+      selectedConversation.model.id as any,
+    )
+  ) {
+    const url = baseUrl
+      ? `${baseUrl}/api/chat/anthropic`
+      : '/api/chat/anthropic'
     response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ conversation: selectedConversation }),
+      body: JSON.stringify({ chatBody }),
     })
   } else if (
-    Object.values(OpenAIModelID).includes(selectedConversation.model.id as any)
+    Object.values(OpenAIModelID).includes(
+      selectedConversation.model.id as any,
+    ) ||
+    Object.values(AzureModelID).includes(selectedConversation.model.id as any)
   ) {
-    // Call the OpenAI API
+    // Call the OpenAI or Azure API
     const url = baseUrl ? `${baseUrl}/api/chat` : '/api/chat'
     response = await fetch(url, {
       method: 'POST',

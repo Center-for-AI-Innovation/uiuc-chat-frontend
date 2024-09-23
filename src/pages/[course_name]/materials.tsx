@@ -5,11 +5,15 @@ import { useRouter } from 'next/router'
 import { useUser } from '@clerk/nextjs'
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
-import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
+import {
+  LoadingPlaceholderForAdminPages,
+  MainPageBackground,
+} from '~/components/UIUC-Components/MainPageBackground'
 import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
 import { CourseMetadata } from '~/types/courseMetadata'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
+import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 
 const CourseMain: NextPage = () => {
   const router = useRouter()
@@ -66,11 +70,7 @@ const CourseMain: NextPage = () => {
 
   // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
   if (isLoading) {
-    return (
-      <MainPageBackground>
-        <LoadingSpinner />
-      </MainPageBackground>
-    )
+    return <LoadingPlaceholderForAdminPages />
   }
 
   if (!isSignedIn && courseName) {

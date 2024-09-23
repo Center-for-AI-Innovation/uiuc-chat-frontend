@@ -42,20 +42,23 @@ const handler = async (req: NextApiRequest) => {
 
     // console.log('👉 Submitting to ingest queue/:', s3_filepath)
 
-    const response = await fetch('https://41kgx.apps.beam.cloud', {
-      method: 'POST',
-      headers: {
-        Accept: '*/*',
-        'Accept-Encoding': 'gzip, deflate',
-        Authorization: `Basic ${process.env.BEAM_API_KEY}`,
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      'https://app.beam.cloud/taskqueue/ingest_task_queue/latest',
+      {
+        method: 'POST',
+        headers: {
+          Accept: '*/*',
+          'Accept-Encoding': 'gzip, deflate',
+          Authorization: `Bearer ${process.env.BEAM_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          course_name: courseName,
+          readable_filename: readableFilename,
+          s3_paths: s3_filepath,
+        }),
       },
-      body: JSON.stringify({
-        course_name: courseName,
-        readable_filename: readableFilename,
-        s3_paths: s3_filepath,
-      }),
-    })
+    )
 
     const responseBody = await response.json()
     console.log(

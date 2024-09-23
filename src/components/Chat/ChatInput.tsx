@@ -18,7 +18,7 @@ import {
   useRef,
   useState,
 } from 'react'
-
+import { v4 as uuidv4 } from 'uuid'
 import { useTranslation } from 'next-i18next'
 import { Content, Message, MessageType } from '@/types/chat'
 import { Plugin } from '@/types/plugin'
@@ -46,8 +46,10 @@ import ChatUI, {
   WebllmModel,
   webLLMModels,
 } from '~/utils/modelProviders/WebLLM'
-import { VisionCapableModels } from '~/types/LLMProvider'
-import { OpenAIModelID } from '~/utils/modelProviders/openai'
+import { VisionCapableModels } from '~/utils/modelProviders/LLMProvider'
+import { OpenAIModelID } from '~/utils/modelProviders/types/openai'
+import { UserSettings } from '~/components/Chat/UserSettings'
+import { IconChevronRight } from '@tabler/icons-react'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -87,7 +89,12 @@ export const ChatInput = ({
   const { t } = useTranslation('chat')
 
   const {
-    state: { selectedConversation, messageIsStreaming, prompts },
+    state: {
+      selectedConversation,
+      messageIsStreaming,
+      prompts,
+      showModelSettings,
+    },
 
     dispatch: homeDispatch,
   } = useContext(HomeContext)
@@ -116,6 +123,16 @@ export const ChatInput = ({
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [imageUrls, setImageUrls] = useState<string[]>([])
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
+  // const [showModelSettings, setShowModelSettings] = useState(false);
+  const modelSelectContainerRef = useRef<HTMLDivElement | null>(null)
+
+  const handleTextClick = () => {
+    console.log('handleTextClick')
+    homeDispatch({
+      field: 'showModelSettings',
+      value: !showModelSettings,
+    })
+  }
 
   const removeButtonStyle: CSSProperties = {
     position: 'absolute',
@@ -230,6 +247,7 @@ export const ChatInput = ({
 
     // Create a structured message for GPT-4 Vision
     const messageForGPT4Vision: Message = {
+      id: uuidv4(),
       role: 'user',
       content: contentArray,
     }
@@ -608,7 +626,7 @@ export const ChatInput = ({
   useEffect(() => {
     const handleFocus = () => {
       if (chatInputParentContainerRef.current) {
-        chatInputParentContainerRef.current.style.boxShadow = `0 0 2px ${theme.colors.grape[6]}`
+        chatInputParentContainerRef.current.style.boxShadow = `0 0 2px rgba(42,42,120, 1)`
       }
     }
 
@@ -845,6 +863,9 @@ export const ChatInput = ({
                 placeholder={
                   t('Type a message or type "/" to select a prompt...') || ''
                 }
+                aria-label={
+                  t('Type a message or type "/" to select a prompt...') || ''
+                }
                 value={content}
                 rows={1}
                 onCompositionStart={() => setIsTyping(true)}
@@ -908,8 +929,10 @@ export const ChatInput = ({
 
           <Text
             size={isSmallScreen ? '10px' : 'xs'}
-            className={`font-montserratHeading ${montserrat_heading.variable} pointer-events-none absolute bottom-2 left-6 mr-6 break-words text-neutral-400`}
+            className={`font-montserratHeading ${montserrat_heading.variable} absolute bottom-2 left-5 break-words rounded-full p-1 text-neutral-400 text-neutral-800 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200`}
             tt={'capitalize'}
+            onClick={handleTextClick}
+            style={{ cursor: 'pointer' }}
           >
             {selectedConversation?.model.name}
             {selectedConversation?.model &&
@@ -918,8 +941,28 @@ export const ChatInput = ({
               ) &&
               chat_ui?.isModelLoading() &&
               '  Please wait while the model is loading...'}
-            {/* webLLMModels.some((m) => m.name === model.name) */}
+            <IconChevronRight
+              size={isSmallScreen ? '10px' : '13px'}
+              style={{
+                marginLeft: '2px',
+                marginBottom: isSmallScreen ? '2px' : '4px',
+                display: 'inline-block',
+              }}
+            />
           </Text>
+          {showModelSettings && (
+            <div
+              ref={modelSelectContainerRef}
+              style={{
+                position: 'absolute',
+                zIndex: 100,
+                right: '30px',
+                top: '75px',
+              }}
+            >
+              <UserSettings />
+            </div>
+          )}
         </div>
       </div>
     </div>

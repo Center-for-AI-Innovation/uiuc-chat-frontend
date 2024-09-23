@@ -3,20 +3,18 @@ import {
   ChatCompletionMessageParam,
   CompletionUsage,
 } from '@mlc-ai/web-llm'
-// import { ChatCompletionMessageParam } from 'openai/resources/chat'
-import { buildPrompt } from '~/pages/api/chat'
-// import buildPrompt from '~/pages/api/chat'
-import { Conversation, Message } from '~/types/chat'
+import { Conversation } from '~/types/chat'
 import { ModelRecord, prebuiltAppConfig } from './ConfigWebLLM'
-// import { ModelRecord, prebuiltAppConfig } from './ConfigWebLLM'
+import {
+  ProviderNames,
+  WebLLMProvider,
+} from '~/utils/modelProviders/LLMProvider'
 
 // TODO: finish this message interface. Write a converter between `Message` and `WebLLMMessage`
 export interface WebLLMMessage {
   // No other fields allowed
   role: string
   content: string
-  // TOOLS?
-  // JSON mode?
 }
 
 export interface WebllmModel {
@@ -31,26 +29,6 @@ export interface WebLLMLoadingState {
   id: string
   isLoading: boolean
 }
-
-// export enum WebLLMModelID {
-//   Llama38BInstructQ4f321MLC = 'Llama-3-8B-Instruct-q4f32_1-MLC',
-//   TinyLlama11BChatV04Q4f161MLC1k = 'TinyLlama-1.1B-Chat-v0.4-q4f16_1-MLC-1k',
-// }
-
-// export const WebLLMModels: Record<WebLLMModelID, WebllmModel> = {
-//   [WebLLMModelID.TinyLlama11BChatV04Q4f161MLC1k]: {
-//     id: WebLLMModelID.TinyLlama11BChatV04Q4f161MLC1k,
-//     name: 'TinyLlama-1.1B-Chat-v0.4-q4f16_1-MLC-1k',
-//     tokenLimit: 8192,
-//     parameterSize: '1.1B',
-//   },
-//   [WebLLMModelID.Llama38BInstructQ4f321MLC]: {
-//     id: WebLLMModelID.Llama38BInstructQ4f321MLC,
-//     name: 'Llama-3-8B-Instruct-q4f32_1-MLC',
-//     tokenLimit: 8192,
-//     parameterSize: '8B',
-//   },
-// }
 
 export default class ChatUI {
   private engine: MLCEngineInterface
@@ -292,7 +270,7 @@ export default class ChatUI {
   }
 }
 
-export function convertToLocalModels(record: ModelRecord): WebllmModel {
+function convertToLocalModels(record: ModelRecord): WebllmModel {
   return {
     id: record.model_id,
     name: record.model_id,
@@ -303,6 +281,28 @@ export function convertToLocalModels(record: ModelRecord): WebllmModel {
     enabled: true, // hard-code all models to be enabled
   }
 }
+
 export const webLLMModels: WebllmModel[] = prebuiltAppConfig.model_list.map(
   (model: ModelRecord) => convertToLocalModels(model),
 )
+
+export const getWebLLMModels = async (
+  webLLMProvider: WebLLMProvider,
+): Promise<WebLLMProvider> => {
+  webLLMProvider.provider = ProviderNames.WebLLM
+  if (!webLLMProvider.models || webLLMProvider.models.length === 0) {
+    // If no models, add all possible models and enable them
+    webLLMProvider.models = webLLMModels.map((model) => ({
+      ...model,
+      enabled: true,
+    }))
+  } else {
+    // Ensure existing models are in the master list and remove any that aren't
+    const masterModelIds = new Set(webLLMModels.map((model) => model.id))
+    webLLMProvider.models = webLLMProvider.models.filter((model) =>
+      masterModelIds.has(model.id),
+    )
+  }
+  delete webLLMProvider.error // Remove the error property if it exists
+  return webLLMProvider
+}

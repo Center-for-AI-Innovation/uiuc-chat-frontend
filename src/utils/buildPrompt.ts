@@ -54,7 +54,7 @@
 
 //   // do these things in parallel -- await at end
 //   const allPromises = []
-//   allPromises.push(parseOpenaiKey(rawOpenaiKey))
+//   allPromises.push(decryptKeyIfNeeded(rawOpenaiKey))
 //   allPromises.push(_getLastUserMessage({ conversation }))
 //   allPromises.push(_getLastToolResult({ conversation }))
 //   allPromises.push(_getSystemPrompt({ courseMetadata, conversation }))
@@ -304,7 +304,7 @@
 //   return most_recent_user_message
 // }
 
-// const parseOpenaiKey = async (openaiKey: string) => {
+// const decryptKeyIfNeeded = async (openaiKey: string) => {
 //   if (openaiKey && isEncrypted(openaiKey)) {
 //     const decryptedText = await decrypt(
 //       openaiKey,

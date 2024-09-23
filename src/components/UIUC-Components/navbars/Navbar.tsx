@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import GlobalHeader from '~/components/UIUC-Components/navbars/GlobalHeader'
-import { Flex } from '@mantine/core'
+import { Flex, Indicator, Tooltip } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
@@ -11,25 +11,23 @@ import {
   rem,
   Transition,
   Paper,
-  // Header,
-  // Anchor,
-  // Group,
 } from '@mantine/core'
 import {
   ChartDots3,
   MessageChatbot,
   Folder,
   ReportAnalytics,
-  // Settings,
   MessageCode,
   Key,
+  Code,
+  Brain,
+  Message,
 } from 'tabler-icons-react'
 import { useRouter } from 'next/router'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 
 const styles: Record<string, React.CSSProperties> = {
   logoContainerBox: {
-    // Control image-box size
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
@@ -42,24 +40,24 @@ const styles: Record<string, React.CSSProperties> = {
     paddingLeft: '25px',
   },
   thumbnailImage: {
-    // Control picture layout INSIDE of the box
-    objectFit: 'cover', // Cover to ensure image fills the box
-    objectPosition: 'center', // Center to ensure image is centered
-    height: '100%', // Set height to 100% to match navbar height
+    objectFit: 'cover',
+    objectPosition: 'center',
+    height: '100%',
     width: 'auto',
   },
 }
 
-const HEADER_HEIGHT = rem(114)
+const HEADER_HEIGHT = rem(90)
 
 const useStyles = createStyles((theme) => ({
   burger: {
     [theme.fn.largerThan('md')]: {
+      // 968px
       display: 'none',
     },
   },
   links: {
-    padding: 'theme.spacing.lg, 1em, 1em',
+    padding: '0em',
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -76,48 +74,46 @@ const useStyles = createStyles((theme) => ({
     justifyContent: 'space-between',
   },
   link: {
-    // textTransform: 'uppercase',
     fontSize: rem(13),
-    padding: `${theme.spacing.sm} ${theme.spacing.lg}`,
-    margin: '0.35rem',
+    padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
+    margin: '0.1rem',
     fontWeight: 700,
     transition:
       'border-color 100ms ease, color 100ms ease, background-color 100ms ease',
-    borderRadius: theme.radius.sm, // added to make the square edges round
+    borderRadius: theme.radius.sm,
 
     '&:hover': {
-      color: 'hsl(280,100%,70%)', // make the hovered color lighter
+      color: 'hsl(280,100%,70%)',
       backgroundColor: 'rgba(255, 255, 255, 0.1)',
       textDecoration: 'none',
-      borderRadius: '10px',
+      borderRadius: '8px',
     },
 
     '&[data-active="true"]': {
       color: 'hsl(280,100%,70%)',
-      borderBottom: '2px solid hsl(280,100%,70%)', // make the bottom border of the square thicker and same color as "AI"
-      textDecoration: 'none', // remove underline
-      borderRadius: '10px', // added to make the square edges round when hovered
-      backgroundColor: 'rgba(255, 255, 255, 0.1)', // add a background color when the link is active
-      textAlign: 'right', // align the text to the right
+      borderBottom: '2px solid hsl(280,100%,70%)',
+      textDecoration: 'none',
+      borderRadius: '8px',
+      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      textAlign: 'right',
     },
     [theme.fn.smallerThan('md')]: {
-      display: 'list-item', // change the display to list-item when 'sm'
+      display: 'list-item',
       textAlign: 'center',
       borderRadius: 0,
-      padding: theme.spacing.sm,
+      padding: theme.spacing.xs,
     },
   },
 
   dropdown: {
     position: 'absolute',
     top: HEADER_HEIGHT,
-    // left: '50%',
     right: '20px',
     zIndex: 2,
     borderRadius: '10px',
     overflow: 'hidden',
     width: '200px',
-    [theme.fn.largerThan('md')]: {
+    [theme.fn.largerThan('lg')]: {
       display: 'none',
     },
   },
@@ -129,41 +125,36 @@ const Navbar = ({
   isgpt4 = true,
   isPlain = false,
 }) => {
-  // if (!course_name) {
-  //   return null;
-  // }
   const { classes, theme } = useStyles()
-  const router = useRouter() // import useRouter from next/router
-  const [activeLink, setActiveLink] = useState(router.asPath) // useState to track the active link
-  const [opened, { toggle }] = useDisclosure(false)
+  const router = useRouter()
+  const [activeLink, setActiveLink] = useState<null | string>(null)
+  const [opened, { toggle, close }] = useDisclosure(false)
 
   useEffect(() => {
-    setActiveLink(router.asPath) // update the active link when the component mounts
+    if (!router.isReady) return
+    setActiveLink(router.asPath.split('?')[0]!)
   }, [router.asPath])
 
   const handleLinkClick = (path: string) => {
-    setActiveLink(path) // update the active link when a link is clicked
-    toggle() // close the mobile menu when a link is clicked
+    close() // This will always close the menu, regardless of screen size
   }
 
   const getCurrentCourseName = () => {
-    // Extract the course name from the current URL path
-    // Example: /CS-125/materials --> CS-125
     return router.asPath.split('/')[1]
   }
 
   const items = [
-    {
-      name: (
-        <span
-          className={`${montserrat_heading.variable} font-montserratHeading`}
-        >
-          Chat
-        </span>
-      ),
-      icon: <MessageChatIcon />,
-      link: `/${getCurrentCourseName()}/chat`,
-    },
+    // {
+    //   name: (
+    //     <span
+    //       className={`${montserrat_heading.variable} font-montserratHeading`}
+    //     >
+    //       Chat
+    //     </span>
+    //   ),
+    //   icon: <MessageChatIcon />,
+    //   link: `/${getCurrentCourseName()}/chat`,
+    // },
     {
       name: (
         <span
@@ -177,6 +168,25 @@ const Navbar = ({
     },
     {
       name: (
+        <Indicator
+          label="New"
+          color="hsl(280,100%,70%)"
+          size={12}
+          styles={{ indicator: { top: '-4px !important' } }}
+        >
+          {' '}
+          <span
+            className={`${montserrat_heading.variable} font-montserratHeading`}
+          >
+            LLMs
+          </span>
+        </Indicator>
+      ),
+      icon: <LLMIcon />,
+      link: `/${getCurrentCourseName()}/llms`,
+    },
+    {
+      name: (
         <span
           className={`${montserrat_heading.variable} font-montserratHeading`}
         >
@@ -184,7 +194,7 @@ const Navbar = ({
         </span>
       ),
       icon: <ReportIcon />,
-      link: `/${getCurrentCourseName()}/query-analysis`,
+      link: `/${getCurrentCourseName()}/analysis`,
     },
     {
       name: (
@@ -216,7 +226,7 @@ const Navbar = ({
           API
         </span>
       ),
-      icon: <KeyIcon />,
+      icon: <ApiIcon />,
       link: `/${getCurrentCourseName()}/api`,
     },
   ]
@@ -224,17 +234,16 @@ const Navbar = ({
   return (
     <div className="bg-[#2e026d]">
       <Flex direction="row" align="center" justify="center">
-        <div className="mt-4 w-full max-w-[95%]">
-          <div className="navbar rounded-badge h-24 bg-[#15162c] shadow-lg shadow-purple-800">
+        <div className="mt-2 w-full max-w-[98%]">
+          <div className="navbar rounded-badge h-20 bg-[#15162c] shadow-lg shadow-purple-800">
             <div className="flex-1">
               <Link href="/">
-                <h2 className="ms-8 cursor-pointer text-3xl font-extrabold tracking-tight text-white sm:text-[2rem] ">
+                <h2 className="ms-4 cursor-pointer text-2xl font-extrabold tracking-tight text-white sm:text-[1.8rem] ">
                   UIUC.<span className="text-[hsl(280,100%,70%)]">chat</span>
                 </h2>
               </Link>
             </div>
 
-            {/* TODO: Make sticky-left Remove the Banner image bceause I can't get it centered properly (works on /chat page tho) */}
             {bannerUrl && (
               <div style={{ ...styles.logoContainerBox }}>
                 <Image
@@ -244,7 +253,7 @@ const Navbar = ({
                   height={2000}
                   alt="The course creator uploaded a logo for this chatbot."
                   aria-label="The course creator uploaded a logo for this chatbot."
-                  onError={(e) => (e.currentTarget.style.display = 'none')} // display nothing if image fails
+                  onError={(e) => (e.currentTarget.style.display = 'none')}
                 />
               </div>
             )}
@@ -281,7 +290,41 @@ const Navbar = ({
                     </Paper>
                   )}
                 </Transition>
-                <Container className={classes.inner}>
+                <button
+                  className={`${classes.link}`}
+                  onClick={() => {
+                    router.push(`/${getCurrentCourseName()}/chat`)
+                  }}
+                >
+                  <div
+                    // ref={topBarRef}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      width: '100%',
+                    }}
+                  >
+                    <MessageChatIcon />
+                    <span
+                      style={{
+                        whiteSpace: 'nowrap',
+                        marginRight: '-5px',
+                        paddingRight: '2px',
+                        padding: `4px 0`,
+                      }}
+                      className={`${montserrat_heading.variable} font-montserratHeading`}
+                    >
+                      {/* Model: {modelName} */}
+                      {/* {selectedConversation?.model.name} */}
+                      Chat
+                    </span>
+                    {/* </span> */}
+                  </div>
+                </button>
+                <Container
+                  className={classes.inner}
+                  style={{ paddingLeft: '0px' }}
+                >
                   <div className={classes.links}>
                     {items.map((item, index) => (
                       <Link
@@ -321,10 +364,9 @@ export default Navbar
 export function MessageChatIcon() {
   return (
     <MessageChatbot
-      size={20}
+      size={18}
       strokeWidth={2}
-      // color={'white'}
-      style={{ marginRight: '5px', marginLeft: '5px' }}
+      style={{ marginRight: '3px', marginLeft: '3px' }}
     />
   )
 }
@@ -332,10 +374,9 @@ export function MessageChatIcon() {
 export function MessageCodeIcon() {
   return (
     <MessageCode
-      size={20}
+      size={18}
       strokeWidth={2}
-      // color={'white'}
-      style={{ marginRight: '5px', marginLeft: '5px' }}
+      style={{ marginRight: '3px', marginLeft: '3px' }}
     />
   )
 }
@@ -343,10 +384,9 @@ export function MessageCodeIcon() {
 export function FolderIcon() {
   return (
     <Folder
-      size={20}
+      size={18}
       strokeWidth={2}
-      // color={'white'}
-      style={{ marginRight: '5px', marginLeft: '5px' }}
+      style={{ marginRight: '3px', marginLeft: '3px' }}
     />
   )
 }
@@ -354,21 +394,29 @@ export function FolderIcon() {
 export function ReportIcon() {
   return (
     <ReportAnalytics
-      size={20}
+      size={18}
       strokeWidth={2}
-      // color={isSelected ? 'hsl(280,100%,70%)' : 'white'}
-      style={{ marginRight: '5px', marginLeft: '5px' }}
+      style={{ marginRight: '3px', marginLeft: '3px' }}
     />
   )
 }
 
-export function KeyIcon() {
+export function LLMIcon() {
   return (
-    <Key
-      size={20}
+    <Brain
+      size={18}
       strokeWidth={2}
-      // color={isSelected ? 'hsl(280,100%,70%)' : 'white'}
-      style={{ marginRight: '5px', marginLeft: '5px' }}
+      style={{ marginRight: '3px', marginLeft: '3px' }}
+    />
+  )
+}
+
+export function ApiIcon() {
+  return (
+    <Code
+      size={18}
+      strokeWidth={2}
+      style={{ marginRight: '3px', marginLeft: '3px' }}
     />
   )
 }
@@ -376,21 +424,9 @@ export function KeyIcon() {
 export function ChartDots3Icon() {
   return (
     <ChartDots3
-      size={20}
+      size={18}
       strokeWidth={2}
-      // color={'white'}
-      style={{ marginRight: '4px', marginLeft: '4px' }}
+      style={{ marginRight: '3px', marginLeft: '3px' }}
     />
   )
 }
-
-// export function SettingIcon() {
-//   return (
-//     <Settings
-//       size={20}
-//       strokeWidth={2}
-//       color={'white'}
-//       style={{ marginRight: '5px', marginLeft: '5px' }}
-//     />
-//   )
-// }

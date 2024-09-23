@@ -8,10 +8,50 @@ import { DataTable } from 'mantine-datatable'
 import styled from 'styled-components'
 import { montserrat_heading } from 'fonts'
 import Link from 'next/link'
+import React from 'react'
+import { useMediaQuery } from '@mantine/hooks'
 
 const StyledRow = styled.tr`
   &:hover {
     background-color: hsla(280, 100%, 70%, 0.5);
+  }
+`
+
+const StyledTable = styled(Table)`
+  table-layout: fixed;
+  width: 100%;
+
+  th,
+  td {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    padding: 8px;
+  }
+`
+
+const ResponsiveTableWrapper = styled.div`
+  overflow-x: auto;
+  width: 100%;
+  background-color: #15162b;
+  box-shadow: 0px 0px 10px 2px rgba(0, 0, 0, 0.5);
+  border-radius: 15px;
+  padding: 0;
+
+  @media (min-width: 640px) {
+    padding: 0 8px;
+  }
+
+  @media (min-width: 768px) {
+    padding: 0 16px;
+  }
+
+  @media (min-width: 1024px) {
+    padding: 0 24px;
+  }
+
+  @media (min-width: 1280px) {
+    padding: 0 32px;
   }
 `
 
@@ -24,6 +64,7 @@ const ListProjectTable: React.FC = () => {
   const router = useRouter()
   const [rows, setRows] = useState<JSX.Element[]>([])
   const [isFullyLoaded, setIsFullyLoaded] = useState<boolean>(false)
+  const isMobile = useMediaQuery('(max-width: 768px)')
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -99,73 +140,61 @@ const ListProjectTable: React.FC = () => {
         </>
       )
     }
-    // authed users:
+
     return (
       <>
-        <Title order={3} color="white" ta="center">
-          Your Projects
-        </Title>
-        {rows.length > 0 ? (
-          <div
-            style={{
-              overflowX: 'auto',
-              minWidth: '40%',
-              maxWidth: '80%',
-              backgroundColor: '#15162b',
-              boxShadow: '0px 0px 10px 2px rgba(0,0,0,0,5)',
-              borderRadius: '12px',
-            }}
-          >
-            <Table withBorder>
-              <thead>
-                <tr>
-                  <th>
-                    <span
-                      className={`text-md text-slate-200 ${montserrat_heading.variable} font-montserratHeading`}
-                    >
-                      Project Name
-                    </span>
-                  </th>
-                  <th>
-                    <span
-                      className={`text-md text-slate-200 ${montserrat_heading.variable} font-montserratHeading`}
-                    >
-                      Privacy
-                    </span>
-                  </th>
-                  <th>
-                    <span
-                      className={`text-md text-slate-200 ${montserrat_heading.variable} font-montserratHeading`}
-                    >
-                      Project Owner
-                    </span>
-                  </th>
-                  <th>
-                    <span
-                      className={`text-md text-slate-200 ${montserrat_heading.variable} font-montserratHeading`}
-                    >
-                      Project Admins
-                    </span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>{rows}</tbody>
-            </Table>
-          </div>
-        ) : (
-          <Text
-            size="md"
-            className={`${montserrat_heading.variable} font-montserratHeading`}
-            bg={'bg-transparent'}
-            style={{ backgroundColor: 'clear', textAlign: 'center' }}
-          >
-            You haven&apos;t created any projects yet. Let&apos;s{' '}
-            <Link className="text-purple-500 underline" href="/new">
-              go make one here
-            </Link>
-            , don&apos;t worry it&apos;s easy.
-          </Text>
-        )}
+        <div className="mx-auto w-full md:w-4/5">
+          <Title order={2} color="white" ta="center" pb={16} pt={8}>
+            Your Projects
+          </Title>
+          {rows.length > 0 ? (
+            <div
+              style={{
+                overflowX: 'auto',
+                width: '100%',
+                // maxWidth: isMobile ? '100%' : '80%',
+                backgroundColor: '#15162b',
+                boxShadow: '0px 0px 10px 2px rgba(0,0,0,0,5)',
+                borderRadius: '15px',
+              }}
+            >
+              <StyledTable>
+                <thead>
+                  <tr>
+                    {[
+                      'Project Name',
+                      'Privacy',
+                      'Project Owner',
+                      'Project Admins',
+                    ].map((header) => (
+                      <th key={header}>
+                        <span
+                          className={`text-md text-slate-200 ${montserrat_heading.variable} font-montserratHeading`}
+                        >
+                          {header}
+                        </span>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>{rows}</tbody>
+              </StyledTable>
+            </div>
+          ) : (
+            <Text
+              size="md"
+              className={`${montserrat_heading.variable} font-montserratHeading`}
+              bg={'bg-transparent'}
+              style={{ backgroundColor: 'clear', textAlign: 'center' }}
+            >
+              You haven&apos;t created any projects yet. Let&apos;s{' '}
+              <Link className="text-purple-500 underline" href="/new">
+                go make one here
+              </Link>
+              , don&apos;t worry it&apos;s easy.
+            </Text>
+          )}
+        </div>
       </>
     )
   }

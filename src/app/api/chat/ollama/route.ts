@@ -1,8 +1,12 @@
 import { createOllama } from 'ollama-ai-provider'
 import { CoreMessage, StreamingTextResponse, streamText } from 'ai'
 import { Conversation } from '~/types/chat'
-import { OllamaProvider } from '~/types/LLMProvider'
+import {
+  NCSAHostedProvider,
+  OllamaProvider,
+} from '~/utils/modelProviders/LLMProvider'
 import { OllamaModel } from '~/utils/modelProviders/ollama'
+import { decryptKeyIfNeeded } from '~/utils/crypto'
 
 // export const runtime = 'edge' // Does NOT work
 export const dynamic = 'force-dynamic' // known bug with Vercel: https://sdk.vercel.ai/docs/troubleshooting/common-issues/streaming-not-working-on-vercel
@@ -12,17 +16,21 @@ export async function POST(req: Request) {
   /*
   Run Ollama chat, given a text string. Return a streaming response promise.
   */
+
   const {
     conversation,
     ollamaProvider,
   }: {
     conversation: Conversation
-    ollamaProvider: OllamaProvider
+    ollamaProvider: OllamaProvider | NCSAHostedProvider
   } = await req.json()
 
+  if (!ollamaProvider.baseUrl || ollamaProvider.baseUrl === '') {
+    ollamaProvider.baseUrl = process.env.OLLAMA_SERVER_URL
+  }
+
   const ollama = createOllama({
-    baseURL: `${process.env.OLLAMA_SERVER_URL}/api`,
-    // baseURL: `${ollamaProvider.baseUrl}/api`, // TODO use user-defiend base URL...
+    baseURL: `${(await decryptKeyIfNeeded(ollamaProvider!.baseUrl!)) as any}/api`,
   })
 
   if (conversation.messages.length === 0) {
@@ -30,7 +38,7 @@ export async function POST(req: Request) {
   }
 
   const result = await streamText({
-    model: ollama('llama3.1:70b'),
+    model: ollama(conversation.model.id),
     messages: convertConversatonToVercelAISDKv3(conversation),
     temperature: conversation.temperature,
     maxTokens: 4096, // output tokens

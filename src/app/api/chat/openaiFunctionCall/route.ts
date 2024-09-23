@@ -78,7 +78,7 @@ export async function POST(req: Request) {
   const openai = wrapOpenAI(new OpenAI({ apiKey: decryptedKey }), {
     project_name: 'uiuc-chat-production',
     metadata: {
-      user_email: conversation.user_email,
+      user_email: conversation.userEmail,
       conversation_id: conversation.id,
     },
     name: 'tool-routing',

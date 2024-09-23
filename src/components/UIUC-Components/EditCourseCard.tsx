@@ -8,42 +8,26 @@ import {
   Checkbox,
   Title,
   type CheckboxProps,
-  Input,
   Button,
   Divider,
   Accordion,
   createStyles,
-  Switch,
 } from '@mantine/core'
-import {
-  IconAlertCircle,
-  IconArrowUpRight,
-  IconCircleCheck,
-  IconEdit,
-  IconKey,
-  IconLock,
-  IconTrash,
-} from '@tabler/icons-react'
-import { OpenAIModel } from '~/utils/modelProviders/openai'
+import { IconLock } from '@tabler/icons-react'
 import {
   CourseMetadataOptionalForUpsert,
   type CourseMetadata,
 } from '~/types/courseMetadata'
 import LargeDropzone from './LargeDropzone'
-import { CanvasIngest } from './CanvasIngest'
 import EmailChipsComponent from './EmailChipsComponent'
 import { useMediaQuery } from '@mantine/hooks'
 import { Montserrat } from 'next/font/google'
-// import { GetCurrentPageName } from './CanViewOnlyCourse'
 import { useRouter } from 'next/router'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
-// import axios from 'axios'
 import { WebScrape } from '~/components/UIUC-Components/WebScrape'
 import { callSetCourseMetadata, uploadToS3 } from '~/utils/apiUtils'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { notifications } from '@mantine/notifications'
 import SetExampleQuestions from './SetExampleQuestions'
-import { AllLLMProviders } from '~/types/LLMProvider'
 
 const montserrat_light = Montserrat({
   weight: '400',
@@ -71,7 +55,6 @@ const useStyles = createStyles((theme) => ({
   },
   item: {
     backgroundColor: 'bg-transparent',
-    // border: `${rem(1)} solid transparent`,
     border: `solid transparent`,
     borderRadius: theme.radius.xl,
     position: 'relative',
@@ -82,8 +65,6 @@ const useStyles = createStyles((theme) => ({
     '&[data-active]': {
       transform: 'scale(1.03)',
       backgroundColor: 'bg-transparent',
-      // boxShadow: theme.shadows.xl,
-      // borderRadius: theme.radius.lg,
       zIndex: 1,
     },
     '&:hover': {
@@ -126,7 +107,9 @@ const EditCourseCard = ({
   const [apiKey, setApiKey] = useState<string | undefined>(
     courseMetadata?.openai_api_key as string,
   )
-  const [isKeyUpdated, setIsKeyUpdated] = useState(false)
+  const [projectDescription, setProjectDescription] = useState(
+    courseMetadata?.project_description || '',
+  )
 
   const checkCourseAvailability = () => {
     const courseExists =
@@ -177,112 +160,6 @@ const EditCourseCard = ({
     setApiKey(courseMetadata?.openai_api_key as string)
   }, [courseMetadata])
 
-  const validateKey = async (key: string, isAzure: boolean) => {
-    const response = await fetch('/api/validateKey', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ key: key, isAzure: isAzure }),
-    })
-
-    return response
-  }
-
-  const handleKeyUpdate = async (inputValue: string, isAzure: boolean) => {
-    setIsKeyUpdating(true) // Start loading
-    if (inputValue === '' && courseMetadata?.openai_api_key === '') {
-      console.log('Key already empty')
-      notifications.show({
-        id: 'info-notification',
-        title: 'No Changes',
-        message: 'The key is already empty.',
-        color: 'blue',
-        radius: 'lg',
-        icon: <IconAlertCircle />,
-        className: 'my-notification-class',
-        style: { backgroundColor: '#15162c' },
-        loading: false,
-      })
-      return
-    }
-
-    if (inputValue === '' && courseMetadata?.openai_api_key !== '') {
-      ;(courseMetadata as CourseMetadata).openai_api_key = inputValue
-      console.log('Removing api key')
-      setApiKey(inputValue)
-      await callSetCourseMetadata(course_name, courseMetadata as CourseMetadata)
-      setIsKeyUpdating(false)
-      notifications.show({
-        id: 'success-notification',
-        title: 'Update Successful',
-        message: 'Key removed.',
-        color: 'green',
-        radius: 'lg',
-        icon: <IconTrash />,
-        className: 'my-notification-class',
-        style: { backgroundColor: '#15162c' },
-        loading: false,
-      })
-      return
-    }
-    // Disabling this condition to support Azure OpenAI keys
-    // if (!inputValue.startsWith('sk-')) {
-    // console.log('Invalid OpenAI API Key')
-    // notifications.show({
-    //   id: 'error-notification',
-    //   title: 'Invalid OpenAI API Key',
-    //   message:
-    //     'The OpenAI API Key usually looks like "sk-***". Did you paste something else you copied? 😉',
-    //   color: 'red',
-    //   radius: 'lg',
-    //   icon: <IconAlertCircle />,
-    //   className: 'my-notification-class',
-    //   style: { backgroundColor: '#15162c' },
-    //   loading: false,
-    // })
-    // return
-    // }
-
-    const validationResponse = await validateKey(inputValue, isAzure)
-    if (!validationResponse.ok) {
-      const response = await validationResponse.json()
-      console.log('New key validated')
-      notifications.show({
-        id: 'error-notification',
-        title: response.name,
-        message: response.message,
-        color: 'red',
-        radius: 'lg',
-        icon: <IconAlertCircle />,
-        className: 'my-notification-class',
-        style: { backgroundColor: '#15162c' },
-        loading: false,
-      })
-      return
-    }
-
-    if (courseMetadata) {
-      console.log('Key updated for course')
-      courseMetadata.openai_api_key = inputValue
-      setApiKey(inputValue)
-      await callSetCourseMetadata(course_name, courseMetadata)
-      notifications.show({
-        id: 'success-notification',
-        title: 'Update Successful',
-        message: 'Course Wide api key set successfully.',
-        color: 'green',
-        radius: 'lg',
-        icon: <IconCircleCheck />,
-        className: 'my-notification-class',
-        style: { backgroundColor: '#15162c' },
-        loading: false,
-      })
-      setIsEditing(false)
-      setIsKeyUpdating(false)
-    }
-  }
-
   const { classes } = useStyles() // for Accordion
 
   return (
@@ -290,8 +167,8 @@ const EditCourseCard = ({
       shadow="xs"
       padding="none"
       radius="xl"
-      // style={{ maxWidth: '85%', width: '100%', marginTop: '4%' }}
-      className="mt-[4%] w-[96%] md:w-[90%] 2xl:w-[75%]"
+      // style={{ maxWidth: '85%', width: '100%', marginTop: '2%' }}
+      className="mt-[2%] w-[96%] md:w-[90%] 2xl:w-[75%]"
     >
       <Flex direction={isSmallScreen ? 'column' : 'row'}>
         <div
@@ -340,8 +217,8 @@ const EditCourseCard = ({
                   order={4}
                   className={`w-full text-center ${montserrat_paragraph.variable} mt-4 font-montserratParagraph`}
                 >
-                  Just one step: upload any and all materials. More is better,
-                  it&apos;s fine if they&apos;re messy.
+                  Just one step: upload everything. The more, the better &mdash;
+                  even if it&apos;s messy.
                 </Title>
               </>
             )}
@@ -389,17 +266,6 @@ const EditCourseCard = ({
             <div className="card flex h-full flex-col justify-center">
               <div className="card-body">
                 <div className="form-control relative">
-                  {/* <Title
-                    className={montserrat.className}
-                    variant="gradient"
-                    gradient={{ from: 'gold', to: 'white', deg: 50 }}
-                    order={2}
-                    p="xs"
-                    style={{ alignSelf: 'center' }}
-                  >
-                    Customization{' '}
-                  </Title> */}
-
                   <Title
                     // className={`label ${montserrat.className}`}
                     className={`label ${montserrat_heading.variable} font-montserratHeading`}
@@ -407,150 +273,51 @@ const EditCourseCard = ({
                     gradient={{ from: 'gold', to: 'white', deg: 170 }}
                     order={3}
                   >
-                    Project-wide OpenAI key{' '}
+                    Project Description
                   </Title>
+                  <Textarea
+                    placeholder="Describe your project, goals, expected impact etc..."
+                    radius={'sm'}
+                    value={projectDescription}
+                    onChange={(e) => setProjectDescription(e.target.value)}
+                    size={'lg'}
+                    minRows={4}
+                    styles={{
+                      input: {
+                        backgroundColor: '#1A1B1E',
+                        fontSize: '16px', // Added text styling
+                        font: `${montserrat_paragraph.variable} font-montserratParagraph`,
+                      },
+                      label: {
+                        fontWeight: 'bold',
+                        color: 'white',
+                      },
+                    }}
+                    className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                  />
+                  <Button
+                    className={`w-1rem relative m-1 mt-3 self-end bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600`}
+                    type="submit"
+                    onClick={async () => {
+                      if (courseMetadata) {
+                        courseMetadata.project_description = projectDescription
+                        // Update the courseMetadata object
 
-                  <Accordion
-                    pl={27}
-                    pr={27}
-                    pt={40}
-                    pb={40}
-                    m={-40}
-                    // style={{ borderRadius: 'theme.radius.xl', width: '112%', maxWidth: 'min(50rem, )', marginLeft: 'max(-1rem, -10%)' }}
-                    style={{ borderRadius: 'theme.radius.xl' }}
-                    classNames={classes}
-                    className={classes.root}
-                  >
-                    {/* ... Accordion items */}
-                    <Accordion.Item value="openai-key-details">
-                      <Accordion.Control>
-                        <Text
-                          className={`label ${montserrat_light.className} inline-block p-0 text-neutral-200`}
-                          size={'md'}
-                        >
-                          If you provide an API key then all users of this
-                          course, and only this course, will bill to the below
-                          key while chatting with your documents.{' '}
-                          <span className={'text-purple-600'}>Read more</span>{' '}
-                          👇
-                        </Text>
-                        {/* <a
-                          className={'text-purple-600'}
-                          // href="/privacy"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{ textDecoration: 'underline' }}
-                        >
-                          read more...
-                        </a> */}
-                      </Accordion.Control>
-                      <Accordion.Panel>
-                        <Text
-                          className={`label ${montserrat_light.className} p-0 text-neutral-200`}
-                          size={'sm'}
-                        >
-                          Only set this key if you&apos;re comfortable with
-                          paying the OpenAI bill for users to chat with your
-                          documents. Without this, each user must bring their
-                          own key and enter it before using the app. Providing a
-                          key makes your page free and much simpler for your
-                          users. You can use the visibility controls below to
-                          limit access. Advanced rate-limit features are a work
-                          in progress.
-                        </Text>
-                      </Accordion.Panel>
-                    </Accordion.Item>
-                  </Accordion>
-
-                  {apiKey && !isEditing ? (
-                    <>
-                      <Input
-                        icon={<IconKey />}
-                        className="mt-4 w-full min-w-[20rem]"
-                        placeholder="sk-**********"
-                        type="password"
-                        radius={'xl'}
-                        size={'md'}
-                        variant={'default'}
-                        id="openai-api-key-input"
-                        disabled={!isKeyUpdated}
-                        rightSection={
-                          <Button
-                            onClick={() => {
-                              setIsEditing(true)
-                              setIsKeyUpdated(false)
-                            }}
-                            size="sm"
-                            radius={'xl'}
-                            className="min-w-[5rem] -translate-x-1 transform rounded-s-md bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none"
-                            w={'auto'}
-                          >
-                            <IconEdit />
-                          </Button>
-                        }
-                        rightSectionWidth={'auto'}
-                      />
-                    </>
-                  ) : (
-                    <Input
-                      icon={<IconKey />}
-                      className="mt-4 w-full min-w-[20rem]"
-                      placeholder="OpenAI API key"
-                      type="password"
-                      radius={'xl'}
-                      size={'md'}
-                      variant={'default'}
-                      id="openai-api-key-input"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          const inputValue = (e.target as HTMLInputElement)
-                            .value
-                          handleKeyUpdate(
-                            inputValue,
-                            !inputValue.startsWith('sk-'),
+                        const resp = await callSetCourseMetadata(
+                          course_name,
+                          courseMetadata,
+                        )
+                        if (!resp) {
+                          console.log(
+                            'Error upserting course metadata for course: ',
+                            course_name,
                           )
                         }
-                      }}
-                      rightSection={
-                        <Button
-                          onClick={(e) => {
-                            e.preventDefault()
-                            const apiKeyInput = document.getElementById(
-                              'openai-api-key-input',
-                            ) as HTMLInputElement
-                            if (apiKeyInput) {
-                              const inputValue = apiKeyInput.value
-                              handleKeyUpdate(
-                                inputValue,
-                                !inputValue.startsWith('sk-'),
-                              )
-                            }
-                          }}
-                          size="sm"
-                          radius={'xl'}
-                          className={`min-w-[5rem] -translate-x-1 transform rounded-s-md ${isKeyUpdating ? 'bg-indigo-600' : 'bg-purple-800'} text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
-                          w={'auto'}
-                        >
-                          {isKeyUpdating ? (
-                            <LoadingSpinner size={'sm'} />
-                          ) : (
-                            'Submit'
-                          )}
-                        </Button>
                       }
-                      rightSectionWidth={'auto'}
-                    />
-                  )}
-                  <Input.Description className="p-2 text-right">
-                    <a
-                      href="https://platform.openai.com/account/api-keys"
-                      target="_blank"
-                      className="hover:underline"
-                    >
-                      Get your own api key here
-                      <IconArrowUpRight size={12} className={'mb-2 inline'} />
-                    </a>
-                  </Input.Description>
+                    }}
+                  >
+                    Update
+                  </Button>
                 </div>
 
                 <PrivateOrPublicCourse
@@ -661,7 +428,6 @@ const EditCourseCard = ({
                     className={`file-input-bordered file-input w-full border-violet-800 bg-violet-800 text-white  shadow-inner hover:border-violet-600 hover:bg-violet-800 ${montserrat_paragraph.variable} font-montserratParagraph`}
                     onChange={async (e) => {
                       // Assuming the file is converted to a URL somewhere else
-                      setCourseBannerUrl(e.target.value)
                       if (e.target.files?.length) {
                         console.log('Uploading to s3')
                         const banner_s3_image = await uploadToS3(
@@ -670,18 +436,10 @@ const EditCourseCard = ({
                         )
                         if (banner_s3_image && courseMetadata) {
                           courseMetadata.banner_image_s3 = banner_s3_image
-                          const response = await callSetCourseMetadata(
+                          await callSetCourseMetadata(
                             course_name,
                             courseMetadata,
                           )
-                          if (response) {
-                            setCourseBannerUrl(banner_s3_image)
-                          } else {
-                            console.log(
-                              'Error upserting course metadata for course: ',
-                              course_name,
-                            )
-                          }
                         }
                       }
                     }}
@@ -766,198 +524,9 @@ const PrivateOrPublicCourse = ({
     }
   }
 
-  const [selectedModels, setSelectedModels] = useState<OpenAIModel[]>([])
-  const [models, setModels] = useState<OpenAIModel[]>([])
-  useEffect(() => {
-    const fetchModels = async () => {
-      const res = await fetch('/api/models', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          openAIApiKey: apiKey,
-          projectName: course_name,
-        }),
-      })
-      if (res.ok) {
-        // TODO: eventually support multipe LLM providers for disabling models.
-        const allLLMProviders = (await res.json()) as AllLLMProviders
-
-        // set OpenAI modles or empty
-        setModels(allLLMProviders.OpenAI?.models || [])
-
-        if (allLLMProviders.OpenAI?.models) {
-          setSelectedModels(
-            allLLMProviders.OpenAI.models.filter(
-              (model) => !courseMetadata.disabled_models?.includes(model.id),
-            ),
-          )
-        }
-      } else {
-        console.error(`Error fetching models: ${res.status}`)
-      }
-    }
-
-    if (apiKey) {
-      fetchModels()
-    } else {
-      setModels([])
-      // console.error('No API key provided')
-    }
-  }, [apiKey])
-
-  const handleModelCheckboxChange = (modelId: string, isChecked: boolean) => {
-    if (!isChecked) {
-      console.log('Model being unchecked')
-
-      const mySelectedModels = selectedModels.filter(
-        (model) => model.id !== modelId,
-      )
-
-      // start with models and filter out all of mySelectedModels from it
-      const myDisabledModels = models.filter(
-        (model) => !mySelectedModels.includes(model),
-      )
-
-      setSelectedModels((prevModels) =>
-        prevModels.filter((model) => model.id !== modelId),
-      )
-      setDisabledModels(myDisabledModels)
-    } else {
-      const model = models.find((model) => model.id === modelId)
-      const mySelectedModels = [...selectedModels, model]
-      const myDisabledModels = models.filter(
-        (model) => !mySelectedModels.includes(model),
-      )
-
-      if (model) {
-        setSelectedModels((prevModels) => [...prevModels, model])
-      }
-      setDisabledModels(myDisabledModels)
-    }
-  }
-
-  const setDisabledModels = async (disabledModels: OpenAIModel[]) => {
-    const disabledModelIds = disabledModels.map((model) => model.id)
-    const res = await fetch('/api/UIUC-api/setDisabledModels', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        course_name: course_name,
-        disabled_models: disabledModelIds,
-      }),
-    })
-    if (res.ok) {
-      console.log('Successfully set disabled models')
-    } else {
-      console.error(`Error setting disabled models on backend: ${res.status}`)
-    }
-  }
-
   return (
     <>
-      <Divider />
-      <Title
-        className={`${montserrat_heading.variable} font-montserratHeading`}
-        variant="gradient"
-        gradient={{ from: 'gold', to: 'white', deg: 170 }}
-        order={3}
-        // p="md"
-        pl={'md'}
-        pr={'md'}
-        pt={'sm'}
-        pb={0}
-        style={{ alignSelf: 'left', marginLeft: '-11px' }}
-      >
-        Model Access Control{' '}
-      </Title>
-      <Accordion
-        pl={27}
-        pr={27}
-        pt={40}
-        pb={40}
-        m={-40}
-        // style={{ borderRadius: 'theme.radius.xl', width: '112%', maxWidth: 'min(50rem, )', marginLeft: 'max(-1rem, -10%)' }}
-        style={{ borderRadius: 'theme.radius.xl' }}
-        classNames={classes}
-        className={classes.root}
-      >
-        {/* ... Accordion items */}
-        <Accordion.Item value="openai-key-details">
-          <Accordion.Control>
-            <Text
-              className={`label ${montserrat_light.className} inline-block p-0 text-neutral-200`}
-              size={'md'}
-            >
-              Limit what models your users can chat with (mostly to save cost)
-              {/* <span className={'text-purple-600'}>Read more</span>{' '}
-              👇 */}
-            </Text>
-          </Accordion.Control>
-          <Accordion.Panel>
-            {models.length > 0 ? (
-              models
-                .sort((a, b) => b.name.localeCompare(a.name))
-                .map((model: OpenAIModel) => (
-                  <Group key={model.id} className="flex justify-between">
-                    <label>{model.name}</label>
-                    <Switch
-                      size="sm"
-                      onLabel="ON"
-                      offLabel="OFF"
-                      styles={{
-                        track: {
-                          backgroundColor: selectedModels.some(
-                            (selectedModel) => selectedModel.id === model.id,
-                          )
-                            ? '#6a29a4 !important'
-                            : '#25262b',
-                          borderColor: selectedModels.some(
-                            (selectedModel) => selectedModel.id === model.id,
-                          )
-                            ? '#6a29a4 !important'
-                            : '#25262b',
-                        },
-                      }}
-                      checked={selectedModels.some(
-                        (selectedModel) => selectedModel.id === model.id,
-                      )}
-                      onChange={(e) =>
-                        handleModelCheckboxChange(model.id, e.target.checked)
-                      }
-                    />
-                  </Group>
-                ))
-            ) : (
-              <Text>
-                Please input a &quot;Project-wide OpenAI key&quot; (above) to
-                access this feature
-              </Text>
-            )}
-            {/* <Text
-              className={`label ${montserrat_light.className} inline-block p-0 text-neutral-200`}
-              size={'sm'}
-            >
-              Read our{' '}
-              <a
-                className={'text-purple-600'}
-                href="/privacy"
-                target="_blank"
-                rel="noopener noreferrer"
-              // style={{ textDecoration: 'underline' }}
-              >
-                strict security policy
-              </a>{' '}
-              on protecting your data.
-            </Text> */}
-          </Accordion.Panel>
-        </Accordion.Item>
-      </Accordion>
-      <Divider />
-
+      <Divider></Divider>
       <Title
         className={`${montserrat_heading.variable} font-montserratHeading`}
         variant="gradient"

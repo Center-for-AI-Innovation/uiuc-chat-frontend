@@ -102,15 +102,15 @@ export const UserSettings = () => {
         className={`${classes.modalContent} ${isSmallScreen ? 'p-2' : 'p-4'} overflow-x-hidden md:rounded-lg`}
       >
         <Modal.Header className={classes.modalHeader}>
-          <Modal.Title>
-            <Title
-              className={`${classes.title} ${montserrat_heading.variable} font-montserratHeading`}
-              order={isSmallScreen ? 5 : 4}
-            >
-              Settings
-            </Title>
+          <Modal.Title
+            className={`${classes.title} ${montserrat_heading.variable} font-montserratHeading text-white`}
+          >
+            Settings
           </Modal.Title>
-          <Modal.CloseButton />
+          <Modal.CloseButton
+            onClick={handleClose}
+            aria-label="Close settings"
+          />
         </Modal.Header>
         <Modal.Body className="mt-4" p={isSmallScreen ? 'xs' : 'md'}>
           <Tabs

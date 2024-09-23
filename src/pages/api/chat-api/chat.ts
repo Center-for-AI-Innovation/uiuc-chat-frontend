@@ -30,7 +30,12 @@ import {
   fetchTools,
   handleToolsServer,
 } from '~/utils/functionCalling/handleFunctionCalling'
-import { GenericSupportedModel } from '~/types/LLMProvider'
+import {
+  AllLLMProviders,
+  GenericSupportedModel,
+  OpenAIProvider,
+  ProviderNames,
+} from '~/utils/modelProviders/LLMProvider'
 import { fetchEnabledDocGroups } from '~/utils/dbUtils'
 
 export const runtime = 'edge'
@@ -230,7 +235,7 @@ export default async function chat(req: NextRequest): Promise<NextResponse> {
         : DEFAULT_SYSTEM_PROMPT,
     temperature: temperature || DEFAULT_TEMPERATURE,
     folderId: null,
-    user_email: email,
+    userEmail: email,
   }
 
   // Handle image content if it exists
@@ -246,14 +251,20 @@ export default async function chat(req: NextRequest): Promise<NextResponse> {
   )
 
   if (imageContent.length > 0) {
+    // convert the provided key into an OpenAI provider.
+    const llmProviders = {
+      [ProviderNames.OpenAI]: {
+        provider: ProviderNames.OpenAI,
+        apiKey: key,
+      } as OpenAIProvider,
+    } as AllLLMProviders
     const { searchQuery: newSearchQuery, imgDesc: newImgDesc } =
       await handleImageContent(
         lastMessage,
         course_name,
         conversation,
         searchQuery,
-        courseMetadata,
-        openai_key,
+        llmProviders,
         controller,
       )
     searchQuery = newSearchQuery

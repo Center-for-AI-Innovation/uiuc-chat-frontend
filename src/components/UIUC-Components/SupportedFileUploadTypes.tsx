@@ -273,7 +273,7 @@ const SupportedFileUploadTypes = () => {
                 className={`label ${montserrat_paragraph.variable} inline-block p-0 font-montserratParagraph text-neutral-200`}
                 size={'md'}
               >
-                <span className={'text-white'}>Read the details</span> 👇
+                <span className={'text-white'}>Integrations</span> 👇
               </Text>
             </div>
           </Accordion.Control>

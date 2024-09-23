@@ -1,10 +1,13 @@
 import { Action, Conversation, Message, UIUCTool } from '@/types/chat'
 import { ErrorMessage } from '@/types/error'
-import { FolderInterface } from '@/types/folder'
-import { OpenAIModelID } from '~/utils/modelProviders/openai'
+import { FolderInterface, FolderWithConversation } from '@/types/folder'
+import { OpenAIModelID } from '~/utils/modelProviders/types/openai'
 import { PluginKey } from '@/types/plugin'
 import { Prompt } from '@/types/prompt'
-import { AnySupportedModel, AllLLMProviders } from '~/types/LLMProvider'
+import {
+  AnySupportedModel,
+  AllLLMProviders,
+} from '~/utils/modelProviders/LLMProvider'
 
 export interface HomeInitialState {
   apiKey: string
@@ -15,7 +18,7 @@ export interface HomeInitialState {
   modelError: ErrorMessage | null
   llmProviders: AllLLMProviders
   selectedModel: AnySupportedModel | null
-  folders: FolderInterface[]
+  folders: FolderWithConversation[]
   conversations: Conversation[]
   selectedConversation: Conversation | undefined
   currentMessage: Message | undefined

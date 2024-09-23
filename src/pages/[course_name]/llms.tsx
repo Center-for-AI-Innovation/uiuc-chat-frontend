@@ -5,16 +5,20 @@ import { useRouter } from 'next/router'
 import { useUser } from '@clerk/nextjs'
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
-import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
+import {
+  LoadingPlaceholderForAdminPages,
+  MainPageBackground,
+} from '~/components/UIUC-Components/MainPageBackground'
 import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { CourseMetadata } from '~/types/courseMetadata'
+import APIKeyInputForm from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
 
 const CourseMain: NextPage = () => {
   const router = useRouter()
   const [courseName, setCourseName] = useState<string | null>(null)
   const { user, isLoaded, isSignedIn } = useUser()
-  const [isLoading, setIsLoading] = useState(true)
+  const [isFetchingCourseMetadata, setIsFetchingCourseMetadata] = useState(true)
 
   const getCurrentPageName = () => {
     return router.query.course_name as string
@@ -33,18 +37,14 @@ const CourseMain: NextPage = () => {
         return
       }
       setCourseName(local_course_name)
-      setIsLoading(false)
+      setIsFetchingCourseMetadata(false)
     }
     fetchCourseData()
   }, [router.isReady])
 
   // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
-  if (!isLoaded || isLoading || courseName == null) {
-    return (
-      <MainPageBackground>
-        <LoadingSpinner />
-      </MainPageBackground>
-    )
+  if (!isLoaded || isFetchingCourseMetadata || courseName == null) {
+    return <LoadingPlaceholderForAdminPages />
   }
 
   if (!isSignedIn) {
@@ -63,7 +63,7 @@ const CourseMain: NextPage = () => {
 
   return (
     <>
-      <MakeNomicVisualizationPage course_name={courseName as string} />
+      <APIKeyInputForm />
     </>
   )
 }
