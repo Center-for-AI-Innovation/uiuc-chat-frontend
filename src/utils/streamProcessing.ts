@@ -331,21 +331,19 @@ export async function fetchKeyToUse(
  * @param {string | undefined} openai_key - The OpenAI key provided in the request.
  * @param {CourseMetadata} courseMetadata - The course metadata containing the fallback OpenAI key.
  * @param {string} modelId - The model identifier to validate against the available models.
- * @returns {Promise<string>} The validated OpenAI key.
+ * @returns {Promise<{ activeModel: GenericSupportedModel, modelsWithProviders: AllLLMProviders }>} The validated OpenAI key and available models.
  */
 export async function determineAndValidateModel(
   keyToUse: string,
   modelId: string,
   projectName: string,
-): Promise<GenericSupportedModel> {
-  // const availableModels = await fetchAvailableModels(
-  //   keyToUse,
-  //   projectName,
-  // )
+): Promise<{
+  activeModel: GenericSupportedModel
+  modelsWithProviders: AllLLMProviders
+}> {
   const baseUrl = getBaseUrl()
   console.log('baseUrl:', baseUrl)
 
-  // TODO refactor into a react query hook.
   const response = await fetch(baseUrl + '/api/models', {
     method: 'POST',
     headers: {
@@ -368,18 +366,15 @@ export async function determineAndValidateModel(
     .flatMap((provider) => provider?.models || [])
     .filter((model) => model.enabled)
 
-  // Check if availableModels doesn't contain modelId then return error otherwise Return model to use
-  if (availableModels.find((model) => model.id === modelId)) {
-    return availableModels.find(
-      (model) => model.id === modelId,
-    ) as GenericSupportedModel
-  } else {
-    // ❌ Model unavailable, tell them the available ones
+  const activeModel = availableModels.find(
+    (model) => model.id === modelId,
+  ) as GenericSupportedModel
+
+  if (!activeModel) {
     throw new Error(
       `The requested model '${modelId}' is not available in this project. It has likely been restricted by the project's admins. You can enable this model on the admin page here: https://uiuc.chat/${projectName}/materials. These models are available to use: ${Array.from(
         availableModels,
       )
-        // Filter out WebLLM models, those are In-Web-Browser only (not in API)
         .filter(
           (model) =>
             !webLLMModels.some((webLLMModel) => webLLMModel.id === model.id),
@@ -388,6 +383,8 @@ export async function determineAndValidateModel(
         .join(', ')}`,
     )
   }
+
+  return { activeModel, modelsWithProviders }
 }
 
 /**

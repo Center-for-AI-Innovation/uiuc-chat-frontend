@@ -137,9 +137,13 @@ export default async function chat(req: NextRequest): Promise<NextResponse> {
   const key = await fetchKeyToUse(openai_key, courseMetadata)
 
   // // Determine and validate the model to use
-  let activeModel: GenericSupportedModel
+  let selectedModel: GenericSupportedModel
+  let llmProviders: AllLLMProviders
   try {
-    activeModel = await determineAndValidateModel(key, model, course_name)
+    const { activeModel, modelsWithProviders } =
+      await determineAndValidateModel(key, model, course_name)
+    selectedModel = activeModel
+    llmProviders = modelsWithProviders
   } catch (error) {
     return NextResponse.json(
       { error: (error as Error).message },
@@ -225,7 +229,7 @@ export default async function chat(req: NextRequest): Promise<NextResponse> {
     id: uuidv4(),
     name: 'New Conversation',
     messages: messages,
-    model: activeModel,
+    model: selectedModel,
     prompt:
       messages.filter((message) => message.role === 'system').length > 0
         ? ((messages.filter((message) => message.role === 'system')[0]
@@ -318,6 +322,7 @@ export default async function chat(req: NextRequest): Promise<NextResponse> {
     course_name,
     stream,
     courseMetadata,
+    llmProviders,
   )
 
   // Build the prompt
