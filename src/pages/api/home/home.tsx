@@ -596,10 +596,19 @@ const Home = ({
           const cleanedSelectedConversation = cleanSelectedConversation(
             parsedSelectedConversation,
           )
-          dispatch({
-            field: 'selectedConversation',
-            value: cleanedSelectedConversation,
-          })
+          const oneHourAgo = new Date(Date.now() - 3600 * 1000).toISOString()
+          if (
+            cleanedSelectedConversation &&
+            cleanedSelectedConversation.createdAt &&
+            cleanedSelectedConversation.createdAt < oneHourAgo
+          ) {
+            dispatch({
+              field: 'selectedConversation',
+              value: cleanedSelectedConversation,
+            })
+          } else {
+            handleNewConversation()
+          }
         } else {
           handleNewConversation()
         }
