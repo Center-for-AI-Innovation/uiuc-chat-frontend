@@ -349,6 +349,10 @@ const Home = ({
     // })
 
     dispatch({ field: 'loading', value: false })
+    localStorage.setItem(
+      'selectedConversation',
+      JSON.stringify(newConversation),
+    )
   }
 
   const handleUpdateConversation = (
