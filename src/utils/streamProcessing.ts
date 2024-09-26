@@ -882,7 +882,6 @@ export const routeModelRequest = async (
         conversation: selectedConversation,
         ollamaProvider: newChatBody,
         stream: chatBody.stream,
-        stream: chatBody.stream,
       }),
     })
   } else if (
