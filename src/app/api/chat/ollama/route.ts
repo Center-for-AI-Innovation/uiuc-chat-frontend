@@ -1,5 +1,10 @@
 import { createOllama } from 'ollama-ai-provider'
-import { CoreMessage, StreamingTextResponse, streamText } from 'ai'
+import {
+  CoreMessage,
+  generateText,
+  StreamingTextResponse,
+  streamText,
+} from 'ai'
 import { Conversation } from '~/types/chat'
 import {
   NCSAHostedProvider,
@@ -7,6 +12,7 @@ import {
 } from '~/utils/modelProviders/LLMProvider'
 import { OllamaModel } from '~/utils/modelProviders/ollama'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
+import { NextResponse } from 'next/server'
 
 // export const runtime = 'edge' // Does NOT work
 export const dynamic = 'force-dynamic' // known bug with Vercel: https://sdk.vercel.ai/docs/troubleshooting/common-issues/streaming-not-working-on-vercel
@@ -20,10 +26,16 @@ export async function POST(req: Request) {
   const {
     conversation,
     ollamaProvider,
+    stream,
   }: {
     conversation: Conversation
     ollamaProvider: OllamaProvider | NCSAHostedProvider
+    stream: boolean
   } = await req.json()
+
+  console.log('ollamaProvider', ollamaProvider)
+  console.log('here conversation', conversation)
+  console.log('here stream', stream)
 
   if (!ollamaProvider.baseUrl || ollamaProvider.baseUrl === '') {
     ollamaProvider.baseUrl = process.env.OLLAMA_SERVER_URL
@@ -37,13 +49,24 @@ export async function POST(req: Request) {
     throw new Error('Conversation messages array is empty')
   }
 
-  const result = await streamText({
-    model: ollama(conversation.model.id),
-    messages: convertConversatonToVercelAISDKv3(conversation),
-    temperature: conversation.temperature,
-    maxTokens: 4096, // output tokens
-  })
-  return result.toTextStreamResponse()
+  if (stream) {
+    const result = await streamText({
+      model: ollama(conversation.model.id),
+      messages: convertConversatonToVercelAISDKv3(conversation),
+      temperature: conversation.temperature,
+      maxTokens: 4096, // output tokens
+    })
+    return result.toTextStreamResponse()
+  } else {
+    const result = await generateText({
+      model: ollama(conversation.model.id),
+      messages: convertConversatonToVercelAISDKv3(conversation),
+      temperature: conversation.temperature,
+      maxTokens: 4096, // output tokens
+    })
+    console.log('returning result', result)
+    return NextResponse.json(result.text)
+  }
 }
 
 function convertConversatonToVercelAISDKv3(

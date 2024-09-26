@@ -7,7 +7,7 @@ import {
   Message,
 } from '~/types/chat'
 import { CourseMetadata } from '~/types/courseMetadata'
-import { decrypt } from './crypto'
+import { decrypt, decryptKeyIfNeeded } from './crypto'
 import { OpenAIError } from './server'
 import { NextRequest, NextResponse } from 'next/server'
 import { replaceCitationLinks } from './citations'
@@ -319,9 +319,8 @@ export async function fetchKeyToUse(
 ): Promise<string> {
   return (
     openai_key ||
-    ((await decrypt(
+    ((await decryptKeyIfNeeded(
       courseMetadata.openai_api_key as string,
-      process.env.NEXT_PUBLIC_SIGNING_KEY as string,
     )) as string)
   )
 }
@@ -459,7 +458,6 @@ export async function validateRequestBody(body: ChatApiBody): Promise<void> {
   }
 
   // Additional validation for other fields can be added here if needed
-  console.debug('API body validation passed')
 }
 
 /**
@@ -707,14 +705,27 @@ export async function handleNonStreamingResponse(
   }
 
   try {
-    const json = await apiResponse.json()
-    const response = json.choices[0].message.content || ''
+    let response: string
+    const contentType = apiResponse.headers.get('content-type')
+
+    // Handle JSON or Plain Text response
+    if (contentType && contentType.includes('application/json')) {
+      const json = await apiResponse.json()
+      response = json.choices[0].message.content || ''
+    } else {
+      // Handle plain text response
+      response = await apiResponse.text()
+    }
+
+    console.log('response in handleNonStreamingResponse', response)
+
     const processedResponse = await processResponseData(
       response,
       conversation,
       req,
       course_name,
     )
+
     return new NextResponse(JSON.stringify({ message: processedResponse }), {
       status: 200,
     })
@@ -869,12 +880,13 @@ export const routeModelRequest = async (
     )
   ) {
     // NCSA Hosted LLMs
-
     const newChatBody = chatBody!.llmProviders!.NCSAHosted as NCSAHostedProvider
     newChatBody.baseUrl = process.env.OLLAMA_SERVER_URL // inject proper baseURL
-    console.log('IN NCSA hosted router....', newChatBody)
 
-    response = await fetch('/api/chat/ollama', {
+    const stream = chatBody.stream
+    console.log('stream here', stream)
+
+    response = await fetch(`${getBaseUrl()}/api/chat/ollama`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -883,6 +895,7 @@ export const routeModelRequest = async (
       body: JSON.stringify({
         conversation: selectedConversation,
         ollamaProvider: newChatBody,
+        stream: chatBody.stream,
       }),
     })
   } else if (
