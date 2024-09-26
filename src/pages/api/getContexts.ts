@@ -10,7 +10,6 @@ export const fetchContexts = async (
   token_limit = 4000,
   doc_groups: string[] = [],
 ): Promise<ContextWithMetadata[]> => {
-  console.log('fetchContexts search query:', search_query, token_limit)
   const requestBody = {
     course_name: course_name,
     search_query: search_query,

@@ -7,7 +7,7 @@ import {
   Message,
 } from '~/types/chat'
 import { CourseMetadata } from '~/types/courseMetadata'
-import { decrypt } from './crypto'
+import { decrypt, decryptKeyIfNeeded } from './crypto'
 import { OpenAIError } from './server'
 import { NextRequest, NextResponse } from 'next/server'
 import { replaceCitationLinks } from './citations'
@@ -319,9 +319,8 @@ export async function fetchKeyToUse(
 ): Promise<string> {
   return (
     openai_key ||
-    ((await decrypt(
+    ((await decryptKeyIfNeeded(
       courseMetadata.openai_api_key as string,
-      process.env.NEXT_PUBLIC_SIGNING_KEY as string,
     )) as string)
   )
 }
@@ -459,7 +458,6 @@ export async function validateRequestBody(body: ChatApiBody): Promise<void> {
   }
 
   // Additional validation for other fields can be added here if needed
-  console.debug('API body validation passed')
 }
 
 /**
@@ -716,6 +714,7 @@ export async function handleNonStreamingResponse(
       req,
       course_name,
     )
+
     return new NextResponse(JSON.stringify({ message: processedResponse }), {
       status: 200,
     })
@@ -870,10 +869,8 @@ export const routeModelRequest = async (
     )
   ) {
     // NCSA Hosted LLMs
-
     const newChatBody = chatBody!.llmProviders!.NCSAHosted as NCSAHostedProvider
     newChatBody.baseUrl = process.env.OLLAMA_SERVER_URL // inject proper baseURL
-    console.log('IN NCSA hosted router....', newChatBody)
 
     response = await fetch(`${baseUrl}/api/chat/ollama`, {
       method: 'POST',
@@ -884,6 +881,7 @@ export const routeModelRequest = async (
       body: JSON.stringify({
         conversation: selectedConversation,
         ollamaProvider: newChatBody,
+        stream: chatBody.stream,
         stream: chatBody.stream,
       }),
     })

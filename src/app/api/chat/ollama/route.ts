@@ -12,6 +12,7 @@ import {
 } from '~/utils/modelProviders/LLMProvider'
 import { OllamaModel } from '~/utils/modelProviders/ollama'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
+import { NextResponse } from 'next/server'
 
 // export const runtime = 'edge' // Does NOT work
 export const dynamic = 'force-dynamic' // known bug with Vercel: https://sdk.vercel.ai/docs/troubleshooting/common-issues/streaming-not-working-on-vercel
@@ -26,11 +27,17 @@ export async function POST(req: Request) {
     conversation,
     ollamaProvider,
     stream,
+    stream,
   }: {
     conversation: Conversation
     ollamaProvider: OllamaProvider | NCSAHostedProvider
     stream: boolean
+    stream: boolean
   } = await req.json()
+
+  console.log('ollamaProvider', ollamaProvider)
+  console.log('here conversation', conversation)
+  console.log('here stream', stream)
 
   if (!ollamaProvider.baseUrl || ollamaProvider.baseUrl === '') {
     ollamaProvider.baseUrl = process.env.OLLAMA_SERVER_URL
