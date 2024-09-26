@@ -27,11 +27,9 @@ export async function POST(req: Request) {
     conversation,
     ollamaProvider,
     stream,
-    stream,
   }: {
     conversation: Conversation
     ollamaProvider: OllamaProvider | NCSAHostedProvider
-    stream: boolean
     stream: boolean
   } = await req.json()
 
