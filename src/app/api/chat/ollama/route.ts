@@ -1,5 +1,10 @@
 import { createOllama } from 'ollama-ai-provider'
-import { CoreMessage, StreamingTextResponse, streamText } from 'ai'
+import {
+  CoreMessage,
+  generateText,
+  StreamingTextResponse,
+  streamText,
+} from 'ai'
 import { Conversation } from '~/types/chat'
 import {
   NCSAHostedProvider,
@@ -20,9 +25,11 @@ export async function POST(req: Request) {
   const {
     conversation,
     ollamaProvider,
+    stream,
   }: {
     conversation: Conversation
     ollamaProvider: OllamaProvider | NCSAHostedProvider
+    stream: boolean
   } = await req.json()
 
   if (!ollamaProvider.baseUrl || ollamaProvider.baseUrl === '') {
@@ -37,13 +44,29 @@ export async function POST(req: Request) {
     throw new Error('Conversation messages array is empty')
   }
 
-  const result = await streamText({
-    model: ollama(conversation.model.id),
-    messages: convertConversatonToVercelAISDKv3(conversation),
-    temperature: conversation.temperature,
-    maxTokens: 4096, // output tokens
-  })
-  return result.toTextStreamResponse()
+  if (stream) {
+    const result = await streamText({
+      model: ollama(conversation.model.id),
+      messages: convertConversatonToVercelAISDKv3(conversation),
+      temperature: conversation.temperature,
+      maxTokens: 4096, // output tokens
+    })
+    return result.toTextStreamResponse()
+  } else {
+    const result = await generateText({
+      model: ollama(conversation.model.id),
+      messages: convertConversatonToVercelAISDKv3(conversation),
+      temperature: conversation.temperature,
+      maxTokens: 4096, // output tokens
+    })
+    // console.log('result.response', result)
+    const choices = [{ message: { content: result.text } }]
+    const response = { choices: choices }
+    return new Response(JSON.stringify(response), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
 }
 
 function convertConversatonToVercelAISDKv3(

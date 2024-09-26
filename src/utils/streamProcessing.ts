@@ -708,6 +708,7 @@ export async function handleNonStreamingResponse(
 
   try {
     const json = await apiResponse.json()
+    // console.log('apiResponse:', json)
     const response = json.choices[0].message.content || ''
     const processedResponse = await processResponseData(
       response,
@@ -874,7 +875,7 @@ export const routeModelRequest = async (
     newChatBody.baseUrl = process.env.OLLAMA_SERVER_URL // inject proper baseURL
     console.log('IN NCSA hosted router....', newChatBody)
 
-    response = await fetch('/api/chat/ollama', {
+    response = await fetch(`${baseUrl}/api/chat/ollama`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -883,6 +884,7 @@ export const routeModelRequest = async (
       body: JSON.stringify({
         conversation: selectedConversation,
         ollamaProvider: newChatBody,
+        stream: chatBody.stream,
       }),
     })
   } else if (
@@ -894,7 +896,7 @@ export const routeModelRequest = async (
     )
 
     // Ollama model
-    response = await fetch('/api/chat/ollama', {
+    response = await fetch(`${baseUrl}/api/chat/ollama`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
