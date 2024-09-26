@@ -600,7 +600,7 @@ const Home = ({
           if (
             cleanedSelectedConversation &&
             cleanedSelectedConversation.createdAt &&
-            cleanedSelectedConversation.createdAt < oneHourAgo
+            cleanedSelectedConversation.createdAt > oneHourAgo
           ) {
             dispatch({
               field: 'selectedConversation',
