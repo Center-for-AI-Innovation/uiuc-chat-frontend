@@ -32,11 +32,6 @@ export async function POST(req: Request) {
     ollamaProvider: OllamaProvider | NCSAHostedProvider
     stream: boolean
   } = await req.json()
-
-  console.log('ollamaProvider', ollamaProvider)
-  console.log('here conversation', conversation)
-  console.log('here stream', stream)
-
   if (!ollamaProvider.baseUrl || ollamaProvider.baseUrl === '') {
     ollamaProvider.baseUrl = process.env.OLLAMA_SERVER_URL
   }

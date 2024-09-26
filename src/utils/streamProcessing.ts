@@ -872,7 +872,8 @@ export const routeModelRequest = async (
     const newChatBody = chatBody!.llmProviders!.NCSAHosted as NCSAHostedProvider
     newChatBody.baseUrl = process.env.OLLAMA_SERVER_URL // inject proper baseURL
 
-    response = await fetch(`${baseUrl}/api/chat/ollama`, {
+    const url = baseUrl ? `${baseUrl}/api/chat/ollama` : '/api/chat/ollama'
+    response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -893,7 +894,8 @@ export const routeModelRequest = async (
     )
 
     // Ollama model
-    response = await fetch(`${baseUrl}/api/chat/ollama`, {
+    const url = baseUrl ? `${baseUrl}/api/chat/ollama` : '/api/chat/ollama'
+    response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
