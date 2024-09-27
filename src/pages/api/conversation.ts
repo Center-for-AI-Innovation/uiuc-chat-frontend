@@ -99,6 +99,8 @@ export function convertDBToChatConversation(
         updated_at: msg.updated_at || undefined,
       }
     }),
+    createdAt: dbConversation.created_at || undefined,
+    updatedAt: dbConversation.updated_at || undefined,
   }
 }
 
