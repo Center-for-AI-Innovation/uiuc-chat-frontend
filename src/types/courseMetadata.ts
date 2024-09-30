@@ -15,6 +15,9 @@ export interface CourseMetadata {
   openai_api_key: string | undefined // TODO: remove
   disabled_models: string[] | undefined // TODO: remove
   project_description: string | undefined
+  documentsOnly: boolean | undefined
+  guidedLearning: boolean | undefined
+  systemPromptOnly: boolean | undefined
 }
 
 export type ProjectWideLLMProviders = {
@@ -37,4 +40,7 @@ export interface CourseMetadataOptionalForUpsert {
   system_prompt: string | undefined
   disabled_models: string[] | undefined
   project_description: string | undefined
+  documentsOnly: boolean | undefined
+  guidedLearning: boolean | undefined
+  systemPromptOnly: boolean | undefined
 }
