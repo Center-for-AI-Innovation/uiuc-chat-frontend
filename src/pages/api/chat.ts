@@ -473,7 +473,9 @@ const _getSystemPrompt = async ({
 
   // User defined + our standard citations prompt + tool prompt-engineering
   return (
-    userDefinedSystemPrompt + '\n\n' + getSystemPostPrompt({ conversation })
+    userDefinedSystemPrompt +
+    '\n\n' +
+    getSystemPostPrompt({ conversation, courseMetadata: courseMetadata! })
   )
 }
 
@@ -509,18 +511,33 @@ const _getLastUserTextInput = async ({
 
 export const getSystemPostPrompt = ({
   conversation,
+  courseMetadata,
 }: {
   conversation: Conversation
+  courseMetadata: CourseMetadata
 }): string => {
-  /*
-  This goes AFTER the user-defined system message. It's mostly about citations and response format styling.
-  */
-  let PostPrompt = `Please analyze and respond to the following question using the excerpts from the provided documents. These documents can be pdf files or web pages. Additionally, you may see the output from API calls (called 'tools') to the user's services which, when relevant, you should use to construct your answer. You may also see image descriptions from images uploaded by the user. Prioritize image descriptions, when helpful, to construct your answer.
+  const { guidedLearning, systemPromptOnly } = courseMetadata;
+
+  // If systemPromptOnly is true, return an empty PostPrompt
+  if (systemPromptOnly) {
+    return '';
+  }
+
+  // Initialize PostPrompt as an array of strings for easy manipulation
+  let PostPromptLines: string[] = [];
+
+  // The main system prompt
+  PostPromptLines.push(
+    `Please analyze and respond to the following question using the excerpts from the provided documents. These documents can be pdf files or web pages. Additionally, you may see the output from API calls (called 'tools') to the user's services which, when relevant, you should use to construct your answer. You may also see image descriptions from images uploaded by the user. Prioritize image descriptions, when helpful, to construct your answer.
 Integrate relevant information from these documents, ensuring each reference is linked to the document's number.
 Your response should be semi-formal. 
 When quoting directly, cite with footnotes linked to the document number and page number, if provided. 
 Summarize or paraphrase other relevant information with inline citations, again referencing the document number and page number, if provided.
-If the answer is not in the provided documents, state so. Yet always provide as helpful a response as possible to directly answer the question.
+If the answer is not in the provided documents, state so.${
+      guidedLearning
+        ? ''
+        : ' Yet always provide as helpful a response as possible to directly answer the question.'
+    }
 Conclude your response with a LIST of the document titles as clickable placeholders, each linked to its respective document number and page number, if provided.
 Always share page numbers if they were shared with you.
 ALWAYS follow the examples below:
@@ -530,7 +547,7 @@ Insert an inline citation like this in your response:
 At the end of your response, list the document title with a clickable link, like this: 
 "1. [document_name](#)" if you're referencing the first document or
 "1. [document_name, page: 2](#)" if you're referencing page 2 of the first document.
-Nothing else should prefixxed or suffixed to the citation or document name. 
+Nothing else should prefix or suffix the citation or document name. 
 
 Consecutive inline citations are ALWAYS discouraged. Use a maximum of 3 citations. Follow this exact formatting: separate citations with a comma like this: "[1, page: 2], [2, page: 3]" or like this "[1], [2], [3]".
 
@@ -544,17 +561,21 @@ Relevant Sources:
 29. [pdf.www, page: 11](#)
 """
 ONLY return the documents with relevant information and cited in the response. If there are no relevant sources, don't include the "Relevant Sources" section in response.
-The user message will include excerpts from the high-quality documents, APIs/tools, and image descriptions to construct your answer. Each will be labeled with XML-style tags, like <Potentially Relevant Documents> and <Tool Ouputs>. Make use of that information when writing your response.`
+The user message will include excerpts from the high-quality documents, APIs/tools, and image descriptions to construct your answer. Each will be labeled with XML-style tags, like <Potentially Relevant Documents> and <Tool Outputs>. Make use of that information when writing your response.`
+  );
 
-  // Tools prompt engineering in system prompt
+  // Combine the lines to form the PostPrompt
+  let PostPrompt = PostPromptLines.join('\n');
+
   const latestUserMessage =
-    conversation.messages[conversation.messages.length - 1]
-  if (latestUserMessage?.tools) {
-    const toolsOutputResults = _buildToolsOutputResults({ conversation }) // todo: check for length problems...
+    conversation.messages[conversation.messages.length - 1];
 
+  if (latestUserMessage?.tools) {
+    const toolsOutputResults = _buildToolsOutputResults({ conversation });
     PostPrompt +=
-      "\n<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool `tool name`...' or 'According to tool `tool name`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>"
-    PostPrompt += toolsOutputResults
+      "\n<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool `tool name`...' or 'According to tool `tool name`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>";
+    PostPrompt += toolsOutputResults;
   }
-  return PostPrompt
+
+  return PostPrompt;
 }
