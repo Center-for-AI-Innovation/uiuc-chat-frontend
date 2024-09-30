@@ -37,33 +37,38 @@ const handler = async (req: NextApiRequest) => {
       )
     }
 
-    const response = await fetch('https://bb51x.apps.beam.cloud', {
-      method: 'POST',
-      headers: {
-        Accept: '*/*',
-        'Accept-Encoding': 'gzip, deflate',
-        Authorization: `Basic ${process.env.BEAM_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        // course_name: courseName,
-        // readable_filename: readableFilename,
-        // s3_paths: s3_filepath,
+    const response = await fetch(
+      'https://app.beam.cloud/endpoint/canvas_ingest/latest',
+      {
+        method: 'POST',
+        headers: {
+          Accept: '*/*',
+          'Accept-Encoding': 'gzip, deflate',
+          Authorization: `Bearer ${process.env.BEAM_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          // course_name: courseName,
+          // readable_filename: readableFilename,
+          // s3_paths: s3_filepath,
 
-        canvas_url: canvas_url,
-        course_name: courseName,
-        files: selectedCanvasOptions.includes('files') ? 'true' : 'false',
-        pages: selectedCanvasOptions.includes('pages') ? 'true' : 'false',
-        modules: selectedCanvasOptions.includes('modules') ? 'true' : 'false',
-        syllabus: selectedCanvasOptions.includes('syllabus') ? 'true' : 'false',
-        assignments: selectedCanvasOptions.includes('assignments')
-          ? 'true'
-          : 'false',
-        discussions: selectedCanvasOptions.includes('discussions')
-          ? 'true'
-          : 'false',
-      }),
-    })
+          canvas_url: canvas_url,
+          course_name: courseName,
+          files: selectedCanvasOptions.includes('files') ? 'true' : 'false',
+          pages: selectedCanvasOptions.includes('pages') ? 'true' : 'false',
+          modules: selectedCanvasOptions.includes('modules') ? 'true' : 'false',
+          syllabus: selectedCanvasOptions.includes('syllabus')
+            ? 'true'
+            : 'false',
+          assignments: selectedCanvasOptions.includes('assignments')
+            ? 'true'
+            : 'false',
+          discussions: selectedCanvasOptions.includes('discussions')
+            ? 'true'
+            : 'false',
+        }),
+      },
+    )
 
     const responseBody = await response.json()
     console.log(

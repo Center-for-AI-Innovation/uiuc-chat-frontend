@@ -184,7 +184,6 @@ export const WebScrape = ({
 
         showToast()
       } else if (url.includes('canvas.illinois.edu/courses/')) {
-        // TODO: Switch this to new canvas ingest endpoint (https://bb51x.apps.beam.cloud for canvas)
         const response = await fetch('/api/UIUC-api/ingestCanvas', {
           method: 'POST',
           headers: {
@@ -197,7 +196,10 @@ export const WebScrape = ({
           }),
         })
         const data = await response.json()
-        if (data.error) {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        if (data && data.error) {
           throw new Error(data.error)
         }
         await new Promise((resolve) => setTimeout(resolve, 8000)) // wait a moment before redirecting
