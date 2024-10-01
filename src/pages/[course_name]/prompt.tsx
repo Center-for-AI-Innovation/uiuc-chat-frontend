@@ -725,6 +725,8 @@ const CourseMain: NextPage = () => {
                         >
                           AI Behavior Settings
                         </Title>
+
+                        {/* Checkboxes */}
                         <Checkbox
                           label={
                             <span className="flex items-center text-white">
@@ -762,11 +764,12 @@ const CourseMain: NextPage = () => {
                           color="grape"
                           checked={guidedLearning}
                           onChange={(event) => {
-                            const value = event.currentTarget.checked
-                            setGuidedLearning(value)
-                            debouncedHandleCheckboxChange('guidedLearning', value)
+                            const value = event.currentTarget.checked;
+                            setGuidedLearning(value);
+                            debouncedHandleCheckboxChange('guidedLearning', value);
                           }}
                         />
+
                         <Checkbox
                           label={
                             <span className="flex items-center text-white">
@@ -804,11 +807,12 @@ const CourseMain: NextPage = () => {
                           color="grape"
                           checked={documentsOnly}
                           onChange={(event) => {
-                            const value = event.currentTarget.checked
-                            setDocumentsOnly(value)
-                            debouncedHandleCheckboxChange('documentsOnly', value)
+                            const value = event.currentTarget.checked;
+                            setDocumentsOnly(value);
+                            debouncedHandleCheckboxChange('documentsOnly', value);
                           }}
                         />
+
                         <Checkbox
                           label={
                             <span className="flex items-center text-white">
@@ -816,7 +820,7 @@ const CourseMain: NextPage = () => {
                               <Tooltip
                                 label={
                                   <Text size="sm" color="gray.1">
-                                    Uses only the custom system prompt you&apos;ve provided, without additional formatting or citation instructions. This gives you full control over the AI&apos;s behavior and output structure.
+                                    Uses only the custom system prompt you've provided, without additional formatting or citation instructions. This gives you full control over the AI's behavior and output structure.
                                   </Text>
                                 }
                                 position="bottom"
@@ -846,15 +850,17 @@ const CourseMain: NextPage = () => {
                           color="grape"
                           checked={systemPromptOnly}
                           onChange={(event) => {
-                            const value = event.currentTarget.checked
-                            setSystemPromptOnly(value)
-                            debouncedHandleCheckboxChange('systemPromptOnly', value)
+                            const value = event.currentTarget.checked;
+                            setSystemPromptOnly(value);
+                            debouncedHandleCheckboxChange('systemPromptOnly', value);
                           }}
                         />
+
+                        {/* Conditional Button */}
                         {systemPromptOnly && (
-                          <Flex align="center">
+                          <Flex mt="sm" align="center" gap="xs">
                             <Button
-                              className={`relative m-1 bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                              className={`relative bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 ${montserrat_paragraph.variable} font-montserratParagraph`}
                               onClick={handleCopyDefaultPrompt}
                               style={{ minWidth: 'fit-content' }}
                             >
@@ -888,34 +894,27 @@ const CourseMain: NextPage = () => {
                             </Tooltip>
                           </Flex>
                         )}
-                        <div style={{ paddingTop: '10px', width: '100%' }}>
-                          <div
-                            style={{
-                              paddingTop: '10px',
-                              width: '100%',
-                              display: 'flex',
-                              justifyContent: 'space-between',
+
+                        {/* Reset Button */}
+                        <Flex mt="md" justify="flex-start">
+                          <Button
+                            className="relative bg-red-500 text-white hover:border-red-600 hover:bg-red-600"
+                            onClick={() => {
+                              setBaseSystemPrompt(DEFAULT_SYSTEM_PROMPT);
+                              setCourseMetadata({
+                                ...courseMetadata!,
+                                system_prompt: DEFAULT_SYSTEM_PROMPT,
+                              });
+                              setGuidedLearning(false);
+                              setDocumentsOnly(false);
+                              setSystemPromptOnly(false);
+                              resetSystemPrompt();
                             }}
+                            style={{ minWidth: 'fit-content' }}
                           >
-                            <Button
-                              className="relative m-1 self-end bg-red-500 text-white hover:border-red-600 hover:bg-red-600"
-                              onClick={() => {
-                                setBaseSystemPrompt(DEFAULT_SYSTEM_PROMPT)
-                                setCourseMetadata({
-                                  ...courseMetadata!,
-                                  system_prompt: DEFAULT_SYSTEM_PROMPT,
-                                })
-                                setGuidedLearning(false)
-                                setDocumentsOnly(false)
-                                setSystemPromptOnly(false)
-                                resetSystemPrompt()
-                              }}
-                              style={{ minWidth: 'fit-content' }}
-                            >
-                              Reset
-                            </Button>
-                          </div>
-                        </div>
+                            Reset
+                          </Button>
+                        </Flex>
                       </Flex>
                     </div>
                   </div>
