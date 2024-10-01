@@ -176,23 +176,20 @@ export const buildPrompt = async ({
   conversation: Conversation
   projectName: string
   courseMetadata: CourseMetadata | undefined
-  // }): Promise<Prompts> => {
 }): Promise<Conversation> => {
   /*
-  System prompt -- defined by user. Then we add the citations instructions to it.
+  System prompt -- defined by user. If documents are provided, add the citations instructions to it.
 
-  isImage -- means we're JUST generating an image description, not a final answer.
-  
-Priorities for building prompt w/ limited window: 
-1. ✅ most recent user text input & images/img-description (depending on model support for images)
-1.5. ❌ Last 1 or 2 convo history. At least the user message and the AI response. Key for follow-up questions.
-2. ✅ image description
-3. ✅ tool result
-4. ✅ query_topContext
-5. image_topContext
-6. tool_topContext
-7. ✅ conversation history
-*/
+  Priorities for building prompt w/ limited window: 
+  1. ✅ most recent user text input & images/img-description (depending on model support for images)
+  1.5. ❌ Last 1 or 2 convo history. At least the user message and the AI response. Key for follow-up questions.
+  2. ✅ image description
+  3. ✅ tool result
+  4. ✅ query_topContext (if documents are retrieved)
+  5. image_topContext
+  6. tool_topContext
+  7. ✅ conversation history
+  */
   let remainingTokenBudget = conversation.model.tokenLimit - 1500 // save space for images, OpenAI's handling, etc.
 
   await init((imports) => WebAssembly.instantiate(wasm, imports))
@@ -202,31 +199,27 @@ Priorities for building prompt w/ limited window:
     tiktokenModel.pat_str,
   )
 
-  // do these things in parallel -- await at end
+  // Do these things in parallel -- await at the end
   const allPromises = []
-  // allPromises.push(decryptKeyIfNeeded(rawOpenaiKey))
   allPromises.push(_getLastUserTextInput({ conversation }))
   allPromises.push(_getLastToolResult({ conversation }))
   allPromises.push(_getSystemPrompt({ courseMetadata, conversation }))
-  // ideally, run context search here -- parallelized. (tricky due to sending status updates homeDispatch)
   const [lastUserTextInput, lastToolResult, finalSystemPrompt] =
     (await Promise.all(allPromises)) as [string, UIUCTool[], string]
 
   console.log('LATEST USER Text Input: ', lastUserTextInput)
 
-  // --------- <SYSTEM PROMPT> ----------
+  // Adjust remaining token budget
   remainingTokenBudget -= encoding.encode(finalSystemPrompt).length
-  // --------- </SYSTEM PROMPT> ----------
 
   // --------- <USER PROMPT> ----------
   let userPrompt = ''
 
-  // P1: most recent user text input (don't add it yet, just keep room in budget for it)
-  remainingTokenBudget -= encoding.encode(
-    `\nFinally, please respond to the best of your ability to the user's query: ${lastUserTextInput}`,
-  ).length
+  // P1: Most recent user text input
+  const userQuery = `\nFinally, please respond to the user's query to the best of your ability:\n<User Query>\n${lastUserTextInput}\n</User Query>`
+  remainingTokenBudget -= encoding.encode(userQuery).length
 
-  // P2: latest 2 convo messages (Don't add them, just keep room in budget for them)
+  // P2: Latest 2 conversation messages (Reserved tokens)
   const tokensInLastTwoMessages = _getRecentConvoTokens({
     conversation,
     encoding,
@@ -234,39 +227,40 @@ Priorities for building prompt w/ limited window:
   console.log('Tokens in last two messages: ', tokensInLastTwoMessages)
   remainingTokenBudget -= tokensInLastTwoMessages
 
-  // TODO: P3: image description // full image, depending on model support.
+  // Get contexts
+  const contexts =
+    (conversation.messages[conversation.messages.length - 1]?.contexts as ContextWithMetadata[]) || []
 
-  // P4: Tool output + user Query (added to prompt below)
-  // MOVED TO SYSTEM PROMPT
-  // const toolsOutputResults = _buildToolsOutputResults({ conversation }) // todo: check for length problems...
-  // userPrompt += toolsOutputResults
-  // remainingTokenBudget -= encoding.encode(toolsOutputResults).length
-
-  // P5: query_topContext
-  const query_topContext = _buildQueryTopContext({
-    conversation: conversation,
-    encoding: encoding,
-    tokenLimit: remainingTokenBudget - tokensInLastTwoMessages, // keep room for convo history
-  })
-  if (query_topContext) {
-    const queryContextMsg = `\nHere's high quality passages from the user's documents. Use these, and cite them carefully in the format previously described, to construct your answer:\n<Potentially Relevant Documents>\n${query_topContext}\n</Potentially Relevant Documents>\n`
-    remainingTokenBudget -= encoding.encode(queryContextMsg).length
-    userPrompt += queryContextMsg
+  if (!contexts || contexts.length === 0) {
+    // No documents retrieved, skip custom document citation prompt builder
+    // Use vanilla model without fancy prompts
+    // Only include the user's query in the user prompt
+    userPrompt += userQuery
+  } else {
+    // Documents are present, maintain all existing processes as normal
+    // P5: query_topContext
+    const query_topContext = _buildQueryTopContext({
+      conversation: conversation,
+      encoding: encoding,
+      tokenLimit: remainingTokenBudget - tokensInLastTwoMessages, // Keep room for convo history
+    })
+    if (query_topContext) {
+      const queryContextMsg = `\nHere's high quality passages from the user's documents. Use these, and cite them carefully in the format previously described, to construct your answer:\n<Potentially Relevant Documents>\n${query_topContext}\n</Potentially Relevant Documents>\n`
+      remainingTokenBudget -= encoding.encode(queryContextMsg).length
+      userPrompt += queryContextMsg
+    }
+    // Finally, add the user's query
+    userPrompt += userQuery
   }
 
-  // TODO: P6: image_topContext, P7: tool_topContext
-
-  // P8: conversation history (we should ~always have room for at least the last 2 messages, since that's P1.5)
+  // P8: Conversation history
   const convoHistory = _buildConvoHistory({
     conversation,
     encoding,
     tokenLimit: remainingTokenBudget,
   })
 
-  userPrompt += `\nFinally, please respond to the user's query to the best of your ability:\n<User Query>\n${lastUserTextInput}\n</User Query>`
-  // --------- </USER PROMPT> ----------
-
-  encoding.free() // keep this
+  encoding.free() // Clean up the encoding
 
   // Set final system and user prompts
   conversation.messages[
@@ -277,13 +271,6 @@ Priorities for building prompt w/ limited window:
     finalSystemPrompt
 
   return conversation
-
-  // return {
-  //   systemPrompt: systemPrompt as string,
-  //   userPrompt,
-  //   convoHistory,
-  //   openAIKey: openaiKey as string,
-  // }
 }
 
 const _getRecentConvoTokens = ({
@@ -471,12 +458,21 @@ const _getSystemPrompt = async ({
     )
   }
 
-  // User defined + our standard citations prompt + tool prompt-engineering
-  return (
-    userDefinedSystemPrompt +
-    '\n\n' +
-    getSystemPostPrompt({ conversation, courseMetadata: courseMetadata! })
-  )
+  // Check if contexts are present
+  const contexts =
+    (conversation.messages[conversation.messages.length - 1]?.contexts as ContextWithMetadata[]) || []
+
+  if (!contexts || contexts.length === 0) {
+    // No documents retrieved, return only user-defined system prompt
+    return userDefinedSystemPrompt
+  } else {
+    // Documents are present, include system post prompt
+    return (
+      userDefinedSystemPrompt +
+      '\n\n' +
+      getSystemPostPrompt({ conversation, courseMetadata: courseMetadata! })
+    )
+  }
 }
 
 const _getLastToolResult = async ({
