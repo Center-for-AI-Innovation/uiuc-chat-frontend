@@ -773,6 +773,41 @@ const CourseMain: NextPage = () => {
                             setGuidedLearning(value);
                             debouncedHandleCheckboxChange('guidedLearning', value);
                           }}
+                          styles={(theme) => ({
+                            root: {
+                              position: 'relative',
+                              display: 'flex',
+                              alignItems: 'center',
+                              borderRadius: theme.radius.sm,
+                              padding: '0.5rem',
+                              transition: 'background-color 0.2s ease',
+                              '&:hover': {
+                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                              },
+                            },
+                            input: {
+                              '&:checked': {
+                                backgroundColor: theme.colors.grape[6],
+                                borderColor: theme.colors.grape[6],
+                              },
+                              '&:checked::before': {
+                                backgroundColor: 'white',
+                              },
+                            },
+                            icon: {
+                              color: 'white',
+                              transition: 'transform 0.2s ease',
+                            },
+                            inner: {
+                              '&:hover .mantine-Checkbox-input': {
+                                borderColor: theme.colors.grape[6],
+                              },
+                              '&:hover .mantine-Checkbox-input:checked': {
+                                backgroundColor: theme.colors.grape[7],
+                                borderColor: theme.colors.grape[7],
+                              },
+                            },
+                          })}
                         />
 
                         <Checkbox
@@ -816,6 +851,41 @@ const CourseMain: NextPage = () => {
                             setDocumentsOnly(value);
                             debouncedHandleCheckboxChange('documentsOnly', value);
                           }}
+                          styles={(theme) => ({
+                            root: {
+                              position: 'relative',
+                              display: 'flex',
+                              alignItems: 'center',
+                              borderRadius: theme.radius.sm,
+                              padding: '0.5rem',
+                              transition: 'background-color 0.2s ease',
+                              '&:hover': {
+                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                              },
+                            },
+                            input: {
+                              '&:checked': {
+                                backgroundColor: theme.colors.grape[6],
+                                borderColor: theme.colors.grape[6],
+                              },
+                              '&:checked::before': {
+                                backgroundColor: 'white',
+                              },
+                            },
+                            icon: {
+                              color: 'white',
+                              transition: 'transform 0.2s ease',
+                            },
+                            inner: {
+                              '&:hover .mantine-Checkbox-input': {
+                                borderColor: theme.colors.grape[6],
+                              },
+                              '&:hover .mantine-Checkbox-input:checked': {
+                                backgroundColor: theme.colors.grape[7],
+                                borderColor: theme.colors.grape[7],
+                              },
+                            },
+                          })}
                         />
 
                         <Checkbox
@@ -859,6 +929,41 @@ const CourseMain: NextPage = () => {
                             setSystemPromptOnly(value);
                             debouncedHandleCheckboxChange('systemPromptOnly', value);
                           }}
+                          styles={(theme) => ({
+                            root: {
+                              position: 'relative',
+                              display: 'flex',
+                              alignItems: 'center',
+                              borderRadius: theme.radius.sm,
+                              padding: '0.5rem',
+                              transition: 'background-color 0.2s ease',
+                              '&:hover': {
+                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                              },
+                            },
+                            input: {
+                              '&:checked': {
+                                backgroundColor: theme.colors.grape[6],
+                                borderColor: theme.colors.grape[6],
+                              },
+                              '&:checked::before': {
+                                backgroundColor: 'white',
+                              },
+                            },
+                            icon: {
+                              color: 'white',
+                              transition: 'transform 0.2s ease',
+                            },
+                            inner: {
+                              '&:hover .mantine-Checkbox-input': {
+                                borderColor: theme.colors.grape[6],
+                              },
+                              '&:hover .mantine-Checkbox-input:checked': {
+                                backgroundColor: theme.colors.grape[7],
+                                borderColor: theme.colors.grape[7],
+                              },
+                            },
+                          })}
                         />
 
                         {/* Conditional Button */}
