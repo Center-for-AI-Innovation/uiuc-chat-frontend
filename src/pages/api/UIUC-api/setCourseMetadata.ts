@@ -17,7 +17,7 @@ const setCourseMetadata = async (req: any, res: any) => {
     'course_intro_message',
   )
   const banner_image_s3 = req.nextUrl.searchParams.get('banner_image_s3')
-  const is_private = req.nextUrl.searchParams.get('is_private') || 'false'
+  const is_private = JSON.parse(req.nextUrl.searchParams.get('is_private') || 'false')
   const course_admins = JSON.parse(
     req.nextUrl.searchParams.get('course_admins') || '["kvday2@illinois.edu"]',
   )
@@ -37,19 +37,31 @@ const setCourseMetadata = async (req: any, res: any) => {
   const project_description = JSON.parse(
     req.nextUrl.searchParams.get('project_description') || '[]',
   )
+  const documentsOnly = JSON.parse(
+    req.nextUrl.searchParams.get('documentsOnly') || 'false',
+  )
+  const guidedLearning = JSON.parse(
+    req.nextUrl.searchParams.get('guidedLearning') || 'false',
+  )
+  const systemPromptOnly = JSON.parse(
+    req.nextUrl.searchParams.get('systemPromptOnly') || 'false',
+  )
   try {
     const course_metadata: CourseMetadata = {
-      is_private: is_private,
-      course_owner: course_owner,
-      course_admins: course_admins,
-      approved_emails_list: approved_emails_list,
-      course_intro_message: course_intro_message,
-      banner_image_s3: banner_image_s3,
-      openai_api_key: openai_api_key,
-      example_questions: example_questions,
-      system_prompt: system_prompt,
-      disabled_models: disabled_models,
-      project_description: project_description,
+      is_private,
+      course_owner,
+      course_admins,
+      approved_emails_list,
+      course_intro_message,
+      banner_image_s3,
+      openai_api_key,
+      example_questions,
+      system_prompt,
+      disabled_models,
+      project_description,
+      documentsOnly,
+      guidedLearning,
+      systemPromptOnly,
     }
     console.log('Right before setting course_metadata with: ', course_metadata)
     await kv.hset('course_metadatas', { [course_name]: course_metadata })

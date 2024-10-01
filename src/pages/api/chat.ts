@@ -520,7 +520,7 @@ export const getSystemPostPrompt = ({
   }
 
   // Initialize PostPrompt as an array of strings for easy manipulation
-  let PostPromptLines: string[] = [];
+  const PostPromptLines: string[] = [];
 
   // The main system prompt
   PostPromptLines.push(
