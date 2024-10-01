@@ -600,7 +600,7 @@ The user message will include excerpts from the high-quality documents, APIs/too
   );
 
   // Combine the lines to form the PostPrompt
-  let PostPrompt = PostPromptLines.join('\n');
+  const PostPrompt = PostPromptLines.join('\n');
 
   return PostPrompt;
 }

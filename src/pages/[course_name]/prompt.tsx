@@ -895,7 +895,7 @@ const CourseMain: NextPage = () => {
                               <Tooltip
                                 label={
                                   <Text size="sm" color="gray.1">
-                                    Uses only the custom system prompt you've provided, without additional formatting or citation instructions. This gives you full control over the AI's behavior and output structure.
+                                    Uses only the custom system prompt you&apos;ve provided, without additional formatting or citation instructions. This gives you full control over the AI&apos;s behavior and output structure.
                                   </Text>
                                 }
                                 position="bottom"
@@ -1044,7 +1044,7 @@ export const showToastNotification = (
   theme: MantineTheme,
   title: string,
   message: string,
-  isError: boolean = false,
+  isError = false,
   icon?: React.ReactNode,
 ) => {
   notifications.show({
