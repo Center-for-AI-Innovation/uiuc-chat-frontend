@@ -337,9 +337,31 @@ const CourseMain: NextPage = () => {
     console.log('apikey set to', apiKey)
     e.preventDefault()
 
-    const systemPrompt = `
-    Today, you will be optimizing instructions for an eager, helpful, but inexperienced and unworldly AI assistant...
-    ` // Truncated for brevity
+    const systemPrompt = `You are an expert at optimizing system prompts for AI assistants to ensure they perform tasks consistently, accurately, and effectively. Your task is to rewrite the following system prompt to make it clear, precise, and actionable for the AI assistant. The optimized prompt should:
+
+      1. **Detailed Task Explanation**: Start with a clear description of the assistant's role, objectives, and desired outcomes.
+
+      2. **Step-by-Step Guidance**: Provide sequential instructions with specific actions the assistant should take at each step.
+
+      3. **Examples and Clarifications**: Include examples to illustrate key points and clarify any potential ambiguities.
+
+      4. **Professional Tailoring**: Ensure the final instructions are professionally tailored, clear, concise, and directly usable.
+
+      **Additional Guidelines:**
+
+      - **Clarity and Conciseness**: Use straightforward language to avoid confusion and keep instructions brief.
+
+      - **Avoid Redundancy**: Eliminate unnecessary repetition to maintain focus on key instructions.
+
+      - **User-Centric Focus**: Emphasize understanding and fulfilling the user's needs and questions.
+
+      - **Positive and Professional Tone**: Encourage responses that are friendly, respectful, and professional.
+
+      - **Flexibility**: Allow the assistant to adapt its responses based on the context and the user's intent.
+
+      **Note**: Avoid unnecessary verbosity or repetition that could obscure important instructions.
+
+      Please optimize the following system prompt accordingly:`
 
     setMessages([
       { role: 'system', content: systemPrompt },
