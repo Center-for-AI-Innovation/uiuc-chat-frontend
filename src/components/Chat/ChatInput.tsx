@@ -170,7 +170,7 @@ export const ChatInput = ({
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     // TODO: Update this to use tokens, instead of characters
     const value = e.target.value
-    const maxLength = selectedConversation?.model.tokenLimit
+    const maxLength = selectedConversation?.model?.tokenLimit
 
     if (maxLength && value.length > maxLength) {
       alert(
@@ -556,7 +556,7 @@ export const ChatInput = ({
 
   useEffect(() => {
     if (
-      !VisionCapableModels.has(selectedConversation?.model.id as OpenAIModelID)
+      !VisionCapableModels.has(selectedConversation?.model?.id as OpenAIModelID)
     ) {
       return // Exit early if the model is not GPT-4 Vision
     }
@@ -598,7 +598,7 @@ export const ChatInput = ({
       document.removeEventListener('drop', handleDocumentDrop)
       document.removeEventListener('dragleave', handleDocumentDragLeave)
     }
-  }, [handleImageUpload, selectedConversation?.model.id])
+  }, [handleImageUpload, selectedConversation?.model?.id])
 
   useEffect(() => {
     if (imageError) {
@@ -716,7 +716,8 @@ export const ChatInput = ({
 
         {!messageIsStreaming &&
           selectedConversation &&
-          selectedConversation.messages.length > 0 && (
+          selectedConversation.messages &&
+          selectedConversation.messages?.length > 0 && (
             <button
               className={`absolute ${isSmallScreen ? '-top-28' : '-top-20'} left-0 right-0 mx-auto mb-24 flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white px-4 py-2 text-black hover:opacity-50 dark:border-neutral-600 dark:bg-[#343541] dark:text-white md:mb-0 md:mt-2`}
               onClick={onRegenerate}
@@ -730,9 +731,9 @@ export const ChatInput = ({
           className="absolute bottom-0 mx-4 flex w-[80%] flex-col self-center rounded-t-3xl border border-black/10 bg-[#070712] px-4 pb-8 pt-4 shadow-[0_0_10px_rgba(0,0,0,0.10)] dark:border-gray-900/50 dark:text-white dark:shadow-[0_0_15px_rgba(0,0,0,0.10)] md:mx-20 md:w-[70%]"
         >
           {/* BUTTON 2: Image Icon and Input */}
-          {selectedConversation?.model.id &&
+          {selectedConversation?.model?.id &&
             VisionCapableModels.has(
-              selectedConversation.model.id as OpenAIModelID,
+              selectedConversation.model?.id as OpenAIModelID,
             ) && (
               <button
                 className="absolute bottom-11 left-5 rounded-full p-1 text-neutral-800 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
@@ -849,7 +850,7 @@ export const ChatInput = ({
               className={`
                 ${
                   VisionCapableModels.has(
-                    selectedConversation?.model.id as OpenAIModelID,
+                    selectedConversation?.model?.id as OpenAIModelID,
                   )
                     ? 'pl-8'
                     : 'pl-1'
@@ -934,10 +935,10 @@ export const ChatInput = ({
             onClick={handleTextClick}
             style={{ cursor: 'pointer' }}
           >
-            {selectedConversation?.model.name}
+            {selectedConversation?.model?.name}
             {selectedConversation?.model &&
               webLLMModels.some(
-                (m) => m.name === selectedConversation.model.name,
+                (m) => m.name === selectedConversation?.model?.name,
               ) &&
               chat_ui?.isModelLoading() &&
               '  Please wait while the model is loading...'}

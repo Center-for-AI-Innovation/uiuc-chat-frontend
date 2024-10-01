@@ -199,78 +199,98 @@ export const buildPrompt = async ({
     tiktokenModel.pat_str,
   )
 
-  // Do these things in parallel -- await at the end
-  const allPromises = []
-  allPromises.push(_getLastUserTextInput({ conversation }))
-  allPromises.push(_getLastToolResult({ conversation }))
-  allPromises.push(_getSystemPrompt({ courseMetadata, conversation }))
-  const [lastUserTextInput, lastToolResult, finalSystemPrompt] =
-    (await Promise.all(allPromises)) as [string, UIUCTool[], string]
+  try {
+    // Do these things in parallel -- await at the end
+    const allPromises = []
+    allPromises.push(_getLastUserTextInput({ conversation }))
+    allPromises.push(_getLastToolResult({ conversation }))
+    allPromises.push(_getSystemPrompt({ courseMetadata, conversation }))
+    const [lastUserTextInput, lastToolResult, finalSystemPrompt] =
+      (await Promise.all(allPromises)) as [string, UIUCTool[], string]
 
-  console.log('LATEST USER Text Input: ', lastUserTextInput)
+    console.log('LATEST USER Text Input: ', lastUserTextInput)
 
-  // Adjust remaining token budget
-  remainingTokenBudget -= encoding.encode(finalSystemPrompt).length
-
-  // --------- <USER PROMPT> ----------
-  let userPrompt = ''
-
-  // P1: Most recent user text input
-  const userQuery = `\nFinally, please respond to the user's query to the best of your ability:\n<User Query>\n${lastUserTextInput}\n</User Query>`
-  remainingTokenBudget -= encoding.encode(userQuery).length
-
-  // P2: Latest 2 conversation messages (Reserved tokens)
-  const tokensInLastTwoMessages = _getRecentConvoTokens({
-    conversation,
-    encoding,
-  })
-  console.log('Tokens in last two messages: ', tokensInLastTwoMessages)
-  remainingTokenBudget -= tokensInLastTwoMessages
-
-  // Get contexts
-  const contexts =
-    (conversation.messages[conversation.messages.length - 1]?.contexts as ContextWithMetadata[]) || []
-
-  if (!contexts || contexts.length === 0) {
-    // No documents retrieved, skip custom document citation prompt builder
-    // Use vanilla model without fancy prompts
-    // Only include the user's query in the user prompt
-    userPrompt += userQuery
-  } else {
-    // Documents are present, maintain all existing processes as normal
-    // P5: query_topContext
-    const query_topContext = _buildQueryTopContext({
-      conversation: conversation,
-      encoding: encoding,
-      tokenLimit: remainingTokenBudget - tokensInLastTwoMessages, // Keep room for convo history
-    })
-    if (query_topContext) {
-      const queryContextMsg = `\nHere's high quality passages from the user's documents. Use these, and cite them carefully in the format previously described, to construct your answer:\n<Potentially Relevant Documents>\n${query_topContext}\n</Potentially Relevant Documents>\n`
-      remainingTokenBudget -= encoding.encode(queryContextMsg).length
-      userPrompt += queryContextMsg
+    // Adjust remaining token budget
+    try {
+      remainingTokenBudget -= encoding.encode(finalSystemPrompt).length
+    } catch (encodeError) {
+      console.error('Error during encoding of finalSystemPrompt:', encodeError);
+      console.log('String being encoded (finalSystemPrompt):', finalSystemPrompt);
     }
-    // Finally, add the user's query
-    userPrompt += userQuery
+
+    // --------- <USER PROMPT> ----------
+    let userPrompt = ''
+
+    // P1: Most recent user text input
+    const userQuery = `\nFinally, please respond to the user's query to the best of your ability:\n<User Query>\n${lastUserTextInput}\n</User Query>`
+    try {
+      remainingTokenBudget -= encoding.encode(userQuery).length
+    } catch (encodeError) {
+      console.error('Error during encoding of userQuery:', encodeError);
+      console.log('String being encoded (userQuery):', userQuery);
+    }
+
+    // P2: Latest 2 conversation messages (Reserved tokens)
+    const tokensInLastTwoMessages = _getRecentConvoTokens({
+      conversation,
+      encoding,
+    })
+    console.log('Tokens in last two messages: ', tokensInLastTwoMessages)
+    remainingTokenBudget -= tokensInLastTwoMessages
+
+    // Get contexts
+    const contexts =
+      (conversation.messages[conversation.messages.length - 1]?.contexts as ContextWithMetadata[]) || []
+
+    if (!contexts || contexts.length === 0) {
+      // No documents retrieved, skip custom document citation prompt builder
+      // Use vanilla model without fancy prompts
+      // Only include the user's query in the user prompt
+      userPrompt += userQuery
+    } else {
+      // Documents are present, maintain all existing processes as normal
+      // P5: query_topContext
+      const query_topContext = _buildQueryTopContext({
+        conversation: conversation,
+        encoding: encoding,
+        tokenLimit: remainingTokenBudget - tokensInLastTwoMessages, // Keep room for convo history
+      })
+      if (query_topContext) {
+        const queryContextMsg = `\nHere's high quality passages from the user's documents. Use these, and cite them carefully in the format previously described, to construct your answer:\n<Potentially Relevant Documents>\n${query_topContext}\n</Potentially Relevant Documents>\n`
+        try {
+          remainingTokenBudget -= encoding.encode(queryContextMsg).length
+        } catch (encodeError) {
+          console.error('Error during encoding of queryContextMsg:', encodeError);
+          console.log('String being encoded (queryContextMsg):', queryContextMsg);
+        }
+        userPrompt += queryContextMsg
+      }
+      // Finally, add the user's query
+      userPrompt += userQuery
+    }
+
+    // P8: Conversation history
+    const convoHistory = _buildConvoHistory({
+      conversation,
+      encoding,
+      tokenLimit: remainingTokenBudget,
+    })
+
+    // Set final system and user prompts
+    conversation.messages[
+      conversation.messages.length - 1
+    ]!.finalPromtEngineeredMessage = userPrompt
+
+    conversation.messages[conversation.messages.length - 1]!.latestSystemMessage =
+      finalSystemPrompt
+
+    return conversation
+  } catch (error) {
+    console.error('Error in buildPrompt:', error);
+    throw error;
+  } finally {
+    encoding.free() // Clean up the encoding
   }
-
-  // P8: Conversation history
-  const convoHistory = _buildConvoHistory({
-    conversation,
-    encoding,
-    tokenLimit: remainingTokenBudget,
-  })
-
-  encoding.free() // Clean up the encoding
-
-  // Set final system and user prompts
-  conversation.messages[
-    conversation.messages.length - 1
-  ]!.finalPromtEngineeredMessage = userPrompt
-
-  conversation.messages[conversation.messages.length - 1]!.latestSystemMessage =
-    finalSystemPrompt
-
-  return conversation
 }
 
 const _getRecentConvoTokens = ({

@@ -365,11 +365,16 @@ export async function determineAndValidateModel(
     .flatMap((provider) => provider?.models || [])
     .filter((model) => model.enabled)
 
+  if (availableModels.length === 0) {
+    throw new Error('No models are available or enabled for this project.')
+  }
+
   const activeModel = availableModels.find(
     (model) => model.id === modelId,
   ) as GenericSupportedModel
 
   if (!activeModel) {
+    console.error(`Model with ID ${modelId} not found in available models.`)
     throw new Error(
       `The requested model '${modelId}' is not available in this project. It has likely been restricted by the project's admins. You can enable this model on the admin page here: https://uiuc.chat/${projectName}/materials. These models are available to use: ${Array.from(
         availableModels,
@@ -850,6 +855,13 @@ export const routeModelRequest = async (
       🧠 ADD NEW LLM PROVIDERS HERE 🧠
   */
   const selectedConversation = chatBody.conversation!
+
+  // Add this check at the beginning of the function
+  if (!selectedConversation.model || !selectedConversation.model.id) {
+    throw new Error(
+      'Conversation model is undefined or missing "id" property.',
+    )
+  }
 
   posthog.capture('LLM Invoked', {
     distinct_id: selectedConversation.userEmail
