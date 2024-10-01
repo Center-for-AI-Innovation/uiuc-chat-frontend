@@ -19,7 +19,7 @@ import {
 } from '@/types/chat'
 import { NextResponse } from 'next/server'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
-import { ProviderNames } from '~/utils/modelProviders/LLMProvider'
+import { ProviderNames, AnySupportedModel } from '~/utils/modelProviders/LLMProvider'
 import { AzureModels } from '~/utils/modelProviders/azure'
 import { OpenAIModels } from '~/utils/modelProviders/types/openai'
 import OpenAI from 'openai'
@@ -603,4 +603,38 @@ The user message will include excerpts from the high-quality documents, APIs/too
   let PostPrompt = PostPromptLines.join('\n');
 
   return PostPrompt;
+}
+
+export const getDefaultPostPrompt = (): string => {
+  // The default values for courseMetadata
+  const defaultCourseMetadata: CourseMetadata = {
+    is_private: false,
+    course_owner: '',
+    course_admins: [],
+    approved_emails_list: [],
+    example_questions: undefined,
+    banner_image_s3: undefined,
+    course_intro_message: undefined,
+    system_prompt: undefined,
+    openai_api_key: undefined, // TODO: remove
+    disabled_models: undefined, // TODO: remove
+    project_description: undefined,
+    documentsOnly: false,
+    guidedLearning: false,
+    systemPromptOnly: false
+  }
+
+  // Call getSystemPostPrompt with default values
+  return getSystemPostPrompt({
+    conversation: {
+      id: '',
+      name: '',
+      messages: [],
+      model: {} as AnySupportedModel,
+      prompt: '',
+      temperature: 0.7,
+      folderId: null,
+    } as Conversation,
+    courseMetadata: defaultCourseMetadata,
+  })
 }

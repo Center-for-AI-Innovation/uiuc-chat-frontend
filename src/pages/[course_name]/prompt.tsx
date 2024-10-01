@@ -49,6 +49,8 @@ import { notifications } from '@mantine/notifications'
 import { useChat } from 'ai/react'
 import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
 import { debounce } from 'lodash'
+import { showNotification } from '@mantine/notifications'
+import { getDefaultPostPrompt } from '~/pages/api/chat'
 
 const montserrat = Montserrat({
   weight: '700',
@@ -262,6 +264,23 @@ const CourseMain: NextPage = () => {
     debounce(handleCheckboxChange, 500),
     [courseMetadata, course_name, baseSystemPrompt, theme]
   )
+
+  const handleCopyDefaultPrompt = () => {
+    // Obtain the default post prompt
+    const defaultPostPrompt = getDefaultPostPrompt()
+
+    navigator.clipboard.writeText(defaultPostPrompt)
+      .then(() => {
+        showNotification({
+          title: 'Copied',
+          message: 'Default post prompt system prompt copied to clipboard',
+          color: 'grape',
+        })
+      })
+      .catch((err) => {
+        console.error('Could not copy text: ', err)
+      })
+  }
 
   // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
   if (!isLoaded || isLoading) {
@@ -708,7 +727,7 @@ const CourseMain: NextPage = () => {
                         </Title>
                         <Checkbox
                           label={
-                            <span className="flex items-center">
+                            <span className="flex items-center text-white">
                               Guided Learning
                               <Tooltip
                                 label={
@@ -733,7 +752,7 @@ const CourseMain: NextPage = () => {
                                 })}
                               >
                                 <span className="ml-2" aria-label="More information">
-                                  <IconInfoCircle size={16} />
+                                  <IconInfoCircle size={16} color="white" />
                                 </span>
                               </Tooltip>
                             </span>
@@ -750,7 +769,7 @@ const CourseMain: NextPage = () => {
                         />
                         <Checkbox
                           label={
-                            <span className="flex items-center">
+                            <span className="flex items-center text-white">
                               Document-Based References Only
                               <Tooltip
                                 label={
@@ -775,12 +794,12 @@ const CourseMain: NextPage = () => {
                                 })}
                               >
                                 <span className="ml-2" aria-label="More information">
-                                  <IconInfoCircle size={16} />
+                                  <IconInfoCircle size={16} color="white" />
                                 </span>
                               </Tooltip>
                             </span>
                           }
-                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                          className="font-montserratParagraph"
                           size="md"
                           color="grape"
                           checked={documentsOnly}
@@ -792,7 +811,7 @@ const CourseMain: NextPage = () => {
                         />
                         <Checkbox
                           label={
-                            <span className="flex items-center">
+                            <span className="flex items-center text-white">
                               Raw System Prompt Only
                               <Tooltip
                                 label={
@@ -817,7 +836,7 @@ const CourseMain: NextPage = () => {
                                 })}
                               >
                                 <span className="ml-2" aria-label="More information">
-                                  <IconInfoCircle size={16} />
+                                  <IconInfoCircle size={16} color="white" />
                                 </span>
                               </Tooltip>
                             </span>
@@ -832,6 +851,43 @@ const CourseMain: NextPage = () => {
                             debouncedHandleCheckboxChange('systemPromptOnly', value)
                           }}
                         />
+                        {systemPromptOnly && (
+                          <Flex align="center">
+                            <Button
+                              className={`relative m-1 bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                              onClick={handleCopyDefaultPrompt}
+                              style={{ minWidth: 'fit-content' }}
+                            >
+                              Copy Default Post Prompt
+                            </Button>
+                            <Tooltip
+                              label={
+                                <Text size="sm" color="gray.1">
+                                  Copy the default post-processing system prompt to your clipboard. You can then paste this into the System Prompt section and customize it to suit your specific needs. This provides a solid starting point for defining AI behavior in raw prompt mode.
+                                </Text>
+                              }
+                              position="bottom"
+                              withArrow
+                              multiline
+                              styles={(theme) => ({
+                                tooltip: {
+                                  backgroundColor: '#1A1B1E',
+                                  color: '#D1D1D1',
+                                  borderRadius: '4px',
+                                  maxWidth: '250px',
+                                  wordWrap: 'break-word',
+                                },
+                                arrow: {
+                                  backgroundColor: '#1A1B1E',
+                                },
+                              })}
+                            >
+                              <span className="ml-2" aria-label="More information">
+                                <IconInfoCircle size={16} />
+                              </span>
+                            </Tooltip>
+                          </Flex>
+                        )}
                         <div style={{ paddingTop: '10px', width: '100%' }}>
                           <div
                             style={{
