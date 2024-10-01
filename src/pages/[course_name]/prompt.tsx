@@ -132,19 +132,6 @@ const CourseMain: NextPage = () => {
       setGuidedLearning(fetchedMetadata.guidedLearning || false)
       setDocumentsOnly(fetchedMetadata.documentsOnly || false)
       setSystemPromptOnly(fetchedMetadata.systemPromptOnly || false)
-      
-      // **Removed the following block to prevent appending snippets on page load**
-      /*
-      // Append snippets based on initial checkbox states
-      let updatedPrompt = fetchedMetadata.system_prompt || DEFAULT_SYSTEM_PROMPT
-      if (fetchedMetadata.guidedLearning) {
-        updatedPrompt += GUIDED_LEARNING_PROMPT
-      }
-      if (fetchedMetadata.documentsOnly) {
-        updatedPrompt += DOCUMENT_FOCUS_PROMPT
-      }
-      setBaseSystemPrompt(updatedPrompt)
-      */
 
       setIsLoading(false)
     }
