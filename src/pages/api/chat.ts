@@ -242,12 +242,7 @@ export const buildPrompt = async ({
     const contexts =
       (conversation.messages[conversation.messages.length - 1]?.contexts as ContextWithMetadata[]) || []
 
-    if (!contexts || contexts.length === 0) {
-      // No documents retrieved, skip custom document citation prompt builder
-      // Use vanilla model without fancy prompts
-      // Only include the user's query in the user prompt
-      userPrompt += userQuery
-    } else {
+    if (contexts && contexts.length > 0) {
       // Documents are present, maintain all existing processes as normal
       // P5: query_topContext
       const query_topContext = _buildQueryTopContext({
@@ -265,9 +260,33 @@ export const buildPrompt = async ({
         }
         userPrompt += queryContextMsg
       }
-      // Finally, add the user's query
-      userPrompt += userQuery
     }
+
+    const latestUserMessage =
+      conversation.messages[conversation.messages.length - 1];
+
+    // Move Tool Outputs to be added before the userQuery
+    if (latestUserMessage?.tools) {
+      const toolsOutputResults = _buildToolsOutputResults({ conversation });
+
+      // Add Tool Instructions and outputs
+      const toolInstructions = "\n<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool `tool name`...' or 'According to tool `tool name`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>";
+
+      userPrompt += toolInstructions;
+
+      // Ensure tool outputs are counted in the token budget
+      try {
+        remainingTokenBudget -= encoding.encode(toolsOutputResults).length
+      } catch (encodeError) {
+        console.error('Error during encoding of toolsOutputResults:', encodeError);
+        console.log('String being encoded (toolsOutputResults):', toolsOutputResults);
+      }
+
+      userPrompt += toolsOutputResults;
+    }
+
+    // Add the user's query
+    userPrompt += userQuery;
 
     // P8: Conversation history
     const convoHistory = _buildConvoHistory({
@@ -582,16 +601,6 @@ The user message will include excerpts from the high-quality documents, APIs/too
 
   // Combine the lines to form the PostPrompt
   let PostPrompt = PostPromptLines.join('\n');
-
-  const latestUserMessage =
-    conversation.messages[conversation.messages.length - 1];
-
-  if (latestUserMessage?.tools) {
-    const toolsOutputResults = _buildToolsOutputResults({ conversation });
-    PostPrompt +=
-      "\n<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool `tool name`...' or 'According to tool `tool name`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>";
-    PostPrompt += toolsOutputResults;
-  }
 
   return PostPrompt;
 }
