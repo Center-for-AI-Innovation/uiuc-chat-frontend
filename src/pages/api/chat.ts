@@ -532,7 +532,7 @@ export const getSystemPostPrompt = ({
   conversation: Conversation
   courseMetadata: CourseMetadata
 }): string => {
-  const { guidedLearning, systemPromptOnly } = courseMetadata;
+  const { guidedLearning, systemPromptOnly, documentsOnly } = courseMetadata;
 
   // If systemPromptOnly is true, return an empty PostPrompt
   if (systemPromptOnly) {
@@ -550,7 +550,7 @@ Your response should be semi-formal.
 When quoting directly, cite with footnotes linked to the document number and page number, if provided. 
 Summarize or paraphrase other relevant information with inline citations, again referencing the document number and page number, if provided.
 If the answer is not in the provided documents, state so.${
-      guidedLearning
+      (guidedLearning || documentsOnly)
         ? ''
         : ' Yet always provide as helpful a response as possible to directly answer the question.'
     }
