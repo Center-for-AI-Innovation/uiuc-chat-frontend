@@ -266,20 +266,25 @@ const CourseMain: NextPage = () => {
   )
 
   const handleCopyDefaultPrompt = () => {
-    // Obtain the default post prompt
-    const defaultPostPrompt = getDefaultPostPrompt()
+    const defaultPostPrompt = getDefaultPostPrompt();
 
     navigator.clipboard.writeText(defaultPostPrompt)
       .then(() => {
-        showNotification({
-          title: 'Copied',
-          message: 'Default post prompt system prompt copied to clipboard',
-          color: 'grape',
-        })
+        showToastNotification(
+          theme,
+          'Copied',
+          'Default post prompt system prompt copied to clipboard',
+        );
       })
       .catch((err) => {
-        console.error('Could not copy text: ', err)
-      })
+        console.error('Could not copy text: ', err);
+        showToastNotification(
+          theme,
+          'Error Copying',
+          'Could not copy text to clipboard',
+          true,
+        );
+      });
   }
 
   // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
@@ -930,56 +935,65 @@ const CourseMain: NextPage = () => {
   )
 }
 
+export const showToastNotification = (
+  theme: MantineTheme,
+  title: string,
+  message: string,
+  isError: boolean = false,
+  icon?: React.ReactNode,
+) => {
+  notifications.show({
+    withCloseButton: true,
+    autoClose: 5000,
+    title: title,
+    message: message,
+    icon: icon || (isError ? <IconAlertTriangle /> : <IconCheck />),
+    styles: {
+      root: {
+        backgroundColor: '#1A1B1E', // Dark background to match the page
+        borderColor: isError ? '#E53935' : '#6D28D9', // Red for errors, purple for success
+        borderWidth: '1px',
+        borderStyle: 'solid',
+      },
+      title: {
+        color: '#FFFFFF', // White text for the title
+        fontWeight: 600,
+      },
+      description: {
+        color: '#D1D1D1', // Light gray text for the message
+      },
+      closeButton: {
+        color: '#FFFFFF', // White color for the close button
+        '&:hover': {
+          backgroundColor: 'rgba(255, 255, 255, 0.1)', // Subtle hover effect
+        },
+      },
+      icon: {
+        backgroundColor: 'transparent', // Transparent background for the icon
+        color: isError ? '#E53935' : '#6D28D9', // Icon color matches the border
+      },
+    },
+  });
+};
+
 export const showToastOnPromptUpdate = (
   theme: MantineTheme,
   was_error = false,
   isReset = false,
 ) => {
-  return notifications.show({
-    id: 'prompt-updated',
-    withCloseButton: true,
-    onClose: () => console.log('unmounted'),
-    onOpen: () => console.log('mounted'),
-    autoClose: 12000,
-    title: was_error
-      ? 'Error updating prompt'
-      : isReset
-        ? 'Resetting prompt...'
-        : 'Updating prompt...',
-    message: was_error
-      ? 'An error occurred while updating the prompt. Please try again.'
-      : isReset
-        ? 'The prompt has been reset to default.'
-        : 'The prompt has been updated successfully.',
-    icon: was_error ? <IconAlertTriangle /> : <IconCheck />,
-    styles: {
-      root: {
-        backgroundColor: theme.colors.nearlyWhite,
-        borderColor: was_error
-          ? theme.colors.errorBorder
-          : theme.colors.aiPurple,
-      },
-      title: {
-        color: theme.colors.nearlyBlack,
-      },
-      description: {
-        color: theme.colors.nearlyBlack,
-      },
-      closeButton: {
-        color: theme.colors.nearlyBlack,
-        '&:hover': {
-          backgroundColor: theme.colors.dark[1],
-        },
-      },
-      icon: {
-        backgroundColor: was_error
-          ? theme.colors.errorBackground
-          : theme.colors.successBackground,
-        padding: '4px',
-      },
-    },
-    loading: false,
-  })
-}
+  const title = was_error
+    ? 'Error Updating Prompt'
+    : isReset
+    ? 'Prompt Reset to Default'
+    : 'Prompt Updated Successfully';
+  const message = was_error
+    ? 'An error occurred while updating the prompt. Please try again.'
+    : isReset
+    ? 'The system prompt has been reset to default settings.'
+    : 'The system prompt has been updated.';
+  const isError = was_error;
+
+  showToastNotification(theme, title, message, isError);
+};
 
 export default CourseMain
