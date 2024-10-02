@@ -638,12 +638,12 @@ const CourseMain: NextPage = () => {
                                 }}
                                 className={`relative text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
                                 onMouseEnter={(e) =>
-                                (e.currentTarget.style.background =
-                                  'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%)')
+                                  (e.currentTarget.style.background =
+                                    'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%)')
                                 }
                                 onMouseLeave={(e) =>
-                                (e.currentTarget.style.background =
-                                  'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%)')
+                                  (e.currentTarget.style.background =
+                                    'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%)')
                                 }
                               >
                                 <IconSparkles
@@ -780,7 +780,7 @@ const CourseMain: NextPage = () => {
 
                         <CustomSwitch
                           label="Bypass UIUC.chat's internal prompting"
-                          tooltip="Internally, we prompt the model to (1) add citations and (2) always be as helpful as possible. You can bypass this for full un-modified control over the bot's behavior."
+                          tooltip="Internally, we prompt the model to (1) add citations and (2) always be as helpful as possible. You can bypass this for full un-modified control over your bot."
                           checked={systemPromptOnly}
                           onChange={(value: boolean) =>
                             handleCheckboxChange({ systemPromptOnly: value })
@@ -789,55 +789,92 @@ const CourseMain: NextPage = () => {
 
                         {/* Conditional Button */}
                         {systemPromptOnly && (
-                          <Flex mt="sm" align="center" gap="xs">
-                            <Button
-                              className={`
-                                relative bg-purple-800 text-white 
-                                hover:bg-purple-700 active:bg-purple-900 
-                                transition-colors duration-200
-                                flex items-center space-x-2 px-4 py-2 rounded-md
-                                ${montserrat_paragraph.variable} font-montserratParagraph
-                              `}
-                              onClick={handleCopyDefaultPrompt}
-                            >
-                              <IconCopy size={18} className="mr-2" />
-                              <span>Copy UIUC.chat&apos;s Default internal prompt</span>
-                            </Button>
-                            <Tooltip
-                              label={
-                                <Text size="sm" color="gray.1">
-                                  Copy the default post-processing system prompt
-                                  to your clipboard. You can then paste this
-                                  into the System Prompt section and customize
-                                  it to suit your specific needs. This provides
-                                  a solid starting point for defining AI
-                                  behavior in raw prompt mode.
-                                </Text>
-                              }
-                              position="bottom"
-                              withArrow
-                              multiline
-                              styles={{
-                                tooltip: {
-                                  backgroundColor: '#1A1B1E',
-                                  color: '#D1D1D1',
-                                  borderRadius: '4px',
-                                  maxWidth: '250px',
-                                  wordWrap: 'break-word',
-                                },
-                                arrow: {
-                                  backgroundColor: '#1A1B1E',
-                                },
-                              }}
-                            >
-                              <span
-                                className="ml-2"
-                                aria-label="More information"
-                                style={{ cursor: 'pointer' }}
+                          <Flex
+                            mt="sm"
+                            direction="column"
+                            gap="xs"
+                            className="mt-[-4px] pl-12"
+                          >
+                            <Flex align="center" gap="xs">
+                              <Button
+                                className={`
+                                  relative flex items-center 
+                                  justify-center bg-purple-800 
+                                  px-3 py-2
+                                  text-center text-white transition-colors
+                                  duration-200
+                                  hover:bg-purple-700 active:bg-purple-900 
+                                  ${montserrat_paragraph.variable} font-montserratParagraph
+                                `}
+                                onClick={handleCopyDefaultPrompt}
+                                styles={(theme) => ({
+                                  root: {
+                                    height: 'auto',
+                                    minHeight: 36,
+                                  },
+                                  inner: {
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    flexWrap: 'nowrap',
+                                    gap: '4px',
+                                  },
+                                  label: {
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    '@media (max-width: 480px)': {
+                                      whiteSpace: 'normal',
+                                    },
+                                  },
+                                })}
                               >
-                                <IconInfoCircle size={16} />
-                              </span>
-                            </Tooltip>
+                                <IconCopy size={18} className="mr-2" />
+                                Copy UIUC.chat&apos;s internal prompt
+                              </Button>
+                              <Tooltip
+                                label={
+                                  <Text size="sm" color="gray.1">
+                                    You can use and customize our default
+                                    internal prompting to suit your needs. Note,
+                                    only the specific citation formatting
+                                    described will work with our citation
+                                    &apos;find and replace&apos; system. This
+                                    provides a solid starting point for defining
+                                    AI behavior in raw prompt mode.
+                                  </Text>
+                                }
+                                position="right"
+                                withArrow
+                                multiline
+                                width={220}
+                                styles={{
+                                  tooltip: {
+                                    backgroundColor: '#1A1B1E',
+                                    color: theme.colors.gray[2],
+                                    borderRadius: '4px',
+                                    wordWrap: 'break-word',
+                                  },
+                                  arrow: {
+                                    backgroundColor: '#1A1B1E',
+                                  },
+                                }}
+                              >
+                                <span
+                                  aria-label="More information"
+                                  style={{ cursor: 'pointer' }}
+                                >
+                                  <IconInfoCircle
+                                    size={16}
+                                    className={'text-gray-400'}
+                                    style={{
+                                      transition: 'all 0.2s ease-in-out',
+                                    }}
+                                  />
+                                </span>
+                              </Tooltip>
+                            </Flex>
                           </Flex>
                         )}
 
