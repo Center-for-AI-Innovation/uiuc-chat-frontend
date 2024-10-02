@@ -192,80 +192,72 @@ const CourseMain: NextPage = () => {
     }
   };
 
-  /**
-   * Handles changes to checkboxes by updating the backend.
-   * This function is debounced to prevent excessive API calls.
-   * @param updatedFields - Partial updates to the courseMetadata.
-   */
+  const updateSystemPrompt = (updatedFields: Partial<CourseMetadata>) => {
+    let newPrompt = baseSystemPrompt
+
+    // Handle Guided Learning prompt
+    if (updatedFields.guidedLearning !== undefined) {
+      if (updatedFields.guidedLearning) {
+        if (!newPrompt.includes(GUIDED_LEARNING_PROMPT)) {
+          newPrompt += GUIDED_LEARNING_PROMPT
+        }
+      } else {
+        newPrompt = newPrompt.replace(GUIDED_LEARNING_PROMPT, '')
+      }
+    }
+
+    // Handle Documents Only prompt
+    if (updatedFields.documentsOnly !== undefined) {
+      if (updatedFields.documentsOnly) {
+        if (!newPrompt.includes(DOCUMENT_FOCUS_PROMPT)) {
+          newPrompt += DOCUMENT_FOCUS_PROMPT
+        }
+      } else {
+        newPrompt = newPrompt.replace(DOCUMENT_FOCUS_PROMPT, '')
+      }
+    }
+
+    return newPrompt
+  }
+
   const handleCheckboxChange = async (updatedFields: Partial<CourseMetadata>) => {
     if (!courseMetadata || !course_name) {
       showToastOnPromptUpdate(theme, true)
       return
     }
 
-    // Create a new courseMetadata object with the updated fields
-    const updatedCourseMetadata: CourseMetadata = {
-      ...courseMetadata,
-      ...updatedFields,
-    }
+    // Immediately update local state
+    const newCourseMetadata = { ...courseMetadata, ...updatedFields }
+    const newSystemPrompt = updateSystemPrompt(updatedFields)
 
-    // Modify the baseSystemPrompt based on updated fields
-    let updatedPrompt = baseSystemPrompt
+    setCourseMetadata(newCourseMetadata)
+    setBaseSystemPrompt(newSystemPrompt)
 
     if (updatedFields.guidedLearning !== undefined) {
-      if (updatedFields.guidedLearning) {
-        if (!updatedPrompt.includes(GUIDED_LEARNING_PROMPT)) {
-          updatedPrompt += GUIDED_LEARNING_PROMPT
-        }
-      } else {
-        updatedPrompt = updatedPrompt.replace(GUIDED_LEARNING_PROMPT, '')
-      }
+      setGuidedLearning(updatedFields.guidedLearning)
     }
-
     if (updatedFields.documentsOnly !== undefined) {
-      if (updatedFields.documentsOnly) {
-        if (!updatedPrompt.includes(DOCUMENT_FOCUS_PROMPT)) {
-          updatedPrompt += DOCUMENT_FOCUS_PROMPT
-        }
-      } else {
-        updatedPrompt = updatedPrompt.replace(DOCUMENT_FOCUS_PROMPT, '')
-      }
+      setDocumentsOnly(updatedFields.documentsOnly)
+    }
+    if (updatedFields.systemPromptOnly !== undefined) {
+      setSystemPromptOnly(updatedFields.systemPromptOnly)
     }
 
-    // Update the system_prompt in courseMetadata
-    updatedCourseMetadata.system_prompt = updatedPrompt
-
-    // Attempt to save the updated metadata to Redis
-    const success = await callSetCourseMetadata(course_name, updatedCourseMetadata)
-
-    if (!success) {
-      // If saving failed, notify the user
-      showToastOnPromptUpdate(theme, true)
-      return
-    }
-
-    // Update local state
-    setCourseMetadata(updatedCourseMetadata)
-    setBaseSystemPrompt(updatedPrompt)
-
-    // Notify the user of the successful update
-    showToastOnPromptUpdate(theme)
+    // Debounced API call
+    debouncedSave({ ...newCourseMetadata, system_prompt: newSystemPrompt })
   }
 
-  // Debounced save function
   const debouncedSave = useCallback(
-    debounce((fields: Partial<CourseMetadata>) => {
-      handleCheckboxChange(fields)
+    debounce(async (updatedMetadata: CourseMetadata) => {
+      const success = await callSetCourseMetadata(course_name, updatedMetadata)
+      if (!success) {
+        showToastOnPromptUpdate(theme, true)
+      } else {
+        showToastOnPromptUpdate(theme)
+      }
     }, 500),
-    [courseMetadata, course_name, baseSystemPrompt, theme]
+    [course_name, theme]
   )
-
-  // Cleanup debounced function on unmount
-  useEffect(() => {
-    return () => {
-      debouncedSave.cancel()
-    }
-  }, [debouncedSave])
 
   const handleCopyDefaultPrompt = async () => {
     try {
@@ -752,30 +744,21 @@ const CourseMain: NextPage = () => {
                           label="Guided Learning"
                           tooltip="Enables a tutoring mode where the AI encourages independent problem-solving. It provides hints and asks questions instead of giving direct answers, promoting critical thinking and discovery."
                           checked={guidedLearning}
-                          onChange={(value: boolean) => {
-                            setGuidedLearning(value);
-                            debouncedSave({ guidedLearning: value });
-                          }}
+                          onChange={(value: boolean) => handleCheckboxChange({ guidedLearning: value })}
                         />
 
                         <CustomSwitch
                           label="Document-Based References Only"
                           tooltip="Restricts the AI to use only information from the provided documents. Useful for maintaining accuracy in fields like legal research where external knowledge could be problematic."
                           checked={documentsOnly}
-                          onChange={(value: boolean) => {
-                            setDocumentsOnly(value);
-                            debouncedSave({ documentsOnly: value });
-                          }}
+                          onChange={(value: boolean) => handleCheckboxChange({ documentsOnly: value })}
                         />
 
                         <CustomSwitch
                           label="Raw System Prompt Only"
                           tooltip="Uses only the custom system prompt you've provided, without additional formatting or citation instructions. This gives you full control over the AI's behavior and output structure."
                           checked={systemPromptOnly}
-                          onChange={(value: boolean) => {
-                            setSystemPromptOnly(value);
-                            debouncedSave({ systemPromptOnly: value });
-                          }}
+                          onChange={(value: boolean) => handleCheckboxChange({ systemPromptOnly: value })}
                         />
 
                         {/* Conditional Button */}
