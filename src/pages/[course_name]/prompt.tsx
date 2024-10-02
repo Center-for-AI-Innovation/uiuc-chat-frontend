@@ -170,21 +170,27 @@ const CourseMain: NextPage = () => {
       const updatedCourseMetadata = {
         ...courseMetadata,
         system_prompt: DEFAULT_SYSTEM_PROMPT,
-      }
-      const success = await callSetCourseMetadata(course_name, updatedCourseMetadata)
+        guidedLearning: false,
+        documentsOnly: false,
+        systemPromptOnly: false,
+      };
+      const success = await callSetCourseMetadata(course_name, updatedCourseMetadata);
       if (!success) {
-        alert('Error resetting system prompt')
-        showToastOnPromptUpdate(theme, true, true)
+        alert('Error resetting system prompt');
+        showToastOnPromptUpdate(theme, true, true);
       } else {
-        // Reset the base system prompt to default
-        setBaseSystemPrompt(DEFAULT_SYSTEM_PROMPT)
-        setCourseMetadata(updatedCourseMetadata)
-        showToastOnPromptUpdate(theme, false, true)
+        // Reset the base system prompt and checkbox states
+        setBaseSystemPrompt(DEFAULT_SYSTEM_PROMPT);
+        setCourseMetadata(updatedCourseMetadata);
+        setGuidedLearning(false);
+        setDocumentsOnly(false);
+        setSystemPromptOnly(false);
+        showToastOnPromptUpdate(theme, false, true);
       }
     } else {
-      alert('Error resetting system prompt')
+      alert('Error resetting system prompt');
     }
-  }
+  };
 
   /**
    * Handles changes to checkboxes by updating the backend.
@@ -1021,17 +1027,7 @@ const CourseMain: NextPage = () => {
                         <Flex mt="md" justify="flex-start">
                           <Button
                             className="relative bg-red-500 text-white hover:border-red-600 hover:bg-red-600"
-                            onClick={() => {
-                              setBaseSystemPrompt(DEFAULT_SYSTEM_PROMPT);
-                              setCourseMetadata({
-                                ...courseMetadata!,
-                                system_prompt: DEFAULT_SYSTEM_PROMPT,
-                              });
-                              setGuidedLearning(false);
-                              setDocumentsOnly(false);
-                              setSystemPromptOnly(false);
-                              resetSystemPrompt();
-                            }}
+                            onClick={resetSystemPrompt}
                             style={{ minWidth: 'fit-content' }}
                           >
                             Reset
