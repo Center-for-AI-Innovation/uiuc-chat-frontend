@@ -43,6 +43,7 @@ import {
   IconLayoutSidebarRightExpand,
   IconSparkles,
   IconInfoCircle,
+  IconCopy,
 } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import { useChat } from 'ai/react'
@@ -790,11 +791,17 @@ const CourseMain: NextPage = () => {
                         {systemPromptOnly && (
                           <Flex mt="sm" align="center" gap="xs">
                             <Button
-                              className={`relative bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                              className={`
+                                relative bg-purple-800 text-white 
+                                hover:bg-purple-700 active:bg-purple-900 
+                                transition-colors duration-200
+                                flex items-center space-x-2 px-4 py-2 rounded-md
+                                ${montserrat_paragraph.variable} font-montserratParagraph
+                              `}
                               onClick={handleCopyDefaultPrompt}
-                              style={{ minWidth: 'fit-content' }}
                             >
-                              Copy UIUC.chat&apos;s Default internal prompt
+                              <IconCopy size={18} className="mr-2" />
+                              <span>Copy UIUC.chat&apos;s Default internal prompt</span>
                             </Button>
                             <Tooltip
                               label={
