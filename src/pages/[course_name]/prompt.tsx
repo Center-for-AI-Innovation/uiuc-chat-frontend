@@ -778,8 +778,8 @@ const CourseMain: NextPage = () => {
                         />
 
                         <CustomSwitch
-                          label="Raw System Prompt Only"
-                          tooltip="Uses only the custom system prompt you've provided, without additional formatting or citation instructions. This gives you full control over the AI's behavior and output structure."
+                          label="Bypass UIUC.chat's internal prompting"
+                          tooltip="Internally, we prompt the model to (1) add citations and (2) always be as helpful as possible. You can bypass this for full un-modified control over the bot's behavior."
                           checked={systemPromptOnly}
                           onChange={(value: boolean) =>
                             handleCheckboxChange({ systemPromptOnly: value })
@@ -794,7 +794,7 @@ const CourseMain: NextPage = () => {
                               onClick={handleCopyDefaultPrompt}
                               style={{ minWidth: 'fit-content' }}
                             >
-                              Copy Default Post Prompt
+                              Copy UIUC.chat's Default internal prompt
                             </Button>
                             <Tooltip
                               label={
