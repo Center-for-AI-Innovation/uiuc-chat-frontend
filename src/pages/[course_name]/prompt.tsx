@@ -49,8 +49,6 @@ import { notifications } from '@mantine/notifications'
 import { useChat } from 'ai/react'
 import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
 import { debounce } from 'lodash'
-import { showNotification } from '@mantine/notifications'
-import { getDefaultPostPrompt } from '~/pages/api/chat'
 
 const montserrat = Montserrat({
   weight: '700',
@@ -265,26 +263,41 @@ const CourseMain: NextPage = () => {
     [courseMetadata, course_name, baseSystemPrompt, theme]
   )
 
-  const handleCopyDefaultPrompt = () => {
-    const defaultPostPrompt = getDefaultPostPrompt();
+  const handleCopyDefaultPrompt = async () => {
+    try {
+      const response = await fetch('/api/getDefaultPostPrompt')
+      if (!response.ok) {
+        throw new Error('Failed to fetch default prompt')
+      }
+      const data = await response.json()
+      const defaultPostPrompt = data.prompt
 
-    navigator.clipboard.writeText(defaultPostPrompt)
-      .then(() => {
-        showToastNotification(
-          theme,
-          'Copied',
-          'Default post prompt system prompt copied to clipboard',
-        );
-      })
-      .catch((err) => {
-        console.error('Could not copy text: ', err);
-        showToastNotification(
-          theme,
-          'Error Copying',
-          'Could not copy text to clipboard',
-          true,
-        );
-      });
+      navigator.clipboard.writeText(defaultPostPrompt)
+        .then(() => {
+          showToastNotification(
+            theme,
+            'Copied',
+            'Default post prompt system prompt copied to clipboard',
+          );
+        })
+        .catch((err) => {
+          console.error('Could not copy text: ', err);
+          showToastNotification(
+            theme,
+            'Error Copying',
+            'Could not copy text to clipboard',
+            true,
+          );
+        });
+    } catch (error) {
+      console.error('Error fetching default prompt:', error);
+      showToastNotification(
+        theme,
+        'Error Fetching',
+        'Could not fetch default prompt',
+        true,
+      );
+    }
   }
 
   // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
