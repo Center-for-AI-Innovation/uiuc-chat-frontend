@@ -174,7 +174,7 @@ const CourseMain: NextPage = () => {
       const success = await callSetCourseMetadata(course_name, updatedCourseMetadata)
       if (!success) {
         alert('Error resetting system prompt')
-        showToastOnPromptUpdate(theme, true)
+        showToastOnPromptUpdate(theme, true, true)
       } else {
         // Reset the base system prompt to default
         setBaseSystemPrompt(DEFAULT_SYSTEM_PROMPT)
@@ -582,9 +582,9 @@ const CourseMain: NextPage = () => {
                               maxRows={20}
                               placeholder="Enter the system prompt..."
                               className="px-1 pt-3 md:px-0"
-                              value={baseSystemPrompt} // Bound to baseSystemPrompt
+                              value={baseSystemPrompt}
                               onChange={(e) => {
-                                setBaseSystemPrompt(e.target.value) // Updates baseSystemPrompt on change
+                                setBaseSystemPrompt(e.target.value)
                               }}
                               style={{ width: '100%' }}
                               styles={{
@@ -593,7 +593,17 @@ const CourseMain: NextPage = () => {
                                 },
                               }}
                             />
-                            <div className="flex w-full flex-col items-center pl-2 pt-4 md:flex-row md:items-start md:justify-between md:pl-0">
+                            <Group mt="md" spacing="sm">
+                              <Button
+                                className={`relative bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                type="button"
+                                onClick={() => {
+                                  handleSystemPromptSubmit(baseSystemPrompt)
+                                }}
+                                style={{ minWidth: 'fit-content' }}
+                              >
+                                Update System Prompt
+                              </Button>
                               <Button
                                 type="submit"
                                 onClick={open}
@@ -613,7 +623,7 @@ const CourseMain: NextPage = () => {
                                   backgroundOrigin: 'border-box',
                                   backgroundClip: 'border-box',
                                 }}
-                                className={`relative text-white md:mr-2 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                className={`relative text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
                                 onMouseEnter={(e) =>
                                   (e.currentTarget.style.background =
                                     'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%)')
@@ -626,18 +636,7 @@ const CourseMain: NextPage = () => {
                                 <IconSparkles stroke={1} style={{ marginRight: '4px' }} />
                                 Optimize System Prompt
                               </Button>
-                              
-                              <Button
-                                className={`relative m-1 bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                type="button"
-                                onClick={() => {
-                                  handleSystemPromptSubmit(baseSystemPrompt) // Updated here
-                                }}
-                                style={{ minWidth: 'fit-content' }}
-                              >
-                                Update System Prompt
-                              </Button>
-                            </div>
+                            </Group>
 
                             <Modal
                               opened={opened}
