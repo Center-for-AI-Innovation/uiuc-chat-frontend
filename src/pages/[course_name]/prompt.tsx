@@ -106,7 +106,7 @@ const CourseMain: NextPage = () => {
       },
     })
   const [optimizedSystemPrompt, setOptimizedSystemPrompt] = useState('')
-  const [isRightSideVisible, setIsRightSideVisible] = useState(false)
+  const [isRightSideVisible, setIsRightSideVisible] = useState(true)
 
   // Updated state variables for checkboxes
   const [guidedLearning, setGuidedLearning] = useState(false)
