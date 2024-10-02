@@ -16,7 +16,6 @@ import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 import {
   Button,
   Card,
-  Checkbox,
   Flex,
   Group,
   List,
@@ -49,6 +48,7 @@ import { notifications } from '@mantine/notifications'
 import { useChat } from 'ai/react'
 import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
 import { debounce } from 'lodash'
+import CustomSwitch from '~/components/Switches/CustomSwitch' // Import the CustomSwitch component
 
 const montserrat = Montserrat({
   weight: '700',
@@ -515,7 +515,7 @@ const CourseMain: NextPage = () => {
                           className={`label ${montserrat_paragraph.variable} inline-block select-text font-montserratParagraph`}
                           size={'md'}
                         >
-                          The System Prompt is used during <i>all</i> conversations on this project. It is the most powerful form of instructions to the model.
+                          The System Prompt is used during <i>all</i> conversations on this project. It is the most powerful form of instructions to the model. It is the most powerful form of instructions to the model.
                           <br></br>
                           Include the most salient information possible, like good examples, welcome greetings and links to where users can learn more about your work.
                         </Text>
@@ -749,239 +749,35 @@ const CourseMain: NextPage = () => {
                           AI Behavior Settings
                         </Title>
 
-                        {/* Checkboxes */}
-                        <Checkbox
-                          label={
-                            <span className="flex items-center text-white">
-                              Guided Learning
-                              <Tooltip
-                                label={
-                                  <Text size="sm" color="gray.1">
-                                    Enables a tutoring mode where the AI encourages independent problem-solving. It provides hints and asks questions instead of giving direct answers, promoting critical thinking and discovery.
-                                  </Text>
-                                }
-                                position="bottom"
-                                withArrow
-                                multiline
-                                styles={(theme) => ({
-                                  tooltip: {
-                                    backgroundColor: '#1A1B1E',
-                                    color: '#D1D1D1',
-                                    borderRadius: '4px',
-                                    maxWidth: '250px',
-                                    wordWrap: 'break-word',
-                                  },
-                                  arrow: {
-                                    backgroundColor: '#1A1B1E',
-                                  },
-                                })}
-                              >
-                                <span className="ml-2" aria-label="More information">
-                                  <IconInfoCircle size={16} color="white" />
-                                </span>
-                              </Tooltip>
-                            </span>
-                          }
-                          className="font-montserratParagraph"
-                          size="md"
-                          color="grape"
+                        {/* Enhanced Switches */}
+                        <CustomSwitch
+                          label="Guided Learning"
+                          tooltip="Enables a tutoring mode where the AI encourages independent problem-solving. It provides hints and asks questions instead of giving direct answers, promoting critical thinking and discovery."
                           checked={guidedLearning}
-                          onChange={(event) => {
-                            const value = event.currentTarget.checked;
+                          onChange={(value: boolean) => {
                             setGuidedLearning(value);
                             debouncedHandleCheckboxChange('guidedLearning', value);
                           }}
-                          styles={(theme) => ({
-                            root: {
-                              position: 'relative',
-                              display: 'flex',
-                              alignItems: 'center',
-                              borderRadius: theme.radius.sm,
-                              padding: '0.5rem',
-                              transition: 'background-color 0.2s ease',
-                              '&:hover': {
-                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                              },
-                            },
-                            input: {
-                              '&:checked': {
-                                backgroundColor: theme.colors.grape[6],
-                                borderColor: theme.colors.grape[6],
-                              },
-                              '&:checked::before': {
-                                backgroundColor: 'white',
-                              },
-                            },
-                            icon: {
-                              color: 'white',
-                              transition: 'transform 0.2s ease',
-                            },
-                            inner: {
-                              '&:hover .mantine-Checkbox-input': {
-                                borderColor: theme.colors.grape[6],
-                              },
-                              '&:hover .mantine-Checkbox-input:checked': {
-                                backgroundColor: theme.colors.grape[7],
-                                borderColor: theme.colors.grape[7],
-                              },
-                            },
-                          })}
                         />
 
-                        <Checkbox
-                          label={
-                            <span className="flex items-center text-white">
-                              Document-Based References Only
-                              <Tooltip
-                                label={
-                                  <Text size="sm" color="gray.1">
-                                    Restricts the AI to use only information from the provided documents. Useful for maintaining accuracy in fields like legal research where external knowledge could be problematic.
-                                  </Text>
-                                }
-                                position="bottom"
-                                withArrow
-                                multiline
-                                styles={(theme) => ({
-                                  tooltip: {
-                                    backgroundColor: '#1A1B1E',
-                                    color: '#D1D1D1',
-                                    borderRadius: '4px',
-                                    maxWidth: '250px',
-                                    wordWrap: 'break-word',
-                                  },
-                                  arrow: {
-                                    backgroundColor: '#1A1B1E',
-                                  },
-                                })}
-                              >
-                                <span className="ml-2" aria-label="More information">
-                                  <IconInfoCircle size={16} color="white" />
-                                </span>
-                              </Tooltip>
-                            </span>
-                          }
-                          className="font-montserratParagraph"
-                          size="md"
-                          color="grape"
+                        <CustomSwitch
+                          label="Document-Based References Only"
+                          tooltip="Restricts the AI to use only information from the provided documents. Useful for maintaining accuracy in fields like legal research where external knowledge could be problematic."
                           checked={documentsOnly}
-                          onChange={(event) => {
-                            const value = event.currentTarget.checked;
+                          onChange={(value: boolean) => {
                             setDocumentsOnly(value);
                             debouncedHandleCheckboxChange('documentsOnly', value);
                           }}
-                          styles={(theme) => ({
-                            root: {
-                              position: 'relative',
-                              display: 'flex',
-                              alignItems: 'center',
-                              borderRadius: theme.radius.sm,
-                              padding: '0.5rem',
-                              transition: 'background-color 0.2s ease',
-                              '&:hover': {
-                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                              },
-                            },
-                            input: {
-                              '&:checked': {
-                                backgroundColor: theme.colors.grape[6],
-                                borderColor: theme.colors.grape[6],
-                              },
-                              '&:checked::before': {
-                                backgroundColor: 'white',
-                              },
-                            },
-                            icon: {
-                              color: 'white',
-                              transition: 'transform 0.2s ease',
-                            },
-                            inner: {
-                              '&:hover .mantine-Checkbox-input': {
-                                borderColor: theme.colors.grape[6],
-                              },
-                              '&:hover .mantine-Checkbox-input:checked': {
-                                backgroundColor: theme.colors.grape[7],
-                                borderColor: theme.colors.grape[7],
-                              },
-                            },
-                          })}
                         />
 
-                        <Checkbox
-                          label={
-                            <span className="flex items-center text-white">
-                              Raw System Prompt Only
-                              <Tooltip
-                                label={
-                                  <Text size="sm" color="gray.1">
-                                    Uses only the custom system prompt you&apos;ve provided, without additional formatting or citation instructions. This gives you full control over the AI&apos;s behavior and output structure.
-                                  </Text>
-                                }
-                                position="bottom"
-                                withArrow
-                                multiline
-                                styles={(theme) => ({
-                                  tooltip: {
-                                    backgroundColor: '#1A1B1E',
-                                    color: '#D1D1D1',
-                                    borderRadius: '4px',
-                                    maxWidth: '250px',
-                                    wordWrap: 'break-word',
-                                  },
-                                  arrow: {
-                                    backgroundColor: '#1A1B1E',
-                                  },
-                                })}
-                              >
-                                <span className="ml-2" aria-label="More information">
-                                  <IconInfoCircle size={16} color="white" />
-                                </span>
-                              </Tooltip>
-                            </span>
-                          }
-                          className="font-montserratParagraph"
-                          size="md"
-                          color="grape"
+                        <CustomSwitch
+                          label="Raw System Prompt Only"
+                          tooltip="Uses only the custom system prompt you've provided, without additional formatting or citation instructions. This gives you full control over the AI's behavior and output structure."
                           checked={systemPromptOnly}
-                          onChange={(event) => {
-                            const value = event.currentTarget.checked;
+                          onChange={(value: boolean) => {
                             setSystemPromptOnly(value);
                             debouncedHandleCheckboxChange('systemPromptOnly', value);
                           }}
-                          styles={(theme) => ({
-                            root: {
-                              position: 'relative',
-                              display: 'flex',
-                              alignItems: 'center',
-                              borderRadius: theme.radius.sm,
-                              padding: '0.5rem',
-                              transition: 'background-color 0.2s ease',
-                              '&:hover': {
-                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                              },
-                            },
-                            input: {
-                              '&:checked': {
-                                backgroundColor: theme.colors.grape[6],
-                                borderColor: theme.colors.grape[6],
-                              },
-                              '&:checked::before': {
-                                backgroundColor: 'white',
-                              },
-                            },
-                            icon: {
-                              color: 'white',
-                              transition: 'transform 0.2s ease',
-                            },
-                            inner: {
-                              '&:hover .mantine-Checkbox-input': {
-                                borderColor: theme.colors.grape[6],
-                              },
-                              '&:hover .mantine-Checkbox-input:checked': {
-                                backgroundColor: theme.colors.grape[7],
-                                borderColor: theme.colors.grape[7],
-                              },
-                            },
-                          })}
                         />
 
                         {/* Conditional Button */}
@@ -1003,7 +799,7 @@ const CourseMain: NextPage = () => {
                               position="bottom"
                               withArrow
                               multiline
-                              styles={(theme) => ({
+                              styles={{
                                 tooltip: {
                                   backgroundColor: '#1A1B1E',
                                   color: '#D1D1D1',
@@ -1014,9 +810,13 @@ const CourseMain: NextPage = () => {
                                 arrow: {
                                   backgroundColor: '#1A1B1E',
                                 },
-                              })}
+                              }}
                             >
-                              <span className="ml-2" aria-label="More information">
+                              <span
+                                className="ml-2"
+                                aria-label="More information"
+                                style={{ cursor: 'pointer' }}
+                              >
                                 <IconInfoCircle size={16} />
                               </span>
                             </Tooltip>
