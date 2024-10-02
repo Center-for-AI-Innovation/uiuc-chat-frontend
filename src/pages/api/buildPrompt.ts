@@ -27,28 +27,49 @@ export const config = {
 // A POST request endpoint that just calls buildPrompt and returns that as a json body.
 export default async (req: Request): Promise<NextResponse> => {
   try {
-    const { conversation, key, course_name, courseMetadata } =
-      (await req.json()) as ChatBody
+    const body = await req.json();
 
-    console.log('In build prompt fetch endpoint!!')
+    const { conversation, key, course_name, courseMetadata } = body as ChatBody;
 
     if (!conversation) {
-      console.error('No conversation provided')
+      console.error('No conversation provided');
       return new NextResponse(
         JSON.stringify({ error: 'No conversation provided' }),
         { status: 400 },
       )
     }
 
-    const updatedConversation = await buildPrompt({
-      conversation,
-      projectName: course_name,
-      courseMetadata,
-    })
+    if (!conversation.messages || !Array.isArray(conversation.messages)) {
+      console.error('Invalid or missing messages in conversation');
+      return new NextResponse(
+        JSON.stringify({ error: 'Invalid conversation structure' }),
+        { status: 400 },
+      )
+    }
 
-    return new NextResponse(JSON.stringify(updatedConversation))
+    try {
+      const updatedConversation = await buildPrompt({
+        conversation,
+        projectName: course_name,
+        courseMetadata,
+      })
+
+
+      return new NextResponse(JSON.stringify(updatedConversation))
+    } catch (buildPromptError) {
+      console.error('Error in buildPrompt function:', buildPromptError);
+      return new NextResponse(
+        JSON.stringify({ error: 'Error in buildPrompt function', details: (buildPromptError as Error).message }),
+        { status: 500 }
+      )
+    }
   } catch (error) {
-    console.error('Error in buildPromptAPI:', error)
-    return new NextResponse(JSON.stringify({ error: (error as Error).message }))
+    console.error('Detailed error in buildPromptAPI:', error);
+    if (error instanceof Error) {
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+    return new NextResponse(JSON.stringify({ error: 'An error occurred in buildPromptAPI', details: (error as Error).message }), { status: 500 })
   }
 }

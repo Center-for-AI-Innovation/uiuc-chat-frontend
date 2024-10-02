@@ -1,8 +1,8 @@
-// src/pages/[course_name]/api.tsx
+// src/pages/[course_name]/prompt.tsx
 'use client'
 import { type NextPage } from 'next'
 import MakeNewCoursePage from '~/components/UIUC-Components/MakeNewCoursePage'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { Montserrat } from 'next/font/google'
 import { useRouter } from 'next/router'
 import { useUser } from '@clerk/nextjs'
@@ -16,7 +16,6 @@ import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 import {
   Button,
   Card,
-  Checkbox,
   Flex,
   Group,
   List,
@@ -43,46 +42,60 @@ import {
   IconLayoutSidebarRight,
   IconLayoutSidebarRightExpand,
   IconSparkles,
+  IconInfoCircle,
+  IconCopy,
 } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import { useChat } from 'ai/react'
 import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
+import { debounce } from 'lodash'
+import CustomSwitch from '~/components/Switches/CustomSwitch' // Import the CustomSwitch component
 
 const montserrat = Montserrat({
   weight: '700',
   subsets: ['latin'],
 })
 
-const CourseMain: NextPage = () => {
-  const [checked1, setChecked1] = useState(false)
-  const [checked2, setChecked2] = useState(false)
-  const [checked3, setChecked3] = useState(false)
+const DOCUMENT_FOCUS_PROMPT = `
 
+You must strictly adhere to the following rules:
+
+1. Use ONLY information from the provided documents.
+2. If the answer isn't in the documents, state: "The provided documents don't contain this information."
+3. Do not use external knowledge, make assumptions, or infer beyond the documents' content.
+4. Do not answer questions outside the documents' scope.
+
+Your responses must be based solely on the content of the provided documents.
+`
+
+const GUIDED_LEARNING_PROMPT =
+  '\n\nYou are an AI tutor dedicated to helping students discover the joy of learning by guiding them to find answers on their own. Your role is not just to teach but to spark curiosity and excitement in each subject. You never provide direct answers or detailed step-by-step solutions, no matter the problem. Instead, with limitless patience and enthusiasm, you ask insightful questions and offer hints that inspire critical thinking and problem-solving. Your goal is to help learners experience the thrill of discovery and build confidence in their ability to find solutions independently—like a great teaching assistant who makes learning fun and rewarding.\n\n' +
+  'Key approaches:\n\n' +
+  '1. **Ask Open-Ended Questions**: Lead students with questions that encourage exploration, making problem-solving feel like an exciting challenge.\n' +
+  '2. **Guide Without Giving Specific Steps**: Offer general insights and hints that keep students thinking creatively without giving direct solutions.\n' +
+  '3. **Explain Concepts Without Revealing Answers**: Provide engaging explanations of concepts that deepen understanding while leaving the solution for the student to uncover.\n\n' +
+  'Strict guidelines:\n\n' +
+  '- **Never Provide Solutions**: Avoid any form of direct or partial solutions. Always redirect learners to approach the problem with fresh questions and ideas.\n' +
+  '- **Resist Workarounds**: If a student seeks the answer, gently steer them back to thoughtful reflection, keeping the excitement alive in the process of discovery.\n' +
+  '- **Encourage Independent Thinking**: Use probing questions to spark analysis and creative thinking, helping students feel empowered by their own problem-solving skills.\n' +
+  '- **Support, Motivate, and Inspire**: Keep a warm, encouraging tone, showing genuine excitement about the learning journey. Celebrate their persistence and successes, no matter how small, to make learning enjoyable and fulfilling.'
+
+const CourseMain: NextPage = () => {
   const theme = useMantineTheme()
   const router = useRouter()
 
   const GetCurrentPageName = () => {
-    // return router.asPath.slice(1).split('/')[0]
-    // Possible improvement.
     return router.query.course_name as string // Change this line
   }
   const isSmallScreen = useMediaQuery('(max-width: 1280px)')
   const course_name = GetCurrentPageName() as string
   const { user, isLoaded, isSignedIn } = useUser()
-  const [courseData, setCourseData] = useState(null)
   const [courseExists, setCourseExists] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [systemPrompt, setSystemPrompt] = useState('')
   const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
     null,
   )
-  const clerk_user = useUser()
-  // const emails = extractEmailsFromClerk(clerk_user.user)
-  // const currUserEmail = emails[0]
   const [baseSystemPrompt, setBaseSystemPrompt] = useState('')
-  const [thingsToDo, setThingsToDo] = useState('')
-  const [thingsNotToDo, setThingsNotToDo] = useState('')
-  // const [originalSystemPrompt, setOriginalSystemPrompt] = useState('')
   const [opened, { close, open }] = useDisclosure(false)
   const [apiKey, setApiKey] = useState<string | undefined>(undefined)
   const { messages, input, handleInputChange, reload, setMessages, setInput } =
@@ -93,12 +106,16 @@ const CourseMain: NextPage = () => {
       },
     })
   const [optimizedSystemPrompt, setOptimizedSystemPrompt] = useState('')
-  // const [isSystemPromptSaved, setIsSystemPromptSaved] = useState(false)
-  const [isRightSideVisible, setIsRightSideVisible] = useState(false)
+  const [isRightSideVisible, setIsRightSideVisible] = useState(true)
+
+  // Updated state variables for checkboxes
+  const [guidedLearning, setGuidedLearning] = useState(false)
+  const [documentsOnly, setDocumentsOnly] = useState(false)
+  const [systemPromptOnly, setSystemPromptOnly] = useState(false)
 
   useEffect(() => {
     const fetchCourseData = async () => {
-      if (course_name == undefined) {
+      if (course_name === undefined) {
         return
       }
       const response = await fetch(
@@ -109,85 +126,40 @@ const CourseMain: NextPage = () => {
       const response_metadata = await fetch(
         `/api/UIUC-api/getCourseMetadata?course_name=${course_name}`,
       )
-      const courseMetadata = (await response_metadata.json()).course_metadata
-      setCourseMetadata(courseMetadata)
-      setSystemPrompt(courseMetadata.system_prompt || DEFAULT_SYSTEM_PROMPT)
-      setBaseSystemPrompt(courseMetadata.system_prompt || DEFAULT_SYSTEM_PROMPT)
+      const fetchedMetadata = (await response_metadata.json()).course_metadata
+      setCourseMetadata(fetchedMetadata)
+      setBaseSystemPrompt(
+        fetchedMetadata.system_prompt || DEFAULT_SYSTEM_PROMPT,
+      )
+
+      // Initialize checkbox states
+      setGuidedLearning(fetchedMetadata.guidedLearning || false)
+      setDocumentsOnly(fetchedMetadata.documentsOnly || false)
+      setSystemPromptOnly(fetchedMetadata.systemPromptOnly || false)
+
       setIsLoading(false)
     }
     fetchCourseData()
-  }, [router.isReady])
-
-  // useEffect(() => {
-  //   let newApiKey
-  //   if (courseMetadata?.openai_api_key) {
-  //     newApiKey = courseMetadata.openai_api_key
-  //   }
-  //   setApiKey(newApiKey)
-  // }, [courseMetadata])
+  }, [router.isReady, course_name])
 
   useEffect(() => {
-    // Just for testing
-    if (systemPrompt) {
-      setInput(systemPrompt)
-      console.log('system prompt in ueseffected', systemPrompt)
-      console.log('input in useeffect', input)
-    }
-  }, [systemPrompt])
-
-  useEffect(() => {
-    let newSystemPrompt = baseSystemPrompt
-
-    const addIfNotIncluded = (content: string) => {
-      if (!newSystemPrompt.includes(content)) {
-        newSystemPrompt += content
-      }
-    }
-
-    if (checked1) {
-      addIfNotIncluded(
-        '\nContent includes equations; LaTeX notation preferred.',
-      )
-    }
-
-    if (checked2) {
-      addIfNotIncluded(
-        '\nFocus exclusively on document-based references—avoid incorporating knowledge from outside sources. Essential for legal and similar fields to maintain response quality.',
-      )
-    }
-
-    const introMessage =
-      checked3 && courseMetadata?.course_intro_message
-        ? `\n${courseMetadata.course_intro_message} If the user asks an introductory question or greeting along the lines of 'hello' or 'what can you do?' or 'What's in here ?' or 'what is ${course_name}?' or similar, then please respond with a warm welcome to ${course_name}, the AI ${course_name} assistant chatbot. Tell them that you can answer questions using the entire knowledge base of Extension. Feel free to ask!`
-        : `\nIf the user asks an introductory question or greeting along the lines of 'hello' or 'what can you do?' or 'What's in here ?' or 'what is ${course_name}?' or similar, then please respond with a warm welcome to ${course_name}, the AI ${course_name} assistant chatbot. Tell them that you can answer questions using the entire knowledge base of the project: ${course_name}. Feel free to ask!`
-
-    if (checked3) {
-      addIfNotIncluded(introMessage)
-    }
-
-    if (thingsToDo) {
-      addIfNotIncluded('\nThings to do: ' + thingsToDo)
-    }
-    if (thingsNotToDo) {
-      addIfNotIncluded('\nThings NOT to do: ' + thingsNotToDo)
-    }
-
-    setSystemPrompt(newSystemPrompt)
-  }, [
-    checked1,
-    checked2,
-    checked3,
-    thingsToDo,
-    thingsNotToDo,
-    courseMetadata,
-    baseSystemPrompt,
-  ])
+    setInput(baseSystemPrompt)
+  }, [baseSystemPrompt, setInput])
 
   const handleSystemPromptSubmit = async (newSystemPrompt: string) => {
     let success = false
     if (courseMetadata && course_name && newSystemPrompt) {
-      courseMetadata.system_prompt = newSystemPrompt
-      success = await callSetCourseMetadata(course_name, courseMetadata)
+      const updatedCourseMetadata = {
+        ...courseMetadata,
+        system_prompt: newSystemPrompt,
+        guidedLearning,
+        documentsOnly,
+        systemPromptOnly,
+      }
+      success = await callSetCourseMetadata(course_name, updatedCourseMetadata)
+      if (success) {
+        setCourseMetadata(updatedCourseMetadata)
+      }
     }
     if (!success) {
       console.log('Error updating course metadata')
@@ -199,16 +171,140 @@ const CourseMain: NextPage = () => {
 
   const resetSystemPrompt = async () => {
     if (courseMetadata && course_name) {
-      courseMetadata.system_prompt = DEFAULT_SYSTEM_PROMPT
-      const success = await callSetCourseMetadata(course_name, courseMetadata)
+      const updatedCourseMetadata = {
+        ...courseMetadata,
+        system_prompt: DEFAULT_SYSTEM_PROMPT,
+        guidedLearning: false,
+        documentsOnly: false,
+        systemPromptOnly: false,
+      }
+      const success = await callSetCourseMetadata(
+        course_name,
+        updatedCourseMetadata,
+      )
       if (!success) {
         alert('Error resetting system prompt')
-        showToastOnPromptUpdate(theme, true)
+        showToastOnPromptUpdate(theme, true, true)
       } else {
+        // Reset the base system prompt and checkbox states
+        setBaseSystemPrompt(DEFAULT_SYSTEM_PROMPT)
+        setCourseMetadata(updatedCourseMetadata)
+        setGuidedLearning(false)
+        setDocumentsOnly(false)
+        setSystemPromptOnly(false)
         showToastOnPromptUpdate(theme, false, true)
       }
     } else {
       alert('Error resetting system prompt')
+    }
+  }
+
+  const updateSystemPrompt = (updatedFields: Partial<CourseMetadata>) => {
+    let newPrompt = baseSystemPrompt
+
+    // Handle Guided Learning prompt
+    if (updatedFields.guidedLearning !== undefined) {
+      if (updatedFields.guidedLearning) {
+        if (!newPrompt.includes(GUIDED_LEARNING_PROMPT)) {
+          newPrompt += GUIDED_LEARNING_PROMPT
+        }
+      } else {
+        newPrompt = newPrompt.replace(GUIDED_LEARNING_PROMPT, '')
+      }
+    }
+
+    // Handle Documents Only prompt
+    if (updatedFields.documentsOnly !== undefined) {
+      if (updatedFields.documentsOnly) {
+        if (!newPrompt.includes(DOCUMENT_FOCUS_PROMPT)) {
+          newPrompt += DOCUMENT_FOCUS_PROMPT
+        }
+      } else {
+        newPrompt = newPrompt.replace(DOCUMENT_FOCUS_PROMPT, '')
+      }
+    }
+
+    return newPrompt
+  }
+
+  const handleCheckboxChange = async (
+    updatedFields: Partial<CourseMetadata>,
+  ) => {
+    if (!courseMetadata || !course_name) {
+      showToastOnPromptUpdate(theme, true)
+      return
+    }
+
+    // Immediately update local state
+    const newCourseMetadata = { ...courseMetadata, ...updatedFields }
+    const newSystemPrompt = updateSystemPrompt(updatedFields)
+
+    setCourseMetadata(newCourseMetadata)
+    setBaseSystemPrompt(newSystemPrompt)
+
+    if (updatedFields.guidedLearning !== undefined) {
+      setGuidedLearning(updatedFields.guidedLearning)
+    }
+    if (updatedFields.documentsOnly !== undefined) {
+      setDocumentsOnly(updatedFields.documentsOnly)
+    }
+    if (updatedFields.systemPromptOnly !== undefined) {
+      setSystemPromptOnly(updatedFields.systemPromptOnly)
+    }
+
+    // Debounced API call
+    debouncedSave({ ...newCourseMetadata, system_prompt: newSystemPrompt })
+  }
+
+  const debouncedSave = useCallback(
+    debounce(async (updatedMetadata: CourseMetadata) => {
+      const success = await callSetCourseMetadata(course_name, updatedMetadata)
+      if (!success) {
+        showToastOnPromptUpdate(theme, true)
+      } else {
+        showToastOnPromptUpdate(theme)
+      }
+    }, 500),
+    [course_name, theme],
+  )
+
+  const handleCopyDefaultPrompt = async () => {
+    try {
+      const response = await fetch('/api/getDefaultPostPrompt')
+      if (!response.ok) {
+        const errorMessage = `Failed to fetch default prompt: ${response.status} ${response.statusText}`
+        console.error(errorMessage)
+        throw new Error(errorMessage)
+      }
+      const data = await response.json()
+      const defaultPostPrompt = data.prompt
+
+      navigator.clipboard
+        .writeText(defaultPostPrompt)
+        .then(() => {
+          showToastNotification(
+            theme,
+            'Copied',
+            'Default post prompt system prompt copied to clipboard',
+          )
+        })
+        .catch((err) => {
+          console.error('Could not copy text: ', err)
+          showToastNotification(
+            theme,
+            'Error Copying',
+            'Could not copy text to clipboard',
+            true,
+          )
+        })
+    } catch (error) {
+      console.error('Error fetching default prompt:', error)
+      showToastNotification(
+        theme,
+        'Error Fetching',
+        'Could not fetch default prompt',
+        true,
+      )
     }
   }
 
@@ -286,46 +382,36 @@ const CourseMain: NextPage = () => {
     console.log('apikey set to', apiKey)
     e.preventDefault()
 
-    const systemPrompt = `
-    Today, you will be optimizing instructions for an eager, helpful, but inexperienced and unworldly AI assistant. This assistant requires careful instruction and clear examples to understand how to behave effectively. Follow the steps below to write precise and thorough instructions that will guide the assistant to accomplish tasks consistently, accurately, and correctly.
+    const systemPrompt = `You are an expert at optimizing system prompts for AI assistants to ensure they perform tasks consistently, accurately, and effectively. Your task is to rewrite the following system prompt to make it clear, precise, and actionable for the AI assistant. The optimized prompt should:
 
-    In addition to the specific instructions provided, keep the following guidelines in mind:
+      1. **Detailed Task Explanation**: Start with a clear description of the assistant's role, objectives, and desired outcomes.
 
-    Task Explanation:
-    Begin with a detailed explanation of the task at hand. Clearly outline the objectives and the desired outcome.
+      2. **Step-by-Step Guidance**: Provide sequential instructions with specific actions the assistant should take at each step.
 
-    Step-by-Step Guidance:
-    Break down the task into clear, sequential steps.
-    Provide specific actions the assistant should take at each step.
+      3. **Examples and Clarifications**: Include examples to illustrate key points and clarify any potential ambiguities.
 
-    Examples and Clarifications:
-    Include examples to illustrate each step.
-    Clarify any potential ambiguities with additional explanations or scenarios.
+      4. **Professional Tailoring**: Ensure the final instructions are professionally tailored, clear, concise, and directly usable.
 
-    Handling Subject-Related Questions:
-    If the question is related to the subject in ANY WAY, ensure the assistant always provides an answer, even if the available documents are not directly helpful.
-    Encourage the assistant to give the most helpful response possible, drawing from general knowledge if specific information is lacking.
+      **Additional Guidelines:**
 
-    Always Provide Help:
-    Instruct the assistant to always give a reasonable answer to the user's question.
-    If there is limited information, suggest an array of potential helpful answers or solutions.
+      - **Clarity and Conciseness**: Use straightforward language to avoid confusion and keep instructions brief.
 
-    Citations and Sources:
-    When relevant, provide citations to support the information given.
-    Avoid stacking too many citations together; use them judiciously to maintain clarity.
+      - **Avoid Redundancy**: Eliminate unnecessary repetition to maintain focus on key instructions.
 
-    Professional Tailoring:
-    Ensure the final instructions are professionally tailored to meet the project's needs.
-    The instructions should be clear, concise, and directly usable.
-    Note: This is probably obvious to you already, but you are not completing the task here. You are writing instructions for an AI to complete the task.
-    Here are the instructions you need to optimize:
-    `
+      - **User-Centric Focus**: Emphasize understanding and fulfilling the user's needs and questions.
+
+      - **Positive and Professional Tone**: Encourage responses that are friendly, respectful, and professional.
+
+      - **Flexibility**: Allow the assistant to adapt its responses based on the context and the user's intent.
+
+      **Note**: Avoid unnecessary verbosity or repetition that could obscure important instructions.
+
+      Please optimize the following system prompt accordingly:`
 
     setMessages([
       { role: 'system', content: systemPrompt },
       { role: 'user', content: e.target[0].value },
     ])
-    // setFinalSystemPrompt(finalMessage)
     reload()
   }
 
@@ -356,14 +442,12 @@ const CourseMain: NextPage = () => {
                 >
                   <div className="card flex h-full flex-col">
                     <Group
-                      // spacing="lg"
                       m="3rem"
                       align="center"
                       variant="column"
                       className="w-[100%] md:w-[90%] lg:w-[80%]"
                       style={{
                         justifyContent: 'center',
-                        // width: '97%',
                         alignSelf: 'center',
                         overflow: 'hidden',
                       }}
@@ -380,19 +464,14 @@ const CourseMain: NextPage = () => {
                       <Paper
                         className="rounded-xl"
                         shadow="xs"
-                        // radius="lg"
                         p="md"
                         style={{
-                          // width: isRightSideVisible ? '90%' : '100%',
                           width: '100%',
-                          // margin: 'auto',
-                          // marginTop: '8px',
                           backgroundColor: 'rgba(0, 0, 0, 0.3)',
                         }}
                       >
                         <Text
                           size={'md'}
-                          // w={'100%'}
                           className={`${montserrat_paragraph.variable} select-text font-montserratParagraph`}
                         >
                           For guidance on crafting prompts, consult
@@ -436,14 +515,12 @@ const CourseMain: NextPage = () => {
 
                         <Text
                           className={`label ${montserrat_paragraph.variable} inline-block select-text font-montserratParagraph`}
-                          // variant="gradient"
-                          // gradient={{ from: 'gold', to: 'white', deg: 170 }}
-                          // order={4}
                           size={'md'}
                         >
                           The System Prompt is used during <i>all</i>{' '}
                           conversations on this project. It is the most powerful
-                          form of instructions to the model.
+                          form of instructions to the model. It is the most
+                          powerful form of instructions to the model.
                           <br></br>
                           Include the most salient information possible, like
                           good examples, welcome greetings and links to where
@@ -512,26 +589,15 @@ const CourseMain: NextPage = () => {
                               )
                             }
                           >
-                            {/* <Title
-                              className={`label ${montserrat_heading.variable} font - montserratHeading`}
-                              variant="gradient"
-                              gradient={{ from: 'gold', to: 'white', deg: 170 }}
-                              order={4}
-                            >
-                              System Prompt
-                            </Title>
-                            <p>This system prompt is used on ALL messages in this project. Read more...</p> */}
                             <Textarea
                               autosize
                               minRows={3}
                               maxRows={20}
                               placeholder="Enter the system prompt..."
                               className="px-1 pt-3 md:px-0"
-                              value={input}
+                              value={baseSystemPrompt}
                               onChange={(e) => {
                                 setBaseSystemPrompt(e.target.value)
-                                setSystemPrompt(e.target.value)
-                                handleInputChange(e)
                               }}
                               style={{ width: '100%' }}
                               styles={{
@@ -540,43 +606,53 @@ const CourseMain: NextPage = () => {
                                 },
                               }}
                             />
-                            <div className="flex w-full flex-col items-center pl-2 pt-4 md:flex-row md:items-start md:justify-between md:pl-0">
+                            <Group mt="md" spacing="sm">
                               <Button
-                                type="submit"
-                                onClick={open}
-                                style={{
-                                  minWidth: 'fit-content',
-                                  // marginTop: '15px',
-                                  paddingLeft: '8px',
-                                  background:
-                                    'linear-gradient(to right, #6d28d9, #4f46e5, #2563eb)',
-                                  transition: 'background 0.3s ease-in-out',
-                                }}
-                                className={`relative m-1 text-white hover:border-indigo-600 md:mr-2 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                onMouseEnter={(e) =>
-                                  (e.currentTarget.style.background =
-                                    'linear-gradient(to right, #4f46e5, #2563eb, #6d28d9)')
-                                }
-                                onMouseLeave={(e) =>
-                                  (e.currentTarget.style.background =
-                                    'linear-gradient(to right, #6d28d9, #4f46e5, #2563eb)')
-                                }
-                              >
-                                <IconSparkles stroke={1} />
-                                Optimize System Prompt
-                              </Button>
-
-                              <Button
-                                className={`relative m-1 bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                type="submit"
+                                className={`relative bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                type="button"
                                 onClick={() => {
-                                  handleSystemPromptSubmit(systemPrompt)
+                                  handleSystemPromptSubmit(baseSystemPrompt)
                                 }}
                                 style={{ minWidth: 'fit-content' }}
                               >
                                 Update System Prompt
                               </Button>
-                            </div>
+                              <Button
+                                type="submit"
+                                onClick={open}
+                                style={{
+                                  minWidth: 'fit-content',
+                                  background:
+                                    'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%)',
+                                  transition: 'background 0.3s ease-in-out',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  padding: '0 8px',
+                                  backgroundSize: '100% 100%',
+                                  backgroundRepeat: 'no-repeat',
+                                  boxSizing: 'border-box',
+                                  border: 'none',
+                                  outline: 'none',
+                                  backgroundOrigin: 'border-box',
+                                  backgroundClip: 'border-box',
+                                }}
+                                className={`relative text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                onMouseEnter={(e) =>
+                                (e.currentTarget.style.background =
+                                  'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%)')
+                                }
+                                onMouseLeave={(e) =>
+                                (e.currentTarget.style.background =
+                                  'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%)')
+                                }
+                              >
+                                <IconSparkles
+                                  stroke={1}
+                                  style={{ marginRight: '4px' }}
+                                />
+                                Optimize System Prompt
+                              </Button>
+                            </Group>
 
                             <Modal
                               opened={opened}
@@ -619,7 +695,7 @@ const CourseMain: NextPage = () => {
                                   double confirm the handleSystemPromptSubmit */}
                                 <Button
                                   className="relative m-1 self-end bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600"
-                                  type="submit"
+                                  type="button"
                                   onClick={() => {
                                     const lastMessage =
                                       messages[messages.length - 1]
@@ -631,7 +707,6 @@ const CourseMain: NextPage = () => {
                                         lastMessage.content
                                       setOptimizedSystemPrompt(newSystemPrompt)
                                       setBaseSystemPrompt(newSystemPrompt)
-                                      setSystemPrompt(newSystemPrompt)
                                       handleSystemPromptSubmit(newSystemPrompt)
                                       console.log(
                                         'system prompt',
@@ -663,7 +738,7 @@ const CourseMain: NextPage = () => {
                   </div>
                 </div>
                 {/* RIGHT SIDE OF CARD */}
-                {isRightSideVisible && (
+                {isRightSideVisible && courseMetadata && (
                   <div
                     style={{
                       flex: isSmallScreen ? '1 1 100%' : '1 1 40%',
@@ -681,116 +756,101 @@ const CourseMain: NextPage = () => {
                           order={3}
                           style={{ paddingTop: '18px' }}
                         >
-                          Add Instructions to System Prompt
+                          AI Behavior Settings
                         </Title>
-                        <Checkbox
-                          label={`Add greetings at the beginning of the conversation.`}
-                          // wrapperProps={{}}
-                          // description="Course is private by default."
-                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                          // style={{ marginTop: '4rem' }}
-                          size="md"
-                          // bg='#020307'
-                          color="grape"
-                          // icon={CheckboxIcon}
-                          checked={checked3}
-                          onChange={(event) =>
-                            setChecked3(event.currentTarget.checked)
+
+                        {/* Enhanced Switches */}
+                        <CustomSwitch
+                          label="Guided Learning"
+                          tooltip="Enables a tutoring mode where the AI encourages independent problem-solving. It provides hints and asks questions instead of giving direct answers, promoting critical thinking and discovery."
+                          checked={guidedLearning}
+                          onChange={(value: boolean) =>
+                            handleCheckboxChange({ guidedLearning: value })
                           }
                         />
-                        <Checkbox
-                          label={`Content includes equations; LaTeX notation preferred.`}
-                          // wrapperProps={{}}
-                          // description="Course is private by default."
-                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                          // style={{ marginTop: '4rem' }}
-                          size="md"
-                          // bg='#020307'
-                          color="grape"
-                          // icon={CheckboxIcon}
-                          checked={checked1}
-                          onChange={(event) =>
-                            setChecked1(event.currentTarget.checked)
+
+                        <CustomSwitch
+                          label="Document-Based References Only"
+                          tooltip="Restricts the AI to use only information from the provided documents. Useful for maintaining accuracy in fields like legal research where external knowledge could be problematic."
+                          checked={documentsOnly}
+                          onChange={(value: boolean) =>
+                            handleCheckboxChange({ documentsOnly: value })
                           }
                         />
-                        <Checkbox
-                          label={`Focus exclusively on document - based references—avoid incorporating knowledge from outside sources.Essential for legal and similar fields to maintain response quality.`}
-                          // wrapperProps={{}}
-                          // description="Course is private by default."
-                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                          // style={{ marginTop: '4rem' }}
-                          size="md"
-                          // bg='#020307'
-                          color="grape"
-                          // icon={CheckboxIcon}
-                          checked={checked2}
-                          onChange={(event) =>
-                            setChecked2(event.currentTarget.checked)
+
+                        <CustomSwitch
+                          label="Bypass UIUC.chat's internal prompting"
+                          tooltip="Internally, we prompt the model to (1) add citations and (2) always be as helpful as possible. You can bypass this for full un-modified control over the bot's behavior."
+                          checked={systemPromptOnly}
+                          onChange={(value: boolean) =>
+                            handleCheckboxChange({ systemPromptOnly: value })
                           }
                         />
-                        <Title
-                          className={`label ${montserrat_heading.variable} font-montserratHeading`}
-                          variant="gradient"
-                          gradient={{ from: 'gold', to: 'white', deg: 170 }}
-                          order={4}
-                        >
-                          Things to do
-                        </Title>
-                        <Textarea
-                          // label={<strong>Things to do</strong>}
-                          autosize
-                          minRows={3}
-                          maxRows={20}
-                          style={{ width: '100%', paddingTop: '0px' }}
-                          placeholder="Enter guidelines that the chat response should adhere to..."
-                          className={`pt-3 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                          value={thingsToDo}
-                          onChange={(e) => {
-                            setThingsToDo(e.target.value)
-                          }}
-                        />
-                        <Title
-                          className={`label ${montserrat_heading.variable} font-montserratHeading`}
-                          variant="gradient"
-                          gradient={{ from: 'gold', to: 'white', deg: 170 }}
-                          order={4}
-                        >
-                          Things NOT to do
-                        </Title>
-                        <Textarea
-                          // label={<strong>Things NOT to do</strong>}
-                          autosize
-                          minRows={3}
-                          maxRows={20}
-                          style={{ width: '100%', paddingTop: '0px' }}
-                          placeholder="Edit the guidelines that the chat response should not adhere to..."
-                          className={`pt-3 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                          value={thingsNotToDo}
-                          onChange={(e) => {
-                            setThingsNotToDo(e.target.value)
-                          }}
-                        />
-                        <div style={{ paddingTop: '10px', width: '100%' }}>
-                          <div
-                            style={{
-                              paddingTop: '10px',
-                              width: '100%',
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                            }}
-                          >
+
+                        {/* Conditional Button */}
+                        {systemPromptOnly && (
+                          <Flex mt="sm" align="center" gap="xs">
                             <Button
-                              className="relative m-1 self-end bg-red-500 text-white hover:border-red-600 hover:bg-red-600"
-                              onClick={() => {
-                                setSystemPrompt(DEFAULT_SYSTEM_PROMPT)
-                                resetSystemPrompt()
-                              }}
-                              style={{ minWidth: 'fit-content' }}
+                              className={`
+                                relative bg-purple-800 text-white 
+                                hover:bg-purple-700 active:bg-purple-900 
+                                transition-colors duration-200
+                                flex items-center space-x-2 px-4 py-2 rounded-md
+                                ${montserrat_paragraph.variable} font-montserratParagraph
+                              `}
+                              onClick={handleCopyDefaultPrompt}
                             >
-                              Reset
+                              <IconCopy size={18} className="mr-2" />
+                              <span>Copy UIUC.chat&apos;s Default internal prompt</span>
                             </Button>
-                          </div>
-                        </div>
+                            <Tooltip
+                              label={
+                                <Text size="sm" color="gray.1">
+                                  Copy the default post-processing system prompt
+                                  to your clipboard. You can then paste this
+                                  into the System Prompt section and customize
+                                  it to suit your specific needs. This provides
+                                  a solid starting point for defining AI
+                                  behavior in raw prompt mode.
+                                </Text>
+                              }
+                              position="bottom"
+                              withArrow
+                              multiline
+                              styles={{
+                                tooltip: {
+                                  backgroundColor: '#1A1B1E',
+                                  color: '#D1D1D1',
+                                  borderRadius: '4px',
+                                  maxWidth: '250px',
+                                  wordWrap: 'break-word',
+                                },
+                                arrow: {
+                                  backgroundColor: '#1A1B1E',
+                                },
+                              }}
+                            >
+                              <span
+                                className="ml-2"
+                                aria-label="More information"
+                                style={{ cursor: 'pointer' }}
+                              >
+                                <IconInfoCircle size={16} />
+                              </span>
+                            </Tooltip>
+                          </Flex>
+                        )}
+
+                        {/* Reset Button */}
+                        <Flex mt="md" justify="flex-start">
+                          <Button
+                            className="relative bg-red-500 text-white hover:border-red-600 hover:bg-red-600"
+                            onClick={resetSystemPrompt}
+                            style={{ minWidth: 'fit-content' }}
+                          >
+                            Reset
+                          </Button>
+                        </Flex>
                       </Flex>
                     </div>
                   </div>
@@ -805,55 +865,66 @@ const CourseMain: NextPage = () => {
     </>
   )
 }
+
+export const showToastNotification = (
+  theme: MantineTheme,
+  title: string,
+  message: string,
+  isError = false,
+  icon?: React.ReactNode,
+) => {
+  notifications.show({
+    withCloseButton: true,
+    autoClose: 5000,
+    title: title,
+    message: message,
+    icon: icon || (isError ? <IconAlertTriangle /> : <IconCheck />),
+    styles: {
+      root: {
+        backgroundColor: '#1A1B1E', // Dark background to match the page
+        borderColor: isError ? '#E53935' : '#6D28D9', // Red for errors, purple for success
+        borderWidth: '1px',
+        borderStyle: 'solid',
+      },
+      title: {
+        color: '#FFFFFF', // White text for the title
+        fontWeight: 600,
+      },
+      description: {
+        color: '#D1D1D1', // Light gray text for the message
+      },
+      closeButton: {
+        color: '#FFFFFF', // White color for the close button
+        '&:hover': {
+          backgroundColor: 'rgba(255, 255, 255, 0.1)', // Subtle hover effect
+        },
+      },
+      icon: {
+        backgroundColor: 'transparent', // Transparent background for the icon
+        color: isError ? '#E53935' : '#6D28D9', // Icon color matches the border
+      },
+    },
+  })
+}
+
 export const showToastOnPromptUpdate = (
   theme: MantineTheme,
   was_error = false,
   isReset = false,
 ) => {
-  return notifications.show({
-    id: 'prompt-updated',
-    withCloseButton: true,
-    onClose: () => console.log('unmounted'),
-    onOpen: () => console.log('mounted'),
-    autoClose: 12000,
-    title: was_error
-      ? 'Error updating prompt'
-      : isReset
-        ? 'Resetting prompt...'
-        : 'Updating prompt...',
-    message: was_error
-      ? 'An error occurred while updating the prompt. Please try again.'
-      : isReset
-        ? 'The prompt has been reset to default.'
-        : 'The prompt has been updated successfully.',
-    icon: was_error ? <IconAlertTriangle /> : <IconCheck />,
-    styles: {
-      root: {
-        backgroundColor: theme.colors.nearlyWhite,
-        borderColor: was_error
-          ? theme.colors.errorBorder
-          : theme.colors.aiPurple,
-      },
-      title: {
-        color: theme.colors.nearlyBlack,
-      },
-      description: {
-        color: theme.colors.nearlyBlack,
-      },
-      closeButton: {
-        color: theme.colors.nearlyBlack,
-        '&:hover': {
-          backgroundColor: theme.colors.dark[1],
-        },
-      },
-      icon: {
-        backgroundColor: was_error
-          ? theme.colors.errorBackground
-          : theme.colors.successBackground,
-        padding: '4px',
-      },
-    },
-    loading: false,
-  })
+  const title = was_error
+    ? 'Error Updating Prompt'
+    : isReset
+      ? 'Prompt Reset to Default'
+      : 'Prompt Updated Successfully'
+  const message = was_error
+    ? 'An error occurred while updating the prompt. Please try again.'
+    : isReset
+      ? 'The system prompt has been reset to default settings.'
+      : 'The system prompt has been updated.'
+  const isError = was_error
+
+  showToastNotification(theme, title, message, isError)
 }
+
 export default CourseMain

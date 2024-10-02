@@ -173,7 +173,7 @@ export const Chat = memo(
 
     useEffect(() => {
       const loadModel = async () => {
-        if (selectedConversation && !chat_ui.isModelLoading()) {
+        if (selectedConversation?.model && !chat_ui.isModelLoading()) {
           homeDispatch({
             field: 'webLLMModelIdLoading',
             value: { id: selectedConversation.model.id, isLoading: true },
@@ -189,12 +189,12 @@ export const Chat = memo(
         }
       }
       if (
-        selectedConversation &&
+        selectedConversation?.model &&
         webLLMModels.some((m) => m.name === selectedConversation.model.name)
       ) {
         loadModel()
       }
-    }, [selectedConversation?.model.name, chat_ui])
+    }, [selectedConversation?.model?.id, chat_ui])
 
     const [currentMessage, setCurrentMessage] = useState<Message>()
     const [autoScrollEnabled, setAutoScrollEnabled] = useState<boolean>(true)
@@ -336,6 +336,7 @@ export const Chat = memo(
         enabledDocumentGroups: string[],
         llmProviders: AllLLMProviders,
       ) => {
+        console.log('handleSend called with model:', selectedConversation?.model);
         setCurrentMessage(message)
         resetMessageStates()
 
@@ -344,6 +345,21 @@ export const Chat = memo(
           : message.content
 
         if (selectedConversation) {
+          // Add this type guard function
+          function isValidModel(model: any): model is { id: string; name: string } {
+            return model && typeof model.id === 'string' && typeof model.name === 'string';
+          }
+
+          // Check if model is defined and valid
+          if (!isValidModel(selectedConversation.model)) {
+            console.error('Selected conversation does not have a valid model.');
+            errorToast({
+              title: 'Model Error',
+              message: 'No valid model selected for the conversation.',
+            });
+            return;
+          }
+
           let updatedConversation: Conversation
           if (deleteCount) {
             // Remove tools from message to clear old tools
@@ -355,7 +371,7 @@ export const Chat = memo(
                 )
               : message.content
 
-            const updatedMessages = [...selectedConversation.messages]
+            const updatedMessages = [...(selectedConversation.messages || [])]
             const messagesToDelete = updatedMessages.slice(0, deleteCount)
             for (let i = 0; i < deleteCount; i++) {
               updatedMessages.pop()
@@ -371,15 +387,15 @@ export const Chat = memo(
           } else {
             updatedConversation = {
               ...selectedConversation,
-              messages: [...selectedConversation.messages, message],
+              messages: [...(selectedConversation.messages || []), message],
             }
             // console.log(
             //   'updatedConversation before name:',
             //   updatedConversation,
-            //   updatedConversation.messages.length,
+            //   updatedConversation.messages?.length,
             // )
             // Update the name of the conversation if it's the first message
-            if (updatedConversation.messages.length === 1) {
+            if (updatedConversation.messages?.length === 1) {
               const { content } = message
               // Use only texts instead of content itself
               const contentText = Array.isArray(content)
@@ -529,12 +545,21 @@ export const Chat = memo(
             },
             body: JSON.stringify(chatBody),
           })
-          chatBody.conversation = await buildPromptResponse.json()
+
+          const builtConversation = await buildPromptResponse.json()
+          chatBody.conversation = builtConversation
+
+          // Ensure that chatBody.model is set
+          if (!chatBody.model) {
+            chatBody.model = selectedConversation.model
+          }
+
           updatedConversation = chatBody.conversation!
 
+          // Update the selected conversation
           homeDispatch({
             field: 'selectedConversation',
-            value: chatBody.conversation,
+            value: updatedConversation,
           })
 
           // Action 5: Run Chat Completion based on model provider
@@ -545,8 +570,9 @@ export const Chat = memo(
           let reader
 
           if (
+            selectedConversation.model &&
             webLLMModels.some(
-              (model) => model.name === chatBody.conversation?.model.name,
+              (model) => model.name === selectedConversation.model.name,
             )
           ) {
             // Is WebLLM model
@@ -555,7 +581,7 @@ export const Chat = memo(
             }
             try {
               response = await chat_ui.runChatCompletion(
-                chatBody.conversation!,
+                selectedConversation,
                 getCurrentPageName(),
               )
             } catch (error) {
@@ -673,9 +699,9 @@ export const Chat = memo(
                     value: updatedConversation,
                   })
                 } else {
-                  if (updatedConversation.messages.length > 0) {
+                  if (updatedConversation.messages?.length > 0) {
                     const lastMessageIndex =
-                      updatedConversation.messages.length - 1
+                      updatedConversation.messages?.length - 1
                     const lastMessage =
                       updatedConversation.messages[lastMessageIndex]
                     const lastUserMessage =
@@ -695,7 +721,7 @@ export const Chat = memo(
                         )
 
                       // Update the last message with the new content
-                      const updatedMessages = updatedConversation.messages.map(
+                      const updatedMessages = updatedConversation.messages?.map(
                         (msg, index) =>
                           index === lastMessageIndex
                             ? { ...msg, content: finalAssistantRespose }
@@ -868,7 +894,7 @@ export const Chat = memo(
         }
         if (
           selectedConversation?.messages[
-            selectedConversation?.messages.length - 1
+            selectedConversation?.messages?.length - 1
           ]?.role === 'user'
         ) {
           // console.log('user')
@@ -953,13 +979,13 @@ export const Chat = memo(
       if (messageIsStreaming) throttledScrollDown()
       if (selectedConversation) {
         const messages = selectedConversation.messages
-        if (messages.length > 1) {
-          if (messages[messages.length - 1]?.role === 'assistant') {
-            setCurrentMessage(messages[messages.length - 2])
+        if (messages?.length > 1) {
+          if (messages[messages?.length - 1]?.role === 'assistant') {
+            setCurrentMessage(messages[messages?.length - 2])
           } else {
-            setCurrentMessage(messages[messages.length - 1])
+            setCurrentMessage(messages[messages?.length - 1])
           }
-        } else if (messages.length === 1) {
+        } else if (messages?.length === 1) {
           setCurrentMessage(messages[0])
         } else {
           setCurrentMessage(undefined)
@@ -1074,7 +1100,7 @@ export const Chat = memo(
     }
 
     const updateMessages = (updatedMessage: Message, messageIndex: number) => {
-      return selectedConversation?.messages.map((message, index) => {
+      return selectedConversation?.messages?.map((message, index) => {
         return index === messageIndex ? updatedMessage : message
       })
     }
@@ -1143,12 +1169,12 @@ export const Chat = memo(
                   className="mt-4 max-h-full"
                   ref={chatContainerRef}
                   onScroll={handleScroll}
-                  initial={{ opacity: 0, scale: 0.95 }} // Initial state: invisible and slightly scaled down
-                  animate={{ opacity: 1, scale: 1 }} // Animate to: fully visible and scaled to normal size
-                  exit={{ opacity: 0, scale: 0.95 }} // Exit state: invisible and slightly scaled down
-                  transition={{ duration: 0.25, ease: 'easeInOut' }} // Duration and easing of the animation
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.25, ease: 'easeInOut' }}
                 >
-                  {selectedConversation?.messages.length === 0 ? (
+                  {selectedConversation && selectedConversation.messages && selectedConversation.messages?.length === 0 ? (
                     <>
                       <div className="mt-16">
                         {renderIntroductoryStatements()}
@@ -1156,17 +1182,16 @@ export const Chat = memo(
                     </>
                   ) : (
                     <>
-                      {selectedConversation?.messages.map((message, index) => (
+                      {selectedConversation?.messages?.map((message, index) => (
                         <MemoizedChatMessage
                           key={index}
                           message={message}
                           contentRenderer={renderMessageContent}
                           messageIndex={index}
                           onEdit={(editedMessage) => {
-                            // setCurrentMessage(editedMessage)
                             handleSend(
                               editedMessage,
-                              selectedConversation?.messages.length - index,
+                              selectedConversation?.messages?.length - index,
                               null,
                               tools,
                               enabledDocumentGroups,
