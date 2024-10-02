@@ -195,44 +195,39 @@ const CourseMain: NextPage = () => {
   /**
    * Handles changes to checkboxes by updating the backend.
    * This function is debounced to prevent excessive API calls.
-   * @param field - The field in courseMetadata to update.
-   * @param value - The new boolean value for the checkbox.
+   * @param updatedFields - Partial updates to the courseMetadata.
    */
-  const handleCheckboxChange = async (field: keyof CourseMetadata, value: boolean) => {
+  const handleCheckboxChange = async (updatedFields: Partial<CourseMetadata>) => {
     if (!courseMetadata || !course_name) {
       showToastOnPromptUpdate(theme, true)
       return
     }
 
-    // Create a new courseMetadata object with the updated field
+    // Create a new courseMetadata object with the updated fields
     const updatedCourseMetadata: CourseMetadata = {
       ...courseMetadata,
-      [field]: value,
+      ...updatedFields,
     }
 
-    // Modify the baseSystemPrompt by adding or removing the snippet
+    // Modify the baseSystemPrompt based on updated fields
     let updatedPrompt = baseSystemPrompt
 
-    if (field === 'guidedLearning') {
-      if (value) {
-        // Append the Guided Learning snippet if not already present
+    if (updatedFields.guidedLearning !== undefined) {
+      if (updatedFields.guidedLearning) {
         if (!updatedPrompt.includes(GUIDED_LEARNING_PROMPT)) {
           updatedPrompt += GUIDED_LEARNING_PROMPT
         }
       } else {
-        // Remove the Guided Learning snippet
         updatedPrompt = updatedPrompt.replace(GUIDED_LEARNING_PROMPT, '')
       }
     }
 
-    if (field === 'documentsOnly') {
-      if (value) {
-        // Append the Document Focus snippet if not already present
+    if (updatedFields.documentsOnly !== undefined) {
+      if (updatedFields.documentsOnly) {
         if (!updatedPrompt.includes(DOCUMENT_FOCUS_PROMPT)) {
           updatedPrompt += DOCUMENT_FOCUS_PROMPT
         }
       } else {
-        // Remove the Document Focus snippet
         updatedPrompt = updatedPrompt.replace(DOCUMENT_FOCUS_PROMPT, '')
       }
     }
@@ -246,12 +241,6 @@ const CourseMain: NextPage = () => {
     if (!success) {
       // If saving failed, notify the user
       showToastOnPromptUpdate(theme, true)
-
-      // Revert the UI state to previous value
-      if (field === 'guidedLearning') setGuidedLearning(!value)
-      if (field === 'documentsOnly') setDocumentsOnly(!value)
-      if (field === 'systemPromptOnly') setSystemPromptOnly(!value)
-
       return
     }
 
@@ -263,11 +252,20 @@ const CourseMain: NextPage = () => {
     showToastOnPromptUpdate(theme)
   }
 
-  // Create a debounced version of handleCheckboxChange using useCallback to ensure it's not recreated on every render
-  const debouncedHandleCheckboxChange = useCallback(
-    debounce(handleCheckboxChange, 500),
+  // Debounced save function
+  const debouncedSave = useCallback(
+    debounce((fields: Partial<CourseMetadata>) => {
+      handleCheckboxChange(fields)
+    }, 500),
     [courseMetadata, course_name, baseSystemPrompt, theme]
   )
+
+  // Cleanup debounced function on unmount
+  useEffect(() => {
+    return () => {
+      debouncedSave.cancel()
+    }
+  }, [debouncedSave])
 
   const handleCopyDefaultPrompt = async () => {
     try {
@@ -756,7 +754,7 @@ const CourseMain: NextPage = () => {
                           checked={guidedLearning}
                           onChange={(value: boolean) => {
                             setGuidedLearning(value);
-                            debouncedHandleCheckboxChange('guidedLearning', value);
+                            debouncedSave({ guidedLearning: value });
                           }}
                         />
 
@@ -766,7 +764,7 @@ const CourseMain: NextPage = () => {
                           checked={documentsOnly}
                           onChange={(value: boolean) => {
                             setDocumentsOnly(value);
-                            debouncedHandleCheckboxChange('documentsOnly', value);
+                            debouncedSave({ documentsOnly: value });
                           }}
                         />
 
@@ -776,7 +774,7 @@ const CourseMain: NextPage = () => {
                           checked={systemPromptOnly}
                           onChange={(value: boolean) => {
                             setSystemPromptOnly(value);
-                            debouncedHandleCheckboxChange('systemPromptOnly', value);
+                            debouncedSave({ systemPromptOnly: value });
                           }}
                         />
 
