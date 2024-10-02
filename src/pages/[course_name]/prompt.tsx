@@ -637,12 +637,12 @@ const CourseMain: NextPage = () => {
                                 }}
                                 className={`relative text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
                                 onMouseEnter={(e) =>
-                                  (e.currentTarget.style.background =
-                                    'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%)')
+                                (e.currentTarget.style.background =
+                                  'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%)')
                                 }
                                 onMouseLeave={(e) =>
-                                  (e.currentTarget.style.background =
-                                    'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%)')
+                                (e.currentTarget.style.background =
+                                  'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%)')
                                 }
                               >
                                 <IconSparkles
@@ -794,7 +794,7 @@ const CourseMain: NextPage = () => {
                               onClick={handleCopyDefaultPrompt}
                               style={{ minWidth: 'fit-content' }}
                             >
-                              Copy UIUC.chat's Default internal prompt
+                              Copy UIUC.chat&apos;s Default internal prompt
                             </Button>
                             <Tooltip
                               label={
