@@ -19,7 +19,10 @@ import {
 } from '@/types/chat'
 import { NextResponse } from 'next/server'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
-import { ProviderNames, AnySupportedModel } from '~/utils/modelProviders/LLMProvider'
+import {
+  ProviderNames,
+  AnySupportedModel,
+} from '~/utils/modelProviders/LLMProvider'
 import { AzureModels } from '~/utils/modelProviders/azure'
 import { OpenAIModels } from '~/utils/modelProviders/types/openai'
 import OpenAI from 'openai'
@@ -214,8 +217,11 @@ export const buildPrompt = async ({
     try {
       remainingTokenBudget -= encoding.encode(finalSystemPrompt).length
     } catch (encodeError) {
-      console.error('Error during encoding of finalSystemPrompt:', encodeError);
-      console.log('String being encoded (finalSystemPrompt):', finalSystemPrompt);
+      console.error('Error during encoding of finalSystemPrompt:', encodeError)
+      console.log(
+        'String being encoded (finalSystemPrompt):',
+        finalSystemPrompt,
+      )
     }
 
     // --------- <USER PROMPT> ----------
@@ -226,8 +232,8 @@ export const buildPrompt = async ({
     try {
       remainingTokenBudget -= encoding.encode(userQuery).length
     } catch (encodeError) {
-      console.error('Error during encoding of userQuery:', encodeError);
-      console.log('String being encoded (userQuery):', userQuery);
+      console.error('Error during encoding of userQuery:', encodeError)
+      console.log('String being encoded (userQuery):', userQuery)
     }
 
     // P2: Latest 2 conversation messages (Reserved tokens)
@@ -240,7 +246,8 @@ export const buildPrompt = async ({
 
     // Get contexts
     const contexts =
-      (conversation.messages[conversation.messages.length - 1]?.contexts as ContextWithMetadata[]) || []
+      (conversation.messages[conversation.messages.length - 1]
+        ?.contexts as ContextWithMetadata[]) || []
 
     if (contexts && contexts.length > 0) {
       // Documents are present, maintain all existing processes as normal
@@ -255,38 +262,51 @@ export const buildPrompt = async ({
         try {
           remainingTokenBudget -= encoding.encode(queryContextMsg).length
         } catch (encodeError) {
-          console.error('Error during encoding of queryContextMsg:', encodeError);
-          console.log('String being encoded (queryContextMsg):', queryContextMsg);
+          console.error(
+            'Error during encoding of queryContextMsg:',
+            encodeError,
+          )
+          console.log(
+            'String being encoded (queryContextMsg):',
+            queryContextMsg,
+          )
         }
         userPrompt += queryContextMsg
       }
     }
 
     const latestUserMessage =
-      conversation.messages[conversation.messages.length - 1];
+      conversation.messages[conversation.messages.length - 1]
 
     // Move Tool Outputs to be added before the userQuery
     if (latestUserMessage?.tools) {
-      const toolsOutputResults = _buildToolsOutputResults({ conversation });
+      const toolsOutputResults = _buildToolsOutputResults({ conversation })
 
       // Add Tool Instructions and outputs
-      const toolInstructions = "\n<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool `tool name`...' or 'According to tool `tool name`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>";
+      const toolInstructions =
+        "\n<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool `tool name`...' or 'According to tool `tool name`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>"
 
-      userPrompt += toolInstructions;
+      userPrompt += toolInstructions
 
       // Ensure tool outputs are counted in the token budget
       try {
         remainingTokenBudget -= encoding.encode(toolsOutputResults).length
       } catch (encodeError) {
-        console.error('Error during encoding of toolsOutputResults:', encodeError);
-        console.log('String being encoded (toolsOutputResults):', toolsOutputResults);
+        console.error(
+          'Error during encoding of toolsOutputResults:',
+          encodeError,
+        )
+        console.log(
+          'String being encoded (toolsOutputResults):',
+          toolsOutputResults,
+        )
       }
 
-      userPrompt += toolsOutputResults;
+      userPrompt += toolsOutputResults
     }
 
     // Add the user's query
-    userPrompt += userQuery;
+    userPrompt += userQuery
 
     // P8: Conversation history
     const convoHistory = _buildConvoHistory({
@@ -300,13 +320,14 @@ export const buildPrompt = async ({
       conversation.messages.length - 1
     ]!.finalPromtEngineeredMessage = userPrompt
 
-    conversation.messages[conversation.messages.length - 1]!.latestSystemMessage =
-      finalSystemPrompt
+    conversation.messages[
+      conversation.messages.length - 1
+    ]!.latestSystemMessage = finalSystemPrompt
 
     return conversation
   } catch (error) {
-    console.error('Error in buildPrompt:', error);
-    throw error;
+    console.error('Error in buildPrompt:', error)
+    throw error
   } finally {
     encoding.free() // Clean up the encoding
   }
@@ -499,7 +520,8 @@ const _getSystemPrompt = async ({
 
   // Check if contexts are present
   const contexts =
-    (conversation.messages[conversation.messages.length - 1]?.contexts as ContextWithMetadata[]) || []
+    (conversation.messages[conversation.messages.length - 1]
+      ?.contexts as ContextWithMetadata[]) || []
 
   if (!contexts || contexts.length === 0) {
     // No documents retrieved, return only user-defined system prompt
@@ -551,15 +573,18 @@ export const getSystemPostPrompt = ({
   conversation: Conversation
   courseMetadata: CourseMetadata
 }): string => {
-  const { guidedLearning, systemPromptOnly, documentsOnly } = courseMetadata;
+  console.log('At the top of getSystemPostPrompt')
+  const { guidedLearning, systemPromptOnly, documentsOnly } = courseMetadata
+  console.log('At the top of getSystemPostPrompt')
+  console.log('Inputs:', { guidedLearning, systemPromptOnly, documentsOnly })
 
   // If systemPromptOnly is true, return an empty PostPrompt
   if (systemPromptOnly) {
-    return '';
+    return ''
   }
 
   // Initialize PostPrompt as an array of strings for easy manipulation
-  const PostPromptLines: string[] = [];
+  const PostPromptLines: string[] = []
 
   // The main system prompt
   PostPromptLines.push(
@@ -569,7 +594,7 @@ Your response should be semi-formal.
 When quoting directly, cite with footnotes linked to the document number and page number, if provided. 
 Summarize or paraphrase other relevant information with inline citations, again referencing the document number and page number, if provided.
 If the answer is not in the provided documents, state so.${
-      (guidedLearning || documentsOnly)
+      guidedLearning || documentsOnly
         ? ''
         : ' Yet always provide as helpful a response as possible to directly answer the question.'
     }
@@ -596,13 +621,15 @@ Relevant Sources:
 29. [pdf.www, page: 11](#)
 """
 ONLY return the documents with relevant information and cited in the response. If there are no relevant sources, don't include the "Relevant Sources" section in response.
-The user message will include excerpts from the high-quality documents, APIs/tools, and image descriptions to construct your answer. Each will be labeled with XML-style tags, like <Potentially Relevant Documents> and <Tool Outputs>. Make use of that information when writing your response.`
-  );
+The user message will include excerpts from the high-quality documents, APIs/tools, and image descriptions to construct your answer. Each will be labeled with XML-style tags, like <Potentially Relevant Documents> and <Tool Outputs>. Make use of that information when writing your response.`,
+  )
 
   // Combine the lines to form the PostPrompt
-  const PostPrompt = PostPromptLines.join('\n');
+  const PostPrompt = PostPromptLines.join('\n')
 
-  return PostPrompt;
+  console.log('PostPrompt:', PostPrompt)
+
+  return PostPrompt
 }
 
 export const getDefaultPostPrompt = (): string => {
@@ -621,7 +648,7 @@ export const getDefaultPostPrompt = (): string => {
     project_description: undefined,
     documentsOnly: false,
     guidedLearning: false,
-    systemPromptOnly: false
+    systemPromptOnly: false,
   }
 
   // Call getSystemPostPrompt with default values
