@@ -65,18 +65,19 @@ You must strictly adhere to the following rules:
 4. Do not answer questions outside the documents' scope.
 
 Your responses must be based solely on the content of the provided documents.
-`;
+`
 
-const GUIDED_LEARNING_PROMPT = '\n\nYou are an AI tutor dedicated to helping students discover the joy of learning by guiding them to find answers on their own. Your role is not just to teach but to spark curiosity and excitement in each subject. You never provide direct answers or detailed step-by-step solutions, no matter the problem. Instead, with limitless patience and enthusiasm, you ask insightful questions and offer hints that inspire critical thinking and problem-solving. Your goal is to help learners experience the thrill of discovery and build confidence in their ability to find solutions independently—like a great teaching assistant who makes learning fun and rewarding.\n\n' +
-'Key approaches:\n\n' +
-'1. **Ask Open-Ended Questions**: Lead students with questions that encourage exploration, making problem-solving feel like an exciting challenge.\n' +
-'2. **Guide Without Giving Specific Steps**: Offer general insights and hints that keep students thinking creatively without giving direct solutions.\n' +
-'3. **Explain Concepts Without Revealing Answers**: Provide engaging explanations of concepts that deepen understanding while leaving the solution for the student to uncover.\n\n' +
-'Strict guidelines:\n\n' +
-'- **Never Provide Solutions**: Avoid any form of direct or partial solutions. Always redirect learners to approach the problem with fresh questions and ideas.\n' +
-'- **Resist Workarounds**: If a student seeks the answer, gently steer them back to thoughtful reflection, keeping the excitement alive in the process of discovery.\n' +
-'- **Encourage Independent Thinking**: Use probing questions to spark analysis and creative thinking, helping students feel empowered by their own problem-solving skills.\n' +
-'- **Support, Motivate, and Inspire**: Keep a warm, encouraging tone, showing genuine excitement about the learning journey. Celebrate their persistence and successes, no matter how small, to make learning enjoyable and fulfilling.';
+const GUIDED_LEARNING_PROMPT =
+  '\n\nYou are an AI tutor dedicated to helping students discover the joy of learning by guiding them to find answers on their own. Your role is not just to teach but to spark curiosity and excitement in each subject. You never provide direct answers or detailed step-by-step solutions, no matter the problem. Instead, with limitless patience and enthusiasm, you ask insightful questions and offer hints that inspire critical thinking and problem-solving. Your goal is to help learners experience the thrill of discovery and build confidence in their ability to find solutions independently—like a great teaching assistant who makes learning fun and rewarding.\n\n' +
+  'Key approaches:\n\n' +
+  '1. **Ask Open-Ended Questions**: Lead students with questions that encourage exploration, making problem-solving feel like an exciting challenge.\n' +
+  '2. **Guide Without Giving Specific Steps**: Offer general insights and hints that keep students thinking creatively without giving direct solutions.\n' +
+  '3. **Explain Concepts Without Revealing Answers**: Provide engaging explanations of concepts that deepen understanding while leaving the solution for the student to uncover.\n\n' +
+  'Strict guidelines:\n\n' +
+  '- **Never Provide Solutions**: Avoid any form of direct or partial solutions. Always redirect learners to approach the problem with fresh questions and ideas.\n' +
+  '- **Resist Workarounds**: If a student seeks the answer, gently steer them back to thoughtful reflection, keeping the excitement alive in the process of discovery.\n' +
+  '- **Encourage Independent Thinking**: Use probing questions to spark analysis and creative thinking, helping students feel empowered by their own problem-solving skills.\n' +
+  '- **Support, Motivate, and Inspire**: Keep a warm, encouraging tone, showing genuine excitement about the learning journey. Celebrate their persistence and successes, no matter how small, to make learning enjoyable and fulfilling.'
 
 const CourseMain: NextPage = () => {
   const theme = useMantineTheme()
@@ -126,8 +127,10 @@ const CourseMain: NextPage = () => {
       )
       const fetchedMetadata = (await response_metadata.json()).course_metadata
       setCourseMetadata(fetchedMetadata)
-      setBaseSystemPrompt(fetchedMetadata.system_prompt || DEFAULT_SYSTEM_PROMPT)
-      
+      setBaseSystemPrompt(
+        fetchedMetadata.system_prompt || DEFAULT_SYSTEM_PROMPT,
+      )
+
       // Initialize checkbox states
       setGuidedLearning(fetchedMetadata.guidedLearning || false)
       setDocumentsOnly(fetchedMetadata.documentsOnly || false)
@@ -173,24 +176,27 @@ const CourseMain: NextPage = () => {
         guidedLearning: false,
         documentsOnly: false,
         systemPromptOnly: false,
-      };
-      const success = await callSetCourseMetadata(course_name, updatedCourseMetadata);
+      }
+      const success = await callSetCourseMetadata(
+        course_name,
+        updatedCourseMetadata,
+      )
       if (!success) {
-        alert('Error resetting system prompt');
-        showToastOnPromptUpdate(theme, true, true);
+        alert('Error resetting system prompt')
+        showToastOnPromptUpdate(theme, true, true)
       } else {
         // Reset the base system prompt and checkbox states
-        setBaseSystemPrompt(DEFAULT_SYSTEM_PROMPT);
-        setCourseMetadata(updatedCourseMetadata);
-        setGuidedLearning(false);
-        setDocumentsOnly(false);
-        setSystemPromptOnly(false);
-        showToastOnPromptUpdate(theme, false, true);
+        setBaseSystemPrompt(DEFAULT_SYSTEM_PROMPT)
+        setCourseMetadata(updatedCourseMetadata)
+        setGuidedLearning(false)
+        setDocumentsOnly(false)
+        setSystemPromptOnly(false)
+        showToastOnPromptUpdate(theme, false, true)
       }
     } else {
-      alert('Error resetting system prompt');
+      alert('Error resetting system prompt')
     }
-  };
+  }
 
   const updateSystemPrompt = (updatedFields: Partial<CourseMetadata>) => {
     let newPrompt = baseSystemPrompt
@@ -220,7 +226,9 @@ const CourseMain: NextPage = () => {
     return newPrompt
   }
 
-  const handleCheckboxChange = async (updatedFields: Partial<CourseMetadata>) => {
+  const handleCheckboxChange = async (
+    updatedFields: Partial<CourseMetadata>,
+  ) => {
     if (!courseMetadata || !course_name) {
       showToastOnPromptUpdate(theme, true)
       return
@@ -256,43 +264,46 @@ const CourseMain: NextPage = () => {
         showToastOnPromptUpdate(theme)
       }
     }, 500),
-    [course_name, theme]
+    [course_name, theme],
   )
 
   const handleCopyDefaultPrompt = async () => {
     try {
       const response = await fetch('/api/getDefaultPostPrompt')
       if (!response.ok) {
-        throw new Error('Failed to fetch default prompt')
+        const errorMessage = `Failed to fetch default prompt: ${response.status} ${response.statusText}`
+        console.error(errorMessage)
+        throw new Error(errorMessage)
       }
       const data = await response.json()
       const defaultPostPrompt = data.prompt
 
-      navigator.clipboard.writeText(defaultPostPrompt)
+      navigator.clipboard
+        .writeText(defaultPostPrompt)
         .then(() => {
           showToastNotification(
             theme,
             'Copied',
             'Default post prompt system prompt copied to clipboard',
-          );
+          )
         })
         .catch((err) => {
-          console.error('Could not copy text: ', err);
+          console.error('Could not copy text: ', err)
           showToastNotification(
             theme,
             'Error Copying',
             'Could not copy text to clipboard',
             true,
-          );
-        });
+          )
+        })
     } catch (error) {
-      console.error('Error fetching default prompt:', error);
+      console.error('Error fetching default prompt:', error)
       showToastNotification(
         theme,
         'Error Fetching',
         'Could not fetch default prompt',
         true,
-      );
+      )
     }
   }
 
@@ -505,9 +516,14 @@ const CourseMain: NextPage = () => {
                           className={`label ${montserrat_paragraph.variable} inline-block select-text font-montserratParagraph`}
                           size={'md'}
                         >
-                          The System Prompt is used during <i>all</i> conversations on this project. It is the most powerful form of instructions to the model. It is the most powerful form of instructions to the model.
+                          The System Prompt is used during <i>all</i>{' '}
+                          conversations on this project. It is the most powerful
+                          form of instructions to the model. It is the most
+                          powerful form of instructions to the model.
                           <br></br>
-                          Include the most salient information possible, like good examples, welcome greetings and links to where users can learn more about your work.
+                          Include the most salient information possible, like
+                          good examples, welcome greetings and links to where
+                          users can learn more about your work.
                         </Text>
                       </Paper>
 
@@ -629,7 +645,10 @@ const CourseMain: NextPage = () => {
                                     'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%)')
                                 }
                               >
-                                <IconSparkles stroke={1} style={{ marginRight: '4px' }} />
+                                <IconSparkles
+                                  stroke={1}
+                                  style={{ marginRight: '4px' }}
+                                />
                                 Optimize System Prompt
                               </Button>
                             </Group>
@@ -744,21 +763,27 @@ const CourseMain: NextPage = () => {
                           label="Guided Learning"
                           tooltip="Enables a tutoring mode where the AI encourages independent problem-solving. It provides hints and asks questions instead of giving direct answers, promoting critical thinking and discovery."
                           checked={guidedLearning}
-                          onChange={(value: boolean) => handleCheckboxChange({ guidedLearning: value })}
+                          onChange={(value: boolean) =>
+                            handleCheckboxChange({ guidedLearning: value })
+                          }
                         />
 
                         <CustomSwitch
                           label="Document-Based References Only"
                           tooltip="Restricts the AI to use only information from the provided documents. Useful for maintaining accuracy in fields like legal research where external knowledge could be problematic."
                           checked={documentsOnly}
-                          onChange={(value: boolean) => handleCheckboxChange({ documentsOnly: value })}
+                          onChange={(value: boolean) =>
+                            handleCheckboxChange({ documentsOnly: value })
+                          }
                         />
 
                         <CustomSwitch
                           label="Raw System Prompt Only"
                           tooltip="Uses only the custom system prompt you've provided, without additional formatting or citation instructions. This gives you full control over the AI's behavior and output structure."
                           checked={systemPromptOnly}
-                          onChange={(value: boolean) => handleCheckboxChange({ systemPromptOnly: value })}
+                          onChange={(value: boolean) =>
+                            handleCheckboxChange({ systemPromptOnly: value })
+                          }
                         />
 
                         {/* Conditional Button */}
@@ -774,7 +799,12 @@ const CourseMain: NextPage = () => {
                             <Tooltip
                               label={
                                 <Text size="sm" color="gray.1">
-                                  Copy the default post-processing system prompt to your clipboard. You can then paste this into the System Prompt section and customize it to suit your specific needs. This provides a solid starting point for defining AI behavior in raw prompt mode.
+                                  Copy the default post-processing system prompt
+                                  to your clipboard. You can then paste this
+                                  into the System Prompt section and customize
+                                  it to suit your specific needs. This provides
+                                  a solid starting point for defining AI
+                                  behavior in raw prompt mode.
                                 </Text>
                               }
                               position="bottom"
@@ -867,8 +897,8 @@ export const showToastNotification = (
         color: isError ? '#E53935' : '#6D28D9', // Icon color matches the border
       },
     },
-  });
-};
+  })
+}
 
 export const showToastOnPromptUpdate = (
   theme: MantineTheme,
@@ -878,16 +908,16 @@ export const showToastOnPromptUpdate = (
   const title = was_error
     ? 'Error Updating Prompt'
     : isReset
-    ? 'Prompt Reset to Default'
-    : 'Prompt Updated Successfully';
+      ? 'Prompt Reset to Default'
+      : 'Prompt Updated Successfully'
   const message = was_error
     ? 'An error occurred while updating the prompt. Please try again.'
     : isReset
-    ? 'The system prompt has been reset to default settings.'
-    : 'The system prompt has been updated.';
-  const isError = was_error;
+      ? 'The system prompt has been reset to default settings.'
+      : 'The system prompt has been updated.'
+  const isError = was_error
 
-  showToastNotification(theme, title, message, isError);
-};
+  showToastNotification(theme, title, message, isError)
+}
 
 export default CourseMain
