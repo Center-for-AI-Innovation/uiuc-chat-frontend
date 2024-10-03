@@ -171,7 +171,7 @@ const Navbar = ({
         <Indicator
           label="New"
           color="hsl(280,100%,70%)"
-          size={12}
+          size={13}
           styles={{ indicator: { top: '-4px !important' } }}
         >
           {' '}
