@@ -819,7 +819,7 @@ const CourseMain: NextPage = () => {
                               mt="sm"
                               direction="column"
                               gap="xs"
-                              className="mt-[-4px] pl-12"
+                              className="mt-[-4px] pl-[82px]"
                             >
                               <Flex align="center" gap="xs">
                                 <Button
@@ -856,9 +856,13 @@ const CourseMain: NextPage = () => {
                                     },
                                   })}
                                 >
-                                  <IconCopy size={18} className="mr-2" />
-                                  Copy UIUC.chat&apos;s internal prompt
+                                  <IconCopy size={18} className="" />
                                 </Button>
+                                <Text
+                                  className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                >
+                                  Copy UIUC.chat&apos;s internal prompt
+                                </Text>
                                 <Tooltip
                                   label={
                                     <Text size="sm" color="gray.1">
