@@ -37,6 +37,7 @@ export default function CanvasIngestForm() {
   const logoRef = useRef(null) // Create a ref for the logo
   const [showContentOptions, setShowContentOptions] = useState(false);
   const [isEnabled, setIsEnabled] = useState(false);
+  const [open, setOpen] = useState(false);
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value
     setUrl(input)
@@ -86,7 +87,7 @@ export default function CanvasIngestForm() {
   // }
   return (
     <motion.div layout>
-      <Dialog>
+      <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <Card className="max-w-[330px] bg-[#15162c] md:w-[330px] p-6 rounded-lg shadow-sm hover:bg-[#1c1c2e] cursor-pointer transition-colors duration-300">
             <div className="flex items-center justify-between mb-4">
@@ -136,7 +137,9 @@ export default function CanvasIngestForm() {
                 transition={{ duration: 0.3 }}
               >
 
-                <DialogContent className="sm:max-w-[425px] bg-[#15162c] text-white border-0">
+                <DialogContent className="sm:max-w-[425px] bg-[#15162c] text-white border-0"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <DialogHeader>
                     <DialogTitle className="text-xl font-bold">Ingest Canvas Course</DialogTitle>
                   </DialogHeader>
@@ -203,6 +206,6 @@ export default function CanvasIngestForm() {
       </Dialog>
 
 
-    </motion.div>
+    </motion.div >
   )
 }
