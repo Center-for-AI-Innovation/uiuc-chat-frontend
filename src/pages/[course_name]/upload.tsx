@@ -12,13 +12,11 @@ import {
 import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { CourseMetadata } from '~/types/courseMetadata'
-import APIKeyInputForm from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
-import IngestLinkForm from '~/components/UIUC-Components/IngestCards'
 import LargeDropzone from '~/components/UIUC-Components/LargeDropzone'
 import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 import Head from 'next/head'
-import { Card, Flex, Stack, Title } from '@mantine/core'
+import { Card, Flex, Title } from '@mantine/core'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 import CanvasIngestForm from '~/components/UIUC-Components/CanvasIngestForm'
@@ -149,7 +147,8 @@ const CourseMain: NextPage = () => {
                   align="center"
                   direction="row"
                   gap="md"
-                  style={{ width: '100%' }}
+                  style={{ width: '100%', paddingBottom: '2rem' }}
+                  wrap="wrap"
                 >
 
                   <CanvasIngestForm

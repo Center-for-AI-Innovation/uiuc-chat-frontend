@@ -48,21 +48,6 @@ export default function CanvasIngestForm() {
     return regex.test(input)
   }
 
-  // const validateUrl = (url: string) => {
-  //   const courseraRegex = /^https?:\/\/(www\.)?coursera\.org\/learn\/.+/
-  //   const mitRegex = /^https?:\/\/ocw\.mit\.edu\/.+/
-  //   const githubRegex = /^https?:\/\/(www\.)?github\.com\/.+/
-  //   const canvasRegex = /^https?:\/\/canvas\.illinois\.edu\/courses\/\d+/
-  //   const webScrapingRegex = /^(https?:\/\/)?.+/
-
-  //   return (
-  //     courseraRegex.test(url) ||
-  //     mitRegex.test(url) ||
-  //     githubRegex.test(url) ||
-  //     canvasRegex.test(url) ||
-  //     webScrapingRegex.test(url)
-  //   )
-  // }
   useEffect(() => {
     if (url && url.length > 0 && validateUrl(url)) {
       setIsUrlUpdated(true)
@@ -80,11 +65,8 @@ export default function CanvasIngestForm() {
 
   const handleIngest = () => {
     console.log('Ingesting:', url, 'with options:', selectedOptions)
-    // Implement actual ingest logic here
   }
-  // if (isLoading) {
-  //   return <Skeleton height={200} width={330} radius={'lg'} />
-  // }
+
   return (
     <motion.div layout>
       <Dialog open={open} onOpenChange={setOpen}>
@@ -104,7 +86,7 @@ export default function CanvasIngestForm() {
                   ref={logoRef} // Attach the ref to the logo
                   src="/media/canvas_logo.png"
                   alt="Canvas logo"
-                  style={{ width: '2rem', height: '2rem', marginRight: '0.5rem' }}
+                  style={{ width: '2rem', marginRight: '0.5rem' }}
                 />
                 Canvas
               </span>

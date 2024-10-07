@@ -120,21 +120,6 @@ export default function WebsiteIngestForm() {
       matchRegex: matchRegex,
     }
   }
-  // const validateUrl = (url: string) => {
-  //   const courseraRegex = /^https?:\/\/(www\.)?coursera\.org\/learn\/.+/
-  //   const mitRegex = /^https?:\/\/ocw\.mit\.edu\/.+/
-  //   const githubRegex = /^https?:\/\/(www\.)?github\.com\/.+/
-  //   const canvasRegex = /^https?:\/\/canvas\.illinois\.edu\/courses\/\d+/
-  //   const webScrapingRegex = /^(https?:\/\/)?.+/
-
-  //   return (
-  //     courseraRegex.test(url) ||
-  //     mitRegex.test(url) ||
-  //     githubRegex.test(url) ||
-  //     canvasRegex.test(url) ||
-  //     webScrapingRegex.test(url)
-  //   )
-  // }
   useEffect(() => {
     if (url && url.length > 0 && validateUrl(url)) {
       setIsUrlUpdated(true)
@@ -263,7 +248,7 @@ export default function WebsiteIngestForm() {
                 transition={{ duration: 0.3 }}
               >
 
-                <DialogContent className="sm:max-w-[25rem] bg-[#15162c] text-white border-0 max-w-fit"
+                <DialogContent className="sm:max-w-[30rem] bg-[#15162c] text-white border-0 max-w-fit"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <DialogHeader>
@@ -365,7 +350,7 @@ export default function WebsiteIngestForm() {
                         />
                       </div>
                       <form
-                        className="w-[80%] min-w-[20rem] lg:w-[75%]"
+                        className="s:w-[30%] min-w-[20rem] w-[90%]"
                         onSubmit={(event) => {
                           event.preventDefault()
                         }}
