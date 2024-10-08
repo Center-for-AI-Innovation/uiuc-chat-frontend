@@ -51,6 +51,7 @@ import { useChat } from 'ai/react'
 import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
 import { debounce } from 'lodash'
 import CustomSwitch from '~/components/Switches/CustomSwitch' // Import the CustomSwitch component
+import CustomCopyButton from '~/components/Buttons/CustomCopyButton' // Import the CustomCopyButton component
 
 const montserrat = Montserrat({
   weight: '700',
@@ -130,7 +131,7 @@ const CourseMain: NextPage = () => {
       const fetchedMetadata = (await response_metadata.json()).course_metadata
       setCourseMetadata(fetchedMetadata)
       setBaseSystemPrompt(
-        fetchedMetadata.system_prompt || DEFAULT_SYSTEM_PROMPT,
+        fetchedMetadata.system_prompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
       )
 
       // Initialize checkbox states
@@ -147,12 +148,12 @@ const CourseMain: NextPage = () => {
     setInput(baseSystemPrompt)
   }, [baseSystemPrompt, setInput])
 
-  const handleSystemPromptSubmit = async (newSystemPrompt: string) => {
+  const handleSystemPromptSubmit = async (newSystemPrompt: string | undefined) => {
     let success = false
-    if (courseMetadata && course_name && newSystemPrompt) {
+    if (courseMetadata && course_name) {
       const updatedCourseMetadata = {
         ...courseMetadata,
-        system_prompt: newSystemPrompt,
+        system_prompt: newSystemPrompt, // Keep as is, whether it's an empty string or undefined
         guidedLearning,
         documentsOnly,
         systemPromptOnly,
@@ -174,7 +175,7 @@ const CourseMain: NextPage = () => {
     if (courseMetadata && course_name) {
       const updatedCourseMetadata = {
         ...courseMetadata,
-        system_prompt: DEFAULT_SYSTEM_PROMPT,
+        system_prompt: null,  // Explicitly set to undefined
         guidedLearning: false,
         documentsOnly: false,
         systemPromptOnly: false,
@@ -187,8 +188,7 @@ const CourseMain: NextPage = () => {
         alert('Error resetting system prompt')
         showToastOnPromptUpdate(theme, true, true)
       } else {
-        // Reset the base system prompt and checkbox states
-        setBaseSystemPrompt(DEFAULT_SYSTEM_PROMPT)
+        setBaseSystemPrompt(DEFAULT_SYSTEM_PROMPT ?? '')
         setCourseMetadata(updatedCourseMetadata)
         setGuidedLearning(false)
         setDocumentsOnly(false)
@@ -383,31 +383,53 @@ const CourseMain: NextPage = () => {
     console.log('apikey set to', apiKey)
     e.preventDefault()
 
-    const systemPrompt = `You are an expert at optimizing system prompts for AI assistants to ensure they perform tasks consistently, accurately, and effectively. Your task is to rewrite the following system prompt to make it clear, precise, and actionable for the AI assistant. The optimized prompt should:
+    const systemPrompt = `Understand the Task: Grasp the main objective, goals, requirements, constraints, and expected output.
 
-      1. **Detailed Task Explanation**: Start with a clear description of the assistant's role, objectives, and desired outcomes.
+- Minimal Changes: If an existing prompt is provided, improve it only if it's simple. For complex prompts, enhance clarity and add missing elements without altering the original structure.
 
-      2. **Step-by-Step Guidance**: Provide sequential instructions with specific actions the assistant should take at each step.
+- Reasoning Before Conclusions: Encourage reasoning steps before any conclusions are reached. ATTENTION! If the user provides examples where the reasoning happens afterward, REVERSE the order! NEVER START EXAMPLES WITH CONCLUSIONS!
+  - Reasoning Order: Call out reasoning portions of the prompt and conclusion parts (specific fields by name). For each, determine the ORDER in which this is done, and whether it needs to be reversed.
+  - Conclusion, classifications, or results should ALWAYS appear last.
 
-      3. **Examples and Clarifications**: Include examples to illustrate key points and clarify any potential ambiguities.
+- Examples: Include high-quality examples if helpful, using placeholders [in brackets] for complex elements.
+  - What kinds of examples may need to be included, how many, and whether they are complex enough to benefit from placeholders.
 
-      4. **Professional Tailoring**: Ensure the final instructions are professionally tailored, clear, concise, and directly usable.
+- Clarity and Conciseness: Use clear, specific language. Avoid unnecessary instructions or bland statements.
 
-      **Additional Guidelines:**
+- Formatting: Use markdown features for readability. DO NOT USE \`\`\` CODE BLOCKS UNLESS SPECIFICALLY REQUESTED.
 
-      - **Clarity and Conciseness**: Use straightforward language to avoid confusion and keep instructions brief.
+- Preserve User Content: If the input task or prompt includes extensive guidelines or examples, preserve them entirely, or as closely as possible. If they are vague, consider breaking down into sub-steps. Keep any details, guidelines, examples, variables, or placeholders provided by the user.
 
-      - **Avoid Redundancy**: Eliminate unnecessary repetition to maintain focus on key instructions.
+- Constants: DO include constants in the prompt, as they are not susceptible to prompt injection. Such as guides, rubrics, and examples.
 
-      - **User-Centric Focus**: Emphasize understanding and fulfilling the user's needs and questions.
+- Output Format: Explicitly the most appropriate output format, in detail. This should include length and syntax (e.g. short sentence, paragraph, JSON, etc.)
+  - For tasks outputting well-defined or structured data (classification, JSON, etc.) bias toward outputting a JSON.
+  - JSON should never be wrapped in code blocks (\`\`\`) unless explicitly requested.
 
-      - **Positive and Professional Tone**: Encourage responses that are friendly, respectful, and professional.
+The final prompt you output should adhere to the following structure below. Do not include any additional commentary, only output the completed system prompt. SPECIFICALLY, do not include any additional messages at the start or end of the prompt. (e.g. no "---")
 
-      - **Flexibility**: Allow the assistant to adapt its responses based on the context and the user's intent.
+[Concise instruction describing the task - this should be the first line in the prompt, no section header]
 
-      **Note**: Avoid unnecessary verbosity or repetition that could obscure important instructions.
+[Additional details as needed.]
 
-      Please optimize the following system prompt accordingly:`
+[Optional sections with headings or bullet points for detailed steps.]
+
+# Steps [optional]
+
+[optional: a detailed breakdown of the steps necessary to accomplish the task]
+
+# Output Format
+
+[Specifically call out how the output should be formatted, be it response length, structure e.g. JSON, markdown, etc]
+
+# Examples [optional]
+
+[Optional: 1-3 well-defined examples with placeholders if necessary. Clearly mark where examples start and end, and what the input and output are. User placeholders as necessary.]
+[If the examples are shorter than what a realistic example is expected to be, make a reference with () explaining how real examples should be longer / shorter / different. AND USE PLACEHOLDERS! ]
+
+# Notes [optional]
+
+[optional: edge cases, details, and an area to call or repeat out specific important considerations]`
 
     setMessages([
       { role: 'system', content: systemPrompt },
@@ -821,91 +843,11 @@ const CourseMain: NextPage = () => {
                               gap="xs"
                               className="mt-[-4px] pl-[82px]"
                             >
-                              <Flex align="center" gap="xs">
-                                <Button
-                                  className={`
-                                  relative flex items-center 
-                                  justify-center bg-purple-800 
-                                  px-3 py-2
-                                  text-center text-white transition-colors
-                                  duration-200
-                                  hover:bg-purple-700 active:bg-purple-900 
-                                  ${montserrat_paragraph.variable} font-montserratParagraph
-                                `}
-                                  onClick={handleCopyDefaultPrompt}
-                                  styles={(theme) => ({
-                                    root: {
-                                      height: 'auto',
-                                      minHeight: 36,
-                                    },
-                                    inner: {
-                                      display: 'flex',
-                                      flexDirection: 'row',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      flexWrap: 'nowrap',
-                                      gap: '4px',
-                                    },
-                                    label: {
-                                      whiteSpace: 'nowrap',
-                                      overflow: 'hidden',
-                                      textOverflow: 'ellipsis',
-                                      '@media (max-width: 480px)': {
-                                        whiteSpace: 'normal',
-                                      },
-                                    },
-                                  })}
-                                >
-                                  <IconCopy size={18} className="" />
-                                </Button>
-                                <Text
-                                  className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                                >
-                                  Copy UIUC.chat&apos;s internal prompt
-                                </Text>
-                                <Tooltip
-                                  label={
-                                    <Text size="sm" color="gray.1">
-                                      You can use and customize our default
-                                      internal prompting to suit your needs.
-                                      Note, only the specific citation
-                                      formatting described will work with our
-                                      citation &apos;find and replace&apos;
-                                      system. This provides a solid starting
-                                      point for defining AI behavior in raw
-                                      prompt mode.
-                                    </Text>
-                                  }
-                                  position="right"
-                                  withArrow
-                                  multiline
-                                  width={220}
-                                  styles={{
-                                    tooltip: {
-                                      backgroundColor: '#1A1B1E',
-                                      color: theme.colors.gray[2],
-                                      borderRadius: '4px',
-                                      wordWrap: 'break-word',
-                                    },
-                                    arrow: {
-                                      backgroundColor: '#1A1B1E',
-                                    },
-                                  }}
-                                >
-                                  <span
-                                    aria-label="More information"
-                                    style={{ cursor: 'pointer' }}
-                                  >
-                                    <IconInfoCircle
-                                      size={16}
-                                      className={'text-gray-400'}
-                                      style={{
-                                        transition: 'all 0.2s ease-in-out',
-                                      }}
-                                    />
-                                  </span>
-                                </Tooltip>
-                              </Flex>
+                              <CustomCopyButton
+                                label="Copy UIUC.chat's internal prompt"
+                                tooltip="You can use and customize our default internal prompting to suit your needs. Note, only the specific citation formatting described will work with our citation 'find and replace' system. This provides a solid starting point for defining AI behavior in raw prompt mode."
+                                onClick={handleCopyDefaultPrompt}
+                              />
                             </Flex>
                           )}
 

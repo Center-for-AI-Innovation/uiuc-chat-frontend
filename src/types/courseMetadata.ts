@@ -11,7 +11,7 @@ export interface CourseMetadata {
   example_questions: string[] | undefined
   banner_image_s3: string | undefined
   course_intro_message: string | undefined
-  system_prompt: string | undefined
+  system_prompt: string | undefined | null
   openai_api_key: string | undefined // TODO: remove
   disabled_models: string[] | undefined // TODO: remove
   project_description: string | undefined
@@ -37,7 +37,7 @@ export interface CourseMetadataOptionalForUpsert {
   banner_image_s3: string | undefined
   course_intro_message: string | undefined
   openai_api_key: string | undefined
-  system_prompt: string | undefined
+  system_prompt: string | undefined | null
   disabled_models: string[] | undefined
   project_description: string | undefined
   documentsOnly: boolean | undefined

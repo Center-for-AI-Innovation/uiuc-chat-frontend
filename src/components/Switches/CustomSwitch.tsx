@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Switch, Tooltip, Text, Portal } from '@mantine/core'
+import { Switch, Tooltip, Text } from '@mantine/core'
 import { IconCheck, IconInfoCircle, IconX } from '@tabler/icons-react'
 import { montserrat_paragraph } from 'fonts'
 
@@ -46,11 +46,10 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
         size="lg"
         onLabel="ON"
         offLabel="OFF"
-        // color="violet"
         classNames={{
           root: 'flex items-center cursor-pointer',
-          track: `bg-gray-700 hover:bg-gray-600`,
-          thumb: 'bg-white',
+          track: `bg-gray-700 hover:bg-gray-600 cursor-pointer`, // Added 'cursor-pointer' here
+          thumb: 'bg-white cursor-pointer', // Ensure thumb also has 'cursor-pointer'
           label: `ml-2 ${montserrat_paragraph.variable} font-montserratParagraph text-md text-white cursor-pointer`,
         }}
         thumbIcon={
@@ -76,17 +75,8 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
           track: {
             backgroundColor: checked ? '#6a29a4 !important' : '#25262b',
             borderColor: checked ? '#6a29a4 !important' : '#25262b',
+            cursor: 'pointer', // Reinforced cursor here
           },
-          // track: {
-          //   backgroundColor: checked ? '#6a29a4' : '#25262b',
-          //   borderRadius: '9999px',
-          //   transition: 'all 0.3s ease',
-          //   cursor: 'pointer',
-          //   '&:hover': {
-          //     backgroundColor: checked ? '#6a29a4' : '#25262b',
-          //     boxShadow: '0 0 0 3px rgba(124, 58, 237, 0.3)',
-          //   },
-          // },
           thumb: {
             width: 22,
             height: 22,

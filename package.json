@@ -20,7 +20,7 @@
     "@aws-sdk/s3-request-presigner": "3.338.0",
     "@clerk/nextjs": "^5.6.0",
     "@clerk/themes": "^1.7.5",
-    "@dqbd/tiktoken": "^1.0.7",
+    "@dqbd/tiktoken": "^1.0.16",
     "@emotion/react": "^11.11.1",
     "@magicbell/magicbell-react": "^10.9.10",
     "@mantine/carousel": "^6.0.10",

@@ -31,10 +31,8 @@ import { v4 as uuidv4 } from 'uuid'
 import { AzureModelID } from './modelProviders/azure'
 import { AnthropicModelID } from './modelProviders/types/anthropic'
 import { NCSAHostedModelID } from './modelProviders/NCSAHosted'
+import { NextApiRequest, NextApiResponse } from 'next'
 
-export const config = {
-  runtime: 'edge',
-}
 export const maxDuration = 60
 
 /**
@@ -568,15 +566,14 @@ export function constructChatBody(
 export async function handleStreamingResponse(
   apiResponse: Response,
   conversation: Conversation,
-  req: NextRequest,
+  req: NextApiRequest,
+  res: NextApiResponse,
   course_name: string,
-): Promise<NextResponse> {
+): Promise<void> {
   if (!apiResponse.body) {
     console.error('API response body is null')
-    return new NextResponse(
-      JSON.stringify({ error: 'API response body is null' }),
-      { status: 500 },
-    )
+    res.status(500).json({ error: 'API response body is null' })
+    return
   }
 
   const lastMessage = conversation.messages[
@@ -586,70 +583,58 @@ export async function handleStreamingResponse(
   const citationLinkCache = new Map<number, string>()
   let fullAssistantResponse = ''
 
-  const transformer = new TransformStream({
-    async transform(chunk, controller) {
-      const textDecoder = new TextDecoder()
-      let decodedChunk = textDecoder.decode(chunk, { stream: true })
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Cache-Control', 'no-cache')
+  res.setHeader('Connection', 'keep-alive')
+  res.flushHeaders()
 
-      try {
-        decodedChunk = await processChunkWithStateMachine(
-          decodedChunk,
-          lastMessage,
-          stateMachineContext,
-          citationLinkCache,
-        )
-        fullAssistantResponse += decodedChunk
-      } catch (error) {
-        console.error('Error processing chunk with state machine:', error)
-        controller.error(error)
-        return
-      }
+  try {
+    const decoder = new TextDecoder()
+    const reader = apiResponse.body.getReader()
 
-      const textEncoder = new TextEncoder()
-      const encodedChunk = textEncoder.encode(decodedChunk)
-      controller.enqueue(encodedChunk)
+    while (true) {
+      const { done, value } = await reader.read()
 
-      if (chunk.done) {
-        controller.terminate()
-      }
-    },
-    flush(controller) {
-      const textEncoder = new TextEncoder()
-      if (stateMachineContext.buffer.length > 0) {
-        processChunkWithStateMachine(
-          '',
-          lastMessage,
-          stateMachineContext,
-          citationLinkCache,
-        )
-          .then((finalChunk) => {
-            controller.enqueue(textEncoder.encode(finalChunk))
-            controller.terminate()
-          })
-          .catch((error) => {
-            console.error(
-              'Error processing final chunk with state machine:',
-              error,
-            )
-            controller.error(error)
-          })
-      } else {
-        controller.terminate()
-      }
-      // Append the processed response to the conversation
-      conversation.messages.push({
-        id: uuidv4(),
-        role: 'assistant',
-        content: fullAssistantResponse,
-      })
+      if (done) break
 
-      // Log the conversation to the database
-      updateConversationInDatabase(conversation, course_name, req)
-    },
-  })
+      let decodedChunk = decoder.decode(value, { stream: true })
+      decodedChunk = await processChunkWithStateMachine(
+        decodedChunk,
+        lastMessage,
+        stateMachineContext,
+        citationLinkCache,
+      )
+      fullAssistantResponse += decodedChunk
+      res.write(decodedChunk)
+    }
 
-  const transformedStream = apiResponse.body.pipeThrough(transformer)
-  return new NextResponse(transformedStream)
+    // Handle any remaining buffer
+    if (stateMachineContext.buffer.length > 0) {
+      const finalChunk = await processChunkWithStateMachine(
+        '',
+        lastMessage,
+        stateMachineContext,
+        citationLinkCache,
+      )
+      fullAssistantResponse += finalChunk
+      res.write(finalChunk)
+    }
+
+    // Append the processed response to the conversation
+    conversation.messages.push({
+      id: uuidv4(),
+      role: 'assistant',
+      content: fullAssistantResponse,
+    })
+
+    // Log the conversation to the database
+    await updateConversationInDatabase(conversation, course_name, req)
+  } catch (error) {
+    console.error('Error processing streaming response:', error)
+    res.status(500).json({ error: 'Error processing streaming response' })
+  } finally {
+    res.end()
+  }
 }
 
 /**
@@ -663,7 +648,7 @@ export async function handleStreamingResponse(
 async function processResponseData(
   data: string,
   conversation: Conversation,
-  req: NextRequest,
+  req: NextApiRequest,
   course_name: string,
 ): Promise<string> {
   const lastMessage = conversation.messages[
@@ -689,29 +674,28 @@ async function processResponseData(
 
 /**
  * Handles the non-streaming response from the chat handler.
- * @param {NextResponse} apiResponse - The response from the chat handler.
+ * @param {Response} apiResponse - The response from the chat handler.
  * @param {Conversation} conversation - The conversation object for logging purposes.
- * @param {NextRequest} req - The incoming Next.js API request object.
+ * @param {NextApiRequest} req - The incoming Next.js API request object.
+ * @param {NextApiResponse} res - The Next.js API response object.
  * @param {string} course_name - The name of the course associated with the conversation.
- * @returns {Promise<NextResponse>} A NextResponse object representing the JSON response.
+ * @returns {Promise<void>} A promise that resolves when the response is sent.
  */
 export async function handleNonStreamingResponse(
   apiResponse: Response,
   conversation: Conversation,
-  req: NextRequest,
+  req: NextApiRequest,
+  res: NextApiResponse,
   course_name: string,
-): Promise<NextResponse> {
+): Promise<void> {
   if (!apiResponse.body) {
     console.error('API response body is null')
-    return new NextResponse(
-      JSON.stringify({ error: 'API response body is null' }),
-      { status: 500 },
-    )
+    res.status(500).json({ error: 'API response body is null' })
+    return
   }
 
   try {
     const json = await apiResponse.json()
-    // console.log('apiResponse:', json)
     const response = json.choices[0].message.content || ''
     const processedResponse = await processResponseData(
       response,
@@ -721,18 +705,11 @@ export async function handleNonStreamingResponse(
     )
     const contexts =
       conversation.messages[conversation.messages.length - 1]?.contexts
-    return new NextResponse(
-      JSON.stringify({ message: processedResponse, contexts: contexts }),
-      {
-        status: 200,
-      },
-    )
+    res.status(200).json({ message: processedResponse, contexts: contexts })
+    return
   } catch (error) {
     console.error('Error handling non-streaming response:', error)
-    return new NextResponse(
-      JSON.stringify({ error: 'Failed to process response' }),
-      { status: 500 },
-    )
+    res.status(500).json({ error: 'Failed to process response' })
   }
 }
 
@@ -745,7 +722,7 @@ export async function handleNonStreamingResponse(
 export async function updateConversationInDatabase(
   conversation: Conversation,
   course_name: string,
-  req: NextRequest,
+  req: NextApiRequest,
 ) {
   // Log conversation to Supabase
   try {
@@ -771,7 +748,7 @@ export async function updateConversationInDatabase(
   }
 
   posthog.capture('stream_api_conversation_updated', {
-    distinct_id: req.headers.get('x-forwarded-for') || req.ip,
+    distinct_id: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
     conversation_id: conversation.id,
     user_id: conversation.userEmail,
   })

@@ -1,4 +1,4 @@
-// src/pages/api/chat-api/stream.ts
+// src/pages/api/chat-api/chat.ts
 
 import { ChatBody, Content, Conversation, Message } from '~/types/chat'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
@@ -6,7 +6,7 @@ import { validateApiKeyAndRetrieveData } from './keys/validate'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import posthog from 'posthog-js'
 import { User } from '@clerk/nextjs/server'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextApiRequest, NextApiResponse } from 'next'
 import { CourseMetadata } from '~/types/courseMetadata'
 import {
   attachContextsToLastMessage,
@@ -38,49 +38,47 @@ import {
 } from '~/utils/modelProviders/LLMProvider'
 import { fetchEnabledDocGroups } from '~/utils/dbUtils'
 
-export const runtime = 'edge'
-
 export const maxDuration = 60
 /**
  * The chat API endpoint for handling chat requests and streaming/non streaming responses.
  * This function orchestrates the validation of the request, user permissions,
  * fetching of necessary data, and the construction and handling of the chat response.
  *
- * @param {NextRequest} req - The incoming Next.js API request object.
- * @returns {Promise<NextResponse>} A promise that resolves to the Next.js API response object.
+ * @param {NextApiRequest} req - The incoming Next.js API request object.
+ * @param {NextApiResponse} res - The Next.js API response object.
+ * @returns {Promise<void>} A promise that resolves when the response is sent.
  */
-export default async function chat(req: NextRequest): Promise<NextResponse> {
+export default async function chat(
+  req: NextApiRequest,
+  res: NextApiResponse
+): Promise<void> {
   // Validate the HTTP method
   if (req.method !== 'POST') {
     console.error('Invalid request method:', req.method)
     posthog.capture('stream_api_invalid_method', {
-      distinct_id: req.headers.get('x-forwarded-for') || req.ip,
+      distinct_id: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
       method: req.method,
     })
-    return new NextResponse(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-    })
+    res.status(405).json({ error: 'Method not allowed' })
+    return
   }
 
   // Parse and validate the request body
-  const body = await req.json()
+  const body = req.body
   try {
-    // Validate the request body
     await validateRequestBody(body)
   } catch (error: any) {
     // Log the error and capture it with PostHog
     console.error('Invalid request body:', body, 'Error:', error.message)
     posthog.capture('Invalid Request Body', {
-      distinct_id: req.headers.get('x-forwarded-for') || req.ip,
+      distinct_id: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
       body: body,
       error: error.message,
     })
 
     // Return a response with the error message
-    return new NextResponse(
-      JSON.stringify({ error: `Invalid request body: ${error.message}` }),
-      { status: 400 },
-    )
+    res.status(400).json({ error: `Invalid request body: ${error.message}` })
+    return
   }
 
   // Destructure the necessary properties from the request body
@@ -117,28 +115,25 @@ export default async function chat(req: NextRequest): Promise<NextResponse> {
 
   if (!isValidApiKey) {
     posthog.capture('stream_api_invalid_api_key', {
-      distinct_id: req.headers.get('x-forwarded-for') || req.ip,
+      distinct_id: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
       api_key: api_key,
       user_id: email,
     })
-    return new NextResponse(JSON.stringify({ error: 'Invalid API key' }), {
-      status: 403,
-    })
+    res.status(403).json({ error: 'Invalid API key' })
+    return
   }
 
   // Retrieve course metadata
   const courseMetadata: CourseMetadata = await fetchCourseMetadata(course_name)
   if (!courseMetadata) {
-    return NextResponse.json(
-      { error: 'Course metadata not found' },
-      { status: 404 },
-    )
+    res.status(404).json({ error: 'Course metadata not found' })
+    return
   }
 
   // Fetch the final key to use
   const key = await fetchKeyToUse(openai_key, courseMetadata)
 
-  // // Determine and validate the model to use
+  // Determine and validate the model to use
   let selectedModel: GenericSupportedModel
   let llmProviders: AllLLMProviders
   try {
@@ -147,10 +142,8 @@ export default async function chat(req: NextRequest): Promise<NextResponse> {
     selectedModel = activeModel
     llmProviders = modelsWithProviders
   } catch (error) {
-    return NextResponse.json(
-      { error: (error as Error).message },
-      { status: 400 },
-    )
+    res.status(400).json({ error: (error as Error).message })
+    return
   }
 
   // Check user permissions
@@ -166,23 +159,19 @@ export default async function chat(req: NextRequest): Promise<NextResponse> {
 
   if (permission !== 'edit') {
     posthog.capture('stream_api_permission_denied', {
-      distinct_id: req.headers.get('x-forwarded-for') || req.ip,
+      distinct_id: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
       permission: permission,
       user_id: email,
     })
-    return NextResponse.json(
-      { error: 'You do not have permission to perform this action' },
-      { status: 403 },
-    )
+    res.status(403).json({ error: 'You do not have permission to perform this action' })
+    return
   }
 
   // Ensure there are messages in the conversation
   if (messages.length === 0) {
     console.error('No messages in conversation')
-    return NextResponse.json(
-      { error: 'No messages in conversation' },
-      { status: 400 },
-    )
+    res.status(400).json({ error: 'No messages in conversation' })
+    return
   }
 
   // Get the last message in the conversation
@@ -203,10 +192,8 @@ export default async function chat(req: NextRequest): Promise<NextResponse> {
     } catch (error) {
       console.error('Error fetching tools.', error)
       availableTools = []
-      return NextResponse.json(
-        { error: `Error fetching tools. ${error}` },
-        { status: 500 },
-      )
+      res.status(500).json({ error: `Error fetching tools. ${(error as Error).message}` })
+      return
     }
   }
 
@@ -217,10 +204,8 @@ export default async function chat(req: NextRequest): Promise<NextResponse> {
     doc_groups = enabledDocGroups.map((group) => group.name)
   } catch (error) {
     console.error('Error fetching document groups:', error)
-    return NextResponse.json(
-      { error: 'Error fetching document groups' },
-      { status: 500 },
-    )
+    res.status(500).json({ error: 'Error fetching document groups' })
+    return
   }
 
   const controller = new AbortController()
@@ -280,6 +265,7 @@ export default async function chat(req: NextRequest): Promise<NextResponse> {
   }
 
   // Fetch Contexts
+  console.log('Before context search:', { courseName: course_name, searchQuery, documentGroups: doc_groups })
   const contexts = await handleContextSearch(
     lastMessage,
     course_name,
@@ -287,20 +273,22 @@ export default async function chat(req: NextRequest): Promise<NextResponse> {
     searchQuery,
     doc_groups,
   )
+  console.log('After context search:', { contextsLength: contexts.length })
 
-  // Do we need this?
   // Check if contexts were found
   if (contexts.length === 0) {
     console.error('No contexts found')
     posthog.capture('stream_api_no_contexts_found', {
-      distinct_id: req.headers.get('x-forwarded-for') || req.ip,
+      distinct_id: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
       user_id: email,
     })
-    return NextResponse.json({ error: 'No contexts found' }, { status: 500 })
+    res.status(500).json({ error: 'No contexts found' })
+    return
   }
 
   if (retrieval_only) {
-    return NextResponse.json({ contexts: contexts }, { status: 200 })
+    res.status(200).json({ contexts: contexts })
+    return
   }
 
   // Attach contexts to the last message
@@ -312,9 +300,9 @@ export default async function chat(req: NextRequest): Promise<NextResponse> {
   if (availableTools.length > 0) {
     updatedConversation = await handleToolsServer(
       lastMessage,
-      availableTools, // You need to define availableTools somewhere in your code
-      imageUrls, // You need to define imageUrls somewhere in your code
-      imgDesc, // You need to define imageDescription somewhere in your code
+      availableTools,
+      imageUrls,
+      imgDesc,
       conversation,
       key,
       course_name,
@@ -344,45 +332,44 @@ export default async function chat(req: NextRequest): Promise<NextResponse> {
 
   // Make the API request to the chat handler
   const baseUrl = getBaseUrl()
-  // console.log('baseUrl:', baseUrl);
   const apiResponse = await routeModelRequest(chatBody, controller, baseUrl)
 
   // Handle errors from the chat handler API
   if (!apiResponse.ok) {
     console.error('API error:', apiResponse.statusText)
     posthog.capture('stream_api_error', {
-      distinct_id: req.headers.get('x-forwarded-for') || req.ip,
+      distinct_id: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
       error: apiResponse.statusText,
       status: apiResponse.status,
       user_id: email,
     })
-    return new NextResponse(
-      JSON.stringify({ error: `API error: ${apiResponse.statusText}` }),
-      { status: apiResponse.status },
-    )
+    res.status(apiResponse.status).json({ error: `API error: ${apiResponse.statusText}` })
+    return
   }
 
   // Stream the response or return it as a single message
   if (stream) {
     posthog.capture('stream_api_streaming_started', {
-      distinct_id: req.headers.get('x-forwarded-for') || req.ip,
+      distinct_id: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
       user_id: email,
     })
-    return await handleStreamingResponse(
+    await handleStreamingResponse(
       apiResponse,
       conversation,
       req,
+      res,
       course_name,
     )
   } else {
     posthog.capture('stream_api_response_sent', {
-      distinct_id: req.headers.get('x-forwarded-for') || req.ip,
+      distinct_id: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
       user_id: email,
     })
-    return await handleNonStreamingResponse(
+    await handleNonStreamingResponse(
       apiResponse,
       conversation,
       req,
+      res,
       course_name,
     )
   }

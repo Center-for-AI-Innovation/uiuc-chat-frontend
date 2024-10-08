@@ -1,8 +1,7 @@
 // src/pages/api/chat.ts
 import { CourseMetadata } from '~/types/courseMetadata'
 import { getCourseMetadata } from '~/pages/api/UIUC-api/getCourseMetadata'
-import tiktokenModel from '@dqbd/tiktoken/encoders/cl100k_base.json'
-import { Tiktoken, init } from '@dqbd/tiktoken/lite/init'
+import { initializeEncoding, encoding, Tiktoken } from '@/utils/encoding'
 import { OpenAIError, OpenAIStream } from '@/utils/server'
 import {
   ChatBody,
@@ -14,16 +13,22 @@ import {
   OpenAIChatMessage,
   UIUCTool,
 } from '@/types/chat'
-import { NextResponse } from 'next/server'
+import { NextApiRequest, NextApiResponse } from 'next'
 import { AnySupportedModel } from '~/utils/modelProviders/LLMProvider'
+import { DEFAULT_SYSTEM_PROMPT } from '@/utils/app/const'
+import { log } from 'next-axiom'
 
-export const config = {
-  runtime: 'edge',
-}
 export const maxDuration = 60
 
-const handler = async (req: Request): Promise<NextResponse> => {
+export const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
+    // Ensure encoding is initialized before usage
+    await initializeEncoding();
+
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method Not Allowed' });
+    }
+
     const {
       conversation,
       key,
@@ -31,73 +36,73 @@ const handler = async (req: Request): Promise<NextResponse> => {
       courseMetadata,
       stream,
       llmProviders,
-    } = (await req.json()) as ChatBody
+    } = req.body as ChatBody;
 
     if (!conversation) {
       console.error(
         'No conversation provided. It seems the `messages` array was empty.',
-      )
-      return new NextResponse(
-        JSON.stringify({
-          error:
-            'No conversation provided. It seems the `messages` array was empty.',
-        }),
-        { status: 400 },
-      )
+      );
+      return res.status(400).json({
+        error:
+          'No conversation provided. It seems the `messages` array was empty.',
+      });
     }
 
-    // const messagesToSend = [latestMessage, ...convoHistory] // BUG: REPLACE (not append to) latest user message. RN we have dupliacates.
-    // Strip internal messages to send to OpenAI
-    // console.log('Messages to send before refactor:', conversation.messages)
     const messagesToSend = convertConversationToOpenAIMessages(
       conversation.messages,
-    )
-    // console.log('Messages to send: ', messagesToSend)
+    );
 
-    console.log(
-      'System prompt: ',
-      conversation.messages[conversation.messages.length - 1]!
-        .latestSystemMessage,
-    )
+    // Get the latest system message
+    const latestSystemMessage = conversation.messages[conversation.messages.length - 1]?.latestSystemMessage;
+
+    if (!latestSystemMessage) {
+      console.error('No system message found in the conversation.');
+      return res.status(400).json({
+        error: 'No system message found in the conversation.',
+      });
+    }
 
     const apiStream = await OpenAIStream(
       conversation.model,
-      conversation.messages[conversation.messages.length - 1]!
-        .latestSystemMessage!,
+      latestSystemMessage,
       conversation.temperature,
       llmProviders!,
       // openAIKey,
       // @ts-ignore -- I think the types are fine.
       messagesToSend, //old: conversation.messages
       stream,
-    )
+    );
+
     if (stream) {
-      return new NextResponse(apiStream)
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache, no-transform',
+        Connection: 'keep-alive',
+      });
+
+      for await (const chunk of apiStream) {
+        res.write(chunk);
+      }
+
+      res.end();
     } else {
-      return new NextResponse(JSON.stringify(apiStream))
+      return new Response(JSON.stringify(apiStream))
     }
   } catch (error) {
     if (error instanceof OpenAIError) {
-      const { name, message } = error
-      console.error('OpenAI Completion Error', message)
-      const resp = NextResponse.json(
-        {
-          statusCode: 400,
-          name: name,
-          message: message,
-        },
-        { status: 400 },
-      )
-      console.log('Final OpenAIError resp: ', resp)
-      return resp
+      const { name, message } = error;
+      console.error('OpenAI Completion Error', message);
+      res.status(400).json({
+        statusCode: 400,
+        name: name,
+        message: message,
+      });
     } else {
-      console.error('Unexpected Error', error)
-      const resp = NextResponse.json({ name: 'Error' }, { status: 500 })
-      console.log('Final Error resp: ', resp)
-      return resp
+      console.error('Unexpected Error', error);
+      res.status(500).json({ name: 'Error', message: 'An unexpected error occurred' });
     }
   }
-}
+};
 
 const convertConversationToOpenAIMessages = (
   messages: Message[],
@@ -133,7 +138,6 @@ const convertConversationToOpenAIMessages = (
               text: strippedMessage.finalPromtEngineeredMessage,
             },
           ]
-          // Add system prompt to message with role system
         } else if (strippedMessage.role === 'system') {
           strippedMessage.content = [
             {
@@ -166,189 +170,170 @@ export const buildPrompt = async ({
   projectName,
   courseMetadata,
 }: {
-  conversation: Conversation
-  projectName: string
-  courseMetadata: CourseMetadata | undefined
+  conversation: Conversation;
+  projectName: string;
+  courseMetadata: CourseMetadata | undefined;
 }): Promise<Conversation> => {
   /*
   System prompt -- defined by user. If documents are provided, add the citations instructions to it.
 
-  Priorities for building prompt w/ limited window: 
-  1. ✅ most recent user text input & images/img-description (depending on model support for images)
-  1.5. ❌ Last 1 or 2 convo history. At least the user message and the AI response. Key for follow-up questions.
-  2. ✅ image description
-  3. ✅ tool result
+  Priorities for building prompt w/ limited window:
+  1. ✅ Most recent user text input & images/img-description (depending on model support for images)
+  1.5. ❌ Last 1 or 2 conversation history. At least the user message and the AI response. Key for follow-up questions.
+  2. ✅ Image description
+  3. ✅ Tool result
   4. ✅ query_topContext (if documents are retrieved)
-  5. image_topContext
-  6. tool_topContext
-  7. ✅ conversation history
+  5. Image_topContext
+  6. Tool_topContext
+  7. ✅ Conversation history
   */
-  let remainingTokenBudget = conversation.model.tokenLimit - 1500 // save space for images, OpenAI's handling, etc.
-
-  const wasm = await import('@dqbd/tiktoken/lite/tiktoken_bg.wasm')
-  await init((imports) => WebAssembly.instantiate(wasm.default, imports))
-
-  await init((imports) => WebAssembly.instantiate(wasm, imports))
-  const encoding = new Tiktoken(
-    tiktokenModel.bpe_ranks,
-    tiktokenModel.special_tokens,
-    tiktokenModel.pat_str,
-  )
+  let remainingTokenBudget = conversation.model.tokenLimit - 1500; // Save space for images, OpenAI's handling, etc.
 
   try {
-    // Do these things in parallel -- await at the end
-    const allPromises = []
-    allPromises.push(_getLastUserTextInput({ conversation }))
-    allPromises.push(_getLastToolResult({ conversation }))
-    allPromises.push(_getSystemPrompt({ courseMetadata, conversation }))
-    const [lastUserTextInput, lastToolResult, finalSystemPrompt] =
-      (await Promise.all(allPromises)) as [string, UIUCTool[], string]
+    // Ensure 'encoding' is initialized
+    await initializeEncoding();
 
-    console.log('LATEST USER Text Input: ', lastUserTextInput)
+    // Execute asynchronous operations in parallel and await their results
+    const allPromises = [];
+    allPromises.push(_getLastUserTextInput({ conversation }));
+    allPromises.push(_getLastToolResult({ conversation }));
+    allPromises.push(_getSystemPrompt({ courseMetadata, conversation }));
+    const [lastUserTextInput, lastToolResult, systemPrompt] =
+      (await Promise.all(allPromises)) as [string, UIUCTool[], string | undefined];
 
-    // Adjust remaining token budget
-    try {
-      remainingTokenBudget -= encoding.encode(finalSystemPrompt).length
-    } catch (encodeError) {
-      console.error('Error during encoding of finalSystemPrompt:', encodeError)
-      console.log(
-        'String being encoded (finalSystemPrompt):',
-        finalSystemPrompt,
-      )
+    const finalSystemPrompt = systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? '';
+
+    // Adjust remaining token budget based on the system prompt length
+    if (encoding) {
+      const tokenCount = encoding.encode(finalSystemPrompt).length;
+      remainingTokenBudget -= tokenCount;
     }
 
     // --------- <USER PROMPT> ----------
-    let userPrompt = ''
+    // Initialize an array to collect sections of the user prompt
+    const userPromptSections: string[] = [];
 
     // P1: Most recent user text input
-    const userQuery = `\nFinally, please respond to the user's query to the best of your ability:\n<User Query>\n${lastUserTextInput}\n</User Query>`
-    try {
-      remainingTokenBudget -= encoding.encode(userQuery).length
-    } catch (encodeError) {
-      console.error('Error during encoding of userQuery:', encodeError)
-      console.log('String being encoded (userQuery):', userQuery)
+    const userQuery = `\n<User Query>\n${lastUserTextInput}\n</User Query>`;
+    if (encoding) {
+      remainingTokenBudget -= encoding.encode(userQuery).length;
     }
 
     // P2: Latest 2 conversation messages (Reserved tokens)
     const tokensInLastTwoMessages = _getRecentConvoTokens({
       conversation,
-      encoding,
-    })
-    console.log('Tokens in last two messages: ', tokensInLastTwoMessages)
-    remainingTokenBudget -= tokensInLastTwoMessages
+    });
+    console.log('Tokens in last two messages: ', tokensInLastTwoMessages);
+    remainingTokenBudget -= tokensInLastTwoMessages;
 
-    // Get contexts
+    // Get contexts from the last message
     const contexts =
       (conversation.messages[conversation.messages.length - 1]
-        ?.contexts as ContextWithMetadata[]) || []
+        ?.contexts as ContextWithMetadata[]) || [];
 
     if (contexts && contexts.length > 0) {
-      // Documents are present, maintain all existing processes as normal
+      // Documents are present; maintain all existing processes as normal
       // P5: query_topContext
+
+      // Check if encoding is initialized
+      if (!encoding) {
+        console.error('Encoding is not initialized.');
+        throw new Error('Encoding initialization failed.');
+      }
+
       const query_topContext = _buildQueryTopContext({
         conversation: conversation,
         encoding: encoding,
-        tokenLimit: remainingTokenBudget - tokensInLastTwoMessages, // Keep room for convo history
-      })
+        tokenLimit: remainingTokenBudget - tokensInLastTwoMessages, // Keep room for conversation history
+      });
+
       if (query_topContext) {
-        const queryContextMsg = `\nHere's high quality passages from the user's documents. Use these, and cite them carefully in the format previously described, to construct your answer:\n<Potentially Relevant Documents>\n${query_topContext}\n</Potentially Relevant Documents>\n`
-        try {
-          remainingTokenBudget -= encoding.encode(queryContextMsg).length
-        } catch (encodeError) {
-          console.error(
-            'Error during encoding of queryContextMsg:',
-            encodeError,
-          )
-          console.log(
-            'String being encoded (queryContextMsg):',
-            queryContextMsg,
-          )
-        }
-        userPrompt += queryContextMsg
+        const queryContextMsg = `
+        <RetrievedDocumentsInstructions>
+        The following are passages retrieved via RAG from a large dataset. They may be relevant but aren't guaranteed to be. Evaluate critically, use what's pertinent, disregard irrelevant info. Cite used passages carefully in the format previously described.
+        </RetrievedDocumentsInstructions>
+        
+        <PotentiallyRelevantDocuments>
+        ${query_topContext}
+        </PotentiallyRelevantDocuments>`;
+        // Adjust remaining token budget
+        remainingTokenBudget -= encoding.encode(queryContextMsg).length;
+        // Add to user prompt sections
+        userPromptSections.push(queryContextMsg);
       }
     }
 
     const latestUserMessage =
-      conversation.messages[conversation.messages.length - 1]
+      conversation.messages[conversation.messages.length - 1];
 
     // Move Tool Outputs to be added before the userQuery
     if (latestUserMessage?.tools) {
-      const toolsOutputResults = _buildToolsOutputResults({ conversation })
+      const toolsOutputResults = _buildToolsOutputResults({ conversation });
 
       // Add Tool Instructions and outputs
       const toolInstructions =
-        "\n<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool `tool name`...' or 'According to tool `tool name`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>"
+        "<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool `tool name`...' or 'According to tool `tool name`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>";
 
-      userPrompt += toolInstructions
+      // Add to user prompt sections
+      userPromptSections.push(toolInstructions);
 
-      // Ensure tool outputs are counted in the token budget
-      try {
-        remainingTokenBudget -= encoding.encode(toolsOutputResults).length
-      } catch (encodeError) {
-        console.error(
-          'Error during encoding of toolsOutputResults:',
-          encodeError,
-        )
-        console.log(
-          'String being encoded (toolsOutputResults):',
-          toolsOutputResults,
-        )
+      // Adjust remaining token budget for tool outputs
+      if (encoding) {
+        remainingTokenBudget -= encoding.encode(toolsOutputResults).length;
       }
 
-      userPrompt += toolsOutputResults
+      // Add tool outputs to user prompt sections
+      userPromptSections.push(toolsOutputResults);
     }
 
-    // Add the user's query
-    userPrompt += userQuery
+    // Add the user's query to the prompt sections
+    userPromptSections.push(userQuery);
 
-    // P8: Conversation history
-    const convoHistory = _buildConvoHistory({
-      conversation,
-      encoding,
-      tokenLimit: remainingTokenBudget,
-    })
+    // Assemble the user prompt by joining sections with double line breaks
+    const userPrompt = userPromptSections.join('\n\n');
 
-    // Set final system and user prompts
+    // Set final system and user prompts in the conversation
     conversation.messages[
       conversation.messages.length - 1
-    ]!.finalPromtEngineeredMessage = userPrompt
+    ]!.finalPromtEngineeredMessage = userPrompt;
 
     conversation.messages[
       conversation.messages.length - 1
-    ]!.latestSystemMessage = finalSystemPrompt
+    ]!.latestSystemMessage = finalSystemPrompt;
 
-    return conversation
+    return conversation;
   } catch (error) {
-    console.error('Error in buildPrompt:', error)
-    throw error
-  } finally {
-    encoding.free() // Clean up the encoding
+    console.error('Error in buildPrompt:', error);
+    throw error;
   }
-}
+};
+
 
 const _getRecentConvoTokens = ({
   conversation,
-  encoding,
 }: {
-  conversation: Conversation
-  encoding: Tiktoken
+  conversation: Conversation;
 }): number => {
-  // TODO: This is not counting the last 2/4 messages properly. I think it only counts assistant messages, not user. Not sure.
+  if (!encoding) {
+    throw new Error('Encoding is not initialized.');
+  }
 
+  // Your existing logic using 'encoding'
   return conversation.messages.slice(-4).reduce((acc, message) => {
-    let content: string
+    let content: string;
     if (typeof message.content === 'string') {
-      content = message.content
-      console.log('Message content: ', content)
+      content = message.content;
     } else {
-      content = ''
+      content = '';
     }
 
-    console.log('Encoding content: ', content, encoding.encode(content).length)
-    const tokens = encoding.encode(content).length
-    return acc + tokens
-  }, 0)
-}
+    if (!encoding) {
+      throw new Error("Encoding is null");
+    }
+    const tokens = encoding.encode(content).length;
+    return acc + tokens;
+  }, 0);
+};
 
 const _buildToolsOutputResults = ({
   conversation,
@@ -495,37 +480,36 @@ const _getSystemPrompt = async ({
   courseMetadata: CourseMetadata | undefined
   conversation: Conversation
 }): Promise<string> => {
-  let userDefinedSystemPrompt
-  if (courseMetadata) {
-    userDefinedSystemPrompt =
-      courseMetadata.system_prompt ||
-      (process.env.DEFAULT_SYSTEM_PROMPT as string)
+  let userDefinedSystemPrompt: string | undefined | null
+  if (courseMetadata?.system_prompt) {
+    userDefinedSystemPrompt = courseMetadata.system_prompt
   } else {
-    userDefinedSystemPrompt = await getCourseMetadata(conversation.name).then(
-      (courseMetadata) => {
-        return (
-          courseMetadata?.system_prompt ||
-          (process.env.DEFAULT_SYSTEM_PROMPT as string)
-        )
-      },
-    )
+    userDefinedSystemPrompt = await getCourseMetadata(conversation.name)
+      .then(metadata => metadata?.system_prompt)
+      .catch(error => {
+        console.warn('Failed to fetch course metadata:', error)
+        return undefined
+      })
   }
 
+  // If userDefinedSystemPrompt is null or undefined, use DEFAULT_SYSTEM_PROMPT
+  const systemPrompt = userDefinedSystemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
+
   // Check if contexts are present
-  const contexts =
-    (conversation.messages[conversation.messages.length - 1]
-      ?.contexts as ContextWithMetadata[]) || []
+  const contexts = conversation.messages[conversation.messages.length - 1]?.contexts as ContextWithMetadata[] || []
 
   if (!contexts || contexts.length === 0) {
-    // No documents retrieved, return only user-defined system prompt
-    return userDefinedSystemPrompt
+    // No documents retrieved, return only system prompt
+    return systemPrompt.trim()
   } else {
-    // Documents are present, include system post prompt
-    return (
-      userDefinedSystemPrompt +
-      '\n\n' +
-      getSystemPostPrompt({ conversation, courseMetadata: courseMetadata! })
-    )
+    // Documents are present, combine system prompt with system post prompt
+    const systemPostPrompt = getSystemPostPrompt({ 
+      conversation, 
+      courseMetadata: courseMetadata ?? {} as CourseMetadata 
+    })
+    return [systemPrompt, systemPostPrompt]
+      .filter(prompt => prompt?.trim())
+      .join('\n\n')
   }
 }
 
