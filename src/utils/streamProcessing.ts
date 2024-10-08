@@ -719,10 +719,14 @@ export async function handleNonStreamingResponse(
       req,
       course_name,
     )
-
-    return new NextResponse(JSON.stringify({ message: processedResponse }), {
-      status: 200,
-    })
+    const contexts =
+      conversation.messages[conversation.messages.length - 1]?.contexts
+    return new NextResponse(
+      JSON.stringify({ message: processedResponse, contexts: contexts }),
+      {
+        status: 200,
+      },
+    )
   } catch (error) {
     console.error('Error handling non-streaming response:', error)
     return new NextResponse(

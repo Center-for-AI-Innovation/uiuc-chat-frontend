@@ -92,6 +92,7 @@ export default async function chat(req: NextRequest): Promise<NextResponse> {
     course_name,
     stream,
     api_key,
+    retrieval_only,
   }: {
     model: string
     messages: Message[]
@@ -100,6 +101,7 @@ export default async function chat(req: NextRequest): Promise<NextResponse> {
     course_name: string
     stream: boolean
     api_key: string
+    retrieval_only: boolean
   } = body
 
   // Validate the API key and retrieve user data
@@ -188,22 +190,24 @@ export default async function chat(req: NextRequest): Promise<NextResponse> {
 
   // Fetch tools
   let availableTools
-  try {
-    availableTools = await fetchTools(
-      course_name!,
-      '',
-      20,
-      'true',
-      false,
-      getBaseUrl(),
-    )
-  } catch (error) {
-    console.error('Error fetching tools.', error)
-    availableTools = []
-    return NextResponse.json(
-      { error: `Error fetching tools. ${error}` },
-      { status: 500 },
-    )
+  if (!retrieval_only) {
+    try {
+      availableTools = await fetchTools(
+        course_name!,
+        '',
+        20,
+        'true',
+        false,
+        getBaseUrl(),
+      )
+    } catch (error) {
+      console.error('Error fetching tools.', error)
+      availableTools = []
+      return NextResponse.json(
+        { error: `Error fetching tools. ${error}` },
+        { status: 500 },
+      )
+    }
   }
 
   // Fetch document groups
@@ -254,7 +258,7 @@ export default async function chat(req: NextRequest): Promise<NextResponse> {
     (content) => content.image_url?.url as string,
   )
 
-  if (imageContent.length > 0) {
+  if (imageContent.length > 0 && !retrieval_only) {
     // convert the provided key into an OpenAI provider.
     const llmProviders = {
       [ProviderNames.OpenAI]: {
@@ -293,6 +297,10 @@ export default async function chat(req: NextRequest): Promise<NextResponse> {
       user_id: email,
     })
     return NextResponse.json({ error: 'No contexts found' }, { status: 500 })
+  }
+
+  if (retrieval_only) {
+    return NextResponse.json({ contexts: contexts }, { status: 200 })
   }
 
   // Attach contexts to the last message
