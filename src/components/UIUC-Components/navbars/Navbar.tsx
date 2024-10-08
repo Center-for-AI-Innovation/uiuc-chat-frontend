@@ -152,6 +152,7 @@ const Navbar = ({
     //       Chat
     //     </span>
     //   ),
+    // hi there
     //   icon: <MessageChatIcon />,
     //   link: `/${getCurrentCourseName()}/chat`,
     // },

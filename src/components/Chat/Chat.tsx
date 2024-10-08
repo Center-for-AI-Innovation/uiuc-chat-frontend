@@ -611,15 +611,35 @@ export const Chat = memo(
             homeDispatch({ field: 'messageIsStreaming', value: false })
             console.error(
               'Error calling the LLM:',
-              final_response.name,
-              final_response.message,
+              final_response,
+              final_response,
             )
-            errorToast({
-              title: final_response.name,
-              message:
-                final_response.message ||
-                'There was an unexpected error calling the LLM. Try using a different model (via the Settings button in the header).',
-            })
+            if (final_response.error) {
+              let errorObj
+              if (typeof final_response.error === 'string') {
+                try {
+                  errorObj = JSON.parse(final_response.error)
+                } catch (e) {
+                  errorObj = { error: final_response.error }
+                }
+              } else {
+                errorObj = final_response.error
+              }
+
+              const errorDetails = errorObj.error || errorObj
+              errorToast({
+                title: errorDetails.type || 'Error',
+                message: errorDetails.message || 'An unexpected error occurred',
+              })
+              return
+            } else {
+              errorToast({
+                title: final_response.name,
+                message:
+                  final_response.message ||
+                  'There was an unexpected error calling the LLM. Try using a different model (via the Settings button in the header).',
+              })
+            }
             return
           }
 

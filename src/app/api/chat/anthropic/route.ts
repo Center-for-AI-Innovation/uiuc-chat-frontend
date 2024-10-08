@@ -1,42 +1,80 @@
-import { CoreMessage, streamText } from 'ai'
-import { ChatBody, Conversation } from '~/types/chat'
+import { type CoreMessage, streamText } from 'ai'
+import { type ChatBody, type Conversation } from '~/types/chat'
 import { createAnthropic } from '@ai-sdk/anthropic'
-
+import {
+  AnthropicModels,
+  type AnthropicModel,
+} from '~/utils/modelProviders/types/anthropic'
+import { ProviderNames } from '~/utils/modelProviders/LLMProvider'
+import { decryptKeyIfNeeded } from '~/utils/crypto'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
+import { NextResponse } from 'next/server'
+
 export async function POST(req: Request) {
-  const {
-    chatBody,
-  }: {
-    chatBody: ChatBody
-  } = await req.json()
+  try {
+    const {
+      chatBody,
+    }: {
+      chatBody: ChatBody
+    } = await req.json()
 
-  console.log('chatBody: ', chatBody)
+    console.log('chatBody: ', chatBody)
 
-  const conversation = chatBody.conversation!
+    const conversation = chatBody.conversation
+    if (!conversation) {
+      throw new Error('Conversation is missing from the chat body')
+    }
 
-  console.log('conversation', conversation)
+    const apiKey = chatBody.llmProviders?.Anthropic?.apiKey
+    if (!apiKey) {
+      throw new Error('Anthropic API key is missing')
+    }
 
-  const anthropic = createAnthropic({
-    apiKey: chatBody.llmProviders?.Anthropic?.apiKey,
-  })
+    const anthropic = createAnthropic({
+      apiKey: await decryptKeyIfNeeded(apiKey),
+    })
 
-  if (conversation.messages.length === 0) {
-    throw new Error('Conversation messages array is empty')
+    if (conversation.messages.length === 0) {
+      throw new Error('Conversation messages array is empty')
+    }
+
+    const model = anthropic(conversation.model.id)
+
+    const result = await streamText({
+      model: model,
+      messages: convertConversationToVercelAISDKv3(conversation),
+      temperature: conversation.temperature,
+      maxTokens: 4096,
+    })
+    return result.toTextStreamResponse()
+  } catch (error) {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'data' in error &&
+      error.data &&
+      typeof error.data === 'object' &&
+      'error' in error.data
+    ) {
+      console.error('error.data.error', error.data.error)
+      return new Response(JSON.stringify({ error: error.data.error }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    } else {
+      return new Response(
+        JSON.stringify({
+          error: 'An error occurred while processing the chat request',
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      )
+    }
   }
-
-  console.log('model', conversation.model.id)
-
-  const model = anthropic(conversation.model.id)
-
-  const result = await streamText({
-    model: model,
-    messages: convertConversationToVercelAISDKv3(conversation),
-    temperature: conversation.temperature,
-    maxTokens: 4096,
-  })
-  return result.toTextStreamResponse()
 }
 
 function convertConversationToVercelAISDKv3(
@@ -79,13 +117,6 @@ function convertConversationToVercelAISDKv3(
 
   return coreMessages
 }
-
-import { NextResponse } from 'next/server'
-import {
-  AnthropicModels,
-  AnthropicModel,
-} from '~/utils/modelProviders/types/anthropic'
-import { ProviderNames } from '~/utils/modelProviders/LLMProvider'
 
 export async function GET(req: Request) {
   const apiKey = process.env.ANTHROPIC_API_KEY

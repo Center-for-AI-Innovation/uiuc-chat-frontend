@@ -906,13 +906,32 @@ export const routeModelRequest = async (
     const url = baseUrl
       ? `${baseUrl}/api/chat/anthropic`
       : '/api/chat/anthropic'
-    response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ chatBody }),
-    })
+
+    try {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ chatBody }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(JSON.stringify(errorData) || 'Unknown error occurred')
+      }
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          error:
+            error instanceof Error ? error.message : 'Unknown error occurred',
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      )
+    }
   } else if (
     Object.values(OpenAIModelID).includes(
       selectedConversation.model.id as any,
