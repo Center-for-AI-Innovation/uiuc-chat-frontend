@@ -157,7 +157,6 @@ const CourseMain: NextPage = () => {
 
                   <WebsiteIngestForm
                   />
-                  <UploadNotification />
                 </Flex>
                 {/* </Flex> */}
               </div>

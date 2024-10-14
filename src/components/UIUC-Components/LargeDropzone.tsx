@@ -28,13 +28,9 @@ import { useMediaQuery } from '@mantine/hooks'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { notifications } from '@mantine/notifications'
 import { v4 as uuidv4 } from 'uuid'
-import UploadNotification from './UploadNotification'
+import UploadNotification, { FileUpload } from './UploadNotification'
 
-interface FileUpload {
-  name: string,
-  progress: number,
-  status: "uploading" | "complete" | "error",
-}
+
 const useStyles = createStyles((theme) => ({
   wrapper: {
     position: 'relative',

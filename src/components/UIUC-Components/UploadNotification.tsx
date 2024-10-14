@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Card, Text, Button, Progress, MantineProvider } from '@mantine/core'
 import { IconCheck, IconChevronDown, IconChevronUp, IconX } from '@tabler/icons-react'
 
-interface FileUpload {
+export interface FileUpload {
   name: string
   progress: number
   status: 'uploading' | 'complete' | 'error'
@@ -51,11 +51,11 @@ function UploadNotificationContent({ files, onClose, onCancel }: UploadNotificat
       shadow="sm"
       padding="sm"
       radius="md"
-      withBorder
-      className="fixed bottom-4 right-4 w-80 bg-white z-50"
+      // withBorder
+      className="fixed bottom-4 right-4 w-96 bg-[#292c5b] z-50"
     >
       <div className="flex items-center justify-between">
-        <Text size="sm" weight={500}>
+        <Text size="md" weight={500} c='white'>
           {allComplete
             ? `${currentFiles.length} upload${currentFiles.length > 1 ? 's' : ''} complete`
             : `Uploading ${currentFiles.length} item${currentFiles.length > 1 ? 's' : ''}`
@@ -67,7 +67,7 @@ function UploadNotificationContent({ files, onClose, onCancel }: UploadNotificat
             color="gray"
             compact
             onClick={toggleMinimize}
-            className="p-0"
+            className="p-0 hover:bg-[#3b3d6b]"
           >
             {isMinimized ? <IconChevronUp size={18} /> : <IconChevronDown size={18} />}
           </Button>
@@ -76,7 +76,7 @@ function UploadNotificationContent({ files, onClose, onCancel }: UploadNotificat
             color="gray"
             compact
             onClick={onClose}
-            className="p-0 ml-2"
+            className="p-0 ml-2 hover:bg-[#3b3d6b]"
           >
             <IconX size={18} />
           </Button>
@@ -88,7 +88,7 @@ function UploadNotificationContent({ files, onClose, onCancel }: UploadNotificat
             <div key={index} className="flex items-center">
               {getFileIcon(file.name.split('.').pop() || '')}
               <div className="ml-2 flex-grow">
-                <Text size="xs" className="truncate">{file.name}</Text>
+                <Text size="sm" className="truncate" c='white'>{file.name}</Text>
                 {file.status === 'uploading' && (
                   <Progress value={file.progress} size="xs" className="mt-1" />
                 )}
