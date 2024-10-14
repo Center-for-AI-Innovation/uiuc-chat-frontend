@@ -523,7 +523,7 @@ export function LargeDropzone({
             textAlign: 'center',
           }}
         >
-          <SupportedFileUploadTypes />
+          {/* <SupportedFileUploadTypes /> */}
         </div>
         {/* END RIGHT COLUMN */}
       </div>

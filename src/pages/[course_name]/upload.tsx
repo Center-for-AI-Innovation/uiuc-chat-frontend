@@ -16,12 +16,15 @@ import LargeDropzone from '~/components/UIUC-Components/LargeDropzone'
 import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 import Head from 'next/head'
-import { Card, Flex, Title } from '@mantine/core'
+import { Card, Flex, SimpleGrid, Title } from '@mantine/core'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 import CanvasIngestForm from '~/components/UIUC-Components/CanvasIngestForm'
 import WebsiteIngestForm from '~/components/UIUC-Components/WebsiteIngestForm'
+import GitHubIngestForm from '~/components/UIUC-Components/GitHubIngestForm'
 import UploadNotification from '~/components/UIUC-Components/UploadNotification'
+import MITIngestForm from '~/components/UIUC-Components/MITIngestForm'
+import CourseraIngestForm from '~/components/UIUC-Components/CourseraIngestForm'
 
 const CourseMain: NextPage = () => {
   const router = useRouter()
@@ -143,22 +146,25 @@ const CourseMain: NextPage = () => {
                 />
 
 
-                <Flex
-                  justify="center"
-                  align="center"
-                  direction="row"
-                  gap="md"
-                  style={{ width: '100%', paddingBottom: '2rem' }}
-                  wrap="wrap"
+                <SimpleGrid
+                  cols={3}
+                  spacing="lg"
+                  breakpoints={[
+                    { maxWidth: 1192, cols: 2, spacing: 'md' },
+                    { maxWidth: 768, cols: 1, spacing: 'sm' },
+                  ]}
+                  style={{ padding: '2rem 2rem 3rem 3rem' }}
                 >
+                  <CanvasIngestForm />
 
-                  <CanvasIngestForm
-                  />
+                  <WebsiteIngestForm />
 
-                  <WebsiteIngestForm
-                  />
-                </Flex>
-                {/* </Flex> */}
+                  <GitHubIngestForm />
+
+                  <MITIngestForm />
+
+                  <CourseraIngestForm />
+                </SimpleGrid>
               </div>
 
             </Card>
