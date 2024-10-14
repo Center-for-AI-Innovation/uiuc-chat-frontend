@@ -28,7 +28,13 @@ import { useMediaQuery } from '@mantine/hooks'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { notifications } from '@mantine/notifications'
 import { v4 as uuidv4 } from 'uuid'
+import UploadNotification from './UploadNotification'
 
+interface FileUpload {
+  name: string,
+  progress: number,
+  status: "uploading" | "complete" | "error",
+}
 const useStyles = createStyles((theme) => ({
   wrapper: {
     position: 'relative',
@@ -114,7 +120,7 @@ function IngestProgressBar({ courseName }: { courseName: string }) {
         setHasDocuments(data.documents.length > 0)
         setProgress(
           ((newTotalDocuments - data.documents.length) / newTotalDocuments) *
-            100,
+          100,
         )
       } else {
         setHasDocuments(false)
@@ -182,6 +188,7 @@ export function LargeDropzone({
   const openRef = useRef<() => void>(null)
   const [files, setFiles] = useState<File[]>([])
   const queryClient = useQueryClient()
+  const [fileUploads, setFileUploads] = useState<FileUpload[]>([])
 
   const refreshOrRedirect = async (redirect_to_gpt_4: boolean) => {
     if (is_new_course) {
@@ -255,6 +262,14 @@ export function LargeDropzone({
     setUploadInProgress(true)
     setUploadComplete(false)
 
+    // Initialize file upload status
+    const initialFileUploads = files.map((file) => ({
+      name: file.name,
+      progress: 0,
+      status: "uploading" as "uploading",
+    }))
+    setFileUploads(initialFileUploads)
+
     if (is_new_course) {
       await callSetCourseMetadata(
         courseName,
@@ -284,6 +299,8 @@ export function LargeDropzone({
         try {
           await uploadToS3(file, uniqueFileName)
           setSuccessfulUploads((prev) => prev + 1) // Increment successful uploads
+          setFileUploads((prev) => prev.map((upload, i) =>
+            i === index ? { ...upload, progress: 100, status: "complete" } : upload))
 
           const response = await fetch(`/api/UIUC-api/ingest`, {
             method: 'POST',
@@ -301,6 +318,11 @@ export function LargeDropzone({
           return { ok: true, s3_path: file.name }
         } catch (error) {
           console.error('Error during file upload or ingest:', error)
+          setFileUploads((prev) =>
+            prev.map((upload, i) =>
+              i === index ? { ...upload, status: 'error' } : upload
+            )
+          )
           return { ok: false, s3_path: file.name }
         }
       }),
@@ -509,6 +531,17 @@ export function LargeDropzone({
         </div>
         {/* END RIGHT COLUMN */}
       </div>
+      <UploadNotification
+        files={fileUploads}
+        onClose={() => setFileUploads([])}
+        onCancel={() => {
+          // Handle cancel logic
+          // setUploadInProgress(false)
+          // setFileUploads((prev) =>
+          //   prev.map((upload) => ({ ...upload, status: 'error' }))
+          // )
+        }}
+      />
     </>
   )
 }
@@ -565,9 +598,8 @@ const showIngestInProgressToast = (num_success_files: number) => {
     // onClose: () => console.log('unmounted'),
     // onOpen: () => console.log('mounted'),
     autoClose: 30000,
-    title: `Ingest in progress for ${num_success_files} file${
-      num_success_files > 1 ? 's' : ''
-    }.`,
+    title: `Ingest in progress for ${num_success_files} file${num_success_files > 1 ? 's' : ''
+      }.`,
     message: `This is a background task. Refresh the page to see your files as they're processed.`,
     color: 'green',
     radius: 'lg',

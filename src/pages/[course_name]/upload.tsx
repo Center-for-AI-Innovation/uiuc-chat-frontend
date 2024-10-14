@@ -21,6 +21,7 @@ import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 import CanvasIngestForm from '~/components/UIUC-Components/CanvasIngestForm'
 import WebsiteIngestForm from '~/components/UIUC-Components/WebsiteIngestForm'
+import UploadNotification from '~/components/UIUC-Components/UploadNotification'
 
 const CourseMain: NextPage = () => {
   const router = useRouter()
@@ -156,6 +157,7 @@ const CourseMain: NextPage = () => {
 
                   <WebsiteIngestForm
                   />
+                  <UploadNotification />
                 </Flex>
                 {/* </Flex> */}
               </div>
