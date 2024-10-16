@@ -862,9 +862,6 @@ export const routeModelRequest = async (
     )
   ) {
     // NCSA Hosted LLMs
-    const newChatBody = chatBody!.llmProviders!
-      .NCSAHostedVLLM as NCSAHostedVLLMProvider
-
     const url = `/api/chat/vllm`
     response = await fetch(url, {
       method: 'POST',

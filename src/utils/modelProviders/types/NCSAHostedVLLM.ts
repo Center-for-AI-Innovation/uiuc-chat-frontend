@@ -9,6 +9,7 @@ export interface NCSAHostedVLLMModel {
 
 export enum NCSAHostedVLLMModelID {
   Llama_3_2_11B_Vision_Instruct = 'meta-llama/Llama-3.2-11B-Vision-Instruct',
+  MOLMO_7B_D_0924 = 'allenai/Molmo-7B-D-0924',
 }
 
 export const NCSAHostedVLLMModels: Record<
@@ -19,6 +20,13 @@ export const NCSAHostedVLLMModels: Record<
     id: NCSAHostedVLLMModelID.Llama_3_2_11B_Vision_Instruct,
     name: 'Llama 3.2 11B Vision Instruct',
     tokenLimit: 128000,
+    enabled: true,
+  },
+  // allenai/Molmo-7B-D-0924
+  [NCSAHostedVLLMModelID.MOLMO_7B_D_0924]: {
+    id: NCSAHostedVLLMModelID.MOLMO_7B_D_0924,
+    name: 'Molmo 7B D 0924',
+    tokenLimit: 4096,
     enabled: true,
   },
 }

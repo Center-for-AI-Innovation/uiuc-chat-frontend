@@ -60,6 +60,7 @@ export const VisionCapableModels: Set<
 
   // VLLM
   NCSAHostedVLLMModelID.Llama_3_2_11B_Vision_Instruct,
+  NCSAHostedVLLMModelID.MOLMO_7B_D_0924,
 ])
 
 export const AllSupportedModels: Set<AnySupportedModel> = new Set([

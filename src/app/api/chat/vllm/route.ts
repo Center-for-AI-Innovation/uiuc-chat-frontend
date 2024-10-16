@@ -1,7 +1,7 @@
 import { convertToCoreMessages, generateText, streamText } from 'ai'
 import { NextResponse } from 'next/server'
 import { createOpenAI } from '@ai-sdk/openai'
-import { convertConversatonToLlamaVisionNoSystemMessage } from '~/utils/apiUtils'
+import { convertConversationToCoreMessagesWithoutSystem } from '~/utils/apiUtils'
 
 export async function POST(req: Request) {
   try {
@@ -16,20 +16,21 @@ export async function POST(req: Request) {
     })
 
     const messages =
-      convertConversatonToLlamaVisionNoSystemMessage(conversation)
+      convertConversationToCoreMessagesWithoutSystem(conversation)
     // const messages = convertToCoreMessages(conversation)
     console.log('⭐️ messages', JSON.stringify(messages, null, 2))
 
     if (stream) {
       const result = await streamText({
-        model: openai('meta-llama/Llama-3.2-11B-Vision-Instruct'),
+        model: openai(conversation.model.id),
         temperature: conversation.temperature,
         messages,
       })
       return result.toTextStreamResponse()
     } else {
       const result = await generateText({
-        model: openai('meta-llama/Llama-3.2-11B-Vision-Instruct'),
+        model: openai(conversation.model.id),
+        temperature: conversation.temperature,
         messages,
       })
       return NextResponse.json({ text: result.text })

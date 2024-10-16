@@ -5,7 +5,7 @@ import {
 } from '~/types/courseMetadata'
 import { log } from 'next-axiom'
 import { v4 as uuidv4 } from 'uuid'
-import { Conversation } from '~/types/chat'
+import { Conversation, Message } from '~/types/chat'
 import { CoreMessage } from 'ai'
 
 // Configuration for runtime environment
@@ -221,66 +221,20 @@ export function convertConversatonToVercelAISDKv3(
   return coreMessages
 }
 
-export function convertConversatonToLlamaVisionNoSystemMessage(
+export function convertConversationToCoreMessagesWithoutSystem(
   conversation: Conversation,
 ): CoreMessage[] {
-  const coreMessages: CoreMessage[] = []
+  function processMessageContent(message: Message, isLastUserMessage: boolean) {
+    let content: any[]
 
-  // Add system message as the first message
-  // const systemMessage = conversation.messages.findLast(
-  //   (msg) => msg.latestSystemMessage !== undefined,
-  // )
-  // if (systemMessage) {
-  //   console.log(
-  //     'Found system message, latestSystemMessage: ',
-  //     systemMessage.latestSystemMessage,
-  //   )
-  //   coreMessages.push({
-  //     role: 'system',
-  //     content: systemMessage.latestSystemMessage || '',
-  //   })
-  // }
-
-  // Convert other messages
-  conversation.messages.forEach((message, index) => {
-    console.log('IN MESSAGE LOOP', message)
-    if (message.role === 'system') return // Skip system message as it's already added
-
-    let content: any
-    if (index === conversation.messages.length - 1 && message.role === 'user') {
-      // Use finalPromtEngineeredMessage for the most recent user message
-      content = [
-        { type: 'text', text: message.finalPromtEngineeredMessage || '' },
-      ]
-
-      // just for Llama 3.1 70b, remind it to use proper citation format.
-      content[0].text +=
-        '\n\nIf you use the <Potentially Relevant Documents> in your response, please remember cite your sources using the required formatting, e.g. "The grass is green. [29, page: 11]'
-
-      if (Array.isArray(message.content)) {
-        console.log(
-          'in last message -- MESSAGE CONTENT IS ARRAY - HAS IMAGE(s)',
-        )
-        content = message.content.map((c) => {
-          if (c.type === 'text') {
-            console.log('👉 ADDING TEXT msg')
-            return { type: 'text', text: c.text }
-          } else if (c.type === 'image_url') {
-            console.log('👉 ADDING IMAGE msg')
-            return { type: 'image', image: c.image_url!.url }
-          }
-          return c
-        })
-      }
+    if (isLastUserMessage && message.finalPromtEngineeredMessage) {
+      content = [{ type: 'text', text: message.finalPromtEngineeredMessage }]
     } else if (Array.isArray(message.content)) {
-      console.log('MESSAGE CONTENT IS ARRAY - HAS IMAGE(s)')
       content = message.content.map((c) => {
         if (c.type === 'text') {
-          console.log('👉 ADDING TEXT msg')
           return { type: 'text', text: c.text }
         } else if (c.type === 'image_url') {
-          console.log('👉 ADDING IMAGE msg')
-          return { type: 'image', image: c.image_url }
+          return { type: 'image', image: c.image_url!.url }
         }
         return c
       })
@@ -288,13 +242,35 @@ export function convertConversatonToLlamaVisionNoSystemMessage(
       content = [{ type: 'text', text: message.content as string }]
     }
 
-    coreMessages.push({
-      role: message.role as 'user' | 'assistant',
-      content: content,
-    })
-  })
+    if (isLastUserMessage) {
+      const citationReminder =
+        '\n\nIf you use the <Potentially Relevant Documents> in your response, please remember cite your sources using the required formatting, e.g. "The grass is green. [29, page: 11]'
+      if (content[0].type === 'text') {
+        content[0].text += citationReminder
+      } else {
+        content.push({ type: 'text', text: citationReminder })
+      }
+    }
 
-  return coreMessages
+    return content
+  }
+
+  return conversation.messages
+    .filter((message) => message.role !== 'system')
+    .map((message, index) => {
+      const isLastUserMessage =
+        index === conversation.messages.length - 1 && message.role === 'user'
+      console.log(
+        'Processing message:',
+        message.role,
+        isLastUserMessage ? '(last user message)' : '',
+      )
+
+      return {
+        role: message.role as 'user' | 'assistant',
+        content: processMessageContent(message, isLastUserMessage),
+      }
+    })
 }
 
 // Helper Types
