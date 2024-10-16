@@ -24,7 +24,7 @@ import HomeContext from './home.context'
 import { type HomeInitialState, initialState } from './home.state'
 
 import { v4 as uuidv4 } from 'uuid'
-import {type CourseMetadata } from '~/types/courseMetadata'
+import { type CourseMetadata } from '~/types/courseMetadata'
 import {
   AnySupportedModel,
   ProjectWideLLMProviders,
@@ -166,7 +166,7 @@ const Home = ({
     // Set model after we fetch available models
     if (!llmProviders || Object.keys(llmProviders).length === 0) return
 
-    let model;
+    let model
     if (!llmProviders.defaultModel) {
       model = selectBestModel(llmProviders.providers)
     } else {
@@ -343,11 +343,11 @@ const Home = ({
     if (selectedConversation?.messages.length === 0) return
     const lastConversation = conversations[conversations.length - 1]
     // Determine the model to use for the new conversation
-    
-    let model;
+
+    let model
     if (llmProviders && !llmProviders.defaultModel) {
       model = selectBestModel(llmProviders.providers)
-    } else if (llmProviders) {  
+    } else if (llmProviders) {
       model = llmProviders.defaultModel
     } else {
       // @ts-ignore - this is a hack to get the default model

@@ -345,18 +345,24 @@ export const Chat = memo(
 
         if (selectedConversation) {
           // Add this type guard function
-          function isValidModel(model: any): model is { id: string; name: string } {
-            return model && typeof model.id === 'string' && typeof model.name === 'string';
+          function isValidModel(
+            model: any,
+          ): model is { id: string; name: string } {
+            return (
+              model &&
+              typeof model.id === 'string' &&
+              typeof model.name === 'string'
+            )
           }
 
           // Check if model is defined and valid
           if (!isValidModel(selectedConversation.model)) {
-            console.error('Selected conversation does not have a valid model.');
+            console.error('Selected conversation does not have a valid model.')
             errorToast({
               title: 'Model Error',
               message: 'No valid model selected for the conversation.',
-            });
-            return;
+            })
+            return
           }
 
           let updatedConversation: Conversation
@@ -1193,7 +1199,9 @@ export const Chat = memo(
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.25, ease: 'easeInOut' }}
                 >
-                  {selectedConversation && selectedConversation.messages && selectedConversation.messages?.length === 0 ? (
+                  {selectedConversation &&
+                  selectedConversation.messages &&
+                  selectedConversation.messages?.length === 0 ? (
                     <>
                       <div className="mt-16">
                         {renderIntroductoryStatements()}

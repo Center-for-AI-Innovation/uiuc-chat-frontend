@@ -66,6 +66,8 @@ export const getModelLogo = (modelType: string) => {
       return 'https://assets.kastan.ai/UofI-logo-white.jpg'
     case ProviderNames.Azure:
       return 'https://assets.kastan.ai/uiuc-chat-emails/msft-logo.png'
+    case ProviderNames.NCSAHostedVLLM:
+      return 'https://assets.kastan.ai/UofI-logo-white.jpg'
     default:
       console.warn('Unknown model type: ', modelType)
     // throw new Error(`Unknown model type: ${modelType}`)

@@ -107,6 +107,8 @@ export default function AzureProviderInput({
                 borderRadius: '4px',
                 backgroundColor: 'rgba(255, 0, 0, 0.1)',
                 border: '1px solid rgba(255, 0, 0, 0.2)',
+                wordBreak: 'break-all', // Add this line
+                overflowWrap: 'break-word', // Add this line for better compatibility
               }}
             >
               {provider.error}

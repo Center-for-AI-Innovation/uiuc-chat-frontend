@@ -24,9 +24,6 @@ export function ModelToggles({
     ? form.state.values.providers[provider.provider]?.models || {}
     : {}
 
-  // console.log(`${provider.provider} PROV Models`, providerModels)
-  // console.log(`${provider.provider} PROV.models here`, provider.models)
-
   return (
     <Stack mt="md">
       {Object.entries(providerModels).map(
@@ -45,13 +42,6 @@ export function ModelToggles({
                   const newValue = event.currentTarget.checked
                   field.handleChange(newValue)
                   // Update the provider's model state
-                  console.log(
-                    'enabled or not',
-                    (form.state.values.providers[provider.provider].models[
-                      modelId
-                    ].enabled = newValue),
-                  )
-                  // Update the provider's model state
                   if (
                     isProviderWithModels(provider) &&
                     modelId in provider.models
@@ -59,8 +49,7 @@ export function ModelToggles({
                     ;(provider.models[modelId] as AnySupportedModel).enabled =
                       newValue
                   }
-                  // Trigger form submission
-                  setTimeout(() => form.handleSubmit(), 0)
+                  form.handleSubmit()
                 }}
                 thumbIcon={
                   field.state.value ? (

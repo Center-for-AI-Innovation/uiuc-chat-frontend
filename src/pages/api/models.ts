@@ -5,6 +5,7 @@ import {
   AzureProvider,
   LLMProvider,
   NCSAHostedProvider,
+  NCSAHostedVLLMProvider,
   OllamaProvider,
   OpenAIProvider,
   ProjectWideLLMProviders,
@@ -19,6 +20,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
 import { getNCSAHostedModels } from '~/utils/modelProviders/NCSAHosted'
 import { getOpenAIModels } from '~/utils/modelProviders/routes/openai'
+import { getNCSAHostedVLLMModels } from '~/utils/modelProviders/types/NCSAHostedVLLM'
 
 export const config = {
   runtime: 'edge',
@@ -44,8 +46,11 @@ const handler = async (
     const createPlaceholderProvider = (
       providerName: ProviderNames,
     ): LLMProvider => ({
+      // Enable by default NCSA Hosted models. All others disabled by default.
       provider: providerName,
-      enabled: false,
+      enabled:
+        providerName === ProviderNames.NCSAHostedVLLM ||
+        providerName === ProviderNames.NCSAHosted,
       models: [],
     })
 
@@ -112,15 +117,18 @@ const handler = async (
             llmProvider as NCSAHostedProvider,
           )
           break
+        case ProviderNames.NCSAHostedVLLM:
+          llmProviders.providers[providerName] = await getNCSAHostedVLLMModels(
+            llmProvider as NCSAHostedVLLMProvider,
+          )
+          break
         default:
           console.warn(`Unhandled provider: ${providerName}`)
       }
     }
 
-    // console.log('FINAL -- llmProviders', llmProviders)
-    return NextResponse.json(llmProviders as ProjectWideLLMProviders, {
-      status: 200,
-    })
+    // console.log('FINAL -- llmProviders', llmProviders.providers.NCSAHostedVLLM)
+    return NextResponse.json(llmProviders, { status: 200 })
   } catch (error) {
     console.error(error)
     return NextResponse.json({ error: JSON.stringify(error) }, { status: 500 })

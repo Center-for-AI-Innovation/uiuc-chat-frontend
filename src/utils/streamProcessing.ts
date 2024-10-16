@@ -19,6 +19,7 @@ import {
   AllSupportedModels,
   AnySupportedModel,
   NCSAHostedProvider,
+  NCSAHostedVLLMProvider,
   OllamaProvider,
   VisionCapableModels,
 } from '~/utils/modelProviders/LLMProvider'
@@ -32,6 +33,7 @@ import { AzureModelID } from './modelProviders/azure'
 import { AnthropicModelID } from './modelProviders/types/anthropic'
 import { NCSAHostedModelID } from './modelProviders/NCSAHosted'
 import { NextApiRequest, NextApiResponse } from 'next'
+import { NCSAHostedVLLMModelID } from '~/utils/modelProviders/types/NCSAHostedVLLM'
 
 export const maxDuration = 60
 
@@ -839,9 +841,7 @@ export const routeModelRequest = async (
 
   // Add this check at the beginning of the function
   if (!selectedConversation.model || !selectedConversation.model.id) {
-    throw new Error(
-      'Conversation model is undefined or missing "id" property.',
-    )
+    throw new Error('Conversation model is undefined or missing "id" property.')
   }
 
   posthog.capture('LLM Invoked', {
@@ -857,6 +857,28 @@ export const routeModelRequest = async (
 
   let response: Response
   if (
+    Object.values(NCSAHostedVLLMModelID).includes(
+      selectedConversation.model.id as any,
+    )
+  ) {
+    // NCSA Hosted LLMs
+    const newChatBody = chatBody!.llmProviders!
+      .NCSAHostedVLLM as NCSAHostedVLLMProvider
+
+    const url = `/api/chat/vllm`
+    response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+
+      body: JSON.stringify({
+        conversation: selectedConversation,
+        // ollamaProvider: newChatBody,
+        stream: chatBody.stream,
+      }),
+    })
+  } else if (
     Object.values(NCSAHostedModelID).includes(
       selectedConversation.model.id as any,
     )

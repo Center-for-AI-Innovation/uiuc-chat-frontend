@@ -83,12 +83,19 @@ export const getNCSAHostedModels = async (
       return ncsaHostedProvider as NCSAHostedProvider
     }
     const data = await response.json()
+
     const ollamaModels: OllamaModel[] = data.models
       .filter((model: any) =>
         Object.values(NCSAHostedModelID).includes(model.model),
       )
       .map((model: any): OllamaModel => {
-        return NCSAHostedModels[model.model as NCSAHostedModelID]
+        const baseModel = NCSAHostedModels[model.model as NCSAHostedModelID]
+        return {
+          ...baseModel,
+          enabled:
+            ncsaHostedProvider.models?.find((m) => m.id === model.model)
+              ?.enabled ?? baseModel.enabled,
+        }
       })
 
     ncsaHostedProvider.models = ollamaModels

@@ -2,7 +2,10 @@
 import { kv } from '@vercel/kv'
 import { type NextRequest, NextResponse } from 'next/server'
 import { encryptKeyIfNeeded } from '~/utils/crypto'
-import { ProjectWideLLMProviders } from '~/utils/modelProviders/LLMProvider'
+import {
+  ProjectWideLLMProviders,
+  ProviderNames,
+} from '~/utils/modelProviders/LLMProvider'
 
 export const runtime = 'edge'
 
@@ -57,10 +60,8 @@ export default async function handler(req: NextRequest, res: NextResponse) {
       for (const [providerName, provider] of Object.entries(
         llmProviders.providers,
       )) {
-        console.log('providerName:', providerName)
-        console.log('provider:', provider)
-
         if (provider && 'apiKey' in provider) {
+          // @ts-ignore - stupid.
           llmProviders.providers[
             providerName as keyof typeof llmProviders.providers
           ] = {
@@ -80,6 +81,11 @@ export default async function handler(req: NextRequest, res: NextResponse) {
 
     // Combine the existing metadata with the new metadata, prioritizing the new values
     const combined_llms = { ...existingLLMs, ...llmProviders }
+
+    // Delete all the old providers, they're now nested inside.
+    Object.values(ProviderNames).forEach((provider) => {
+      delete (combined_llms as any)[provider]
+    })
 
     if (llmProviders.defaultModel) {
       combined_llms.defaultModel = llmProviders.defaultModel

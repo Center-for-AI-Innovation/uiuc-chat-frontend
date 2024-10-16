@@ -94,10 +94,6 @@ export const getAzureModels = async (
       : azureProvider.AzureEndpoint
     const url = `${baseUrl}/openai/deployments?api-version=${OPENAI_API_VERSION}`
 
-    console.log(
-      'Azure api key: await decryptKeyIfNeeded(azureProvider.apiKey!)',
-    )
-
     const response = await fetch(url, {
       method: 'GET',
       headers: {

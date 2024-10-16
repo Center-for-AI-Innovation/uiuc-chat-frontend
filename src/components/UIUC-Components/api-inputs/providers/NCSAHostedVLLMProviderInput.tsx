@@ -3,17 +3,17 @@ import { Text, Switch, Card, Skeleton, Badge } from '@mantine/core'
 import { IconCheck, IconExternalLink, IconX } from '@tabler/icons-react'
 import { ModelToggles } from '../ModelToggles'
 import {
-  NCSAHostedProvider,
+  NCSAHostedVLLMProvider,
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { motion, AnimatePresence } from 'framer-motion'
 
-export default function NCSAHostedLLmsProviderInput({
+export default function NCSAHostedVLLMProviderInput({
   provider,
   form,
   isLoading,
 }: {
-  provider: NCSAHostedProvider
+  provider: NCSAHostedVLLMProvider
   form: any
   isLoading: boolean
 }) {
@@ -28,7 +28,6 @@ export default function NCSAHostedLLmsProviderInput({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            width: '100%',
           }}
         >
           <div>
@@ -45,28 +44,26 @@ export default function NCSAHostedLLmsProviderInput({
                   mb="xs"
                   style={{ paddingRight: '8px' }}
                 >
-                  NCSA Hosted LLMs
+                  NCSA Hosted VLMs
                 </Text>
                 <IconExternalLink size={16} className="mb-3" />
               </div>
             </a>
           </div>
-          <form.Field name={`providers.${ProviderNames.NCSAHosted}.enabled`}>
+          <form.Field
+            name={`providers.${ProviderNames.NCSAHostedVLLM}.enabled`}
+          >
             {(field: any) => (
               <Switch
                 size="md"
                 labelPosition="left"
                 onLabel="ON"
                 offLabel="OFF"
-                aria-label="Enable NCSA Hosted LLMs provider"
+                aria-label="Enable NCSA Hosted VLM provider"
                 checked={field.state.value}
                 onChange={(event) => {
-                  const newValue = event.currentTarget.checked
-                  field.handleChange(newValue)
-                  provider.enabled = newValue
-
-                  // Trigger form submission
-                  setTimeout(() => form.handleSubmit(), 0)
+                  field.handleChange(event.currentTarget.checked)
+                  form.handleSubmit()
                 }}
                 thumbIcon={
                   field.state.value ? (
@@ -89,20 +86,16 @@ export default function NCSAHostedLLmsProviderInput({
             )}
           </form.Field>
         </div>
-        <Text size="sm" color="dimmed" mb="md">
-          These models are hosted by the Center for AI Innovation at the
-          National Center for Supercomputing Applications. They&apos;re free.
-        </Text>
-        <Badge color="red">Poor quality model</Badge>
+        <Badge color="red">Experimental</Badge>
         <div className="pb-2"></div>
         <Text size="sm" color="dimmed" mb="md">
-          This Llama 3.1 70b (quantized) model is just really stupid. It messes
-          up on providing proper citations, is rather terse and
-          &apos;lazy&apos;. Only use this for free testing, not for anything
-          meaningful.
+          Llama 3.2 Vision has certain limitations, like no native support for a
+          System Message. So we hack a system message into the user&apos;s
+          message. It may struggle with following instructions. Furthermore,
+          sometimes the model can go offline.
         </Text>
         {provider?.error &&
-          (form.state.values?.providers?.NCSAHosted?.enabled ||
+          (form.state.values?.providers?.NCSAHostedVLLM?.enabled ||
             provider.enabled) && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -119,15 +112,13 @@ export default function NCSAHostedLLmsProviderInput({
                   borderRadius: '4px',
                   backgroundColor: 'rgba(255, 0, 0, 0.1)',
                   border: '1px solid rgba(255, 0, 0, 0.2)',
-                  wordBreak: 'break-all', // Add this line
-                  overflowWrap: 'break-word', // Add this line for better compatibility
                 }}
               >
                 {provider.error}
               </Text>
             </motion.div>
           )}
-        <form.Field name={`providers.${ProviderNames.NCSAHosted}.enabled`}>
+        <form.Field name={`providers.${ProviderNames.NCSAHostedVLLM}.enabled`}>
           {(field: any) => (
             <AnimatePresence>
               {field.state.value && (

@@ -187,10 +187,6 @@ export default async function handler(
       try {
         // Convert conversation to DB type
         const dbConversation = convertChatToDBConversation(conversation)
-        console.log(
-          'Saving conversation to server with db object:',
-          dbConversation,
-        )
 
         if (conversation.messages.length === 0) {
           throw new Error('No messages in conversation, not saving!')
