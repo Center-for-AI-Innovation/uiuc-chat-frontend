@@ -6,6 +6,7 @@ import { ModelToggles } from '../ModelToggles'
 import {
   AnthropicProvider,
   ProviderNames,
+  selectBestModel,
 } from '~/utils/modelProviders/LLMProvider'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -65,6 +66,9 @@ export default function AnthropicProviderInput({
                   const newValue = event.currentTarget.checked
                   field.handleChange(newValue)
                   provider.enabled = newValue
+                  if (form.state.values.defaultModel && form.state.values.defaultModel.provider === ProviderNames.Anthropic) {
+                    form.setFieldValue('defaultModel', newValue ? form.state.values.defaultModel : null)
+                  }
                   form.handleSubmit()
                 }}
                 thumbIcon={
@@ -128,7 +132,7 @@ export default function AnthropicProviderInput({
                       <APIKeyInput
                         field={field}
                         placeholder="Anthropic API Key"
-                        // onValidate={validateApiKey}
+                      // onValidate={validateApiKey}
                       />
                     )}
                   </form.Field>

@@ -46,7 +46,7 @@ export function ModelToggles({
                     isProviderWithModels(provider) &&
                     modelId in provider.models
                   ) {
-                    ;(provider.models[modelId] as AnySupportedModel).enabled =
+                    ; (provider.models[modelId] as AnySupportedModel).enabled =
                       newValue
                   }
                   form.handleSubmit()

@@ -170,7 +170,12 @@ const Home = ({
     if (!llmProviders.defaultModel) {
       model = selectBestModel(llmProviders.providers)
     } else {
-      model = llmProviders.defaultModel
+      // if model not in llmProviders.providers, use default model
+      // @ts-ignore - these types are fine.
+      if (!llmProviders.providers[llmProviders.defaultModel.provider]) {
+        model = selectBestModel(llmProviders.providers)
+      }
+      llmProviders.defaultModel = model
     }
 
     dispatch({

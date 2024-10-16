@@ -177,20 +177,6 @@ export const selectBestModel = (
     .flatMap((provider) => provider!.models || [])
     .filter((model) => model.enabled)
 
-  // console.log('in selectBestModel with models: ', allModels)
-  // TODO: if project has global default model, use it.
-  // First, try to use the model from the conversation if it exists and is valid
-  // if (
-  //   convo &&
-  //   convo.model &&
-  //   typeof convo.model === 'object' &&
-  //   'id' in convo.model
-  // ) {
-  //   const conversationModel = allModels.find((m) => m.id === convo.model.id)
-  //   if (conversationModel) {
-  //     return conversationModel
-  //   }
-  // }
   const defaultModelId = localStorage.getItem('defaultModel')
   // console.log('defaultModelId from localstorage: ', defaultModelId)
   if (defaultModelId && allModels.find((m) => m.id === defaultModelId)) {
@@ -198,11 +184,14 @@ export const selectBestModel = (
       .filter((model) => model.enabled)
       .find((m) => m.id === defaultModelId)
     if (defaultModel) {
+      console.log(
+        'Using default model from localStorage:',
+        JSON.stringify(defaultModel),
+      )
       return defaultModel
     }
   }
 
-  // If the conversation model is not available or invalid, use the preferredModelIds
   for (const preferredId of preferredModelIds) {
     const model = allModels
       .filter((model) => model.enabled)
@@ -213,7 +202,7 @@ export const selectBestModel = (
     }
   }
 
-  // If no preferred models are available, fallback to Llama 3.1 70b
+  console.log('No preferred models found, falling back to Llama 3.1 70b')
   localStorage.setItem('defaultModel', NCSAHostedModelID.LLAMA31_70b)
   return NCSAHostedModels['llama3.1:70b']
 }
