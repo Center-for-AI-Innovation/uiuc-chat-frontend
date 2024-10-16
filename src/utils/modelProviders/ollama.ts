@@ -36,7 +36,7 @@ export const OllamaModels: Record<OllamaModelIDs, OllamaModel> = {
   },
   [OllamaModelIDs.LLAMA31_70b]: {
     id: OllamaModelIDs.LLAMA31_70b,
-    name: 'Llama 3.1 70b (poor quality)',
+    name: 'Llama 3.1 70b Quantized (poor quality model!)',
     parameterSize: '70b',
     tokenLimit: 128000,
     enabled: true,

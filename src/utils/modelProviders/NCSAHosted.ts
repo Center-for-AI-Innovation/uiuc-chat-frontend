@@ -25,7 +25,7 @@ export enum NCSAHostedModelID {
 export const NCSAHostedModels: Record<NCSAHostedModelID, OllamaModel> = {
   [NCSAHostedModelID.LLAMA31_8b]: {
     id: NCSAHostedModelID.LLAMA31_8b,
-    name: 'Llama 3.1 8b (quantized)',
+    name: 'Llama 3.1 8b (Quantized)',
     parameterSize: '8b',
     tokenLimit: 128000,
     enabled: true,
@@ -46,21 +46,21 @@ export const NCSAHostedModels: Record<NCSAHostedModelID, OllamaModel> = {
   },
   [NCSAHostedModelID.LLAMA31_70b]: {
     id: NCSAHostedModelID.LLAMA31_70b,
-    name: 'Llama 3.1 70b (quantized)',
+    name: 'Llama 3.1 70b Quantized (poor quality model!)',
     parameterSize: '70b',
     tokenLimit: 128000,
     enabled: true,
   },
   [NCSAHostedModelID.LLAMA31_latest]: {
     id: NCSAHostedModelID.LLAMA31_latest,
-    name: 'Llama 3.1 8b (quantized)',
+    name: 'Llama 3.1 8b (Quantized)',
     parameterSize: '8b',
     tokenLimit: 128000,
     enabled: true,
   },
   [NCSAHostedModelID.LLAMA31_405b]: {
     id: NCSAHostedModelID.LLAMA31_405b,
-    name: 'Llama 3.1 405b (quantized)',
+    name: 'Llama 3.1 405b (Quantized)',
     parameterSize: '405b',
     tokenLimit: 128000,
     enabled: true,
