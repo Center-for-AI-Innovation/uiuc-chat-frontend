@@ -63,6 +63,11 @@ export default function OllamaProviderInput({
                   const newValue = event.currentTarget.checked
                   field.handleChange(newValue)
                   provider.enabled = newValue
+
+                  if (form.state.values.defaultModel && form.state.values.defaultModel.provider === ProviderNames.Ollama) {
+                    form.setFieldValue('defaultModel', newValue ? form.state.values.defaultModel : null)
+                  }
+
                   // Trigger form submission
                   form.handleSubmit()
                 }}

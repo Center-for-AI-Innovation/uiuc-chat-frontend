@@ -67,6 +67,10 @@ export default function AzureProviderInput({
                   field.handleChange(newValue)
                   provider.enabled = newValue
 
+                  if (form.state.values.defaultModel && form.state.values.defaultModel.provider === ProviderNames.Azure) {
+                    form.setFieldValue('defaultModel', newValue ? form.state.values.defaultModel : null)
+                  }
+
                   form.handleSubmit() // Trigger form submission
                 }}
                 thumbIcon={

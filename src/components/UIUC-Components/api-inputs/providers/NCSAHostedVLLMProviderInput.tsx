@@ -63,6 +63,12 @@ export default function NCSAHostedVLLMProviderInput({
                 checked={field.state.value}
                 onChange={(event) => {
                   field.handleChange(event.currentTarget.checked)
+                  provider.enabled = event.currentTarget.checked
+
+                  if (form.state.values.defaultModel && form.state.values.defaultModel.provider === ProviderNames.NCSAHostedVLLM) {
+                    form.setFieldValue('defaultModel', event.currentTarget.checked ? form.state.values.defaultModel : null)
+                  }
+
                   form.handleSubmit()
                 }}
                 thumbIcon={

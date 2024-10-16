@@ -47,7 +47,7 @@ export const getNCSAHostedVLLMModels = async (
       const knownModel = NCSAHostedVLLMModels[model.id as NCSAHostedVLLMModelID]
       return {
         id: model.id,
-        name: knownModel ? knownModel.name : model.id,
+        name: knownModel ? knownModel.name : 'Experimental: ' + model.id,
         tokenLimit: model.max_tokens || 128000, // Default to 128000 if max_tokens is not provided
         enabled: true,
       }

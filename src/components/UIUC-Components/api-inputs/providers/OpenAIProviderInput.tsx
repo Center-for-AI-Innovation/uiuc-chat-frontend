@@ -67,6 +67,11 @@ export default function OpenAIProviderInput({
                   const newValue = event.currentTarget.checked
                   field.handleChange(newValue)
                   provider.enabled = newValue
+
+                  if (form.state.values.defaultModel && form.state.values.defaultModel.provider === ProviderNames.OpenAI) {
+                    form.setFieldValue('defaultModel', newValue ? form.state.values.defaultModel : null)
+                  }
+
                   // Trigger form submission
                   form.handleSubmit()
                 }}
@@ -129,7 +134,7 @@ export default function OpenAIProviderInput({
                       <APIKeyInput
                         field={apiKeyField}
                         placeholder="OpenAI API Key"
-                        // onValidate={validateApiKey}
+                      // onValidate={validateApiKey}
                       />
                     )}
                   </form.Field>
