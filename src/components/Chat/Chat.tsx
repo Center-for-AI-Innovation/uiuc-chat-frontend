@@ -336,7 +336,6 @@ export const Chat = memo(
         enabledDocumentGroups: string[],
         llmProviders: AllLLMProviders,
       ) => {
-        console.log('handleSend called with model:', selectedConversation?.model);
         setCurrentMessage(message)
         resetMessageStates()
 

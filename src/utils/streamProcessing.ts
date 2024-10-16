@@ -17,7 +17,7 @@ import posthog from 'posthog-js'
 import {
   AllLLMProviders,
   AllSupportedModels,
-  GenericSupportedModel,
+  AnySupportedModel,
   NCSAHostedProvider,
   OllamaProvider,
   VisionCapableModels,
@@ -335,7 +335,7 @@ export async function determineAndValidateModel(
   modelId: string,
   projectName: string,
 ): Promise<{
-  activeModel: GenericSupportedModel
+  activeModel: AnySupportedModel
   modelsWithProviders: AllLLMProviders
 }> {
   const baseUrl = getBaseUrl()
@@ -369,7 +369,7 @@ export async function determineAndValidateModel(
 
   const activeModel = availableModels.find(
     (model) => model.id === modelId,
-  ) as GenericSupportedModel
+  ) as AnySupportedModel
 
   if (!activeModel) {
     console.error(`Model with ID ${modelId} not found in available models.`)
@@ -861,11 +861,28 @@ export const routeModelRequest = async (
       selectedConversation.model.id as any,
     )
   ) {
-    // NCSA Hosted LLMs
-    const newChatBody = chatBody!.llmProviders!.NCSAHosted as NCSAHostedProvider
-    newChatBody.baseUrl = process.env.OLLAMA_SERVER_URL // inject proper baseURL
+    // Ollama model
+    console.log('Ollama provider in stream: ', chatBody!.llmProviders!.Ollama)
 
-    const url = baseUrl ? `${baseUrl}/api/chat/ollama` : '/api/chat/ollama'
+    response = await fetch('/api/chat/ollama', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        conversation: selectedConversation,
+        ollamaProvider: chatBody!.llmProviders!.Ollama as OllamaProvider,
+      }),
+    })
+  } else if (
+    Object.values(AnthropicModelID).includes(
+      selectedConversation.model.id as any,
+    )
+  ) {
+    console.log('Anthropic model: ', chatBody)
+    const url = baseUrl
+      ? `${baseUrl}/api/chat/anthropic`
+      : '/api/chat/anthropic'
     response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -874,7 +891,7 @@ export const routeModelRequest = async (
 
       body: JSON.stringify({
         conversation: selectedConversation,
-        ollamaProvider: newChatBody,
+        ollamaProvider: chatBody,
         stream: chatBody.stream,
       }),
     })

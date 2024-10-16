@@ -20,14 +20,6 @@ export interface CourseMetadata {
   systemPromptOnly: boolean | undefined
 }
 
-export type ProjectWideLLMProviders = {
-  [P in ProviderNames]?: LLMProvider & { provider: P }
-} & {
-  llmProviders?: LLMProvider[]
-  defaultModel?: string
-  defaultTemp?: number
-}
-
 export interface CourseMetadataOptionalForUpsert {
   is_private: boolean | undefined
   course_owner: string | undefined

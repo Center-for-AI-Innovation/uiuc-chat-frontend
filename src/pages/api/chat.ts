@@ -13,6 +13,12 @@ import {
   OpenAIChatMessage,
   UIUCTool,
 } from '@/types/chat'
+import { NextResponse } from 'next/server'
+import { decryptKeyIfNeeded } from '~/utils/crypto'
+import { ProviderNames } from '~/utils/modelProviders/LLMProvider'
+import { AzureModels } from '~/utils/modelProviders/azure'
+import { OpenAIModels } from '~/utils/modelProviders/types/openai'
+import OpenAI from 'openai'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { AnySupportedModel } from '~/utils/modelProviders/LLMProvider'
 import { DEFAULT_SYSTEM_PROMPT } from '@/utils/app/const'

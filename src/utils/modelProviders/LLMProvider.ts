@@ -49,7 +49,7 @@ export const VisionCapableModels: Set<
   AnthropicModelID.Claude_3_5_Sonnet,
 ])
 
-export const AllSupportedModels: Set<GenericSupportedModel> = new Set([
+export const AllSupportedModels: Set<AnySupportedModel> = new Set([
   ...Object.values(AnthropicModels),
   ...Object.values(OpenAIModels),
   ...Object.values(AzureModels),
@@ -57,28 +57,6 @@ export const AllSupportedModels: Set<GenericSupportedModel> = new Set([
   ...Object.values(NCSAHostedModels),
   // ...webLLMModels,
 ])
-// e.g. Easily validate ALL POSSIBLE models that we support. They may be offline or disabled, but they are supported.
-// {
-//   id: 'llama3.1:70b',
-//   name: 'Llama 3.1 70b',
-//   parameterSize: '70b',
-//   tokenLimit: 16385,
-//   enabled: false
-// },
-//   {
-//   id: 'gpt-3.5-turbo',
-//   name: 'GPT-3.5',
-//   tokenLimit: 16385,
-//   enabled: false
-// },
-
-export interface GenericSupportedModel {
-  id: string
-  name: string
-  tokenLimit: number
-  enabled: boolean
-  parameterSize?: string
-}
 
 export interface BaseLLMProvider {
   provider: ProviderNames
@@ -131,19 +109,22 @@ export type LLMProvider =
   | WebLLMProvider
   | NCSAHostedProvider
 
-// export type AllLLMProviders = {
-//   [P in ProviderNames]?: LLMProvider & { provider: P }
-// }
-
-// export interface AllLLMProviders {
-//   [key: string]: LLMProvider & { provider: ProviderNames } | undefined;
-// }
-
 export type AllLLMProviders = {
   [key in ProviderNames]: LLMProvider
 }
 
+export type ProjectWideLLMProviders = {
+  providers: {
+    [P in ProviderNames]: LLMProvider & { provider: P }
+  }
+  defaultModel?: AnySupportedModel
+  defaultTemp?: number
+}
+
 // Ordered list of preferred model IDs -- the first available model will be used as default
+// Priority 1: Admin-defined default model
+// Priority 2: Last used model, if actively chosen by end user.
+// Priority 3: First available model in preferredModelIds
 export const preferredModelIds = [
   AnthropicModelID.Claude_3_5_Sonnet,
 
@@ -168,14 +149,29 @@ export const preferredModelIds = [
 
 export const selectBestModel = (
   allLLMProviders: AllLLMProviders,
-): GenericSupportedModel => {
+  convo?: Conversation,
+): AnySupportedModel => {
   const allModels = Object.values(allLLMProviders)
     .filter((provider) => provider!.enabled)
     .flatMap((provider) => provider!.models || [])
     .filter((model) => model.enabled)
 
+  // console.log('in selectBestModel with models: ', allModels)
+  // TODO: if project has global default model, use it.
+  // First, try to use the model from the conversation if it exists and is valid
+  // if (
+  //   convo &&
+  //   convo.model &&
+  //   typeof convo.model === 'object' &&
+  //   'id' in convo.model
+  // ) {
+  //   const conversationModel = allModels.find((m) => m.id === convo.model.id)
+  //   if (conversationModel) {
+  //     return conversationModel
+  //   }
+  // }
   const defaultModelId = localStorage.getItem('defaultModel')
-
+  // console.log('defaultModelId from localstorage: ', defaultModelId)
   if (defaultModelId && allModels.find((m) => m.id === defaultModelId)) {
     const defaultModel = allModels
       .filter((model) => model.enabled)
@@ -197,6 +193,7 @@ export const selectBestModel = (
   }
 
   // If no preferred models are available, fallback to Llama 3.1 70b
+  localStorage.setItem('defaultModel', 'llama3.1:70b')
   return {
     id: 'llama3.1:70b',
     name: 'Llama 3.1 70b',

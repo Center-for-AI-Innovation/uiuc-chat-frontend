@@ -12,7 +12,7 @@ import { Database } from 'database.types'
 import { v4 as uuidv4 } from 'uuid'
 import {
   AllSupportedModels,
-  GenericSupportedModel,
+  AnySupportedModel,
 } from '~/utils/modelProviders/LLMProvider'
 
 export const config = {
@@ -54,7 +54,7 @@ export function convertDBToChatConversation(
     name: dbConversation.name,
     model: Array.from(AllSupportedModels).find(
       (model) => model.id === dbConversation.model,
-    ) as GenericSupportedModel,
+    ) as AnySupportedModel,
     prompt: dbConversation.prompt,
     temperature: dbConversation.temperature,
     userEmail: dbConversation.user_email || undefined,

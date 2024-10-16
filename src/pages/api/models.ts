@@ -1,11 +1,13 @@
 import {
   AllLLMProviders,
   AnthropicProvider,
+  AnySupportedModel,
   AzureProvider,
   LLMProvider,
   NCSAHostedProvider,
   OllamaProvider,
   OpenAIProvider,
+  ProjectWideLLMProviders,
   ProviderNames,
   WebLLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
@@ -17,16 +19,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
 import { getNCSAHostedModels } from '~/utils/modelProviders/NCSAHosted'
 import { getOpenAIModels } from '~/utils/modelProviders/routes/openai'
-import { OpenAIModelID } from '~/utils/modelProviders/types/openai'
-import { ProjectWideLLMProviders } from '~/types/courseMetadata'
 
 export const config = {
   runtime: 'edge',
 }
+export const maxDuration = 60
 
 const handler = async (
   req: NextRequest,
-): Promise<NextResponse<AllLLMProviders | { error: string }>> => {
+): Promise<NextResponse<ProjectWideLLMProviders | { error: string }>> => {
   try {
     const { projectName } = (await req.json()) as {
       projectName: string
@@ -39,18 +40,7 @@ const handler = async (
       )
     }
 
-    // Fetch the project's API keys
-    let llmProviders = (await kv.get(
-      `${projectName}-llms`,
-    )) as ProjectWideLLMProviders | null
-
-    if (!llmProviders) {
-      llmProviders = {} as ProjectWideLLMProviders
-    } else {
-      llmProviders = llmProviders as ProjectWideLLMProviders
-    }
-
-    // Define a function to create a placeholder provider with default values
+    // Define a function to create a placeholder provider
     const createPlaceholderProvider = (
       providerName: ProviderNames,
     ): LLMProvider => ({
@@ -59,58 +49,66 @@ const handler = async (
       models: [],
     })
 
+    // Fetch the project's API keys, filtering out all keys if requested
+    const llmProviders = (await kv.get(
+      `${projectName}-llms`,
+    )) as unknown as ProjectWideLLMProviders
+
     // Ensure all providers are defined
     const allProviderNames = Object.values(ProviderNames)
     for (const providerName of allProviderNames) {
-      if (!llmProviders[providerName]) {
-        // @ts-ignore -- I can't figure out why Ollama complains about undefined.
-        llmProviders[providerName] = createPlaceholderProvider(providerName)
+      if (!llmProviders.providers) {
+        llmProviders.providers = {} as any
+      }
+
+      if (!llmProviders.providers[providerName]) {
+        // console.log("creating placeholder provider:", providerName);
+        // @ts-ignore - ignored for now
+        if (llmProviders[providerName]) {
+          // @ts-ignore - ignored for now
+          llmProviders.providers[providerName] = llmProviders[providerName]
+          // console.log("adding pre-existing provider:", llmProviders.providers[providerName]);
+        } else {
+          llmProviders.providers[providerName] = createPlaceholderProvider(
+            providerName,
+          ) as any
+        }
       }
     }
 
-    // Ensure defaultModel and defaultTemp are set
-    if (!llmProviders.defaultModel) {
-      llmProviders.defaultModel = OpenAIModelID.GPT_4o_mini
-    }
-    if (!llmProviders.defaultTemp) {
-      llmProviders.defaultTemp = 0.1
-    }
-
-    const allLLMProviders: Partial<AllLLMProviders> = {}
-
     // Iterate through all possible providers
     for (const providerName of Object.values(ProviderNames)) {
-      const llmProvider = llmProviders[providerName]
+      const llmProvider = llmProviders.providers[providerName]
 
       switch (providerName) {
         case ProviderNames.Ollama:
-          allLLMProviders[providerName] = (await getOllamaModels(
+          llmProviders.providers[providerName] = (await getOllamaModels(
             llmProvider as OllamaProvider,
           )) as OllamaProvider
           break
         case ProviderNames.OpenAI:
-          allLLMProviders[providerName] = await getOpenAIModels(
+          llmProviders.providers[providerName] = await getOpenAIModels(
             llmProvider as OpenAIProvider,
             projectName,
           )
           break
         case ProviderNames.Azure:
-          allLLMProviders[providerName] = await getAzureModels(
+          llmProviders.providers[providerName] = await getAzureModels(
             llmProvider as AzureProvider,
           )
           break
         case ProviderNames.Anthropic:
-          allLLMProviders[providerName] = await getAnthropicModels(
+          llmProviders.providers[providerName] = await getAnthropicModels(
             llmProvider as AnthropicProvider,
           )
           break
         case ProviderNames.WebLLM:
-          allLLMProviders[providerName] = await getWebLLMModels(
+          llmProviders.providers[providerName] = await getWebLLMModels(
             llmProvider as WebLLMProvider,
           )
           break
         case ProviderNames.NCSAHosted:
-          allLLMProviders[providerName] = await getNCSAHostedModels(
+          llmProviders.providers[providerName] = await getNCSAHostedModels(
             llmProvider as NCSAHostedProvider,
           )
           break
@@ -119,8 +117,8 @@ const handler = async (
       }
     }
 
-    // console.log('FINAL -- allLLMProviders', allLLMProviders)
-    return NextResponse.json(allLLMProviders as AllLLMProviders, {
+    // console.log('FINAL -- llmProviders', llmProviders)
+    return NextResponse.json(llmProviders as ProjectWideLLMProviders, {
       status: 200,
     })
   } catch (error) {

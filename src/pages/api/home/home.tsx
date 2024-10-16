@@ -24,8 +24,10 @@ import HomeContext from './home.context'
 import { type HomeInitialState, initialState } from './home.state'
 
 import { v4 as uuidv4 } from 'uuid'
-import { type CourseMetadata } from '~/types/courseMetadata'
+import {type CourseMetadata } from '~/types/courseMetadata'
 import {
+  AnySupportedModel,
+  ProjectWideLLMProviders,
   selectBestModel,
   VisionCapableModels,
 } from '~/utils/modelProviders/LLMProvider'
@@ -39,6 +41,8 @@ import { useUpdateConversation } from '~/hooks/conversationQueries'
 import { FolderType, FolderWithConversation } from '~/types/folder'
 import { useQueryClient } from '@tanstack/react-query'
 import { useCreateFolder } from '~/hooks/folderQueries'
+import { GetCurrentPageName } from '~/components/UIUC-Components/CanViewOnlyCourse'
+import { useGetProjectLLMProviders } from '~/hooks/useProjectAPIKeys'
 
 const Home = ({
   current_email,
@@ -114,7 +118,7 @@ const Home = ({
         throw new Error('Failed to fetch models')
       }
 
-      return response.json()
+      return response.json() as unknown as ProjectWideLLMProviders
     },
     [],
   )
@@ -135,7 +139,6 @@ const Home = ({
       selectedConversation,
       prompts,
       temperature,
-      llmProviders,
       documentGroups,
       tools,
       searchTerm,
@@ -148,21 +151,38 @@ const Home = ({
     queryClient,
     course_name,
   )
+  const projectName = GetCurrentPageName()
+
+  const {
+    data: llmProviders,
+    isLoading: isLoadingLLMProviders,
+    isError: isErrorLLMProviders,
+    error: errorLLMProviders,
+    // enabled: !!projectName // Only run the query when projectName is available
+  } = useGetProjectLLMProviders({ projectName: projectName })
+
   // Use effects for setting up the course metadata and models depending on the course/project
   useEffect(() => {
     // Set model after we fetch available models
     if (!llmProviders || Object.keys(llmProviders).length === 0) return
-    const model = selectBestModel(llmProviders)
+
+    let model;
+    if (!llmProviders.defaultModel) {
+      model = selectBestModel(llmProviders.providers)
+    } else {
+      model = llmProviders.defaultModel
+    }
 
     dispatch({
       field: 'defaultModelId',
-      value: model.id,
+      value: llmProviders.defaultModel,
     })
 
+    // THIS IS ERRORING DUE TO TYPES
     // Ensure current convo has a valid model
-    if (selectedConversation) {
+    if (selectedConversation && llmProviders.defaultModel) {
       const convo_with_valid_model = selectedConversation
-      convo_with_valid_model.model = model
+      convo_with_valid_model.model = llmProviders.defaultModel
       dispatch({
         field: 'selectedConversation',
         value: convo_with_valid_model,
@@ -212,10 +232,11 @@ const Home = ({
       try {
         if (!course_metadata) return
 
-        const models = await getModels({
+        const llmProviders = await getModels({
           projectName: course_name,
         })
-        dispatch({ field: 'llmProviders', value: models })
+
+        dispatch({ field: 'llmProviders', value: llmProviders.providers })
       } catch (error) {
         console.error('Error fetching models user has access to: ', error)
         dispatch({ field: 'modelError', value: getModelsError(error) })
@@ -317,17 +338,27 @@ const Home = ({
     if (selectedConversation?.messages.length === 0) return
   }
 
+  // This will ONLY update the react context and not the server
   const handleNewConversation = () => {
+    if (selectedConversation?.messages.length === 0) return
     const lastConversation = conversations[conversations.length - 1]
-
     // Determine the model to use for the new conversation
-    const model = selectBestModel(llmProviders)
+    
+    let model;
+    if (llmProviders && !llmProviders.defaultModel) {
+      model = selectBestModel(llmProviders.providers)
+    } else if (llmProviders) {  
+      model = llmProviders.defaultModel
+    } else {
+      // @ts-ignore - this is a hack to get the default model
+      model = selectBestModel({})
+    }
 
     const newConversation: Conversation = {
       id: uuidv4(),
       name: t('New Conversation'),
       messages: [],
-      model: model,
+      model: (model as AnySupportedModel) ?? llmProviders?.defaultModel,
       prompt: DEFAULT_SYSTEM_PROMPT,
       temperature: lastConversation?.temperature ?? DEFAULT_TEMPERATURE,
       folderId: null,
@@ -616,7 +647,6 @@ const Home = ({
         if (!llmProviders || Object.keys(llmProviders).length === 0) return
         handleNewConversation()
       }
-      // handleNewConversation()
       setIsInitialSetupDone(true)
     }
 

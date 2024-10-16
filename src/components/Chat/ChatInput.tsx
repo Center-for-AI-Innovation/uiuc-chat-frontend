@@ -205,10 +205,10 @@ export const ChatInput = ({
           imageUrls.length > 0
             ? imageUrls
             : await Promise.all(
-                imageFiles.map((file) =>
-                  uploadImageAndGetUrl(file, courseName),
-                ),
-              )
+              imageFiles.map((file) =>
+                uploadImageAndGetUrl(file, courseName),
+              ),
+            )
 
         // Construct image content for the message
         imageContent = imageUrlsToUse
@@ -617,9 +617,8 @@ export const ChatInput = ({
     if (textareaRef && textareaRef.current) {
       textareaRef.current.style.height = 'inherit'
       textareaRef.current.style.height = `${textareaRef.current?.scrollHeight}px`
-      textareaRef.current.style.overflow = `${
-        textareaRef?.current?.scrollHeight > 400 ? 'auto' : 'hidden'
-      }`
+      textareaRef.current.style.overflow = `${textareaRef?.current?.scrollHeight > 400 ? 'auto' : 'hidden'
+        }`
     }
   }, [content])
 
@@ -733,7 +732,7 @@ export const ChatInput = ({
           {/* BUTTON 2: Image Icon and Input */}
           {selectedConversation?.model?.id &&
             VisionCapableModels.has(
-              selectedConversation.model?.id as OpenAIModelID,
+              selectedConversation.model.id as any,
             ) && (
               <button
                 className="absolute bottom-11 left-5 rounded-full p-1 text-neutral-800 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
@@ -848,12 +847,11 @@ export const ChatInput = ({
             {/* Button 3: main input text area  */}
             <div
               className={`
-                ${
-                  VisionCapableModels.has(
-                    selectedConversation?.model?.id as OpenAIModelID,
-                  )
-                    ? 'pl-8'
-                    : 'pl-1'
+                ${VisionCapableModels.has(
+                selectedConversation?.model?.id as any,
+              )
+                  ? 'pl-8'
+                  : 'pl-1'
                 }
                   `}
             >

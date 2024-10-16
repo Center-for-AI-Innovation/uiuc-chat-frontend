@@ -272,9 +272,33 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
               <>
                 <Title
                   order={6}
-                  className={`w-full text-center ${montserrat_heading.variable} mt-2 font-montserratHeading`}
+                  className={`w-full px-8 pl-16 ${montserrat_heading.variable} mt-2 font-montserratHeading`}
                 >
-                  Query visualization requires at least 20 queries to be made...
+                  This feature is disabled. I&apos;m re-negotiating our
+                  enterprise contract with{' '}
+                  <a
+                    className={'text-purple-600'}
+                    href="https://atlas.nomic.ai/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ textDecoration: 'underline' }}
+                  >
+                    Nomic Atlas
+                  </a>
+                  , who we partner with to display beautiful visualizations of
+                  chatbot&apos;s LLM usage. You can still export your
+                  Conversation history via the button above. Or read the{' '}
+                  <a
+                    className={'text-purple-600'}
+                    href="https://docs.uiuc.chat/features/bulk-export-documents-or-conversation-history#export-all-conversations-from-your-project"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ textDecoration: 'underline' }}
+                  >
+                    data exporting docs.
+                  </a>
+                  .
+                  {/* Query visualization requires at least 20 queries to be made...
                   go ask some questions and check back later :)
                   <br></br>
                   Read more about{' '}
@@ -286,7 +310,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     style={{ textDecoration: 'underline', paddingRight: '5px' }}
                   >
                     semantic similarity visualizations
-                  </a>
+                  </a> */}
                 </Title>
               </>
             )}

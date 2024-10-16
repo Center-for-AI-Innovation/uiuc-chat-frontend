@@ -1,12 +1,8 @@
 // upsertCourseMetadata.ts
 import { kv } from '@vercel/kv'
 import { type NextRequest, NextResponse } from 'next/server'
-import { ProjectWideLLMProviders } from '~/types/courseMetadata'
 import { encryptKeyIfNeeded } from '~/utils/crypto'
-import {
-  AllLLMProviders,
-  LLMProvider,
-} from '~/utils/modelProviders/LLMProvider'
+import { ProjectWideLLMProviders } from '~/utils/modelProviders/LLMProvider'
 
 export const runtime = 'edge'
 
@@ -18,23 +14,19 @@ export default async function handler(req: NextRequest, res: NextResponse) {
 
   const requestBody = await req.text()
   let courseName: string
-  let llmProviders: AllLLMProviders
-  let defaultModelID: string
-  let defaultTemperature: number
+  let llmProviders: ProjectWideLLMProviders
 
   try {
     const parsedBody = JSON.parse(requestBody)
     courseName = parsedBody.projectName as string
-    llmProviders = parsedBody.llmProviders as AllLLMProviders
-    defaultModelID = parsedBody.defaultModelID as string
-    defaultTemperature = parsedBody.defaultTemperature as number
+    llmProviders = parsedBody.llmProviders as ProjectWideLLMProviders
   } catch (error) {
     console.error('Error parsing request body:', error)
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
   // Check if all required variables are defined
-  if (!courseName || !llmProviders || !defaultModelID || !defaultTemperature) {
+  if (!courseName || !llmProviders || !llmProviders.providers) {
     console.error('Error: Missing required parameters')
     return NextResponse.json(
       { error: 'Missing required parameters' },
@@ -43,11 +35,7 @@ export default async function handler(req: NextRequest, res: NextResponse) {
   }
 
   // Type checking
-  if (
-    typeof courseName !== 'string' ||
-    typeof defaultModelID !== 'string' ||
-    typeof defaultTemperature !== 'string'
-  ) {
+  if (typeof courseName !== 'string') {
     console.error('Error: Invalid parameter types')
     return NextResponse.json(
       { error: 'Invalid parameter types' },
@@ -61,22 +49,30 @@ export default async function handler(req: NextRequest, res: NextResponse) {
   }
 
   try {
-    console.debug('llmProviders BEFORE being cleaned and such', llmProviders)
-
     const redisKey = `${courseName}-llms`
     const existingLLMs = (await kv.get(redisKey)) as ProjectWideLLMProviders
 
     // Ensure all keys are encrypted, then save to DB.
     const processProviders = async () => {
-      for (const providerName in llmProviders) {
-        const typedProviderName = providerName as keyof AllLLMProviders
-        const provider = llmProviders[typedProviderName]
+      for (const [providerName, provider] of Object.entries(
+        llmProviders.providers,
+      )) {
+        console.log('providerName:', providerName)
+        console.log('provider:', provider)
+
         if (provider && 'apiKey' in provider) {
-          llmProviders[typedProviderName] = {
+          llmProviders.providers[
+            providerName as keyof typeof llmProviders.providers
+          ] = {
             ...provider,
+            // @ts-ignore - it's because this function could throw an error. But we don't care about it here.
             apiKey:
               (await encryptKeyIfNeeded(provider.apiKey!)) ?? provider.apiKey,
-          } as LLMProvider & { provider: typeof typedProviderName }
+          }
+        } else {
+          llmProviders.providers[
+            providerName as keyof typeof llmProviders.providers
+          ] = provider as any
         }
       }
     }
@@ -85,12 +81,12 @@ export default async function handler(req: NextRequest, res: NextResponse) {
     // Combine the existing metadata with the new metadata, prioritizing the new values
     const combined_llms = { ...existingLLMs, ...llmProviders }
 
-    if (defaultModelID) {
-      combined_llms.defaultModel = defaultModelID
+    if (llmProviders.defaultModel) {
+      combined_llms.defaultModel = llmProviders.defaultModel
     }
 
-    if (defaultTemperature) {
-      combined_llms.defaultTemp = defaultTemperature
+    if (llmProviders.defaultTemp) {
+      combined_llms.defaultTemp = llmProviders.defaultTemp
     }
 
     console.debug('-----------------------------------------')
