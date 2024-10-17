@@ -78,6 +78,7 @@ import {
   AllLLMProviders,
   ProjectWideLLMProviders,
 } from '~/utils/modelProviders/LLMProvider'
+import posthog from 'posthog-js'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -439,6 +440,15 @@ export const Chat = memo(
           //   'updatedConversation before mutation:',
           //   updatedConversation,
           // )
+
+          // Log the conversation to PostHog
+          posthog.capture('message_sent_by_user', {
+            user_email: updatedConversation.userEmail,
+            conversation_id: updatedConversation.id,
+            message_count: updatedConversation.messages?.length,
+            conversation_name: updatedConversation.name,
+          })
+
           handleUpdateConversation(updatedConversation, {
             key: 'messages',
             value: updatedConversation.messages,
