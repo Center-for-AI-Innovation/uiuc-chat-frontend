@@ -181,10 +181,10 @@ export const selectBestModel = ({
 
   // 1. Admin-defined on /llms page
   // console.log("selectBestModel: At top. Here's the admin-defined on /llms page:", projectLLMProviders?.defaultModel || "No project-wide default model")
-  // @ts-ignore - these types are fine.
   if (
     projectLLMProviders &&
     projectLLMProviders.defaultModel &&
+    // @ts-ignore - these types are fine.
     projectLLMProviders.providers[projectLLMProviders.defaultModel.provider]
   ) {
     // if defaultModel, and it's one of the project's active models, use it.
