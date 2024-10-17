@@ -166,27 +166,19 @@ const Home = ({
     // Set model after we fetch available models
     if (!llmProviders || Object.keys(llmProviders).length === 0) return
 
-    let model
-    if (!llmProviders.defaultModel) {
-      model = selectBestModel(llmProviders.providers)
-    } else {
-      // if the defaultModel not in llmProviders.providers, use different model
-      // @ts-ignore - these types are fine.
-      if (!llmProviders.providers[llmProviders.defaultModel.provider]) {
-        llmProviders.defaultModel = selectBestModel(llmProviders.providers)
-      }
-    }
+    const defaultModel = selectBestModel({
+      projectLLMProviders: llmProviders,
+    })
 
     dispatch({
       field: 'defaultModelId',
-      value: llmProviders.defaultModel,
+      value: defaultModel,
     })
 
-    // THIS IS ERRORING DUE TO TYPES
     // Ensure current convo has a valid model
-    if (selectedConversation && llmProviders.defaultModel) {
+    if (selectedConversation) {
       const convo_with_valid_model = selectedConversation
-      convo_with_valid_model.model = llmProviders.defaultModel
+      convo_with_valid_model.model = defaultModel
       dispatch({
         field: 'selectedConversation',
         value: convo_with_valid_model,
@@ -202,19 +194,12 @@ const Home = ({
     let key = ''
 
     if (course_metadata && course_metadata.openai_api_key) {
-      // console.log(
-      //   'Using key from course_metadata',
-      //   course_metadata.openai_api_key,
-      // )
       key = course_metadata.openai_api_key
-      // setServerSideApiKeyIsSet(true)
       dispatch({
         field: 'serverSideApiKeyIsSet',
         value: true,
       })
       dispatch({ field: 'apiKey', value: '' })
-      // TODO: add logging for axiom, after merging with main (to get the axiom code)
-      // log.debug('Using Course-Wide OpenAI API Key', { course_metadata: { course_metadata } })
     } else if (local_api_key) {
       if (local_api_key.startsWith('sk-')) {
         console.log(
@@ -240,7 +225,7 @@ const Home = ({
           projectName: course_name,
         })
 
-        dispatch({ field: 'llmProviders', value: llmProviders.providers })
+        dispatch({ field: 'projectLLMProviders', value: llmProviders })
       } catch (error) {
         console.error('Error fetching models user has access to: ', error)
         dispatch({ field: 'modelError', value: getModelsError(error) })
@@ -346,23 +331,16 @@ const Home = ({
   const handleNewConversation = () => {
     if (selectedConversation?.messages.length === 0) return
     const lastConversation = conversations[conversations.length - 1]
-    // Determine the model to use for the new conversation
 
-    let model
-    if (llmProviders && !llmProviders.defaultModel) {
-      model = selectBestModel(llmProviders.providers)
-    } else if (llmProviders) {
-      model = llmProviders.defaultModel
-    } else {
-      // @ts-ignore - this is a hack to get the default model
-      model = selectBestModel({})
-    }
+    const defaultModel = selectBestModel({
+      projectLLMProviders: llmProviders,
+    })
 
     const newConversation: Conversation = {
       id: uuidv4(),
       name: t('New Conversation'),
       messages: [],
-      model: (model as AnySupportedModel) ?? llmProviders?.defaultModel,
+      model: (defaultModel as AnySupportedModel) ?? llmProviders?.defaultModel,
       prompt: DEFAULT_SYSTEM_PROMPT,
       temperature: lastConversation?.temperature ?? DEFAULT_TEMPERATURE,
       folderId: null,

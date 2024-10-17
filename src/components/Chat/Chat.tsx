@@ -74,7 +74,10 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useUpdateConversation } from '~/hooks/conversationQueries'
 import { motion } from 'framer-motion'
 import { useDeleteMessages } from '~/hooks/messageQueries'
-import { AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
+import {
+  AllLLMProviders,
+  ProjectWideLLMProviders,
+} from '~/utils/modelProviders/LLMProvider'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -165,7 +168,7 @@ export const Chat = memo(
         documentGroups,
         tools,
         webLLMModelIdLoading,
-        llmProviders,
+        projectLLMProviders,
       },
       handleUpdateConversation,
       dispatch: homeDispatch,
@@ -334,7 +337,7 @@ export const Chat = memo(
         plugin: Plugin | null = null,
         tools: UIUCTool[],
         enabledDocumentGroups: string[],
-        llmProviders: AllLLMProviders,
+        llmProviders: ProjectWideLLMProviders,
       ) => {
         setCurrentMessage(message)
         resetMessageStates()
@@ -469,7 +472,7 @@ export const Chat = memo(
                     courseName,
                     updatedConversation,
                     searchQuery,
-                    llmProviders,
+                    llmProviders.providers,
                     controller,
                   )
                 searchQuery = newSearchQuery
@@ -540,7 +543,7 @@ export const Chat = memo(
             courseName,
             true,
             courseMetadata,
-            llmProviders,
+            llmProviders.providers,
           )
           // Action 4: Build Prompt - Put everything together into a prompt
           const buildPromptResponse = await fetch('/api/buildPrompt', {
@@ -929,7 +932,7 @@ export const Chat = memo(
             null,
             tools,
             enabledDocumentGroups,
-            llmProviders,
+            projectLLMProviders,
           )
         } else {
           // console.log('assistant')
@@ -939,7 +942,7 @@ export const Chat = memo(
             null,
             tools,
             enabledDocumentGroups,
-            llmProviders,
+            projectLLMProviders,
           )
         }
       }
@@ -1222,7 +1225,7 @@ export const Chat = memo(
                               null,
                               tools,
                               enabledDocumentGroups,
-                              llmProviders,
+                              projectLLMProviders,
                             )
                           }}
                           onImageUrlsUpdate={onImageUrlsUpdate}
@@ -1248,7 +1251,7 @@ export const Chat = memo(
                       plugin,
                       tools,
                       enabledDocumentGroups,
-                      llmProviders,
+                      projectLLMProviders,
                     )
                   }}
                   onScrollDownClick={handleScrollDown}

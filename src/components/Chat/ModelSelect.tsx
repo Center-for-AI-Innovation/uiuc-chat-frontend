@@ -447,17 +447,17 @@ const ModelDropdown: React.FC<
 export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
   ({ chat_ui, props }, ref) => {
     const {
-      state: { selectedConversation, llmProviders, defaultModelId },
+      state: { selectedConversation, projectLLMProviders, defaultModelId },
       handleUpdateConversation,
       dispatch: homeDispatch,
     } = useContext(HomeContext)
     const isSmallScreen = useMediaQuery('(max-width: 960px)')
-    const defaultModel = selectBestModel(llmProviders).id
+    const defaultModel = selectBestModel({ projectLLMProviders }).id
     const [loadingModelId, setLoadingModelId] = useState<string | null>(null)
 
     const handleModelClick = (modelId: string) => {
       // Get list of models from all providers
-      const allModels = Object.values(llmProviders)
+      const allModels = Object.values(projectLLMProviders.providers)
         .flatMap((provider) => provider?.models || [])
         .filter((model) => model.enabled)
 
@@ -495,7 +495,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                   handleModelClick(modelId)
                 }
               }
-              llmProviders={llmProviders}
+              llmProviders={projectLLMProviders.providers}
               isSmallScreen={isSmallScreen}
               loadingModelId={loadingModelId}
               setLoadingModelId={setLoadingModelId}

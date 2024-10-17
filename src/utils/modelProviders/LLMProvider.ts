@@ -167,41 +167,72 @@ export const preferredModelIds = [
   OpenAIModelID.GPT_3_5,
 ]
 
-export const selectBestModel = (
-  allLLMProviders: AllLLMProviders,
-  convo?: Conversation,
-): AnySupportedModel => {
-  const allModels = Object.values(allLLMProviders)
+export const selectBestModel = ({
+  projectLLMProviders,
+}: {
+  projectLLMProviders?: ProjectWideLLMProviders
+}): AnySupportedModel => {
+  // ⭐️ Priority list for defaults ⭐️
+  // 1. Admin-defined on /llms page
+  // 2. User defined default from local storage
+  // 3. Our preferred model list
+  // 4. Fallback: Llama 3.1 70b (poor quality model)
+  // Rules for local-storage: If they haven't clicked it, we can't set it. They should opt-in to storing that default.
+
+  // 1. Admin-defined on /llms page
+  // console.log("selectBestModel: At top. Here's the admin-defined on /llms page:", projectLLMProviders?.defaultModel || "No project-wide default model")
+  // @ts-ignore - these types are fine.
+  if (
+    projectLLMProviders &&
+    projectLLMProviders.defaultModel &&
+    projectLLMProviders.providers[projectLLMProviders.defaultModel.provider]
+  ) {
+    // if defaultModel, and it's one of the project's active models, use it.
+    // console.log("selectBestModel: Using 1. Admin-defined on /llms page:", projectLLMProviders.defaultModel)
+    return projectLLMProviders.defaultModel
+  }
+
+  // 2. User defined default from local storage
+  const defaultModelId = localStorage.getItem('defaultModel')
+  const allAvailableModels = Object.values(projectLLMProviders?.providers || {})
     .filter((provider) => provider!.enabled)
     .flatMap((provider) => provider!.models || [])
     .filter((model) => model.enabled)
 
-  const defaultModelId = localStorage.getItem('defaultModel')
   // console.log('defaultModelId from localstorage: ', defaultModelId)
-  if (defaultModelId && allModels.find((m) => m.id === defaultModelId)) {
-    const defaultModel = allModels
+  if (
+    defaultModelId &&
+    allAvailableModels.find((m) => m.id === defaultModelId)
+  ) {
+    const defaultModel = allAvailableModels
       .filter((model) => model.enabled)
       .find((m) => m.id === defaultModelId)
     if (defaultModel) {
-      console.log(
-        'Using default model from localStorage:',
-        JSON.stringify(defaultModel),
-      )
+      // console.log(
+      //   'selectBestModel ✅ -- 2. User-defined default from localStorage:',
+      //   JSON.stringify(defaultModel),
+      // )
       return defaultModel
     }
   }
 
+  // 3. Our preferred model list
+  // console.log("selectBestModel -- 3. checking preferredModels List")
   for (const preferredId of preferredModelIds) {
-    const model = allModels
+    const model = allAvailableModels
       .filter((model) => model.enabled)
       .find((m) => m.id === preferredId)
     if (model) {
-      localStorage.setItem('defaultModel', preferredId)
+      console.log(
+        'selectBestModel ✅ -- 2. from preferredModels List using: ',
+        preferredId,
+      )
       return model
     }
   }
 
-  console.log('No preferred models found, falling back to Llama 3.1 70b')
-  localStorage.setItem('defaultModel', NCSAHostedModelID.LLAMA31_70b)
+  // 4. Fallback: Llama 3.1 70b (poor quality model)
+  // console.log("selectBestModel -- 4. falling back to Llama 3.1 70b")
+  // localStorage.setItem('defaultModel', NCSAHostedModelID.LLAMA31_70b) // Don't set llama in local storage, it's too bad to be using anywhere.
   return NCSAHostedModels['llama3.1:70b']
 }

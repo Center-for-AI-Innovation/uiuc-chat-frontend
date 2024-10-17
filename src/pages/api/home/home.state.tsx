@@ -7,6 +7,7 @@ import { Prompt } from '@/types/prompt'
 import {
   AnySupportedModel,
   AllLLMProviders,
+  ProjectWideLLMProviders,
 } from '~/utils/modelProviders/LLMProvider'
 
 export interface HomeInitialState {
@@ -16,7 +17,8 @@ export interface HomeInitialState {
   lightMode: 'light' | 'dark'
   messageIsStreaming: boolean
   modelError: ErrorMessage | null
-  llmProviders: AllLLMProviders
+  // llmProviders: AllLLMProviders
+  projectLLMProviders: ProjectWideLLMProviders
   selectedModel: AnySupportedModel | null
   folders: FolderWithConversation[]
   conversations: Conversation[]
@@ -53,7 +55,8 @@ export const initialState: HomeInitialState = {
   lightMode: 'dark',
   messageIsStreaming: false,
   modelError: null,
-  llmProviders: {} as AllLLMProviders,
+  // llmProviders: {} as AllLLMProviders,
+  projectLLMProviders: {} as ProjectWideLLMProviders,
   selectedModel: null,
   folders: [],
   conversations: [],
