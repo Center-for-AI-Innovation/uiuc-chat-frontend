@@ -106,18 +106,19 @@ function IngestProgressBar({ courseName }: { courseName: string }) {
         `/api/materialsTable/docsInProgress?course_name=${courseName}`,
       )
       const data = await response.json()
+      console.log(data)
       if (data && data.documents) {
-        const newTotalDocuments = Math.max(
-          totalDocuments,
-          data.documents.length,
-        )
-        setTotalDocuments(newTotalDocuments) // Set total documents from the initial API call
-        setDataLength(newTotalDocuments - data.documents.length)
+        // const newTotalDocuments = Math.max(
+        //   totalDocuments,
+        //   data.documents.length,
+        // )
+        setTotalDocuments(data.documents)
+        // setDataLength(newTotalDocuments - data.documents.length)
         setHasDocuments(data.documents.length > 0)
-        setProgress(
-          ((newTotalDocuments - data.documents.length) / newTotalDocuments) *
-          100,
-        )
+        // setProgress(
+        //   ((newTotalDocuments - data.documents.length) / newTotalDocuments) *
+        //   100,
+        // )
       } else {
         setHasDocuments(false)
       }
@@ -265,6 +266,38 @@ export function LargeDropzone({
       status: "uploading" as "uploading",
     }))
     setFileUploads(initialFileUploads)
+
+    // useEffect(() => {
+    //   async function fetchData() {
+    //     const response = await fetch(
+    //       `/api/materialsTable/docsInProgress?course_name=${courseName}`,
+    //     )
+    //     const data = await response.json()
+    //     console.log(data)
+    //     if (data && data.documents) {
+    //       // const newTotalDocuments = Math.max(
+    //       //   totalDocuments,
+    //       //   data.documents.length,
+    //       // )
+    //       setTotalDocuments(data.documents)
+    //       // setDataLength(newTotalDocuments - data.documents.length)
+    //       setHasDocuments(data.documents.length > 0)
+    //       // setProgress(
+    //       //   ((newTotalDocuments - data.documents.length) / newTotalDocuments) *
+    //       //   100,
+    //       // )
+    //     } else {
+    //       setHasDocuments(false)
+    //     }
+    //   }
+
+    //   const intervalId = setInterval(fetchData, 3000) // Fetch data every 3000 milliseconds (3 seconds)
+    //   return () => clearInterval(intervalId)
+    // }, [courseName, totalDocuments])
+
+    // if (!hasDocuments) {
+    //   return null
+    // }
 
     if (is_new_course) {
       await callSetCourseMetadata(
@@ -528,6 +561,7 @@ export function LargeDropzone({
       </div>
       <UploadNotification
         files={fileUploads}
+        // ingestFiles={ }
         onClose={() => setFileUploads([])}
         onCancel={() => {
           // Handle cancel logic
