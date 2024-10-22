@@ -12,7 +12,7 @@ import { Database } from 'database.types'
 import { v4 as uuidv4 } from 'uuid'
 import {
   AllSupportedModels,
-  AnySupportedModel,
+  GenericSupportedModel,
 } from '~/utils/modelProviders/LLMProvider'
 
 export const config = {
@@ -54,7 +54,7 @@ export function convertDBToChatConversation(
     name: dbConversation.name,
     model: Array.from(AllSupportedModels).find(
       (model) => model.id === dbConversation.model,
-    ) as AnySupportedModel,
+    ) as GenericSupportedModel,
     prompt: dbConversation.prompt,
     temperature: dbConversation.temperature,
     userEmail: dbConversation.user_email || undefined,
@@ -187,6 +187,10 @@ export default async function handler(
       try {
         // Convert conversation to DB type
         const dbConversation = convertChatToDBConversation(conversation)
+        console.log(
+          'Saving conversation to server with db object:',
+          dbConversation,
+        )
 
         if (conversation.messages.length === 0) {
           throw new Error('No messages in conversation, not saving!')

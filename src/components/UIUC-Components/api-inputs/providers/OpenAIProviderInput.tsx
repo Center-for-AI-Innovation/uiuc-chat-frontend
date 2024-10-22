@@ -25,7 +25,12 @@ export default function OpenAIProviderInput({
 
   return (
     <motion.div layout>
-      <Card shadow="sm" p="lg" radius="lg" className="w-[310px] bg-[#15162c]">
+      <Card
+        shadow="sm"
+        p="lg"
+        radius="lg"
+        className="max-w-[330px] bg-[#15162c] md:w-[330px]"
+      >
         <div
           style={{
             display: 'flex',
@@ -64,16 +69,10 @@ export default function OpenAIProviderInput({
                 aria-label="Enable OpenAI provider"
                 checked={field.state.value}
                 onChange={(event) => {
-                  const newValue = event.currentTarget.checked
-                  field.handleChange(newValue)
-                  provider.enabled = newValue
-
-                  if (form.state.values.defaultModel && form.state.values.defaultModel.provider === ProviderNames.OpenAI) {
-                    form.setFieldValue('defaultModel', newValue ? form.state.values.defaultModel : null)
-                  }
+                  field.handleChange(event.currentTarget.checked)
 
                   // Trigger form submission
-                  form.handleSubmit()
+                  setTimeout(() => form.handleSubmit(), 0)
                 }}
                 thumbIcon={
                   field.state.value ? (
@@ -112,8 +111,6 @@ export default function OpenAIProviderInput({
                 borderRadius: '4px',
                 backgroundColor: 'rgba(255, 0, 0, 0.1)',
                 border: '1px solid rgba(255, 0, 0, 0.2)',
-                wordBreak: 'break-all', // Add this line
-                overflowWrap: 'break-word', // Add this line for better compatibility
               }}
             >
               {provider.error}
@@ -134,7 +131,7 @@ export default function OpenAIProviderInput({
                       <APIKeyInput
                         field={apiKeyField}
                         placeholder="OpenAI API Key"
-                      // onValidate={validateApiKey}
+                        // onValidate={validateApiKey}
                       />
                     )}
                   </form.Field>

@@ -1,8 +1,6 @@
-import { CourseMetadata } from '~/types/courseMetadata'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 import { OpenAIModelID, OpenAIModels, OpenAIProvider } from '../types/openai'
 import OpenAI from 'openai'
-import { kv } from '@vercel/kv'
 import { preferredModelIds, ProviderNames } from '../LLMProvider'
 
 export const getOpenAIModels = async (
@@ -23,8 +21,9 @@ export const getOpenAIModels = async (
       return openAIProvider
     }
 
+    const key = await decryptKeyIfNeeded(openAIProvider.apiKey)
     const client = new OpenAI({
-      apiKey: await decryptKeyIfNeeded(openAIProvider.apiKey),
+      apiKey: key,
     })
 
     const response = await client.models.list()

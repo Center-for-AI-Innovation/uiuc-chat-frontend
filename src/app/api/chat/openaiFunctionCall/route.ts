@@ -7,7 +7,7 @@ import type {
 } from 'openai/resources/chat/completions'
 
 import { Conversation } from '~/types/chat'
-import { decryptKeyIfNeeded } from '~/utils/crypto'
+import { decrypt, isEncrypted } from '~/utils/crypto'
 
 export const runtime = 'edge'
 
@@ -46,10 +46,30 @@ export async function POST(req: Request) {
     openaiKey: string
   } = await req.json()
 
-  let decryptedKey = await decryptKeyIfNeeded(openaiKey)
+  let decryptedKey = openaiKey
+  // console.log('Decrypted key before transform: ', decryptedKey)
+  if (openaiKey && isEncrypted(openaiKey)) {
+    // Decrypt the key
+    const decryptedText = await decrypt(
+      openaiKey,
+      process.env.NEXT_PUBLIC_SIGNING_KEY as string,
+    )
+    decryptedKey = decryptedText as string
+    // console.log('models.ts Decrypted api key: ', apiKey)
+  }
+
   if (decryptedKey && !decryptedKey.startsWith('sk-')) {
+    // console.log('api key: ', decryptedKey)
+    // console.log('process.env.VLADS_OPENAI_KEY: ', process.env.VLADS_OPENAI_KEY)
     decryptedKey = process.env.VLADS_OPENAI_KEY as string
   }
+  // console.log('Decrypted key: ', decryptedKey)
+
+  // Create an OpenAI API client (that's edge friendly!)
+  // const openai = new OpenAI({ apiKey: decryptedKey })
+
+  // Cloudflare proxy format: https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_slug}/openai
+  // const openai = new OpenAI({ apiKey: decryptedKey, baseURL: "https://gateway.ai.cloudflare.com/v1/74022ae0779bc80e94e2346e1720449d/uiucchat/openai" })
 
   // Auto-trace LLM calls w/ langsmith
   const openai = wrapOpenAI(new OpenAI({ apiKey: decryptedKey }), {

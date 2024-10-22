@@ -74,11 +74,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useUpdateConversation } from '~/hooks/conversationQueries'
 import { motion } from 'framer-motion'
 import { useDeleteMessages } from '~/hooks/messageQueries'
-import {
-  AllLLMProviders,
-  ProjectWideLLMProviders,
-} from '~/utils/modelProviders/LLMProvider'
-import posthog from 'posthog-js'
+import { AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -169,7 +165,7 @@ export const Chat = memo(
         documentGroups,
         tools,
         webLLMModelIdLoading,
-        projectLLMProviders,
+        llmProviders,
       },
       handleUpdateConversation,
       dispatch: homeDispatch,
@@ -338,8 +334,9 @@ export const Chat = memo(
         plugin: Plugin | null = null,
         tools: UIUCTool[],
         enabledDocumentGroups: string[],
-        llmProviders: ProjectWideLLMProviders,
+        llmProviders: AllLLMProviders,
       ) => {
+        console.log('handleSend called with model:', selectedConversation?.model);
         setCurrentMessage(message)
         resetMessageStates()
 
@@ -349,24 +346,18 @@ export const Chat = memo(
 
         if (selectedConversation) {
           // Add this type guard function
-          function isValidModel(
-            model: any,
-          ): model is { id: string; name: string } {
-            return (
-              model &&
-              typeof model.id === 'string' &&
-              typeof model.name === 'string'
-            )
+          function isValidModel(model: any): model is { id: string; name: string } {
+            return model && typeof model.id === 'string' && typeof model.name === 'string';
           }
 
           // Check if model is defined and valid
           if (!isValidModel(selectedConversation.model)) {
-            console.error('Selected conversation does not have a valid model.')
+            console.error('Selected conversation does not have a valid model.');
             errorToast({
               title: 'Model Error',
               message: 'No valid model selected for the conversation.',
-            })
-            return
+            });
+            return;
           }
 
           let updatedConversation: Conversation
@@ -440,15 +431,6 @@ export const Chat = memo(
           //   'updatedConversation before mutation:',
           //   updatedConversation,
           // )
-
-          // Log the conversation to PostHog
-          posthog.capture('message_sent_by_user', {
-            user_email: updatedConversation.userEmail,
-            conversation_id: updatedConversation.id,
-            message_count: updatedConversation.messages?.length,
-            conversation_name: updatedConversation.name,
-          })
-
           handleUpdateConversation(updatedConversation, {
             key: 'messages',
             value: updatedConversation.messages,
@@ -482,7 +464,7 @@ export const Chat = memo(
                     courseName,
                     updatedConversation,
                     searchQuery,
-                    llmProviders.providers,
+                    llmProviders,
                     controller,
                   )
                 searchQuery = newSearchQuery
@@ -553,7 +535,7 @@ export const Chat = memo(
             courseName,
             true,
             courseMetadata,
-            llmProviders.providers,
+            llmProviders,
           )
           // Action 4: Build Prompt - Put everything together into a prompt
           const buildPromptResponse = await fetch('/api/buildPrompt', {
@@ -942,7 +924,7 @@ export const Chat = memo(
             null,
             tools,
             enabledDocumentGroups,
-            projectLLMProviders,
+            llmProviders,
           )
         } else {
           // console.log('assistant')
@@ -952,7 +934,7 @@ export const Chat = memo(
             null,
             tools,
             enabledDocumentGroups,
-            projectLLMProviders,
+            llmProviders,
           )
         }
       }
@@ -1212,9 +1194,7 @@ export const Chat = memo(
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.25, ease: 'easeInOut' }}
                 >
-                  {selectedConversation &&
-                  selectedConversation.messages &&
-                  selectedConversation.messages?.length === 0 ? (
+                  {selectedConversation && selectedConversation.messages && selectedConversation.messages?.length === 0 ? (
                     <>
                       <div className="mt-16">
                         {renderIntroductoryStatements()}
@@ -1235,7 +1215,7 @@ export const Chat = memo(
                               null,
                               tools,
                               enabledDocumentGroups,
-                              projectLLMProviders,
+                              llmProviders,
                             )
                           }}
                           onImageUrlsUpdate={onImageUrlsUpdate}
@@ -1261,7 +1241,7 @@ export const Chat = memo(
                       plugin,
                       tools,
                       enabledDocumentGroups,
-                      projectLLMProviders,
+                      llmProviders,
                     )
                   }}
                   onScrollDownClick={handleScrollDown}

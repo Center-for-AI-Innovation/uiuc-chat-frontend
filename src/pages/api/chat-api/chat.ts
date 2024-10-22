@@ -32,7 +32,7 @@ import {
 } from '~/utils/functionCalling/handleFunctionCalling'
 import {
   AllLLMProviders,
-  AnySupportedModel,
+  GenericSupportedModel,
   OpenAIProvider,
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
@@ -134,7 +134,7 @@ export default async function chat(
   const key = await fetchKeyToUse(openai_key, courseMetadata)
 
   // Determine and validate the model to use
-  let selectedModel: AnySupportedModel
+  let selectedModel: GenericSupportedModel
   let llmProviders: AllLLMProviders
   try {
     const { activeModel, modelsWithProviders } =

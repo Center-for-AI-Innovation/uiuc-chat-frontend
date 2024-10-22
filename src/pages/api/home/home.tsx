@@ -26,8 +26,6 @@ import { type HomeInitialState, initialState } from './home.state'
 import { v4 as uuidv4 } from 'uuid'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import {
-  AnySupportedModel,
-  ProjectWideLLMProviders,
   selectBestModel,
   VisionCapableModels,
 } from '~/utils/modelProviders/LLMProvider'
@@ -41,8 +39,6 @@ import { useUpdateConversation } from '~/hooks/conversationQueries'
 import { FolderType, FolderWithConversation } from '~/types/folder'
 import { useQueryClient } from '@tanstack/react-query'
 import { useCreateFolder } from '~/hooks/folderQueries'
-import { GetCurrentPageName } from '~/components/UIUC-Components/CanViewOnlyCourse'
-import { useGetProjectLLMProviders } from '~/hooks/useProjectAPIKeys'
 
 const Home = ({
   current_email,
@@ -118,7 +114,7 @@ const Home = ({
         throw new Error('Failed to fetch models')
       }
 
-      return response.json() as unknown as ProjectWideLLMProviders
+      return response.json()
     },
     [],
   )
@@ -139,6 +135,7 @@ const Home = ({
       selectedConversation,
       prompts,
       temperature,
+      llmProviders,
       documentGroups,
       tools,
       searchTerm,
@@ -151,34 +148,21 @@ const Home = ({
     queryClient,
     course_name,
   )
-  const projectName = GetCurrentPageName()
-
-  const {
-    data: llmProviders,
-    isLoading: isLoadingLLMProviders,
-    isError: isErrorLLMProviders,
-    error: errorLLMProviders,
-    // enabled: !!projectName // Only run the query when projectName is available
-  } = useGetProjectLLMProviders({ projectName: projectName })
-
   // Use effects for setting up the course metadata and models depending on the course/project
   useEffect(() => {
     // Set model after we fetch available models
     if (!llmProviders || Object.keys(llmProviders).length === 0) return
-
-    const defaultModel = selectBestModel({
-      projectLLMProviders: llmProviders,
-    })
+    const model = selectBestModel(llmProviders)
 
     dispatch({
       field: 'defaultModelId',
-      value: defaultModel,
+      value: model.id,
     })
 
     // Ensure current convo has a valid model
     if (selectedConversation) {
       const convo_with_valid_model = selectedConversation
-      convo_with_valid_model.model = defaultModel
+      convo_with_valid_model.model = model
       dispatch({
         field: 'selectedConversation',
         value: convo_with_valid_model,
@@ -194,12 +178,19 @@ const Home = ({
     let key = ''
 
     if (course_metadata && course_metadata.openai_api_key) {
+      // console.log(
+      //   'Using key from course_metadata',
+      //   course_metadata.openai_api_key,
+      // )
       key = course_metadata.openai_api_key
+      // setServerSideApiKeyIsSet(true)
       dispatch({
         field: 'serverSideApiKeyIsSet',
         value: true,
       })
       dispatch({ field: 'apiKey', value: '' })
+      // TODO: add logging for axiom, after merging with main (to get the axiom code)
+      // log.debug('Using Course-Wide OpenAI API Key', { course_metadata: { course_metadata } })
     } else if (local_api_key) {
       if (local_api_key.startsWith('sk-')) {
         console.log(
@@ -221,11 +212,10 @@ const Home = ({
       try {
         if (!course_metadata) return
 
-        const llmProviders = await getModels({
+        const models = await getModels({
           projectName: course_name,
         })
-
-        dispatch({ field: 'projectLLMProviders', value: llmProviders })
+        dispatch({ field: 'llmProviders', value: models })
       } catch (error) {
         console.error('Error fetching models user has access to: ', error)
         dispatch({ field: 'modelError', value: getModelsError(error) })
@@ -327,20 +317,17 @@ const Home = ({
     if (selectedConversation?.messages.length === 0) return
   }
 
-  // This will ONLY update the react context and not the server
   const handleNewConversation = () => {
-    if (selectedConversation?.messages.length === 0) return
     const lastConversation = conversations[conversations.length - 1]
 
-    const defaultModel = selectBestModel({
-      projectLLMProviders: llmProviders,
-    })
+    // Determine the model to use for the new conversation
+    const model = selectBestModel(llmProviders)
 
     const newConversation: Conversation = {
       id: uuidv4(),
       name: t('New Conversation'),
       messages: [],
-      model: (defaultModel as AnySupportedModel) ?? llmProviders?.defaultModel,
+      model: model,
       prompt: DEFAULT_SYSTEM_PROMPT,
       temperature: lastConversation?.temperature ?? DEFAULT_TEMPERATURE,
       folderId: null,
@@ -629,6 +616,7 @@ const Home = ({
         if (!llmProviders || Object.keys(llmProviders).length === 0) return
         handleNewConversation()
       }
+      // handleNewConversation()
       setIsInitialSetupDone(true)
     }
 
