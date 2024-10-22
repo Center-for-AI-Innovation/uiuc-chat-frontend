@@ -25,10 +25,11 @@ import GitHubIngestForm from '~/components/UIUC-Components/GitHubIngestForm'
 import UploadNotification from '~/components/UIUC-Components/UploadNotification'
 import MITIngestForm from '~/components/UIUC-Components/MITIngestForm'
 import CourseraIngestForm from '~/components/UIUC-Components/CourseraIngestForm'
+import SupportedFileUploadTypes from '~/components/UIUC-Components/SupportedFileUploadTypes'
 
 const CourseMain: NextPage = () => {
   const router = useRouter()
-  const [courseName, setCourseName] = useState<string | null>(null)
+  const [projectName, setProjectName] = useState<string | null>(null)
   const { user, isLoaded, isSignedIn } = useUser()
   const [isFetchingCourseMetadata, setIsFetchingCourseMetadata] = useState(true)
   const user_emails = extractEmailsFromClerk(user)
@@ -49,7 +50,7 @@ const CourseMain: NextPage = () => {
         await router.push('/new?course_name=' + local_course_name)
         return
       }
-      setCourseName(local_course_name)
+      setProjectName(local_course_name)
       setIsFetchingCourseMetadata(false)
       setProjectMetadata(metadata)
     }
@@ -57,29 +58,29 @@ const CourseMain: NextPage = () => {
   }, [router.isReady])
 
   // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
-  if (!isLoaded || isFetchingCourseMetadata || courseName == null) {
+  if (!isLoaded || isFetchingCourseMetadata || projectName == null) {
     return <LoadingPlaceholderForAdminPages />
   }
 
   if (!isSignedIn) {
-    console.log('User not logged in', isSignedIn, isLoaded, courseName)
-    return <AuthComponent course_name={courseName as string} />
+    console.log('User not logged in', isSignedIn, isLoaded, projectName)
+    return <AuthComponent course_name={projectName as string} />
   }
 
   // Don't edit certain special pages (no context allowed)
   if (
-    courseName.toLowerCase() == 'gpt4' ||
-    courseName.toLowerCase() == 'global' ||
-    courseName.toLowerCase() == 'extreme'
+    projectName.toLowerCase() == 'gpt4' ||
+    projectName.toLowerCase() == 'global' ||
+    projectName.toLowerCase() == 'extreme'
   ) {
-    return <CannotEditGPT4Page course_name={courseName as string} />
+    return <CannotEditGPT4Page course_name={projectName as string} />
   }
 
   return (
-    <>  <Navbar course_name={courseName} />
+    <>  <Navbar course_name={projectName} />
 
       <Head>
-        <title>{courseName}/upload</title>
+        <title>{projectName}/upload</title>
         <meta
           name="UIUC.chat"
           content="The AI teaching assistant built for students at UIUC."
@@ -123,7 +124,7 @@ const CourseMain: NextPage = () => {
                   className={`pl-8 pt-8 ${montserrat_heading.variable} font-montserratHeading`}
                 >
                   {/* API Keys: Add LLMs to your Chatbot */}
-                  {courseName}
+                  {projectName}
                 </Title>
                 {/* <Title
                   className={`${montserrat_heading.variable} flex-[1_1_50%] font-montserratHeading`}
@@ -137,14 +138,16 @@ const CourseMain: NextPage = () => {
                 </Title> */}
 
                 <LargeDropzone
-                  courseName={courseName}
+                  courseName={projectName}
                   current_user_email={user_emails[0] as string}
                   redirect_to_gpt_4={false}
                   isDisabled={false}
                   courseMetadata={metadata as CourseMetadata}
                   is_new_course={false}
                 />
-
+                <div className='grid justify-center'>
+                  <SupportedFileUploadTypes />
+                </div>
 
                 <SimpleGrid
                   cols={3}
@@ -155,13 +158,13 @@ const CourseMain: NextPage = () => {
                   ]}
                   style={{ padding: '2rem 2rem 3rem 3rem' }}
                 >
-                  <CanvasIngestForm />
+                  <CanvasIngestForm project_name={projectName} />
 
-                  <WebsiteIngestForm />
+                  <WebsiteIngestForm project_name={projectName} />
 
                   <GitHubIngestForm />
 
-                  <MITIngestForm />
+                  <MITIngestForm project_name={projectName} />
 
                   <CourseraIngestForm />
                 </SimpleGrid>

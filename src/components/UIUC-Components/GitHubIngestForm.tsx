@@ -57,7 +57,7 @@ export default function GitHubIngestForm() {
     setIsUrlValid(validateUrl(input))
   }
   const validateUrl = (input: string) => {
-    const regex = /^https?:\/\/canvas\.illinois\.edu\/courses\/\d+/
+    const regex = /^https?:\/\/(www\.)?github\.com\/.+/
     return regex.test(input)
   }
 

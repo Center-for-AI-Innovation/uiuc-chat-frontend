@@ -45,7 +45,6 @@ export default function CourseraIngestForm() {
       // setMaxDepth(value)
     }
   }
-  const [icon, setIcon] = useState(<IconWorldDownload size={'50%'} />)
   const [scrapeStrategy, setScrapeStrategy] =
     useState<string>('equal-and-below')
   const logoRef = useRef(null) // Create a ref for the logo
@@ -57,7 +56,7 @@ export default function CourseraIngestForm() {
     setIsUrlValid(validateUrl(input))
   }
   const validateUrl = (input: string) => {
-    const regex = /^https?:\/\/canvas\.illinois\.edu\/courses\/\d+/
+    const regex = /^https?:\/\/(www\.)?coursera\.org\/learn\/.+/
     return regex.test(input)
   }
 
@@ -263,7 +262,11 @@ export default function CourseraIngestForm() {
                       <div>
                         <Label htmlFor="canvas-url" className="text-white">URL</Label>
                         <Input
-                          icon={icon}
+                          icon={<img
+                            src={'/media/coursera_logo_cutout.png'}
+                            alt="Coursera Logo"
+                            style={{ height: '50%', width: '50%' }}
+                          />}
                           // I can't figure out how to change the background colors.
                           className={`mt-4 w-[100%] min-w-[25rem] disabled:bg-purple-200 lg:w-[75%]`}
                           // wrapperProps={{ borderRadius: 'xl' }}
@@ -282,48 +285,8 @@ export default function CourseraIngestForm() {
                           type="url" // Set the type to 'url' to avoid thinking it's a username or pw.
                           value={url}
                           size={'lg'}
-                          // disabled={isDisabled}
-                          onChange={(e) => {
-                            setUrl(e.target.value)
-                            // setShowContentOptions(
-                            //   e.target.value.includes('canvas.illinois.edu'),
-                            // )
-                            if (e.target.value.includes('coursera.org')) {
-                              setIcon(
-                                <img
-                                  src={'/media/coursera_logo_cutout.png'}
-                                  alt="Coursera Logo"
-                                  style={{ height: '50%', width: '50%' }}
-                                />,
-                              )
-                            } else if (e.target.value.includes('ocw.mit.edu')) {
-                              setIcon(
-                                <img
-                                  src={'/media/mitocw_logo.jpg'}
-                                  alt="MIT OCW Logo"
-                                  style={{ height: '50%', width: '50%' }}
-                                />,
-                              )
-                            } else if (e.target.value.includes('github.com')) {
-                              setIcon(
-                                <img
-                                  src="/media/github-mark-white.png"
-                                  alt="GitHub Logo"
-                                  style={{ height: '50%', width: '50%' }}
-                                />,
-                              )
-                            } else if (e.target.value.includes('canvas.illinois.edu')) {
-                              setIcon(
-                                <img
-                                  src="/media/canvas_logo.png"
-                                  alt="Canvas Logo"
-                                  style={{ height: '50%', width: '50%' }}
-                                />,
-                              )
-                            } else {
-                              setIcon(<IconWorldDownload />)
-                            }
-                          }}
+                        // disabled={isDisabled}
+
                         // onKeyPress={(event) => {
                         //   if (event.key === 'Enter') {
                         //     handleSubmit()

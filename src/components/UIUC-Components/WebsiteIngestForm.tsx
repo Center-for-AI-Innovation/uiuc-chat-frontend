@@ -28,7 +28,9 @@ const montserrat_med = Montserrat({
   weight: '500',
   subsets: ['latin'],
 })
-export default function WebsiteIngestForm() {
+export default function WebsiteIngestForm({
+  project_name }: { project_name: string }): JSX.Element {
+
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
   const [url, setUrl] = useState('')
@@ -57,7 +59,7 @@ export default function WebsiteIngestForm() {
     setIsUrlValid(validateUrl(input))
   }
   const validateUrl = (input: string) => {
-    const regex = /^https?:\/\/canvas\.illinois\.edu\/courses\/\d+/
+    const regex = /^(https?:\/\/)?.+/
     return regex.test(input)
   }
 
@@ -99,6 +101,23 @@ export default function WebsiteIngestForm() {
     }
     return url
   }
+
+  const handleIngest = async () => {
+
+    try {
+      await scrapeWeb(
+        url,
+        project_name,
+        maxUrls.trim() !== '' ? parseInt(maxUrls) : 50,
+        scrapeStrategy,
+      )
+    } catch (error: any) {
+      console.error('Error while scraping web:', error)
+    }
+    // let ingest finalize things. It should be finished, but the DB is slow.
+    await new Promise((resolve) => setTimeout(resolve, 8000))
+  }
+
   const formatUrlAndMatchRegex = (url: string) => {
     // fullUrl always starts with http://. Is the starting place of the scrape.
     // baseUrl is used to construct the match statement.
@@ -278,48 +297,8 @@ export default function WebsiteIngestForm() {
                           type="url" // Set the type to 'url' to avoid thinking it's a username or pw.
                           value={url}
                           size={'lg'}
-                          // disabled={isDisabled}
-                          onChange={(e) => {
-                            setUrl(e.target.value)
-                            // setShowContentOptions(
-                            //   e.target.value.includes('canvas.illinois.edu'),
-                            // )
-                            if (e.target.value.includes('coursera.org')) {
-                              setIcon(
-                                <img
-                                  src={'/media/coursera_logo_cutout.png'}
-                                  alt="Coursera Logo"
-                                  style={{ height: '50%', width: '50%' }}
-                                />,
-                              )
-                            } else if (e.target.value.includes('ocw.mit.edu')) {
-                              setIcon(
-                                <img
-                                  src={'/media/mitocw_logo.jpg'}
-                                  alt="MIT OCW Logo"
-                                  style={{ height: '50%', width: '50%' }}
-                                />,
-                              )
-                            } else if (e.target.value.includes('github.com')) {
-                              setIcon(
-                                <img
-                                  src="/media/github-mark-white.png"
-                                  alt="GitHub Logo"
-                                  style={{ height: '50%', width: '50%' }}
-                                />,
-                              )
-                            } else if (e.target.value.includes('canvas.illinois.edu')) {
-                              setIcon(
-                                <img
-                                  src="/media/canvas_logo.png"
-                                  alt="Canvas Logo"
-                                  style={{ height: '50%', width: '50%' }}
-                                />,
-                              )
-                            } else {
-                              setIcon(<IconWorldDownload />)
-                            }
-                          }}
+                        // disabled={isDisabled}
+
                         // onKeyPress={(event) => {
                         //   if (event.key === 'Enter') {
                         //     handleSubmit()
@@ -500,7 +479,7 @@ export default function WebsiteIngestForm() {
                         />
                       </form>
                       <Button
-                        // onClick={handleIngest}
+                        onClick={handleIngest}
                         disabled={!isUrlValid}
                         className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                       >

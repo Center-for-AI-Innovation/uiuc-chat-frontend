@@ -202,8 +202,8 @@ const SupportedFileUploadTypes = () => {
           quality={60}
           alt="Canvas logo"
           className={classes.logos}
-          // Had to force it down a few pixels, looked weird otherwise
-          // style={{ position: 'relative', top: '7px' }}
+        // Had to force it down a few pixels, looked weird otherwise
+        // style={{ position: 'relative', top: '7px' }}
         />
         <Image
           src="/media/mitocw_logo.jpg"
@@ -220,8 +220,8 @@ const SupportedFileUploadTypes = () => {
           quality={60}
           alt="Github logo"
           className={classes.logos}
-          // className={classes.smallLogos}
-          // style={{mixBlendMode: 'multiply' }}
+        // className={classes.smallLogos}
+        // style={{mixBlendMode: 'multiply' }}
         />
         <Image
           src="/media/notion_logo.png"
@@ -230,8 +230,8 @@ const SupportedFileUploadTypes = () => {
           quality={60}
           alt="Notion logo"
           className={classes.logos}
-          // className={classes.smallLogos}
-          // style={{mixBlendMode: 'multiply' }}
+        // className={classes.smallLogos}
+        // style={{mixBlendMode: 'multiply' }}
         />
       </Flex>
 
@@ -243,7 +243,7 @@ const SupportedFileUploadTypes = () => {
         <code className={classes.codeStyledText}>code</code>,{' '}
         <code className={classes.codeStyledText}>utf-8</code> ...
       </Text>
-
+      {/* 
       <Accordion
         pl={20}
         pr={4}
@@ -259,8 +259,8 @@ const SupportedFileUploadTypes = () => {
           value="openai-key-details"
           className={classes.item}
           style={{ backgroundColor: '#292c5b' }}
-        >
-          <Accordion.Control className={classes.control}>
+        > */}
+      {/* <Accordion.Control className={classes.control}>
             <div
               style={{
                 display: 'flex',
@@ -434,7 +434,7 @@ const SupportedFileUploadTypes = () => {
             </Text>
           </Accordion.Panel>
         </Accordion.Item>
-      </Accordion>
+      </Accordion> */}
     </>
   )
 }

@@ -20,9 +20,12 @@ import {
 // import { Checkbox } from '@radix-ui/react-checkbox'
 import { Label } from '@radix-ui/react-label'
 import { ExternalLink } from 'tabler-icons-react'
+import { useRouter } from 'next/router'
 
 
-export default function CanvasIngestForm() {
+export default function CanvasIngestForm({
+  project_name, }: { project_name: string }): JSX.Element {
+
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
   const [selectedOptions, setSelectedOptions] = useState<string[]>([
@@ -36,6 +39,7 @@ export default function CanvasIngestForm() {
   const [url, setUrl] = useState('')
   const logoRef = useRef(null) // Create a ref for the logo
   const [showContentOptions, setShowContentOptions] = useState(false);
+  const [loadingSpinner, setLoadingSpinner] = useState(false)
   const [isEnabled, setIsEnabled] = useState(false);
   const [open, setOpen] = useState(false);
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,6 +51,12 @@ export default function CanvasIngestForm() {
     const regex = /^https?:\/\/canvas\.illinois\.edu\/courses\/\d+/
     return regex.test(input)
   }
+  const router = useRouter()
+
+  const getCurrentPageName = () => {
+    return router.query.course_name as string
+  }
+  const courseName = getCurrentPageName() as string
 
   useEffect(() => {
     if (url && url.length > 0 && validateUrl(url)) {
@@ -63,8 +73,36 @@ export default function CanvasIngestForm() {
     )
   }
 
-  const handleIngest = () => {
-    console.log('Ingesting:', url, 'with options:', selectedOptions)
+  const handleIngest = async () => {
+    if (validateUrl(url)) {
+
+
+      if (url.includes('canvas.illinois.edu/courses/')) {
+        const response = await fetch('/api/UIUC-api/ingestCanvas', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            courseName: courseName,
+            canvas_url: url,
+            selectedCanvasOptions: selectedOptions,
+          }),
+        })
+        const data = await response.json()
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        if (data && data.error) {
+          throw new Error(data.error)
+        }
+        await new Promise((resolve) => setTimeout(resolve, 8000)) // wait a moment before redirecting
+        console.log('Canvas content ingestion was successful!')
+      }
+      console.log('Ingesting:', url, 'with options:', selectedOptions)
+    } else {
+      alert('Invalid URL (please include https://)')
+    }
   }
 
   return (

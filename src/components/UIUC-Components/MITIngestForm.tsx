@@ -28,11 +28,14 @@ const montserrat_med = Montserrat({
   weight: '500',
   subsets: ['latin'],
 })
-export default function MITIngestForm() {
+export default function MITIngestForm({
+  project_name, }: { project_name: string }): JSX.Element {
+
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
   const [url, setUrl] = useState('')
   const [maxUrls, setMaxUrls] = useState('50')
+  const theme = useMantineTheme()
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     variable: string,
@@ -57,10 +60,79 @@ export default function MITIngestForm() {
     setIsUrlValid(validateUrl(input))
   }
   const validateUrl = (input: string) => {
-    const regex = /^https?:\/\/canvas\.illinois\.edu\/courses\/\d+/
+    const regex = /^https?:\/\/ocw\.mit\.edu\/.+/
     return regex.test(input)
   }
+  const downloadMITCourse = async (
+    url: string | null,
+    courseName: string | null,
+    localDir: string | null,
+  ) => {
+    try {
+      if (!url || !courseName || !localDir) return null
+      console.log('calling downloadMITCourse')
+      const response = await axios.get(
+        `https://flask-production-751b.up.railway.app/mit-download`,
+        {
+          params: {
+            url: url,
+            course_name: courseName,
+            local_dir: localDir,
+          },
+        },
+      )
+      return response.data
+    } catch (error) {
+      console.error('Error during MIT course download:', error)
+      return null
+    }
+  }
 
+  const handleIngest = () => {
+    let data = null;
+    if (url.includes('ocw.mit.edu')) {
+      data = downloadMITCourse(url, project_name, 'local_dir') // no await -- do in background
+
+      showToast()
+    }
+  }
+  const showToast = () => {
+    return (
+      // docs: https://mantine.dev/others/notifications/
+
+      notifications.show({
+        id: 'web-scrape-toast',
+        withCloseButton: true,
+        onClose: () => console.log('unmounted'),
+        onOpen: () => console.log('mounted'),
+        autoClose: 15000,
+        // position="top-center",
+        title: 'Web scraping started',
+        message:
+          "It'll scrape in the background, just wait for the results to show up in your project (~3 minutes total).\nThis feature is stable but the web is a messy place. If you have trouble, I'd love to fix it. Just shoot me an email: kvday2@illinois.edu.",
+        icon: <IconWorldDownload />,
+        styles: {
+          root: {
+            backgroundColor: theme.colors.nearlyWhite,
+            borderColor: theme.colors.aiPurple,
+          },
+          title: {
+            color: theme.colors.nearlyBlack,
+          },
+          description: {
+            color: theme.colors.nearlyBlack,
+          },
+          closeButton: {
+            color: theme.colors.nearlyBlack,
+            '&:hover': {
+              backgroundColor: theme.colors.dark[1],
+            },
+          },
+        },
+        loading: false,
+      })
+    )
+  }
   const [inputErrors, setInputErrors] = useState({
     maxUrls: { error: false, message: '' },
     maxDepth: { error: false, message: '' },
@@ -282,48 +354,8 @@ export default function MITIngestForm() {
                           type="url" // Set the type to 'url' to avoid thinking it's a username or pw.
                           value={url}
                           size={'lg'}
-                          // disabled={isDisabled}
-                          onChange={(e) => {
-                            setUrl(e.target.value)
-                            // setShowContentOptions(
-                            //   e.target.value.includes('canvas.illinois.edu'),
-                            // )
-                            if (e.target.value.includes('coursera.org')) {
-                              setIcon(
-                                <img
-                                  src={'/media/coursera_logo_cutout.png'}
-                                  alt="Coursera Logo"
-                                  style={{ height: '50%', width: '50%' }}
-                                />,
-                              )
-                            } else if (e.target.value.includes('ocw.mit.edu')) {
-                              setIcon(
-                                <img
-                                  src={'/media/mitocw_logo.jpg'}
-                                  alt="MIT OCW Logo"
-                                  style={{ height: '50%', width: '50%' }}
-                                />,
-                              )
-                            } else if (e.target.value.includes('github.com')) {
-                              setIcon(
-                                <img
-                                  src="/media/github-mark-white.png"
-                                  alt="GitHub Logo"
-                                  style={{ height: '50%', width: '50%' }}
-                                />,
-                              )
-                            } else if (e.target.value.includes('canvas.illinois.edu')) {
-                              setIcon(
-                                <img
-                                  src="/media/canvas_logo.png"
-                                  alt="Canvas Logo"
-                                  style={{ height: '50%', width: '50%' }}
-                                />,
-                              )
-                            } else {
-                              setIcon(<IconWorldDownload />)
-                            }
-                          }}
+                        // disabled={isDisabled}
+
                         // onKeyPress={(event) => {
                         //   if (event.key === 'Enter') {
                         //     handleSubmit()
@@ -361,7 +393,7 @@ export default function MITIngestForm() {
                       >
                          */}
                       <Button
-                        // onClick={handleIngest}
+                        onClick={handleIngest}
                         disabled={!isUrlValid}
                         className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                       >
@@ -381,3 +413,4 @@ export default function MITIngestForm() {
     </motion.div >
   )
 }
+
