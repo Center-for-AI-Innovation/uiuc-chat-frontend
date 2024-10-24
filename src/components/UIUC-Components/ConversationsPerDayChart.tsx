@@ -104,9 +104,9 @@ const ConversationsPerDayChart: React.FC<{ course_name: string }> = ({
               fill: '#fff',
               fontFamily: 'Montserrat',
               fontSize: 15,
-              angle: -45,
               dx: -5,
             }}
+            angle={-45}
             label={{
               value: 'Date',
               position: 'insideBottom',
