@@ -26,6 +26,10 @@ import axios from 'axios'
 import { useRouter } from 'next/router'
 import { LoadingSpinner } from './LoadingSpinner'
 import { downloadConversationHistory } from '../../pages/api/UIUC-api/downloadConvoHistory'
+import ConversationsPerDayChart from './ConversationsPerDayChart'
+import ConversationsPerHourChart from './ConversationsPerHourChart'
+import ConversationsPerDayOfWeekChart from './ConversationsPerDayOfWeekChart'
+import ConversationsHeatmapByHourChart from './ConversationsHeatmapByHourChart'
 
 const useStyles = createStyles((theme: MantineTheme) => ({
   downloadButton: {
@@ -290,6 +294,27 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                 </Title>
               </>
             )}
+
+            <div className="flex w-full justify-center pt-10">
+              <div className="w-11/12 md:w-3/4 lg:w-2/3">
+                <ConversationsPerDayChart course_name={course_name} />
+              </div>
+            </div>
+            <div className="flex w-full justify-center pt-10">
+              <div className="w-11/12 md:w-3/4 lg:w-2/3">
+                <ConversationsPerHourChart course_name={course_name} />
+              </div>
+            </div>
+            <div className="flex w-full justify-center pt-10">
+              <div className="w-11/12 md:w-3/4 lg:w-2/3">
+                <ConversationsPerDayOfWeekChart course_name={course_name} />
+              </div>
+            </div>
+            <div className="flex w-full justify-center pt-10">
+              <div className="w-11/12 md:w-3/4 lg:w-2/3">
+                <ConversationsHeatmapByHourChart course_name={course_name} />
+              </div>
+            </div>
           </Flex>
         </div>
         <GlobalFooter />
