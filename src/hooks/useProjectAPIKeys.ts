@@ -50,8 +50,8 @@ export function useSetProjectLLMProviders(queryClient: QueryClient) {
       projectName: string
       queryClient: QueryClient
       llmProviders: AllLLMProviders
-      defaultModelID: string
-      defaultTemperature: string
+      defaultModelID?: string
+      defaultTemperature?: string
     }) => {
       const response = await fetch('/api/UIUC-api/upsertLLMProviders', {
         method: 'POST',
@@ -86,7 +86,7 @@ export function useSetProjectLLMProviders(queryClient: QueryClient) {
       queryClient.setQueryData(['projectLLMProviders', variables.projectName], {
         ...variables.llmProviders,
         defaultModel: variables.defaultModelID,
-        defaultTemp: parseFloat(variables.defaultTemperature),
+        defaultTemp: parseFloat(variables.defaultTemperature ?? '0.1'),
       })
 
       // Return a context object with the snapshotted value

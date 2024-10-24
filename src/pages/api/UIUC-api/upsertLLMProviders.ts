@@ -34,7 +34,7 @@ export default async function handler(req: NextRequest, res: NextResponse) {
   }
 
   // Check if all required variables are defined
-  if (!courseName || !llmProviders || !defaultModelID || !defaultTemperature) {
+  if (!courseName || !llmProviders) {
     console.error('Error: Missing required parameters')
     return NextResponse.json(
       { error: 'Missing required parameters' },
