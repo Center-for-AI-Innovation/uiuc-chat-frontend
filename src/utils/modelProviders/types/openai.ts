@@ -14,6 +14,8 @@ export interface OpenAIModel {
   name: string
   tokenLimit: number
   enabled: boolean
+  default?: boolean
+  temperature?: number
 }
 
 export enum OpenAIModelID {

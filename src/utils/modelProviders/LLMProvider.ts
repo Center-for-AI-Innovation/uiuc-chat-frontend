@@ -78,6 +78,8 @@ export interface GenericSupportedModel {
   tokenLimit: number
   enabled: boolean
   parameterSize?: string
+  default?: boolean
+  temperature?: number
 }
 
 export interface BaseLLMProvider {

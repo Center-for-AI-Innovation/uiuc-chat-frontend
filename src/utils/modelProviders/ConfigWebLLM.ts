@@ -9,6 +9,8 @@ export interface ModelRecord {
   low_resource_required?: boolean
   buffer_size_required_bytes?: number
   required_features?: Array<string>
+  default?: boolean
+  temperature?: number
 }
 
 /**

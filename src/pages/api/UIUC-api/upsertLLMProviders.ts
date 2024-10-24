@@ -64,7 +64,7 @@ export default async function handler(req: NextRequest, res: NextResponse) {
     console.debug('llmProviders BEFORE being cleaned and such', llmProviders)
 
     const redisKey = `${courseName}-llms`
-    const existingLLMs = (await kv.get(redisKey)) as ProjectWideLLMProviders
+    const existingLLMs = (await kv.get(redisKey)) as AllLLMProviders
 
     // Ensure all keys are encrypted, then save to DB.
     const processProviders = async () => {
@@ -86,11 +86,18 @@ export default async function handler(req: NextRequest, res: NextResponse) {
     const combined_llms = { ...existingLLMs, ...llmProviders }
 
     if (defaultModelID) {
-      combined_llms.defaultModel = defaultModelID
-    }
-
-    if (defaultTemperature) {
-      combined_llms.defaultTemp = defaultTemperature
+      Object.values(combined_llms).forEach(provider => {
+        if (provider && provider.models) {
+          provider.models.forEach(model => {
+            if (model.id === defaultModelID) {
+              model.default = true;
+              model.temperature = defaultTemperature
+            } else if (model.default) {
+              model.default = false;
+            }
+          });
+        }
+      });
     }
 
     console.debug('-----------------------------------------')
