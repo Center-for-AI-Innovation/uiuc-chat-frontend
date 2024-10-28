@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { HeatMapGrid } from 'react-grid-heatmap'
 import axios from 'axios'
 import { Text, Title } from '@mantine/core'
@@ -9,6 +9,9 @@ const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
   const [data, setData] = useState<number[][]>([])
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
+  const [containerWidth, setContainerWidth] = useState<number>(0)
+  const containerRef = useRef<HTMLDivElement>(null)
+
   const daysOfWeek = [
     'Sunday',
     'Monday',
@@ -20,6 +23,7 @@ const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
   ]
   const hours = Array.from({ length: 24 }, (_, i) => i.toString())
 
+  // Fetch heatmap data
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -48,6 +52,39 @@ const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
     fetchData()
   }, [course_name])
 
+  // Update container width on mount and resize
+  useEffect(() => {
+    const updateWidth = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.offsetWidth)
+      }
+    }
+
+    // Initial width
+    updateWidth()
+
+    // Add resize listener
+    window.addEventListener('resize', updateWidth)
+    return () => window.removeEventListener('resize', updateWidth)
+  }, [])
+
+  // Calculate dynamic cell width
+  const numColumns = hours.length
+  const padding = 40 // Adjust based on your layout (e.g., padding/margins)
+  const availableWidth = containerWidth - padding
+  const cellWidth = availableWidth / numColumns
+
+  // Set minimum and maximum cell widths for better responsiveness
+  const minCellWidth = 30
+  const maxCellWidth = 60
+  const finalCellWidth = Math.max(
+    minCellWidth,
+    Math.min(cellWidth, maxCellWidth),
+  )
+
+  // Optional: Adjust font size based on cell width for better readability
+  const fontSize = Math.max(10, Math.min(finalCellWidth / 3, 14)) // Example logic
+
   if (isLoading) {
     return <Text>Loading heatmap...</Text>
   }
@@ -57,8 +94,20 @@ const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
   }
 
   return (
-    <div style={{ width: '100%', height: 'auto', padding: '20px' }}>
-      <Title order={4} mb="md" style={{ textAlign: 'center' }}>
+    <div
+      ref={containerRef}
+      style={{
+        width: '100%',
+        height: 'auto', // Keep height auto to accommodate fixed cell height
+        padding: '20px',
+        boxSizing: 'border-box',
+      }}
+    >
+      <Title
+        order={4}
+        mb="md"
+        style={{ textAlign: 'center', fontSize: `${fontSize + 2}px` }}
+      >
         Conversations Per Day and Hour
       </Title>
       <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
@@ -67,26 +116,29 @@ const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
           xLabels={hours}
           yLabels={daysOfWeek}
           cellRender={(x, y, value) => `${value}`}
-          xLabelsStyle={(index) => ({
+          xLabelsStyle={() => ({
             color: '#fff',
             fontFamily: 'Montserrat',
-            fontSize: '12px',
-            padding: '0 5px',
+            padding: '0 2px',
+            textAlign: 'center',
           })}
           yLabelsStyle={() => ({
             color: '#fff',
             fontFamily: 'Montserrat',
-            fontSize: '12px',
             padding: '0 5px',
+            textAlign: 'right',
+            lineHeight: `${40}px`, // Match the fixed cellHeight
           })}
           cellStyle={(_x, _y, ratio) => ({
             background: `rgba(126, 87, 194, ${ratio})`,
-            fontSize: '12px',
             color: '#fff',
             border: '1px solid #3a3a4a',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           })}
-          square
-          cellHeight="40px"
+          square={false}
+          cellHeight="40px" // Fixed height
         />
       </div>
     </div>
