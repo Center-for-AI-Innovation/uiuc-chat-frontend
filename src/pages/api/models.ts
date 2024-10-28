@@ -68,14 +68,6 @@ const handler = async (
       }
     }
 
-    // Ensure defaultModel and defaultTemp are set
-    if (!llmProviders.defaultModel) {
-      llmProviders.defaultModel = OpenAIModelID.GPT_4o_mini
-    }
-    if (!llmProviders.defaultTemp) {
-      llmProviders.defaultTemp = 0.1
-    }
-
     const allLLMProviders: Partial<AllLLMProviders> = {}
 
     // Iterate through all possible providers

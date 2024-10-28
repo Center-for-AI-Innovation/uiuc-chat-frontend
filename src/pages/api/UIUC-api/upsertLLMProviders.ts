@@ -19,15 +19,11 @@ export default async function handler(req: NextRequest, res: NextResponse) {
   const requestBody = await req.text()
   let courseName: string
   let llmProviders: AllLLMProviders
-  let defaultModelID: string
-  let defaultTemperature: number
 
   try {
     const parsedBody = JSON.parse(requestBody)
     courseName = parsedBody.projectName as string
     llmProviders = parsedBody.llmProviders as AllLLMProviders
-    defaultModelID = parsedBody.defaultModelID as string
-    defaultTemperature = parsedBody.defaultTemperature as number
   } catch (error) {
     console.error('Error parsing request body:', error)
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
@@ -44,9 +40,7 @@ export default async function handler(req: NextRequest, res: NextResponse) {
 
   // Type checking
   if (
-    typeof courseName !== 'string' ||
-    typeof defaultModelID !== 'string' ||
-    typeof defaultTemperature !== 'string'
+    typeof courseName !== 'string'
   ) {
     console.error('Error: Invalid parameter types')
     return NextResponse.json(
@@ -84,21 +78,6 @@ export default async function handler(req: NextRequest, res: NextResponse) {
 
     // Combine the existing metadata with the new metadata, prioritizing the new values
     const combined_llms = { ...existingLLMs, ...llmProviders }
-
-    if (defaultModelID) {
-      Object.values(combined_llms).forEach(provider => {
-        if (provider && provider.models) {
-          provider.models.forEach(model => {
-            if (model.id === defaultModelID) {
-              model.default = true;
-              model.temperature = defaultTemperature
-            } else if (model.default) {
-              model.default = false;
-            }
-          });
-        }
-      });
-    }
 
     console.debug('-----------------------------------------')
     console.debug('EXISTING LLM Providers:', existingLLMs)
