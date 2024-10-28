@@ -1,7 +1,9 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useMemo } from 'react'
 import { HeatMapGrid } from 'react-grid-heatmap'
 import axios from 'axios'
-import { Text, Title } from '@mantine/core'
+import { Text } from '@mantine/core'
+import { LoadingSpinner } from './LoadingSpinner'
+import { montserrat_paragraph } from 'fonts'
 
 const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
   course_name,
@@ -11,16 +13,18 @@ const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
   const [error, setError] = useState<string | null>(null)
   const [containerWidth, setContainerWidth] = useState<number>(0)
   const containerRef = useRef<HTMLDivElement>(null)
-
-  const daysOfWeek = [
-    'Sunday',
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-  ]
+  const daysOfWeek = useMemo(
+    () => [
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+    ],
+    [],
+  )
   const hours = Array.from({ length: 24 }, (_, i) => i.toString())
 
   // Fetch heatmap data
@@ -50,7 +54,7 @@ const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
     }
 
     fetchData()
-  }, [course_name])
+  }, [course_name, daysOfWeek, hours])
 
   // Update container width on mount and resize
   useEffect(() => {
@@ -86,7 +90,11 @@ const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
   const fontSize = Math.max(10, Math.min(finalCellWidth / 3, 14)) // Example logic
 
   if (isLoading) {
-    return <Text>Loading heatmap...</Text>
+    return (
+      <Text>
+        Loading heatmap <LoadingSpinner size="xs" />
+      </Text>
+    )
   }
 
   if (error) {
@@ -98,18 +106,10 @@ const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
       ref={containerRef}
       style={{
         width: '100%',
-        height: 'auto', // Keep height auto to accommodate fixed cell height
-        padding: '20px',
+        height: 'auto',
         boxSizing: 'border-box',
       }}
     >
-      <Title
-        order={4}
-        mb="md"
-        style={{ textAlign: 'center', fontSize: `${fontSize + 2}px` }}
-      >
-        Conversations Per Day and Hour
-      </Title>
       <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
         <HeatMapGrid
           data={data}
@@ -118,13 +118,13 @@ const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
           cellRender={(x, y, value) => `${value}`}
           xLabelsStyle={() => ({
             color: '#fff',
-            fontFamily: 'Montserrat',
+            fontFamily: montserrat_paragraph.style.fontFamily,
             padding: '0 2px',
             textAlign: 'center',
           })}
           yLabelsStyle={() => ({
             color: '#fff',
-            fontFamily: 'Montserrat',
+            fontFamily: montserrat_paragraph.style.fontFamily,
             padding: '0 5px',
             textAlign: 'right',
             lineHeight: `${40}px`, // Match the fixed cellHeight

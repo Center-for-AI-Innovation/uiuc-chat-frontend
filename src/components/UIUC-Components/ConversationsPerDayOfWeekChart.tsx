@@ -11,6 +11,8 @@ import {
 } from 'recharts'
 import axios from 'axios'
 import { Text, Title } from '@mantine/core'
+import { LoadingSpinner } from './LoadingSpinner'
+import { montserrat_paragraph } from 'fonts'
 
 const ConversationsPerDayOfWeekChart: React.FC<{ course_name: string }> = ({
   course_name,
@@ -59,7 +61,11 @@ const ConversationsPerDayOfWeekChart: React.FC<{ course_name: string }> = ({
   }, [course_name])
 
   if (isLoading) {
-    return <Text>Loading chart...</Text>
+    return (
+      <Text>
+        Loading chart <LoadingSpinner size="xs" />
+      </Text>
+    )
   }
 
   if (error) {
@@ -68,9 +74,6 @@ const ConversationsPerDayOfWeekChart: React.FC<{ course_name: string }> = ({
 
   return (
     <div style={{ width: '100%', height: 400 }}>
-      <Title order={4} mb="md" style={{ textAlign: 'center' }}>
-        Conversations Per Day of the Week
-      </Title>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}
@@ -79,25 +82,31 @@ const ConversationsPerDayOfWeekChart: React.FC<{ course_name: string }> = ({
           <CartesianGrid strokeDasharray="3 3" stroke="#3a3a4a" />
           <XAxis
             dataKey="day"
-            tick={{ fill: '#fff', fontFamily: 'Montserrat' }}
+            tick={{
+              fill: '#fff',
+              fontFamily: montserrat_paragraph.style.fontFamily,
+            }}
             label={{
               value: 'Day of Week',
               position: 'insideBottom',
               offset: -5,
               fill: '#fff',
-              fontFamily: 'Montserrat',
+              fontFamily: montserrat_paragraph.style.fontFamily,
               dy: 5,
             }}
           />
           <YAxis
             allowDecimals={false}
-            tick={{ fill: '#fff', fontFamily: 'Montserrat' }}
+            tick={{
+              fill: '#fff',
+              fontFamily: montserrat_paragraph.style.fontFamily,
+            }}
             label={{
               value: 'Number of Conversations',
               angle: -90,
               position: 'center',
               fill: '#fff',
-              fontFamily: 'Montserrat',
+              fontFamily: montserrat_paragraph.style.fontFamily,
               dx: -10,
             }}
           />
@@ -106,7 +115,7 @@ const ConversationsPerDayOfWeekChart: React.FC<{ course_name: string }> = ({
               backgroundColor: '#15162c',
               borderColor: '#3a3a4a',
               color: '#fff',
-              fontFamily: 'Montserrat',
+              fontFamily: montserrat_paragraph.style.fontFamily,
             }}
             formatter={(value) => [`Conversations: ${value}`]}
             labelFormatter={(label) => `Day of Week: ${label}`}
