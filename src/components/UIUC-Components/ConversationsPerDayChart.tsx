@@ -87,6 +87,14 @@ const ConversationsPerDayChart: React.FC<{ course_name: string }> = ({
     return <Text color="red">{error}</Text>
   }
 
+  const determineInterval = (dataLength: number): number => {
+    if (dataLength <= 20) return 0
+    if (dataLength <= 80) return 1
+    return 5
+  }
+
+  const xAxisInterval = determineInterval(data.length)
+
   return (
     <div style={{ width: '100%', height: 400 }}>
       <Title order={4} mb="md" style={{ textAlign: 'center' }}>
@@ -106,7 +114,7 @@ const ConversationsPerDayChart: React.FC<{ course_name: string }> = ({
               fontSize: 15,
               dx: -5,
             }}
-            angle={-45}
+            angle={data.length > 15 ? -45 : 0}
             label={{
               value: 'Date',
               position: 'insideBottom',
@@ -115,9 +123,9 @@ const ConversationsPerDayChart: React.FC<{ course_name: string }> = ({
               fontFamily: 'Montserrat',
               dy: 13,
             }}
-            tickFormatter={(date) => formatDate(date)}
+            tickFormatter={formatDate}
             tickMargin={10}
-            interval={2}
+            interval={xAxisInterval}
           />
 
           <YAxis
