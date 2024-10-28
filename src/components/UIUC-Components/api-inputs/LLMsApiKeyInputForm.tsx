@@ -763,8 +763,7 @@ export default function APIKeyInputForm() {
                                 </Text>
                                 <Slider
                                   value={defaultModel?.temperature}
-                                  onChange={async (newTemperature) => {
-                                    let defaultModel = form.getFieldValue('defaultModel');                                    
+                                  onChange={async (newTemperature) => {                                 
                                     form.setFieldValue('providers', (prevProviders: AllLLMProviders | undefined) => {
                                       if (!prevProviders || !defaultModel) return prevProviders;
                                       
