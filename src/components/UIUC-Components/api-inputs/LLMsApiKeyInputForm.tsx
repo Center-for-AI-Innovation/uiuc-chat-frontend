@@ -476,8 +476,8 @@ export default function APIKeyInputForm() {
     },
     onSubmit: async ({ value }) => {
       const llmProviders = value.providers as AllLLMProviders
-      let defaultModel = findDefaultModel(llmProviders)   
-      let defaultTemp = defaultModel?.temperature
+      const defaultModel = findDefaultModel(llmProviders)   
+      const defaultTemp = defaultModel?.temperature
       mutation.mutate(
         {
           projectName,
