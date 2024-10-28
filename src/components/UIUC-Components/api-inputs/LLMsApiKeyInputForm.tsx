@@ -211,7 +211,6 @@ const NewModelDropdown: React.FC<{
         value={value?.id || ''}
         onChange={async (modelId) => {
           const selectedModel = allModels.find((model) => model.id === modelId)
-          // console.log("selectedModel on change:", selectedModel);
           if (selectedModel) {
             await onChange(selectedModel)
           }
@@ -370,12 +369,10 @@ export default function APIKeyInputForm() {
   const projectName = GetCurrentPageName()
 
   function findDefaultModel(providers: AllLLMProviders): (AnySupportedModel & { provider: ProviderNames }) | undefined {
-    console.log("providers:", providers);
     for (const providerKey in providers) {
       const provider = providers[providerKey as keyof typeof providers]
       if (provider && provider.models) {
         const currentDefaultModel = provider.models.find(model => model.default === true)
-        console.log("currentDefaultModel:", currentDefaultModel);
         if (currentDefaultModel) {
           return { ...currentDefaultModel, provider: providerKey as ProviderNames }
         }
@@ -415,9 +412,6 @@ export default function APIKeyInputForm() {
   const mutation = useSetProjectLLMProviders(queryClient)
 
   const setDefaultModelAndUpdateProviders = (newDefaultModel: AnySupportedModel & { provider: ProviderNames }) => {
-    // console.log("newDefaultModel:", newDefaultModel);
-    console.log('inside setDefaultModelAndUpdateProviders');
-    
     // Update the llmProviders state
     form.setFieldValue('providers', (prevProviders: AllLLMProviders | undefined) => {
       if (!prevProviders) return prevProviders;
@@ -440,11 +434,8 @@ export default function APIKeyInputForm() {
         }
       }
 
-      // console.log("updatedProviders:", updatedProviders);
       newDefaultModel.default = true;
-      // console.log("newDefaultModel is:", newDefaultModel.default);
       setDefaultModel(newDefaultModel);
-      // console.log("defaultModel is:", defaultModel);  
       return updatedProviders;
     });
   };
@@ -459,12 +450,12 @@ export default function APIKeyInputForm() {
     }
   }, [llmProviders])
 
-  useEffect(() => {
-    console.log('inside useEffect');
-    if (defaultModel) {
-      // console.log("defaultModel:", defaultModel);
-    }
-  }, [defaultModel])
+  // useEffect(() => {
+  //   console.log('inside useEffect');
+  //   if (defaultModel) {
+  //     console.log("defaultModel:", defaultModel);
+  //   }
+  // }, [defaultModel])
 
   // ------------ </TANSTACK QUERIES> ------------
 
@@ -475,7 +466,7 @@ export default function APIKeyInputForm() {
       defaultTemperature: defaultModel?.temperature,
     },
     onSubmit: async ({ value }) => {
-      const llmProviders = value.providers as AllLLMProviders
+      const llmProviders = value.providers as AllLLMProviders  
       const defaultModel = findDefaultModel(llmProviders)   
       const defaultTemp = defaultModel?.temperature
       mutation.mutate(
@@ -733,11 +724,9 @@ export default function APIKeyInputForm() {
                                     ...newDefaultModel, 
                                     provider: (newDefaultModel as any).provider || defaultModel?.provider 
                                   };
-                                  // console.log("modelWithProvider:", modelWithProvider);
                                   field.setValue(modelWithProvider);
                                   setDefaultModelAndUpdateProviders(modelWithProvider as AnySupportedModel & { provider: ProviderNames });
                                   field.setValue(modelWithProvider);
-                                  console.log("defaultModel", defaultModel);
                                   return form.handleSubmit()
                                 }}
                                 llmProviders={llmProviders}
@@ -775,11 +764,31 @@ export default function APIKeyInputForm() {
                                 <Slider
                                   value={defaultModel?.temperature}
                                   onChange={async (newTemperature) => {
+                                    let defaultModel = form.getFieldValue('defaultModel');                                    
+                                    form.setFieldValue('providers', (prevProviders: AllLLMProviders | undefined) => {
+                                      if (!prevProviders || !defaultModel) return prevProviders;
+                                      
+                                      const updatedProviders = { ...prevProviders };
+                                      
+                                      const provider = updatedProviders[defaultModel.provider];
+                                      if (provider?.models) {
+                                        const modelIndex = provider.models.findIndex(model => model.default === true);
+                                        if (modelIndex !== -1) {
+                                          const currentModel = provider.models[modelIndex];
+                                          if (currentModel) {  
+                                            provider.models[modelIndex] = { 
+                                              ...currentModel,
+                                              temperature: newTemperature 
+                                            };
+                                          }
+                                        }
+                                      }
+                                      return updatedProviders;
+                                    });
                                     field.handleChange(newTemperature)
                                   }}
                                   onChangeEnd={async (newTemperature) => {
-                                    field.handleChange(newTemperature)
-                                    await form.handleSubmit()
+                                    await form.handleSubmit();
                                   }}
                                   min={0}
                                   max={1}
