@@ -198,9 +198,6 @@ const NewModelDropdown: React.FC<{
       allModels: [] as AnySupportedModel[],
     },
   )
-
-  console.log('enabledProvidersAndModels', enabledProvidersAndModels)
-
   const selectedModel =
     allModels.find((model) => model.id === value?.id) || undefined
 
@@ -373,12 +370,14 @@ export default function APIKeyInputForm() {
   const projectName = GetCurrentPageName()
 
   function findDefaultModel(providers: AllLLMProviders): (AnySupportedModel & { provider: ProviderNames }) | undefined {
+    console.log("providers:", providers);
     for (const providerKey in providers) {
       const provider = providers[providerKey as keyof typeof providers]
       if (provider && provider.models) {
-        const defaultModel = provider.models.find(model => model.default === true)
-        if (defaultModel) {
-          return { ...defaultModel, provider: providerKey as ProviderNames }
+        const currentDefaultModel = provider.models.find(model => model.default === true)
+        console.log("currentDefaultModel:", currentDefaultModel);
+        if (currentDefaultModel) {
+          return { ...currentDefaultModel, provider: providerKey as ProviderNames }
         }
       }
     }
@@ -416,8 +415,9 @@ export default function APIKeyInputForm() {
   const mutation = useSetProjectLLMProviders(queryClient)
 
   const setDefaultModelAndUpdateProviders = (newDefaultModel: AnySupportedModel & { provider: ProviderNames }) => {
-    setDefaultModel(newDefaultModel);
-
+    // console.log("newDefaultModel:", newDefaultModel);
+    console.log('inside setDefaultModelAndUpdateProviders');
+    
     // Update the llmProviders state
     form.setFieldValue('providers', (prevProviders: AllLLMProviders | undefined) => {
       if (!prevProviders) return prevProviders;
@@ -440,9 +440,16 @@ export default function APIKeyInputForm() {
         }
       }
 
+      // console.log("updatedProviders:", updatedProviders);
+      newDefaultModel.default = true;
+      // console.log("newDefaultModel is:", newDefaultModel.default);
+      setDefaultModel(newDefaultModel);
+      // console.log("defaultModel is:", defaultModel);  
       return updatedProviders;
     });
   };
+
+
 
   const [defaultModel, setDefaultModel] = useState<(AnySupportedModel & { provider: ProviderNames }) | undefined>(undefined)
   useEffect(() => {
@@ -451,6 +458,13 @@ export default function APIKeyInputForm() {
       setDefaultModel(calculatedDefaultModel)
     }
   }, [llmProviders])
+
+  useEffect(() => {
+    console.log('inside useEffect');
+    if (defaultModel) {
+      // console.log("defaultModel:", defaultModel);
+    }
+  }, [defaultModel])
 
   // ------------ </TANSTACK QUERIES> ------------
 
@@ -719,12 +733,15 @@ export default function APIKeyInputForm() {
                                     ...newDefaultModel, 
                                     provider: (newDefaultModel as any).provider || defaultModel?.provider 
                                   };
+                                  // console.log("modelWithProvider:", modelWithProvider);
                                   field.setValue(modelWithProvider);
                                   setDefaultModelAndUpdateProviders(modelWithProvider as AnySupportedModel & { provider: ProviderNames });
+                                  field.setValue(modelWithProvider);
+                                  console.log("defaultModel", defaultModel);
                                   return form.handleSubmit()
                                 }}
                                 llmProviders={llmProviders}
-                                isSmallScreen={false}
+                                isSmallScreen={isSmallScreen}
                               />
                               )}
                             </form.Field>

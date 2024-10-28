@@ -14,8 +14,8 @@ export function ModelToggles({
     ? form.state.values.providers[provider.provider]?.models || {}
     : {}
 
-  console.log(`${provider.provider} PROV Models`, providerModels)
-  console.log(`${provider.provider} PROV.models here`, provider.models)
+  // console.log(`${provider.provider} PROV Models`, providerModels)
+  // console.log(`${provider.provider} PROV.models here`, provider.models)
 
   return (
     <Stack mt="md">
