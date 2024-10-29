@@ -1,4 +1,4 @@
-// src/components/UIUC-Components/ConversationsPerHourChart.tsx
+// src/components/UIUC-Components/ConversationsHeatmapByHourChart.tsx
 import React, { useEffect, useState, useRef, useMemo } from 'react'
 import { HeatMapGrid } from 'react-grid-heatmap'
 import axios from 'axios'
