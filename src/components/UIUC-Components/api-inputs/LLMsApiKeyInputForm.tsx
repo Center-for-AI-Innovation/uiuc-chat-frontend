@@ -1,8 +1,7 @@
-import React, { useEffect, useState, forwardRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Button,
   Text,
-  Slider,
   Card,
   Flex,
   Title,
@@ -11,7 +10,6 @@ import {
   ActionIcon,
   TextInput,
   Select,
-  Group,
 } from '@mantine/core'
 import Image from 'next/image'
 import { useQueryClient } from '@tanstack/react-query'
@@ -23,14 +21,10 @@ import {
 import {
   AllLLMProviders,
   AnthropicProvider,
-  AnySupportedModel,
   AzureProvider,
-  LLMProvider,
   NCSAHostedProvider,
-  NCSAHostedVLLMProvider,
   OllamaProvider,
   OpenAIProvider,
-  ProjectWideLLMProviders,
   ProviderNames,
   WebLLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
@@ -52,11 +46,7 @@ import AzureProviderInput from './providers/AzureProviderInput'
 import OllamaProviderInput from './providers/OllamaProviderInput'
 import WebLLMProviderInput from './providers/WebLLMProviderInput'
 import NCSAHostedLLmsProviderInput from './providers/NCSAHostedProviderInput'
-import NCSAHostedVLLMProviderInput from './providers/NCSAHostedVLLMProviderInput'
-import { getModelLogo } from '~/components/Chat/ModelSelect'
-import { t } from 'i18next'
-
-const isSmallScreen = false
+import { getModelLogo, ModelItem } from '~/components/Chat/ModelSelect'
 
 function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
   return (
@@ -85,6 +75,10 @@ export const APIKeyInput = ({
   useEffect(() => {
     setError(null)
   }, [field.state.value])
+
+  // const handleSubmit = () => {
+  //   field.form.handleSubmit()
+  // }
 
   return (
     <div style={{ position: 'relative', width: '100%' }}>
@@ -120,6 +114,7 @@ export const APIKeyInput = ({
               e.preventDefault()
               field.handleChange('')
               field.form.handleSubmit()
+              console.log('field.state in onclick for delete', field.state)
             }}
             type="submit"
             style={{ marginLeft: '8px' }}
@@ -158,217 +153,182 @@ export const APIKeyInput = ({
   )
 }
 
-const NewModelDropdown: React.FC<{
-  value: AnySupportedModel
-  onChange: (model: AnySupportedModel) => Promise<void>
-  llmProviders: AllLLMProviders
+interface NewModelDropdownProps {
+  value: string | undefined
+  onChange: (value: string) => void
+  models: {
+    OpenAI?: { id: string; name: string; downloadSize?: string }[]
+    Ollama?: { id: string; name: string; downloadSize?: string }[]
+    Azure?: { id: string; name: string; downloadSize?: string }[]
+    WebLLM?: { id: string; name: string; downloadSize?: string }[]
+    Anthropic?: { id: string; name: string; downloadSize?: string }[]
+  }
   isSmallScreen: boolean
-}> = ({ value, onChange, llmProviders, isSmallScreen }) => {
-  // Filter out providers that are not enabled and their models which are disabled
-  const { enabledProvidersAndModels, allModels } = Object.keys(
-    llmProviders,
-  ).reduce(
-    (
-      acc: {
-        enabledProvidersAndModels: Record<string, LLMProvider>
-        allModels: AnySupportedModel[]
-      },
-      key,
-    ) => {
-      const provider = llmProviders[key as keyof typeof llmProviders]
-      if (provider && provider.enabled) {
-        const enabledModels =
-          provider.models?.filter((model: { enabled: any }) => model.enabled) ||
-          []
-        if (enabledModels.length > 0) {
-          // @ts-ignore -- Can't figure out why the types aren't perfect.
-          acc.enabledProvidersAndModels[key as keyof typeof llmProviders] = {
-            ...provider,
-            models: enabledModels,
-          }
-          acc.allModels.push(
-            ...enabledModels.map((model: any) => ({
-              ...model,
-              provider: provider.provider,
-            })),
-          )
-        }
-      }
-      return acc
-    },
-    {
-      enabledProvidersAndModels: {} as Record<string, LLMProvider>,
-      allModels: [] as AnySupportedModel[],
-    },
-  )
+  loadingModelId: string | null
+  state: {
+    webLLMModelIdLoading: {
+      id: string | null
+      isLoading: boolean
+    }
+    // Add other state properties as needed
+  }
+  showWebLLmModels: boolean
+}
 
-  const selectedModel =
-    allModels.find((model) => model.id === value?.id) || undefined
+const NewModelDropdown: React.FC<
+  NewModelDropdownProps & {
+    setLoadingModelId: (id: string | null) => void
+    onChange: (modelId: string) => Promise<void>
+  }
+> = ({
+  value,
+  onChange,
+  models,
+  isSmallScreen,
+  loadingModelId,
+  setLoadingModelId,
+  state,
+  showWebLLmModels,
+}) => {
+  const allModels = [
+    ...(models.Ollama || []).map((model: any) => ({
+      ...model,
+      provider: ProviderNames.Ollama,
+      group: 'NCSA Hosted Models, 100% free',
+    })),
+    ...(models.OpenAI || []).map((model: any) => ({
+      ...model,
+      provider: ProviderNames.OpenAI,
+      group: 'OpenAI',
+    })),
+    ...(models.Anthropic || []).map((model: any) => ({
+      ...model,
+      provider: ProviderNames.Anthropic,
+      group: 'Anthropic',
+    })),
+    ...(models.WebLLM && models.WebLLM.length > 0
+      ? models.WebLLM.map((model: any) => ({
+          ...model,
+          provider: ProviderNames.WebLLM,
+          group: 'Local in Browser LLMs, runs on your device',
+        }))
+      : []),
+  ]
+  const selectedModel = allModels.find((model) => model.id === value)
 
   return (
     <>
-      <Select
-        className="menu z-[50] w-full"
-        size="md"
-        placeholder="Select a model"
-        searchable
-        value={value?.id || ''}
-        onChange={async (modelId) => {
-          const selectedModel = allModels.find((model) => model.id === modelId)
-          // console.log("selectedModel on change:", selectedModel);
-          if (selectedModel) {
-            await onChange(selectedModel)
-          }
-        }}
-        data={Object.values(enabledProvidersAndModels).flatMap(
-          (provider: LLMProvider) =>
-            provider.models?.map((model) => ({
-              value: model.id,
-              label: model.name,
-              // @ts-ignore -- this being missing is fine
-              downloadSize: model?.downloadSize,
-              modelId: model.id,
-              selectedModelId: value,
-              modelType: provider.provider,
-              group: provider.provider,
-              // @ts-ignore -- this being missing is fine
-              vram_required_MB: model.vram_required_MB,
-            })) || [],
-        )}
-        itemComponent={(props) => (
-          <ModelItem {...props} setLoadingModelId={() => {}} />
-        )}
-        maxDropdownHeight={480}
-        rightSectionWidth="auto"
-        icon={
-          selectedModel ? (
-            <Image
-              // @ts-ignore -- this being missing is fine
-              src={getModelLogo(selectedModel.provider)}
-              // @ts-ignore -- this being missing is fine
-              alt={`${selectedModel.provider} logo`}
-              width={20}
-              height={20}
-              style={{ marginLeft: '4px', borderRadius: '4px' }}
+      <div
+        tabIndex={0}
+        className="relative flex w-full flex-col items-start px-2"
+      >
+        <Select
+          className="menu z-[50] w-full"
+          size="md"
+          placeholder="Select a model"
+          searchable
+          value={value}
+          onChange={async (modelId: any) => {
+            if (state.webLLMModelIdLoading.isLoading) {
+              setLoadingModelId(modelId)
+              console.log('model id', modelId)
+              console.log('loading model id', loadingModelId)
+              console.log('model is loading', state.webLLMModelIdLoading.id)
+            } else if (!state.webLLMModelIdLoading.isLoading) {
+              setLoadingModelId(null)
+            }
+            await onChange(modelId!)
+          }}
+          data={allModels.map((model: any) => ({
+            value: model.id,
+            label: model.name,
+            downloadSize: model.downloadSize,
+            modelId: model.id,
+            selectedModelId: value,
+            modelType: model.provider,
+            group: model.group,
+            vram_required_MB: model.vram_required_MB,
+          }))}
+          itemComponent={(props: any) => (
+            <ModelItem
+              {...props}
+              loadingModelId={loadingModelId}
+              setLoadingModelId={setLoadingModelId}
+              showWebLLmModels={showWebLLmModels}
             />
-          ) : null
-        }
-        rightSection={<IconChevronDown size="1rem" className="mr-2" />}
-        classNames={{
-          root: 'w-full',
-          wrapper: 'w-full',
-          input: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'} w-full`,
-          rightSection: 'pointer-events-none',
-          item: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`,
-        }}
-        styles={(theme) => ({
-          input: {
-            backgroundColor: 'rgb(107, 33, 168)',
-            border: 'none',
-            // color: theme.white,
-            // borderRadius: theme.radius.md,
-            // width: '24rem',
-            // [`@media (max-width: 960px)`]: {
-            //   width: '17rem', // Smaller width for small screens
-            // },
-          },
-          dropdown: {
-            backgroundColor: '#1d1f33',
-            border: '1px solid rgba(42,42,120,1)',
-            borderRadius: theme.radius.md,
-            marginTop: '2px',
-            boxShadow: theme.shadows.xs,
-            width: '100%',
-            maxWidth: '100%',
-            position: 'absolute',
-          },
-          item: {
-            backgroundColor: '#1d1f33',
-            borderRadius: theme.radius.md,
-            margin: '2px',
-            '&[data-selected]': {
-              '&': {
-                backgroundColor: 'transparent',
+          )}
+          maxDropdownHeight={480}
+          rightSectionWidth="auto"
+          icon={
+            selectedModel ? (
+              <Image
+                src={getModelLogo(selectedModel.provider)}
+                alt={`${selectedModel.provider} logo`}
+                width={20}
+                height={20}
+                style={{ marginLeft: '4px', borderRadius: '4px' }}
+              />
+            ) : null
+          }
+          rightSection={<IconChevronDown size="1rem" />}
+          classNames={{
+            root: 'w-full',
+            wrapper: 'w-full',
+            input: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'} w-full`,
+            rightSection: 'pointer-events-none',
+            item: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`,
+          }}
+          styles={(theme: {
+            radius: { md: any }
+            shadows: { xs: any }
+            white: any
+          }) => ({
+            input: {
+              backgroundColor: 'rgb(107, 33, 168)',
+              border: 'none',
+              // color: theme.white,
+              // borderRadius: theme.radius.md,
+              // width: '24rem',
+              // [`@media (max-width: 960px)`]: {
+              //   width: '17rem', // Smaller width for small screens
+              // },
+            },
+            dropdown: {
+              backgroundColor: '#1d1f33',
+              border: '1px solid rgba(42,42,120,1)',
+              borderRadius: theme.radius.md,
+              marginTop: '2px',
+              boxShadow: theme.shadows.xs,
+              width: '100%',
+              maxWidth: '100%',
+              position: 'absolute',
+            },
+            item: {
+              backgroundColor: '#1d1f33',
+              borderRadius: theme.radius.md,
+              margin: '2px',
+              '&[data-selected]': {
+                '&': {
+                  backgroundColor: 'transparent',
+                },
+                '&:hover': {
+                  backgroundColor: 'rgb(107, 33, 168)',
+                  color: theme.white,
+                },
               },
-              '&:hover': {
+              '&[data-hovered]': {
                 backgroundColor: 'rgb(107, 33, 168)',
                 color: theme.white,
               },
             },
-            '&[data-hovered]': {
-              backgroundColor: 'rgb(107, 33, 168)',
-              color: theme.white,
-            },
-          },
-        })}
-        dropdownPosition="bottom"
-        withinPortal
-      />
+          })}
+          dropdownPosition="bottom"
+          withinPortal
+        />
+      </div>
     </>
   )
 }
-
-interface ModelItemProps extends React.ComponentPropsWithoutRef<'div'> {
-  label: string
-  downloadSize?: string
-  isDownloaded?: boolean
-  modelId: string
-  selectedModelId: string | undefined
-  modelType: string
-  vram_required_MB: number
-}
-
-export const ModelItem = forwardRef<
-  HTMLDivElement,
-  ModelItemProps & {
-    loadingModelId: string | null
-  }
->(
-  (
-    {
-      label,
-      downloadSize,
-      isDownloaded,
-      modelId,
-      selectedModelId,
-      modelType,
-      vram_required_MB,
-      loadingModelId,
-      ...others
-    }: ModelItemProps & {
-      loadingModelId: string | null
-    },
-    ref,
-  ) => {
-    return (
-      <>
-        <div ref={ref} {...others}>
-          <Group noWrap>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <Image
-                  src={getModelLogo(modelType) || ''}
-                  alt={`${modelType} logo`}
-                  width={20}
-                  height={20}
-                  style={{ marginRight: '8px', borderRadius: '4px' }}
-                />
-                {/* {selectedModelId === modelId ? (
-                <IconCircleCheck stroke={2} />
-              ) : (
-                <IconCircleDashed stroke={2} />
-              )} */}
-                <Text size="sm" style={{ marginLeft: '8px' }}>
-                  {label}
-                </Text>
-              </div>
-            </div>
-          </Group>
-        </div>
-      </>
-    )
-  },
-)
 
 export default function APIKeyInputForm() {
   const projectName = GetCurrentPageName()
@@ -389,6 +349,10 @@ export default function APIKeyInputForm() {
     }
   }, [llmProviders])
 
+  // TODO: TEMP HACK
+  const defaultModel = 'tmp' // don't default... stay undefined
+  const defaultTemp = 1.0 // default to 0.1
+
   useEffect(() => {
     // handle errors
     if (isErrorLLMProviders) {
@@ -406,21 +370,26 @@ export default function APIKeyInputForm() {
 
   const form = useForm({
     defaultValues: {
-      ...llmProviders,
+      providers: llmProviders,
+      defaultModel: defaultModel,
+      defaultTemperature: defaultTemp,
     },
     onSubmit: async ({ value }) => {
-      const llmProviders = value as ProjectWideLLMProviders
+      const llmProviders = value.providers as AllLLMProviders
       mutation.mutate(
         {
           projectName,
           queryClient,
           llmProviders,
+          defaultModelID: (value.defaultModel || '').toString(),
+          defaultTemperature: (value.defaultTemperature || '').toString(),
         },
         {
           onSuccess: (data, variables, context) => {
-            queryClient.invalidateQueries({
-              queryKey: ['projectLLMProviders', projectName],
-            })
+            // queryClient.invalidateQueries(['projectLLMProviders', projectName])
+            // queryClient.invalidateQueries({
+            //   queryKey: ['projectLLMProviders', projectName],
+            // })
             // showConfirmationToast({
             //   title: 'Updated LLM providers',
             //   message: `Now your project's users can use the supplied LLMs!`,
@@ -436,6 +405,29 @@ export default function APIKeyInputForm() {
       )
     },
   })
+
+  useEffect(() => {
+    console.log('form.state.isSubmitting', form.state.isSubmitting)
+  }, [form.state.isSubmitting])
+
+  // if (isLoadingLLMProviders) {
+  //   return (
+  //     <div className="flex h-screen items-center justify-center">
+  //       <Text>Loading...</Text>
+  //     </div>
+  //   )
+  // }
+
+  // if (isErrorLLMProviders) {
+  //   return (
+  //     <div className="flex h-screen items-center justify-center">
+  //       <Text>
+  //         Failed to load API keys. Please try again later.{' '}
+  //         {errorLLMProviders?.message}
+  //       </Text>
+  //     </div>
+  //   )
+  // }
 
   return (
     <>
@@ -516,6 +508,18 @@ export default function APIKeyInputForm() {
                             gap: 16,
                           }}
                         >
+                          {/* {isLoadingLLMProviders && (
+                            <Flex
+                              justify="center"
+                              align="center"
+                              className={`${montserrat_heading.variable} font-montserratHeading`}
+                            >
+                              Synchronizing LLM providers… smart settings
+                              inbound! <LoadingSpinner size="sm" />
+                            </Flex>
+                          )} */}
+
+                          {/* {llmProviders && ( */}
                           <>
                             <Title
                               className={`${montserrat_heading.variable} mt-4 font-montserratHeading`}
@@ -537,6 +541,7 @@ export default function APIKeyInputForm() {
                               prices and follow their rules.
                             </Text>
                             <Flex
+                              // direction={{ base: 'column', '130rem': 'row' }} // good for split screen card.
                               direction={{ base: 'column', '75rem': 'row' }}
                               wrap="wrap"
                               justify="space-between"
@@ -544,27 +549,22 @@ export default function APIKeyInputForm() {
                               className="gap-4"
                               w={'100%'}
                             >
-                              {' '}
                               <AnthropicProviderInput
                                 provider={
-                                  llmProviders?.providers
-                                    .Anthropic as AnthropicProvider
+                                  llmProviders?.Anthropic as AnthropicProvider
                                 }
                                 form={form}
                                 isLoading={isLoadingLLMProviders}
                               />
                               <OpenAIProviderInput
                                 provider={
-                                  llmProviders?.providers
-                                    .OpenAI as OpenAIProvider
+                                  llmProviders?.OpenAI as OpenAIProvider
                                 }
                                 form={form}
                                 isLoading={isLoadingLLMProviders}
                               />
                               <AzureProviderInput
-                                provider={
-                                  llmProviders?.providers.Azure as AzureProvider
-                                }
+                                provider={llmProviders?.Azure as AzureProvider}
                                 form={form}
                                 isLoading={isLoadingLLMProviders}
                               />
@@ -588,6 +588,7 @@ export default function APIKeyInputForm() {
                               Your weights, your rules.
                             </Text>
                             <Flex
+                              // direction={{ base: 'column', '130rem': 'row' }} // good for split screen card.
                               direction={{ base: 'column', '75rem': 'row' }}
                               wrap="wrap"
                               justify="space-between"
@@ -598,38 +599,29 @@ export default function APIKeyInputForm() {
                               {' '}
                               <NCSAHostedLLmsProviderInput
                                 provider={
-                                  llmProviders?.providers
-                                    .NCSAHosted as NCSAHostedProvider
-                                }
-                                form={form}
-                                isLoading={isLoadingLLMProviders}
-                              />
-                              <NCSAHostedVLLMProviderInput
-                                provider={
-                                  llmProviders?.providers
-                                    .NCSAHostedVLLM as NCSAHostedVLLMProvider
+                                  llmProviders?.NCSAHosted as NCSAHostedProvider
                                 }
                                 form={form}
                                 isLoading={isLoadingLLMProviders}
                               />
                               <OllamaProviderInput
                                 provider={
-                                  llmProviders?.providers
-                                    .Ollama as OllamaProvider
+                                  llmProviders?.Ollama as OllamaProvider
                                 }
                                 form={form}
                                 isLoading={isLoadingLLMProviders}
                               />
                               <WebLLMProviderInput
                                 provider={
-                                  llmProviders?.providers
-                                    .WebLLM as WebLLMProvider
+                                  llmProviders?.WebLLM as WebLLMProvider
                                 }
                                 form={form}
                                 isLoading={isLoadingLLMProviders}
                               />
                             </Flex>
                           </>
+
+                          {/* } */}
                         </div>
                       </form>
                     </Stack>
@@ -657,93 +649,19 @@ export default function APIKeyInputForm() {
                         </Title>
                         <br />
                         <Text
-                          className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                          size="md"
+                          className={`label ${montserrat_paragraph.className}`}
                         >
-                          Choose the default model for your chatbot. Users can
-                          still override this default to use any of the models
-                          enabled on the left.
+                          You can choose the default model for your chatbot.
                         </Text>
                         <br />
                         <div className="flex justify-center">
-                          {llmProviders && (
-                            <form.Field name="defaultModel">
-                              {(field) => (
-                                <NewModelDropdown
-                                  value={
-                                    llmProviders.defaultModel as AnySupportedModel
-                                  }
-                                  onChange={(newDefaultModel) => {
-                                    llmProviders.defaultModel =
-                                      newDefaultModel as AnySupportedModel
-                                    form.setFieldValue(
-                                      'defaultModel',
-                                      newDefaultModel as AnySupportedModel,
-                                    )
-                                    return form.handleSubmit()
-                                  }}
-                                  llmProviders={llmProviders.providers}
-                                  isSmallScreen={false}
-                                />
-                              )}
-                            </form.Field>
-                          )}
-                        </div>
-                        <div className="pt-6"></div>
-                        <div>
-                          <form.Field name="defaultTemp">
-                            {(field) => (
-                              <>
-                                <Text
-                                  size="sm"
-                                  weight={500}
-                                  mb={4}
-                                  className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                >
-                                  Default Temperature:{' '}
-                                  {llmProviders?.defaultTemp}
-                                </Text>
-                                <Text
-                                  size="xs"
-                                  color="dimmed"
-                                  mt={4}
-                                  className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                >
-                                  We recommended using 0.1. Higher values
-                                  increase randomness or &apos;creativity&apos;,
-                                  lower force the model to stick to its normal
-                                  behavior.
-                                </Text>
-                                <Slider
-                                  value={llmProviders?.defaultTemp}
-                                  onChange={async (newTemperature) => {
-                                    field.handleChange(newTemperature)
-                                  }}
-                                  onChangeEnd={async (newTemperature) => {
-                                    field.handleChange(newTemperature)
-                                    await form.handleSubmit()
-                                  }}
-                                  min={0}
-                                  max={1}
-                                  step={0.1}
-                                  precision={1}
-                                  marks={[
-                                    { value: 0, label: t('Precise') },
-                                    { value: 0.5, label: t('Neutral') },
-                                    { value: 1, label: t('Creative') },
-                                  ]}
-                                  showLabelOnHover
-                                  color="grape"
-                                  className="m-2"
-                                  size={isSmallScreen ? 'xs' : 'md'}
-                                  classNames={{
-                                    markLabel: `mx-2 text-neutral-300 ${montserrat_paragraph.variable} font-montserratParagraph mt-2 ${isSmallScreen ? 'text-xs' : ''}`,
-                                  }}
-                                />
-                                <FieldInfo field={field} />
-                              </>
-                            )}
-                          </form.Field>
+                          <Text
+                            className={`label ${montserrat_paragraph.className}`}
+                            variant="gradient"
+                            gradient={{ from: 'gold', to: 'white', deg: 170 }}
+                          >
+                            Coming Soon...
+                          </Text>
                         </div>
                         <div className="pt-2" />
                       </div>
@@ -815,6 +733,8 @@ export const showConfirmationToast = ({
     notifications.show({
       id: 'confirmation-toast',
       withCloseButton: true,
+      onClose: () => console.log('unmounted'),
+      onOpen: () => console.log('mounted'),
       autoClose: 6000,
       title: title,
       message: message,
@@ -845,4 +765,3 @@ export const showConfirmationToast = ({
     })
   )
 }
-ModelItem.displayName = 'ModelItem'

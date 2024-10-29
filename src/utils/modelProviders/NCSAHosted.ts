@@ -25,7 +25,7 @@ export enum NCSAHostedModelID {
 export const NCSAHostedModels: Record<NCSAHostedModelID, OllamaModel> = {
   [NCSAHostedModelID.LLAMA31_8b]: {
     id: NCSAHostedModelID.LLAMA31_8b,
-    name: 'Llama 3.1 8b (Quantized)',
+    name: 'Llama 3.1 8b (quantized)',
     parameterSize: '8b',
     tokenLimit: 128000,
     enabled: true,
@@ -46,21 +46,21 @@ export const NCSAHostedModels: Record<NCSAHostedModelID, OllamaModel> = {
   },
   [NCSAHostedModelID.LLAMA31_70b]: {
     id: NCSAHostedModelID.LLAMA31_70b,
-    name: 'Llama 3.1 70b Quantized (poor quality model!)',
+    name: 'Llama 3.1 70b (quantized)',
     parameterSize: '70b',
     tokenLimit: 128000,
     enabled: true,
   },
   [NCSAHostedModelID.LLAMA31_latest]: {
     id: NCSAHostedModelID.LLAMA31_latest,
-    name: 'Llama 3.1 8b (Quantized)',
+    name: 'Llama 3.1 8b (quantized)',
     parameterSize: '8b',
     tokenLimit: 128000,
     enabled: true,
   },
   [NCSAHostedModelID.LLAMA31_405b]: {
     id: NCSAHostedModelID.LLAMA31_405b,
-    name: 'Llama 3.1 405b (Quantized)',
+    name: 'Llama 3.1 405b (quantized)',
     parameterSize: '405b',
     tokenLimit: 128000,
     enabled: true,
@@ -77,25 +77,20 @@ export const getNCSAHostedModels = async (
     // /api/ps - all HOT AND LOADED models
     const response = await fetch(process.env.OLLAMA_SERVER_URL + '/api/ps')
 
+    console.log('process.env.OLLAMA_SERVER_URL', process.env.OLLAMA_SERVER_URL)
+
     if (!response.ok) {
       ncsaHostedProvider.error = `HTTP error ${response.status} ${response.statusText}.`
       ncsaHostedProvider.models = [] // clear any previous models.
       return ncsaHostedProvider as NCSAHostedProvider
     }
     const data = await response.json()
-
     const ollamaModels: OllamaModel[] = data.models
       .filter((model: any) =>
         Object.values(NCSAHostedModelID).includes(model.model),
       )
       .map((model: any): OllamaModel => {
-        const baseModel = NCSAHostedModels[model.model as NCSAHostedModelID]
-        return {
-          ...baseModel,
-          enabled:
-            ncsaHostedProvider.models?.find((m) => m.id === model.model)
-              ?.enabled ?? baseModel.enabled,
-        }
+        return NCSAHostedModels[model.model as NCSAHostedModelID]
       })
 
     ncsaHostedProvider.models = ollamaModels

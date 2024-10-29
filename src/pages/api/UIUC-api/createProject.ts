@@ -1,6 +1,4 @@
 import { ContextWithMetadata } from '~/types/chat'
-import posthog from 'posthog-js'
-// import * as Sentry from '@sentry/nextjs'
 
 export const createProject = async (
   project_name: string,
@@ -31,21 +29,9 @@ export const createProject = async (
         'Failed to create the project. Err status:' + response.status,
       )
     }
-    // Log success to PostHog
-    posthog.capture('project_created', {
-      project_name: project_name,
-      project_owner_email: project_owner_email,
-    })
     return true
   } catch (error) {
     console.error(error)
-    // Log error to Sentry
-    // Sentry.captureException(error, {
-    //   tags: {
-    //     project_name: project_name,
-    //     project_owner_email: project_owner_email,
-    //   },
-    // })
     return false
   }
 }

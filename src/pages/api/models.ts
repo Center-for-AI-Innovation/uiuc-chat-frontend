@@ -1,14 +1,11 @@
 import {
   AllLLMProviders,
   AnthropicProvider,
-  AnySupportedModel,
   AzureProvider,
   LLMProvider,
   NCSAHostedProvider,
-  NCSAHostedVLLMProvider,
   OllamaProvider,
   OpenAIProvider,
-  ProjectWideLLMProviders,
   ProviderNames,
   WebLLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
@@ -20,16 +17,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
 import { getNCSAHostedModels } from '~/utils/modelProviders/NCSAHosted'
 import { getOpenAIModels } from '~/utils/modelProviders/routes/openai'
-import { getNCSAHostedVLLMModels } from '~/utils/modelProviders/types/NCSAHostedVLLM'
+import { OpenAIModelID } from '~/utils/modelProviders/types/openai'
+import { ProjectWideLLMProviders } from '~/types/courseMetadata'
 
 export const config = {
   runtime: 'edge',
 }
-export const maxDuration = 60
 
 const handler = async (
   req: NextRequest,
-): Promise<NextResponse<ProjectWideLLMProviders | { error: string }>> => {
+): Promise<NextResponse<AllLLMProviders | { error: string }>> => {
   try {
     const { projectName } = (await req.json()) as {
       projectName: string
@@ -42,84 +39,79 @@ const handler = async (
       )
     }
 
-    // Define a function to create a placeholder provider
+    // Fetch the project's API keys
+    let llmProviders = (await kv.get(
+      `${projectName}-llms`,
+    )) as ProjectWideLLMProviders | null
+
+    if (!llmProviders) {
+      llmProviders = {} as ProjectWideLLMProviders
+    } else {
+      llmProviders = llmProviders as ProjectWideLLMProviders
+    }
+
+    // Define a function to create a placeholder provider with default values
     const createPlaceholderProvider = (
       providerName: ProviderNames,
     ): LLMProvider => ({
-      // Enable by default NCSA Hosted models. All others disabled by default.
       provider: providerName,
-      enabled:
-        providerName === ProviderNames.NCSAHostedVLLM ||
-        providerName === ProviderNames.NCSAHosted,
+      enabled: false,
       models: [],
     })
-
-    // Fetch the project's API keys, filtering out all keys if requested
-    const llmProviders = (await kv.get(
-      `${projectName}-llms`,
-    )) as unknown as ProjectWideLLMProviders
 
     // Ensure all providers are defined
     const allProviderNames = Object.values(ProviderNames)
     for (const providerName of allProviderNames) {
-      if (!llmProviders.providers) {
-        llmProviders.providers = {} as any
-      }
-
-      if (!llmProviders.providers[providerName]) {
-        // console.log("creating placeholder provider:", providerName);
-        // @ts-ignore - ignored for now
-        if (llmProviders[providerName]) {
-          // @ts-ignore - ignored for now
-          llmProviders.providers[providerName] = llmProviders[providerName]
-          // console.log("adding pre-existing provider:", llmProviders.providers[providerName]);
-        } else {
-          llmProviders.providers[providerName] = createPlaceholderProvider(
-            providerName,
-          ) as any
-        }
+      if (!llmProviders[providerName]) {
+        // @ts-ignore -- I can't figure out why Ollama complains about undefined.
+        llmProviders[providerName] = createPlaceholderProvider(providerName)
       }
     }
 
+    // Ensure defaultModel and defaultTemp are set
+    if (!llmProviders.defaultModel) {
+      llmProviders.defaultModel = OpenAIModelID.GPT_4o_mini
+    }
+    if (!llmProviders.defaultTemp) {
+      llmProviders.defaultTemp = 0.1
+    }
+
+    const allLLMProviders: Partial<AllLLMProviders> = {}
+
     // Iterate through all possible providers
     for (const providerName of Object.values(ProviderNames)) {
-      const llmProvider = llmProviders.providers[providerName]
+      const llmProvider = llmProviders[providerName]
 
       switch (providerName) {
         case ProviderNames.Ollama:
-          llmProviders.providers[providerName] = (await getOllamaModels(
+          allLLMProviders[providerName] = (await getOllamaModels(
             llmProvider as OllamaProvider,
           )) as OllamaProvider
           break
         case ProviderNames.OpenAI:
-          llmProviders.providers[providerName] = await getOpenAIModels(
+          allLLMProviders[providerName] = await getOpenAIModels(
             llmProvider as OpenAIProvider,
             projectName,
           )
           break
         case ProviderNames.Azure:
-          llmProviders.providers[providerName] = await getAzureModels(
+          allLLMProviders[providerName] = await getAzureModels(
             llmProvider as AzureProvider,
           )
           break
         case ProviderNames.Anthropic:
-          llmProviders.providers[providerName] = await getAnthropicModels(
+          allLLMProviders[providerName] = await getAnthropicModels(
             llmProvider as AnthropicProvider,
           )
           break
         case ProviderNames.WebLLM:
-          llmProviders.providers[providerName] = await getWebLLMModels(
+          allLLMProviders[providerName] = await getWebLLMModels(
             llmProvider as WebLLMProvider,
           )
           break
         case ProviderNames.NCSAHosted:
-          llmProviders.providers[providerName] = await getNCSAHostedModels(
+          allLLMProviders[providerName] = await getNCSAHostedModels(
             llmProvider as NCSAHostedProvider,
-          )
-          break
-        case ProviderNames.NCSAHostedVLLM:
-          llmProviders.providers[providerName] = await getNCSAHostedVLLMModels(
-            llmProvider as NCSAHostedVLLMProvider,
           )
           break
         default:
@@ -127,8 +119,10 @@ const handler = async (
       }
     }
 
-    // console.log('FINAL -- llmProviders', llmProviders.providers.NCSAHostedVLLM)
-    return NextResponse.json(llmProviders, { status: 200 })
+    // console.log('FINAL -- allLLMProviders', allLLMProviders)
+    return NextResponse.json(allLLMProviders as AllLLMProviders, {
+      status: 200,
+    })
   } catch (error) {
     console.error(error)
     return NextResponse.json({ error: JSON.stringify(error) }, { status: 500 })

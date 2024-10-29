@@ -66,11 +66,8 @@ export const getModelLogo = (modelType: string) => {
       return 'https://assets.kastan.ai/UofI-logo-white.jpg'
     case ProviderNames.Azure:
       return 'https://assets.kastan.ai/uiuc-chat-emails/msft-logo.png'
-    case ProviderNames.NCSAHostedVLLM:
-      return 'https://assets.kastan.ai/UofI-logo-white.jpg'
     default:
-      console.warn('Unknown model type: ', modelType)
-    // throw new Error(`Unknown model type: ${modelType}`)
+      throw new Error(`Unknown model type: ${modelType}`)
   }
 }
 export const ModelItem = forwardRef<
@@ -147,7 +144,7 @@ export const ModelItem = forwardRef<
           <div>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <Image
-                src={getModelLogo(modelType) || ''}
+                src={getModelLogo(modelType)}
                 alt={`${modelType} logo`}
                 width={20}
                 height={20}
@@ -447,17 +444,17 @@ const ModelDropdown: React.FC<
 export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
   ({ chat_ui, props }, ref) => {
     const {
-      state: { selectedConversation, projectLLMProviders, defaultModelId },
+      state: { selectedConversation, llmProviders, defaultModelId },
       handleUpdateConversation,
       dispatch: homeDispatch,
     } = useContext(HomeContext)
     const isSmallScreen = useMediaQuery('(max-width: 960px)')
-    const defaultModel = selectBestModel({ projectLLMProviders }).id
+    const defaultModel = selectBestModel(llmProviders).id
     const [loadingModelId, setLoadingModelId] = useState<string | null>(null)
 
     const handleModelClick = (modelId: string) => {
       // Get list of models from all providers
-      const allModels = Object.values(projectLLMProviders.providers)
+      const allModels = Object.values(llmProviders)
         .flatMap((provider) => provider?.models || [])
         .filter((model) => model.enabled)
 
@@ -495,7 +492,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                   handleModelClick(modelId)
                 }
               }
-              llmProviders={projectLLMProviders.providers}
+              llmProviders={llmProviders}
               isSmallScreen={isSmallScreen}
               loadingModelId={loadingModelId}
               setLoadingModelId={setLoadingModelId}

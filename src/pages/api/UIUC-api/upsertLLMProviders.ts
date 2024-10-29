@@ -1,10 +1,11 @@
 // upsertCourseMetadata.ts
 import { kv } from '@vercel/kv'
 import { type NextRequest, NextResponse } from 'next/server'
+import { ProjectWideLLMProviders } from '~/types/courseMetadata'
 import { encryptKeyIfNeeded } from '~/utils/crypto'
 import {
-  ProjectWideLLMProviders,
-  ProviderNames,
+  AllLLMProviders,
+  LLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
 
 export const runtime = 'edge'
@@ -17,19 +18,23 @@ export default async function handler(req: NextRequest, res: NextResponse) {
 
   const requestBody = await req.text()
   let courseName: string
-  let llmProviders: ProjectWideLLMProviders
+  let llmProviders: AllLLMProviders
+  let defaultModelID: string
+  let defaultTemperature: number
 
   try {
     const parsedBody = JSON.parse(requestBody)
     courseName = parsedBody.projectName as string
-    llmProviders = parsedBody.llmProviders as ProjectWideLLMProviders
+    llmProviders = parsedBody.llmProviders as AllLLMProviders
+    defaultModelID = parsedBody.defaultModelID as string
+    defaultTemperature = parsedBody.defaultTemperature as number
   } catch (error) {
     console.error('Error parsing request body:', error)
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
   // Check if all required variables are defined
-  if (!courseName || !llmProviders || !llmProviders.providers) {
+  if (!courseName || !llmProviders || !defaultModelID || !defaultTemperature) {
     console.error('Error: Missing required parameters')
     return NextResponse.json(
       { error: 'Missing required parameters' },
@@ -38,7 +43,11 @@ export default async function handler(req: NextRequest, res: NextResponse) {
   }
 
   // Type checking
-  if (typeof courseName !== 'string') {
+  if (
+    typeof courseName !== 'string' ||
+    typeof defaultModelID !== 'string' ||
+    typeof defaultTemperature !== 'string'
+  ) {
     console.error('Error: Invalid parameter types')
     return NextResponse.json(
       { error: 'Invalid parameter types' },
@@ -52,28 +61,22 @@ export default async function handler(req: NextRequest, res: NextResponse) {
   }
 
   try {
+    console.debug('llmProviders BEFORE being cleaned and such', llmProviders)
+
     const redisKey = `${courseName}-llms`
     const existingLLMs = (await kv.get(redisKey)) as ProjectWideLLMProviders
 
     // Ensure all keys are encrypted, then save to DB.
     const processProviders = async () => {
-      for (const [providerName, provider] of Object.entries(
-        llmProviders.providers,
-      )) {
+      for (const providerName in llmProviders) {
+        const typedProviderName = providerName as keyof AllLLMProviders
+        const provider = llmProviders[typedProviderName]
         if (provider && 'apiKey' in provider) {
-          // @ts-ignore - stupid.
-          llmProviders.providers[
-            providerName as keyof typeof llmProviders.providers
-          ] = {
+          llmProviders[typedProviderName] = {
             ...provider,
-            // @ts-ignore - it's because this function could throw an error. But we don't care about it here.
             apiKey:
               (await encryptKeyIfNeeded(provider.apiKey!)) ?? provider.apiKey,
-          }
-        } else {
-          llmProviders.providers[
-            providerName as keyof typeof llmProviders.providers
-          ] = provider as any
+          } as LLMProvider & { provider: typeof typedProviderName }
         }
       }
     }
@@ -82,17 +85,12 @@ export default async function handler(req: NextRequest, res: NextResponse) {
     // Combine the existing metadata with the new metadata, prioritizing the new values
     const combined_llms = { ...existingLLMs, ...llmProviders }
 
-    // Delete all the old providers, they're now nested inside.
-    Object.values(ProviderNames).forEach((provider) => {
-      delete (combined_llms as any)[provider]
-    })
-
-    if (llmProviders.defaultModel) {
-      combined_llms.defaultModel = llmProviders.defaultModel
+    if (defaultModelID) {
+      combined_llms.defaultModel = defaultModelID
     }
 
-    if (llmProviders.defaultTemp) {
-      combined_llms.defaultTemp = llmProviders.defaultTemp
+    if (defaultTemperature) {
+      combined_llms.defaultTemp = defaultTemperature
     }
 
     console.debug('-----------------------------------------')
