@@ -15,7 +15,7 @@ export default async function handler(req: NextRequest, res: NextResponse) {
 
   try {
     const response = await fetch(
-      `https://flask-pr-319.up.railway.app/getConversationHeatmapByHour?course_name=${course_name}`,
+      `https://flask-production-751b.up.railway.app/getConversationHeatmapByHour?course_name=${course_name}`,
     )
 
     if (!response.ok) {
