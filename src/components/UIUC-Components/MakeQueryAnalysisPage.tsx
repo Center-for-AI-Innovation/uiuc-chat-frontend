@@ -17,6 +17,7 @@ import {
   createStyles,
   // Divider,
   MantineTheme,
+  Divider,
   // TextInput,
   // Tooltip,
 } from '@mantine/core'
@@ -26,6 +27,10 @@ import axios from 'axios'
 import { useRouter } from 'next/router'
 import { LoadingSpinner } from './LoadingSpinner'
 import { downloadConversationHistory } from '../../pages/api/UIUC-api/downloadConvoHistory'
+import ConversationsPerDayChart from './ConversationsPerDayChart'
+import ConversationsPerHourChart from './ConversationsPerHourChart'
+import ConversationsPerDayOfWeekChart from './ConversationsPerDayOfWeekChart'
+import ConversationsHeatmapByHourChart from './ConversationsHeatmapByHourChart'
 
 const useStyles = createStyles((theme: MantineTheme) => ({
   downloadButton: {
@@ -189,56 +194,119 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
       <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
         <div className="items-left flex w-full flex-col justify-center py-0">
           <Flex direction="column" align="center" w="100%">
+            <div className="pt-5"></div>
             <div
-              // Course files header/background
-              className="mx-auto mt-[2%] w-[90%] items-start rounded-2xl shadow-md shadow-purple-600"
-              style={{ zIndex: 1, background: '#15162c' }}
+              className="w-full md:w-[98%]"
+              style={{
+                // width: '98%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                background: '#15162c',
+                paddingTop: '1rem',
+                borderRadius: '1rem',
+              }}
             >
-              <Flex direction="row" justify="space-between">
-                <div className="flex flex-row items-start justify-start">
-                  <Title
-                    className={`${montserrat_heading.variable} font-montserratHeading`}
-                    variant="gradient"
-                    gradient={{
-                      from: 'hsl(280,100%,70%)',
-                      to: 'white',
-                      deg: 185,
-                    }}
-                    order={3}
-                    p="xl"
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}
-                  >
-                    {' '}
-                    What questions are people asking?
-                  </Title>
-                </div>
-                <div className="me-6 flex flex-row items-center justify-end">
+              <div
+                style={{
+                  width: '95%',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  background: '#15162c',
+                  paddingBottom: '1rem',
+                }}
+              >
+                <Title
+                  order={3}
+                  align="left"
+                  className="px-2 text-[hsl(280,100%,70%)] "
+                  style={{ flexGrow: 2 }}
+                >
+                  Analyze Conversations
+                </Title>
+                <div className="flex flex-row items-center justify-end">
                   {/* Can add more buttons here */}
                   <Button
-                    className={`${montserrat_paragraph.variable} font-montserratParagraph ${classes.downloadButton}`}
+                    className={`${montserrat_paragraph.variable} font-montserratParagraph ${classes.downloadButton} w-full px-2 text-sm sm:w-auto sm:px-4 sm:text-base`}
                     rightIcon={
                       isLoading ? (
                         <LoadingSpinner size="sm" />
                       ) : (
-                        <IconCloudDownload />
+                        <IconCloudDownload className="hidden sm:block" />
                       )
                     }
                     onClick={() => handleDownload(course_name)}
                   >
-                    Download Conversation History
+                    <span className="hidden sm:inline">
+                      Download Conversation History
+                    </span>
+                    <span className="sm:hidden">Download History</span>
                   </Button>
                 </div>
-              </Flex>
+              </div>
+
+              <Divider className="w-full" color="gray.4" size="sm" />
+
+              <div className="grid w-[95%] grid-cols-1 gap-6 pb-10 pt-10 lg:grid-cols-2">
+                {/* Chart 1 */}
+                <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
+                  <Title order={4} mb="md" align="left" className="text-white">
+                    Conversations Per Day
+                  </Title>
+                  <Text size="sm" color="dimmed" mb="xl">
+                    Shows the total number of conversations that occurred on
+                    each calendar day
+                  </Text>
+                  <ConversationsPerDayChart course_name={course_name} />
+                </div>
+
+                {/* Chart 2 */}
+                <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
+                  <Title order={4} mb="md" align="left" className="text-white">
+                    Conversations Per Hour
+                  </Title>
+                  <Text size="sm" color="dimmed" mb="xl">
+                    Displays the total number of conversations that occurred
+                    during each hour of the day (24-hour format), aggregated
+                    across all days
+                  </Text>
+                  <ConversationsPerHourChart course_name={course_name} />
+                </div>
+
+                {/* Chart 3 */}
+                <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
+                  <Title order={4} mb="md" align="left" className="text-white">
+                    Conversations Per Day of the Week
+                  </Title>
+                  <Text size="sm" color="dimmed" mb="xl">
+                    Shows the total number of conversations that occurred on
+                    each day of the week, helping identify which days are most
+                    active
+                  </Text>
+                  <ConversationsPerDayOfWeekChart course_name={course_name} />
+                </div>
+
+                {/* Chart 4 */}
+                <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
+                  <Title order={4} mb="md" align="left" className="text-white">
+                    Conversations Per Day and Hour
+                  </Title>
+                  <Text size="sm" color="dimmed" mb="xl">
+                    A heatmap showing conversation density across both days and
+                    hours, with darker colors indicating higher activity during
+                    those time periods
+                  </Text>
+                  <ConversationsHeatmapByHourChart course_name={course_name} />
+                </div>
+              </div>
             </div>
-            <div className="pt-5"></div>
-            {/* NOMIC VISUALIZATION  */}
-            {/* {false ? ( */}
-            {/* {true ? ( */}
-            {nomicIsLoading ? (
+          </Flex>
+        </div>
+        {/* NOMIC VISUALIZATION  */}
+        {/* {false ? ( */}
+        {/* {true ? ( */}
+        {/* {nomicIsLoading ? (
               <>
                 <span className="nomic-iframe skeleton-box pl-7 pr-7 pt-4"></span>
               </>
@@ -286,12 +354,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     style={{ textDecoration: 'underline', paddingRight: '5px' }}
                   >
                     semantic similarity visualizations
-                  </a>
-                </Title>
-              </>
-            )}
-          </Flex>
-        </div>
+                  </a> */}
+        {/* </Title> */}
+        {/* </> */}
+        {/* )}  */}
         <GlobalFooter />
       </main>
     </>
@@ -330,6 +396,7 @@ import { notifications } from '@mantine/notifications'
 import GlobalFooter from './GlobalFooter'
 import Navbar from './navbars/Navbar'
 import Link from 'next/link'
+import { Separator } from 'tabler-icons-react'
 
 const CourseFilesList = ({ files }: CourseFilesListProps) => {
   const router = useRouter()
