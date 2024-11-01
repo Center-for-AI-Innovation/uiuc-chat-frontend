@@ -52,8 +52,6 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
     }
   }, [])
 
-  return <Maintenance />
-
   if (process.env.NEXT_PUBLIC_MAINTENANCE === 'true') {
     return <Maintenance />
   } else {
