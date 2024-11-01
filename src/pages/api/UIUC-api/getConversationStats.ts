@@ -15,7 +15,7 @@ export default async function handler(req: NextRequest, res: NextResponse) {
 
   try {
     const response = await fetch(
-      `http://127.0.0.1:8000/getConversationStats?course_name=${course_name}`,
+      `https://flask-pr-319.up.railway.app/getConversationStats?course_name=${course_name}`,
     )
 
     // console.log(`Response status: ${response.status}`);
