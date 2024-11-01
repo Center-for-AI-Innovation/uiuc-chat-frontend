@@ -145,6 +145,28 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     fetchNomicMapData()
   }, [course_name])
 
+  const [hasConversationData, setHasConversationData] = useState<boolean>(true)
+
+  // Add this effect to check for conversation data
+  useEffect(() => {
+    const checkConversationData = async () => {
+      try {
+        const response = await axios.get(
+          `/api/UIUC-api/getConversationStats?course_name=${course_name}`,
+        )
+        if (response.status === 200) {
+          const { per_day } = response.data
+          setHasConversationData(Object.keys(per_day).length > 0)
+        }
+      } catch (error) {
+        console.error('Error checking conversation data:', error)
+        setHasConversationData(false)
+      }
+    }
+
+    checkConversationData()
+  }, [course_name])
+
   if (!isLoaded || !courseMetadata) {
     return (
       <MainPageBackground>
@@ -249,56 +271,97 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
               <Divider className="w-full" color="gray.4" size="sm" />
 
               <div className="grid w-[95%] grid-cols-1 gap-6 pb-10 pt-10 lg:grid-cols-2">
-                {/* Chart 1 */}
-                <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
-                  <Title order={4} mb="md" align="left" className="text-white">
-                    Conversations Per Day
-                  </Title>
-                  <Text size="sm" color="dimmed" mb="xl">
-                    Shows the total number of conversations that occurred on
-                    each calendar day
-                  </Text>
-                  <ConversationsPerDayChart course_name={course_name} />
-                </div>
+                {!hasConversationData ? (
+                  <div className="rounded-xl bg-[#1a1b30] p-6 text-center shadow-lg shadow-purple-900/20 lg:col-span-2">
+                    <Title
+                      order={4}
+                      className={`${montserrat_heading.variable} font-montserratHeading`}
+                    >
+                      No conversation data available yet
+                    </Title>
+                    <Text size="lg" color="dimmed" mt="md">
+                      Start some conversations to see analytics and
+                      visualizations!
+                    </Text>
+                  </div>
+                ) : (
+                  <>
+                    {/* Chart 1 */}
+                    <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
+                      <Title
+                        order={4}
+                        mb="md"
+                        align="left"
+                        className="text-white"
+                      >
+                        Conversations Per Day
+                      </Title>
+                      <Text size="sm" color="dimmed" mb="xl">
+                        Shows the total number of conversations that occurred on
+                        each calendar day
+                      </Text>
+                      <ConversationsPerDayChart course_name={course_name} />
+                    </div>
 
-                {/* Chart 2 */}
-                <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
-                  <Title order={4} mb="md" align="left" className="text-white">
-                    Conversations Per Hour
-                  </Title>
-                  <Text size="sm" color="dimmed" mb="xl">
-                    Displays the total number of conversations that occurred
-                    during each hour of the day (24-hour format), aggregated
-                    across all days
-                  </Text>
-                  <ConversationsPerHourChart course_name={course_name} />
-                </div>
+                    {/* Chart 2 */}
+                    <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
+                      <Title
+                        order={4}
+                        mb="md"
+                        align="left"
+                        className="text-white"
+                      >
+                        Conversations Per Hour
+                      </Title>
+                      <Text size="sm" color="dimmed" mb="xl">
+                        Displays the total number of conversations that occurred
+                        during each hour of the day (24-hour format), aggregated
+                        across all days
+                      </Text>
+                      <ConversationsPerHourChart course_name={course_name} />
+                    </div>
 
-                {/* Chart 3 */}
-                <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
-                  <Title order={4} mb="md" align="left" className="text-white">
-                    Conversations Per Day of the Week
-                  </Title>
-                  <Text size="sm" color="dimmed" mb="xl">
-                    Shows the total number of conversations that occurred on
-                    each day of the week, helping identify which days are most
-                    active
-                  </Text>
-                  <ConversationsPerDayOfWeekChart course_name={course_name} />
-                </div>
+                    {/* Chart 3 */}
+                    <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
+                      <Title
+                        order={4}
+                        mb="md"
+                        align="left"
+                        className="text-white"
+                      >
+                        Conversations Per Day of the Week
+                      </Title>
+                      <Text size="sm" color="dimmed" mb="xl">
+                        Shows the total number of conversations that occurred on
+                        each day of the week, helping identify which days are
+                        most active
+                      </Text>
+                      <ConversationsPerDayOfWeekChart
+                        course_name={course_name}
+                      />
+                    </div>
 
-                {/* Chart 4 */}
-                <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
-                  <Title order={4} mb="md" align="left" className="text-white">
-                    Conversations Per Day and Hour
-                  </Title>
-                  <Text size="sm" color="dimmed" mb="xl">
-                    A heatmap showing conversation density across both days and
-                    hours, with darker colors indicating higher activity during
-                    those time periods
-                  </Text>
-                  <ConversationsHeatmapByHourChart course_name={course_name} />
-                </div>
+                    {/* Chart 4 */}
+                    <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
+                      <Title
+                        order={4}
+                        mb="md"
+                        align="left"
+                        className="text-white"
+                      >
+                        Conversations Per Day and Hour
+                      </Title>
+                      <Text size="sm" color="dimmed" mb="xl">
+                        A heatmap showing conversation density across both days
+                        and hours, with darker colors indicating higher activity
+                        during those time periods
+                      </Text>
+                      <ConversationsHeatmapByHourChart
+                        course_name={course_name}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </Flex>
