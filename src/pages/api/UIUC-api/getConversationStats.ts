@@ -15,8 +15,10 @@ export default async function handler(req: NextRequest, res: NextResponse) {
 
   try {
     const response = await fetch(
-      `https://flask-production-751b.up.railway.app/getConversationStats?course_name=${course_name}`,
+      `http://127.0.0.1:8000/getConversationStats?course_name=${course_name}`,
     )
+
+    // console.log(`Response status: ${response.status}`);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch data: ${response.statusText}`)

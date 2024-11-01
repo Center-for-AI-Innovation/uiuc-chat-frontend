@@ -28,15 +28,14 @@ const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
   )
   const hours = Array.from({ length: 24 }, (_, i) => i.toString())
 
-  // Fetch heatmap data
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          `/api/UIUC-api/getConversationHeatmapByHour?course_name=${course_name}`,
+          `/api/UIUC-api/getConversationStats?course_name=${course_name}`,
         )
         if (response.status === 200) {
-          const heatmapData = response.data
+          const heatmapData = response.data.heatmap
 
           const formattedData = daysOfWeek.map((day) =>
             hours.map((hour) => heatmapData[day]?.[parseInt(hour)] || 0),
@@ -55,9 +54,8 @@ const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
     }
 
     fetchData()
-  }, [course_name, daysOfWeek, hours])
+  }, [course_name])
 
-  // Update container width on mount and resize
   useEffect(() => {
     const updateWidth = () => {
       if (containerRef.current) {
@@ -65,21 +63,17 @@ const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
       }
     }
 
-    // Initial width
     updateWidth()
 
-    // Add resize listener
     window.addEventListener('resize', updateWidth)
     return () => window.removeEventListener('resize', updateWidth)
   }, [])
 
-  // Calculate dynamic cell width
   const numColumns = hours.length
-  const padding = 40 // Adjust based on your layout (e.g., padding/margins)
+  const padding = 40
   const availableWidth = containerWidth - padding
   const cellWidth = availableWidth / numColumns
 
-  // Set minimum and maximum cell widths for better responsiveness
   const minCellWidth = 30
   const maxCellWidth = 60
   const finalCellWidth = Math.max(
@@ -87,8 +81,7 @@ const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
     Math.min(cellWidth, maxCellWidth),
   )
 
-  // Optional: Adjust font size based on cell width for better readability
-  const fontSize = Math.max(10, Math.min(finalCellWidth / 3, 14)) // Example logic
+  const fontSize = Math.max(10, Math.min(finalCellWidth / 3, 14))
 
   if (isLoading) {
     return (
