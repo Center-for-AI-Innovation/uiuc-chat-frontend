@@ -40,7 +40,11 @@ const formatDate = (dateString: string) => {
     return 'Invalid Date'
   }
 
-  return date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' })
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  })
 }
 
 const ConversationsPerDayChart: React.FC<{ course_name: string }> = ({
@@ -95,12 +99,20 @@ const ConversationsPerDayChart: React.FC<{ course_name: string }> = ({
   }
 
   const determineInterval = (dataLength: number): number => {
-    if (dataLength <= 20) return 0
-    if (dataLength <= 80) return 1
-    return 5
+    if (dataLength <= 25) return 0
+    if (dataLength <= 40) return 1
+    if (dataLength <= 60) return 2
+    if (dataLength <= 90) return 3
+    return Math.ceil(dataLength / 30)
   }
 
   const xAxisInterval = determineInterval(data.length)
+
+  const getYAxisLabelPadding = (data: { count: number }[]) => {
+    const maxValue = Math.max(...data.map((item) => item.count))
+    const digits = maxValue.toString().length
+    return -(10 + (digits - 1) * 5) // -10 for 1 digit, -15 for 2 digits, -20 for 3 digits, etc.
+  }
 
   return (
     <div style={{ width: '100%', height: 400 }}>
@@ -115,20 +127,21 @@ const ConversationsPerDayChart: React.FC<{ course_name: string }> = ({
             tick={{
               fill: '#fff',
               fontFamily: montserrat_paragraph.style.fontFamily,
-              fontSize: 15,
-              dx: -5,
+              fontSize: data.length > 30 ? 12 : 15,
+              dx: data.length > 30 ? -3 : -5,
+              dy: 8,
             }}
             angle={data.length > 15 ? -45 : 0}
             label={{
               value: 'Date',
               position: 'insideBottom',
-              offset: -5,
+              offset: -20,
               fill: '#fff',
               fontFamily: montserrat_paragraph.style.fontFamily,
-              dy: 13,
+              dy: 25,
             }}
             tickFormatter={formatDate}
-            tickMargin={10}
+            tickMargin={data.length > 30 ? 15 : 25}
             interval={xAxisInterval}
           />
 
@@ -144,7 +157,7 @@ const ConversationsPerDayChart: React.FC<{ course_name: string }> = ({
               position: 'center',
               fill: '#fff',
               fontFamily: montserrat_paragraph.style.fontFamily,
-              dx: -10,
+              dx: getYAxisLabelPadding(data),
             }}
           />
           <Tooltip

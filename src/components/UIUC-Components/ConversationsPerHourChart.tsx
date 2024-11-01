@@ -52,6 +52,12 @@ const ConversationsPerHourChart: React.FC<{ course_name: string }> = ({
     fetchData()
   }, [course_name])
 
+  const getYAxisLabelPadding = (data: { count: number }[]) => {
+    const maxValue = Math.max(...data.map((item) => item.count))
+    const digits = maxValue.toString().length
+    return -(10 + (digits - 1) * 5)
+  }
+
   if (isLoading) {
     return (
       <Text>
@@ -99,7 +105,7 @@ const ConversationsPerHourChart: React.FC<{ course_name: string }> = ({
               position: 'center',
               fill: '#fff',
               fontFamily: montserrat_paragraph.style.fontFamily,
-              dx: -10,
+              dx: getYAxisLabelPadding(data),
             }}
           />
           <Tooltip
