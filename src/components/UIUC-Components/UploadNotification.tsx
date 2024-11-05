@@ -1,22 +1,22 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Card, Text, Button, Progress, MantineProvider } from '@mantine/core'
-import { IconCheck, IconChevronDown, IconChevronUp, IconX } from '@tabler/icons-react'
+import { Card, Text, Button } from '@mantine/core'
+import { IconCheck, IconChevronDown, IconChevronUp, IconX, IconLoader2 } from '@tabler/icons-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 export interface FileUpload {
   name: string
-  progress: number
-  status: 'uploading' | 'complete' | 'error'
+  status: 'uploading' | 'ingesting' | 'complete' | 'error'
 }
 
 interface UploadNotificationProps {
   files: FileUpload[]
   onClose: () => void
-  onCancel: () => void
+  // onCancel: () => void
 }
 
-function UploadNotificationContent({ files, onClose, onCancel }: UploadNotificationProps) {
+function UploadNotificationContent({ files, onClose }: UploadNotificationProps) {
   const [isMinimized, setIsMinimized] = useState(false)
   const [currentFiles, setCurrentFiles] = useState<FileUpload[]>([])
 
@@ -27,7 +27,7 @@ function UploadNotificationContent({ files, onClose, onCancel }: UploadNotificat
   }, [files])
 
   const allComplete = currentFiles.length > 0 && currentFiles.every(file => file.status === 'complete')
-  const anyUploading = currentFiles.some(file => file.status === 'uploading')
+  const anyUploading = currentFiles.some(file => file.status === 'uploading' || file.status === 'ingesting')
 
   const toggleMinimize = () => setIsMinimized(!isMinimized)
 
@@ -51,7 +51,6 @@ function UploadNotificationContent({ files, onClose, onCancel }: UploadNotificat
       shadow="sm"
       padding="sm"
       radius="md"
-      // withBorder
       className="fixed bottom-4 right-4 w-96 bg-[#292c5b] z-50"
     >
       <div className="flex items-center justify-between">
@@ -84,25 +83,44 @@ function UploadNotificationContent({ files, onClose, onCancel }: UploadNotificat
       </div>
       {!isMinimized && (
         <div className="mt-2 space-y-2">
-          {currentFiles.map((file, index) => (
-            <div key={index} className="flex items-center">
-              {getFileIcon(file.name.split('.').pop() || '')}
-              <div className="ml-2 flex-grow">
-                <Text size="sm" className="truncate" c='white'>{file.name}</Text>
-                {file.status === 'uploading' && (
-                  <Progress value={file.progress} size="xs" className="mt-1" />
-                )}
-              </div>
-              {file.status === 'complete' && <IconCheck size={18} className="text-green-500 ml-2" />}
-            </div>
-          ))}
+          <AnimatePresence>
+            {currentFiles.map((file, index) => {
+              console.log(file.status);
+              return (
+                <motion.div
+                  key={file.name}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex items-center"
+                >
+                  {getFileIcon(file.name.split('.').pop() || '')}
+                  <div className="ml-2 flex-grow">
+                    <Text size="sm" className="truncate" c='white'>{file.name}</Text>
+                    <Text size="xs" c='dimmed'>
+                      {file.status === 'uploading' && 'Uploading...'}
+                      {file.status === 'ingesting' && 'Ingesting...'}
+                      {file.status === 'complete' && 'Complete'}
+                      {file.status === 'error' && 'Error'}
+                    </Text>
+                  </div>
+                  {(file.status === 'uploading' || file.status === 'ingesting') && (
+                    <IconLoader2 size={18} className="text-blue-500 ml-2 animate-spin" />
+                  )}
+                  {file.status === 'complete' && <IconCheck size={18} className="text-green-500 ml-2" />}
+                  {file.status === 'error' && <IconX size={18} className="text-red-500 ml-2" />}
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
           {anyUploading && (
             <Button
               variant="light"
               color="red"
               size="xs"
               fullWidth
-              onClick={onCancel}
+            // onClick={onCancel}
             >
               Cancel
             </Button>
@@ -115,8 +133,6 @@ function UploadNotificationContent({ files, onClose, onCancel }: UploadNotificat
 
 export default function UploadNotification(props: UploadNotificationProps) {
   return (
-    <MantineProvider>
-      <UploadNotificationContent {...props} />
-    </MantineProvider>
+    <UploadNotificationContent {...props} />
   )
 }

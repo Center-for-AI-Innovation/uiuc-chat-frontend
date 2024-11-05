@@ -52,113 +52,113 @@ const useStyles = createStyles((theme) => ({
   },
 }))
 
-export function UploadProgressBar({
-  numFiles,
-  totalFiles,
-  isComplete,
-}: {
-  numFiles: number
-  totalFiles: number
-  isComplete: boolean
-}) {
-  return (
-    <Paper
-      shadow="lg"
-      radius="md"
-      p="md"
-      withBorder
-      style={{
-        backgroundColor: '#25262b',
-        width: rem(330),
-        borderWidth: rem(1.5),
-        borderStyle: 'dashed',
-      }}
-    >
-      <Group position="left">
-        {isComplete ? <IconCheck size={rem(24)} color="green" /> : null}
-        <Text>
-          {numFiles} out of {totalFiles} uploaded.
-        </Text>
-      </Group>
-      {!isComplete && (
-        <Progress
-          color="violet"
-          radius="md"
-          size="lg"
-          value={(numFiles / totalFiles) * 100}
-          striped
-          animate
-        />
-      )}
-    </Paper>
-  )
-}
+// export function UploadProgressBar({
+//   numFiles,
+//   totalFiles,
+//   isComplete,
+// }: {
+//   numFiles: number
+//   totalFiles: number
+//   isComplete: boolean
+// }) {
+//   return (
+//     <Paper
+//       shadow="lg"
+//       radius="md"
+//       p="md"
+//       withBorder
+//       style={{
+//         backgroundColor: '#25262b',
+//         width: rem(330),
+//         borderWidth: rem(1.5),
+//         borderStyle: 'dashed',
+//       }}
+//     >
+//       <Group position="left">
+//         {isComplete ? <IconCheck size={rem(24)} color="green" /> : null}
+//         <Text>
+//           {numFiles} out of {totalFiles} uploaded.
+//         </Text>
+//       </Group>
+//       {!isComplete && (
+//         <Progress
+//           color="violet"
+//           radius="md"
+//           size="lg"
+//           value={(numFiles / totalFiles) * 100}
+//           striped
+//           animate
+//         />
+//       )}
+//     </Paper>
+//   )
+// }
 
-function IngestProgressBar({ courseName }: { courseName: string }) {
-  const [progress, setProgress] = useState(0)
-  const [hasDocuments, setHasDocuments] = useState(false) // State to track if there are documents
-  const [totalDocuments, setTotalDocuments] = useState(0) // State to track the total number of documents
-  const [dataLength, setDataLength] = useState(0)
+// function IngestProgressBar({ courseName }: { courseName: string }) {
+//   const [progress, setProgress] = useState(0)
+//   const [hasDocuments, setHasDocuments] = useState(false) // State to track if there are documents
+//   const [totalDocuments, setTotalDocuments] = useState(0) // State to track the total number of documents
+//   const [dataLength, setDataLength] = useState(0)
 
-  useEffect(() => {
-    async function fetchData() {
-      const response = await fetch(
-        `/api/materialsTable/docsInProgress?course_name=${courseName}`,
-      )
-      const data = await response.json()
-      console.log(data)
-      if (data && data.documents) {
-        // const newTotalDocuments = Math.max(
-        //   totalDocuments,
-        //   data.documents.length,
-        // )
-        setTotalDocuments(data.documents)
-        // setDataLength(newTotalDocuments - data.documents.length)
-        setHasDocuments(data.documents.length > 0)
-        // setProgress(
-        //   ((newTotalDocuments - data.documents.length) / newTotalDocuments) *
-        //   100,
-        // )
-      } else {
-        setHasDocuments(false)
-      }
-    }
+//   useEffect(() => {
+//     async function fetchData() {
+//       const response = await fetch(
+//         `/api/materialsTable/docsInProgress?course_name=${courseName}`,
+//       )
+//       const data = await response.json()
+//       console.log(data)
+//       if (data && data.documents) {
+//         // const newTotalDocuments = Math.max(
+//         //   totalDocuments,
+//         //   data.documents.length,
+//         // )
+//         setTotalDocuments(data.documents)
+//         // setDataLength(newTotalDocuments - data.documents.length)
+//         setHasDocuments(data.documents.length > 0)
+//         // setProgress(
+//         //   ((newTotalDocuments - data.documents.length) / newTotalDocuments) *
+//         //   100,
+//         // )
+//       } else {
+//         setHasDocuments(false)
+//       }
+//     }
 
-    const intervalId = setInterval(fetchData, 3000) // Fetch data every 3000 milliseconds (3 seconds)
-    return () => clearInterval(intervalId)
-  }, [courseName, totalDocuments])
+//     const intervalId = setInterval(fetchData, 3000) // Fetch data every 3000 milliseconds (3 seconds)
+//     return () => clearInterval(intervalId)
+//   }, [courseName, totalDocuments])
 
-  if (!hasDocuments) {
-    return null
-  }
+//   if (!hasDocuments) {
+//     return null
+//   }
 
-  return (
-    <Paper
-      shadow="lg"
-      radius="md"
-      p="md"
-      withBorder
-      style={{
-        borderWidth: rem(1.5),
-        backgroundColor: '#25262b',
-        width: rem(330),
-        borderStyle: 'dashed',
-      }}
-    >
-      <Text>
-        {dataLength} out of {totalDocuments} ingested into AI Database
-      </Text>
-      <Progress
-        color="violet"
-        radius="md"
-        size="lg"
-        value={progress}
-        striped
-        animate
-      />
-    </Paper>
-  )
-}
+//   return (
+//     <Paper
+//       shadow="lg"
+//       radius="md"
+//       p="md"
+//       withBorder
+//       style={{
+//         borderWidth: rem(1.5),
+//         backgroundColor: '#25262b',
+//         width: rem(330),
+//         borderStyle: 'dashed',
+//       }}
+//     >
+//       <Text>
+//         {dataLength} out of {totalDocuments} ingested into AI Database
+//       </Text>
+//       <Progress
+//         color="violet"
+//         radius="md"
+//         size="lg"
+//         value={progress}
+//         striped
+//         animate
+//       />
+//     </Paper>
+//   )
+// }
 
 export function LargeDropzone({
   courseName,
@@ -186,6 +186,76 @@ export function LargeDropzone({
   const [files, setFiles] = useState<File[]>([])
   const queryClient = useQueryClient()
   const [fileUploads, setFileUploads] = useState<FileUpload[]>([])
+  const [progress, setProgress] = useState(0)
+  const [hasDocuments, setHasDocuments] = useState(false) // State to track if there are documents
+  const [totalDocuments, setTotalDocuments] = useState(0) // State to track the total number of documents
+  const [dataLength, setDataLength] = useState(0)
+  const [showNotification, setShowNotification] = useState(false)
+
+  useEffect(() => {
+    async function fetchData() {
+      const response = await fetch(
+        `/api/materialsTable/docsInProgress?course_name=${courseName}`,
+      )
+      const data = await response.json()
+      console.log(data)
+      if (data && data.documents) {
+        // const newTotalDocuments = Math.max(
+        //   totalDocuments,
+        //   data.documents.length,
+        // )
+        setTotalDocuments(data.documents)
+        // setDataLength(newTotalDocuments - data.documents.length)
+        setHasDocuments(data.documents.length > 0)
+        // setProgress(
+        //   ((newTotalDocuments - data.documents.length) / newTotalDocuments) *
+        //   100,
+        // )
+        console.log(data.documents)
+        setFileUploads((prevFileUploads) =>
+          prevFileUploads.map((fileUpload) => {
+            const isIngested = data.documents.some(
+              (doc: { readable_filename: string }) => doc.readable_filename === fileUpload.name
+            );
+            console.log('isIngesting', isIngested)
+            console.log('fileUpload.name', fileUpload.name)
+            return isIngested
+              ? { ...fileUpload, status: 'ingesting' }
+              : fileUpload;
+          })
+        );
+
+
+      } else {
+        setHasDocuments(false)
+        setFileUploads((prev) =>
+          prev.map((upload) => {
+            // Check if the file is not present in the data.documents
+            // const isNotInProgress = !data.documents.some(
+            //   (doc: { readable_filename: string }) => doc.readable_filename === upload.name
+            // );
+            // if (isNotInProgress) {
+            const updatedUpload = { ...upload, status: "complete" as "complete" };
+            console.log('upload name in set files', upload.name);
+            console.log('upload status after update', updatedUpload.status);
+            return updatedUpload;
+            // }
+            return upload;
+          })
+        );
+      }
+    }
+
+    const intervalId = setInterval(fetchData, 3000) // Fetch data every 3000 milliseconds (3 seconds)
+    return () => clearInterval(intervalId)
+  }, [courseName, totalDocuments])
+
+
+  // useEffect(() => {
+  //   if (fileUploads.length > 0 && fileUploads.every(file => file.status === 'complete')) {
+  //     setFileUploads([]);
+  //   }
+  // }, [fileUploads]);
 
   const refreshOrRedirect = async (redirect_to_gpt_4: boolean) => {
     if (is_new_course) {
@@ -260,11 +330,18 @@ export function LargeDropzone({
     setUploadComplete(false)
 
     // Initialize file upload status
-    const initialFileUploads = files.map((file) => ({
-      name: file.name,
-      progress: 0,
-      status: "uploading" as "uploading",
-    }))
+    const initialFileUploads = files.map((file) => {
+      const extension = file.name.slice(file.name.lastIndexOf('.'))
+      const nameWithoutExtension = file.name
+        .slice(0, file.name.lastIndexOf('.'))
+        .replace(/[^a-zA-Z0-9]/g, '-')
+      const uniqueReadableFileName = `${nameWithoutExtension}${extension}`
+
+      return {
+        name: uniqueReadableFileName,
+        status: "uploading" as "uploading",
+      }
+    })
     setFileUploads(initialFileUploads)
 
     // useEffect(() => {
@@ -328,8 +405,6 @@ export function LargeDropzone({
         try {
           await uploadToS3(file, uniqueFileName)
           setSuccessfulUploads((prev) => prev + 1) // Increment successful uploads
-          setFileUploads((prev) => prev.map((upload, i) =>
-            i === index ? { ...upload, progress: 100, status: "complete" } : upload))
 
           const response = await fetch(`/api/UIUC-api/ingest`, {
             method: 'POST',
@@ -392,9 +467,9 @@ export function LargeDropzone({
     // Toasts... but just for submitted to queue.
     // NOTE: Were just getting "SUBMISSION to task queue" status, not the success of the ingest job itself!!
 
-    if (resultSummary.success_ingest.length > 0) {
-      showIngestInProgressToast(resultSummary.success_ingest.length)
-    }
+    // if (resultSummary.success_ingest.length > 0) {
+    //   showIngestInProgressToast(resultSummary.success_ingest.length)
+    // }
 
     if (resultSummary.failure_ingest.length > 0) {
       // some failures
@@ -410,6 +485,10 @@ export function LargeDropzone({
       // await refreshOrRedirect(redirect_to_gpt_4)
       // showSuccessToast(resultSummary.failure_ingest.map((ingestResult) => ingestResult.s3_path));
     }
+  }
+  const handleCloseNotification = () => {
+    setShowNotification(false)
+    setFileUploads([])
   }
 
   return (
@@ -435,16 +514,16 @@ export function LargeDropzone({
             paddingTop: rem(24),
           }}
         >
-          {(uploadInProgress || uploadComplete) && (
+          {/* {(uploadInProgress || uploadComplete) && (
             <UploadProgressBar
               numFiles={successfulUploads}
               totalFiles={files.length}
               isComplete={uploadComplete}
             />
-          )}
-          <div className={courseName ? 'pb-4 pt-3' : ''}>
+          )} */}
+          {/* <div className={courseName ? 'pb-4 pt-3' : ''}>
             {courseName && <IngestProgressBar courseName={courseName} />}
-          </div>
+          </div> */}
           <Dropzone
             openRef={openRef}
             style={{
@@ -559,17 +638,18 @@ export function LargeDropzone({
         </div>
         {/* END RIGHT COLUMN */}
       </div>
+
       <UploadNotification
         files={fileUploads}
         // ingestFiles={ }
-        onClose={() => setFileUploads([])}
-        onCancel={() => {
-          // Handle cancel logic
-          // setUploadInProgress(false)
-          // setFileUploads((prev) =>
-          //   prev.map((upload) => ({ ...upload, status: 'error' }))
-          // )
-        }}
+        onClose={handleCloseNotification}
+      // onCancel={() => {
+      //   // Handle cancel logic
+      //   // setUploadInProgress(false)
+      //   // setFileUploads((prev) =>
+      //   //   prev.map((upload) => ({ ...upload, status: 'error' }))
+      //   // )
+      // }}
       />
     </>
   )
