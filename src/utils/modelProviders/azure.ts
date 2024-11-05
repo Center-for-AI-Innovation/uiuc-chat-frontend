@@ -131,8 +131,10 @@ export const getAzureModels = async (
             enabled:
               azureProvider.models?.find((m) => m.id === predefinedModel.id)
                 ?.enabled ?? predefinedModel.enabled,
-            default: predefinedModel.default,
-            temperature: predefinedModel.temperature,
+            default: azureProvider.models?.find((m) => m.id === predefinedModel.id)
+              ?.default ?? predefinedModel.default,
+            temperature: azureProvider.models?.find((m) => m.id === predefinedModel.id)
+              ?.temperature ?? predefinedModel.temperature, 
           })
         }
         return acc

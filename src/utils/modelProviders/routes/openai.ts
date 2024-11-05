@@ -42,6 +42,12 @@ export const getOpenAIModels = async (
         enabled:
           openAIProvider.models?.find((m) => m.id === model.id)?.enabled ??
           OpenAIModels[model.id as OpenAIModelID].enabled,
+        default:
+          openAIProvider.models?.find((m) => m.id === model.id)?.default ??
+          OpenAIModels[model.id as OpenAIModelID].default,
+        temperature:
+          openAIProvider.models?.find((m) => m.id === model.id)?.temperature ??
+          OpenAIModels[model.id as OpenAIModelID].temperature,
       }))
       .sort((a, b) => {
         const indexA = preferredModelIds.indexOf(a.id as OpenAIModelID)

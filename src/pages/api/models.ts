@@ -42,12 +42,12 @@ const handler = async (
     // Fetch the project's API keys
     let llmProviders = (await kv.get(
       `${projectName}-llms`,
-    )) as ProjectWideLLMProviders | null
+    )) as AllLLMProviders | null
 
     if (!llmProviders) {
-      llmProviders = {} as ProjectWideLLMProviders
+      llmProviders = {} as AllLLMProviders
     } else {
-      llmProviders = llmProviders as ProjectWideLLMProviders
+      llmProviders = llmProviders as AllLLMProviders
     }
 
     // Define a function to create a placeholder provider with default values
@@ -111,7 +111,7 @@ const handler = async (
       }
     }
 
-    // console.log('FINAL -- allLLMProviders', allLLMProviders)
+    console.log('FINAL -- allLLMProviders', allLLMProviders)
     return NextResponse.json(allLLMProviders as AllLLMProviders, {
       status: 200,
     })
