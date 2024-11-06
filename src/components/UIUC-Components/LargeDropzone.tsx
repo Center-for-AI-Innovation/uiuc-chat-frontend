@@ -235,7 +235,7 @@ export function LargeDropzone({
             //   (doc: { readable_filename: string }) => doc.readable_filename === upload.name
             // );
             // if (isNotInProgress) {
-            const updatedUpload = { ...upload, status: "complete" as "complete" };
+            const updatedUpload = { ...upload, status: "complete" as const };
             console.log('upload name in set files', upload.name);
             console.log('upload status after update', updatedUpload.status);
             return updatedUpload;
@@ -339,7 +339,7 @@ export function LargeDropzone({
 
       return {
         name: uniqueReadableFileName,
-        status: "uploading" as "uploading",
+        status: "uploading" as const,
       }
     })
     setFileUploads(initialFileUploads)
@@ -527,11 +527,11 @@ export function LargeDropzone({
           <Dropzone
             openRef={openRef}
             style={{
-              width: rem(330),
-              height: rem(225),
+              width: '80%',
+              height: rem(300),
               ...(isDisabled
                 ? { backgroundColor: '#3a374a' }
-                : { backgroundColor: '#25262b' }),
+                : { backgroundColor: '#2a2b3c' }),
               cursor: isDisabled ? 'not-allowed' : 'pointer',
             }}
             loading={uploadInProgress}
@@ -542,11 +542,12 @@ export function LargeDropzone({
             }}
             className={'borderWidth: rem(1.5)'}
             radius="md"
-            bg="#25262b"
+            bg="#2a2b3c"
             disabled={isDisabled}
           >
             <div
               style={{ pointerEvents: 'none', opacity: isDisabled ? 0.6 : 1 }}
+              className='bg-[#2a2b3c] hover:bg-[#1c1c2e] cursor-pointer'
             >
               <Group position="center" pt={'md'}>
                 <Dropzone.Accept>
@@ -600,6 +601,8 @@ export function LargeDropzone({
                   Drag&apos;n&apos;drop files or a whole folder here
                 </Text>
               )}
+              <SupportedFileUploadTypes />
+
             </div>
           </Dropzone>
           {uploadInProgress && (

@@ -5,6 +5,7 @@ import {
   Flex,
   createStyles,
   Accordion,
+  Card,
   // rem,
   // Group,
   // Card,
@@ -26,8 +27,40 @@ import {
 import React from 'react'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import Link from 'next/link'
-import { IconPhoto } from '@tabler/icons-react'
+import {
+  IconFileText,
+  IconFileDescription,
+  IconPresentation,
+  IconFileSpreadsheet,
+  IconFileTypePdf,
+  IconFileTypeDocx,
+  IconFileTypePpt,
+  IconFileTypeXls,
+  IconVideo,
+  IconPhoto,
+  IconMusic,
+  IconCode,
+  IconFileTypeTxt,
+  IconUpload,
+  IconWorld,
+  IconSchool,
+  IconBook,
+  TablerIconsProps
+} from '@tabler/icons-react'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../Tooltip'
+import { motion } from 'framer-motion'
 
+interface FileType {
+  icon: (props: TablerIconsProps) => JSX.Element,
+  // icon: React.FC<TablerIconsProps>,
+  label: string,
+  color: string
+}
 const useStyles = createStyles((theme) => ({
   // For Logos
   logos: {
@@ -110,331 +143,48 @@ const useStyles = createStyles((theme) => ({
 const SupportedFileUploadTypes = () => {
   const { classes, theme } = useStyles()
   // className={classes.wrapper}
+  const fileTypes: FileType[] = [
+    { icon: IconFileTypePdf, label: 'PDF', color: 'text-red-500' },
+    { icon: IconFileTypeDocx, label: 'Word', color: 'text-blue-500' },
+    { icon: IconFileTypePpt, label: 'PPT', color: 'text-orange-500' },
+    { icon: IconFileTypeXls, label: 'Excel', color: 'text-green-500' },
+    { icon: IconVideo, label: 'Video', color: 'text-purple-500' },
+    { icon: IconPhoto, label: 'Image', color: 'text-pink-500' },
+    { icon: IconMusic, label: 'Audio', color: 'text-yellow-500' },
+    { icon: IconCode, label: 'Code', color: 'text-cyan-500' },
+    { icon: IconFileTypeTxt, label: 'Text', color: 'text-white' }
+  ]
 
   return (
     <>
-      <Title
-        className={`${montserrat_heading.variable} font-montserratHeading`}
-        variant="gradient"
-        gradient={{ from: 'gold', to: 'white', deg: 50 }}
-        order={4}
-        p="xl"
-      >
-        Supported File Types
-      </Title>
+      <TooltipProvider>
+        <div className="flex flex-wrap justify-center gap-4 mb-6 mt-8">
+          {fileTypes.map((type, index) => {
+            if (!type.icon) {
+              console.error(`Missing icon for type: ${type.label}`);
+              return null; // Skip rendering this item if icon is missing
+            }
+            const IconComponent = type.icon;
 
-      <Flex className="space-x-0">
-        <Image
-          src="/media/pdf_logo.png"
-          width={720}
-          height={400}
-          quality={85}
-          alt="PDF icon"
-          className={classes.logos}
-        />
-        <Image
-          src="/media/word_logo.png"
-          width={2000}
-          height={2000}
-          quality={80}
-          alt="Word logo"
-          className={classes.logos}
-        />
-        <Image
-          src="/media/ppt_logo.png"
-          width={720}
-          height={220}
-          quality={80}
-          alt="Powerpoint logo"
-          className={classes.logos}
-        />
-        <Image
-          src="/media/excel_logo.png"
-          width={720}
-          height={220}
-          quality={80}
-          alt="Powerpoint logo"
-          className={classes.logos}
-        />
-      </Flex>
-      <div className="p-2" />
-      {/* 2nd ROW  */}
-      <Flex>
-        <Image
-          src="/media/video_clapboard_icon.png"
-          width={720}
-          height={100}
-          quality={60}
-          color="white"
-          alt="Generic video icon"
-          className={classes.logos}
-        />
-        <IconPhoto
-          size={'54px'}
-          strokeWidth={2}
-          color={'white'}
-          className={classes.logos}
-        />
-        <Image
-          src="/media/audio_logo.png"
-          width={720}
-          height={220}
-          quality={60}
-          alt="Generic audio icon"
-          className={classes.logos}
-        />
-        <Image
-          src="/media/cc_logo.jpg"
-          width={720}
-          height={220}
-          quality={60}
-          alt="Closed caption icon"
-          className={classes.logos}
-        />
-      </Flex>
-      <div className="p-2" />
-      {/* THIRD ROW */}
-      <Flex>
-        <Image
-          src="/media/canvas_logo.png"
-          width={720}
-          height={100}
-          quality={60}
-          alt="Canvas logo"
-          className={classes.logos}
-        // Had to force it down a few pixels, looked weird otherwise
-        // style={{ position: 'relative', top: '7px' }}
-        />
-        <Image
-          src="/media/mitocw_logo.jpg"
-          width={720}
-          height={100}
-          quality={60}
-          alt="MIT Open Courseware logo"
-          className={classes.logos}
-        />
-        <Image
-          src="/media/github-mark-white.png"
-          width={720}
-          height={100}
-          quality={60}
-          alt="Github logo"
-          className={classes.logos}
-        // className={classes.smallLogos}
-        // style={{mixBlendMode: 'multiply' }}
-        />
-        <Image
-          src="/media/notion_logo.png"
-          width={720}
-          height={100}
-          quality={60}
-          alt="Notion logo"
-          className={classes.logos}
-        // className={classes.smallLogos}
-        // style={{mixBlendMode: 'multiply' }}
-        />
-      </Flex>
-
-      <div className="p-1" />
-      <Text style={{ paddingTop: '8px' }}>
-        And literally any text file:{' '}
-        {/* < code className={classes.codeStyledText} ></code >, {' '} */}
-        <code className={classes.codeStyledText}>txt</code>,{' '}
-        <code className={classes.codeStyledText}>code</code>,{' '}
-        <code className={classes.codeStyledText}>utf-8</code> ...
-      </Text>
-      {/* 
-      <Accordion
-        pl={20}
-        pr={4}
-        style={{ borderRadius: 'theme.radius.lg' }}
-        classNames={{
-          item: classes.item,
-          chevron: classes.chevron,
-          panel: classes.panel,
-        }}
-        className={classes.root}
-      >
-        <Accordion.Item
-          value="openai-key-details"
-          className={classes.item}
-          style={{ backgroundColor: '#292c5b' }}
-        > */}
-      {/* <Accordion.Control className={classes.control}>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                width: '100%',
-                borderRadius: theme.radius.lg,
-              }}
-            >
-              <Text
-                className={`label ${montserrat_paragraph.variable} inline-block p-0 font-montserratParagraph text-neutral-200`}
-                size={'md'}
-              >
-                <span className={'text-white'}>Integrations</span> 👇
-              </Text>
-            </div>
-          </Accordion.Control>
-          <Accordion.Panel bg={'#15162b'}>
-            <Text
-              className={`${montserrat_paragraph.variable} p-0 font-montserratParagraph text-neutral-200`}
-              size={'sm'}
-              style={{ textAlign: 'left' }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  paddingBottom: '3px',
-                }}
-              >
-                <Image
-                  src="/media/github-mark-white.png"
-                  width={720}
-                  height={100}
-                  quality={60}
-                  alt="Github logo"
-                  className="w-[50px]"
-                />
-              </div>
-              <strong>For GitHub</strong>, just enter a URL like{' '}
-              <code className={classes.codeStyledText}>
-                github.com/USER/REPO
-              </code>
-              , for example:{' '}
-              <span className={'text-purple-600'}>
-                <Link
-                  target="_blank"
-                  rel="noreferrer"
-                  href={'https://github.com/langchain-ai/langchain'}
-                >
-                  https://github.com/langchain-ai/langchain
-                </Link>
-              </span>
-              . We&apos;ll ingest all files in the main branch. Ensure the
-              repository is public.
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  paddingBottom: '3px',
-                }}
-              >
-                <Image
-                  src="/media/canvas_logo.png"
-                  width={720}
-                  height={100}
-                  quality={60}
-                  alt="Github logo"
-                  className="w-[50px]"
-                />
-              </div>
-              <strong>For Canvas</strong>, just enter a URL like{' '}
-              <code className={classes.codeStyledText}>
-                canvas.illinois.edu/courses/COURSE_CODE
-              </code>
-              , for example:{' '}
-              <span className={'text-purple-600'}>
-                <Link
-                  target="_blank"
-                  rel="noreferrer"
-                  href={'https://canvas.illinois.edu/courses/37348'}
-                >
-                  https://canvas.illinois.edu/courses/37348
-                </Link>
-              </span>
-              .
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  paddingBottom: '3px',
-                  paddingTop: '4px',
-                }}
-              >
-                <Image
-                  src="/media/mitocw_logo.jpg"
-                  width={720}
-                  height={100}
-                  quality={60}
-                  alt="MIT Open Course Ware logo"
-                  className="w-[50px]"
-                />
-              </div>
-              <strong>For MIT Open Course Ware</strong>, just enter a URL like{' '}
-              <code className={classes.codeStyledText}>
-                ocw.mit.edu/courses/ANY_COURSE
-              </code>{' '}
-              , for example:{' '}
-              <span className={'text-purple-600'}>
-                <Link
-                  target="_blank"
-                  rel="noreferrer"
-                  href={
-                    'https://ocw.mit.edu/courses/8-321-quantum-theory-i-fall-2017'
-                  }
-                >
-                  https://ocw.mit.edu/courses/8-321-quantum-theory-i-fall-2017
-                </Link>
-              </span>
-              .
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  paddingBottom: '3px',
-                  paddingTop: '3px',
-                }}
-              >
-                <Image
-                  src="/media/coursera_logo_cutout.png"
-                  width={720}
-                  height={100}
-                  quality={60}
-                  alt="Coursera logo"
-                  className="w-[50px]"
-                  style={{ display: 'flex', justifyContent: 'center' }}
-                />
-              </div>
-              <strong>For Coursera</strong>, it&apos;s probably easiest to
-              manually export the content then upload it here. Or{' '}
-              <span className={'text-purple-600'}>
-                <Link
-                  target="_blank"
-                  rel="noreferrer"
-                  href={'mailto:kvday2@illinois.edu'}
-                >
-                  email me
-                </Link>
-              </span>{' '}
-              and we can do a direct ingest, we&apos;re limited by
-              Coursera&apos;s controls on login/auth.
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  paddingBottom: '3px',
-                  paddingTop: '3px',
-                }}
-              >
-                <Image
-                  src="/media/notion_logo.png"
-                  width={720}
-                  height={100}
-                  quality={60}
-                  alt="Notion logo"
-                  className="w-[50px]"
-                  style={{ display: 'flex', justifyContent: 'center' }}
-                />
-              </div>
-              <strong>For Notion</strong>, manually Export your pages to local
-              files, then ingest those. It works great.
-            </Text>
-          </Accordion.Panel>
-        </Accordion.Item>
-      </Accordion> */}
+            return (
+              <Tooltip key={index}>
+                <TooltipTrigger>
+                  <motion.div
+                    whileHover={{ scale: 1.1 }}
+                    className="flex flex-col items-center"
+                  >
+                    <IconComponent className={`w-6 h-6 ${type.color}`} size={24} stroke={1.5} />
+                    <span className="text-xs text-gray-400 mt-1">{type.label}</span>
+                  </motion.div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{type.label} files supported</p>
+                </TooltipContent>
+              </Tooltip>
+            );
+          })}
+        </div>
+      </TooltipProvider>
     </>
   )
 }

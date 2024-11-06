@@ -126,16 +126,6 @@ const CourseMain: NextPage = () => {
                   {/* API Keys: Add LLMs to your Chatbot */}
                   {projectName}
                 </Title>
-                {/* <Title
-                  className={`${montserrat_heading.variable} flex-[1_1_50%] font-montserratHeading`}
-                  order={5}
-                  px={18}
-                  ml={'md'}
-                  style={{ textAlign: 'left' }}
-                >
-                  Configure which LLMs are available to you users. Enable or
-                  disable models to balance price and performance.
-                </Title> */}
 
                 <LargeDropzone
                   courseName={projectName}
@@ -145,9 +135,8 @@ const CourseMain: NextPage = () => {
                   courseMetadata={metadata as CourseMetadata}
                   is_new_course={false}
                 />
-                <div className='grid justify-center'>
-                  <SupportedFileUploadTypes />
-                </div>
+                {/* <div className='grid justify-center'>
+                </div> */}
 
                 <SimpleGrid
                   cols={3}
@@ -156,8 +145,10 @@ const CourseMain: NextPage = () => {
                     { maxWidth: 1192, cols: 2, spacing: 'md' },
                     { maxWidth: 768, cols: 1, spacing: 'sm' },
                   ]}
-                  style={{ padding: '2rem 2rem 3rem 3rem' }}
+                  style={{ width: '80%', margin: '0 auto', paddingTop: '30px', paddingBottom: '30px' }}
                 >
+                  {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-[80%]"> */}
+
                   <CanvasIngestForm project_name={projectName} />
 
                   <WebsiteIngestForm project_name={projectName} />
@@ -168,6 +159,7 @@ const CourseMain: NextPage = () => {
 
                   <CourseraIngestForm />
                 </SimpleGrid>
+                {/* </div> */}
               </div>
 
             </Card>
