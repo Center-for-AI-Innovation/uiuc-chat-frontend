@@ -168,6 +168,7 @@ export const Chat = memo(
         llmProviders,
       },
       handleUpdateConversation,
+      handleFeedbackUpdate,
       dispatch: homeDispatch,
     } = useContext(HomeContext)
 
@@ -418,19 +419,6 @@ export const Chat = memo(
               // )
             }
           }
-          // homeDispatch({
-          //   field: 'selectedConversation',
-          //   value: updatedConversation,
-          // })
-          // Update the conversation in the server
-          // if (!user_email) {
-          // saveConversationToLocalStorage(updatedConversation)
-          // } else {
-
-          // console.log(
-          //   'updatedConversation before mutation:',
-          //   updatedConversation,
-          // )
           handleUpdateConversation(updatedConversation, {
             key: 'messages',
             value: updatedConversation.messages,
@@ -707,6 +695,8 @@ export const Chat = memo(
                       id: uuidv4(),
                       role: 'assistant',
                       content: chunkValue,
+                      contexts: message.contexts,
+                      feedback: message.feedback,
                     },
                   ]
                   finalAssistantRespose += chunkValue
@@ -840,6 +830,7 @@ export const Chat = memo(
                   role: 'assistant',
                   content: answer,
                   contexts: message.contexts,
+                  feedback: message.feedback,
                 },
               ]
               updatedConversation = {
@@ -1165,6 +1156,85 @@ export const Chat = memo(
       [selectedConversation, conversations],
     )
 
+    const handleFeedback = useCallback(
+      async (message: Message, isPositive: boolean, category?: string, details?: string) => {
+        if (!selectedConversation) return;
+
+        // Get conversation from localStorage and parse it
+        const sourceConversationStr = localStorage.getItem('selectedConversation');
+        let sourceConversation;
+        
+        try {
+          sourceConversation = sourceConversationStr ? JSON.parse(sourceConversationStr) : null;
+        } catch (error) {
+          sourceConversation = null;
+        }
+
+        if (!sourceConversation?.messages) {
+          return;
+        }
+
+        // Create updated conversation object using sourceConversation as the base
+        const updatedConversation = {
+          ...sourceConversation,
+          messages: sourceConversation.messages.map((msg: Message) => {
+            if (msg.id === message.id) {
+              return {
+                ...msg,
+                feedback: {
+                  isPositive,
+                  category,
+                  details,
+                },
+              };
+            }
+            return msg;
+          }),
+        };
+
+        try {
+          // Update localStorage
+          localStorage.setItem('selectedConversation', JSON.stringify(updatedConversation));
+
+          // Update the conversation using handleUpdateConversation
+          handleFeedbackUpdate(updatedConversation, { 
+            key: 'messages', 
+            value: updatedConversation.messages 
+          });
+
+          // Update database
+          await updateConversationMutation.mutateAsync(updatedConversation);
+          
+          // Log to Supabase
+          await fetch('/api/UIUC-api/logConversationToSupabase', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              course_name: getCurrentPageName(),
+              conversation: updatedConversation,
+            }),
+          });
+
+        } catch (error) {
+          homeDispatch({
+            field: 'conversations',
+            value: conversations,
+          });
+          homeDispatch({
+            field: 'selectedConversation',
+            value: sourceConversation,
+          });
+          errorToast({
+            title: 'Error updating feedback',
+            message: 'Failed to save feedback. Please try again.',
+          });
+        }
+      },
+      [selectedConversation, conversations, homeDispatch, updateConversationMutation]
+    );
+
     return (
       <>
         <Head>
@@ -1218,6 +1288,7 @@ export const Chat = memo(
                               llmProviders,
                             )
                           }}
+                          onFeedback={handleFeedback}
                           onImageUrlsUpdate={onImageUrlsUpdate}
                         />
                       ))}

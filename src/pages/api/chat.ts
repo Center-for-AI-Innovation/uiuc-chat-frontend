@@ -152,6 +152,7 @@ const convertConversationToOpenAIMessages = (
     delete strippedMessage.latestSystemMessage
     delete strippedMessage.contexts
     delete strippedMessage.tools
+    delete strippedMessage.feedback
     return strippedMessage
   })
 }
