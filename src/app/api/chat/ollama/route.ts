@@ -169,6 +169,8 @@ export async function GET(req: Request) {
           parameterSize: model.details.parameter_size,
           tokenLimit: 4096,
           enabled: true,
+          default: model.default,
+          temperature: model.temperature,
         }),
       )
 

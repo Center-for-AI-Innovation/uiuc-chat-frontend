@@ -461,6 +461,54 @@ export default function APIKeyInputForm() {
     }
   }, [llmProviders])
 
+  const updateDefaultModelTemperature = (newTemperature: number) => {
+    console.log('updateDefaultModelTemperature called with:', newTemperature)
+    // Update the llmProviders state
+    form.setFieldValue('providers', (prevProviders: AllLLMProviders | undefined) => {
+      console.log('Previous providers:', prevProviders)
+      console.log('Current default model:', defaultModel)
+      
+      if (!prevProviders || !defaultModel) {
+        console.log('No previous providers or default model found, returning')
+        return prevProviders;
+      }
+      
+      const updatedProviders = { ...prevProviders };
+      
+      // Update the temperature for the default model
+      const provider = updatedProviders[defaultModel.provider];
+      console.log('Provider for default model:', provider)
+      
+      if (provider?.models) {
+        const modelIndex = provider.models.findIndex(model => model.default === true);
+        console.log('Found default model at index:', modelIndex)
+        
+        if (modelIndex !== -1) {
+          const currentModel = provider.models[modelIndex];
+          console.log('Current model before update:', currentModel)
+          
+          if (currentModel) {  
+            provider.models[modelIndex] = { 
+              ...currentModel,
+              temperature: newTemperature 
+            };
+            console.log('Updated model:', provider.models[modelIndex])
+          }
+        }
+      }
+  
+      // Update the defaultModel state
+      setDefaultModel(prev => {
+        const updated = prev ? { ...prev, temperature: newTemperature } : prev;
+        console.log('Updated default model state:', updated)
+        return updated;
+      });
+      
+      console.log('Final updated providers:', updatedProviders)
+      return updatedProviders;
+    });
+  };
+
   // useEffect(() => {
   //   console.log('inside useEffect');
   //   if (defaultModel) {
@@ -774,31 +822,10 @@ export default function APIKeyInputForm() {
                                 </Text>
                                 <Slider
                                   value={defaultModel?.temperature}
-                                  onChange={async (newTemperature) => {                                 
-                                    form.setFieldValue('providers', (prevProviders: AllLLMProviders | undefined) => {
-                                      if (!prevProviders || !defaultModel) return prevProviders;
-                                      
-                                      const updatedProviders = { ...prevProviders };
-                                      
-                                      const provider = updatedProviders[defaultModel.provider];
-                                      if (provider?.models) {
-                                        const modelIndex = provider.models.findIndex(model => model.default === true);
-                                        if (modelIndex !== -1) {
-                                          const currentModel = provider.models[modelIndex];
-                                          if (currentModel) {  
-                                            provider.models[modelIndex] = { 
-                                              ...currentModel,
-                                              temperature: newTemperature 
-                                            };
-                                          }
-                                        }
-                                      }
-                                      return updatedProviders;
-                                    });
-                                    field.handleChange(newTemperature)
-                                  }}
-                                  onChangeEnd={async (newTemperature) => {
-                                    await form.handleSubmit();
+                                  onChange={(newTemperature) => {
+                                    updateDefaultModelTemperature(newTemperature);
+                                    field.handleChange(newTemperature);
+                                    form.handleSubmit();
                                   }}
                                   min={0}
                                   max={1}
