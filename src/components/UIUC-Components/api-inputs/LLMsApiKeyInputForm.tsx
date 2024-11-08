@@ -372,24 +372,24 @@ export const ModelItem = forwardRef<
   },
 )
 
-export default function APIKeyInputForm() {
-  const projectName = GetCurrentPageName()
-
-  function findDefaultModel(providers: AllLLMProviders): (AnySupportedModel & { provider: ProviderNames }) | undefined {
-    console.log('findDefaultModel called with providers:', providers)
-    for (const providerKey in providers) {
-      const provider = providers[providerKey as keyof typeof providers]
-      if (provider && provider.models) {
-        const currentDefaultModel = provider.models.find(model => model.default === true)
-        if (currentDefaultModel) {
-          console.log('Found default model:', { ...currentDefaultModel, provider: providerKey })
-          return { ...currentDefaultModel, provider: providerKey as ProviderNames }
-        }
+export function findDefaultModel(providers: AllLLMProviders): (AnySupportedModel & { provider: ProviderNames }) | undefined {
+  console.log('findDefaultModel called with providers:', providers)
+  for (const providerKey in providers) {
+    const provider = providers[providerKey as keyof typeof providers]
+    if (provider && provider.models) {
+      const currentDefaultModel = provider.models.find(model => model.default === true)
+      if (currentDefaultModel) {
+        console.log('Found default model:', { ...currentDefaultModel, provider: providerKey })
+        return { ...currentDefaultModel, provider: providerKey as ProviderNames }
       }
     }
-    console.log('No default model found')
-    return undefined
   }
+  console.log('No default model found')
+  return undefined
+}
+
+export default function APIKeyInputForm() {
+  const projectName = GetCurrentPageName()
 
   // ------------ <TANSTACK QUERIES> ------------
   const queryClient = useQueryClient()

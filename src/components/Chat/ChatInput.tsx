@@ -50,6 +50,7 @@ import { VisionCapableModels } from '~/utils/modelProviders/LLMProvider'
 import { OpenAIModelID } from '~/utils/modelProviders/types/openai'
 import { UserSettings } from '~/components/Chat/UserSettings'
 import { IconChevronRight } from '@tabler/icons-react'
+import { findDefaultModel } from '../UIUC-Components/api-inputs/LLMsApiKeyInputForm'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -94,6 +95,7 @@ export const ChatInput = ({
       messageIsStreaming,
       prompts,
       showModelSettings,
+      llmProviders
     },
 
     dispatch: homeDispatch,
@@ -935,7 +937,7 @@ export const ChatInput = ({
             onClick={handleTextClick}
             style={{ cursor: 'pointer' }}
           >
-            {selectedConversation?.model?.name}
+            {findDefaultModel(llmProviders)?.name}
             {selectedConversation?.model &&
               webLLMModels.some(
                 (m) => m.name === selectedConversation?.model?.name,
