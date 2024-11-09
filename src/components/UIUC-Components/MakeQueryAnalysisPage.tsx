@@ -27,6 +27,7 @@ import axios from 'axios'
 import { useRouter } from 'next/router'
 import { LoadingSpinner } from './LoadingSpinner'
 import { downloadConversationHistory } from '../../pages/api/UIUC-api/downloadConvoHistory'
+import { getConversationStats } from '../../pages/api/UIUC-api/getConversationStats'
 import ConversationsPerDayChart from './ConversationsPerDayChart'
 import ConversationsPerHourChart from './ConversationsPerHourChart'
 import ConversationsPerDayOfWeekChart from './ConversationsPerDayOfWeekChart'
@@ -75,6 +76,14 @@ export const GetCurrentPageName = () => {
   return useRouter().asPath.slice(1).split('/')[0] as string
 }
 
+// Add new interface for conversation stats
+interface ConversationStats {
+  per_day: { [date: string]: number }
+  per_hour: { [hour: string]: number }
+  per_weekday: { [day: string]: number }
+  heatmap: { [day: string]: { [hour: string]: number } }
+}
+
 const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
   const { classes, theme } = useStyles()
@@ -91,6 +100,12 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   const currentPageName = GetCurrentPageName()
 
   const [isLoading, setIsLoading] = useState(false)
+
+  // Add new state for conversation stats
+  const [conversationStats, setConversationStats] =
+    useState<ConversationStats | null>(null)
+  const [statsLoading, setStatsLoading] = useState(true)
+  const [statsError, setStatsError] = useState<string | null>(null)
 
   // TODO: remove this hook... we should already have this from the /materials props???
   useEffect(() => {
@@ -147,24 +162,25 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
   const [hasConversationData, setHasConversationData] = useState<boolean>(true)
 
-  // Add this effect to check for conversation data
+  // Add new effect to fetch conversation stats
   useEffect(() => {
-    const checkConversationData = async () => {
+    const fetchConversationStats = async () => {
       try {
-        const response = await axios.get(
-          `/api/UIUC-api/getConversationStats?course_name=${course_name}`,
-        )
+        const response = await getConversationStats(course_name)
         if (response.status === 200) {
-          const { per_day } = response.data
-          setHasConversationData(Object.keys(per_day).length > 0)
+          setConversationStats(response.data)
+          setHasConversationData(Object.keys(response.data.per_day).length > 0)
         }
       } catch (error) {
-        console.error('Error checking conversation data:', error)
+        console.error('Error fetching conversation stats:', error)
+        setStatsError('Failed to fetch conversation statistics')
         setHasConversationData(false)
+      } finally {
+        setStatsLoading(false)
       }
     }
 
-    checkConversationData()
+    fetchConversationStats()
   }, [course_name])
 
   if (!isLoaded || !courseMetadata) {
@@ -300,7 +316,11 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         Shows the total number of conversations that occurred on
                         each calendar day
                       </Text>
-                      <ConversationsPerDayChart course_name={course_name} />
+                      <ConversationsPerDayChart
+                        data={conversationStats?.per_day}
+                        isLoading={statsLoading}
+                        error={statsError}
+                      />
                     </div>
 
                     {/* Chart 2 */}
@@ -318,7 +338,11 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         during each hour of the day (24-hour format), aggregated
                         across all days
                       </Text>
-                      <ConversationsPerHourChart course_name={course_name} />
+                      <ConversationsPerHourChart
+                        data={conversationStats?.per_hour}
+                        isLoading={statsLoading}
+                        error={statsError}
+                      />
                     </div>
 
                     {/* Chart 3 */}
@@ -337,7 +361,9 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         most active
                       </Text>
                       <ConversationsPerDayOfWeekChart
-                        course_name={course_name}
+                        data={conversationStats?.per_weekday}
+                        isLoading={statsLoading}
+                        error={statsError}
                       />
                     </div>
 
@@ -357,7 +383,9 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         during those time periods
                       </Text>
                       <ConversationsHeatmapByHourChart
-                        course_name={course_name}
+                        data={conversationStats?.heatmap}
+                        isLoading={statsLoading}
+                        error={statsError}
                       />
                     </div>
                   </>

@@ -18,7 +18,7 @@ export default async function handler(req: NextRequest, res: NextResponse) {
       `https://flask-pr-319.up.railway.app/getConversationStats?course_name=${course_name}`,
     )
 
-    // console.log(`Response status: ${response.status}`);
+    console.log(`Response status: ${response.status}`)
 
     if (!response.ok) {
       throw new Error(`Failed to fetch data: ${response.statusText}`)
@@ -33,5 +33,23 @@ export default async function handler(req: NextRequest, res: NextResponse) {
       { error: 'Failed to fetch questions per day' },
       { status: 500 },
     )
+  }
+}
+
+export async function getConversationStats(course_name: string) {
+  try {
+    const response = await fetch(
+      `/api/UIUC-api/getConversationStats?course_name=${course_name}`,
+    )
+    if (!response.ok) {
+      throw new Error(`Failed to fetch data: ${response.statusText}`)
+    }
+    return {
+      status: response.status,
+      data: await response.json(),
+    }
+  } catch (error) {
+    console.error('Error fetching conversation stats:', error)
+    throw error
   }
 }

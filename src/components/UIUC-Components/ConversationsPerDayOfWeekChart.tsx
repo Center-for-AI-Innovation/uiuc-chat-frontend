@@ -15,51 +15,32 @@ import { Text, Title } from '@mantine/core'
 import { LoadingSpinner } from './LoadingSpinner'
 import { montserrat_paragraph } from 'fonts'
 
-const ConversationsPerDayOfWeekChart: React.FC<{ course_name: string }> = ({
-  course_name,
+interface ChartProps {
+  data?: { [day: string]: number }
+  isLoading: boolean
+  error: string | null
+}
+
+const ConversationsPerDayOfWeekChart: React.FC<ChartProps> = ({
+  data,
+  isLoading,
+  error,
 }) => {
-  const [data, setData] = useState<{ day: string; count: number }[]>([])
-  const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [error, setError] = useState<string | null>(null)
+  const daysOfWeek = [
+    'Sunday',
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+  ]
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(
-          `/api/UIUC-api/getConversationStats?course_name=${course_name}`,
-        )
-        if (response.status === 200) {
-          const conversationsPerDayOfWeek = response.data.per_weekday
-
-          const daysOfWeek = [
-            'Sunday',
-            'Monday',
-            'Tuesday',
-            'Wednesday',
-            'Thursday',
-            'Friday',
-            'Saturday',
-          ]
-
-          const chartData = daysOfWeek.map((day) => ({
-            day,
-            count: conversationsPerDayOfWeek[day] || 0,
-          }))
-
-          setData(chartData)
-        } else {
-          setError('Failed to fetch data.')
-        }
-      } catch (err) {
-        console.error('Error fetching conversations per day of week:', err)
-        setError('An error occurred while fetching data.')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [course_name])
+  const getYAxisLabelPadding = (data: { count: number }[]) => {
+    const maxValue = Math.max(...data.map((item) => item.count))
+    const digits = maxValue.toString().length
+    return -(10 + (digits - 1) * 5)
+  }
 
   if (isLoading) {
     return (
@@ -73,17 +54,20 @@ const ConversationsPerDayOfWeekChart: React.FC<{ course_name: string }> = ({
     return <Text color="red">{error}</Text>
   }
 
-  const getYAxisLabelPadding = (data: { count: number }[]) => {
-    const maxValue = Math.max(...data.map((item) => item.count))
-    const digits = maxValue.toString().length
-    return -(10 + (digits - 1) * 5)
+  if (!data) {
+    return <Text>No data available</Text>
   }
+
+  const chartData = daysOfWeek.map((day) => ({
+    day,
+    count: data[day] || 0,
+  }))
 
   return (
     <div style={{ width: '100%', height: 400 }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
-          data={data}
+          data={chartData}
           margin={{ top: 20, right: 30, left: 20, bottom: 50 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#3a3a4a" />
@@ -114,7 +98,7 @@ const ConversationsPerDayOfWeekChart: React.FC<{ course_name: string }> = ({
               position: 'center',
               fill: '#fff',
               fontFamily: montserrat_paragraph.style.fontFamily,
-              dx: getYAxisLabelPadding(data),
+              dx: getYAxisLabelPadding(chartData),
             }}
           />
           <Tooltip

@@ -6,14 +6,20 @@ import { Text } from '@mantine/core'
 import { LoadingSpinner } from './LoadingSpinner'
 import { montserrat_paragraph } from 'fonts'
 
-const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
-  course_name,
+interface ChartProps {
+  data?: { [day: string]: { [hour: string]: number } }
+  isLoading: boolean
+  error: string | null
+}
+
+const ConversationsHeatmapByHourChart: React.FC<ChartProps> = ({
+  data,
+  isLoading,
+  error,
 }) => {
-  const [data, setData] = useState<number[][]>([])
-  const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [error, setError] = useState<string | null>(null)
   const [containerWidth, setContainerWidth] = useState<number>(0)
   const containerRef = useRef<HTMLDivElement>(null)
+
   const daysOfWeek = useMemo(
     () => [
       'Sunday',
@@ -29,34 +35,6 @@ const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
   const hours = Array.from({ length: 24 }, (_, i) => i.toString())
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(
-          `/api/UIUC-api/getConversationStats?course_name=${course_name}`,
-        )
-        if (response.status === 200) {
-          const heatmapData = response.data.heatmap
-
-          const formattedData = daysOfWeek.map((day) =>
-            hours.map((hour) => heatmapData[day]?.[parseInt(hour)] || 0),
-          )
-
-          setData(formattedData)
-        } else {
-          setError('Failed to fetch heatmap data.')
-        }
-      } catch (err) {
-        console.error('Error fetching heatmap data:', err)
-        setError('An error occurred while fetching the data.')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [course_name])
-
-  useEffect(() => {
     const updateWidth = () => {
       if (containerRef.current) {
         setContainerWidth(containerRef.current.offsetWidth)
@@ -64,10 +42,29 @@ const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
     }
 
     updateWidth()
-
     window.addEventListener('resize', updateWidth)
     return () => window.removeEventListener('resize', updateWidth)
   }, [])
+
+  if (isLoading) {
+    return (
+      <Text>
+        Loading heatmap <LoadingSpinner size="xs" />
+      </Text>
+    )
+  }
+
+  if (error) {
+    return <Text color="red">{error}</Text>
+  }
+
+  if (!data) {
+    return <Text>No data available</Text>
+  }
+
+  const formattedData = daysOfWeek.map((day) =>
+    hours.map((hour) => data[day]?.[parseInt(hour)] || 0),
+  )
 
   const numColumns = hours.length
   const padding = 40
@@ -83,18 +80,6 @@ const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
 
   const fontSize = Math.max(10, Math.min(finalCellWidth / 3, 14))
 
-  if (isLoading) {
-    return (
-      <Text>
-        Loading heatmap <LoadingSpinner size="xs" />
-      </Text>
-    )
-  }
-
-  if (error) {
-    return <Text color="red">{error}</Text>
-  }
-
   return (
     <div
       ref={containerRef}
@@ -106,7 +91,7 @@ const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
     >
       <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
         <HeatMapGrid
-          data={data}
+          data={formattedData}
           xLabels={hours}
           yLabels={daysOfWeek}
           cellRender={(x, y, value) => `${value}`}
@@ -139,4 +124,4 @@ const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
   )
 }
 
-export default ConversationsHeatmap
+export default ConversationsHeatmapByHourChart

@@ -1,5 +1,5 @@
 // src/components/UIUC-Components/ConversationsPerDayChart.tsx
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import {
   BarChart,
   Bar,
@@ -15,8 +15,10 @@ import { Text, Title } from '@mantine/core'
 import { LoadingSpinner } from './LoadingSpinner'
 import { montserrat_paragraph } from 'fonts'
 
-interface ConversationsPerDayData {
-  [date: string]: number
+interface ChartProps {
+  data?: { [date: string]: number }
+  isLoading: boolean
+  error: string | null
 }
 
 const formatDate = (dateString: string) => {
@@ -47,45 +49,11 @@ const formatDate = (dateString: string) => {
   })
 }
 
-const ConversationsPerDayChart: React.FC<{ course_name: string }> = ({
-  course_name,
+const ConversationsPerDayChart: React.FC<ChartProps> = ({
+  data,
+  isLoading,
+  error,
 }) => {
-  const [data, setData] = useState<{ date: string; count: number }[]>([])
-  const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(
-          `/api/UIUC-api/getConversationStats?course_name=${course_name}`,
-        )
-        if (response.status === 200) {
-          const conversationsPerDay: ConversationsPerDayData =
-            response.data.per_day
-
-          const chartData = Object.keys(conversationsPerDay)
-            .sort()
-            .map((date) => ({
-              date,
-              count: conversationsPerDay[date] || 0,
-            }))
-
-          setData(chartData)
-        } else {
-          setError('Failed to fetch data.')
-        }
-      } catch (err) {
-        console.error('Error fetching conversations per day:', err)
-        setError('An error occurred while fetching data.')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [course_name])
-
   if (isLoading) {
     return (
       <Text>
@@ -98,6 +66,17 @@ const ConversationsPerDayChart: React.FC<{ course_name: string }> = ({
     return <Text color="red">{error}</Text>
   }
 
+  if (!data) {
+    return <Text>No data available</Text>
+  }
+
+  const chartData = Object.keys(data)
+    .sort()
+    .map((date) => ({
+      date,
+      count: data[date] || 0,
+    }))
+
   const determineInterval = (dataLength: number): number => {
     if (dataLength <= 25) return 0
     if (dataLength <= 40) return 1
@@ -106,7 +85,7 @@ const ConversationsPerDayChart: React.FC<{ course_name: string }> = ({
     return Math.ceil(dataLength / 30)
   }
 
-  const xAxisInterval = determineInterval(data.length)
+  const xAxisInterval = determineInterval(chartData.length)
 
   const getYAxisLabelPadding = (data: { count: number }[]) => {
     const maxValue = Math.max(...data.map((item) => item.count))
@@ -118,7 +97,7 @@ const ConversationsPerDayChart: React.FC<{ course_name: string }> = ({
     <div style={{ width: '100%', height: 400 }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
-          data={data}
+          data={chartData}
           margin={{ top: 20, right: 30, left: 20, bottom: 50 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#3a3a4a" />
@@ -127,11 +106,11 @@ const ConversationsPerDayChart: React.FC<{ course_name: string }> = ({
             tick={{
               fill: '#fff',
               fontFamily: montserrat_paragraph.style.fontFamily,
-              fontSize: data.length > 30 ? 12 : 15,
-              dx: data.length > 30 ? -3 : -5,
+              fontSize: chartData.length > 30 ? 12 : 15,
+              dx: chartData.length > 30 ? -3 : -5,
               dy: 8,
             }}
-            angle={data.length > 15 ? -45 : 0}
+            angle={chartData.length > 15 ? -45 : 0}
             label={{
               value: 'Date',
               position: 'insideBottom',
@@ -141,7 +120,7 @@ const ConversationsPerDayChart: React.FC<{ course_name: string }> = ({
               dy: 25,
             }}
             tickFormatter={formatDate}
-            tickMargin={data.length > 30 ? 15 : 25}
+            tickMargin={chartData.length > 30 ? 15 : 25}
             interval={xAxisInterval}
           />
 
@@ -157,7 +136,7 @@ const ConversationsPerDayChart: React.FC<{ course_name: string }> = ({
               position: 'center',
               fill: '#fff',
               fontFamily: montserrat_paragraph.style.fontFamily,
-              dx: getYAxisLabelPadding(data),
+              dx: getYAxisLabelPadding(chartData),
             }}
           />
           <Tooltip
