@@ -28,6 +28,7 @@ import { useRouter } from 'next/router'
 import { LoadingSpinner } from './LoadingSpinner'
 import { downloadConversationHistory } from '../../pages/api/UIUC-api/downloadConvoHistory'
 import { getConversationStats } from '../../pages/api/UIUC-api/getConversationStats'
+import { getCourseStats } from '../../pages/api/UIUC-api/getCourseStats'
 import ConversationsPerDayChart from './ConversationsPerDayChart'
 import ConversationsPerHourChart from './ConversationsPerHourChart'
 import ConversationsPerDayOfWeekChart from './ConversationsPerDayOfWeekChart'
@@ -76,12 +77,17 @@ export const GetCurrentPageName = () => {
   return useRouter().asPath.slice(1).split('/')[0] as string
 }
 
-// Add new interface for conversation stats
 interface ConversationStats {
   per_day: { [date: string]: number }
   per_hour: { [hour: string]: number }
   per_weekday: { [day: string]: number }
   heatmap: { [day: string]: { [hour: string]: number } }
+}
+
+interface CourseStats {
+  total_conversations: number
+  total_users: number
+  total_messages: number
 }
 
 const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
@@ -101,11 +107,12 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
   const [isLoading, setIsLoading] = useState(false)
 
-  // Add new state for conversation stats
   const [conversationStats, setConversationStats] =
     useState<ConversationStats | null>(null)
   const [statsLoading, setStatsLoading] = useState(true)
   const [statsError, setStatsError] = useState<string | null>(null)
+
+  const [courseStats, setCourseStats] = useState<CourseStats | null>(null)
 
   // TODO: remove this hook... we should already have this from the /materials props???
   useEffect(() => {
@@ -162,7 +169,6 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
   const [hasConversationData, setHasConversationData] = useState<boolean>(true)
 
-  // Add new effect to fetch conversation stats
   useEffect(() => {
     const fetchConversationStats = async () => {
       try {
@@ -181,6 +187,21 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     }
 
     fetchConversationStats()
+  }, [course_name])
+
+  useEffect(() => {
+    const fetchCourseStats = async () => {
+      try {
+        const response = await getCourseStats('ECE408FA24')
+        if (response.status === 200) {
+          setCourseStats(response.data)
+        }
+      } catch (error) {
+        console.error('Error fetching course stats:', error)
+      }
+    }
+
+    fetchCourseStats()
   }, [course_name])
 
   if (!isLoaded || !courseMetadata) {
@@ -286,7 +307,70 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
               <Divider className="w-full" color="gray.4" size="sm" />
 
-              <div className="grid w-[95%] grid-cols-1 gap-6 pb-10 pt-10 lg:grid-cols-2">
+              {/* Usage Overview Banner */}
+              <div className="my-6 w-[95%] rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
+                <Title order={4} mb="md" className="text-white">
+                  Usage Overview
+                </Title>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  <div className="text-center">
+                    <div className="flex h-8 items-center justify-center">
+                      {statsLoading ? (
+                        <LoadingSpinner size="sm" />
+                      ) : (
+                        <Text
+                          size="xl"
+                          weight={700}
+                          className="text-purple-400"
+                        >
+                          {courseStats?.total_conversations || 0}
+                        </Text>
+                      )}
+                    </div>
+                    <Text size="sm" color="dimmed">
+                      Total Conversations
+                    </Text>
+                  </div>
+                  <div className="text-center">
+                    <div className="flex h-8 items-center justify-center">
+                      {statsLoading ? (
+                        <LoadingSpinner size="sm" />
+                      ) : (
+                        <Text
+                          size="xl"
+                          weight={700}
+                          className="text-purple-400"
+                        >
+                          {courseStats?.total_users || 0}
+                        </Text>
+                      )}
+                    </div>
+                    <Text size="sm" color="dimmed">
+                      Unique Users
+                    </Text>
+                  </div>
+                  <div className="text-center">
+                    <div className="flex h-8 items-center justify-center">
+                      {statsLoading ? (
+                        <LoadingSpinner size="sm" />
+                      ) : (
+                        <Text
+                          size="xl"
+                          weight={700}
+                          className="text-purple-400"
+                        >
+                          {courseStats?.total_messages || 0}
+                        </Text>
+                      )}
+                    </div>
+                    <Text size="sm" color="dimmed">
+                      Total Messages
+                    </Text>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid w-[95%] grid-cols-1 gap-6 pb-10 lg:grid-cols-2">
                 {!hasConversationData ? (
                   <div className="rounded-xl bg-[#1a1b30] p-6 text-center shadow-lg shadow-purple-900/20 lg:col-span-2">
                     <Title
