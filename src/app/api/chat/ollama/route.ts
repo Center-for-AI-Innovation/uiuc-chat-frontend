@@ -59,7 +59,7 @@ export async function POST(req: Request) {
       temperature: conversation.temperature,
       maxTokens: 4096, // output tokens
     })
-    // console.log('result.response', result)
+    console.log('result.response', result)
     const choices = [{ message: { content: result.text } }]
     const response = { choices: choices }
     return new Response(JSON.stringify(response), {

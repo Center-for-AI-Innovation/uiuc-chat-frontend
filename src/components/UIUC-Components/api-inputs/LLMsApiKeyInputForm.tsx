@@ -162,7 +162,6 @@ const NewModelDropdown: React.FC<{
   isSmallScreen: boolean
 }> = ({ value, onChange, llmProviders, isSmallScreen }) => {
   // Filter out providers that are not enabled and their models which are disabled
-  // console.log('llmProviders before new model dropdown', llmProviders)
   const { enabledProvidersAndModels, allModels } = Object.keys(
     llmProviders,
   ).reduce(
@@ -202,10 +201,6 @@ const NewModelDropdown: React.FC<{
   const selectedModel =
     allModels.find((model) => model.id === value?.id) || undefined
 
-  console.log('NewModelDropdown value:', value)
-  console.log('NewModelDropdown selectedModel:', selectedModel)
-  console.log('NewModelDropdown allModels:', allModels)
-
   return (
     <>
       <Select
@@ -215,9 +210,7 @@ const NewModelDropdown: React.FC<{
         searchable
         value={value?.id || ''}
         onChange={async (modelId) => {
-          console.log('Select onChange modelId:', modelId)
           const selectedModel = allModels.find((model) => model.id === modelId)
-          console.log('Select onChange selectedModel:', selectedModel)
           if (selectedModel) {
             await onChange(selectedModel)
           }
@@ -373,18 +366,15 @@ export const ModelItem = forwardRef<
 )
 
 export function findDefaultModel(providers: AllLLMProviders): (AnySupportedModel & { provider: ProviderNames }) | undefined {
-  console.log('findDefaultModel called with providers:', providers)
   for (const providerKey in providers) {
     const provider = providers[providerKey as keyof typeof providers]
     if (provider && provider.models) {
       const currentDefaultModel = provider.models.find(model => model.default === true)
       if (currentDefaultModel) {
-        console.log('Found default model:', { ...currentDefaultModel, provider: providerKey })
         return { ...currentDefaultModel, provider: providerKey as ProviderNames }
       }
     }
   }
-  console.log('No default model found')
   return undefined
 }
 
@@ -402,7 +392,6 @@ export default function APIKeyInputForm() {
   } = useGetProjectLLMProviders({ projectName: projectName })
 
   useEffect(() => {
-    console.log('llmProviders changed:', llmProviders)
     if (llmProviders) {
       form.reset()
     }
@@ -423,7 +412,6 @@ export default function APIKeyInputForm() {
   const mutation = useSetProjectLLMProviders(queryClient)
 
   const setDefaultModelAndUpdateProviders = (newDefaultModel: AnySupportedModel & { provider: ProviderNames }) => {
-    console.log('setDefaultModelAndUpdateProviders called with:', newDefaultModel)
     // Update the llmProviders state
     form.setFieldValue('providers', (prevProviders: AllLLMProviders | undefined) => {
       if (!prevProviders) return prevProviders;
@@ -447,63 +435,43 @@ export default function APIKeyInputForm() {
       }
 
       newDefaultModel.default = true;
-      console.log('Updated providers:', updatedProviders)
       return updatedProviders;
     });
   };
 
   const updateDefaultModelTemperature = (newTemperature: number) => {
-    console.log('updateDefaultModelTemperature called with:', newTemperature)
     // Update the llmProviders state
     form.setFieldValue('providers', (prevProviders: AllLLMProviders | undefined) => {
-      console.log('Previous providers:', prevProviders)
-      console.log('llmProviders in updateDefaultModelTemperature:', llmProviders)
       let currdefaultModel;
       if (prevProviders) {
         currdefaultModel = findDefaultModel(prevProviders)
       }
 
       if (!prevProviders || !currdefaultModel) {
-        console.log('No previous providers or default model found, returning')
         return prevProviders;
       }
       
       const updatedProviders = { ...prevProviders };
       
       // Update the temperature for the default model
-      const provider = updatedProviders[currdefaultModel.provider];
-      console.log('Provider for default model:', provider)
-      
+      const provider = updatedProviders[currdefaultModel.provider];      
       if (provider?.models) {
-        const modelIndex = provider.models.findIndex(model => model.default === true);
-        console.log('Found default model at index:', modelIndex)
-        
+        const modelIndex = provider.models.findIndex(model => model.default === true);        
         if (modelIndex !== -1) {
-          const currentModel = provider.models[modelIndex];
-          console.log('Current model before update:', currentModel)
-          
+          const currentModel = provider.models[modelIndex];          
           if (currentModel) {  
             provider.models[modelIndex] = { 
               ...currentModel,
               temperature: newTemperature 
             };
-            console.log('Updated model:', provider.models[modelIndex])
           }
         }
       }
   
       // Update the defaultModel state
-      console.log('Final updated providers:', updatedProviders)
       return updatedProviders;
     });
   };
-
-  // useEffect(() => {
-  //   console.log('inside useEffect');
-  //   if (defaultModel) {
-  //     console.log("defaultModel:", defaultModel);
-  //   }
-  // }, [defaultModel])
 
   // ------------ </TANSTACK QUERIES> ------------
 
