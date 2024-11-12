@@ -365,13 +365,20 @@ export const ModelItem = forwardRef<
   },
 )
 
-export function findDefaultModel(providers: AllLLMProviders): (AnySupportedModel & { provider: ProviderNames }) | undefined {
+export function findDefaultModel(
+  providers: AllLLMProviders,
+): (AnySupportedModel & { provider: ProviderNames }) | undefined {
   for (const providerKey in providers) {
     const provider = providers[providerKey as keyof typeof providers]
     if (provider && provider.models) {
-      const currentDefaultModel = provider.models.find(model => model.default === true)
+      const currentDefaultModel = provider.models.find(
+        (model) => model.default === true,
+      )
       if (currentDefaultModel) {
-        return { ...currentDefaultModel, provider: providerKey as ProviderNames }
+        return {
+          ...currentDefaultModel,
+          provider: providerKey as ProviderNames,
+        }
       }
     }
   }
@@ -411,67 +418,86 @@ export default function APIKeyInputForm() {
 
   const mutation = useSetProjectLLMProviders(queryClient)
 
-  const setDefaultModelAndUpdateProviders = (newDefaultModel: AnySupportedModel & { provider: ProviderNames }) => {
+  const setDefaultModelAndUpdateProviders = (
+    newDefaultModel: AnySupportedModel & { provider: ProviderNames },
+  ) => {
     // Update the llmProviders state
-    form.setFieldValue('providers', (prevProviders: AllLLMProviders | undefined) => {
-      if (!prevProviders) return prevProviders;
-      const updatedProviders = { ...prevProviders };
-      
-      // Reset default for all models
-      Object.keys(updatedProviders).forEach(providerKey => {
-        const provider = updatedProviders[providerKey as keyof AllLLMProviders];
+    form.setFieldValue(
+      'providers',
+      (prevProviders: AllLLMProviders | undefined) => {
+        if (!prevProviders) return prevProviders
+        const updatedProviders = { ...prevProviders }
+
+        // Reset default for all models
+        Object.keys(updatedProviders).forEach((providerKey) => {
+          const provider =
+            updatedProviders[providerKey as keyof AllLLMProviders]
+          if (provider && provider.models) {
+            provider.models = provider.models.map((model) => ({
+              ...model,
+              default: false,
+            }))
+          }
+        })
+
+        // Set the new default model
+        const provider = updatedProviders[newDefaultModel.provider]
         if (provider && provider.models) {
-          provider.models = provider.models.map(model => ({ ...model, default: false }));
+          const modelIndex = provider.models.findIndex(
+            (model) => model.id === newDefaultModel.id,
+          )
+          if (modelIndex !== -1) {
+            ;(provider.models as any[])[modelIndex] = {
+              ...(provider.models as any[])[modelIndex],
+              default: true,
+            }
+          }
         }
-      });
 
-      // Set the new default model
-      const provider = updatedProviders[newDefaultModel.provider];
-      if (provider && provider.models) {
-        const modelIndex = provider.models.findIndex(model => model.id === newDefaultModel.id);
-        if (modelIndex !== -1) {
-          (provider.models as any[])[modelIndex] = { ...(provider.models as any[])[modelIndex], default: true };
-        }
-      }
-
-      newDefaultModel.default = true;
-      return updatedProviders;
-    });
-  };
+        newDefaultModel.default = true
+        return updatedProviders
+      },
+    )
+  }
 
   const updateDefaultModelTemperature = (newTemperature: number) => {
     // Update the llmProviders state
-    form.setFieldValue('providers', (prevProviders: AllLLMProviders | undefined) => {
-      let currdefaultModel;
-      if (prevProviders) {
-        currdefaultModel = findDefaultModel(prevProviders)
-      }
+    form.setFieldValue(
+      'providers',
+      (prevProviders: AllLLMProviders | undefined) => {
+        let currdefaultModel
+        if (prevProviders) {
+          currdefaultModel = findDefaultModel(prevProviders)
+        }
 
-      if (!prevProviders || !currdefaultModel) {
-        return prevProviders;
-      }
-      
-      const updatedProviders = { ...prevProviders };
-      
-      // Update the temperature for the default model
-      const provider = updatedProviders[currdefaultModel.provider];      
-      if (provider?.models) {
-        const modelIndex = provider.models.findIndex(model => model.default === true);        
-        if (modelIndex !== -1) {
-          const currentModel = provider.models[modelIndex];          
-          if (currentModel) {  
-            provider.models[modelIndex] = { 
-              ...currentModel,
-              temperature: newTemperature 
-            };
+        if (!prevProviders || !currdefaultModel) {
+          return prevProviders
+        }
+
+        const updatedProviders = { ...prevProviders }
+
+        // Update the temperature for the default model
+        const provider = updatedProviders[currdefaultModel.provider]
+        if (provider?.models) {
+          const modelIndex = provider.models.findIndex(
+            (model) => model.default === true,
+          )
+          if (modelIndex !== -1) {
+            const currentModel = provider.models[modelIndex]
+            if (currentModel) {
+              provider.models[modelIndex] = {
+                ...currentModel,
+                temperature: newTemperature,
+              }
+            }
           }
         }
-      }
-  
-      // Update the defaultModel state
-      return updatedProviders;
-    });
-  };
+
+        // Update the defaultModel state
+        return updatedProviders
+      },
+    )
+  }
 
   // ------------ </TANSTACK QUERIES> ------------
 
@@ -480,7 +506,7 @@ export default function APIKeyInputForm() {
       providers: llmProviders,
     },
     onSubmit: async ({ value }) => {
-      const llmProviders = value.providers as AllLLMProviders  
+      const llmProviders = value.providers as AllLLMProviders
       mutation.mutate(
         {
           projectName,
@@ -631,9 +657,7 @@ export default function APIKeyInputForm() {
                                 isLoading={isLoadingLLMProviders}
                               />
                               <AzureProviderInput
-                                provider={
-                                  llmProviders?.Azure as AzureProvider
-                                }
+                                provider={llmProviders?.Azure as AzureProvider}
                                 form={form}
                                 isLoading={isLoadingLLMProviders}
                               />
@@ -724,81 +748,104 @@ export default function APIKeyInputForm() {
                         </Text>
                         <br />
                         <div className="flex justify-center">
-                          {(llmProviders) && (
+                          {llmProviders && (
+                            // @ts-ignore - we don't really need this named functionality... gonna skip fixing this.
                             <form.Field name="defaultModel">
                               {(field) => (
                                 <NewModelDropdown
-                                value={findDefaultModel(llmProviders) as AnySupportedModel}
-                                onChange={(newDefaultModel) => {
-                                  const modelWithProvider = { 
-                                    ...newDefaultModel, 
-                                    provider: (newDefaultModel as any).provider || findDefaultModel(llmProviders)?.provider 
-                                  };
-                                  field.setValue(modelWithProvider);
-                                  setDefaultModelAndUpdateProviders(modelWithProvider as AnySupportedModel & { provider: ProviderNames });
-                                  field.setValue(modelWithProvider);
-                                  return form.handleSubmit()
-                                }}
-                                llmProviders={llmProviders}
-                                isSmallScreen={isSmallScreen}
-                              />
+                                  value={
+                                    findDefaultModel(
+                                      llmProviders,
+                                    ) as AnySupportedModel
+                                  }
+                                  onChange={(newDefaultModel) => {
+                                    const modelWithProvider = {
+                                      ...newDefaultModel,
+                                      provider:
+                                        (newDefaultModel as any).provider ||
+                                        findDefaultModel(llmProviders)
+                                          ?.provider,
+                                    }
+                                    field.setValue(modelWithProvider)
+                                    setDefaultModelAndUpdateProviders(
+                                      modelWithProvider as AnySupportedModel & {
+                                        provider: ProviderNames
+                                      },
+                                    )
+                                    field.setValue(modelWithProvider)
+                                    return form.handleSubmit()
+                                  }}
+                                  llmProviders={llmProviders}
+                                  isSmallScreen={isSmallScreen}
+                                />
                               )}
                             </form.Field>
                           )}
                         </div>
                         <div className="pt-6"></div>
                         <div>
-                          {llmProviders && <form.Field name="defaultTemperature">
-                            {(field) => (
-                              <>
-                                <Text
-                                  size="sm"
-                                  weight={500}
-                                  mb={4}
-                                  className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                >
-                                  Default Temperature:{' '}
-                                  {findDefaultModel(llmProviders)?.temperature}
-                                </Text>
-                                <Text
-                                  size="xs"
-                                  color="dimmed"
-                                  mt={4}
-                                  className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                >
-                                  We recommended using 0.1. Higher values
-                                  increase randomness or &apos;creativity&apos;,
-                                  lower force the model to stick to its normal
-                                  behavior.
-                                </Text>
-                                <Slider
-                                  value={findDefaultModel(llmProviders)?.temperature}
-                                  onChange={(newTemperature) => {
-                                    updateDefaultModelTemperature(newTemperature);
-                                    field.handleChange(newTemperature);
-                                    form.handleSubmit();
-                                  }}
-                                  min={0}
-                                  max={1}
-                                  step={0.1}
-                                  precision={1}
-                                  marks={[
-                                    { value: 0, label: t('Precise') },
-                                    { value: 0.5, label: t('Neutral') },
-                                    { value: 1, label: t('Creative') },
-                                  ]}
-                                  showLabelOnHover
-                                  color="grape"
-                                  className="m-2"
-                                  size={isSmallScreen ? 'xs' : 'md'}
-                                  classNames={{
-                                    markLabel: `mx-2 text-neutral-300 ${montserrat_paragraph.variable} font-montserratParagraph mt-2 ${isSmallScreen ? 'text-xs' : ''}`,
-                                  }}
-                                />
-                                <FieldInfo field={field} />
-                              </>
-                            )}
-                          </form.Field>}
+                          {llmProviders && (
+                            // @ts-ignore - we don't really need this named functionality... gonna skip fixing this.
+                            <form.Field name="defaultTemperature">
+                              {(field) => (
+                                <>
+                                  <Text
+                                    size="sm"
+                                    weight={500}
+                                    mb={4}
+                                    className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                  >
+                                    Default Temperature:{' '}
+                                    {
+                                      findDefaultModel(llmProviders)
+                                        ?.temperature
+                                    }
+                                  </Text>
+                                  <Text
+                                    size="xs"
+                                    color="dimmed"
+                                    mt={4}
+                                    className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                  >
+                                    We recommended using 0.1. Higher values
+                                    increase randomness or
+                                    &apos;creativity&apos;, lower force the
+                                    model to stick to its normal behavior.
+                                  </Text>
+                                  <Slider
+                                    value={
+                                      findDefaultModel(llmProviders)
+                                        ?.temperature
+                                    }
+                                    onChange={(newTemperature) => {
+                                      updateDefaultModelTemperature(
+                                        newTemperature,
+                                      )
+                                      field.handleChange(newTemperature)
+                                      form.handleSubmit()
+                                    }}
+                                    min={0}
+                                    max={1}
+                                    step={0.1}
+                                    precision={1}
+                                    marks={[
+                                      { value: 0, label: t('Precise') },
+                                      { value: 0.5, label: t('Neutral') },
+                                      { value: 1, label: t('Creative') },
+                                    ]}
+                                    showLabelOnHover
+                                    color="grape"
+                                    className="m-2"
+                                    size={isSmallScreen ? 'xs' : 'md'}
+                                    classNames={{
+                                      markLabel: `mx-2 text-neutral-300 ${montserrat_paragraph.variable} font-montserratParagraph mt-2 ${isSmallScreen ? 'text-xs' : ''}`,
+                                    }}
+                                  />
+                                  <FieldInfo field={field} />
+                                </>
+                              )}
+                            </form.Field>
+                          )}
                         </div>
                         <div className="pt-2" />
                       </div>
