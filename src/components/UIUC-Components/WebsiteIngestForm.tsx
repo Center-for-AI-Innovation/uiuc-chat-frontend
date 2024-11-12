@@ -132,15 +132,25 @@ export default function WebsiteIngestForm({
   }
 
   const handleIngest = async () => {
+    const requestBody = {
+      url,
+      project_name,
+      maxUrls: maxUrls.trim() !== '' ? parseInt(maxUrls) : 50,
+      scrapeStrategy,
+    };
     try {
-      await scrapeWeb(
-        url,
-        project_name,
-        maxUrls.trim() !== '' ? parseInt(maxUrls) : 50,
-        scrapeStrategy,
-      )
-    } catch (error: any) {
-      console.error('Error while scraping web:', error)
+      const response = await fetch('/api/UIUC-api/ingestUrl', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      const data = await response.json();
+      console.log('Response from API:', data);
+    } catch (error) {
+      console.error('Error submitting form:', error);
     }
     // let ingest finalize things. It should be finished, but the DB is slow.
     await new Promise((resolve) => setTimeout(resolve, 8000))
@@ -314,35 +324,38 @@ export default function WebsiteIngestForm({
                   type="url" // Set the type to 'url' to avoid thinking it's a username or pw.
                   value={url}
                   size={'lg'}
-                  // disabled={isDisabled}
+                  onChange={(e) => {
+                    handleUrlChange(e)
+                  }}
+                // disabled={isDisabled}
 
-                  // onKeyPress={(event) => {
-                  //   if (event.key === 'Enter') {
-                  //     handleSubmit()
-                  //   }
-                  // }}
-                  // rightSection={
-                  // <Button
-                  //   onClick={(e) => {
-                  //     e.preventDefault()
-                  //     if (validateInputs() && validateUrl(url)) {
-                  //       handleSubmit()
-                  //     }
-                  //   }}
-                  //   size="md"
-                  //   radius={'xl'}
-                  //   className={`rounded-s-md ${
-                  //     isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
-                  //   } overflow-ellipsis text-ellipsis p-2 ${
-                  //     isUrlUpdated ? 'text-white' : 'text-gray-500'
-                  //   } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
-                  //   w={`${isSmallScreen ? 'auto' : 'auto'}`}
-                  //   disabled={isDisabled}
-                  // >
-                  //   Ingest
-                  // </Button>
-                  // }
-                  // rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
+                // onKeyPress={(event) => {
+                //   if (event.key === 'Enter') {
+                //     handleSubmit()
+                //   }
+                // }}
+                // rightSection={
+                // <Button
+                //   onClick={(e) => {
+                //     e.preventDefault()
+                //     if (validateInputs() && validateUrl(url)) {
+                //       handleSubmit()
+                //     }
+                //   }}
+                //   size="md"
+                //   radius={'xl'}
+                //   className={`rounded-s-md ${
+                //     isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
+                //   } overflow-ellipsis text-ellipsis p-2 ${
+                //     isUrlUpdated ? 'text-white' : 'text-gray-500'
+                //   } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
+                //   w={`${isSmallScreen ? 'auto' : 'auto'}`}
+                //   disabled={isDisabled}
+                // >
+                //   Ingest
+                // </Button>
+                // }
+                // rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
                 />
               </div>
               <form
@@ -500,7 +513,7 @@ export default function WebsiteIngestForm({
               <Button
                 onClick={handleIngest}
                 disabled={!isUrlValid}
-                className="w-full bg-purple-600 text-white hover:bg-purple-700"
+                className="w-[80%] bg-purple-600 text-white hover:bg-purple-700"
               >
                 Ingest the Website
               </Button>

@@ -56,7 +56,11 @@ const montserrat_med = Montserrat({
   weight: '500',
   subsets: ['latin'],
 })
-export default function GitHubIngestForm(): JSX.Element {
+export default function GitHubIngestForm({
+  project_name,
+}: {
+  project_name: string
+}): JSX.Element {
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
   const [url, setUrl] = useState('')
@@ -93,6 +97,20 @@ export default function GitHubIngestForm(): JSX.Element {
     maxUrls: { error: false, message: '' },
     maxDepth: { error: false, message: '' },
   })
+  const handleIngest = async () => {
+    try {
+      await scrapeWeb(
+        url,
+        project_name,
+        maxUrls.trim() !== '' ? parseInt(maxUrls) : 50,
+        scrapeStrategy,
+      )
+    } catch (error: any) {
+      console.error('Error while scraping web:', error)
+    }
+    // let ingest finalize things. It should be finished, but the DB is slow.
+    await new Promise((resolve) => setTimeout(resolve, 8000))
+  }
 
   const validateInputs = () => {
     const errors = {
@@ -296,74 +314,50 @@ export default function GitHubIngestForm(): JSX.Element {
                   value={url}
                   size={'lg'}
                   // disabled={isDisabled}
-                  // onChange={(e) => {
-                  //   setUrl(e.target.value)
-                  //   // setShowContentOptions(
-                  //   //   e.target.value.includes('canvas.illinois.edu'),
-                  //   // )
-                  //   if (e.target.value.includes('coursera.org')) {
-                  //     setIcon(
-                  //       <img
-                  //         src={'/media/coursera_logo_cutout.png'}
-                  //         alt="Coursera Logo"
-                  //         style={{ height: '50%', width: '50%' }}
-                  //       />,
-                  //     )
-                  //   } else if (e.target.value.includes('ocw.mit.edu')) {
-                  //     setIcon(
-                  //       <img
-                  //         src={'/media/mitocw_logo.jpg'}
-                  //         alt="MIT OCW Logo"
-                  //         style={{ height: '50%', width: '50%' }}
-                  //       />,
-                  //     )
-                  //   } else if (e.target.value.includes('github.com')) {
-                  //     setIcon(
-                  //       <img
-                  //         src="/media/github-mark-white.png"
-                  //         alt="GitHub Logo"
-                  //         style={{ height: '50%', width: '50%' }}
-                  //       />,
-                  //     )
-                  //   } else if (e.target.value.includes('canvas.illinois.edu')) {
-                  //     setIcon(
-                  //       <img
-                  //         src="/media/canvas_logo.png"
-                  //         alt="Canvas Logo"
-                  //         style={{ height: '50%', width: '50%' }}
-                  //       />,
-                  //     )
-                  //   } else {
-                  //     setIcon(<IconWorldDownload />)
-                  //   }
-                  // }}
-                  // onKeyPress={(event) => {
-                  //   if (event.key === 'Enter') {
-                  //     handleSubmit()
-                  //   }
-                  // }}
-                  // rightSection={
-                  // <Button
-                  //   onClick={(e) => {
-                  //     e.preventDefault()
-                  //     if (validateInputs() && validateUrl(url)) {
-                  //       handleSubmit()
-                  //     }
-                  //   }}
-                  //   size="md"
-                  //   radius={'xl'}
-                  //   className={`rounded-s-md ${
-                  //     isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
-                  //   } overflow-ellipsis text-ellipsis p-2 ${
-                  //     isUrlUpdated ? 'text-white' : 'text-gray-500'
-                  //   } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
-                  //   w={`${isSmallScreen ? 'auto' : 'auto'}`}
-                  //   disabled={isDisabled}
-                  // >
-                  //   Ingest
-                  // </Button>
-                  // }
-                  // rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
+                  onChange={(e) => {
+                    handleUrlChange(e)                    // setShowContentOptions(
+                    //   e.target.value.includes('canvas.illinois.edu'),
+                    // )
+                    if (e.target.value.includes('github.com')) {
+                      setIcon(
+                        <img
+                          src="/media/github-mark-white.png"
+                          alt="GitHub Logo"
+                          style={{ height: '50%', width: '50%' }}
+                        />,
+                      )
+                    }
+                    else {
+                      setIcon(<IconWorldDownload />)
+                    }
+                  }}
+                // onKeyPress={(event) => {
+                //   if (event.key === 'Enter') {
+                //     handleSubmit()
+                //   }
+                // }}
+                // rightSection={
+                // <Button
+                //   onClick={(e) => {
+                //     e.preventDefault()
+                //     if (validateInputs() && validateUrl(url)) {
+                //       handleSubmit()
+                //     }
+                //   }}
+                //   size="md"
+                //   radius={'xl'}
+                //   className={`rounded-s-md ${
+                //     isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
+                //   } overflow-ellipsis text-ellipsis p-2 ${
+                //     isUrlUpdated ? 'text-white' : 'text-gray-500'
+                //   } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
+                //   w={`${isSmallScreen ? 'auto' : 'auto'}`}
+                //   disabled={isDisabled}
+                // >
+                //   Ingest
+                // </Button>
+                // }
+                // rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
                 />
               </div>
               {/* <form
@@ -374,7 +368,7 @@ export default function GitHubIngestForm(): JSX.Element {
               >
                  */}
               <Button
-                // onClick={handleIngest}
+                onClick={handleIngest}
                 disabled={!isUrlValid}
                 className="w-full bg-purple-600 text-white hover:bg-purple-700"
               >
