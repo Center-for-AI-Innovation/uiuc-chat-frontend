@@ -200,17 +200,9 @@ export function LargeDropzone({
       const data = await response.json()
       console.log(data)
       if (data && data.documents) {
-        // const newTotalDocuments = Math.max(
-        //   totalDocuments,
-        //   data.documents.length,
-        // )
+
         setTotalDocuments(data.documents)
-        // setDataLength(newTotalDocuments - data.documents.length)
-        setHasDocuments(data.documents.length > 0)
-        // setProgress(
-        //   ((newTotalDocuments - data.documents.length) / newTotalDocuments) *
-        //   100,
-        // )
+
         console.log(data.documents)
         setFileUploads((prevFileUploads) =>
           prevFileUploads.map((fileUpload) => {
@@ -248,7 +240,7 @@ export function LargeDropzone({
 
     const intervalId = setInterval(fetchData, 3000) // Fetch data every 3000 milliseconds (3 seconds)
     return () => clearInterval(intervalId)
-  }, [courseName, totalDocuments])
+  }, [courseName])
 
 
   // useEffect(() => {

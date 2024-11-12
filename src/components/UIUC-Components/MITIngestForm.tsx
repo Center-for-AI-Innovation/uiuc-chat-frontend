@@ -367,35 +367,35 @@ export default function MITIngestForm({
                 type="url" // Set the type to 'url' to avoid thinking it's a username or pw.
                 value={url}
                 size={'lg'}
-                // disabled={isDisabled}
+              // disabled={isDisabled}
 
-                // onKeyPress={(event) => {
-                //   if (event.key === 'Enter') {
-                //     handleSubmit()
-                //   }
-                // }}
-                // rightSection={
-                // <Button
-                //   onClick={(e) => {
-                //     e.preventDefault()
-                //     if (validateInputs() && validateUrl(url)) {
-                //       handleSubmit()
-                //     }
-                //   }}
-                //   size="md"
-                //   radius={'xl'}
-                //   className={`rounded-s-md ${
-                //     isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
-                //   } overflow-ellipsis text-ellipsis p-2 ${
-                //     isUrlUpdated ? 'text-white' : 'text-gray-500'
-                //   } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
-                //   w={`${isSmallScreen ? 'auto' : 'auto'}`}
-                //   disabled={isDisabled}
-                // >
-                //   Ingest
-                // </Button>
-                // }
-                // rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
+              // onKeyPress={(event) => {
+              //   if (event.key === 'Enter') {
+              //     handleSubmit()
+              //   }
+              // }}
+              // rightSection={
+              // <Button
+              //   onClick={(e) => {
+              //     e.preventDefault()
+              //     if (validateInputs() && validateUrl(url)) {
+              //       handleSubmit()
+              //     }
+              //   }}
+              //   size="md"
+              //   radius={'xl'}
+              //   className={`rounded-s-md ${
+              //     isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
+              //   } overflow-ellipsis text-ellipsis p-2 ${
+              //     isUrlUpdated ? 'text-white' : 'text-gray-500'
+              //   } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
+              //   w={`${isSmallScreen ? 'auto' : 'auto'}`}
+              //   disabled={isDisabled}
+              // >
+              //   Ingest
+              // </Button>
+              // }
+              // rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
               />
             </div>
             <Button

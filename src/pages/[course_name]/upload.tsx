@@ -26,6 +26,7 @@ import UploadNotification from '~/components/UIUC-Components/UploadNotification'
 import MITIngestForm from '~/components/UIUC-Components/MITIngestForm'
 import CourseraIngestForm from '~/components/UIUC-Components/CourseraIngestForm'
 import SupportedFileUploadTypes from '~/components/UIUC-Components/SupportedFileUploadTypes'
+import { CannotEditCourse } from '~/components/UIUC-Components/CannotEditCourse'
 
 const CourseMain: NextPage = () => {
   const router = useRouter()
@@ -57,6 +58,15 @@ const CourseMain: NextPage = () => {
     fetchCourseData()
   }, [router.isReady])
 
+  if (
+    metadata &&
+    user_emails[0] !== (metadata.course_owner as string) &&
+    metadata.course_admins.indexOf(getCurrentPageName()) === -1
+  ) {
+    router.replace(`/${getCurrentPageName()}/not_authorized`)
+
+    return <CannotEditCourse course_name={getCurrentPageName() as string} />
+  }
   // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
   if (!isLoaded || isFetchingCourseMetadata || projectName == null) {
     return <LoadingPlaceholderForAdminPages />
@@ -153,7 +163,7 @@ const CourseMain: NextPage = () => {
 
                   <WebsiteIngestForm project_name={projectName} />
 
-                  <GitHubIngestForm />
+                  <GitHubIngestForm project_name={projectName} />
 
                   <MITIngestForm project_name={projectName} />
 
