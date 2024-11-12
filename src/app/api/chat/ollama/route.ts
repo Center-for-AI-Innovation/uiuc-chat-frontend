@@ -1,10 +1,5 @@
 import { createOllama } from 'ollama-ai-provider'
-import {
-  CoreMessage,
-  generateText,
-  StreamingTextResponse,
-  streamText,
-} from 'ai'
+import { CoreMessage, generateText, streamText } from 'ai'
 import { Conversation } from '~/types/chat'
 import {
   NCSAHostedProvider,
@@ -12,7 +7,6 @@ import {
 } from '~/utils/modelProviders/LLMProvider'
 import { OllamaModel } from '~/utils/modelProviders/ollama'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
-import { NextResponse } from 'next/server'
 
 // export const runtime = 'edge' // Does NOT work
 export const dynamic = 'force-dynamic' // known bug with Vercel: https://sdk.vercel.ai/docs/troubleshooting/common-issues/streaming-not-working-on-vercel
@@ -79,10 +73,6 @@ function convertConversatonToVercelAISDKv3(
     (msg) => msg.latestSystemMessage !== undefined,
   )
   if (systemMessage) {
-    console.log(
-      'Found system message, latestSystemMessage: ',
-      systemMessage.latestSystemMessage,
-    )
     coreMessages.push({
       role: 'system',
       content: systemMessage.latestSystemMessage || '',

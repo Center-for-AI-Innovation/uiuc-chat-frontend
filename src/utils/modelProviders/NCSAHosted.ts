@@ -77,8 +77,6 @@ export const getNCSAHostedModels = async (
     // /api/ps - all HOT AND LOADED models
     const response = await fetch(process.env.OLLAMA_SERVER_URL + '/api/ps')
 
-    console.log('process.env.OLLAMA_SERVER_URL', process.env.OLLAMA_SERVER_URL)
-
     if (!response.ok) {
       ncsaHostedProvider.error = `HTTP error ${response.status} ${response.statusText}.`
       ncsaHostedProvider.models = [] // clear any previous models.
