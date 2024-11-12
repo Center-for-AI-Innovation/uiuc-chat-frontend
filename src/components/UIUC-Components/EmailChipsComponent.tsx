@@ -1,14 +1,95 @@
-import { TextInput } from '@mantine/core'
-import { IconAt } from '@tabler/icons-react'
-import React, {
-  useState,
-  useEffect,
-  type KeyboardEvent,
-  type ChangeEvent,
-  type ClipboardEvent,
-} from 'react'
+import {
+  TextInput,
+  Chip,
+  Group,
+  createStyles,
+  Stack,
+  Avatar,
+  Text,
+  UnstyledButton,
+  ActionIcon,
+} from '@mantine/core'
+import { IconAt, IconX } from '@tabler/icons-react'
+import React, { useState, useEffect } from 'react'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
+
+const useStyles = createStyles((theme) => ({
+  emailList: {
+    backgroundColor: '#1A1B1E',
+    borderRadius: '12px',
+    overflow: 'hidden',
+  },
+  emailItem: {
+    padding: '8px 16px',
+    transition: 'background-color 150ms ease',
+
+    '&:hover': {
+      backgroundColor: '#2C2E33',
+    },
+  },
+  removeButton: {
+    color: theme.colors.gray[5],
+    transition: 'color 150ms ease',
+
+    '&:hover': {
+      color: theme.colors.red[4],
+    },
+  },
+  input: {
+    input: {
+      backgroundColor: '#1A1B1E',
+      color: 'white',
+      border: '1px solid #2C2E33',
+      borderRadius: '8px',
+      '&:focus': {
+        borderColor: theme.colors.violet[4],
+      },
+    },
+  },
+}))
+
+function EmailListItem({
+  email,
+  onDelete,
+  classes,
+  course_owner,
+}: {
+  email: string
+  onDelete: () => void
+  classes: any
+  course_owner: string
+}) {
+  return (
+    <UnstyledButton className={classes.emailItem}>
+      <Group position="apart">
+        <Group spacing="sm">
+          <Avatar
+            size={32}
+            radius="xl"
+            color="violet"
+            styles={{ placeholder: { backgroundColor: '#2C2E33' } }}
+          >
+            {email[0]?.toUpperCase()}
+          </Avatar>
+          <div>
+            <Text size="sm">{email}</Text>
+            <Text size="xs" color="dimmed">
+              Can {email === course_owner ? 'manage' : 'view'}
+            </Text>
+          </div>
+        </Group>
+        <ActionIcon
+          className={classes.removeButton}
+          onClick={onDelete}
+          variant="subtle"
+        >
+          <IconX size={16} />
+        </ActionIcon>
+      </Group>
+    </UnstyledButton>
+  )
+}
 
 const EmailChipsComponent = ({
   course_name,
@@ -40,6 +121,7 @@ const EmailChipsComponent = ({
   const [value, setValue] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
   const isPrivate = is_private
+  const { classes } = useStyles()
 
   // fetch metadata on mount
   useEffect(() => {
@@ -213,36 +295,32 @@ const EmailChipsComponent = ({
   }
 
   return (
-    <>
+    <Stack spacing="md">
       <TextInput
-        withAsterisk={true}
         icon={<IconAt />}
-        size="md"
-        style={{ minWidth: '20rem', maxWidth: '35rem' }}
-        placeholder="Paste emails, even messy lists from Outlook"
-        className={'p-3 ' + (error && 'border-color: tomato')}
+        placeholder="Add people by email"
+        className={classes.input}
         value={value}
+        error={error}
         onKeyDown={handleKeyDown_users}
         onChange={handleChange_users}
         onPaste={handlePaste_users}
       />
-      {(is_for_admins
-        ? courseAdmins.filter((email) => email !== 'kvday2@illinois.edu')
-        : emailAddresses
-      ).map((email_address) => (
-        <div className="tag-item self-center" key={email_address}>
-          {email_address}
-          <button
-            type="button"
-            className="button"
-            onClick={() => handleDelete(email_address)}
-          >
-            &times;
-          </button>
-        </div>
-      ))}
-      {error && <p className="error">{error}</p>}
-    </>
+      <div className={classes.emailList}>
+        {(is_for_admins
+          ? courseAdmins.filter((email) => email !== 'kvday2@illinois.edu')
+          : emailAddresses
+        ).map((email) => (
+          <EmailListItem
+            key={email}
+            email={email}
+            onDelete={() => handleDelete(email)}
+            classes={classes}
+            course_owner={course_owner}
+          />
+        ))}
+      </div>
+    </Stack>
   )
 }
 

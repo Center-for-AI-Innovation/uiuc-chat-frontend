@@ -77,8 +77,9 @@ const CourseMain: NextPage = () => {
   }
 
   return (
-    <>  <Navbar course_name={projectName} />
-
+    <>
+      {' '}
+      <Navbar course_name={projectName} />
       <Head>
         <title>{projectName}/upload</title>
         <meta
@@ -94,82 +95,11 @@ const CourseMain: NextPage = () => {
             align="center"
             w="100%"
             className="mt-8 lg:mt-4"
-          >
-            <Card
-              shadow="xs"
-              padding="none"
-              radius="xl"
-              style={{ maxWidth: '90%', width: '100%', marginTop: '2%' }}
-            >
-              {/* <Flex className="flex-col md:flex-row"> */}
-              <div
-                style={{
-                  border: 'None',
-                  color: 'white',
-                }}
-                className="min-h-full flex-[1_1_100%] bg-gradient-to-r from-purple-900 via-indigo-800 to-blue-800 md:flex-[1_1_70%]"
-              >
-                {/* <Flex
-                  gap="md"
-                  direction="column"
-                  justify="flex-start"
-                  align="flex-start"
-                  className="lg:ml-8"
-                > */}
-                <Title
-                  order={2}
-                  variant="gradient"
-                  align="center"
-                  gradient={{ from: 'gold', to: 'white', deg: 50 }}
-                  className={`pl-8 pt-8 ${montserrat_heading.variable} font-montserratHeading`}
-                >
-                  {/* API Keys: Add LLMs to your Chatbot */}
-                  {projectName}
-                </Title>
-
-                <LargeDropzone
-                  courseName={projectName}
-                  current_user_email={user_emails[0] as string}
-                  redirect_to_gpt_4={false}
-                  isDisabled={false}
-                  courseMetadata={metadata as CourseMetadata}
-                  is_new_course={false}
-                />
-                {/* <div className='grid justify-center'>
-                </div> */}
-
-                <SimpleGrid
-                  cols={3}
-                  spacing="lg"
-                  breakpoints={[
-                    { maxWidth: 1192, cols: 2, spacing: 'md' },
-                    { maxWidth: 768, cols: 1, spacing: 'sm' },
-                  ]}
-                  style={{ width: '80%', margin: '0 auto', paddingTop: '30px', paddingBottom: '30px' }}
-                >
-                  {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-[80%]"> */}
-
-                  <CanvasIngestForm project_name={projectName} />
-
-                  <WebsiteIngestForm project_name={projectName} />
-
-                  <GitHubIngestForm />
-
-                  <MITIngestForm project_name={projectName} />
-
-                  <CourseraIngestForm />
-                </SimpleGrid>
-                {/* </div> */}
-              </div>
-
-            </Card>
-
-          </Flex>
-        </div >
+          ></Flex>
+        </div>
         <GlobalFooter />
-      </main >
+      </main>
     </>
   )
 }
 export default CourseMain
-

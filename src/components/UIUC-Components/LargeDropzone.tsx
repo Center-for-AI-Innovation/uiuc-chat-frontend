@@ -30,7 +30,6 @@ import { notifications } from '@mantine/notifications'
 import { v4 as uuidv4 } from 'uuid'
 import UploadNotification, { FileUpload } from './UploadNotification'
 
-
 const useStyles = createStyles((theme) => ({
   wrapper: {
     position: 'relative',
@@ -215,17 +214,16 @@ export function LargeDropzone({
         setFileUploads((prevFileUploads) =>
           prevFileUploads.map((fileUpload) => {
             const isIngested = data.documents.some(
-              (doc: { readable_filename: string }) => doc.readable_filename === fileUpload.name
-            );
+              (doc: { readable_filename: string }) =>
+                doc.readable_filename === fileUpload.name,
+            )
             console.log('isIngesting', isIngested)
             console.log('fileUpload.name', fileUpload.name)
             return isIngested
               ? { ...fileUpload, status: 'ingesting' }
-              : fileUpload;
-          })
-        );
-
-
+              : fileUpload
+          }),
+        )
       } else {
         setHasDocuments(false)
         setFileUploads((prev) =>
@@ -235,21 +233,20 @@ export function LargeDropzone({
             //   (doc: { readable_filename: string }) => doc.readable_filename === upload.name
             // );
             // if (isNotInProgress) {
-            const updatedUpload = { ...upload, status: "complete" as const };
-            console.log('upload name in set files', upload.name);
-            console.log('upload status after update', updatedUpload.status);
-            return updatedUpload;
+            const updatedUpload = { ...upload, status: 'complete' as const }
+            console.log('upload name in set files', upload.name)
+            console.log('upload status after update', updatedUpload.status)
+            return updatedUpload
             // }
-            return upload;
-          })
-        );
+            return upload
+          }),
+        )
       }
     }
 
     const intervalId = setInterval(fetchData, 3000) // Fetch data every 3000 milliseconds (3 seconds)
     return () => clearInterval(intervalId)
   }, [courseName, totalDocuments])
-
 
   // useEffect(() => {
   //   if (fileUploads.length > 0 && fileUploads.every(file => file.status === 'complete')) {
@@ -339,7 +336,7 @@ export function LargeDropzone({
 
       return {
         name: uniqueReadableFileName,
-        status: "uploading" as const,
+        status: 'uploading' as const,
       }
     })
     setFileUploads(initialFileUploads)
@@ -424,8 +421,8 @@ export function LargeDropzone({
           console.error('Error during file upload or ingest:', error)
           setFileUploads((prev) =>
             prev.map((upload, i) =>
-              i === index ? { ...upload, status: 'error' } : upload
-            )
+              i === index ? { ...upload, status: 'error' } : upload,
+            ),
           )
           return { ok: false, s3_path: file.name }
         }
@@ -527,82 +524,75 @@ export function LargeDropzone({
           <Dropzone
             openRef={openRef}
             style={{
-              width: '80%',
+              width: '90%',
               height: rem(300),
-              ...(isDisabled
-                ? { backgroundColor: '#3a374a' }
-                : { backgroundColor: '#2a2b3c' }),
+              backgroundColor: isDisabled ? '#3a374a' : '#1c1c2e',
               cursor: isDisabled ? 'not-allowed' : 'pointer',
+              borderWidth: '2px',
+              borderStyle: 'dashed',
+              borderColor: 'rgba(147, 51, 234, 0.3)', // Subtle purple border
+              borderRadius: rem(12),
+              transition: 'all 0.2s ease',
             }}
-            loading={uploadInProgress}
             onDrop={async (files) => {
               ingestFiles(files, is_new_course).catch((error) => {
                 console.error('Error during file upload:', error)
               })
             }}
-            className={'borderWidth: rem(1.5)'}
-            radius="md"
-            bg="#2a2b3c"
-            disabled={isDisabled}
+            loading={uploadInProgress}
+            className={`hover:border-purple-500 hover:bg-[#2a2a40] ${
+              isDisabled ? 'opacity-50' : ''
+            }`}
           >
             <div
-              style={{ pointerEvents: 'none', opacity: isDisabled ? 0.6 : 1 }}
-              className='bg-[#2a2b3c] hover:bg-[#1c1c2e] cursor-pointer'
+              style={{ pointerEvents: 'none' }}
+              className="flex flex-col items-center justify-center"
             >
-              <Group position="center" pt={'md'}>
+              <Group position="center" pt={rem(20)}>
                 <Dropzone.Accept>
-                  <IconDownload
-                    size={rem(50)}
-                    color={theme.primaryColor[6]}
-                    stroke={1.5}
-                  />
+                  <IconDownload size={rem(50)} color="#9333ea" stroke={1.5} />
                 </Dropzone.Accept>
                 <Dropzone.Reject>
-                  <IconX
-                    size={rem(50)}
-                    color={theme.colors.red[6]}
-                    stroke={1.5}
-                  />
+                  <IconX size={rem(50)} color="#ef4444" stroke={1.5} />
                 </Dropzone.Reject>
                 {!isDisabled && (
                   <Dropzone.Idle>
                     <IconCloudUpload
                       size={rem(50)}
-                      color={
-                        theme.colorScheme === 'dark'
-                          ? theme.colors.dark[0]
-                          : theme.black
-                      }
+                      color="#9333ea"
                       stroke={1.5}
                     />
                   </Dropzone.Idle>
                 )}
               </Group>
-              {isDisabled ? (
-                <>
-                  <br></br>
-                  <Text ta="center" fw={700} fz="lg" mt="xl">
-                    Enter an available project name above! 👀
-                  </Text>
-                </>
-              ) : (
-                <Text ta="center" fw={700} fz="lg" mt="xl">
-                  <Dropzone.Accept>Drop files here</Dropzone.Accept>
-                  <Dropzone.Reject>
-                    Upload rejected, not proper file type or too large.
-                  </Dropzone.Reject>
-                  <Dropzone.Idle>Upload materials</Dropzone.Idle>
-                </Text>
-              )}
-              {isDisabled ? (
-                ''
-              ) : (
-                <Text ta="center" fz="sm" mt="xs" c="dimmed">
+
+              <Text
+                ta="center"
+                fw={700}
+                fz="lg"
+                mt="xl"
+                className="text-gray-200"
+              >
+                <Dropzone.Accept>Drop files here</Dropzone.Accept>
+                <Dropzone.Reject>
+                  Upload rejected, not proper file type or too large.
+                </Dropzone.Reject>
+                <Dropzone.Idle>
+                  {isDisabled
+                    ? 'Enter an available project name above! 👀'
+                    : 'Upload materials'}
+                </Dropzone.Idle>
+              </Text>
+
+              {!isDisabled && (
+                <Text ta="center" fz="sm" mt="xs" className="text-gray-400">
                   Drag&apos;n&apos;drop files or a whole folder here
                 </Text>
               )}
-              <SupportedFileUploadTypes />
 
+              <div className="mt-4">
+                <SupportedFileUploadTypes />
+              </div>
             </div>
           </Dropzone>
           {uploadInProgress && (
@@ -637,8 +627,7 @@ export function LargeDropzone({
             flexDirection: 'column',
             textAlign: 'center',
           }}
-        >
-        </div>
+        ></div>
         {/* END RIGHT COLUMN */}
       </div>
 
@@ -646,13 +635,13 @@ export function LargeDropzone({
         files={fileUploads}
         // ingestFiles={ }
         onClose={handleCloseNotification}
-      // onCancel={() => {
-      //   // Handle cancel logic
-      //   // setUploadInProgress(false)
-      //   // setFileUploads((prev) =>
-      //   //   prev.map((upload) => ({ ...upload, status: 'error' }))
-      //   // )
-      // }}
+        // onCancel={() => {
+        //   // Handle cancel logic
+        //   // setUploadInProgress(false)
+        //   // setFileUploads((prev) =>
+        //   //   prev.map((upload) => ({ ...upload, status: 'error' }))
+        //   // )
+        // }}
       />
     </>
   )
@@ -710,8 +699,9 @@ const showIngestInProgressToast = (num_success_files: number) => {
     // onClose: () => console.log('unmounted'),
     // onOpen: () => console.log('mounted'),
     autoClose: 30000,
-    title: `Ingest in progress for ${num_success_files} file${num_success_files > 1 ? 's' : ''
-      }.`,
+    title: `Ingest in progress for ${num_success_files} file${
+      num_success_files > 1 ? 's' : ''
+    }.`,
     message: `This is a background task. Refresh the page to see your files as they're processed.`,
     color: 'green',
     radius: 'lg',

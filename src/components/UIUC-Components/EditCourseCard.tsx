@@ -454,7 +454,7 @@ const EditCourseCard = ({
   )
 }
 
-const PrivateOrPublicCourse = ({
+export const PrivateOrPublicCourse = ({
   course_name,
   courseMetadata,
   apiKey,

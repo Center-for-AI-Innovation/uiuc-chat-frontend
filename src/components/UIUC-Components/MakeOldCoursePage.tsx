@@ -22,6 +22,7 @@ import { IconInfoCircle } from '@tabler/icons-react'
 
 import { CannotEditCourse } from './CannotEditCourse'
 import { type CourseMetadata } from '~/types/courseMetadata'
+import { UploadCard } from './UploadCard'
 
 const MakeOldCoursePage = ({
   course_name,
@@ -91,12 +92,16 @@ const MakeOldCoursePage = ({
       <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
         <div className="items-left flex w-full flex-col justify-center py-0">
           <Flex direction="column" align="center" w="100%">
-            <EditCourseCard
+            {/* <EditCourseCard
               course_name={course_name}
               current_user_email={current_email}
               courseMetadata={metadata}
+            /> */}
+            <UploadCard
+              projectName={course_name}
+              current_user_email={current_email}
+              metadata={metadata}
             />
-
             {/* Document Groups header */}
             <div className="pt-8" />
             <div
