@@ -447,28 +447,23 @@ export default function APIKeyInputForm() {
       }
 
       newDefaultModel.default = true;
-      setDefaultModel(newDefaultModel);
       console.log('Updated providers:', updatedProviders)
       return updatedProviders;
     });
   };
-
-  const [defaultModel, setDefaultModel] = useState<(AnySupportedModel & { provider: ProviderNames }) | undefined>(undefined)
-  useEffect(() => {
-    if (llmProviders) {
-      const calculatedDefaultModel = findDefaultModel(llmProviders)
-      setDefaultModel(calculatedDefaultModel)
-    }
-  }, [llmProviders])
 
   const updateDefaultModelTemperature = (newTemperature: number) => {
     console.log('updateDefaultModelTemperature called with:', newTemperature)
     // Update the llmProviders state
     form.setFieldValue('providers', (prevProviders: AllLLMProviders | undefined) => {
       console.log('Previous providers:', prevProviders)
-      console.log('Current default model:', defaultModel)
-      
-      if (!prevProviders || !defaultModel) {
+      console.log('llmProviders in updateDefaultModelTemperature:', llmProviders)
+      let currdefaultModel;
+      if (prevProviders) {
+        currdefaultModel = findDefaultModel(prevProviders)
+      }
+
+      if (!prevProviders || !currdefaultModel) {
         console.log('No previous providers or default model found, returning')
         return prevProviders;
       }
@@ -476,7 +471,7 @@ export default function APIKeyInputForm() {
       const updatedProviders = { ...prevProviders };
       
       // Update the temperature for the default model
-      const provider = updatedProviders[defaultModel.provider];
+      const provider = updatedProviders[currdefaultModel.provider];
       console.log('Provider for default model:', provider)
       
       if (provider?.models) {
@@ -498,12 +493,6 @@ export default function APIKeyInputForm() {
       }
   
       // Update the defaultModel state
-      setDefaultModel(prev => {
-        const updated = prev ? { ...prev, temperature: newTemperature } : prev;
-        console.log('Updated default model state:', updated)
-        return updated;
-      });
-      
       console.log('Final updated providers:', updatedProviders)
       return updatedProviders;
     });
@@ -521,20 +510,14 @@ export default function APIKeyInputForm() {
   const form = useForm({
     defaultValues: {
       providers: llmProviders,
-      defaultModel: defaultModel,
-      defaultTemperature: defaultModel?.temperature,
     },
     onSubmit: async ({ value }) => {
       const llmProviders = value.providers as AllLLMProviders  
-      const defaultModel = findDefaultModel(llmProviders)   
-      const defaultTemp = defaultModel?.temperature
       mutation.mutate(
         {
           projectName,
           queryClient,
           llmProviders,
-          defaultModelID: (value.defaultModel || '').toString(),
-          defaultTemperature: (value.defaultTemperature || '').toString()
         },
         {
           onSuccess: (data, variables, context) => {
@@ -777,11 +760,11 @@ export default function APIKeyInputForm() {
                             <form.Field name="defaultModel">
                               {(field) => (
                                 <NewModelDropdown
-                                value={defaultModel as AnySupportedModel}
+                                value={findDefaultModel(llmProviders) as AnySupportedModel}
                                 onChange={(newDefaultModel) => {
                                   const modelWithProvider = { 
                                     ...newDefaultModel, 
-                                    provider: (newDefaultModel as any).provider || defaultModel?.provider 
+                                    provider: (newDefaultModel as any).provider || findDefaultModel(llmProviders)?.provider 
                                   };
                                   field.setValue(modelWithProvider);
                                   setDefaultModelAndUpdateProviders(modelWithProvider as AnySupportedModel & { provider: ProviderNames });
@@ -797,7 +780,7 @@ export default function APIKeyInputForm() {
                         </div>
                         <div className="pt-6"></div>
                         <div>
-                          <form.Field name="defaultTemperature">
+                          {llmProviders && <form.Field name="defaultTemperature">
                             {(field) => (
                               <>
                                 <Text
@@ -807,7 +790,7 @@ export default function APIKeyInputForm() {
                                   className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
                                 >
                                   Default Temperature:{' '}
-                                  {defaultModel?.temperature}
+                                  {findDefaultModel(llmProviders)?.temperature}
                                 </Text>
                                 <Text
                                   size="xs"
@@ -821,7 +804,7 @@ export default function APIKeyInputForm() {
                                   behavior.
                                 </Text>
                                 <Slider
-                                  value={defaultModel?.temperature}
+                                  value={findDefaultModel(llmProviders)?.temperature}
                                   onChange={(newTemperature) => {
                                     updateDefaultModelTemperature(newTemperature);
                                     field.handleChange(newTemperature);
@@ -847,7 +830,7 @@ export default function APIKeyInputForm() {
                                 <FieldInfo field={field} />
                               </>
                             )}
-                          </form.Field>
+                          </form.Field>}
                         </div>
                         <div className="pt-2" />
                       </div>
