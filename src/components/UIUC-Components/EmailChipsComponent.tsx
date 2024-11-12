@@ -10,7 +10,12 @@ import {
   ActionIcon,
 } from '@mantine/core'
 import { IconAt, IconX } from '@tabler/icons-react'
-import React, { useState, useEffect } from 'react'
+import React, {
+  useState,
+  useEffect,
+  type ChangeEvent,
+  type KeyboardEvent,
+} from 'react'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 
@@ -178,13 +183,13 @@ const EmailChipsComponent = ({
     }
   }
 
-  const handlePaste_users = (evt: ClipboardEvent<HTMLInputElement>) => {
+  const handlePaste_users = (evt: React.ClipboardEvent<HTMLInputElement>) => {
     evt.preventDefault()
     const paste = evt.clipboardData.getData('text')
     const emails = paste.match(/[\w\d\.-]+@[\w\d\.-]+\.[\w\d\.-]+/g)
 
     if (emails) {
-      const toBeAdded = emails.filter((email) => !isInList(email))
+      const toBeAdded = emails.filter((email: string) => !isInList(email))
       if (is_for_admins) {
         const updatedCourseAdmins = [...courseAdmins, ...toBeAdded]
         setCourseAdmins(updatedCourseAdmins)

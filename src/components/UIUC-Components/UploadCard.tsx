@@ -163,7 +163,7 @@ export function UploadCard({
 
             <WebsiteIngestForm project_name={projectName} />
 
-            <GitHubIngestForm />
+            <GitHubIngestForm project_name={projectName} />
 
             <MITIngestForm project_name={projectName} />
 
