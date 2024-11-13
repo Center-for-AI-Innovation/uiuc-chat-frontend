@@ -150,7 +150,7 @@ export const preferredModelIds = [
   OpenAIModelID.GPT_4o_mini,
   AzureModelID.GPT_4o_mini,
 
-  AnthropicModelID.Claude_3_Haiku,
+  AnthropicModelID.Claude_3_5_Haiku,
 
   OpenAIModelID.GPT_4o,
   AzureModelID.GPT_4o,

@@ -21,7 +21,7 @@ export const getAnthropicModels = async (
   if (!anthropicProvider.models || anthropicProvider.models.length === 0) {
     const preferredAnthropicModelIds = [
       AnthropicModelID.Claude_3_5_Sonnet,
-      AnthropicModelID.Claude_3_Haiku,
+      AnthropicModelID.Claude_3_5_Haiku,
       AnthropicModelID.Claude_3_Opus,
     ]
 
