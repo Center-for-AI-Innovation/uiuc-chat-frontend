@@ -98,8 +98,13 @@ export default function CanvasIngestForm({
   }
 
   return (
-    <motion.div layout>
-      <Dialog open={open} onOpenChange={setOpen}>
+    <motion.div layout >
+      <Dialog open={open} onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (!isOpen) {
+          setUrl('');
+        }
+      }}>
         <DialogTrigger asChild>
           <Card
             className="group relative cursor-pointer overflow-hidden rounded-xl bg-gradient-to-br from-[#1c1c2e] to-[#2a2a40] p-6 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
@@ -135,25 +140,45 @@ export default function CanvasIngestForm({
           </Card>
         </DialogTrigger>
 
-        <DialogContent className="max-w-2xl rounded-lg border-0 bg-[#1c1c2e] p-6 text-white">
+        <DialogContent className="max-w-2xl rounded-lg border-0 bg-[#1c1c2e] pt-10 px-10 text-white" style={{ padding: '50px', paddingBottom: '2px' }} >
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">
+            <DialogTitle className="text-xl font-bold pb-2">
               Ingest Canvas Course
             </DialogTitle>
           </DialogHeader>
-          <ScrollArea className="mt-4 h-[60vh] pr-4">
-            <div className="space-y-4">
+          <ScrollArea className="mt-2 h-[60vh] pr-4">
+            <div className="space-y-2">
               <div>
-                <Label htmlFor="canvas-url" className="text-white">
+                {/* <Label htmlFor="canvas-url" className="text-white">
                   Canvas Course URL
-                </Label>
+                </Label> */}
                 <Input
                   id="canvas-url"
+                  icon={<img
+                    src="/media/canvas_logo.png"
+                    alt="Canvas Logo"
+                    style={{ height: '50%', width: '50%' }}
+                  />}
+                  className={`mt-2 w-[100%] min-w-[25rem] disabled:bg-purple-200 lg:w-[100%] bg-[#1c1c2e] text-white`}
+                  styles={{
+                    input: {
+                      backgroundColor: '#1A1B1E',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      '&:focus': {
+                        borderColor: '#9370DB',
+                      },
+                    },
+                  }}
                   placeholder="https://canvas.illinois.edu/courses/12345"
+                  radius={'xl'}
+                  type="url"
                   value={url}
-                  onChange={handleUrlChange}
-                  className="border-gray-600 bg-[#1c1c2e] text-white"
-                />
+                  size={'lg'}
+                  onChange={(e) => {
+                    handleUrlChange(e)
+                  }} />
               </div>
               <div>
                 <Label className="text-white">Select Content to Ingest</Label>

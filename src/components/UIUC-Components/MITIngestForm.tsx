@@ -298,14 +298,17 @@ export default function MITIngestForm({
         withBorder: true,
         loading: false,
       })
-      // return error
-      // throw error
     }
   }
 
   return (
     <motion.div layout>
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (!isOpen) {
+          setUrl('');
+        }
+      }}>
         <DialogTrigger asChild>
           <Card
             className="group relative cursor-pointer overflow-hidden rounded-xl bg-gradient-to-br from-[#1c1c2e] to-[#2a2a40] p-6 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
@@ -341,16 +344,23 @@ export default function MITIngestForm({
           </Card>
         </DialogTrigger>
 
-        <DialogContent className="max-w-2xl rounded-lg border-0 bg-[#1c1c2e] p-6 text-white">
+        <DialogContent className="max-w-2xl rounded-lg border-0 bg-[#1c1c2e] pt-10 px-10 text-white" style={{ padding: '50px', paddingBottom: '40px' }} >
+          <DialogTitle className="text-xl font-bold">
+            Ingest MIT Course
+          </DialogTitle>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="canvas-url" className="text-white">
+              {/* <Label htmlFor="canvas-url" className="text-white">
                 URL
-              </Label>
+              </Label> */}
               <Input
-                icon={icon}
+                icon={<img
+                  src={'/media/mitocw_logo.jpg'}
+                  alt="MIT OCW Logo"
+                  style={{ height: '50%', width: '50%' }}
+                />}
                 // I can't figure out how to change the background colors.
-                className={`mt-4 w-[100%] min-w-[25rem] disabled:bg-purple-200 lg:w-[75%]`}
+                className={`mt-4 w-[100%] min-w-[25rem] disabled:bg-purple-200 lg:w-[100%]`}
                 // wrapperProps={{ borderRadius: 'xl' }}
                 // styles={{ input: { backgroundColor: '#1A1B1E' } }}
                 styles={{
@@ -360,6 +370,9 @@ export default function MITIngestForm({
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
+                    '&:focus': {
+                      borderColor: '#9370DB', // Change border color to a lighter purple only on focus
+                    },
                   },
                 }}
                 placeholder="Enter URL..."
@@ -367,6 +380,9 @@ export default function MITIngestForm({
                 type="url" // Set the type to 'url' to avoid thinking it's a username or pw.
                 value={url}
                 size={'lg'}
+                onChange={(e) => {
+                  handleUrlChange(e)
+                }}
               // disabled={isDisabled}
 
               // onKeyPress={(event) => {

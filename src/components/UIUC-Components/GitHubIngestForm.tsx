@@ -249,11 +249,15 @@ export default function GitHubIngestForm({
 
   return (
     <motion.div layout>
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (!isOpen) {
+          setUrl('');
+        }
+      }}>
         <DialogTrigger asChild>
           <Card
             className="group relative cursor-pointer overflow-hidden rounded-xl bg-gradient-to-br from-[#1c1c2e] to-[#2a2a40] p-6 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
-            style={{ height: '100%' }}
           >
             <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -281,22 +285,24 @@ export default function GitHubIngestForm({
           </Card>
         </DialogTrigger>
 
-        <DialogContent className="max-w-2xl rounded-lg border-0 bg-[#1c1c2e] p-6 text-white">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">
-              Ingest Website
-            </DialogTitle>
-          </DialogHeader>
+        <DialogContent className="max-w-2xl rounded-lg border-0 bg-[#1c1c2e] pt-10 px-10 text-white" style={{ padding: '50px', height: '35vh' }} >
+          <DialogTitle className="text-xl font-bold">
+            Ingest Website
+          </DialogTitle>
           <ScrollArea className="mt-4 h-[60vh] pr-4">
             <div className="space-y-4">
               <div>
-                <Label htmlFor="canvas-url" className="text-white">
+                {/* <Label htmlFor="canvas-url" className="text-white">
                   URL
-                </Label>
+                </Label> */}
                 <Input
-                  icon={icon}
+                  icon={<img
+                    src="/media/github-mark-white.png"
+                    alt="GitHub Logo"
+                    style={{ height: '50%', width: '50%' }}
+                  />}
                   // I can't figure out how to change the background colors.
-                  className={`mt-4 w-[100%] min-w-[25rem] disabled:bg-purple-200 lg:w-[75%]`}
+                  className={`mt-4 w-[100%] min-w-[25rem] disabled:bg-purple-200 lg:w-[100%]`}
                   // wrapperProps={{ borderRadius: 'xl' }}
                   // styles={{ input: { backgroundColor: '#1A1B1E' } }}
                   styles={{
@@ -306,6 +312,9 @@ export default function GitHubIngestForm({
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
+                      '&:focus': {
+                        borderColor: '#9370DB', // Change border color to a lighter purple only on focus
+                      },
                     },
                   }}
                   placeholder="Enter URL..."
