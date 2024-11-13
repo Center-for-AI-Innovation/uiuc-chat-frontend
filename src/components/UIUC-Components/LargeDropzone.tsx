@@ -28,7 +28,7 @@ import { useMediaQuery } from '@mantine/hooks'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { notifications } from '@mantine/notifications'
 import { v4 as uuidv4 } from 'uuid'
-import UploadNotification, { FileUpload } from './UploadNotification'
+import { FileUpload } from './UploadNotification'
 
 const useStyles = createStyles((theme) => ({
   wrapper: {
@@ -51,114 +51,6 @@ const useStyles = createStyles((theme) => ({
   },
 }))
 
-// export function UploadProgressBar({
-//   numFiles,
-//   totalFiles,
-//   isComplete,
-// }: {
-//   numFiles: number
-//   totalFiles: number
-//   isComplete: boolean
-// }) {
-//   return (
-//     <Paper
-//       shadow="lg"
-//       radius="md"
-//       p="md"
-//       withBorder
-//       style={{
-//         backgroundColor: '#25262b',
-//         width: rem(330),
-//         borderWidth: rem(1.5),
-//         borderStyle: 'dashed',
-//       }}
-//     >
-//       <Group position="left">
-//         {isComplete ? <IconCheck size={rem(24)} color="green" /> : null}
-//         <Text>
-//           {numFiles} out of {totalFiles} uploaded.
-//         </Text>
-//       </Group>
-//       {!isComplete && (
-//         <Progress
-//           color="violet"
-//           radius="md"
-//           size="lg"
-//           value={(numFiles / totalFiles) * 100}
-//           striped
-//           animate
-//         />
-//       )}
-//     </Paper>
-//   )
-// }
-
-// function IngestProgressBar({ courseName }: { courseName: string }) {
-//   const [progress, setProgress] = useState(0)
-//   const [hasDocuments, setHasDocuments] = useState(false) // State to track if there are documents
-//   const [totalDocuments, setTotalDocuments] = useState(0) // State to track the total number of documents
-//   const [dataLength, setDataLength] = useState(0)
-
-//   useEffect(() => {
-//     async function fetchData() {
-//       const response = await fetch(
-//         `/api/materialsTable/docsInProgress?course_name=${courseName}`,
-//       )
-//       const data = await response.json()
-//       console.log(data)
-//       if (data && data.documents) {
-//         // const newTotalDocuments = Math.max(
-//         //   totalDocuments,
-//         //   data.documents.length,
-//         // )
-//         setTotalDocuments(data.documents)
-//         // setDataLength(newTotalDocuments - data.documents.length)
-//         setHasDocuments(data.documents.length > 0)
-//         // setProgress(
-//         //   ((newTotalDocuments - data.documents.length) / newTotalDocuments) *
-//         //   100,
-//         // )
-//       } else {
-//         setHasDocuments(false)
-//       }
-//     }
-
-//     const intervalId = setInterval(fetchData, 3000) // Fetch data every 3000 milliseconds (3 seconds)
-//     return () => clearInterval(intervalId)
-//   }, [courseName, totalDocuments])
-
-//   if (!hasDocuments) {
-//     return null
-//   }
-
-//   return (
-//     <Paper
-//       shadow="lg"
-//       radius="md"
-//       p="md"
-//       withBorder
-//       style={{
-//         borderWidth: rem(1.5),
-//         backgroundColor: '#25262b',
-//         width: rem(330),
-//         borderStyle: 'dashed',
-//       }}
-//     >
-//       <Text>
-//         {dataLength} out of {totalDocuments} ingested into AI Database
-//       </Text>
-//       <Progress
-//         color="violet"
-//         radius="md"
-//         size="lg"
-//         value={progress}
-//         striped
-//         animate
-//       />
-//     </Paper>
-//   )
-// }
-
 export function LargeDropzone({
   courseName,
   current_user_email,
@@ -166,6 +58,7 @@ export function LargeDropzone({
   isDisabled = false,
   courseMetadata,
   is_new_course,
+  setUploadFiles,
 }: {
   courseName: string
   current_user_email: string
@@ -173,6 +66,7 @@ export function LargeDropzone({
   isDisabled?: boolean
   courseMetadata: CourseMetadata
   is_new_course: boolean
+  setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
 }) {
   // upload-in-progress spinner control
   const [uploadInProgress, setUploadInProgress] = useState(false)
@@ -203,7 +97,7 @@ export function LargeDropzone({
         setTotalDocuments(data.documents)
 
         console.log(data.documents)
-        setFileUploads((prevFileUploads) =>
+        setUploadFiles((prevFileUploads) =>
           prevFileUploads.map((fileUpload) => {
             const isIngested = data.documents.some(
               (doc: { readable_filename: string }) =>
@@ -214,11 +108,10 @@ export function LargeDropzone({
             return isIngested
               ? { ...fileUpload, status: 'ingesting' }
               : fileUpload
-          }),
-        )
+          }),)
       } else {
         setHasDocuments(false)
-        setFileUploads((prev) =>
+        setUploadFiles((prev) =>
           prev.map((upload) => {
             // Check if the file is not present in the data.documents
             // const isNotInProgress = !data.documents.some(
@@ -229,8 +122,6 @@ export function LargeDropzone({
             console.log('upload name in set files', upload.name)
             console.log('upload status after update', updatedUpload.status)
             return updatedUpload
-            // }
-            return upload
           }),
         )
       }
@@ -331,39 +222,7 @@ export function LargeDropzone({
         status: 'uploading' as const,
       }
     })
-    setFileUploads(initialFileUploads)
-
-    // useEffect(() => {
-    //   async function fetchData() {
-    //     const response = await fetch(
-    //       `/api/materialsTable/docsInProgress?course_name=${courseName}`,
-    //     )
-    //     const data = await response.json()
-    //     console.log(data)
-    //     if (data && data.documents) {
-    //       // const newTotalDocuments = Math.max(
-    //       //   totalDocuments,
-    //       //   data.documents.length,
-    //       // )
-    //       setTotalDocuments(data.documents)
-    //       // setDataLength(newTotalDocuments - data.documents.length)
-    //       setHasDocuments(data.documents.length > 0)
-    //       // setProgress(
-    //       //   ((newTotalDocuments - data.documents.length) / newTotalDocuments) *
-    //       //   100,
-    //       // )
-    //     } else {
-    //       setHasDocuments(false)
-    //     }
-    //   }
-
-    //   const intervalId = setInterval(fetchData, 3000) // Fetch data every 3000 milliseconds (3 seconds)
-    //   return () => clearInterval(intervalId)
-    // }, [courseName, totalDocuments])
-
-    // if (!hasDocuments) {
-    //   return null
-    // }
+    setUploadFiles(initialFileUploads)
 
     if (is_new_course) {
       await callSetCourseMetadata(
@@ -411,7 +270,7 @@ export function LargeDropzone({
           return { ok: true, s3_path: file.name }
         } catch (error) {
           console.error('Error during file upload or ingest:', error)
-          setFileUploads((prev) =>
+          setUploadFiles((prev) =>
             prev.map((upload, i) =>
               i === index ? { ...upload, status: 'error' } : upload,
             ),
@@ -423,7 +282,6 @@ export function LargeDropzone({
 
     setSuccessfulUploads(files.length)
     setUploadComplete(true)
-
     interface IngestResult {
       ok: boolean
       s3_path: string
@@ -474,10 +332,6 @@ export function LargeDropzone({
       // await refreshOrRedirect(redirect_to_gpt_4)
       // showSuccessToast(resultSummary.failure_ingest.map((ingestResult) => ingestResult.s3_path));
     }
-  }
-  const handleCloseNotification = () => {
-    setShowNotification(false)
-    setFileUploads([])
   }
 
   return (
@@ -622,18 +476,7 @@ export function LargeDropzone({
         {/* END RIGHT COLUMN */}
       </div>
 
-      <UploadNotification
-        files={fileUploads}
-        // ingestFiles={ }
-        onClose={handleCloseNotification}
-      // onCancel={() => {
-      //   // Handle cancel logic
-      //   // setUploadInProgress(false)
-      //   // setFileUploads((prev) =>
-      //   //   prev.map((upload) => ({ ...upload, status: 'error' }))
-      //   // )
-      // }}
-      />
+
     </>
   )
 }

@@ -27,6 +27,7 @@ import CourseraIngestForm from './CourseraIngestForm'
 import { useState } from 'react'
 import { IconShare } from '@tabler/icons-react'
 import ShareSettingsModal from './ShareSettingsModal'
+import UploadNotification, { FileUpload } from './UploadNotification'
 
 const montserrat_light = Montserrat({
   weight: '400',
@@ -95,9 +96,14 @@ export function UploadCard({
   const [introMessage, setIntroMessage] = useState(
     metadata?.course_intro_message || '',
   )
+  const [showNotification, setShowNotification] = useState(false)
   const [isIntroMessageUpdated, setIsIntroMessageUpdated] = useState(false)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
-
+  const [uploadFiles, setUploadFiles] = useState<FileUpload[]>([])
+  const handleCloseNotification = () => {
+    setShowNotification(false)
+    setUploadFiles([])
+  }
   return (
     <Card
       shadow="xs"
@@ -143,6 +149,7 @@ export function UploadCard({
             isDisabled={false}
             courseMetadata={metadata as CourseMetadata}
             is_new_course={false}
+            setUploadFiles={setUploadFiles}
           />
 
           <SimpleGrid
@@ -159,9 +166,9 @@ export function UploadCard({
               paddingBottom: '30px',
             }}
           >
-            <CanvasIngestForm project_name={projectName} />
+            <CanvasIngestForm project_name={projectName} setUploadFiles={setUploadFiles} />
 
-            <WebsiteIngestForm project_name={projectName} />
+            <WebsiteIngestForm project_name={projectName} setUploadFiles={setUploadFiles} />
 
             <GitHubIngestForm project_name={projectName} />
 
@@ -169,6 +176,18 @@ export function UploadCard({
 
             <CourseraIngestForm />
           </SimpleGrid>
+          <UploadNotification
+            files={uploadFiles}
+            // ingestFiles={ }
+            onClose={handleCloseNotification}
+          // onCancel={() => {
+          //   // Handle cancel logic
+          //   // setUploadInProgress(false)
+          //   // setFileUploads((prev) =>
+          //   //   prev.map((upload) => ({ ...upload, status: 'error' }))
+          //   // )
+          // }}
+          />
         </div>
 
         <div
@@ -357,5 +376,6 @@ export function UploadCard({
         metadata={metadata}
       />
     </Card>
+
   )
 }

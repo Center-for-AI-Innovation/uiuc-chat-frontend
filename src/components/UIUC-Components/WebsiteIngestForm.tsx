@@ -51,14 +51,17 @@ import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { notifications } from '@mantine/notifications'
 import axios from 'axios'
 import { Montserrat } from 'next/font/google'
+import { FileUpload } from './UploadNotification'
 const montserrat_med = Montserrat({
   weight: '500',
   subsets: ['latin'],
 })
 export default function WebsiteIngestForm({
   project_name,
+  setUploadFiles
 }: {
   project_name: string
+  setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
 }): JSX.Element {
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
@@ -84,6 +87,13 @@ export default function WebsiteIngestForm({
   const [open, setOpen] = useState(false)
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value
+    setUrl(input)
+    setIsUrlValid(validateUrl(input))
+    const newFile: FileUpload = {
+      name: input,
+      status: 'uploading',
+    }
+    setUploadFiles((prevFiles) => [...prevFiles, newFile])
     setUrl(input)
     setIsUrlValid(validateUrl(input))
   }
@@ -133,13 +143,26 @@ export default function WebsiteIngestForm({
 
   const handleIngest = async () => {
     setOpen(false)
+    setUploadFiles((prevFiles) =>
+      prevFiles.map((file) =>
+        file.name === url ? { ...file, status: 'ingesting' } : file
+      )
+    )
     try {
-      await scrapeWeb(
+      const response = await scrapeWeb(
         url,
         project_name,
         maxUrls.trim() !== '' ? parseInt(maxUrls) : 50,
         scrapeStrategy,
       )
+
+      if (response && response.data.message.includes("Crawl completed successfully")) {
+        setUploadFiles((prevFiles) =>
+          prevFiles.map((file) =>
+            file.name === url ? { ...file, status: 'complete' } : file
+          )
+        )
+      }
     } catch (error: any) {
       console.error('Error while scraping web:', error)
     }
