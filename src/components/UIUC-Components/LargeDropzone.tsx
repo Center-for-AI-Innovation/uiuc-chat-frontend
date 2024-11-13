@@ -532,9 +532,8 @@ export function LargeDropzone({
               })
             }}
             loading={uploadInProgress}
-            className={`hover:border-purple-500 hover:bg-[#2a2a40] ${
-              isDisabled ? 'opacity-50' : ''
-            }`}
+            className={`hover:border-purple-500 hover:bg-[#2a2a40] ${isDisabled ? 'opacity-50' : ''
+              }`}
           >
             <div
               style={{ pointerEvents: 'none' }}
@@ -627,13 +626,13 @@ export function LargeDropzone({
         files={fileUploads}
         // ingestFiles={ }
         onClose={handleCloseNotification}
-        // onCancel={() => {
-        //   // Handle cancel logic
-        //   // setUploadInProgress(false)
-        //   // setFileUploads((prev) =>
-        //   //   prev.map((upload) => ({ ...upload, status: 'error' }))
-        //   // )
-        // }}
+      // onCancel={() => {
+      //   // Handle cancel logic
+      //   // setUploadInProgress(false)
+      //   // setFileUploads((prev) =>
+      //   //   prev.map((upload) => ({ ...upload, status: 'error' }))
+      //   // )
+      // }}
       />
     </>
   )
@@ -691,9 +690,8 @@ const showIngestInProgressToast = (num_success_files: number) => {
     // onClose: () => console.log('unmounted'),
     // onOpen: () => console.log('mounted'),
     autoClose: 30000,
-    title: `Ingest in progress for ${num_success_files} file${
-      num_success_files > 1 ? 's' : ''
-    }.`,
+    title: `Ingest in progress for ${num_success_files} file${num_success_files > 1 ? 's' : ''
+      }.`,
     message: `This is a background task. Refresh the page to see your files as they're processed.`,
     color: 'green',
     radius: 'lg',

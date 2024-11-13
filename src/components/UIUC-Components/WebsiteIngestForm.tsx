@@ -132,25 +132,16 @@ export default function WebsiteIngestForm({
   }
 
   const handleIngest = async () => {
-    const requestBody = {
-      url,
-      project_name,
-      maxUrls: maxUrls.trim() !== '' ? parseInt(maxUrls) : 50,
-      scrapeStrategy,
-    };
+    setOpen(false)
     try {
-      const response = await fetch('/api/UIUC-api/ingestUrl', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      const data = await response.json();
-      console.log('Response from API:', data);
-    } catch (error) {
-      console.error('Error submitting form:', error);
+      await scrapeWeb(
+        url,
+        project_name,
+        maxUrls.trim() !== '' ? parseInt(maxUrls) : 50,
+        scrapeStrategy,
+      )
+    } catch (error: any) {
+      console.error('Error while scraping web:', error)
     }
     // let ingest finalize things. It should be finished, but the DB is slow.
     await new Promise((resolve) => setTimeout(resolve, 8000))

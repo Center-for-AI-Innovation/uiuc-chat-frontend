@@ -156,6 +156,7 @@ export default function CourseraIngestForm(): JSX.Element {
   }, [url])
 
   const handleIngest = () => {
+    setOpen(false)
     if (url.includes('coursera.org')) {
       // TODO: coursera ingest
       alert(

@@ -68,6 +68,7 @@ export default function CanvasIngestForm({
   }
 
   const handleIngest = async () => {
+    setOpen(false)
     if (validateUrl(url)) {
       if (url.includes('canvas.illinois.edu/courses/')) {
         const response = await fetch('/api/UIUC-api/ingestCanvas', {

@@ -119,6 +119,7 @@ export default function MITIngestForm({
   }
 
   const handleIngest = () => {
+    setOpen(false)
     let data = null
     if (url.includes('ocw.mit.edu')) {
       data = downloadMITCourse(url, project_name, 'local_dir') // no await -- do in background

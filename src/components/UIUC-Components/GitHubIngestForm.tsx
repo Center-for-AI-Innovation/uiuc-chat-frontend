@@ -98,6 +98,7 @@ export default function GitHubIngestForm({
     maxDepth: { error: false, message: '' },
   })
   const handleIngest = async () => {
+    setOpen(false)
     try {
       await scrapeWeb(
         url,
@@ -246,6 +247,21 @@ export default function GitHubIngestForm({
       // throw error
     }
   }
+
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dialogRef.current && !dialogRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [dialogRef]);
 
   return (
     <motion.div layout>
