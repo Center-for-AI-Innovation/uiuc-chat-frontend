@@ -119,14 +119,6 @@ export function convertChatToDBMessage(
   chatMessage: ChatMessage,
   conversationId: string,
 ): DBMessage {
-  console.log(
-    'chatMessage',
-    'for id: ',
-    conversationId,
-    'for message: ',
-    // chatMessage,
-  )
-  // console.log('chatMessage.content type: ', typeof chatMessage.content)
   let content_text = ''
   let content_image_urls: string[] = []
   let image_description = ''
@@ -201,10 +193,6 @@ export default async function handler(
       try {
         // Convert conversation to DB type
         const dbConversation = convertChatToDBConversation(conversation)
-        console.log(
-          'Saving conversation to server with db object:',
-          dbConversation,
-        )
 
         if (conversation.messages.length === 0) {
           throw new Error('No messages in conversation, not saving!')

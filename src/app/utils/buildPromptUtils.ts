@@ -381,7 +381,16 @@ const _getSystemPrompt = async ({
   }
 
   // If userDefinedSystemPrompt is null or undefined, use DEFAULT_SYSTEM_PROMPT
-  const systemPrompt = userDefinedSystemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
+  let systemPrompt = userDefinedSystemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
+
+  // Necessary for math notation. See https://docs.mathjax.org/en/latest/input/tex/index.html
+  systemPrompt += `\nWhen responding with equations, use MathJax/KaTeX notation. Equations should be wrapped in either:
+
+  * Single dollar signs $...$ for inline math
+  * Double dollar signs $$...$$ for display/block math
+  * Or \\[...\\] for display math
+  
+  Here's how the equations should be formatted in the markdown: Schrödinger Equation: $i\\hbar \\frac{\\partial}{\\partial t} \\Psi(\\mathbf{r}, t) = \\hat{H} \\Psi(\\mathbf{r}, t)$`
 
   // Check if contexts are present
   const contexts =
@@ -424,8 +433,8 @@ export const getSystemPostPrompt = ({
   PostPromptLines.push(
     `Please analyze and respond to the following question using the excerpts from the provided documents. These documents can be pdf files or web pages. Additionally, you may see the output from API calls (called 'tools') to the user's services which, when relevant, you should use to construct your answer. You may also see image descriptions from images uploaded by the user. Prioritize image descriptions, when helpful, to construct your answer.
 Integrate relevant information from these documents, ensuring each reference is linked to the document's number.
-Your response should be semi-formal. 
-When quoting directly, cite with footnotes linked to the document number and page number, if provided. 
+
+When quoting directly from a source document, cite with footnotes linked to the document number and page number, if provided. 
 Summarize or paraphrase other relevant information with inline citations, again referencing the document number and page number, if provided.
 If the answer is not in the provided documents, state so.${
       guidedLearning || documentsOnly

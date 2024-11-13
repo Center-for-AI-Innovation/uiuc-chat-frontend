@@ -62,10 +62,10 @@ function convertConversatonToVercelAISDKv3(
     (msg) => msg.latestSystemMessage !== undefined,
   )
   if (systemMessage) {
-    console.log(
-      'Found system message, latestSystemMessage: ',
-      systemMessage.latestSystemMessage,
-    )
+    // console.log(
+    //     'Found system message, latestSystemMessage: ',
+    //     systemMessage.latestSystemMessage,
+    // )
     coreMessages.push({
       role: 'system',
       content: systemMessage.latestSystemMessage || '',
@@ -83,7 +83,7 @@ function convertConversatonToVercelAISDKv3(
 
       // just for Llama 3.1 70b, remind it to use proper citation format.
       content +=
-        '\n\nIf you use the <Potentially Relevant Documents> in your response, please remember cite your sources using the required formatting, e.g. "The grass is green. [29, page: 11]'
+        '\nWhen writing equations, always use MathJax/KaTeX notation.\n\nIf you use the <Potentially Relevant Documents> in your response, please remember cite your sources using the required formatting, e.g. "The grass is green. [29, page: 11]'
     } else if (Array.isArray(message.content)) {
       // Combine text content from array
       content = message.content
