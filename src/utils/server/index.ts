@@ -26,16 +26,14 @@ import {
 import { AzureModels } from '../modelProviders/azure'
 
 export class OpenAIError extends Error {
-  type: string
-  param: string
-  code: string
-
-  constructor(message: string, type: string, param: string, code: string) {
+  constructor(
+    message: string,
+    public type?: string,
+    public param?: string,
+    public code?: string,
+  ) {
     super(message)
     this.name = 'OpenAIError'
-    this.type = type
-    this.param = param
-    this.code = code
   }
 }
 

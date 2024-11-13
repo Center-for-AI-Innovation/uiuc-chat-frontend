@@ -577,7 +577,8 @@ export const Chat = memo(
               errorToast({
                 title: 'Error running chat completion',
                 message:
-                  (error as Error).message || 'An unexpected error occurred',
+                  (error as Error).message ||
+                  'In Chat.tsx An unexpected error occurred',
               })
             }
           } else {
@@ -606,35 +607,50 @@ export const Chat = memo(
           }
 
           if (response instanceof Response && !response.ok) {
-            const final_response = await response.json()
+            let final_response
+            try {
+              final_response = await response.json()
+            } catch (error) {
+              console.error('Error parsing response:', error)
+              homeDispatch({ field: 'loading', value: false })
+              homeDispatch({ field: 'messageIsStreaming', value: false })
+              errorToast({
+                title: 'Error',
+                message:
+                  'Received an invalid response from the server. Please try again.',
+              })
+              return
+            }
+
             homeDispatch({ field: 'loading', value: false })
             homeDispatch({ field: 'messageIsStreaming', value: false })
-            console.error(
-              'Error calling the LLM:',
-              final_response,
-              final_response,
-            )
+            console.error('Error calling the LLM:', final_response)
+
             if (final_response.error) {
-              let errorObj
+              let errorMessage = final_response.error
+              let errorCode = final_response.code
+
+              // Handle case where error is a JSON string
               if (typeof final_response.error === 'string') {
                 try {
-                  errorObj = JSON.parse(final_response.error)
+                  const parsed = JSON.parse(final_response.error)
+                  errorMessage = parsed.error || parsed.message
+                  errorCode = parsed.code
                 } catch (e) {
-                  errorObj = { error: final_response.error }
+                  // Keep original error message if not valid JSON
                 }
-              } else {
-                errorObj = final_response.error
               }
 
-              const errorDetails = errorObj.error || errorObj
               errorToast({
-                title: errorDetails.type || 'Error',
-                message: errorDetails.message || 'An unexpected error occurred',
+                title: `Error calling LLM`,
+                message:
+                  errorMessage ||
+                  `An unexpected error occurred. Try using a different model.${errorCode ? ` Error code: ${errorCode}` : ''}`,
               })
               return
             } else {
               errorToast({
-                title: final_response.name,
+                title: final_response.name || 'Error',
                 message:
                   final_response.message ||
                   'There was an unexpected error calling the LLM. Try using a different model (via the Settings button in the header).',

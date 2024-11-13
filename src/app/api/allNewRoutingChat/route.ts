@@ -3,6 +3,7 @@ import { routeModelRequest } from '~/utils/streamProcessing'
 import { NextRequest, NextResponse } from 'next/server'
 
 import { buildPrompt } from '~/app/utils/buildPromptUtils'
+import { OpenAIError } from '~/utils/server'
 
 export async function POST(req: NextRequest, res: NextResponse) {
   const startTime = Date.now()
@@ -11,11 +12,11 @@ export async function POST(req: NextRequest, res: NextResponse) {
 
   const {
     conversation,
-    key,
+    // key,
     course_name,
     courseMetadata,
-    stream,
-    llmProviders,
+    // stream,
+    // llmProviders,
   } = body as ChatBody
 
   const buildPromptStartTime = Date.now()
@@ -30,11 +31,38 @@ export async function POST(req: NextRequest, res: NextResponse) {
 
   body.conversation = newConversation
 
-  const result = await routeModelRequest(body as ChatBody)
+  try {
+    const result = await routeModelRequest(body as ChatBody)
 
-  const endTime = Date.now()
-  const duration = endTime - startTime
-  console.log(`Total duration: ${duration}ms`)
+    const endTime = Date.now()
+    const duration = endTime - startTime
+    console.log(`Total duration: ${duration}ms`)
 
-  return result
+    return result
+  } catch (error) {
+    console.error('Error in chat route:', error)
+
+    let errorMessage = 'An unexpected error occurred'
+    let statusCode = 500
+
+    if (error instanceof OpenAIError) {
+      statusCode = parseInt(error.code || '500')
+      errorMessage = error.message
+    } else if (error instanceof Error) {
+      errorMessage = error.message
+    }
+
+    return new Response(
+      JSON.stringify({
+        error: errorMessage,
+        code: statusCode,
+      }),
+      {
+        status: statusCode,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    )
+  }
 }

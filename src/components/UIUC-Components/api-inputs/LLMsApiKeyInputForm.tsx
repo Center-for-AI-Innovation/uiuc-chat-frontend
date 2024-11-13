@@ -723,17 +723,19 @@ export const showConfirmationToast = ({
   title,
   message,
   isError = false,
+  autoClose = 5000, // Optional parameter with default value
 }: {
   title: string
   message: string
   isError?: boolean
+  autoClose?: number
 }) => {
   notifications.show({
     id: 'success-toast',
     withCloseButton: true,
     onClose: () => console.log('unmounted'),
     onOpen: () => console.log('mounted'),
-    autoClose: 5000,
+    autoClose: autoClose,
     title: title,
     message: message,
     color: isError ? 'red' : 'green',

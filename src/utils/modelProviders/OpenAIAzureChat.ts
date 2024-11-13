@@ -72,12 +72,16 @@ export const openAIAzureChat = async (chatBody: ChatBody, stream: boolean) => {
     }
   } catch (error) {
     if (error instanceof OpenAIError) {
-      const { name, message } = error
-      console.error('OpenAI Completion Error', message)
       throw error
     } else {
-      console.error('Unexpected Error', error)
-      throw new Error('An unexpected error occurred')
+      throw new OpenAIError(
+        error instanceof Error
+          ? error.message
+          : 'An unexpected error occurred while processing your request',
+        'unexpected_error',
+        undefined,
+        error instanceof Error ? error.message : undefined,
+      )
     }
   }
 }
