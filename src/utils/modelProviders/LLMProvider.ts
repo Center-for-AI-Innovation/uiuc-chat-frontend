@@ -196,10 +196,10 @@ export const selectBestModel = (
     }
   }
 
-  // If no preferred models are available, fallback to Llama 3.1 70b
+  // If no preferred models are available, fallback to llama3.1:8b-instruct-fp16
   return {
-    id: 'llama3.1:70b',
-    name: 'Llama 3.1 70b',
+    id: 'llama3.1:8b-instruct-fp16',
+    name: 'Llama 3.1 8b (FP16)',
     tokenLimit: 128000,
     enabled: true,
   }

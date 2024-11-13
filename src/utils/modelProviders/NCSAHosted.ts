@@ -46,7 +46,7 @@ export const NCSAHostedModels: Record<NCSAHostedModelID, OllamaModel> = {
   },
   [NCSAHostedModelID.LLAMA31_70b]: {
     id: NCSAHostedModelID.LLAMA31_70b,
-    name: 'Llama 3.1 70b (quantized)',
+    name: 'Llama 3.1 70b (Quantized, Poor Quality Model)',
     parameterSize: '70b',
     tokenLimit: 128000,
     enabled: true,

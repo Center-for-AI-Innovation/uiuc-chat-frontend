@@ -110,66 +110,66 @@ function convertConversatonToVercelAISDKv3(
   return coreMessages
 }
 
-export async function GET(req: Request) {
-  /*
-  NOT WORKING YET... need post endpoint
-  req: Request
-  Get all available models from Ollama 
-  For ollama, use the endpoint GET /api/ps to see which models are "hot", save just the name and the parameter_size.
-  */
-  const url = new URL(req.url)
-  const ollamaProvider = JSON.parse(
-    url.searchParams.get('ollamaProvider') || '{}',
-  ) as OllamaProvider
+// export async function GET(req: Request) {
+//   /*
+//   NOT WORKING YET... need post endpoint
+//   req: Request
+//   Get all available models from Ollama
+//   For ollama, use the endpoint GET /api/ps to see which models are "hot", save just the name and the parameter_size.
+//   */
+//   const url = new URL(req.url)
+//   const ollamaProvider = JSON.parse(
+//     url.searchParams.get('ollamaProvider') || '{}',
+//   ) as OllamaProvider
 
-  const ollamaNames = new Map([['llama3.1:70b', 'Llama 3.1 70b']])
+//   const ollamaNames = new Map([['llama3.1:70b', 'Llama 3.1 70b']])
 
-  try {
-    if (!ollamaProvider.baseUrl) {
-      return new Response(
-        JSON.stringify({
-          error: `Ollama baseurl not defined: ${ollamaProvider.baseUrl}`,
-        }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        },
-      )
-    }
+//   try {
+//     if (!ollamaProvider.baseUrl) {
+//       return new Response(
+//         JSON.stringify({
+//           error: `Ollama baseurl not defined: ${ollamaProvider.baseUrl}`,
+//         }),
+//         {
+//           status: 400,
+//           headers: { 'Content-Type': 'application/json' },
+//         },
+//       )
+//     }
 
-    const response = await fetch(ollamaProvider.baseUrl + '/api/tags')
+//     const response = await fetch(ollamaProvider.baseUrl + '/api/tags')
 
-    if (!response.ok) {
-      return new Response(
-        JSON.stringify({ error: `HTTP error! status: ${response.status}` }),
-        {
-          status: response.status,
-          headers: { 'Content-Type': 'application/json' },
-        },
-      )
-    }
+//     if (!response.ok) {
+//       return new Response(
+//         JSON.stringify({ error: `HTTP error! status: ${response.status}` }),
+//         {
+//           status: response.status,
+//           headers: { 'Content-Type': 'application/json' },
+//         },
+//       )
+//     }
 
-    const data = await response.json()
-    const ollamaModels: OllamaModel[] = data.models
-      .filter((model: any) => model.name.includes('llama3.1:70b'))
-      .map(
-        (model: any): OllamaModel => ({
-          id: model.name,
-          name: ollamaNames.get(model.name) || model.name,
-          parameterSize: model.details.parameter_size,
-          tokenLimit: 4096,
-          enabled: true,
-        }),
-      )
+//     const data = await response.json()
+//     const ollamaModels: OllamaModel[] = data.models
+//       .filter((model: any) => model.name.includes('llama3.1:70b'))
+//       .map(
+//         (model: any): OllamaModel => ({
+//           id: model.name,
+//           name: ollamaNames.get(model.name) || model.name,
+//           parameterSize: model.details.parameter_size,
+//           tokenLimit: 4096,
+//           enabled: true,
+//         }),
+//       )
 
-    return new Response(JSON.stringify(ollamaModels), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    })
-  } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    })
-  }
-}
+//     return new Response(JSON.stringify(ollamaModels), {
+//       status: 200,
+//       headers: { 'Content-Type': 'application/json' },
+//     })
+//   } catch (error: any) {
+//     return new Response(JSON.stringify({ error: error.message }), {
+//       status: 500,
+//       headers: { 'Content-Type': 'application/json' },
+//     })
+//   }
+// }
