@@ -42,6 +42,7 @@ const useStyles = createStyles((theme) => ({
   },
   tabs: {
     '.mantine-Tabs-tab': {
+      marginTop: '40px',
       color: 'white',
       '&[data-active]': {
         color: theme.colors.violet[4],
