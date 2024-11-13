@@ -155,8 +155,9 @@ export default function WebsiteIngestForm({
         maxUrls.trim() !== '' ? parseInt(maxUrls) : 50,
         scrapeStrategy,
       )
-
-      if (response && response.data.message.includes("Crawl completed successfully")) {
+      console.log('response.data', response)
+      if (response && response.includes("Crawl completed successfully")) {
+        // console.log("ingesting url", response.data.message)
         setUploadFiles((prevFiles) =>
           prevFiles.map((file) =>
             file.name === url ? { ...file, status: 'complete' } : file
