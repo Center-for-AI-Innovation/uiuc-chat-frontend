@@ -1,94 +1,43 @@
 import { useState } from 'react'
-import {
-  Modal,
-  Tabs,
-  Text,
-  Button,
-  Group,
-  TextInput,
-  CopyButton,
-  Tooltip,
-  createStyles,
-  Stack,
-  Switch,
-} from '@mantine/core'
-import { IconCheck, IconCopy } from '@tabler/icons-react'
+import { IconCheck, IconCopy, IconLock, IconWorld } from '@tabler/icons-react'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import EmailChipsComponent from './EmailChipsComponent'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
-import { montserrat_paragraph } from 'fonts'
+import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import { Title } from '@mantine/core'
 
-const useStyles = createStyles((theme) => ({
-  modal: {
-    '.mantine-Modal-content': {
-      borderRadius: '24px',
-      backgroundColor: '#15162c',
-    },
-    '.mantine-Modal-header': {
-      backgroundColor: '#15162c',
-      borderBottom: 'none',
-      marginBottom: '-20px',
-      padding: '24px 32px 0',
-    },
-    '.mantine-Modal-title': {
-      color: 'white',
-      fontSize: '24px',
-      fontWeight: 600,
-    },
-    '.mantine-Modal-body': {
-      marginTop: '-20px',
-      padding: '24px 32px',
-    },
-  },
-  tabs: {
-    '.mantine-Tabs-tab': {
-      marginTop: '40px',
-      color: 'white',
-      '&[data-active]': {
-        color: theme.colors.violet[4],
-        borderColor: theme.colors.violet[4],
-      },
-    },
-  },
-  shareInput: {
-    input: {
-      backgroundColor: '#1A1B1E',
-      color: 'white',
-      border: '1px solid #2C2E33',
-      borderRadius: '8px',
-      '&:focus': {
-        borderColor: theme.colors.violet[4],
-      },
-    },
-  },
-  switch: {
-    input: {
-      '&:checked': {
-        backgroundColor: theme.colors.violet[6],
-        borderColor: theme.colors.violet[6],
-      },
-    },
-  },
-}))
-
+// Props interface for the ShareSettingsModal component
 interface ShareSettingsModalProps {
-  opened: boolean
-  onClose: () => void
-  projectName: string
-  metadata: CourseMetadata
+  opened: boolean // Controls modal visibility
+  onClose: () => void // Handler for closing the modal
+  projectName: string // Name of the current project
+  metadata: CourseMetadata // Project metadata containing sharing settings
 }
 
+/**
+ * ShareSettingsModal Component
+ *
+ * A modal dialog that allows users to manage project sharing settings including:
+ * - Toggle between public/private access
+ * - Share project URL
+ * - Manage member access (for private projects)
+ * - Manage administrator permissions
+ */
 export default function ShareSettingsModal({
   opened,
   onClose,
   projectName,
   metadata,
 }: ShareSettingsModalProps) {
-  const { classes } = useStyles()
+  // State management
   const [isPrivate, setIsPrivate] = useState(metadata?.is_private || false)
   const [courseAdmins, setCourseAdmins] = useState<string[]>([])
   const shareUrl = `${window.location.origin}/${projectName}`
+  const [isCopied, setIsCopied] = useState(false)
 
+  /**
+   * Toggles project privacy setting and updates metadata
+   */
   const handlePrivacyChange = async () => {
     const newIsPrivate = !isPrivate
     setIsPrivate(newIsPrivate)
@@ -99,6 +48,9 @@ export default function ShareSettingsModal({
     }
   }
 
+  /**
+   * Updates course metadata when email addresses are changed
+   */
   const handleEmailAddressesChange = async (
     new_course_metadata: CourseMetadata,
     course_name: string,
@@ -107,87 +59,149 @@ export default function ShareSettingsModal({
       course_name,
       new_course_metadata,
     )
-    if (!response) {
-      console.error('Error updating course metadata')
-    }
+    if (!response) console.error('Error updating course metadata')
   }
 
-  return (
-    <Modal
-      opened={opened}
-      onClose={onClose}
-      title="Share Settings"
-      size="lg"
-      className={`${classes.modal} ${montserrat_paragraph.variable} font-montserratParagraph`}
-    >
-      <Tabs defaultValue="share" className={classes.tabs}>
-        <Tabs.List>
-          <Tabs.Tab value="share">Share Link</Tabs.Tab>
-          <Tabs.Tab value="settings">Access Settings</Tabs.Tab>
-        </Tabs.List>
+  /**
+   * Handles copying the share URL to clipboard
+   */
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(shareUrl)
+    setIsCopied(true)
+    setTimeout(() => setIsCopied(false), 2000)
+  }
 
-        <Tabs.Panel value="share" pt="xl">
-          <Stack spacing="md">
-            <Text size="sm" color="dimmed">
-              Share your project with others using this link:
-            </Text>
-            <Group spacing="xs">
-              <TextInput
+  // Don't render if modal is not opened
+  if (!opened) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="relative mx-4 max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-[#15162c] p-6 shadow-2xl ring-1 ring-white/10">
+        {/* Header with improved gradient and spacing */}
+        <div className="mb-4 flex items-center justify-between">
+          <Title
+            className={`${montserrat_heading.variable} font-montserratHeading text-2xl font-semibold tracking-tight`}
+            variant="gradient"
+            gradient={{ from: '#E5E7EB', to: 'white', deg: 170 }}
+            order={3}
+          >
+            Share your chatbot
+          </Title>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-800/50 hover:text-white"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Subtle divider */}
+        <div className="my-3 h-px w-full bg-gradient-to-r from-transparent via-gray-700 to-transparent" />
+
+        {/* Share URL section with improved input styling */}
+        <div className="mb-6">
+          <Title
+            className={`${montserrat_heading.variable} mb-3 font-montserratHeading text-sm font-medium text-gray-300`}
+            order={4}
+          >
+            Share Link
+          </Title>
+          {/* <div className="rounded-lg bg-gray-900/50 p-3 ring-1 ring-white/5"> */}
+          <div className="relative flex gap-2">
+            <div className="group relative flex-1">
+              <div className="animate-spin-slow absolute -inset-0.5 rounded-lg bg-gradient-to-r from-violet-600/20 via-purple-600/20 to-violet-600/20 opacity-75 blur transition duration-1000 group-hover:opacity-100" />
+              <input
+                type="text"
                 value={shareUrl}
                 readOnly
-                className={classes.shareInput}
-                style={{ flex: 1 }}
+                className="relative w-full rounded-lg bg-[#1A1B1E] px-4 py-2.5 text-sm text-white/90 ring-1 ring-white/10 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
               />
-              <CopyButton value={shareUrl} timeout={2000}>
-                {({ copied, copy }) => (
-                  <Tooltip
-                    label={copied ? 'Copied!' : 'Copy link'}
-                    position="right"
-                  >
-                    <Button
-                      color={copied ? 'teal' : 'violet'}
-                      onClick={copy}
-                      style={{ width: '100px' }}
-                    >
-                      {copied ? (
-                        <IconCheck size={16} />
-                      ) : (
-                        <IconCopy size={16} />
-                      )}
-                    </Button>
-                  </Tooltip>
+            </div>
+            <button
+              onClick={handleCopy}
+              className="relative flex min-w-[42px] items-center justify-center rounded-lg bg-violet-600 p-2.5 text-white transition-all duration-300 hover:bg-violet-500 hover:shadow-lg hover:shadow-violet-500/30 active:scale-95"
+            >
+              {isCopied ? <IconCheck size={16} /> : <IconCopy size={16} />}
+            </button>
+          </div>
+          {/* </div> */}
+        </div>
+
+        {/* Subtle divider */}
+        <div className="my-3 h-px w-full bg-gradient-to-r from-transparent via-gray-700 to-transparent" />
+
+        {/* Access Control section with improved spacing and transitions */}
+        <div>
+          <Title
+            className={`${montserrat_heading.variable} mb-3 font-montserratHeading text-sm font-medium text-gray-300`}
+            order={4}
+          >
+            Access Control
+          </Title>
+          <div className="rounded-lg bg-gray-900/50 p-4 ring-1 ring-white/5">
+            {/* Privacy toggle with improved animation */}
+            <div className="mb-5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {isPrivate ? (
+                  <IconLock className="text-white/90" size={20} />
+                ) : (
+                  <IconWorld className="text-white/90" size={20} />
                 )}
-              </CopyButton>
-            </Group>
-          </Stack>
-        </Tabs.Panel>
-
-        <Tabs.Panel value="settings" pt="xl">
-          <Stack spacing="xl">
-            <Stack spacing="xs">
-              <Group position="apart">
-                <div>
-                  <Text size="sm" weight={500} mb={4}>
-                    Project Access
-                  </Text>
-                  <Text size="xs" color="dimmed">
-                    Make your project private to restrict access
-                  </Text>
-                </div>
-                <Switch
-                  checked={isPrivate}
-                  onChange={handlePrivacyChange}
-                  className={classes.switch}
-                  size="md"
+                <span className="text-sm font-medium text-white/90">
+                  {isPrivate ? 'Private Project' : 'Public Project'}
+                </span>
+              </div>
+              <button
+                onClick={handlePrivacyChange}
+                className={`relative h-6 w-11 rounded-full transition-colors duration-300 ${
+                  isPrivate ? 'bg-violet-600' : 'bg-gray-600'
+                }`}
+              >
+                <span
+                  className={`absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ${
+                    isPrivate ? 'translate-x-5' : 'translate-x-0'
+                  }`}
                 />
-              </Group>
-            </Stack>
+              </button>
+            </div>
 
+            {/* Members section - Condensed spacing */}
             {isPrivate && (
-              <Stack spacing="md">
-                <Text size="sm" weight={500} mb={8}>
-                  People with access
-                </Text>
+              <div className="mb-4 space-y-2">
+                <h4 className="text-sm font-medium text-gray-200">Members</h4>
+                <details className="group" open>
+                  <summary className="cursor-pointer text-xs text-gray-400">
+                    Only these email addresses are able to access the content.
+                  </summary>
+                  <div className="mt-2">
+                    <EmailChipsComponent
+                      course_owner={metadata.course_owner as string}
+                      course_admins={courseAdmins}
+                      course_name={projectName}
+                      is_private={isPrivate}
+                      onEmailAddressesChange={handleEmailAddressesChange}
+                      course_intro_message={metadata.course_intro_message || ''}
+                      banner_image_s3={metadata.banner_image_s3 || ''}
+                      openai_api_key={metadata.openai_api_key as string}
+                      is_for_admins={false}
+                    />
+                  </div>
+                </details>
+              </div>
+            )}
+
+            {/* Subtle divider */}
+            {/* <div className="my-3 h-px w-full bg-gradient-to-r from-transparent via-gray-700 to-transparent" /> */}
+
+            {/* Administrators section - Tightened spacing */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-200">
+                Administrators
+              </h4>
+              <p className="text-xs text-gray-400">
+                Admins have full edit permissions.
+              </p>
+              <div className="mt-2">
                 <EmailChipsComponent
                   course_owner={metadata.course_owner as string}
                   course_admins={courseAdmins}
@@ -197,29 +211,16 @@ export default function ShareSettingsModal({
                   course_intro_message={metadata.course_intro_message || ''}
                   banner_image_s3={metadata.banner_image_s3 || ''}
                   openai_api_key={metadata.openai_api_key as string}
-                  is_for_admins={false}
+                  is_for_admins={true}
                 />
-              </Stack>
-            )}
-            <Stack spacing="md">
-              <Text size="sm" weight={500} mb={8}>
-                Administrators
-              </Text>
-              <EmailChipsComponent
-                course_owner={metadata.course_owner as string}
-                course_admins={courseAdmins}
-                course_name={projectName}
-                is_private={isPrivate}
-                onEmailAddressesChange={handleEmailAddressesChange}
-                course_intro_message={metadata.course_intro_message || ''}
-                banner_image_s3={metadata.banner_image_s3 || ''}
-                openai_api_key={metadata.openai_api_key as string}
-                is_for_admins={true}
-              />
-            </Stack>
-          </Stack>
-        </Tabs.Panel>
-      </Tabs>
-    </Modal>
+              </div>
+            </div>
+
+            {/* Subtle divider */}
+            {/* <div className="my-3 h-px w-full bg-gradient-to-r from-transparent via-gray-700 to-transparent" /> */}
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }

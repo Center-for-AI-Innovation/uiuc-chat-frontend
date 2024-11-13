@@ -1,15 +1,4 @@
-import {
-  TextInput,
-  Chip,
-  Group,
-  createStyles,
-  Stack,
-  Avatar,
-  Text,
-  UnstyledButton,
-  ActionIcon,
-} from '@mantine/core'
-import { IconAt, IconX } from '@tabler/icons-react'
+import { IconAt, IconX, IconUser, IconUsers } from '@tabler/icons-react'
 import React, {
   useState,
   useEffect,
@@ -19,80 +8,44 @@ import React, {
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 
-const useStyles = createStyles((theme) => ({
-  emailList: {
-    backgroundColor: '#1A1B1E',
-    borderRadius: '12px',
-    overflow: 'hidden',
-  },
-  emailItem: {
-    padding: '8px 16px',
-    transition: 'background-color 150ms ease',
-
-    '&:hover': {
-      backgroundColor: '#2C2E33',
-    },
-  },
-  removeButton: {
-    color: theme.colors.gray[5],
-    transition: 'color 150ms ease',
-
-    '&:hover': {
-      color: theme.colors.red[4],
-    },
-  },
-  input: {
-    input: {
-      backgroundColor: '#1A1B1E',
-      color: 'white',
-      border: '1px solid #2C2E33',
-      borderRadius: '8px',
-      '&:focus': {
-        borderColor: theme.colors.violet[4],
-      },
-    },
-  },
-}))
-
 function EmailListItem({
   email,
   onDelete,
-  classes,
   course_owner,
 }: {
   email: string
   onDelete: () => void
-  classes: any
   course_owner: string
 }) {
   return (
-    <UnstyledButton className={classes.emailItem}>
-      <Group position="apart">
-        <Group spacing="sm">
-          <Avatar
-            size={32}
-            radius="xl"
-            color="violet"
-            styles={{ placeholder: { backgroundColor: '#2C2E33' } }}
-          >
-            {email[0]?.toUpperCase()}
-          </Avatar>
-          <div>
-            <Text size="sm">{email}</Text>
-            <Text size="xs" color="dimmed">
-              Can {email === course_owner ? 'manage' : 'view'}
-            </Text>
+    <div className="w-full px-4 py-3 transition-colors hover:bg-gray-800/50">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-500/10 text-violet-400">
+            {email === course_owner ? (
+              <IconUsers className="h-4 w-4" />
+            ) : (
+              <IconUser className="h-4 w-4" />
+            )}
           </div>
-        </Group>
-        <ActionIcon
-          className={classes.removeButton}
-          onClick={onDelete}
-          variant="subtle"
+          <div className="flex flex-col items-start">
+            <span className="text-sm text-gray-200">{email}</span>
+            <span className="text-xs text-gray-400">
+              Can {email === course_owner ? 'manage' : 'view'}
+            </span>
+          </div>
+        </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onDelete()
+          }}
+          className="rounded-full p-1 text-gray-400 transition-colors hover:bg-red-500/10 hover:text-red-400"
         >
-          <IconX size={16} />
-        </ActionIcon>
-      </Group>
-    </UnstyledButton>
+          <IconX className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
   )
 }
 
@@ -126,7 +79,6 @@ const EmailChipsComponent = ({
   const [value, setValue] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
   const isPrivate = is_private
-  const { classes } = useStyles()
 
   // fetch metadata on mount
   useEffect(() => {
@@ -300,32 +252,44 @@ const EmailChipsComponent = ({
   }
 
   return (
-    <Stack spacing="md">
-      <TextInput
-        icon={<IconAt />}
-        placeholder="Add people by email"
-        className={classes.input}
-        value={value}
-        error={error}
-        onKeyDown={handleKeyDown_users}
-        onChange={handleChange_users}
-        onPaste={handlePaste_users}
-      />
-      <div className={classes.emailList}>
+    <div className="flex flex-col space-y-4">
+      <div className="relative">
+        <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+          <IconAt className="h-5 w-5 text-gray-400" />
+        </div>
+        <input
+          type="text"
+          placeholder="Add people by email"
+          className="w-full rounded-lg bg-gray-900 px-10 py-2.5 text-gray-200 placeholder-gray-400 ring-1 ring-gray-700 transition-all focus:outline-none focus:ring-2 focus:ring-violet-500"
+          value={value}
+          onKeyDown={handleKeyDown_users}
+          onChange={handleChange_users}
+          onPaste={handlePaste_users}
+        />
+        {error && <p className="mt-1 text-sm text-red-400">{error}</p>}
+      </div>
+
+      <div className="overflow-hidden rounded-lg ">
         {(is_for_admins
           ? courseAdmins.filter((email) => email !== 'kvday2@illinois.edu')
           : emailAddresses
-        ).map((email) => (
-          <EmailListItem
-            key={email}
-            email={email}
-            onDelete={() => handleDelete(email)}
-            classes={classes}
-            course_owner={course_owner}
-          />
-        ))}
+        ).length > 0 && (
+          <div className="overflow-hidden rounded-lg bg-gray-900 ring-1 ring-gray-800">
+            {(is_for_admins
+              ? courseAdmins.filter((email) => email !== 'kvday2@illinois.edu')
+              : emailAddresses
+            ).map((email) => (
+              <EmailListItem
+                key={email}
+                email={email}
+                onDelete={() => handleDelete(email)}
+                course_owner={course_owner}
+              />
+            ))}
+          </div>
+        )}
       </div>
-    </Stack>
+    </div>
   )
 }
 

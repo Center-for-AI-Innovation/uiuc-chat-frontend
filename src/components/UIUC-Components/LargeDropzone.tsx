@@ -93,7 +93,6 @@ export function LargeDropzone({
       const data = await response.json()
       console.log(data)
       if (data && data.documents) {
-
         setTotalDocuments(data.documents)
 
         console.log(data.documents)
@@ -108,7 +107,8 @@ export function LargeDropzone({
             return isIngested
               ? { ...fileUpload, status: 'ingesting' }
               : fileUpload
-          }),)
+          }),
+        )
       } else {
         setHasDocuments(false)
         setUploadFiles((prev) =>
@@ -119,8 +119,8 @@ export function LargeDropzone({
             // );
             // if (isNotInProgress) {
             const updatedUpload = { ...upload, status: 'complete' as const }
-            console.log('upload name in set files', upload.name)
-            console.log('upload status after update', updatedUpload.status)
+            // console.log('upload name in set files', upload.name)
+            // console.log('upload status after update', updatedUpload.status)
             return updatedUpload
           }),
         )
@@ -386,8 +386,9 @@ export function LargeDropzone({
               })
             }}
             loading={uploadInProgress}
-            className={`hover:border-purple-500 hover:bg-[#2a2a40] ${isDisabled ? 'opacity-50' : ''
-              }`}
+            className={`hover:border-purple-500 hover:bg-[#2a2a40] ${
+              isDisabled ? 'opacity-50' : ''
+            }`}
           >
             <div
               style={{ pointerEvents: 'none' }}
@@ -475,8 +476,6 @@ export function LargeDropzone({
         ></div>
         {/* END RIGHT COLUMN */}
       </div>
-
-
     </>
   )
 }
@@ -533,8 +532,9 @@ const showIngestInProgressToast = (num_success_files: number) => {
     // onClose: () => console.log('unmounted'),
     // onOpen: () => console.log('mounted'),
     autoClose: 30000,
-    title: `Ingest in progress for ${num_success_files} file${num_success_files > 1 ? 's' : ''
-      }.`,
+    title: `Ingest in progress for ${num_success_files} file${
+      num_success_files > 1 ? 's' : ''
+    }.`,
     message: `This is a background task. Refresh the page to see your files as they're processed.`,
     color: 'green',
     radius: 'lg',

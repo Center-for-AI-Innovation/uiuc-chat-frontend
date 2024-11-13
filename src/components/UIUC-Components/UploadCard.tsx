@@ -24,7 +24,7 @@ import WebsiteIngestForm from './WebsiteIngestForm'
 import GitHubIngestForm from './GitHubIngestForm'
 import MITIngestForm from './MITIngestForm'
 import CourseraIngestForm from './CourseraIngestForm'
-import { useState } from 'react'
+import { memo, useState } from 'react'
 import { IconShare } from '@tabler/icons-react'
 import ShareSettingsModal from './ShareSettingsModal'
 import UploadNotification, { FileUpload } from './UploadNotification'
@@ -79,7 +79,7 @@ const useStyles = createStyles((theme) => ({
   },
 }))
 
-export function UploadCard({
+export const UploadCard = memo(function UploadCard({
   projectName,
   current_user_email,
   metadata,
@@ -166,9 +166,15 @@ export function UploadCard({
               paddingBottom: '30px',
             }}
           >
-            <CanvasIngestForm project_name={projectName} setUploadFiles={setUploadFiles} />
+            <CanvasIngestForm
+              project_name={projectName}
+              setUploadFiles={setUploadFiles}
+            />
 
-            <WebsiteIngestForm project_name={projectName} setUploadFiles={setUploadFiles} />
+            <WebsiteIngestForm
+              project_name={projectName}
+              setUploadFiles={setUploadFiles}
+            />
 
             <GitHubIngestForm project_name={projectName} />
 
@@ -180,13 +186,13 @@ export function UploadCard({
             files={uploadFiles}
             // ingestFiles={ }
             onClose={handleCloseNotification}
-          // onCancel={() => {
-          //   // Handle cancel logic
-          //   // setUploadInProgress(false)
-          //   // setFileUploads((prev) =>
-          //   //   prev.map((upload) => ({ ...upload, status: 'error' }))
-          //   // )
-          // }}
+            // onCancel={() => {
+            //   // Handle cancel logic
+            //   // setUploadInProgress(false)
+            //   // setFileUploads((prev) =>
+            //   //   prev.map((upload) => ({ ...upload, status: 'error' }))
+            //   // )
+            // }}
           />
         </div>
 
@@ -376,6 +382,5 @@ export function UploadCard({
         metadata={metadata}
       />
     </Card>
-
   )
-}
+})
