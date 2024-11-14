@@ -28,7 +28,7 @@ import { useRouter } from 'next/router'
 import { LoadingSpinner } from './LoadingSpinner'
 import { downloadConversationHistory } from '../../pages/api/UIUC-api/downloadConvoHistory'
 import { getConversationStats } from '../../pages/api/UIUC-api/getConversationStats'
-import { getCourseStats } from '../../pages/api/UIUC-api/getCourseStats'
+import { getProjectStats } from '../../pages/api/UIUC-api/getProjectStats'
 import ConversationsPerDayChart from './ConversationsPerDayChart'
 import ConversationsPerHourChart from './ConversationsPerHourChart'
 import ConversationsPerDayOfWeekChart from './ConversationsPerDayOfWeekChart'
@@ -112,7 +112,9 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   const [statsLoading, setStatsLoading] = useState(true)
   const [statsError, setStatsError] = useState<string | null>(null)
 
+  const [courseStatsLoading, setCourseStatsLoading] = useState(true)
   const [courseStats, setCourseStats] = useState<CourseStats | null>(null)
+  const [courseStatsError, setCourseStatsError] = useState<string | null>(null)
 
   // TODO: remove this hook... we should already have this from the /materials props???
   useEffect(() => {
@@ -191,13 +193,26 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
   useEffect(() => {
     const fetchCourseStats = async () => {
+      setCourseStatsLoading(true)
+      setCourseStatsError(null)
       try {
-        const response = await getCourseStats('ECE408FA24')
+        const response = await getProjectStats(course_name)
+
         if (response.status === 200) {
-          setCourseStats(response.data)
+          const mappedData = {
+            total_conversations: response.data.total_conversations,
+            total_messages: response.data.total_messages,
+            total_users: response.data.unique_users,
+          }
+
+          setCourseStats(mappedData)
+        } else {
+          throw new Error('Failed to fetch course stats')
         }
       } catch (error) {
-        console.error('Error fetching course stats:', error)
+        setCourseStatsError('Failed to load stats')
+      } finally {
+        setCourseStatsLoading(false)
       }
     }
 
@@ -282,7 +297,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                   className="px-2 text-[hsl(280,100%,70%)] "
                   style={{ flexGrow: 2 }}
                 >
-                  Analyze Conversations
+                  Usage Overview
                 </Title>
                 <div className="flex flex-row items-center justify-end">
                   {/* Can add more buttons here */}
@@ -310,13 +325,22 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
               {/* Usage Overview Banner */}
               <div className="my-6 w-[95%] rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
                 <Title order={4} mb="md" className="text-white">
-                  Usage Overview
+                  Statistics
                 </Title>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  {/* Total Conversations */}
                   <div className="text-center">
                     <div className="flex h-8 items-center justify-center">
-                      {statsLoading ? (
+                      {courseStatsLoading ? (
                         <LoadingSpinner size="sm" />
+                      ) : courseStatsError ? (
+                        <Text size="sm" color="red">
+                          <IconAlertTriangle
+                            size={16}
+                            className="mr-1 inline"
+                          />
+                          Error
+                        </Text>
                       ) : (
                         <Text
                           size="xl"
@@ -331,28 +355,20 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                       Total Conversations
                     </Text>
                   </div>
+
+                  {/* Total Messages */}
                   <div className="text-center">
                     <div className="flex h-8 items-center justify-center">
-                      {statsLoading ? (
+                      {courseStatsLoading ? (
                         <LoadingSpinner size="sm" />
-                      ) : (
-                        <Text
-                          size="xl"
-                          weight={700}
-                          className="text-purple-400"
-                        >
-                          {courseStats?.total_users || 0}
+                      ) : courseStatsError ? (
+                        <Text size="sm" color="red">
+                          <IconAlertTriangle
+                            size={16}
+                            className="mr-1 inline"
+                          />
+                          Error
                         </Text>
-                      )}
-                    </div>
-                    <Text size="sm" color="dimmed">
-                      Unique Users
-                    </Text>
-                  </div>
-                  <div className="text-center">
-                    <div className="flex h-8 items-center justify-center">
-                      {statsLoading ? (
-                        <LoadingSpinner size="sm" />
                       ) : (
                         <Text
                           size="xl"
@@ -365,6 +381,34 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     </div>
                     <Text size="sm" color="dimmed">
                       Total Messages
+                    </Text>
+                  </div>
+
+                  {/* Unique Users */}
+                  <div className="text-center">
+                    <div className="flex h-8 items-center justify-center">
+                      {courseStatsLoading ? (
+                        <LoadingSpinner size="sm" />
+                      ) : courseStatsError ? (
+                        <Text size="sm" color="red">
+                          <IconAlertTriangle
+                            size={16}
+                            className="mr-1 inline"
+                          />
+                          Error
+                        </Text>
+                      ) : (
+                        <Text
+                          size="xl"
+                          weight={700}
+                          className="text-purple-400"
+                        >
+                          {courseStats?.total_users || 0}
+                        </Text>
+                      )}
+                    </div>
+                    <Text size="sm" color="dimmed">
+                      Unique Users
                     </Text>
                   </div>
                 </div>
@@ -508,7 +552,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     style={{ textDecoration: 'underline', paddingRight: '5px' }}
                   >
                     semantic similarity visualizations
-                  </a>
+                  </a
                 </Title>
               </>
             ) : (
@@ -529,7 +573,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     style={{ textDecoration: 'underline', paddingRight: '5px' }}
                   >
                     semantic similarity visualizations
-                  </a> */}
+                  </a */}
         {/* </Title> */}
         {/* </> */}
         {/* )}  */}
