@@ -33,6 +33,11 @@ import ConversationsPerDayChart from './ConversationsPerDayChart'
 import ConversationsPerHourChart from './ConversationsPerHourChart'
 import ConversationsPerDayOfWeekChart from './ConversationsPerDayOfWeekChart'
 import ConversationsHeatmapByHourChart from './ConversationsHeatmapByHourChart'
+import { 
+  IconMessage2,
+  IconUsers,
+  IconMessageCircle2,
+} from '@tabler/icons-react'
 
 const useStyles = createStyles((theme: MantineTheme) => ({
   downloadButton: {
@@ -270,7 +275,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
           <Flex direction="column" align="center" w="100%">
             <div className="pt-5"></div>
             <div
-              className="w-full md:w-[98%]"
+              className="w-[98%] rounded-3xl"
               style={{
                 // width: '98%',
                 display: 'flex',
@@ -278,7 +283,6 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                 alignItems: 'center',
                 background: '#15162c',
                 paddingTop: '1rem',
-                borderRadius: '1rem',
               }}
             >
               <div
@@ -294,7 +298,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                 <Title
                   order={3}
                   align="left"
-                  className="px-2 text-[hsl(280,100%,70%)] "
+                  className={`px-2 text-[hsl(280,100%,70%)] ${montserrat_heading.variable} font-montserratHeading`}
                   style={{ flexGrow: 2 }}
                 >
                   Usage Overview
@@ -324,21 +328,41 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
               {/* Usage Overview Banner */}
               <div className="my-6 w-[95%] rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
-                <Title order={4} mb="md" className="text-white">
-                  Statistics
-                </Title>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div className="mb-6">
+                  <Title 
+                    order={4} 
+                    className={`${montserrat_heading.variable} font-montserratHeading text-white`}
+                  >
+                    Project Analytics
+                  </Title>
+                  <Text size="sm" color="dimmed" mt={2}>
+                    Overview of project engagement and usage statistics
+                  </Text>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                   {/* Total Conversations */}
-                  <div className="text-center">
-                    <div className="flex h-8 items-center justify-center">
+                  <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
+                    <div className="mb-3 flex items-center justify-between">
+                      <div>
+                        <Text size="sm" color="dimmed" weight={500} mb={1}>
+                          Conversations
+                        </Text>
+                        <Text size="xs" color="dimmed" opacity={0.7}>
+                          Total chat sessions
+                        </Text>
+                      </div>
+                      <IconMessageCircle2 
+                        size={24} 
+                        className="text-purple-400 opacity-80" 
+                      />
+                    </div>
+                    <div className="flex items-center justify-start">
                       {courseStatsLoading ? (
                         <LoadingSpinner size="sm" />
                       ) : courseStatsError ? (
-                        <Text size="sm" color="red">
-                          <IconAlertTriangle
-                            size={16}
-                            className="mr-1 inline"
-                          />
+                        <Text size="sm" color="red" className="flex items-center">
+                          <IconAlertTriangle size={16} className="mr-1" />
                           Error
                         </Text>
                       ) : (
@@ -347,26 +371,34 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           weight={700}
                           className="text-purple-400"
                         >
-                          {courseStats?.total_conversations || 0}
+                          {courseStats?.total_conversations?.toLocaleString() || 0}
                         </Text>
                       )}
                     </div>
-                    <Text size="sm" color="dimmed">
-                      Total Conversations
-                    </Text>
                   </div>
 
                   {/* Total Messages */}
-                  <div className="text-center">
-                    <div className="flex h-8 items-center justify-center">
+                  <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
+                    <div className="mb-3 flex items-center justify-between">
+                      <div>
+                        <Text size="sm" color="dimmed" weight={500} mb={1}>
+                          Messages
+                        </Text>
+                        <Text size="xs" color="dimmed" opacity={0.7}>
+                          Total exchanges
+                        </Text>
+                      </div>
+                      <IconMessage2 
+                        size={24} 
+                        className="text-purple-400 opacity-80" 
+                      />
+                    </div>
+                    <div className="flex items-center justify-start">
                       {courseStatsLoading ? (
                         <LoadingSpinner size="sm" />
                       ) : courseStatsError ? (
-                        <Text size="sm" color="red">
-                          <IconAlertTriangle
-                            size={16}
-                            className="mr-1 inline"
-                          />
+                        <Text size="sm" color="red" className="flex items-center">
+                          <IconAlertTriangle size={16} className="mr-1" />
                           Error
                         </Text>
                       ) : (
@@ -375,26 +407,34 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           weight={700}
                           className="text-purple-400"
                         >
-                          {courseStats?.total_messages || 0}
+                          {courseStats?.total_messages?.toLocaleString() || 0}
                         </Text>
                       )}
                     </div>
-                    <Text size="sm" color="dimmed">
-                      Total Messages
-                    </Text>
                   </div>
 
                   {/* Unique Users */}
-                  <div className="text-center">
-                    <div className="flex h-8 items-center justify-center">
+                  <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
+                    <div className="mb-3 flex items-center justify-between">
+                      <div>
+                        <Text size="sm" color="dimmed" weight={500} mb={1}>
+                          Users
+                        </Text>
+                        <Text size="xs" color="dimmed" opacity={0.7}>
+                          Unique participants
+                        </Text>
+                      </div>
+                      <IconUsers 
+                        size={24} 
+                        className="text-purple-400 opacity-80" 
+                      />
+                    </div>
+                    <div className="flex items-center justify-start">
                       {courseStatsLoading ? (
                         <LoadingSpinner size="sm" />
                       ) : courseStatsError ? (
-                        <Text size="sm" color="red">
-                          <IconAlertTriangle
-                            size={16}
-                            className="mr-1 inline"
-                          />
+                        <Text size="sm" color="red" className="flex items-center">
+                          <IconAlertTriangle size={16} className="mr-1" />
                           Error
                         </Text>
                       ) : (
@@ -403,13 +443,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           weight={700}
                           className="text-purple-400"
                         >
-                          {courseStats?.total_users || 0}
+                          {courseStats?.total_users?.toLocaleString() || 0}
                         </Text>
                       )}
                     </div>
-                    <Text size="sm" color="dimmed">
-                      Unique Users
-                    </Text>
                   </div>
                 </div>
               </div>
