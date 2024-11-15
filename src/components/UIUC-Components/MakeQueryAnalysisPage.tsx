@@ -27,10 +27,17 @@ import axios from 'axios'
 import { useRouter } from 'next/router'
 import { LoadingSpinner } from './LoadingSpinner'
 import { downloadConversationHistory } from '../../pages/api/UIUC-api/downloadConvoHistory'
+import { getConversationStats } from '../../pages/api/UIUC-api/getConversationStats'
+import { getProjectStats } from '../../pages/api/UIUC-api/getProjectStats'
 import ConversationsPerDayChart from './ConversationsPerDayChart'
 import ConversationsPerHourChart from './ConversationsPerHourChart'
 import ConversationsPerDayOfWeekChart from './ConversationsPerDayOfWeekChart'
 import ConversationsHeatmapByHourChart from './ConversationsHeatmapByHourChart'
+import { 
+  IconMessage2,
+  IconUsers,
+  IconMessageCircle2,
+} from '@tabler/icons-react'
 
 const useStyles = createStyles((theme: MantineTheme) => ({
   downloadButton: {
@@ -75,6 +82,19 @@ export const GetCurrentPageName = () => {
   return useRouter().asPath.slice(1).split('/')[0] as string
 }
 
+interface ConversationStats {
+  per_day: { [date: string]: number }
+  per_hour: { [hour: string]: number }
+  per_weekday: { [day: string]: number }
+  heatmap: { [day: string]: { [hour: string]: number } }
+}
+
+interface CourseStats {
+  total_conversations: number
+  total_users: number
+  total_messages: number
+}
+
 const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
   const { classes, theme } = useStyles()
@@ -91,6 +111,15 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   const currentPageName = GetCurrentPageName()
 
   const [isLoading, setIsLoading] = useState(false)
+
+  const [conversationStats, setConversationStats] =
+    useState<ConversationStats | null>(null)
+  const [statsLoading, setStatsLoading] = useState(true)
+  const [statsError, setStatsError] = useState<string | null>(null)
+
+  const [courseStatsLoading, setCourseStatsLoading] = useState(true)
+  const [courseStats, setCourseStats] = useState<CourseStats | null>(null)
+  const [courseStatsError, setCourseStatsError] = useState<string | null>(null)
 
   // TODO: remove this hook... we should already have this from the /materials props???
   useEffect(() => {
@@ -145,6 +174,56 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     fetchNomicMapData()
   }, [course_name])
 
+  const [hasConversationData, setHasConversationData] = useState<boolean>(true)
+
+  useEffect(() => {
+    const fetchConversationStats = async () => {
+      try {
+        const response = await getConversationStats(course_name)
+        if (response.status === 200) {
+          setConversationStats(response.data)
+          setHasConversationData(Object.keys(response.data.per_day).length > 0)
+        }
+      } catch (error) {
+        console.error('Error fetching conversation stats:', error)
+        setStatsError('Failed to fetch conversation statistics')
+        setHasConversationData(false)
+      } finally {
+        setStatsLoading(false)
+      }
+    }
+
+    fetchConversationStats()
+  }, [course_name])
+
+  useEffect(() => {
+    const fetchCourseStats = async () => {
+      setCourseStatsLoading(true)
+      setCourseStatsError(null)
+      try {
+        const response = await getProjectStats(course_name)
+
+        if (response.status === 200) {
+          const mappedData = {
+            total_conversations: response.data.total_conversations,
+            total_messages: response.data.total_messages,
+            total_users: response.data.unique_users,
+          }
+
+          setCourseStats(mappedData)
+        } else {
+          throw new Error('Failed to fetch course stats')
+        }
+      } catch (error) {
+        setCourseStatsError('Failed to load stats')
+      } finally {
+        setCourseStatsLoading(false)
+      }
+    }
+
+    fetchCourseStats()
+  }, [course_name])
+
   if (!isLoaded || !courseMetadata) {
     return (
       <MainPageBackground>
@@ -196,7 +275,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
           <Flex direction="column" align="center" w="100%">
             <div className="pt-5"></div>
             <div
-              className="w-full md:w-[98%]"
+              className="w-[98%] rounded-3xl"
               style={{
                 // width: '98%',
                 display: 'flex',
@@ -204,7 +283,6 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                 alignItems: 'center',
                 background: '#15162c',
                 paddingTop: '1rem',
-                borderRadius: '1rem',
               }}
             >
               <div
@@ -220,10 +298,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                 <Title
                   order={3}
                   align="left"
-                  className="px-2 text-[hsl(280,100%,70%)] "
+                  className={`px-2 text-[hsl(280,100%,70%)] ${montserrat_heading.variable} font-montserratHeading`}
                   style={{ flexGrow: 2 }}
                 >
-                  Analyze Conversations
+                  Usage Overview
                 </Title>
                 <div className="flex flex-row items-center justify-end">
                   {/* Can add more buttons here */}
@@ -248,57 +326,235 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
               <Divider className="w-full" color="gray.4" size="sm" />
 
-              <div className="grid w-[95%] grid-cols-1 gap-6 pb-10 pt-10 lg:grid-cols-2">
-                {/* Chart 1 */}
-                <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
-                  <Title order={4} mb="md" align="left" className="text-white">
-                    Conversations Per Day
+              {/* Usage Overview Banner */}
+              <div className="my-6 w-[95%] rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
+                <div className="mb-6">
+                  <Title 
+                    order={4} 
+                    className={`${montserrat_heading.variable} font-montserratHeading text-white`}
+                  >
+                    Project Analytics
                   </Title>
-                  <Text size="sm" color="dimmed" mb="xl">
-                    Shows the total number of conversations that occurred on
-                    each calendar day
+                  <Text size="sm" color="dimmed" mt={2}>
+                    Overview of project engagement and usage statistics
                   </Text>
-                  <ConversationsPerDayChart course_name={course_name} />
                 </div>
 
-                {/* Chart 2 */}
-                <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
-                  <Title order={4} mb="md" align="left" className="text-white">
-                    Conversations Per Hour
-                  </Title>
-                  <Text size="sm" color="dimmed" mb="xl">
-                    Displays the total number of conversations that occurred
-                    during each hour of the day (24-hour format), aggregated
-                    across all days
-                  </Text>
-                  <ConversationsPerHourChart course_name={course_name} />
-                </div>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                  {/* Total Conversations */}
+                  <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
+                    <div className="mb-3 flex items-center justify-between">
+                      <div>
+                        <Text size="sm" color="dimmed" weight={500} mb={1}>
+                          Conversations
+                        </Text>
+                        <Text size="xs" color="dimmed" opacity={0.7}>
+                          Total chat sessions
+                        </Text>
+                      </div>
+                      <IconMessageCircle2 
+                        size={24} 
+                        className="text-purple-400 opacity-80" 
+                      />
+                    </div>
+                    <div className="flex items-center justify-start">
+                      {courseStatsLoading ? (
+                        <LoadingSpinner size="sm" />
+                      ) : courseStatsError ? (
+                        <Text size="sm" color="red" className="flex items-center">
+                          <IconAlertTriangle size={16} className="mr-1" />
+                          Error
+                        </Text>
+                      ) : (
+                        <Text
+                          size="xl"
+                          weight={700}
+                          className="text-purple-400"
+                        >
+                          {courseStats?.total_conversations?.toLocaleString() || 0}
+                        </Text>
+                      )}
+                    </div>
+                  </div>
 
-                {/* Chart 3 */}
-                <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
-                  <Title order={4} mb="md" align="left" className="text-white">
-                    Conversations Per Day of the Week
-                  </Title>
-                  <Text size="sm" color="dimmed" mb="xl">
-                    Shows the total number of conversations that occurred on
-                    each day of the week, helping identify which days are most
-                    active
-                  </Text>
-                  <ConversationsPerDayOfWeekChart course_name={course_name} />
-                </div>
+                  {/* Total Messages */}
+                  <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
+                    <div className="mb-3 flex items-center justify-between">
+                      <div>
+                        <Text size="sm" color="dimmed" weight={500} mb={1}>
+                          Messages
+                        </Text>
+                        <Text size="xs" color="dimmed" opacity={0.7}>
+                          Total exchanges
+                        </Text>
+                      </div>
+                      <IconMessage2 
+                        size={24} 
+                        className="text-purple-400 opacity-80" 
+                      />
+                    </div>
+                    <div className="flex items-center justify-start">
+                      {courseStatsLoading ? (
+                        <LoadingSpinner size="sm" />
+                      ) : courseStatsError ? (
+                        <Text size="sm" color="red" className="flex items-center">
+                          <IconAlertTriangle size={16} className="mr-1" />
+                          Error
+                        </Text>
+                      ) : (
+                        <Text
+                          size="xl"
+                          weight={700}
+                          className="text-purple-400"
+                        >
+                          {courseStats?.total_messages?.toLocaleString() || 0}
+                        </Text>
+                      )}
+                    </div>
+                  </div>
 
-                {/* Chart 4 */}
-                <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
-                  <Title order={4} mb="md" align="left" className="text-white">
-                    Conversations Per Day and Hour
-                  </Title>
-                  <Text size="sm" color="dimmed" mb="xl">
-                    A heatmap showing conversation density across both days and
-                    hours, with darker colors indicating higher activity during
-                    those time periods
-                  </Text>
-                  <ConversationsHeatmapByHourChart course_name={course_name} />
+                  {/* Unique Users */}
+                  <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
+                    <div className="mb-3 flex items-center justify-between">
+                      <div>
+                        <Text size="sm" color="dimmed" weight={500} mb={1}>
+                          Users
+                        </Text>
+                        <Text size="xs" color="dimmed" opacity={0.7}>
+                          Unique participants
+                        </Text>
+                      </div>
+                      <IconUsers 
+                        size={24} 
+                        className="text-purple-400 opacity-80" 
+                      />
+                    </div>
+                    <div className="flex items-center justify-start">
+                      {courseStatsLoading ? (
+                        <LoadingSpinner size="sm" />
+                      ) : courseStatsError ? (
+                        <Text size="sm" color="red" className="flex items-center">
+                          <IconAlertTriangle size={16} className="mr-1" />
+                          Error
+                        </Text>
+                      ) : (
+                        <Text
+                          size="xl"
+                          weight={700}
+                          className="text-purple-400"
+                        >
+                          {courseStats?.total_users?.toLocaleString() || 0}
+                        </Text>
+                      )}
+                    </div>
+                  </div>
                 </div>
+              </div>
+
+              <div className="grid w-[95%] grid-cols-1 gap-6 pb-10 lg:grid-cols-2">
+                {!hasConversationData ? (
+                  <div className="rounded-xl bg-[#1a1b30] p-6 text-center shadow-lg shadow-purple-900/20 lg:col-span-2">
+                    <Title
+                      order={4}
+                      className={`${montserrat_heading.variable} font-montserratHeading`}
+                    >
+                      No conversation data available yet
+                    </Title>
+                    <Text size="lg" color="dimmed" mt="md">
+                      Start some conversations to see analytics and
+                      visualizations!
+                    </Text>
+                  </div>
+                ) : (
+                  <>
+                    {/* Chart 1 */}
+                    <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
+                      <Title
+                        order={4}
+                        mb="md"
+                        align="left"
+                        className="text-white"
+                      >
+                        Conversations Per Day
+                      </Title>
+                      <Text size="sm" color="dimmed" mb="xl">
+                        Shows the total number of conversations that occurred on
+                        each calendar day
+                      </Text>
+                      <ConversationsPerDayChart
+                        data={conversationStats?.per_day}
+                        isLoading={statsLoading}
+                        error={statsError}
+                      />
+                    </div>
+
+                    {/* Chart 2 */}
+                    <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
+                      <Title
+                        order={4}
+                        mb="md"
+                        align="left"
+                        className="text-white"
+                      >
+                        Conversations Per Hour
+                      </Title>
+                      <Text size="sm" color="dimmed" mb="xl">
+                        Displays the total number of conversations that occurred
+                        during each hour of the day (24-hour format), aggregated
+                        across all days
+                      </Text>
+                      <ConversationsPerHourChart
+                        data={conversationStats?.per_hour}
+                        isLoading={statsLoading}
+                        error={statsError}
+                      />
+                    </div>
+
+                    {/* Chart 3 */}
+                    <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
+                      <Title
+                        order={4}
+                        mb="md"
+                        align="left"
+                        className="text-white"
+                      >
+                        Conversations Per Day of the Week
+                      </Title>
+                      <Text size="sm" color="dimmed" mb="xl">
+                        Shows the total number of conversations that occurred on
+                        each day of the week, helping identify which days are
+                        most active
+                      </Text>
+                      <ConversationsPerDayOfWeekChart
+                        data={conversationStats?.per_weekday}
+                        isLoading={statsLoading}
+                        error={statsError}
+                      />
+                    </div>
+
+                    {/* Chart 4 */}
+                    <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
+                      <Title
+                        order={4}
+                        mb="md"
+                        align="left"
+                        className="text-white"
+                      >
+                        Conversations Per Day and Hour
+                      </Title>
+                      <Text size="sm" color="dimmed" mb="xl">
+                        A heatmap showing conversation density across both days
+                        and hours, with darker colors indicating higher activity
+                        during those time periods
+                      </Text>
+                      <ConversationsHeatmapByHourChart
+                        data={conversationStats?.heatmap}
+                        isLoading={statsLoading}
+                        error={statsError}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </Flex>
@@ -333,7 +589,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     style={{ textDecoration: 'underline', paddingRight: '5px' }}
                   >
                     semantic similarity visualizations
-                  </a>
+                  </a
                 </Title>
               </>
             ) : (
@@ -354,7 +610,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     style={{ textDecoration: 'underline', paddingRight: '5px' }}
                   >
                     semantic similarity visualizations
-                  </a> */}
+                  </a */}
         {/* </Title> */}
         {/* </> */}
         {/* )}  */}

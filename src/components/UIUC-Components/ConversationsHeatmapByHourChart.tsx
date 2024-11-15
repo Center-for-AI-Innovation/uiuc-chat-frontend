@@ -6,14 +6,20 @@ import { Text } from '@mantine/core'
 import { LoadingSpinner } from './LoadingSpinner'
 import { montserrat_paragraph } from 'fonts'
 
-const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
-  course_name,
+interface ChartProps {
+  data?: { [day: string]: { [hour: string]: number } }
+  isLoading: boolean
+  error: string | null
+}
+
+const ConversationsHeatmapByHourChart: React.FC<ChartProps> = ({
+  data,
+  isLoading,
+  error,
 }) => {
-  const [data, setData] = useState<number[][]>([])
-  const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [error, setError] = useState<string | null>(null)
   const [containerWidth, setContainerWidth] = useState<number>(0)
   const containerRef = useRef<HTMLDivElement>(null)
+
   const daysOfWeek = useMemo(
     () => [
       'Sunday',
@@ -28,36 +34,6 @@ const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
   )
   const hours = Array.from({ length: 24 }, (_, i) => i.toString())
 
-  // Fetch heatmap data
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(
-          `/api/UIUC-api/getConversationHeatmapByHour?course_name=${course_name}`,
-        )
-        if (response.status === 200) {
-          const heatmapData = response.data
-
-          const formattedData = daysOfWeek.map((day) =>
-            hours.map((hour) => heatmapData[day]?.[parseInt(hour)] || 0),
-          )
-
-          setData(formattedData)
-        } else {
-          setError('Failed to fetch heatmap data.')
-        }
-      } catch (err) {
-        console.error('Error fetching heatmap data:', err)
-        setError('An error occurred while fetching the data.')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [course_name, daysOfWeek, hours])
-
-  // Update container width on mount and resize
   useEffect(() => {
     const updateWidth = () => {
       if (containerRef.current) {
@@ -65,30 +41,10 @@ const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
       }
     }
 
-    // Initial width
     updateWidth()
-
-    // Add resize listener
     window.addEventListener('resize', updateWidth)
     return () => window.removeEventListener('resize', updateWidth)
   }, [])
-
-  // Calculate dynamic cell width
-  const numColumns = hours.length
-  const padding = 40 // Adjust based on your layout (e.g., padding/margins)
-  const availableWidth = containerWidth - padding
-  const cellWidth = availableWidth / numColumns
-
-  // Set minimum and maximum cell widths for better responsiveness
-  const minCellWidth = 30
-  const maxCellWidth = 60
-  const finalCellWidth = Math.max(
-    minCellWidth,
-    Math.min(cellWidth, maxCellWidth),
-  )
-
-  // Optional: Adjust font size based on cell width for better readability
-  const fontSize = Math.max(10, Math.min(finalCellWidth / 3, 14)) // Example logic
 
   if (isLoading) {
     return (
@@ -102,6 +58,28 @@ const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
     return <Text color="red">{error}</Text>
   }
 
+  if (!data) {
+    return <Text>No data available</Text>
+  }
+
+  const formattedData = daysOfWeek.map((day) =>
+    hours.map((hour) => data[day]?.[parseInt(hour)] || 0),
+  )
+
+  const numColumns = hours.length
+  const padding = 40
+  const availableWidth = containerWidth - padding
+  const cellWidth = availableWidth / numColumns
+
+  const minCellWidth = 30
+  const maxCellWidth = 60
+  const finalCellWidth = Math.max(
+    minCellWidth,
+    Math.min(cellWidth, maxCellWidth),
+  )
+
+  const fontSize = Math.max(10, Math.min(finalCellWidth / 3, 14))
+
   return (
     <div
       ref={containerRef}
@@ -113,7 +91,7 @@ const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
     >
       <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
         <HeatMapGrid
-          data={data}
+          data={formattedData}
           xLabels={hours}
           yLabels={daysOfWeek}
           cellRender={(x, y, value) => `${value}`}
@@ -146,4 +124,4 @@ const ConversationsHeatmap: React.FC<{ course_name: string }> = ({
   )
 }
 
-export default ConversationsHeatmap
+export default ConversationsHeatmapByHourChart
