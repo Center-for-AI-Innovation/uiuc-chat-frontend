@@ -12,7 +12,6 @@ import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 
 import Navbar from './navbars/Navbar'
-import EditCourseCard from '~/components/UIUC-Components/EditCourseCard'
 import GlobalFooter from './GlobalFooter'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { fetchPresignedUrl } from '~/utils/apiUtils'
