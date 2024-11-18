@@ -134,11 +134,10 @@ export const UploadCard = memo(function UploadCard({
                   order={3}
                   variant="gradient"
                   gradient={{ from: 'gold', to: 'white', deg: 50 }}
-                  className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base sm:text-xl ${
-                    projectName.length > 40
-                      ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
-                      : ''
-                  }`}
+                  className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base sm:text-xl ${projectName.length > 40
+                    ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
+                    : ''
+                    }`}
                 >
                   {projectName}
                 </Title>
@@ -196,9 +195,11 @@ export const UploadCard = memo(function UploadCard({
               setUploadFiles={setUploadFiles}
             />
 
-            <GitHubIngestForm project_name={projectName} />
+            <GitHubIngestForm project_name={projectName} setUploadFiles={setUploadFiles}
+            />
 
-            <MITIngestForm project_name={projectName} />
+            <MITIngestForm project_name={projectName} setUploadFiles={setUploadFiles}
+            />
 
             <CourseraIngestForm />
           </SimpleGrid>
@@ -206,13 +207,13 @@ export const UploadCard = memo(function UploadCard({
             files={uploadFiles}
             // ingestFiles={ }
             onClose={handleCloseNotification}
-            // onCancel={() => {
-            //   // Handle cancel logic
-            //   // setUploadInProgress(false)
-            //   // setFileUploads((prev) =>
-            //   //   prev.map((upload) => ({ ...upload, status: 'error' }))
-            //   // )
-            // }}
+          // onCancel={() => {
+          //   // Handle cancel logic
+          //   // setUploadInProgress(false)
+          //   // setFileUploads((prev) =>
+          //   //   prev.map((upload) => ({ ...upload, status: 'error' }))
+          //   // )
+          // }}
           />
         </div>
 

@@ -77,13 +77,6 @@ export function LargeDropzone({
   const { classes, theme } = useStyles()
   const openRef = useRef<() => void>(null)
   const [files, setFiles] = useState<File[]>([])
-  const queryClient = useQueryClient()
-  const [fileUploads, setFileUploads] = useState<FileUpload[]>([])
-  const [progress, setProgress] = useState(0)
-  const [hasDocuments, setHasDocuments] = useState(false) // State to track if there are documents
-  const [totalDocuments, setTotalDocuments] = useState(0) // State to track the total number of documents
-  const [dataLength, setDataLength] = useState(0)
-  const [showNotification, setShowNotification] = useState(false)
 
   useEffect(() => {
     async function fetchData() {
@@ -91,26 +84,19 @@ export function LargeDropzone({
         `/api/materialsTable/docsInProgress?course_name=${courseName}`,
       )
       const data = await response.json()
-      console.log(data)
       if (data && data.documents) {
-        setTotalDocuments(data.documents)
-
-        console.log(data.documents)
         setUploadFiles((prevFileUploads) =>
           prevFileUploads.map((fileUpload) => {
             const isIngested = data.documents.some(
               (doc: { readable_filename: string }) =>
                 doc.readable_filename === fileUpload.name,
             )
-            console.log('isIngesting', isIngested)
-            console.log('fileUpload.name', fileUpload.name)
             return isIngested
               ? { ...fileUpload, status: 'ingesting' }
               : fileUpload
           }),
         )
       } else {
-        setHasDocuments(false)
         setUploadFiles((prev) =>
           prev.map((upload) => {
             if (upload.type === "document" as string) {
@@ -126,12 +112,6 @@ export function LargeDropzone({
     const intervalId = setInterval(fetchData, 3000) // Fetch data every 3000 milliseconds (3 seconds)
     return () => clearInterval(intervalId)
   }, [courseName])
-
-  // useEffect(() => {
-  //   if (fileUploads.length > 0 && fileUploads.every(file => file.status === 'complete')) {
-  //     setFileUploads([]);
-  //   }
-  // }, [fileUploads]);
 
   const refreshOrRedirect = async (redirect_to_gpt_4: boolean) => {
     if (is_new_course) {
@@ -529,27 +509,6 @@ const showSuccessToast = (num_success_files: number) => {
     color: 'green',
     radius: 'lg',
     icon: <IconCheck />,
-    className: 'my-notification-class',
-    style: { backgroundColor: '#15162c' },
-    loading: false,
-    // })
-  })
-}
-
-const showIngestInProgressToast = (num_success_files: number) => {
-  // success_files.forEach((file, index) => {
-  notifications.show({
-    id: `ingest-in-progress-toast-${num_success_files}`,
-    withCloseButton: true,
-    // onClose: () => console.log('unmounted'),
-    // onOpen: () => console.log('mounted'),
-    autoClose: 30000,
-    title: `Ingest in progress for ${num_success_files} file${num_success_files > 1 ? 's' : ''
-      }.`,
-    message: `This is a background task. Refresh the page to see your files as they're processed.`,
-    color: 'green',
-    radius: 'lg',
-    icon: <IconFileUpload />,
     className: 'my-notification-class',
     style: { backgroundColor: '#15162c' },
     loading: false,

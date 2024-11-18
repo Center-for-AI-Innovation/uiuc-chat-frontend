@@ -89,12 +89,6 @@ export default function WebsiteIngestForm({
     const input = e.target.value
     setUrl(input)
     setIsUrlValid(validateUrl(input))
-    const newFile: FileUpload = {
-      name: input,
-      status: 'uploading',
-      type: 'webscrape',
-    }
-    setUploadFiles((prevFiles) => [...prevFiles, newFile])
     setUrl(input)
     setIsUrlValid(validateUrl(input))
   }
@@ -174,48 +168,59 @@ export default function WebsiteIngestForm({
 
   const handleIngest = async () => {
     setOpen(false)
-    setUploadFiles((prevFiles) =>
-      prevFiles.map((file) =>
-        file.name === url ? { ...file, status: 'ingesting' } : file,
-      ),
-    )
-    try {
-      const response = await scrapeWeb(
-        url,
-        project_name,
-        maxUrls.trim() !== '' ? parseInt(maxUrls) : 50,
-        scrapeStrategy,
+    if (isUrlValid) {
+      const newFile: FileUpload = {
+        name: url,
+        status: 'uploading',
+        type: 'webscrape',
+      }
+      setUploadFiles((prevFiles) => [...prevFiles, newFile])
+      setUploadFiles((prevFiles) =>
+        prevFiles.map((file) =>
+          file.name === url ? { ...file, status: 'ingesting' } : file,
+        ),
       )
-
-      // Only set to complete if we get a successful response
-      if (
-        response &&
-        typeof response === 'string' &&
-        response.includes('Crawl completed successfully')
-      ) {
-        setUploadFiles((prevFiles) =>
-          prevFiles.map((file) =>
-            file.name === url ? { ...file, status: 'complete' } : file,
-          ),
+      try {
+        const response = await scrapeWeb(
+          url,
+          project_name,
+          maxUrls.trim() !== '' ? parseInt(maxUrls) : 50,
+          scrapeStrategy,
         )
-      } else {
-        // Handle unsuccessful crawl
+
+        if (
+          response &&
+          typeof response === 'string' &&
+          response.includes('Crawl completed successfully')
+        ) {
+          setUploadFiles((prevFiles) =>
+            prevFiles.map((file) =>
+              file.name === url ? { ...file, status: 'complete' } : file,
+            ),
+          )
+        } else {
+          // Handle unsuccessful crawl
+          setUploadFiles((prevFiles) =>
+            prevFiles.map((file) =>
+              file.name === url ? { ...file, status: 'error' } : file,
+            ),
+          )
+          throw new Error('Crawl was not successful')
+        }
+      } catch (error: any) {
+        console.error('Error while scraping web:', error)
         setUploadFiles((prevFiles) =>
           prevFiles.map((file) =>
             file.name === url ? { ...file, status: 'error' } : file,
           ),
         )
-        throw new Error('Crawl was not successful')
+        // Remove the timeout since we're handling errors properly now
       }
-    } catch (error: any) {
-      console.error('Error while scraping web:', error)
-      setUploadFiles((prevFiles) =>
-        prevFiles.map((file) =>
-          file.name === url ? { ...file, status: 'error' } : file,
-        ),
-      )
-      // Remove the timeout since we're handling errors properly now
+    } else {
+      alert('Invalid URL (please include https://)')
     }
+
+    await new Promise((resolve) => setTimeout(resolve, 8000))
   }
 
   const formatUrlAndMatchRegex = (url: string) => {
@@ -397,35 +402,35 @@ export default function WebsiteIngestForm({
                   onChange={(e) => {
                     handleUrlChange(e)
                   }}
-                  // disabled={isDisabled}
+                // disabled={isDisabled}
 
-                  // onKeyPress={(event) => {
-                  //   if (event.key === 'Enter') {
-                  //     handleSubmit()
-                  //   }
-                  // }}
-                  // rightSection={
-                  // <Button
-                  //   onClick={(e) => {
-                  //     e.preventDefault()
-                  //     if (validateInputs() && validateUrl(url)) {
-                  //       handleSubmit()
-                  //     }
-                  //   }}
-                  //   size="md"
-                  //   radius={'xl'}
-                  //   className={`rounded-s-md ${
-                  //     isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
-                  //   } overflow-ellipsis text-ellipsis p-2 ${
-                  //     isUrlUpdated ? 'text-white' : 'text-gray-500'
-                  //   } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
-                  //   w={`${isSmallScreen ? 'auto' : 'auto'}`}
-                  //   disabled={isDisabled}
-                  // >
-                  //   Ingest
-                  // </Button>
-                  // }
-                  // rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
+                // onKeyPress={(event) => {
+                //   if (event.key === 'Enter') {
+                //     handleSubmit()
+                //   }
+                // }}
+                // rightSection={
+                // <Button
+                //   onClick={(e) => {
+                //     e.preventDefault()
+                //     if (validateInputs() && validateUrl(url)) {
+                //       handleSubmit()
+                //     }
+                //   }}
+                //   size="md"
+                //   radius={'xl'}
+                //   className={`rounded-s-md ${
+                //     isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
+                //   } overflow-ellipsis text-ellipsis p-2 ${
+                //     isUrlUpdated ? 'text-white' : 'text-gray-500'
+                //   } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
+                //   w={`${isSmallScreen ? 'auto' : 'auto'}`}
+                //   disabled={isDisabled}
+                // >
+                //   Ingest
+                // </Button>
+                // }
+                // rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
                 />
               </div>
               <form

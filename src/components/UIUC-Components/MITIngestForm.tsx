@@ -52,14 +52,17 @@ import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { notifications } from '@mantine/notifications'
 import axios from 'axios'
 import { Montserrat } from 'next/font/google'
+import { FileUpload } from './UploadNotification'
 const montserrat_med = Montserrat({
   weight: '500',
   subsets: ['latin'],
 })
 export default function MITIngestForm({
   project_name,
+  setUploadFiles,
 }: {
   project_name: string
+  setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
 }): JSX.Element {
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
@@ -120,10 +123,40 @@ export default function MITIngestForm({
 
   const handleIngest = () => {
     setOpen(false)
-    let data = null
-    if (url.includes('ocw.mit.edu')) {
+    if (isUrlValid) {
+      const newFile: FileUpload = {
+        name: url,
+        status: 'uploading',
+        type: 'github',
+      }
+      setUploadFiles((prevFiles) => [...prevFiles, newFile])
+      setUploadFiles((prevFiles) =>
+        prevFiles.map((file) =>
+          file.name === url ? { ...file, status: 'ingesting' } : file,
+        ),
+      )
+      let data = null
       data = downloadMITCourse(url, project_name, 'local_dir') // no await -- do in background
-
+      if (
+        data &&
+        typeof data === 'string'
+        // && 
+        // data.includes('Crawl completed successfully') what is the response here?
+      ) {
+        setUploadFiles((prevFiles) =>
+          prevFiles.map((file) =>
+            file.name === url ? { ...file, status: 'complete' } : file,
+          ),
+        )
+      } else {
+        // Handle unsuccessful crawl
+        setUploadFiles((prevFiles) =>
+          prevFiles.map((file) =>
+            file.name === url ? { ...file, status: 'error' } : file,
+          ),
+        )
+        throw new Error('MIT course ingesting was not successful')
+      }
       showToast()
     }
   }

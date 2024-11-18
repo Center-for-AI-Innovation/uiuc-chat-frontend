@@ -52,14 +52,17 @@ import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { notifications } from '@mantine/notifications'
 import axios from 'axios'
 import { Montserrat } from 'next/font/google'
+import { FileUpload } from './UploadNotification'
 const montserrat_med = Montserrat({
   weight: '500',
   subsets: ['latin'],
 })
 export default function GitHubIngestForm({
   project_name,
+  setUploadFiles,
 }: {
   project_name: string
+  setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
 }): JSX.Element {
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
@@ -70,6 +73,7 @@ export default function GitHubIngestForm({
     variable: string,
   ) => {
     const value = e.target.value
+
     if (variable === 'maxUrls') {
       setMaxUrls(value)
     } else if (variable === 'maxDepth') {
@@ -99,16 +103,57 @@ export default function GitHubIngestForm({
   })
   const handleIngest = async () => {
     setOpen(false)
-    try {
-      await scrapeWeb(
-        url,
-        project_name,
-        maxUrls.trim() !== '' ? parseInt(maxUrls) : 50,
-        scrapeStrategy,
+    if (isUrlValid) {
+      const newFile: FileUpload = {
+        name: url,
+        status: 'uploading',
+        type: 'github',
+      }
+      setUploadFiles((prevFiles) => [...prevFiles, newFile])
+      setUploadFiles((prevFiles) =>
+        prevFiles.map((file) =>
+          file.name === url ? { ...file, status: 'ingesting' } : file,
+        ),
       )
-    } catch (error: any) {
-      console.error('Error while scraping web:', error)
+      try {
+        const response = await scrapeWeb(
+          url,
+          project_name,
+          maxUrls.trim() !== '' ? parseInt(maxUrls) : 50,
+          scrapeStrategy,
+        )
+        if (
+          response &&
+          typeof response === 'string' &&
+          response.includes('Crawl completed successfully')
+        ) {
+          setUploadFiles((prevFiles) =>
+            prevFiles.map((file) =>
+              file.name === url ? { ...file, status: 'complete' } : file,
+            ),
+          )
+        } else {
+          // Handle unsuccessful crawl
+          setUploadFiles((prevFiles) =>
+            prevFiles.map((file) =>
+              file.name === url ? { ...file, status: 'error' } : file,
+            ),
+          )
+          throw new Error('Crawl was not successful')
+        }
+      } catch (error: any) {
+        console.error('Error while scraping web:', error)
+        setUploadFiles((prevFiles) =>
+          prevFiles.map((file) =>
+            file.name === url ? { ...file, status: 'error' } : file,
+          ),
+        )
+        // Remove the timeout since we're handling errors properly now
+      }
+    } else {
+      alert('Invalid URL (please include https://)')
     }
+
     // let ingest finalize things. It should be finished, but the DB is slow.
     await new Promise((resolve) => setTimeout(resolve, 8000))
   }
@@ -247,21 +292,6 @@ export default function GitHubIngestForm({
       // throw error
     }
   }
-
-  const dialogRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dialogRef.current && !dialogRef.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [dialogRef]);
 
   return (
     <motion.div layout>
