@@ -8,21 +8,27 @@ import React, {
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 
+const superAdmins = ['kvday2@illinois.edu', 'rohan13@illinois.edu']
+
 function EmailListItem({
   email,
   onDelete,
   course_owner,
+  course_admins,
 }: {
   email: string
   onDelete: () => void
   course_owner: string
+  course_admins: string[]
 }) {
+  const isAdmin = email === course_owner || course_admins.includes(email)
+
   return (
     <div className="w-full px-4 py-3 transition-colors hover:bg-gray-800/50">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-500/10 text-violet-400">
-            {email === course_owner ? (
+            {isAdmin ? (
               <IconUsers className="h-4 w-4" />
             ) : (
               <IconUser className="h-4 w-4" />
@@ -31,7 +37,7 @@ function EmailListItem({
           <div className="flex flex-col items-start">
             <span className="text-sm text-gray-200">{email}</span>
             <span className="text-xs text-gray-400">
-              Can {email === course_owner ? 'manage' : 'view'}
+              Can {isAdmin ? 'manage' : 'view'}
             </span>
           </div>
         </div>
@@ -51,43 +57,49 @@ function EmailListItem({
 
 const EmailChipsComponent = ({
   course_name,
+  metadata,
+  // course_owner,
+  // course_admins: initialCourseAdmins,
+  // approved_emails_list: initialEmailsList,
+  is_private,
   onEmailAddressesChange,
+  // banner_image_s3,
+  // course_intro_message,
+  // openai_api_key,
   is_for_admins,
 }: {
   course_name: string
-  course_owner: string
-  course_admins: string[]
+  metadata: CourseMetadata
+  // course_owner: string
+  // course_admins: string[]
+  // approved_emails_list: string[]
   is_private: boolean
   onEmailAddressesChange?: (
     new_course_metadata: CourseMetadata,
     course_name: string,
-  ) => void // Add this prop type
-  banner_image_s3: string
-  course_intro_message: string
-  openai_api_key: string
+  ) => void
+  // banner_image_s3: string
+  // course_intro_message: string
+  // openai_api_key: string
   is_for_admins: boolean
 }) => {
-  const [emailAddresses, setEmailAddresses] = useState<string[]>([])
-  const [courseAdmins, setCourseAdmins] = useState<string[]>([]) // New state for course admins
-  const [courseName, setCourseName] = useState<string>(course_name)
+  const [emailAddresses, setEmailAddresses] = useState<string[]>(
+    metadata.approved_emails_list || [],
+  )
+  const [courseAdmins, setCourseAdmins] = useState<string[]>(
+    metadata.course_admins || [],
+  )
   const [value, setValue] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
 
-  // fetch metadata on mount
+  // Update local state when props change
   useEffect(() => {
-    fetchCourseMetadata(course_name).then((metadata) => {
-      if (metadata) {
-        metadata.is_private = JSON.parse(
-          metadata.is_private as unknown as string,
-        )
-        // Initialize both states regardless of the is_for_admins flag
-        setCourseAdmins(metadata.course_admins || [])
-        setEmailAddresses(metadata.approved_emails_list || [])
-      }
-    })
-  }, [course_name])
+    setCourseAdmins(metadata.course_admins || [])
+    setEmailAddresses(metadata.approved_emails_list || [])
+  }, [metadata.course_admins, metadata.approved_emails_list])
 
   const handleKeyDown_users = (evt: KeyboardEvent<HTMLInputElement>) => {
+    console.log('handleKeyDown_users', evt.key)
     if (['Enter', 'Tab', ','].includes(evt.key)) {
       evt.preventDefault()
       const trimmedValue = value.trim()
@@ -108,6 +120,7 @@ const EmailChipsComponent = ({
   }
 
   const handleChange_users = (evt: ChangeEvent<HTMLInputElement>) => {
+    console.log('handleChange_users', evt.target.value)
     setValue(evt.target.value)
     setError(null)
   }
@@ -129,6 +142,7 @@ const EmailChipsComponent = ({
   }
 
   const handlePaste_users = (evt: React.ClipboardEvent<HTMLInputElement>) => {
+    console.log('handlePaste_users', evt.clipboardData.getData('text'))
     evt.preventDefault()
     const paste = evt.clipboardData.getData('text')
     const emails = paste.match(/[\w\d\.-]+@[\w\d\.-]+\.[\w\d\.-]+/g)
@@ -177,7 +191,7 @@ const EmailChipsComponent = ({
   // Get and Set course exist in KV store
   const callRemoveUserFromCourse = async (email_to_remove: string) => {
     try {
-      const course_name = courseName
+      const course_name = course_name
 
       const url = new URL(
         '/api/UIUC-api/removeUserFromCourse',
@@ -200,55 +214,25 @@ const EmailChipsComponent = ({
     }
   }
 
-  async function fetchCourseMetadata(course_name: string) {
-    try {
-      const response = await fetch(
-        `/api/UIUC-api/getCourseMetadata?course_name=${course_name}`,
-      )
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success === false) {
-          console.error('An error occurred while fetching course metadata')
-          return null
-        }
-        return data.course_metadata
-      } else {
-        console.error(`Error fetching course metadata: ${response.status}`)
-        return null
-      }
-    } catch (error) {
-      console.error('Error fetching course metadata:', error)
-      return null
-    }
-  }
-
   const updateCourseMetadata = async (admins: string[], emails: string[]) => {
-    // Fetch current metadata
-    const currentMetadata = await fetchCourseMetadata(courseName);
-
-    if (!currentMetadata) {
-      console.error('Failed to fetch current course metadata');
-      return;
-    }
-
     // Ensure 'kvday2@illinois.edu' is always included in admins
-    if (is_for_admins && !admins.includes('kvday2@illinois.edu')) {
-      admins.push('kvday2@illinois.edu');
+    if (is_for_admins && !admins.some((admin) => superAdmins.includes(admin))) {
+      admins.push(...superAdmins)
     }
 
-    // Create updated metadata by only updating the changed field
     const updatedMetadata: CourseMetadata = {
-      ...currentMetadata,
-      course_admins: is_for_admins ? admins : currentMetadata.course_admins,
-      approved_emails_list: is_for_admins ? currentMetadata.approved_emails_list : emails,
-    };
+      ...metadata,
+      course_admins: is_for_admins ? admins : courseAdmins,
+      approved_emails_list: is_for_admins ? emailAddresses : emails,
+      is_private,
+    }
 
-    await callSetCourseMetadata(courseName, updatedMetadata);
+    await callSetCourseMetadata(course_name, updatedMetadata)
 
     if (onEmailAddressesChange) {
-      onEmailAddressesChange(updatedMetadata, courseName);
+      onEmailAddressesChange(updatedMetadata, course_name)
     }
-  };
+  }
 
   return (
     <div className="flex flex-col space-y-4">
@@ -282,7 +266,8 @@ const EmailChipsComponent = ({
                 key={email}
                 email={email}
                 onDelete={() => handleDelete(email)}
-                course_owner={course_owner}
+                course_owner={metadata.course_owner}
+                course_admins={courseAdmins}
               />
             ))}
           </div>

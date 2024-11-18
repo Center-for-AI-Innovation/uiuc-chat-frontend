@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useDebouncedState } from '@mantine/hooks'
 import {
   IconCheck,
   IconCopy,
@@ -49,7 +50,10 @@ export default function ShareSettingsModal({
   }, [opened])
 
   // State management
-  const [isPrivate, setIsPrivate] = useState(metadata?.is_private || false)
+  const [isPrivate, setIsPrivate] = useDebouncedState(
+    metadata?.is_private || false,
+    500,
+  )
   const [courseAdmins, setCourseAdmins] = useState<string[]>([])
   const shareUrl = `${window.location.origin}/${projectName}`
   const [isCopied, setIsCopied] = useState(false)
@@ -63,8 +67,11 @@ export default function ShareSettingsModal({
     setIsPrivate(newIsPrivate)
 
     if (metadata) {
-      metadata.is_private = newIsPrivate
-      await callSetCourseMetadata(projectName, metadata)
+      const updatedMetadata = {
+        ...metadata,
+        is_private: newIsPrivate,
+      }
+      await callSetCourseMetadata(projectName, updatedMetadata)
     }
   }
 
@@ -95,13 +102,19 @@ export default function ShareSettingsModal({
   if (!opened) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose()
+      }}
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.2 }}
         className="relative mx-4 max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-[#15162c] p-6 shadow-2xl ring-1 ring-white/10"
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header with improved gradient and spacing */}
         <div className="mb-4 flex items-center justify-between">
@@ -221,16 +234,16 @@ export default function ShareSettingsModal({
                         className="mb-4 space-y-2"
                       >
                         <EmailChipsComponent
-                          course_owner={metadata.course_owner as string}
-                          course_admins={courseAdmins}
                           course_name={projectName}
+                          metadata={metadata}
+                          // course_owner={metadata.course_owner as string}
+                          // course_admins={metadata.course_admins || []}
+                          // approved_emails_list={metadata.approved_emails_list || []}
                           is_private={isPrivate}
                           onEmailAddressesChange={handleEmailAddressesChange}
-                          course_intro_message={
-                            metadata.course_intro_message || ''
-                          }
-                          banner_image_s3={metadata.banner_image_s3 || ''}
-                          openai_api_key={metadata.openai_api_key as string}
+                          // banner_image_s3={metadata.banner_image_s3 || ''}
+                          // course_intro_message={metadata.course_intro_message || ''}
+                          // openai_api_key={metadata.openai_api_key as string}
                           is_for_admins={false}
                         />
                       </motion.div>
@@ -253,14 +266,16 @@ export default function ShareSettingsModal({
               </p>
               <div className="mt-2">
                 <EmailChipsComponent
-                  course_owner={metadata.course_owner as string}
-                  course_admins={courseAdmins}
                   course_name={projectName}
+                  metadata={metadata}
+                  // course_owner={metadata.course_owner as string}
+                  // course_admins={metadata.course_admins || []}
+                  // approved_emails_list={metadata.approved_emails_list || []}
                   is_private={isPrivate}
                   onEmailAddressesChange={handleEmailAddressesChange}
-                  course_intro_message={metadata.course_intro_message || ''}
-                  banner_image_s3={metadata.banner_image_s3 || ''}
-                  openai_api_key={metadata.openai_api_key as string}
+                  // banner_image_s3={metadata.banner_image_s3 || ''}
+                  // course_intro_message={metadata.course_intro_message || ''}
+                  // openai_api_key={metadata.openai_api_key as string}
                   is_for_admins={true}
                 />
               </div>

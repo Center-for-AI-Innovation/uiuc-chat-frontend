@@ -400,7 +400,11 @@ export const UploadCard = memo(function UploadCard({
         opened={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
         projectName={projectName}
-        metadata={metadata}
+        metadata={{
+          ...metadata,
+          approved_emails_list: metadata.approved_emails_list || [],
+          course_admins: metadata.course_admins || [],
+        }}
       />
     </Card>
   )
