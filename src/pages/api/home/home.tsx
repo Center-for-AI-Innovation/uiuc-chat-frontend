@@ -189,8 +189,6 @@ const Home = ({
         value: true,
       })
       dispatch({ field: 'apiKey', value: '' })
-      // TODO: add logging for axiom, after merging with main (to get the axiom code)
-      // log.debug('Using Course-Wide OpenAI API Key', { course_metadata: { course_metadata } })
     } else if (local_api_key) {
       if (local_api_key.startsWith('sk-')) {
         console.log(
@@ -398,24 +396,24 @@ const Home = ({
     conversation: Conversation,
     data: KeyValuePair,
   ) => {
-    if (!conversation?.messages) return;
+    if (!conversation?.messages) return
 
     // Create updated conversation object
     const updatedConversation = {
       ...conversation,
       [data.key]: data.value,
-    };
+    }
 
     // Update state
-    dispatch({ field: 'selectedConversation', value: updatedConversation });
+    dispatch({ field: 'selectedConversation', value: updatedConversation })
 
     // Update conversations list
-    const updatedConversations = conversations.map((c) => 
-      c.id === conversation.id ? updatedConversation : c
-    );
+    const updatedConversations = conversations.map((c) =>
+      c.id === conversation.id ? updatedConversation : c,
+    )
 
-    dispatch({ field: 'conversations', value: updatedConversations });
-  };
+    dispatch({ field: 'conversations', value: updatedConversations })
+  }
 
   // Other context actions --------------------------------------------
 

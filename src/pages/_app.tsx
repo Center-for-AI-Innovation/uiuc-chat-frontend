@@ -9,11 +9,6 @@ import { dark } from '@clerk/themes'
 import '~/styles/globals.css'
 import Maintenance from '~/components/UIUC-Components/Maintenance'
 
-import { useReportWebVitals } from 'next-axiom'
-
-// For axiom Web Vitals logging: https://axiom.co/docs/apps/vercel#sending-logs-to-axiom
-import { NextWebVitalsMetric } from 'next/app'
-
 import posthog from 'posthog-js'
 import { PostHogProvider } from 'posthog-js/react'
 import { useRouter } from 'next/router'
@@ -35,10 +30,6 @@ if (typeof window !== 'undefined') {
 }
 
 const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
-  useReportWebVitals(((metric: NextWebVitalsMetric) => {
-    console.log(metric)
-  }) as any)
-
   const router = useRouter()
   const queryClient = new QueryClient()
 

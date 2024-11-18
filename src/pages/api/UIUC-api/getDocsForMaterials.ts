@@ -1,9 +1,4 @@
 // ~/src/pages/api/UIUC-api/getCourseMetadata.ts
-import { kv } from '@vercel/kv'
-import { NextResponse } from 'next/server'
-import { CourseMetadata } from '~/types/courseMetadata'
-import { log } from 'next-axiom'
-import { env } from '~/env.mjs'
 export const runtime = 'edge'
 
 // TODO: look for public anon key for supabase
