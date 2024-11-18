@@ -479,3 +479,18 @@ button.css-s37qmw {
 /* div.css-p472n8 {
   display: none !important;
 } */
+
+@property --r {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes rotating {
+  from {
+    --r: 0deg;
+  }
+  to {
+    --r: 360deg;
+  }
+}

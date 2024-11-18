@@ -58,7 +58,7 @@ const montserrat_med = Montserrat({
 })
 export default function WebsiteIngestForm({
   project_name,
-  setUploadFiles
+  setUploadFiles,
 }: {
   project_name: string
   setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
@@ -141,12 +141,42 @@ export default function WebsiteIngestForm({
     return url
   }
 
+  // const handleIngest = async () => {
+  //   setOpen(false)
+  //   setUploadFiles((prevFiles) =>
+  //     prevFiles.map((file) =>
+  //       file.name === url ? { ...file, status: 'ingesting' } : file
+  //     )
+  //   )
+  //   try {
+  //     const response = await scrapeWeb(
+  //       url,
+  //       project_name,
+  //       maxUrls.trim() !== '' ? parseInt(maxUrls) : 50,
+  //       scrapeStrategy,
+  //     )
+  //     console.log('response.data', response)
+  //     if (response && response.includes("Crawl completed successfully")) {
+  //       // console.log("ingesting url", response.data.message)
+  //       setUploadFiles((prevFiles) =>
+  //         prevFiles.map((file) =>
+  //           file.name === url ? { ...file, status: 'complete' } : file
+  //         )
+  //       )
+  //     }
+  //   } catch (error: any) {
+  //     console.error('Error while scraping web:', error)
+  //   }
+  //   // let ingest finalize things. It should be finished, but the DB is slow.
+  //   await new Promise((resolve) => setTimeout(resolve, 8000))
+  // }
+
   const handleIngest = async () => {
     setOpen(false)
     setUploadFiles((prevFiles) =>
       prevFiles.map((file) =>
-        file.name === url ? { ...file, status: 'ingesting' } : file
-      )
+        file.name === url ? { ...file, status: 'ingesting' } : file,
+      ),
     )
     try {
       const response = await scrapeWeb(
@@ -155,20 +185,36 @@ export default function WebsiteIngestForm({
         maxUrls.trim() !== '' ? parseInt(maxUrls) : 50,
         scrapeStrategy,
       )
-      console.log('response.data', response)
-      if (response && response.includes("Crawl completed successfully")) {
-        // console.log("ingesting url", response.data.message)
+
+      // Only set to complete if we get a successful response
+      if (
+        response &&
+        typeof response === 'string' &&
+        response.includes('Crawl completed successfully')
+      ) {
         setUploadFiles((prevFiles) =>
           prevFiles.map((file) =>
-            file.name === url ? { ...file, status: 'complete' } : file
-          )
+            file.name === url ? { ...file, status: 'complete' } : file,
+          ),
         )
+      } else {
+        // Handle unsuccessful crawl
+        setUploadFiles((prevFiles) =>
+          prevFiles.map((file) =>
+            file.name === url ? { ...file, status: 'error' } : file,
+          ),
+        )
+        throw new Error('Crawl was not successful')
       }
     } catch (error: any) {
       console.error('Error while scraping web:', error)
+      setUploadFiles((prevFiles) =>
+        prevFiles.map((file) =>
+          file.name === url ? { ...file, status: 'error' } : file,
+        ),
+      )
+      // Remove the timeout since we're handling errors properly now
     }
-    // let ingest finalize things. It should be finished, but the DB is slow.
-    await new Promise((resolve) => setTimeout(resolve, 8000))
   }
 
   const formatUrlAndMatchRegex = (url: string) => {
@@ -275,12 +321,15 @@ export default function WebsiteIngestForm({
 
   return (
     <motion.div layout>
-      <Dialog open={open} onOpenChange={(isOpen) => {
-        setOpen(isOpen);
-        if (!isOpen) {
-          setUrl('');
-        }
-      }}>
+      <Dialog
+        open={open}
+        onOpenChange={(isOpen) => {
+          setOpen(isOpen)
+          if (!isOpen) {
+            setUrl('')
+          }
+        }}
+      >
         <DialogTrigger asChild>
           <Card
             className="group relative cursor-pointer overflow-hidden rounded-xl bg-gradient-to-br from-[#1c1c2e] to-[#2a2a40] p-6 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
@@ -312,14 +361,16 @@ export default function WebsiteIngestForm({
           </Card>
         </DialogTrigger>
 
-        <DialogContent className="max-w-2xl rounded-lg border-0 bg-[#1c1c2e] pt-10 px-10 text-white" style={{ padding: '50px', paddingBottom: '40px' }} >
+        <DialogContent
+          className="max-w-2xl rounded-lg border-0 bg-[#1c1c2e] px-10 pt-10 text-white"
+          style={{ padding: '50px', paddingBottom: '40px' }}
+        >
           <DialogTitle className="text-xl font-bold">
             Ingest Website
           </DialogTitle>
           <ScrollArea className="mt-4 h-[60vh] pr-4">
             <div className="space-y-4">
               <div>
-
                 <Input
                   icon={icon}
                   className={`mt-4 w-[100%] min-w-[25rem] disabled:bg-purple-200 lg:w-[100%]`}
@@ -345,35 +396,35 @@ export default function WebsiteIngestForm({
                   onChange={(e) => {
                     handleUrlChange(e)
                   }}
-                // disabled={isDisabled}
+                  // disabled={isDisabled}
 
-                // onKeyPress={(event) => {
-                //   if (event.key === 'Enter') {
-                //     handleSubmit()
-                //   }
-                // }}
-                // rightSection={
-                // <Button
-                //   onClick={(e) => {
-                //     e.preventDefault()
-                //     if (validateInputs() && validateUrl(url)) {
-                //       handleSubmit()
-                //     }
-                //   }}
-                //   size="md"
-                //   radius={'xl'}
-                //   className={`rounded-s-md ${
-                //     isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
-                //   } overflow-ellipsis text-ellipsis p-2 ${
-                //     isUrlUpdated ? 'text-white' : 'text-gray-500'
-                //   } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
-                //   w={`${isSmallScreen ? 'auto' : 'auto'}`}
-                //   disabled={isDisabled}
-                // >
-                //   Ingest
-                // </Button>
-                // }
-                // rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
+                  // onKeyPress={(event) => {
+                  //   if (event.key === 'Enter') {
+                  //     handleSubmit()
+                  //   }
+                  // }}
+                  // rightSection={
+                  // <Button
+                  //   onClick={(e) => {
+                  //     e.preventDefault()
+                  //     if (validateInputs() && validateUrl(url)) {
+                  //       handleSubmit()
+                  //     }
+                  //   }}
+                  //   size="md"
+                  //   radius={'xl'}
+                  //   className={`rounded-s-md ${
+                  //     isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
+                  //   } overflow-ellipsis text-ellipsis p-2 ${
+                  //     isUrlUpdated ? 'text-white' : 'text-gray-500'
+                  //   } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
+                  //   w={`${isSmallScreen ? 'auto' : 'auto'}`}
+                  //   disabled={isDisabled}
+                  // >
+                  //   Ingest
+                  // </Button>
+                  // }
+                  // rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
                 />
               </div>
               <form
@@ -403,10 +454,11 @@ export default function WebsiteIngestForm({
                       <TextInput
                         styles={{
                           input: {
-                            backgroundColor: '#1A1B1E', '&:focus': {
+                            backgroundColor: '#1A1B1E',
+                            '&:focus': {
                               borderColor: '#9370DB',
                             },
-                          }
+                          },
                         }}
                         name="maximumUrls"
                         radius="md"

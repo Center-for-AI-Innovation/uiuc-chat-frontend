@@ -370,15 +370,20 @@ export function LargeDropzone({
           <Dropzone
             openRef={openRef}
             style={{
-              width: '90%',
-              height: rem(300),
+              width: '100%',
+              minHeight: rem(200),
+              height: 'auto',
               backgroundColor: isDisabled ? '#3a374a' : '#1c1c2e',
               cursor: isDisabled ? 'not-allowed' : 'pointer',
               borderWidth: '2px',
               borderStyle: 'dashed',
-              borderColor: 'rgba(147, 51, 234, 0.3)', // Subtle purple border
+              borderColor: 'rgba(147, 51, 234, 0.3)',
               borderRadius: rem(12),
               transition: 'all 0.2s ease',
+              padding: '1rem',
+              margin: '0 auto',
+              maxWidth: '100%',
+              overflow: 'hidden',
             }}
             onDrop={async (files) => {
               ingestFiles(files, is_new_course).catch((error) => {
@@ -392,19 +397,27 @@ export function LargeDropzone({
           >
             <div
               style={{ pointerEvents: 'none' }}
-              className="flex flex-col items-center justify-center"
+              className="flex flex-col items-center justify-center px-2 sm:px-4"
             >
-              <Group position="center" pt={rem(20)}>
+              <Group position="center" pt={rem(12)} className="sm:pt-5">
                 <Dropzone.Accept>
-                  <IconDownload size={rem(50)} color="#9333ea" stroke={1.5} />
+                  <IconDownload
+                    size={isSmallScreen ? rem(30) : rem(50)}
+                    color="#9333ea"
+                    stroke={1.5}
+                  />
                 </Dropzone.Accept>
                 <Dropzone.Reject>
-                  <IconX size={rem(50)} color="#ef4444" stroke={1.5} />
+                  <IconX
+                    size={isSmallScreen ? rem(30) : rem(50)}
+                    color="#ef4444"
+                    stroke={1.5}
+                  />
                 </Dropzone.Reject>
                 {!isDisabled && (
                   <Dropzone.Idle>
                     <IconCloudUpload
-                      size={rem(50)}
+                      size={isSmallScreen ? rem(30) : rem(50)}
                       color="#9333ea"
                       stroke={1.5}
                     />
@@ -415,8 +428,8 @@ export function LargeDropzone({
               <Text
                 ta="center"
                 fw={700}
-                fz="lg"
-                mt="xl"
+                fz={isSmallScreen ? 'md' : 'lg'}
+                mt={isSmallScreen ? 'md' : 'xl'}
                 className="text-gray-200"
               >
                 <Dropzone.Accept>Drop files here</Dropzone.Accept>
@@ -431,34 +444,37 @@ export function LargeDropzone({
               </Text>
 
               {!isDisabled && (
-                <Text ta="center" fz="sm" mt="xs" className="text-gray-400">
+                <Text
+                  ta="center"
+                  fz={isSmallScreen ? 'xs' : 'sm'}
+                  mt="xs"
+                  className="text-gray-400"
+                >
                   Drag&apos;n&apos;drop files or a whole folder here
                 </Text>
               )}
 
-              <div className="mt-4">
+              <div className="mt-2 w-full overflow-x-hidden sm:mt-4">
                 <SupportedFileUploadTypes />
               </div>
             </div>
           </Dropzone>
           {uploadInProgress && (
-            <>
-              <div className="flex flex-col items-center justify-center ">
-                <Title
-                  order={4}
-                  style={{
-                    marginTop: 10,
-                    alignItems: 'center',
-                    color: '#B22222',
-                    justifyContent: 'center',
-                    textAlign: 'center',
-                  }}
-                >
-                  Remain on this page until upload is complete <br></br> or
-                  ingest will fail.
-                </Title>
-              </div>
-            </>
+            <div className="flex flex-col items-center justify-center px-4 text-center">
+              <Title
+                order={4}
+                style={{
+                  marginTop: 10,
+                  color: '#B22222',
+                  fontSize: isSmallScreen ? '0.9rem' : '1rem',
+                  lineHeight: '1.4',
+                }}
+              >
+                Remain on this page until upload is complete
+                <br />
+                or ingest will fail.
+              </Title>
+            </div>
           )}
         </div>
         {/* END LEFT COLUMN */}

@@ -120,37 +120,62 @@ export const UploadCard = memo(function UploadCard({
           }}
           className="min-h-full bg-gradient-to-r from-purple-900 via-indigo-800 to-blue-800"
         >
-          <Group mt="xl" align="center" position="center" w="100%">
-            <Title
-              order={2}
-              variant="gradient"
-              gradient={{ from: 'gold', to: 'white', deg: 50 }}
-              className={`${montserrat_heading.variable} self-center font-montserratHeading`}
-            >
-              {projectName}
-            </Title>
-            <Button
-              variant="subtle"
-              size="xs"
-              onClick={() => setIsShareModalOpen(true)}
-              className={`ms-2 min-h-[2.5rem] transform rounded-xl bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none ${montserrat_paragraph.variable} font-montserratParagraph`}
-            >
-              Share Chatbot{' '}
-              <span className="ml-2">
-                <IconShare size={20} />
-              </span>
-            </Button>
-          </Group>
+          <div className="w-full border-b border-white/10 bg-black/20 px-3 py-2 sm:px-6 sm:py-4 md:px-8">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <Title
+                  order={2}
+                  className={`${montserrat_heading.variable} font-montserratHeading text-lg text-white/90 sm:text-2xl`}
+                >
+                  Dashboard
+                </Title>
+                <Text className="text-white/60">/</Text>
+                <Title
+                  order={3}
+                  variant="gradient"
+                  gradient={{ from: 'gold', to: 'white', deg: 50 }}
+                  className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base sm:text-xl ${
+                    projectName.length > 40
+                      ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
+                      : ''
+                  }`}
+                >
+                  {projectName}
+                </Title>
+              </div>
 
-          <LargeDropzone
-            courseName={projectName}
-            current_user_email={current_user_email as string}
-            redirect_to_gpt_4={false}
-            isDisabled={false}
-            courseMetadata={metadata as CourseMetadata}
-            is_new_course={false}
-            setUploadFiles={setUploadFiles}
-          />
+              <div className="-inset-0.25 relative shrink-0 animate-[rotating_3s_linear_infinite] rounded-3xl bg-[conic-gradient(from_var(--r),#312e81_0%,#4f46e5_10%,#312e81_20%)] p-0.5">
+                <Button
+                  variant="subtle"
+                  size="xs"
+                  onClick={() => setIsShareModalOpen(true)}
+                  className={`relative transform rounded-3xl bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none
+                    ${montserrat_paragraph.variable} min-h-[2rem]
+                    px-2 font-montserratParagraph
+                    text-sm sm:min-h-[2.5rem]
+                    sm:px-4 sm:text-base
+                  `}
+                >
+                  <span className="hidden sm:inline">Share Chatbot</span>
+                  <span className="inline sm:hidden">Share</span>
+                  <IconShare size={12} className="ml-1 inline sm:hidden" />
+                  <IconShare size={20} className="ml-2 hidden sm:inline" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="px-3 sm:px-6 md:px-8">
+            <LargeDropzone
+              courseName={projectName}
+              current_user_email={current_user_email as string}
+              redirect_to_gpt_4={false}
+              isDisabled={false}
+              courseMetadata={metadata as CourseMetadata}
+              is_new_course={false}
+              setUploadFiles={setUploadFiles}
+            />
+          </div>
 
           <SimpleGrid
             cols={3}
@@ -159,12 +184,7 @@ export const UploadCard = memo(function UploadCard({
               { maxWidth: 1192, cols: 2, spacing: 'md' },
               { maxWidth: 768, cols: 1, spacing: 'sm' },
             ]}
-            style={{
-              width: '90%',
-              margin: '0 auto',
-              paddingTop: '30px',
-              paddingBottom: '30px',
-            }}
+            className="px-3 py-4 sm:px-6 sm:py-8 md:px-8"
           >
             <CanvasIngestForm
               project_name={projectName}
@@ -203,6 +223,7 @@ export const UploadCard = memo(function UploadCard({
             backgroundColor: '#15162c',
             color: 'white',
           }}
+          className="p-3 sm:p-6 md:p-8"
         >
           <div className="card flex h-full flex-col justify-center">
             <div className="card-body">

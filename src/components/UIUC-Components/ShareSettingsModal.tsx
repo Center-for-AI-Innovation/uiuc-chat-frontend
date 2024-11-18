@@ -1,10 +1,16 @@
-import { useState } from 'react'
-import { IconCheck, IconCopy, IconLock, IconWorld } from '@tabler/icons-react'
+import { useState, useEffect } from 'react'
+import {
+  IconCheck,
+  IconCopy,
+  IconLock,
+  IconLockOpen,
+} from '@tabler/icons-react'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import EmailChipsComponent from './EmailChipsComponent'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { Title } from '@mantine/core'
+import { Accordion, Title } from '@mantine/core'
+import { motion, AnimatePresence } from 'framer-motion'
 
 // Props interface for the ShareSettingsModal component
 interface ShareSettingsModalProps {
@@ -29,11 +35,25 @@ export default function ShareSettingsModal({
   projectName,
   metadata,
 }: ShareSettingsModalProps) {
+  // Add a state to track if this is the initial mount
+  const [isInitialMount, setIsInitialMount] = useState(true)
+
+  // Update isInitialMount when modal opens/closes
+  useEffect(() => {
+    if (!opened) setIsInitialMount(true)
+    else {
+      // Small delay to ensure modal is visible first
+      const timer = setTimeout(() => setIsInitialMount(false), 100)
+      return () => clearTimeout(timer)
+    }
+  }, [opened])
+
   // State management
   const [isPrivate, setIsPrivate] = useState(metadata?.is_private || false)
   const [courseAdmins, setCourseAdmins] = useState<string[]>([])
   const shareUrl = `${window.location.origin}/${projectName}`
   const [isCopied, setIsCopied] = useState(false)
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false)
 
   /**
    * Toggles project privacy setting and updates metadata
@@ -76,7 +96,13 @@ export default function ShareSettingsModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="relative mx-4 max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-[#15162c] p-6 shadow-2xl ring-1 ring-white/10">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.2 }}
+        className="relative mx-4 max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-[#15162c] p-6 shadow-2xl ring-1 ring-white/10"
+      >
         {/* Header with improved gradient and spacing */}
         <div className="mb-4 flex items-center justify-between">
           <Title
@@ -96,17 +122,16 @@ export default function ShareSettingsModal({
         </div>
 
         {/* Subtle divider */}
-        <div className="my-3 h-px w-full bg-gradient-to-r from-transparent via-gray-700 to-transparent" />
+        {/* <div className="my-3 h-px w-full bg-gradient-to-r from-transparent via-gray-700 to-transparent" /> */}
 
-        {/* Share URL section with improved input styling */}
-        <div className="mb-6">
+        {/* Share URL section */}
+        <div className="mb-6 rounded-lg bg-gray-900/50 p-4 ring-1 ring-white/5">
           <Title
             className={`${montserrat_heading.variable} mb-3 font-montserratHeading text-sm font-medium text-gray-300`}
             order={4}
           >
-            Share Link
+            Chatbot Link
           </Title>
-          {/* <div className="rounded-lg bg-gray-900/50 p-3 ring-1 ring-white/5"> */}
           <div className="relative flex gap-2">
             <div className="group relative flex-1">
               <div className="animate-spin-slow absolute -inset-0.5 rounded-lg bg-gradient-to-r from-violet-600/20 via-purple-600/20 to-violet-600/20 opacity-75 blur transition duration-1000 group-hover:opacity-100" />
@@ -114,7 +139,7 @@ export default function ShareSettingsModal({
                 type="text"
                 value={shareUrl}
                 readOnly
-                className="relative w-full rounded-lg bg-[#1A1B1E] px-4 py-2.5 text-sm text-white/90 ring-1 ring-white/10 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                className="relative w-full rounded-lg bg-gray-900 px-4 py-2.5 text-sm text-white/90 ring-1 ring-white/10 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
               />
             </div>
             <button
@@ -124,11 +149,7 @@ export default function ShareSettingsModal({
               {isCopied ? <IconCheck size={16} /> : <IconCopy size={16} />}
             </button>
           </div>
-          {/* </div> */}
         </div>
-
-        {/* Subtle divider */}
-        <div className="my-3 h-px w-full bg-gradient-to-r from-transparent via-gray-700 to-transparent" />
 
         {/* Access Control section with improved spacing and transitions */}
         <div>
@@ -145,7 +166,7 @@ export default function ShareSettingsModal({
                 {isPrivate ? (
                   <IconLock className="text-white/90" size={20} />
                 ) : (
-                  <IconWorld className="text-white/90" size={20} />
+                  <IconLockOpen className="text-white/90" size={20} />
                 )}
                 <span className="text-sm font-medium text-white/90">
                   {isPrivate ? 'Private Project' : 'Public Project'}
@@ -165,30 +186,59 @@ export default function ShareSettingsModal({
               </button>
             </div>
 
-            {/* Members section - Condensed spacing */}
-            {isPrivate && (
-              <div className="mb-4 space-y-2">
-                <h4 className="text-sm font-medium text-gray-200">Members</h4>
-                <details className="group" open>
-                  <summary className="cursor-pointer text-xs text-gray-400">
-                    Only these email addresses are able to access the content.
-                  </summary>
-                  <div className="mt-2">
-                    <EmailChipsComponent
-                      course_owner={metadata.course_owner as string}
-                      course_admins={courseAdmins}
-                      course_name={projectName}
-                      is_private={isPrivate}
-                      onEmailAddressesChange={handleEmailAddressesChange}
-                      course_intro_message={metadata.course_intro_message || ''}
-                      banner_image_s3={metadata.banner_image_s3 || ''}
-                      openai_api_key={metadata.openai_api_key as string}
-                      is_for_admins={false}
-                    />
+            {/* Members section */}
+            <AnimatePresence>
+              {isPrivate && (
+                <motion.div
+                  initial={isInitialMount ? false : { height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: 'easeInOut' }}
+                  className="mb-4 space-y-2"
+                >
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-gray-200">
+                      Members
+                    </h4>
+                    <details
+                      className="group"
+                      open={isDetailsOpen}
+                      onToggle={(e) =>
+                        setIsDetailsOpen((e.target as HTMLDetailsElement).open)
+                      }
+                    >
+                      <summary className="mb-4 cursor-pointer space-y-2 text-xs text-gray-400">
+                        Only these email addresses are able to access the
+                        content.
+                      </summary>
+                      <motion.div
+                        initial={false}
+                        animate={{
+                          height: isDetailsOpen ? 'auto' : 0,
+                          y: isDetailsOpen ? 0 : -20,
+                        }}
+                        transition={{ duration: 0.2 }}
+                        className="mb-4 space-y-2"
+                      >
+                        <EmailChipsComponent
+                          course_owner={metadata.course_owner as string}
+                          course_admins={courseAdmins}
+                          course_name={projectName}
+                          is_private={isPrivate}
+                          onEmailAddressesChange={handleEmailAddressesChange}
+                          course_intro_message={
+                            metadata.course_intro_message || ''
+                          }
+                          banner_image_s3={metadata.banner_image_s3 || ''}
+                          openai_api_key={metadata.openai_api_key as string}
+                          is_for_admins={false}
+                        />
+                      </motion.div>
+                    </details>
                   </div>
-                </details>
-              </div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Subtle divider */}
             {/* <div className="my-3 h-px w-full bg-gradient-to-r from-transparent via-gray-700 to-transparent" /> */}
@@ -220,7 +270,7 @@ export default function ShareSettingsModal({
             {/* <div className="my-3 h-px w-full bg-gradient-to-r from-transparent via-gray-700 to-transparent" /> */}
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }
