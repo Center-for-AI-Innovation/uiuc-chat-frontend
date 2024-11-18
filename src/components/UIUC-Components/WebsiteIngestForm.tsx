@@ -92,6 +92,7 @@ export default function WebsiteIngestForm({
     const newFile: FileUpload = {
       name: input,
       status: 'uploading',
+      type: 'webscrape',
     }
     setUploadFiles((prevFiles) => [...prevFiles, newFile])
     setUrl(input)

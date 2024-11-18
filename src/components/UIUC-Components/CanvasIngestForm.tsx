@@ -44,6 +44,7 @@ export default function CanvasIngestForm({
     const newFile: FileUpload = {
       name: input,
       status: 'uploading',
+      type: 'canvas',
     }
     setUploadFiles((prevFiles) => [...prevFiles, newFile])
     setUrl(input)

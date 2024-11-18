@@ -8,6 +8,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 export interface FileUpload {
   name: string
   status: 'uploading' | 'ingesting' | 'complete' | 'error'
+  type: 'document' | 'webscrape' | 'canvas' | 'github' | 'mit'
+  url?: string
 }
 
 interface UploadNotificationProps {
@@ -25,6 +27,7 @@ function UploadNotificationContent({ files, onClose }: UploadNotificationProps) 
       setCurrentFiles(files)
     }
   }, [files])
+
 
   const allComplete = currentFiles.length > 0 && currentFiles.every(file => file.status === 'complete')
   const anyUploading = currentFiles.some(file => file.status === 'uploading' || file.status === 'ingesting')
