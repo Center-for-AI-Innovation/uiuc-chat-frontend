@@ -87,8 +87,32 @@ export const saveConversationToLocalStorage = (conversation: Conversation) => {
   let successful = false
   while (!successful) {
     try {
-      localStorage.setItem('selectedConversation', JSON.stringify(conversation))
-      successful = true // Set to false if setItem succeeds
+      // Get existing conversation to preserve feedback
+      const existingConversation = JSON.parse(
+        localStorage.getItem('selectedConversation') || '{}'
+      );
+
+      // If it's the same conversation, preserve feedback
+      if (existingConversation.id === conversation.id) {
+        const messagesWithFeedback = conversation.messages.map(msg => {
+          const existingMsg = existingConversation.messages?.find((m: typeof msg) => m.id === msg.id);
+          return {
+            ...msg,
+            feedback: existingMsg?.feedback || msg.feedback
+          };
+        });
+        
+        const conversationWithFeedback = {
+          ...conversation,
+          messages: messagesWithFeedback
+        };
+        
+        localStorage.setItem('selectedConversation', JSON.stringify(conversationWithFeedback))
+      } else {
+        localStorage.setItem('selectedConversation', JSON.stringify(conversation))
+      }
+      
+      successful = true
     } catch (e) {
       console.debug(
         'Error saving conversation history. Clearing storage, then trying again. Error:',

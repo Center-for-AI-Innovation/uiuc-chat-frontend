@@ -17,6 +17,7 @@ import posthog from 'posthog-js'
 import {
   AllLLMProviders,
   AllSupportedModels,
+  AnthropicProvider,
   GenericSupportedModel,
   NCSAHostedProvider,
   OllamaProvider,
@@ -64,7 +65,6 @@ export async function processChunkWithStateMachine(
   stateMachineContext: { state: State; buffer: string },
   citationLinkCache: Map<number, string>,
 ): Promise<string> {
-  // console.log('in processChunkWithStateMachine with chunk: ', chunk)
   let { state, buffer } = stateMachineContext
   let processedChunk = ''
 
@@ -339,7 +339,6 @@ export async function determineAndValidateModel(
   modelsWithProviders: AllLLMProviders
 }> {
   const baseUrl = getBaseUrl()
-  console.log('baseUrl:', baseUrl)
 
   const response = await fetch(baseUrl + '/api/models', {
     method: 'POST',
@@ -523,36 +522,6 @@ export function attachContextsToLastMessage(
     lastMessage.contexts = []
   }
   lastMessage.contexts = contexts
-  console.log('lastMessage: ', lastMessage)
-}
-
-/**
- * Constructs the ChatBody object for the chat handler.
- * @param {string} model - The model identifier.
- * @param {Conversation} conversation - The conversation object.
- * @param {string} key - The API key.
- * @param {string} prompt - The prompt for the chat.
- * @param {number} temperature - The temperature setting for the chat.
- * @param {string} course_name - The course name associated with the chat.
- * @param {boolean} stream - A boolean indicating if the response should be streamed.
- * @returns {ChatBody} The constructed ChatBody object.
- */
-export function constructChatBody(
-  conversation: Conversation,
-  key: string,
-  course_name: string,
-  stream: boolean,
-  courseMetadata?: CourseMetadata,
-  llmProviders?: AllLLMProviders,
-): ChatBody {
-  return {
-    conversation: conversation,
-    key: key,
-    course_name: course_name,
-    stream: stream,
-    courseMetadata: courseMetadata,
-    llmProviders: llmProviders,
-  }
 }
 
 /**
@@ -726,8 +695,9 @@ export async function updateConversationInDatabase(
 ) {
   // Log conversation to Supabase
   try {
+    const baseUrl = getBaseUrl()
     const response = await fetch(
-      `${getBaseUrl()}/api/UIUC-api/logConversationToSupabase`,
+      `${baseUrl}/api/UIUC-api/logConversationToSupabase`,
       {
         method: 'POST',
         headers: {
@@ -827,11 +797,16 @@ export const getOpenAIKey = (
   return key
 }
 
+import { POST as ollamaPost } from '@/app/api/chat/ollama/route'
+import { runOllamaChat } from '~/app/utils/ollama'
+import { openAIAzureChat } from './modelProviders/OpenAIAzureChat'
+import { runAnthropicChat } from '~/app/utils/anthropic'
+
 export const routeModelRequest = async (
   chatBody: ChatBody,
-  controller: AbortController,
+  controller?: AbortController,
   baseUrl?: string,
-): Promise<Response> => {
+): Promise<any> => {
   /*  Use this to call the LLM. It will call the appropriate endpoint based on the conversation.model.
       🧠 ADD NEW LLM PROVIDERS HERE 🧠
   */
@@ -839,9 +814,7 @@ export const routeModelRequest = async (
 
   // Add this check at the beginning of the function
   if (!selectedConversation.model || !selectedConversation.model.id) {
-    throw new Error(
-      'Conversation model is undefined or missing "id" property.',
-    )
+    throw new Error('Conversation model is undefined or missing "id" property.')
   }
 
   posthog.capture('LLM Invoked', {
@@ -855,7 +828,6 @@ export const routeModelRequest = async (
     model_id: selectedConversation.model.id,
   })
 
-  let response: Response
   if (
     Object.values(NCSAHostedModelID).includes(
       selectedConversation.model.id as any,
@@ -865,66 +837,40 @@ export const routeModelRequest = async (
     const newChatBody = chatBody!.llmProviders!.NCSAHosted as NCSAHostedProvider
     newChatBody.baseUrl = process.env.OLLAMA_SERVER_URL // inject proper baseURL
 
-    const url = baseUrl ? `${baseUrl}/api/chat/ollama` : '/api/chat/ollama'
-    response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-
-      body: JSON.stringify({
-        conversation: selectedConversation,
-        ollamaProvider: newChatBody,
-        stream: chatBody.stream,
-      }),
-    })
+    return await runOllamaChat(
+      chatBody.conversation!,
+      chatBody!.llmProviders!.Ollama as OllamaProvider,
+      chatBody.stream,
+    )
   } else if (
     Object.values(OllamaModelIDs).includes(selectedConversation.model.id as any)
   ) {
-    console.log(
-      'IN NCSA OLLAMA ROUTER SIDE....',
-      chatBody!.llmProviders!.Ollama,
-    )
+    // User-supplied Ollama instance
 
-    // Ollama model
-    const url = baseUrl ? `${baseUrl}/api/chat/ollama` : '/api/chat/ollama'
-    response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        conversation: selectedConversation,
-        ollamaProvider: chatBody!.llmProviders!.Ollama as OllamaProvider,
-      }),
-    })
+    return await runOllamaChat(
+      selectedConversation,
+      chatBody!.llmProviders!.Ollama as OllamaProvider,
+      chatBody.stream,
+    )
   } else if (
     Object.values(AnthropicModelID).includes(
       selectedConversation.model.id as any,
     )
   ) {
-    const url = baseUrl
-      ? `${baseUrl}/api/chat/anthropic`
-      : '/api/chat/anthropic'
-
+    // ANTHROPIC
     try {
-      response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ chatBody }),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(JSON.stringify(errorData) || 'Unknown error occurred')
-      }
+      return await runAnthropicChat(
+        selectedConversation,
+        chatBody!.llmProviders!.Anthropic as AnthropicProvider,
+        chatBody.stream,
+      )
     } catch (error) {
       return new Response(
         JSON.stringify({
           error:
-            error instanceof Error ? error.message : 'Unknown error occurred',
+            error instanceof Error
+              ? error.message
+              : 'Unknown error occurred when streaming Anthropic LLMs.',
         }),
         {
           status: 500,
@@ -939,19 +885,10 @@ export const routeModelRequest = async (
     Object.values(AzureModelID).includes(selectedConversation.model.id as any)
   ) {
     // Call the OpenAI or Azure API
-    const url = baseUrl ? `${baseUrl}/api/chat` : '/api/chat'
-    response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      signal: controller.signal,
-      body: JSON.stringify(chatBody),
-    })
+    return await openAIAzureChat(chatBody, chatBody.stream)
   } else {
     throw new Error(
       `Model '${selectedConversation.model.name}' is not supported.`,
     )
   }
-  return response
 }

@@ -1,14 +1,10 @@
-// src/pages/api/chat.ts
 import { CourseMetadata } from '~/types/courseMetadata'
 import { getCourseMetadata } from '~/pages/api/UIUC-api/getCourseMetadata'
-import { initializeEncoding, encoding, Tiktoken } from '@/utils/encoding'
-import { OpenAIError, OpenAIStream } from '@/utils/server'
 import {
   ChatBody,
   Content,
   ContextWithMetadata,
   Conversation,
-  Message,
   MessageType,
   OpenAIChatMessage,
   UIUCTool,
@@ -16,220 +12,83 @@ import {
 import { NextApiRequest, NextApiResponse } from 'next'
 import { AnySupportedModel } from '~/utils/modelProviders/LLMProvider'
 import { DEFAULT_SYSTEM_PROMPT } from '@/utils/app/const'
-import { log } from 'next-axiom'
+import { routeModelRequest } from '~/utils/streamProcessing'
+import { NextRequest, NextResponse } from 'next/server'
 
-export const maxDuration = 60
+import { encodingForModel } from 'js-tiktoken'
 
-export const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  try {
-    // Ensure encoding is initialized before usage
-    await initializeEncoding();
-
-    if (req.method !== 'POST') {
-      return res.status(405).json({ error: 'Method Not Allowed' });
-    }
-
-    const {
-      conversation,
-      key,
-      course_name,
-      courseMetadata,
-      stream,
-      llmProviders,
-    } = req.body as ChatBody;
-
-    if (!conversation) {
-      console.error(
-        'No conversation provided. It seems the `messages` array was empty.',
-      );
-      return res.status(400).json({
-        error:
-          'No conversation provided. It seems the `messages` array was empty.',
-      });
-    }
-
-    const messagesToSend = convertConversationToOpenAIMessages(
-      conversation.messages,
-    );
-
-    // Get the latest system message
-    const latestSystemMessage = conversation.messages[conversation.messages.length - 1]?.latestSystemMessage;
-
-    if (!latestSystemMessage) {
-      console.error('No system message found in the conversation.');
-      return res.status(400).json({
-        error: 'No system message found in the conversation.',
-      });
-    }
-
-    const apiStream = await OpenAIStream(
-      conversation.model,
-      latestSystemMessage,
-      conversation.temperature,
-      llmProviders!,
-      // openAIKey,
-      // @ts-ignore -- I think the types are fine.
-      messagesToSend, //old: conversation.messages
-      stream,
-    );
-
-    if (stream) {
-      res.writeHead(200, {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache, no-transform',
-        Connection: 'keep-alive',
-      });
-
-      for await (const chunk of apiStream) {
-        res.write(chunk);
-      }
-
-      res.end();
-    } else {
-      return new Response(JSON.stringify(apiStream))
-    }
-  } catch (error) {
-    if (error instanceof OpenAIError) {
-      const { name, message } = error;
-      console.error('OpenAI Completion Error', message);
-      res.status(400).json({
-        statusCode: 400,
-        name: name,
-        message: message,
-      });
-    } else {
-      console.error('Unexpected Error', error);
-      res.status(500).json({ name: 'Error', message: 'An unexpected error occurred' });
-    }
-  }
-};
-
-const convertConversationToOpenAIMessages = (
-  messages: Message[],
-): Message[] => {
-  return messages.map((message, messageIndex) => {
-    const strippedMessage = { ...message }
-    // When content is an array
-    if (Array.isArray(strippedMessage.content)) {
-      strippedMessage.content.map((content, contentIndex) => {
-        // Convert tool_image_url to image_url for OpenAI
-        if (content.type === 'tool_image_url') {
-          content.type = 'image_url'
-        }
-        // Add final prompt to last message
-        if (
-          content.type === 'text' &&
-          messageIndex === messages.length - 1 &&
-          !content.text?.startsWith('Image description:')
-        ) {
-          console.debug('Replacing the text: ', content.text)
-          content.text = strippedMessage.finalPromtEngineeredMessage
-        }
-        return content
-      })
-    } else {
-      // When content is a string
-      // Add final prompt to last message
-      if (messageIndex === messages.length - 1) {
-        if (strippedMessage.role === 'user') {
-          strippedMessage.content = [
-            {
-              type: 'text',
-              text: strippedMessage.finalPromtEngineeredMessage,
-            },
-          ]
-        } else if (strippedMessage.role === 'system') {
-          strippedMessage.content = [
-            {
-              type: 'text',
-              text: strippedMessage.latestSystemMessage,
-            },
-          ]
-        }
-      }
-    }
-    delete strippedMessage.finalPromtEngineeredMessage
-    delete strippedMessage.latestSystemMessage
-    delete strippedMessage.contexts
-    delete strippedMessage.tools
-    return strippedMessage
-  })
-}
-
-export default handler
-
-interface Prompts {
-  systemPrompt: string
-  userPrompt: string
-  convoHistory: OpenAIChatMessage[]
-  openAIKey: string
-}
+const encoding = encodingForModel('gpt-4o')
 
 export const buildPrompt = async ({
   conversation,
   projectName,
   courseMetadata,
 }: {
-  conversation: Conversation;
-  projectName: string;
-  courseMetadata: CourseMetadata | undefined;
+  conversation: Conversation | undefined
+  projectName: string
+  courseMetadata: CourseMetadata | undefined
 }): Promise<Conversation> => {
   /*
-  System prompt -- defined by user. If documents are provided, add the citations instructions to it.
+    System prompt -- defined by user. If documents are provided, add the citations instructions to it.
+  
+    Priorities for building prompt w/ limited window:
+    1. ✅ Most recent user text input & images/img-description (depending on model support for images)
+    1.5. ❌ Last 1 or 2 conversation history. At least the user message and the AI response. Key for follow-up questions.
+    2. ✅ Image description
+    3. ✅ Tool result
+    4. ✅ query_topContext (if documents are retrieved)
+    5. Image_topContext
+    6. Tool_topContext
+    7. ✅ Conversation history
+    */
+  if (conversation == undefined) {
+    throw new Error('Conversation is undefined when building prompt.')
+  }
 
-  Priorities for building prompt w/ limited window:
-  1. ✅ Most recent user text input & images/img-description (depending on model support for images)
-  1.5. ❌ Last 1 or 2 conversation history. At least the user message and the AI response. Key for follow-up questions.
-  2. ✅ Image description
-  3. ✅ Tool result
-  4. ✅ query_topContext (if documents are retrieved)
-  5. Image_topContext
-  6. Tool_topContext
-  7. ✅ Conversation history
-  */
-  let remainingTokenBudget = conversation.model.tokenLimit - 1500; // Save space for images, OpenAI's handling, etc.
+  let remainingTokenBudget = conversation.model.tokenLimit - 1500 // Save space for images, OpenAI's handling, etc.
 
   try {
-    // Ensure 'encoding' is initialized
-    await initializeEncoding();
-
     // Execute asynchronous operations in parallel and await their results
-    const allPromises = [];
-    allPromises.push(_getLastUserTextInput({ conversation }));
-    allPromises.push(_getLastToolResult({ conversation }));
-    allPromises.push(_getSystemPrompt({ courseMetadata, conversation }));
+    const allPromises = []
+    allPromises.push(_getLastUserTextInput({ conversation }))
+    allPromises.push(_getLastToolResult({ conversation }))
+    allPromises.push(_getSystemPrompt({ courseMetadata, conversation }))
     const [lastUserTextInput, lastToolResult, systemPrompt] =
-      (await Promise.all(allPromises)) as [string, UIUCTool[], string | undefined];
+      (await Promise.all(allPromises)) as [
+        string,
+        UIUCTool[],
+        string | undefined,
+      ]
 
-    const finalSystemPrompt = systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? '';
+    const finalSystemPrompt = systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
 
     // Adjust remaining token budget based on the system prompt length
     if (encoding) {
-      const tokenCount = encoding.encode(finalSystemPrompt).length;
-      remainingTokenBudget -= tokenCount;
+      const tokenCount = encoding.encode(finalSystemPrompt).length
+      remainingTokenBudget -= tokenCount
     }
 
     // --------- <USER PROMPT> ----------
     // Initialize an array to collect sections of the user prompt
-    const userPromptSections: string[] = [];
+    const userPromptSections: string[] = []
 
     // P1: Most recent user text input
-    const userQuery = `\n<User Query>\n${lastUserTextInput}\n</User Query>`;
+    const userQuery = `\n<User Query>\n${lastUserTextInput}\n</User Query>`
     if (encoding) {
-      remainingTokenBudget -= encoding.encode(userQuery).length;
+      remainingTokenBudget -= encoding.encode(userQuery).length
     }
 
     // P2: Latest 2 conversation messages (Reserved tokens)
     const tokensInLastTwoMessages = _getRecentConvoTokens({
       conversation,
-    });
-    console.log('Tokens in last two messages: ', tokensInLastTwoMessages);
-    remainingTokenBudget -= tokensInLastTwoMessages;
+    })
+    console.log('Tokens in last two messages: ', tokensInLastTwoMessages)
+    remainingTokenBudget -= tokensInLastTwoMessages
 
     // Get contexts from the last message
     const contexts =
       (conversation.messages[conversation.messages.length - 1]
-        ?.contexts as ContextWithMetadata[]) || [];
+        ?.contexts as ContextWithMetadata[]) || []
 
     if (contexts && contexts.length > 0) {
       // Documents are present; maintain all existing processes as normal
@@ -237,15 +96,15 @@ export const buildPrompt = async ({
 
       // Check if encoding is initialized
       if (!encoding) {
-        console.error('Encoding is not initialized.');
-        throw new Error('Encoding initialization failed.');
+        console.error('Encoding is not initialized.')
+        throw new Error('Encoding initialization failed.')
       }
 
       const query_topContext = _buildQueryTopContext({
         conversation: conversation,
-        encoding: encoding,
+        // encoding: encoding,
         tokenLimit: remainingTokenBudget - tokensInLastTwoMessages, // Keep room for conversation history
-      });
+      })
 
       if (query_topContext) {
         const queryContextMsg = `
@@ -255,85 +114,84 @@ export const buildPrompt = async ({
         
         <PotentiallyRelevantDocuments>
         ${query_topContext}
-        </PotentiallyRelevantDocuments>`;
+        </PotentiallyRelevantDocuments>`
         // Adjust remaining token budget
-        remainingTokenBudget -= encoding.encode(queryContextMsg).length;
+        remainingTokenBudget -= encoding.encode(queryContextMsg).length
         // Add to user prompt sections
-        userPromptSections.push(queryContextMsg);
+        userPromptSections.push(queryContextMsg)
       }
     }
 
     const latestUserMessage =
-      conversation.messages[conversation.messages.length - 1];
+      conversation.messages[conversation.messages.length - 1]
 
     // Move Tool Outputs to be added before the userQuery
     if (latestUserMessage?.tools) {
-      const toolsOutputResults = _buildToolsOutputResults({ conversation });
+      const toolsOutputResults = _buildToolsOutputResults({ conversation })
 
       // Add Tool Instructions and outputs
       const toolInstructions =
-        "<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool `tool name`...' or 'According to tool `tool name`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>";
+        "<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool `tool name`...' or 'According to tool `tool name`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>"
 
       // Add to user prompt sections
-      userPromptSections.push(toolInstructions);
+      userPromptSections.push(toolInstructions)
 
       // Adjust remaining token budget for tool outputs
       if (encoding) {
-        remainingTokenBudget -= encoding.encode(toolsOutputResults).length;
+        remainingTokenBudget -= encoding.encode(toolsOutputResults).length
       }
 
       // Add tool outputs to user prompt sections
-      userPromptSections.push(toolsOutputResults);
+      userPromptSections.push(toolsOutputResults)
     }
 
     // Add the user's query to the prompt sections
-    userPromptSections.push(userQuery);
+    userPromptSections.push(userQuery)
 
     // Assemble the user prompt by joining sections with double line breaks
-    const userPrompt = userPromptSections.join('\n\n');
+    const userPrompt = userPromptSections.join('\n\n')
 
     // Set final system and user prompts in the conversation
     conversation.messages[
       conversation.messages.length - 1
-    ]!.finalPromtEngineeredMessage = userPrompt;
+    ]!.finalPromtEngineeredMessage = userPrompt
 
     conversation.messages[
       conversation.messages.length - 1
-    ]!.latestSystemMessage = finalSystemPrompt;
+    ]!.latestSystemMessage = finalSystemPrompt
 
-    return conversation;
+    return conversation
   } catch (error) {
-    console.error('Error in buildPrompt:', error);
-    throw error;
+    console.error('Error in buildPrompt:', error)
+    throw error
   }
-};
-
+}
 
 const _getRecentConvoTokens = ({
   conversation,
 }: {
-  conversation: Conversation;
+  conversation: Conversation
 }): number => {
   if (!encoding) {
-    throw new Error('Encoding is not initialized.');
+    throw new Error('Encoding is not initialized.')
   }
 
   // Your existing logic using 'encoding'
   return conversation.messages.slice(-4).reduce((acc, message) => {
-    let content: string;
+    let content: string
     if (typeof message.content === 'string') {
-      content = message.content;
+      content = message.content
     } else {
-      content = '';
+      content = ''
     }
 
     if (!encoding) {
-      throw new Error("Encoding is null");
+      throw new Error('Encoding is null')
     }
-    const tokens = encoding.encode(content).length;
-    return acc + tokens;
-  }, 0);
-};
+    const tokens = encoding.encode(content).length
+    return acc + tokens
+  }, 0)
+}
 
 const _buildToolsOutputResults = ({
   conversation,
@@ -378,11 +236,11 @@ const _buildToolsOutputResults = ({
 const _buildConvoHistory = ({
   conversation,
   tokenLimit,
-  encoding,
+  // encoding,
 }: {
   conversation: Conversation
   tokenLimit: number
-  encoding: Tiktoken
+  // encoding: Tiktoken
 }): OpenAIChatMessage[] => {
   let tokenCount = 0
   let messagesToSend: OpenAIChatMessage[] = []
@@ -413,13 +271,32 @@ const _buildConvoHistory = ({
   return messagesToSend
 }
 
-export function _buildQueryTopContext({
+const _getLastUserTextInput = async ({
   conversation,
-  encoding,
+}: {
+  conversation: Conversation
+}): Promise<string> => {
+  /* 
+      Gets ONLY the text that the user input. Does not return images or anything else. Just what the user typed.
+    */
+  const lastMessageContent =
+    conversation.messages?.[conversation.messages.length - 1]?.content
+
+  if (typeof lastMessageContent === 'string') {
+    return lastMessageContent
+  } else if (Array.isArray(lastMessageContent)) {
+    return lastMessageContent.map((content) => content.text || '').join('\n')
+  }
+  throw new Error('No user input found')
+}
+
+function _buildQueryTopContext({
+  conversation,
+  // encoding,
   tokenLimit = 8000,
 }: {
   conversation: Conversation
-  encoding: Tiktoken
+  // encoding: Tiktoken
   tokenLimit: number
 }) {
   try {
@@ -473,6 +350,17 @@ export function _buildQueryTopContext({
   }
 }
 
+const _getLastToolResult = async ({
+  conversation,
+}: {
+  conversation: Conversation
+}): Promise<UIUCTool[] | undefined> => {
+  const toolResults: UIUCTool[] = conversation.messages?.[
+    conversation.messages.length - 1
+  ]?.tools as UIUCTool[]
+  return toolResults
+}
+
 const _getSystemPrompt = async ({
   courseMetadata,
   conversation,
@@ -485,62 +373,43 @@ const _getSystemPrompt = async ({
     userDefinedSystemPrompt = courseMetadata.system_prompt
   } else {
     userDefinedSystemPrompt = await getCourseMetadata(conversation.name)
-      .then(metadata => metadata?.system_prompt)
-      .catch(error => {
+      .then((metadata) => metadata?.system_prompt)
+      .catch((error) => {
         console.warn('Failed to fetch course metadata:', error)
         return undefined
       })
   }
 
   // If userDefinedSystemPrompt is null or undefined, use DEFAULT_SYSTEM_PROMPT
-  const systemPrompt = userDefinedSystemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
+  let systemPrompt = userDefinedSystemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
+
+  // Necessary for math notation. See https://docs.mathjax.org/en/latest/input/tex/index.html
+  systemPrompt += `\nWhen responding with equations, use MathJax/KaTeX notation. Equations should be wrapped in either:
+
+  * Single dollar signs $...$ for inline math
+  * Double dollar signs $$...$$ for display/block math
+  * Or \\[...\\] for display math
+  
+  Here's how the equations should be formatted in the markdown: Schrödinger Equation: $i\\hbar \\frac{\\partial}{\\partial t} \\Psi(\\mathbf{r}, t) = \\hat{H} \\Psi(\\mathbf{r}, t)$`
 
   // Check if contexts are present
-  const contexts = conversation.messages[conversation.messages.length - 1]?.contexts as ContextWithMetadata[] || []
+  const contexts =
+    (conversation.messages[conversation.messages.length - 1]
+      ?.contexts as ContextWithMetadata[]) || []
 
   if (!contexts || contexts.length === 0) {
     // No documents retrieved, return only system prompt
     return systemPrompt.trim()
   } else {
     // Documents are present, combine system prompt with system post prompt
-    const systemPostPrompt = getSystemPostPrompt({ 
-      conversation, 
-      courseMetadata: courseMetadata ?? {} as CourseMetadata 
+    const systemPostPrompt = getSystemPostPrompt({
+      conversation,
+      courseMetadata: courseMetadata ?? ({} as CourseMetadata),
     })
     return [systemPrompt, systemPostPrompt]
-      .filter(prompt => prompt?.trim())
+      .filter((prompt) => prompt?.trim())
       .join('\n\n')
   }
-}
-
-const _getLastToolResult = async ({
-  conversation,
-}: {
-  conversation: Conversation
-}): Promise<UIUCTool[] | undefined> => {
-  const toolResults: UIUCTool[] = conversation.messages?.[
-    conversation.messages.length - 1
-  ]?.tools as UIUCTool[]
-  return toolResults
-}
-
-const _getLastUserTextInput = async ({
-  conversation,
-}: {
-  conversation: Conversation
-}): Promise<string> => {
-  /* 
-    Gets ONLY the text that the user input. Does not return images or anything else. Just what the user typed.
-  */
-  const lastMessageContent =
-    conversation.messages?.[conversation.messages.length - 1]?.content
-
-  if (typeof lastMessageContent === 'string') {
-    return lastMessageContent
-  } else if (Array.isArray(lastMessageContent)) {
-    return lastMessageContent.map((content) => content.text || '').join('\n')
-  }
-  throw new Error('No user input found')
 }
 
 export const getSystemPostPrompt = ({
@@ -564,8 +433,8 @@ export const getSystemPostPrompt = ({
   PostPromptLines.push(
     `Please analyze and respond to the following question using the excerpts from the provided documents. These documents can be pdf files or web pages. Additionally, you may see the output from API calls (called 'tools') to the user's services which, when relevant, you should use to construct your answer. You may also see image descriptions from images uploaded by the user. Prioritize image descriptions, when helpful, to construct your answer.
 Integrate relevant information from these documents, ensuring each reference is linked to the document's number.
-Your response should be semi-formal. 
-When quoting directly, cite with footnotes linked to the document number and page number, if provided. 
+
+When quoting directly from a source document, cite with footnotes linked to the document number and page number, if provided. 
 Summarize or paraphrase other relevant information with inline citations, again referencing the document number and page number, if provided.
 If the answer is not in the provided documents, state so.${
       guidedLearning || documentsOnly

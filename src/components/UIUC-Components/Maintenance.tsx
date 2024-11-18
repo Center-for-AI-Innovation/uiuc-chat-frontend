@@ -8,41 +8,28 @@ const Maintenance = ({}: {
 }) => {
   return (
     <>
-      {/* can't use header, it has auth in it */}
-      <main className="items-left justify-left course-page-main flex min-h-screen flex-col">
-        <div className="container flex flex-col items-center justify-center gap-8 px-4 py-5 ">
+      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
+        <div className="container flex flex-col items-center justify-center gap-8 px-4 py-8 text-center">
           <Link href="/">
             <h2 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
-              UIUC.{' '}
-              <span className="${inter.style.fontFamily} text-[hsl(280,100%,70%)]">
-                chat
-              </span>
+              UIUC. <span className="text-[hsl(280,100%,70%)]">chat</span>
             </h2>
           </Link>
-          <br></br>
-          <Title color="#fbbf24" order={1}>
-            UIUC.chat is down for maintenance
+
+          <Title className="mt-8 text-amber-400" order={1}>
+            We&apos;ll Be Right Back
           </Title>
-          <Text size="lg">
-            Due to a surge in new documents, our vector database is nearing
-            capacity. We&apos;re expanding the database now (a simple EC2
-            instance on AWS) and we&apos;ll be back shortly. No data was lost,
-            and the upgrade will be seamless for everyone.
+
+          <Text size="xl" className="max-w-2xl text-gray-200">
+            Due to a surge in new documents, we are experiencing some technical
+            difficulties. Our team is working hard to resolve this and
+            we&apos;ll be back online shortly. Thank you for your patience.
           </Text>
-          {/* <Text size="lg">
-            Motivation: Things to explosive product growth, accompanied by the
-            start of the school year with blown pas our OpenAI/GPT-4 maximum
-            budget and most core functionality is on pause while that is
-            resolved. We are implementing two solutions: (1) bring your own
-            OpenAI API keys. You can just enter your own to pay for your usage.
-            We will still cover all other server and database costs because
-            OpenAI is by far the most expensive. And (2) implementing better
-            caching of responses, so simple and repeated queries are free for us
-            to run. But cache invalidation is inherently complex and will take
-            more time to implement properly.
-          </Text> */}
+
+          <div className="mt-8 animate-pulse">
+            <div className="h-2 w-24 rounded bg-amber-400"></div>
+          </div>
         </div>
-        <div className="items-left container flex flex-col justify-center gap-12 px-20 py-16 "></div>
       </main>
     </>
   )

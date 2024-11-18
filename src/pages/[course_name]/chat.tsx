@@ -11,6 +11,7 @@ import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { montserrat_heading } from 'fonts'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
+import Head from 'next/head'
 
 const ChatPage: NextPage = () => {
   const clerk_user_outer = useUser()

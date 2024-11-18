@@ -19,9 +19,25 @@ export enum OllamaModelIDs {
   LLAMA31_latest = 'llama3.1:latest', // maps to LLAMA31_8b
   LLAMA31_70b = 'llama3.1:70b',
   LLAMA31_405b = 'llama3.1:405b',
+  LLAMA31_8b_instruct_fp16 = 'llama3.1:8b-instruct-fp16',
+  LLAMA31_70b_instruct_fp16 = 'llama3.1:70b-instruct-fp16',
 }
 
 export const OllamaModels: Record<OllamaModelIDs, OllamaModel> = {
+  [OllamaModelIDs.LLAMA31_70b_instruct_fp16]: {
+    id: OllamaModelIDs.LLAMA31_70b_instruct_fp16,
+    name: 'Llama 3.1 70b (FP16)',
+    parameterSize: '8b',
+    tokenLimit: 128000,
+    enabled: true,
+  },
+  [OllamaModelIDs.LLAMA31_8b_instruct_fp16]: {
+    id: OllamaModelIDs.LLAMA31_8b_instruct_fp16,
+    name: 'Llama 3.1 8b (FP16)',
+    parameterSize: '8b',
+    tokenLimit: 128000,
+    enabled: true,
+  },
   [OllamaModelIDs.LLAMA31_8b]: {
     id: OllamaModelIDs.LLAMA31_8b,
     name: 'Llama 3.1 8b',
@@ -38,7 +54,7 @@ export const OllamaModels: Record<OllamaModelIDs, OllamaModel> = {
   },
   [OllamaModelIDs.LLAMA31_70b]: {
     id: OllamaModelIDs.LLAMA31_70b,
-    name: 'Llama 3.1 70b',
+    name: 'Llama 3.1 70b (Quantized, Poor Quality Model)',
     parameterSize: '70b',
     tokenLimit: 128000,
     enabled: true,

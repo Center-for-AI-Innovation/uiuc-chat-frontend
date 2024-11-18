@@ -58,7 +58,10 @@ export default async function handler(req: NextRequest, res: NextResponse) {
     console.debug('llmProviders BEFORE being cleaned and such', llmProviders)
 
     const redisKey = `${courseName}-llms`
-    const existingLLMs = (await kv.get(redisKey)) as AllLLMProviders
+    // Start fetching existing LLMs early
+    const existingLLMsPromise = kv.get(
+      redisKey,
+    ) as Promise<ProjectWideLLMProviders>
 
     // Ensure all keys are encrypted, then save to DB.
     const processProviders = async () => {
@@ -76,7 +79,8 @@ export default async function handler(req: NextRequest, res: NextResponse) {
     }
     await processProviders()
 
-    // Combine the existing metadata with the new metadata, prioritizing the new values
+    // Now await the existing LLMs and combine with encrypted providers
+    const existingLLMs = await existingLLMsPromise
     const combined_llms = { ...existingLLMs, ...llmProviders }
 
     console.debug('-----------------------------------------')
@@ -89,7 +93,7 @@ export default async function handler(req: NextRequest, res: NextResponse) {
     await kv.set(redisKey, combined_llms)
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error setting course metadata:', error)
+    console.error('Error upserting LLM providers:', error)
     return NextResponse.json({ success: false })
   }
 }

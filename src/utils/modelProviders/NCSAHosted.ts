@@ -46,7 +46,7 @@ export const NCSAHostedModels: Record<NCSAHostedModelID, OllamaModel> = {
   },
   [NCSAHostedModelID.LLAMA31_70b]: {
     id: NCSAHostedModelID.LLAMA31_70b,
-    name: 'Llama 3.1 70b (quantized)',
+    name: 'Llama 3.1 70b (Quantized, Poor Quality Model)',
     parameterSize: '70b',
     tokenLimit: 128000,
     enabled: true,
@@ -76,8 +76,6 @@ export const getNCSAHostedModels = async (
     // /api/tags - all downloaded models - might not have room on the GPUs.
     // /api/ps - all HOT AND LOADED models
     const response = await fetch(process.env.OLLAMA_SERVER_URL + '/api/ps')
-
-    console.log('process.env.OLLAMA_SERVER_URL', process.env.OLLAMA_SERVER_URL)
 
     if (!response.ok) {
       ncsaHostedProvider.error = `HTTP error ${response.status} ${response.statusText}.`

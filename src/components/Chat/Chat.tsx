@@ -45,13 +45,11 @@ import { useRouter } from 'next/router'
 import { useUser } from '@clerk/nextjs'
 import { extractEmailsFromClerk } from '../UIUC-Components/clerkHelpers'
 import ChatNavbar from '../UIUC-Components/navbars/ChatNavbar'
-// import { MainPageBackground } from '../UIUC-Components/MainPageBackground'
 import { notifications } from '@mantine/notifications'
 import { Montserrat } from 'next/font/google'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import {
   State,
-  constructChatBody,
   getOpenAIKey,
   handleContextSearch,
   processChunkWithStateMachine,
@@ -168,6 +166,7 @@ export const Chat = memo(
         llmProviders,
       },
       handleUpdateConversation,
+      handleFeedbackUpdate,
       dispatch: homeDispatch,
     } = useContext(HomeContext)
 
@@ -336,7 +335,10 @@ export const Chat = memo(
         enabledDocumentGroups: string[],
         llmProviders: AllLLMProviders,
       ) => {
-        console.log('handleSend called with model:', selectedConversation?.model);
+        console.log(
+          'handleSend called with model:',
+          selectedConversation?.model,
+        )
         setCurrentMessage(message)
         resetMessageStates()
 
@@ -346,18 +348,24 @@ export const Chat = memo(
 
         if (selectedConversation) {
           // Add this type guard function
-          function isValidModel(model: any): model is { id: string; name: string } {
-            return model && typeof model.id === 'string' && typeof model.name === 'string';
+          function isValidModel(
+            model: any,
+          ): model is { id: string; name: string } {
+            return (
+              model &&
+              typeof model.id === 'string' &&
+              typeof model.name === 'string'
+            )
           }
 
           // Check if model is defined and valid
           if (!isValidModel(selectedConversation.model)) {
-            console.error('Selected conversation does not have a valid model.');
+            console.error('Selected conversation does not have a valid model.')
             errorToast({
               title: 'Model Error',
               message: 'No valid model selected for the conversation.',
-            });
-            return;
+            })
+            return
           }
 
           let updatedConversation: Conversation
@@ -418,19 +426,6 @@ export const Chat = memo(
               // )
             }
           }
-          // homeDispatch({
-          //   field: 'selectedConversation',
-          //   value: updatedConversation,
-          // })
-          // Update the conversation in the server
-          // if (!user_email) {
-          // saveConversationToLocalStorage(updatedConversation)
-          // } else {
-
-          // console.log(
-          //   'updatedConversation before mutation:',
-          //   updatedConversation,
-          // )
           handleUpdateConversation(updatedConversation, {
             key: 'messages',
             value: updatedConversation.messages,
@@ -529,32 +524,26 @@ export const Chat = memo(
             }
           }
 
-          const chatBody: ChatBody = constructChatBody(
-            updatedConversation,
-            getOpenAIKey(courseMetadata, apiKey),
-            courseName,
-            true,
-            courseMetadata,
-            llmProviders,
-          )
-          // Action 4: Build Prompt - Put everything together into a prompt
-          const buildPromptResponse = await fetch('/api/buildPrompt', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(chatBody),
-          })
-
-          const builtConversation = await buildPromptResponse.json()
-          chatBody.conversation = builtConversation
-
-          // Ensure that chatBody.model is set
-          if (!chatBody.model) {
-            chatBody.model = selectedConversation.model
+          const chatBody: ChatBody = {
+            conversation: updatedConversation,
+            key: getOpenAIKey(courseMetadata, apiKey),
+            course_name: courseName,
+            stream: true,
+            courseMetadata: courseMetadata,
+            llmProviders: llmProviders,
+            model: selectedConversation.model,
           }
-
           updatedConversation = chatBody.conversation!
+
+          // Action 4: Build Prompt - Put everything together into a prompt
+          // const buildPromptResponse = await fetch('/api/buildPrompt', {
+          //   method: 'POST',
+          //   headers: {
+          //     'Content-Type': 'application/json',
+          //   },
+          //   body: JSON.stringify(chatBody),
+          // })
+          // const builtConversation = await buildPromptResponse.json()
 
           // Update the selected conversation
           homeDispatch({
@@ -588,14 +577,26 @@ export const Chat = memo(
               errorToast({
                 title: 'Error running chat completion',
                 message:
-                  (error as Error).message || 'An unexpected error occurred',
+                  (error as Error).message ||
+                  'In Chat.tsx An unexpected error occurred',
               })
             }
           } else {
             try {
               // Route to the specific model provider
-              response = await routeModelRequest(chatBody, controller)
+              // response = await routeModelRequest(chatBody, controller)
+
+              // CALL OUR NEW ENDPOINT... /api/chat
+              response = await fetch('/api/allNewRoutingChat', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(chatBody),
+              })
+              console.log('response from /api/chat', response)
             } catch (error) {
+              // TODO: Improve error messages here...
               console.error('Error routing to model provider:', error)
               errorToast({
                 title: 'Error routing to model provider',
@@ -606,35 +607,50 @@ export const Chat = memo(
           }
 
           if (response instanceof Response && !response.ok) {
-            const final_response = await response.json()
+            let final_response
+            try {
+              final_response = await response.json()
+            } catch (error) {
+              console.error('Error parsing response:', error)
+              homeDispatch({ field: 'loading', value: false })
+              homeDispatch({ field: 'messageIsStreaming', value: false })
+              errorToast({
+                title: 'Error',
+                message:
+                  'Received an invalid response from the server. Please try again.',
+              })
+              return
+            }
+
             homeDispatch({ field: 'loading', value: false })
             homeDispatch({ field: 'messageIsStreaming', value: false })
-            console.error(
-              'Error calling the LLM:',
-              final_response,
-              final_response,
-            )
+            console.error('Error calling the LLM:', final_response)
+
             if (final_response.error) {
-              let errorObj
+              let errorMessage = final_response.error
+              let errorCode = final_response.code
+
+              // Handle case where error is a JSON string
               if (typeof final_response.error === 'string') {
                 try {
-                  errorObj = JSON.parse(final_response.error)
+                  const parsed = JSON.parse(final_response.error)
+                  errorMessage = parsed.error || parsed.message
+                  errorCode = parsed.code
                 } catch (e) {
-                  errorObj = { error: final_response.error }
+                  // Keep original error message if not valid JSON
                 }
-              } else {
-                errorObj = final_response.error
               }
 
-              const errorDetails = errorObj.error || errorObj
               errorToast({
-                title: errorDetails.type || 'Error',
-                message: errorDetails.message || 'An unexpected error occurred',
+                title: `Error calling LLM`,
+                message:
+                  errorMessage ||
+                  `An unexpected error occurred. Try using a different model.${errorCode ? ` Error code: ${errorCode}` : ''}`,
               })
               return
             } else {
               errorToast({
-                title: final_response.name,
+                title: final_response.name || 'Error',
                 message:
                   final_response.message ||
                   'There was an unexpected error calling the LLM. Try using a different model (via the Settings button in the header).',
@@ -707,6 +723,8 @@ export const Chat = memo(
                       id: uuidv4(),
                       role: 'assistant',
                       content: chunkValue,
+                      contexts: message.contexts,
+                      feedback: message.feedback,
                     },
                   ]
                   finalAssistantRespose += chunkValue
@@ -840,6 +858,7 @@ export const Chat = memo(
                   role: 'assistant',
                   content: answer,
                   contexts: message.contexts,
+                  feedback: message.feedback,
                 },
               ]
               updatedConversation = {
@@ -1165,6 +1184,101 @@ export const Chat = memo(
       [selectedConversation, conversations],
     )
 
+    const handleFeedback = useCallback(
+      async (
+        message: Message,
+        isPositive: boolean,
+        category?: string,
+        details?: string,
+      ) => {
+        if (!selectedConversation) return
+
+        // Get conversation from localStorage and parse it
+        const sourceConversationStr = localStorage.getItem(
+          'selectedConversation',
+        )
+        let sourceConversation
+
+        try {
+          sourceConversation = sourceConversationStr
+            ? JSON.parse(sourceConversationStr)
+            : null
+        } catch (error) {
+          sourceConversation = null
+        }
+
+        if (!sourceConversation?.messages) {
+          return
+        }
+
+        // Create updated conversation object using sourceConversation as the base
+        const updatedConversation = {
+          ...sourceConversation,
+          messages: sourceConversation.messages.map((msg: Message) => {
+            if (msg.id === message.id) {
+              return {
+                ...msg,
+                feedback: {
+                  isPositive,
+                  category,
+                  details,
+                },
+              }
+            }
+            return msg
+          }),
+        }
+
+        try {
+          // Update localStorage
+          localStorage.setItem(
+            'selectedConversation',
+            JSON.stringify(updatedConversation),
+          )
+
+          // Update the conversation using handleUpdateConversation
+          handleFeedbackUpdate(updatedConversation, {
+            key: 'messages',
+            value: updatedConversation.messages,
+          })
+
+          // Update database
+          await updateConversationMutation.mutateAsync(updatedConversation)
+
+          // Log to Supabase
+          await fetch('/api/UIUC-api/logConversationToSupabase', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              course_name: getCurrentPageName(),
+              conversation: updatedConversation,
+            }),
+          })
+        } catch (error) {
+          homeDispatch({
+            field: 'conversations',
+            value: conversations,
+          })
+          homeDispatch({
+            field: 'selectedConversation',
+            value: sourceConversation,
+          })
+          errorToast({
+            title: 'Error updating feedback',
+            message: 'Failed to save feedback. Please try again.',
+          })
+        }
+      },
+      [
+        selectedConversation,
+        conversations,
+        homeDispatch,
+        updateConversationMutation,
+      ],
+    )
+
     return (
       <>
         <Head>
@@ -1194,7 +1308,9 @@ export const Chat = memo(
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.25, ease: 'easeInOut' }}
                 >
-                  {selectedConversation && selectedConversation.messages && selectedConversation.messages?.length === 0 ? (
+                  {selectedConversation &&
+                  selectedConversation.messages &&
+                  selectedConversation.messages?.length === 0 ? (
                     <>
                       <div className="mt-16">
                         {renderIntroductoryStatements()}
@@ -1218,6 +1334,7 @@ export const Chat = memo(
                               llmProviders,
                             )
                           }}
+                          onFeedback={handleFeedback}
                           onImageUrlsUpdate={onImageUrlsUpdate}
                         />
                       ))}

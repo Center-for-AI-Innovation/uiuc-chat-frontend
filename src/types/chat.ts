@@ -38,6 +38,13 @@ export interface Message {
   conversation_id?: string
   created_at?: string
   updated_at?: string
+  feedback?: MessageFeedback
+}
+
+export type MessageFeedback = {
+  isPositive: boolean | null
+  category: string | null
+  details: string | null
 }
 
 export interface UIUCTool {
