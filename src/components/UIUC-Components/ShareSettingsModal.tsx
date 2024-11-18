@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useDebouncedState } from '@mantine/hooks'
 import {
-  IconCheck,
-  IconCopy,
   IconLock,
   IconLockOpen,
+  IconCopy,
+  IconCheck,
 } from '@tabler/icons-react'
 import { type CourseMetadata } from '~/types/courseMetadata'
-import EmailChipsComponent from './EmailChipsComponent'
+import EmailListAccordion from './EmailListAccordion'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { Accordion, Title } from '@mantine/core'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Accordion } from '@/components/shadcn/accordion'
 
 // Props interface for the ShareSettingsModal component
 interface ShareSettingsModalProps {
@@ -49,15 +49,13 @@ export default function ShareSettingsModal({
     }
   }, [opened])
 
-  // State management
+  // State management for privacy and members
   const [isPrivate, setIsPrivate] = useDebouncedState(
     metadata?.is_private || false,
     500,
   )
-  const [courseAdmins, setCourseAdmins] = useState<string[]>([])
   const shareUrl = `${window.location.origin}/${projectName}`
   const [isCopied, setIsCopied] = useState(false)
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false)
 
   /**
    * Toggles project privacy setting and updates metadata
@@ -113,176 +111,151 @@ export default function ShareSettingsModal({
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.2 }}
-        className="relative mx-4 max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-[#15162c] p-6 shadow-2xl ring-1 ring-white/10"
+        className="relative mx-4 max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-[#15162c] shadow-2xl ring-1 ring-white/10"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header with improved gradient and spacing */}
-        <div className="mb-4 flex items-center justify-between">
-          <Title
-            className={`${montserrat_heading.variable} font-montserratHeading text-2xl font-semibold tracking-tight`}
-            variant="gradient"
-            gradient={{ from: '#E5E7EB', to: 'white', deg: 170 }}
-            order={3}
-          >
-            Share your chatbot
-          </Title>
+        {/* Add subtle gradient border */}
+        <div className="absolute inset-0 -z-10 rounded-2xl bg-gradient-to-tr from-violet-500/20 to-transparent blur-xl" />
+
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
+          <div className="flex flex-col">
+            <h2
+              className={`${montserrat_heading.variable} font-montserratHeading text-xl font-semibold text-white`}
+            >
+              Share your chatbot
+            </h2>
+            <p
+              className={`${montserrat_paragraph.variable} mt-1 font-montserratParagraph text-sm text-gray-400`}
+            >
+              Collaborate with members on this project
+            </p>
+          </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-800/50 hover:text-white"
+            className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-800/50 hover:text-red-500"
           >
-            ✕
+            <div className="flex h-5 w-5 items-center justify-center rounded-full">
+              ✕
+            </div>
           </button>
         </div>
 
-        {/* Subtle divider */}
-        {/* <div className="my-3 h-px w-full bg-gradient-to-r from-transparent via-gray-700 to-transparent" /> */}
-
-        {/* Share URL section */}
-        <div className="mb-6 rounded-lg bg-gray-900/50 p-4 ring-1 ring-white/5">
-          <Title
-            className={`${montserrat_heading.variable} mb-3 font-montserratHeading text-sm font-medium text-gray-300`}
-            order={4}
-          >
-            Chatbot Link
-          </Title>
-          <div className="relative flex gap-2">
-            <div className="group relative flex-1">
-              <div className="animate-spin-slow absolute -inset-0.5 rounded-lg bg-gradient-to-r from-violet-600/20 via-purple-600/20 to-violet-600/20 opacity-75 blur transition duration-1000 group-hover:opacity-100" />
-              <input
-                type="text"
-                value={shareUrl}
-                readOnly
-                className="relative w-full rounded-lg bg-gray-900 px-4 py-2.5 text-sm text-white/90 ring-1 ring-white/10 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
-              />
-            </div>
-            <button
-              onClick={handleCopy}
-              className="relative flex min-w-[42px] items-center justify-center rounded-lg bg-violet-600 p-2.5 text-white transition-all duration-300 hover:bg-violet-500 hover:shadow-lg hover:shadow-violet-500/30 active:scale-95"
+        {/* Content */}
+        <div className="divide-y divide-white/10">
+          {/* Chatbot Link section */}
+          <div className="p-6">
+            <h3
+              className={`${montserrat_heading.variable} mb-3 font-montserratHeading text-sm font-medium text-gray-400`}
             >
-              {isCopied ? <IconCheck size={16} /> : <IconCopy size={16} />}
-            </button>
-          </div>
-        </div>
-
-        {/* Access Control section with improved spacing and transitions */}
-        <div>
-          <Title
-            className={`${montserrat_heading.variable} mb-3 font-montserratHeading text-sm font-medium text-gray-300`}
-            order={4}
-          >
-            Access Control
-          </Title>
-          <div className="rounded-lg bg-gray-900/50 p-4 ring-1 ring-white/5">
-            {/* Privacy toggle with improved animation */}
-            <div className="mb-5 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {isPrivate ? (
-                  <IconLock className="text-white/90" size={20} />
-                ) : (
-                  <IconLockOpen className="text-white/90" size={20} />
-                )}
-                <span className="text-sm font-medium text-white/90">
-                  {isPrivate ? 'Private Project' : 'Public Project'}
-                </span>
+              Chatbot Link
+            </h3>
+            <div className="relative flex gap-2">
+              <div className="group relative flex-1">
+                <input
+                  type="text"
+                  value={shareUrl}
+                  readOnly
+                  className={`${montserrat_paragraph.variable} w-full rounded-lg bg-[#1e1f3a]/80 px-4 py-2.5 font-montserratParagraph text-sm text-white/90 ring-1 ring-white/10 backdrop-blur-sm transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-violet-500/50`}
+                />
               </div>
               <button
-                onClick={handlePrivacyChange}
-                className={`relative h-6 w-11 rounded-full transition-colors duration-300 ${
-                  isPrivate ? 'bg-violet-600' : 'bg-gray-600'
-                }`}
+                onClick={handleCopy}
+                className="flex min-w-[42px] items-center justify-center rounded-lg bg-violet-600 p-2.5 text-white transition-all duration-300 hover:bg-violet-500 active:scale-95"
               >
-                <span
-                  className={`absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ${
-                    isPrivate ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
+                {isCopied ? <IconCheck size={16} /> : <IconCopy size={16} />}
               </button>
             </div>
+          </div>
 
-            {/* Members section */}
-            <AnimatePresence>
-              {isPrivate && (
-                <motion.div
-                  initial={isInitialMount ? false : { height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2, ease: 'easeInOut' }}
-                  className="mb-4 space-y-2"
-                >
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-gray-200">
-                      Members
-                    </h4>
-                    <details
-                      className="group"
-                      open={isDetailsOpen}
-                      onToggle={(e) =>
-                        setIsDetailsOpen((e.target as HTMLDetailsElement).open)
-                      }
+          {/* Access Control section */}
+          <div className="space-y-4 p-6">
+            <h3
+              className={`${montserrat_heading.variable} font-montserratHeading text-sm font-medium text-gray-400`}
+            >
+              Access Control
+            </h3>
+
+            {/* Privacy toggle */}
+            <div className="rounded-lg bg-[#1e1f3a] p-4 ring-1 ring-white/10 transition-all duration-300 hover:ring-violet-500/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {isPrivate ? (
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#15162c] ring-1 ring-white/10">
+                      <IconLock className="h-5 w-5 text-violet-400" />
+                    </div>
+                  ) : (
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#15162c] ring-1 ring-white/10">
+                      <IconLockOpen className="h-5 w-5 text-violet-400" />
+                    </div>
+                  )}
+                  <div>
+                    <p
+                      className={`${montserrat_heading.variable} font-montserratHeading text-sm font-medium text-white`}
                     >
-                      <summary className="mb-4 cursor-pointer space-y-2 text-xs text-gray-400">
-                        Only these email addresses are able to access the
-                        content.
-                      </summary>
-                      <motion.div
-                        initial={false}
-                        animate={{
-                          height: isDetailsOpen ? 'auto' : 0,
-                          y: isDetailsOpen ? 0 : -20,
-                        }}
-                        transition={{ duration: 0.2 }}
-                        className="mb-4 space-y-2"
-                      >
-                        <EmailChipsComponent
-                          course_name={projectName}
-                          metadata={metadata}
-                          // course_owner={metadata.course_owner as string}
-                          // course_admins={metadata.course_admins || []}
-                          // approved_emails_list={metadata.approved_emails_list || []}
-                          is_private={isPrivate}
-                          onEmailAddressesChange={handleEmailAddressesChange}
-                          // banner_image_s3={metadata.banner_image_s3 || ''}
-                          // course_intro_message={metadata.course_intro_message || ''}
-                          // openai_api_key={metadata.openai_api_key as string}
-                          is_for_admins={false}
-                        />
-                      </motion.div>
-                    </details>
+                      {isPrivate ? 'Private Project' : 'Public Project'}
+                    </p>
+                    <p
+                      className={`${montserrat_paragraph.variable} font-montserratParagraph text-xs text-gray-400`}
+                    >
+                      {isPrivate
+                        ? 'Only specified people can access'
+                        : 'Anyone with the link can access'}
+                    </p>
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Subtle divider */}
-            {/* <div className="my-3 h-px w-full bg-gradient-to-r from-transparent via-gray-700 to-transparent" /> */}
-
-            {/* Administrators section - Tightened spacing */}
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-gray-200">
-                Administrators
-              </h4>
-              <p className="text-xs text-gray-400">
-                Admins have full edit permissions.
-              </p>
-              <div className="mt-2">
-                <EmailChipsComponent
-                  course_name={projectName}
-                  metadata={metadata}
-                  // course_owner={metadata.course_owner as string}
-                  // course_admins={metadata.course_admins || []}
-                  // approved_emails_list={metadata.approved_emails_list || []}
-                  is_private={isPrivate}
-                  onEmailAddressesChange={handleEmailAddressesChange}
-                  // banner_image_s3={metadata.banner_image_s3 || ''}
-                  // course_intro_message={metadata.course_intro_message || ''}
-                  // openai_api_key={metadata.openai_api_key as string}
-                  is_for_admins={true}
-                />
+                </div>
+                <button
+                  onClick={handlePrivacyChange}
+                  className={`relative h-6 w-11 rounded-full transition-colors duration-300 ${
+                    isPrivate ? 'bg-violet-600' : 'bg-gray-600'
+                  }`}
+                >
+                  <span
+                    className={`absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ${
+                      isPrivate ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
               </div>
             </div>
 
-            {/* Subtle divider */}
-            {/* <div className="my-3 h-px w-full bg-gradient-to-r from-transparent via-gray-700 to-transparent" /> */}
+            {/* Members & Administrators sections */}
+            <div className="space-y-3">
+              <AnimatePresence>
+                {isPrivate && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Accordion
+                      type="single"
+                      defaultValue="members"
+                      className="w-full"
+                    >
+                      <EmailListAccordion
+                        course_name={projectName}
+                        metadata={metadata}
+                        is_private={isPrivate}
+                        onEmailAddressesChange={handleEmailAddressesChange}
+                        is_for_admins={false}
+                      />
+                    </Accordion>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <Accordion type="single" defaultValue="admins" className="w-full">
+                <EmailListAccordion
+                  course_name={projectName}
+                  metadata={metadata}
+                  is_private={isPrivate}
+                  onEmailAddressesChange={handleEmailAddressesChange}
+                  is_for_admins={true}
+                />
+              </Accordion>
+            </div>
           </div>
         </div>
       </motion.div>
