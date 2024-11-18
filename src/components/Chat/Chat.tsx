@@ -45,13 +45,11 @@ import { useRouter } from 'next/router'
 import { useUser } from '@clerk/nextjs'
 import { extractEmailsFromClerk } from '../UIUC-Components/clerkHelpers'
 import ChatNavbar from '../UIUC-Components/navbars/ChatNavbar'
-// import { MainPageBackground } from '../UIUC-Components/MainPageBackground'
 import { notifications } from '@mantine/notifications'
 import { Montserrat } from 'next/font/google'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import {
   State,
-  constructChatBody,
   getOpenAIKey,
   handleContextSearch,
   processChunkWithStateMachine,
@@ -168,12 +166,13 @@ export const Chat = memo(
         llmProviders,
       },
       handleUpdateConversation,
+      handleFeedbackUpdate,
       dispatch: homeDispatch,
     } = useContext(HomeContext)
 
     useEffect(() => {
       const loadModel = async () => {
-        if (selectedConversation && !chat_ui.isModelLoading()) {
+        if (selectedConversation?.model && !chat_ui.isModelLoading()) {
           homeDispatch({
             field: 'webLLMModelIdLoading',
             value: { id: selectedConversation.model.id, isLoading: true },
@@ -189,12 +188,12 @@ export const Chat = memo(
         }
       }
       if (
-        selectedConversation &&
+        selectedConversation?.model &&
         webLLMModels.some((m) => m.name === selectedConversation.model.name)
       ) {
         loadModel()
       }
-    }, [selectedConversation?.model.name, chat_ui])
+    }, [selectedConversation?.model?.id, chat_ui])
 
     const [currentMessage, setCurrentMessage] = useState<Message>()
     const [autoScrollEnabled, setAutoScrollEnabled] = useState<boolean>(true)
@@ -336,6 +335,10 @@ export const Chat = memo(
         enabledDocumentGroups: string[],
         llmProviders: AllLLMProviders,
       ) => {
+        console.log(
+          'handleSend called with model:',
+          selectedConversation?.model,
+        )
         setCurrentMessage(message)
         resetMessageStates()
 
@@ -344,6 +347,27 @@ export const Chat = memo(
           : message.content
 
         if (selectedConversation) {
+          // Add this type guard function
+          function isValidModel(
+            model: any,
+          ): model is { id: string; name: string } {
+            return (
+              model &&
+              typeof model.id === 'string' &&
+              typeof model.name === 'string'
+            )
+          }
+
+          // Check if model is defined and valid
+          if (!isValidModel(selectedConversation.model)) {
+            console.error('Selected conversation does not have a valid model.')
+            errorToast({
+              title: 'Model Error',
+              message: 'No valid model selected for the conversation.',
+            })
+            return
+          }
+
           let updatedConversation: Conversation
           if (deleteCount) {
             // Remove tools from message to clear old tools
@@ -355,7 +379,7 @@ export const Chat = memo(
                 )
               : message.content
 
-            const updatedMessages = [...selectedConversation.messages]
+            const updatedMessages = [...(selectedConversation.messages || [])]
             const messagesToDelete = updatedMessages.slice(0, deleteCount)
             for (let i = 0; i < deleteCount; i++) {
               updatedMessages.pop()
@@ -371,15 +395,15 @@ export const Chat = memo(
           } else {
             updatedConversation = {
               ...selectedConversation,
-              messages: [...selectedConversation.messages, message],
+              messages: [...(selectedConversation.messages || []), message],
             }
             // console.log(
             //   'updatedConversation before name:',
             //   updatedConversation,
-            //   updatedConversation.messages.length,
+            //   updatedConversation.messages?.length,
             // )
             // Update the name of the conversation if it's the first message
-            if (updatedConversation.messages.length === 1) {
+            if (updatedConversation.messages?.length === 1) {
               const { content } = message
               // Use only texts instead of content itself
               const contentText = Array.isArray(content)
@@ -402,19 +426,6 @@ export const Chat = memo(
               // )
             }
           }
-          // homeDispatch({
-          //   field: 'selectedConversation',
-          //   value: updatedConversation,
-          // })
-          // Update the conversation in the server
-          // if (!user_email) {
-          // saveConversationToLocalStorage(updatedConversation)
-          // } else {
-
-          // console.log(
-          //   'updatedConversation before mutation:',
-          //   updatedConversation,
-          // )
           handleUpdateConversation(updatedConversation, {
             key: 'messages',
             value: updatedConversation.messages,
@@ -513,28 +524,31 @@ export const Chat = memo(
             }
           }
 
-          const chatBody: ChatBody = constructChatBody(
-            updatedConversation,
-            getOpenAIKey(courseMetadata, apiKey),
-            courseName,
-            true,
-            courseMetadata,
-            llmProviders,
-          )
-          // Action 4: Build Prompt - Put everything together into a prompt
-          const buildPromptResponse = await fetch('/api/buildPrompt', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(chatBody),
-          })
-          chatBody.conversation = await buildPromptResponse.json()
+          const chatBody: ChatBody = {
+            conversation: updatedConversation,
+            key: getOpenAIKey(courseMetadata, apiKey),
+            course_name: courseName,
+            stream: true,
+            courseMetadata: courseMetadata,
+            llmProviders: llmProviders,
+            model: selectedConversation.model,
+          }
           updatedConversation = chatBody.conversation!
 
+          // Action 4: Build Prompt - Put everything together into a prompt
+          // const buildPromptResponse = await fetch('/api/buildPrompt', {
+          //   method: 'POST',
+          //   headers: {
+          //     'Content-Type': 'application/json',
+          //   },
+          //   body: JSON.stringify(chatBody),
+          // })
+          // const builtConversation = await buildPromptResponse.json()
+
+          // Update the selected conversation
           homeDispatch({
             field: 'selectedConversation',
-            value: chatBody.conversation,
+            value: updatedConversation,
           })
 
           // Action 5: Run Chat Completion based on model provider
@@ -545,8 +559,9 @@ export const Chat = memo(
           let reader
 
           if (
+            selectedConversation.model &&
             webLLMModels.some(
-              (model) => model.name === chatBody.conversation?.model.name,
+              (model) => model.name === selectedConversation.model.name,
             )
           ) {
             // Is WebLLM model
@@ -555,21 +570,33 @@ export const Chat = memo(
             }
             try {
               response = await chat_ui.runChatCompletion(
-                chatBody.conversation!,
+                selectedConversation,
                 getCurrentPageName(),
               )
             } catch (error) {
               errorToast({
                 title: 'Error running chat completion',
                 message:
-                  (error as Error).message || 'An unexpected error occurred',
+                  (error as Error).message ||
+                  'In Chat.tsx An unexpected error occurred',
               })
             }
           } else {
             try {
               // Route to the specific model provider
-              response = await routeModelRequest(chatBody, controller)
+              // response = await routeModelRequest(chatBody, controller)
+
+              // CALL OUR NEW ENDPOINT... /api/chat
+              response = await fetch('/api/allNewRoutingChat', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(chatBody),
+              })
+              console.log('response from /api/chat', response)
             } catch (error) {
+              // TODO: Improve error messages here...
               console.error('Error routing to model provider:', error)
               errorToast({
                 title: 'Error routing to model provider',
@@ -580,20 +607,55 @@ export const Chat = memo(
           }
 
           if (response instanceof Response && !response.ok) {
-            const final_response = await response.json()
+            let final_response
+            try {
+              final_response = await response.json()
+            } catch (error) {
+              console.error('Error parsing response:', error)
+              homeDispatch({ field: 'loading', value: false })
+              homeDispatch({ field: 'messageIsStreaming', value: false })
+              errorToast({
+                title: 'Error',
+                message:
+                  'Received an invalid response from the server. Please try again.',
+              })
+              return
+            }
+
             homeDispatch({ field: 'loading', value: false })
             homeDispatch({ field: 'messageIsStreaming', value: false })
-            console.error(
-              'Error calling the LLM:',
-              final_response.name,
-              final_response.message,
-            )
-            errorToast({
-              title: final_response.name,
-              message:
-                final_response.message ||
-                'There was an unexpected error calling the LLM. Try using a different model (via the Settings button in the header).',
-            })
+            console.error('Error calling the LLM:', final_response)
+
+            if (final_response.error) {
+              let errorMessage = final_response.error
+              let errorCode = final_response.code
+
+              // Handle case where error is a JSON string
+              if (typeof final_response.error === 'string') {
+                try {
+                  const parsed = JSON.parse(final_response.error)
+                  errorMessage = parsed.error || parsed.message
+                  errorCode = parsed.code
+                } catch (e) {
+                  // Keep original error message if not valid JSON
+                }
+              }
+
+              errorToast({
+                title: `Error calling LLM`,
+                message:
+                  errorMessage ||
+                  `An unexpected error occurred. Try using a different model.${errorCode ? ` Error code: ${errorCode}` : ''}`,
+              })
+              return
+            } else {
+              errorToast({
+                title: final_response.name || 'Error',
+                message:
+                  final_response.message ||
+                  'There was an unexpected error calling the LLM. Try using a different model (via the Settings button in the header).',
+              })
+            }
             return
           }
 
@@ -661,6 +723,8 @@ export const Chat = memo(
                       id: uuidv4(),
                       role: 'assistant',
                       content: chunkValue,
+                      contexts: message.contexts,
+                      feedback: message.feedback,
                     },
                   ]
                   finalAssistantRespose += chunkValue
@@ -673,9 +737,9 @@ export const Chat = memo(
                     value: updatedConversation,
                   })
                 } else {
-                  if (updatedConversation.messages.length > 0) {
+                  if (updatedConversation.messages?.length > 0) {
                     const lastMessageIndex =
-                      updatedConversation.messages.length - 1
+                      updatedConversation.messages?.length - 1
                     const lastMessage =
                       updatedConversation.messages[lastMessageIndex]
                     const lastUserMessage =
@@ -695,7 +759,7 @@ export const Chat = memo(
                         )
 
                       // Update the last message with the new content
-                      const updatedMessages = updatedConversation.messages.map(
+                      const updatedMessages = updatedConversation.messages?.map(
                         (msg, index) =>
                           index === lastMessageIndex
                             ? { ...msg, content: finalAssistantRespose }
@@ -794,6 +858,7 @@ export const Chat = memo(
                   role: 'assistant',
                   content: answer,
                   contexts: message.contexts,
+                  feedback: message.feedback,
                 },
               ]
               updatedConversation = {
@@ -868,7 +933,7 @@ export const Chat = memo(
         }
         if (
           selectedConversation?.messages[
-            selectedConversation?.messages.length - 1
+            selectedConversation?.messages?.length - 1
           ]?.role === 'user'
         ) {
           // console.log('user')
@@ -953,13 +1018,13 @@ export const Chat = memo(
       if (messageIsStreaming) throttledScrollDown()
       if (selectedConversation) {
         const messages = selectedConversation.messages
-        if (messages.length > 1) {
-          if (messages[messages.length - 1]?.role === 'assistant') {
-            setCurrentMessage(messages[messages.length - 2])
+        if (messages?.length > 1) {
+          if (messages[messages?.length - 1]?.role === 'assistant') {
+            setCurrentMessage(messages[messages?.length - 2])
           } else {
-            setCurrentMessage(messages[messages.length - 1])
+            setCurrentMessage(messages[messages?.length - 1])
           }
-        } else if (messages.length === 1) {
+        } else if (messages?.length === 1) {
           setCurrentMessage(messages[0])
         } else {
           setCurrentMessage(undefined)
@@ -1074,7 +1139,7 @@ export const Chat = memo(
     }
 
     const updateMessages = (updatedMessage: Message, messageIndex: number) => {
-      return selectedConversation?.messages.map((message, index) => {
+      return selectedConversation?.messages?.map((message, index) => {
         return index === messageIndex ? updatedMessage : message
       })
     }
@@ -1119,6 +1184,101 @@ export const Chat = memo(
       [selectedConversation, conversations],
     )
 
+    const handleFeedback = useCallback(
+      async (
+        message: Message,
+        isPositive: boolean,
+        category?: string,
+        details?: string,
+      ) => {
+        if (!selectedConversation) return
+
+        // Get conversation from localStorage and parse it
+        const sourceConversationStr = localStorage.getItem(
+          'selectedConversation',
+        )
+        let sourceConversation
+
+        try {
+          sourceConversation = sourceConversationStr
+            ? JSON.parse(sourceConversationStr)
+            : null
+        } catch (error) {
+          sourceConversation = null
+        }
+
+        if (!sourceConversation?.messages) {
+          return
+        }
+
+        // Create updated conversation object using sourceConversation as the base
+        const updatedConversation = {
+          ...sourceConversation,
+          messages: sourceConversation.messages.map((msg: Message) => {
+            if (msg.id === message.id) {
+              return {
+                ...msg,
+                feedback: {
+                  isPositive,
+                  category,
+                  details,
+                },
+              }
+            }
+            return msg
+          }),
+        }
+
+        try {
+          // Update localStorage
+          localStorage.setItem(
+            'selectedConversation',
+            JSON.stringify(updatedConversation),
+          )
+
+          // Update the conversation using handleUpdateConversation
+          handleFeedbackUpdate(updatedConversation, {
+            key: 'messages',
+            value: updatedConversation.messages,
+          })
+
+          // Update database
+          await updateConversationMutation.mutateAsync(updatedConversation)
+
+          // Log to Supabase
+          await fetch('/api/UIUC-api/logConversationToSupabase', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              course_name: getCurrentPageName(),
+              conversation: updatedConversation,
+            }),
+          })
+        } catch (error) {
+          homeDispatch({
+            field: 'conversations',
+            value: conversations,
+          })
+          homeDispatch({
+            field: 'selectedConversation',
+            value: sourceConversation,
+          })
+          errorToast({
+            title: 'Error updating feedback',
+            message: 'Failed to save feedback. Please try again.',
+          })
+        }
+      },
+      [
+        selectedConversation,
+        conversations,
+        homeDispatch,
+        updateConversationMutation,
+      ],
+    )
+
     return (
       <>
         <Head>
@@ -1143,12 +1303,14 @@ export const Chat = memo(
                   className="mt-4 max-h-full"
                   ref={chatContainerRef}
                   onScroll={handleScroll}
-                  initial={{ opacity: 0, scale: 0.95 }} // Initial state: invisible and slightly scaled down
-                  animate={{ opacity: 1, scale: 1 }} // Animate to: fully visible and scaled to normal size
-                  exit={{ opacity: 0, scale: 0.95 }} // Exit state: invisible and slightly scaled down
-                  transition={{ duration: 0.25, ease: 'easeInOut' }} // Duration and easing of the animation
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.25, ease: 'easeInOut' }}
                 >
-                  {selectedConversation?.messages.length === 0 ? (
+                  {selectedConversation &&
+                  selectedConversation.messages &&
+                  selectedConversation.messages?.length === 0 ? (
                     <>
                       <div className="mt-16">
                         {renderIntroductoryStatements()}
@@ -1156,23 +1318,23 @@ export const Chat = memo(
                     </>
                   ) : (
                     <>
-                      {selectedConversation?.messages.map((message, index) => (
+                      {selectedConversation?.messages?.map((message, index) => (
                         <MemoizedChatMessage
                           key={index}
                           message={message}
                           contentRenderer={renderMessageContent}
                           messageIndex={index}
                           onEdit={(editedMessage) => {
-                            // setCurrentMessage(editedMessage)
                             handleSend(
                               editedMessage,
-                              selectedConversation?.messages.length - index,
+                              selectedConversation?.messages?.length - index,
                               null,
                               tools,
                               enabledDocumentGroups,
                               llmProviders,
                             )
                           }}
+                          onFeedback={handleFeedback}
                           onImageUrlsUpdate={onImageUrlsUpdate}
                         />
                       ))}

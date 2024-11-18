@@ -1,54 +1,36 @@
-// src/pages/api/chat.ts
-import { CourseMetadata } from '~/types/courseMetadata'
-import { getCourseMetadata } from '~/pages/api/UIUC-api/getCourseMetadata'
-// @ts-expect-error - no types
-import wasm from '../../../node_modules/@dqbd/tiktoken/lite/tiktoken_bg.wasm?module'
-import tiktokenModel from '@dqbd/tiktoken/encoders/cl100k_base.json'
-import { Tiktoken, init } from '@dqbd/tiktoken/lite/init'
-import { OpenAIError, OpenAIStream } from '@/utils/server'
-import {
-  ChatBody,
-  Content,
-  ContextWithMetadata,
-  Conversation,
-  MessageType,
-  OpenAIChatMessage,
-  ToolOutput,
-  UIUCTool,
-} from '@/types/chat'
-import { NextResponse } from 'next/server'
-import { decrypt, isEncrypted } from '~/utils/crypto'
-import { buildPrompt } from './chat'
+import { NextApiRequest, NextApiResponse } from 'next'
+import { ChatBody } from '@/types/chat'
+import { buildPrompt } from '~/app/utils/buildPromptUtils'
 
-export const config = {
-  runtime: 'edge',
-}
-
-// A POST request endpoint that just calls buildPrompt and returns that as a json body.
-export default async (req: Request): Promise<NextResponse> => {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
   try {
-    const { conversation, key, course_name, courseMetadata } =
-      (await req.json()) as ChatBody
+    const chatBody = req.body as ChatBody
 
-    console.log('In build prompt fetch endpoint!!')
+    const { conversation, course_name, courseMetadata } = chatBody
 
+    // **Add a nullish check for 'conversation'**
     if (!conversation) {
-      console.error('No conversation provided')
-      return new NextResponse(
-        JSON.stringify({ error: 'No conversation provided' }),
-        { status: 400 },
-      )
+      console.error('Conversation is undefined.')
+      return res.status(400).json({ error: 'Conversation is required.' })
     }
 
+    // Ensure the handler is async and awaits buildPrompt
     const updatedConversation = await buildPrompt({
-      conversation,
+      conversation: conversation, // Now TypeScript knows 'conversation' is not undefined
       projectName: course_name,
-      courseMetadata,
+      courseMetadata: courseMetadata,
     })
 
-    return new NextResponse(JSON.stringify(updatedConversation))
+    return res.status(200).json(updatedConversation)
   } catch (error) {
     console.error('Error in buildPromptAPI:', error)
-    return new NextResponse(JSON.stringify({ error: (error as Error).message }))
+
+    return res.status(500).json({
+      error: 'An error occurred in buildPromptAPI',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    })
   }
 }

@@ -166,6 +166,9 @@ export const WebScrape = ({
           system_prompt: undefined,
           disabled_models: undefined,
           project_description: undefined,
+          documentsOnly: undefined,
+          guidedLearning: undefined,
+          systemPromptOnly: undefined,
         })
         if (!response) {
           throw new Error('Error while setting course metadata')

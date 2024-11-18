@@ -1,15 +1,12 @@
-import { OpenAIStream, StreamingTextResponse } from 'ai'
 import OpenAI from 'openai'
-import { traceable } from 'langsmith/traceable'
 import { wrapOpenAI } from 'langsmith/wrappers'
 import type {
-  ChatCompletionCreateParams,
   ChatCompletionMessageParam,
   ChatCompletionMessageToolCall,
   ChatCompletionTool,
-} from 'openai/resources/chat'
+} from 'openai/resources/chat/completions'
 
-import { Conversation, Message } from '~/types/chat'
+import { Conversation } from '~/types/chat'
 import { decrypt, isEncrypted } from '~/utils/crypto'
 
 export const runtime = 'edge'

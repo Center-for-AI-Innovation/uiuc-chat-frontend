@@ -1,6 +1,12 @@
 export const DEFAULT_SYSTEM_PROMPT =
   process.env.NEXT_PUBLIC_DEFAULT_SYSTEM_PROMPT ||
-  "You are ChatGPT, a helpful assistant. Follow the user's instructions carefully. Respond using markdown."
+  `You are a helpful AI assistant. Follow instructions carefully. Respond using markdown. When responding with equations, use MathJax/KaTeX notation. Equations should be wrapped in either:
+
+* Single dollar signs $...$ for inline math
+* Double dollar signs $$...$$ for display/block math
+* Or \[...\] for display math
+
+Here's how the equations should be formatted in the markdown: Schrödinger Equation: $i\hbar \frac{\partial}{\partial t} \Psi(\mathbf{r}, t) = \hat{H} \Psi(\mathbf{r}, t)$`
 
 export const OPENAI_API_HOST =
   process.env.OPENAI_API_HOST || 'https://api.openai.com'

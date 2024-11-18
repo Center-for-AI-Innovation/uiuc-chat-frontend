@@ -1,5 +1,5 @@
 import { type NextPage } from 'next'
-import MakeNomicVisualizationPage from '~/components/UIUC-Components/MakeQueryAnalysisPage'
+import MakeQueryAnalysisPage from '~/components/UIUC-Components/MakeQueryAnalysisPage'
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { useUser } from '@clerk/nextjs'
@@ -62,7 +62,7 @@ const CourseMain: NextPage = () => {
 
   return (
     <>
-      <MakeNomicVisualizationPage course_name={courseName as string} />
+      <MakeQueryAnalysisPage course_name={courseName as string} />
     </>
   )
 }

@@ -379,7 +379,7 @@ export default function APIKeyInputForm() {
       mutation.mutate(
         {
           projectName,
-          queryClient,
+          // queryClient,
           llmProviders,
           defaultModelID: (value.defaultModel || '').toString(),
           defaultTemperature: (value.defaultTemperature || '').toString(),
@@ -390,15 +390,15 @@ export default function APIKeyInputForm() {
             // queryClient.invalidateQueries({
             //   queryKey: ['projectLLMProviders', projectName],
             // })
-            // showConfirmationToast({
-            //   title: 'Updated LLM providers',
-            //   message: `Now your project's users can use the supplied LLMs!`,
-            // })
+            showConfirmationToast({
+              title: 'Updated LLM providers',
+              message: `Now your project's users can use the supplied LLMs!`,
+            })
           },
           onError: (error, variables, context) =>
             showConfirmationToast({
               title: 'Error updating LLM providers',
-              message: `Failed to update LLM providers with error: ${error.name} -- ${error.message}`,
+              message: `Update failed with error: ${error.name} -- ${error.message}`,
               isError: true,
             }),
         },
@@ -718,50 +718,31 @@ export default function APIKeyInputForm() {
   )
 }
 
+// This is a BEAUTIFUL component. Should use this more places.
 export const showConfirmationToast = ({
   title,
   message,
   isError = false,
+  autoClose = 5000, // Optional parameter with default value
 }: {
   title: string
   message: string
   isError?: boolean
+  autoClose?: number
 }) => {
-  return (
-    // docs: https://mantine.dev/others/notifications/
-
-    notifications.show({
-      id: 'confirmation-toast',
-      withCloseButton: true,
-      onClose: () => console.log('unmounted'),
-      onOpen: () => console.log('mounted'),
-      autoClose: 6000,
-      title: title,
-      message: message,
-      icon: isError ? <IconAlertCircle /> : <IconCheck />,
-      styles: {
-        root: {
-          backgroundColor: isError
-            ? '#FEE2E2' // errorBackground
-            : '#F9FAFB', // nearlyWhite
-          borderColor: isError
-            ? '#FCA5A5' // errorBorder
-            : '#8B5CF6', // aiPurple
-        },
-        title: {
-          color: '#111827', // nearlyBlack
-        },
-        description: {
-          color: '#111827', // nearlyBlack
-        },
-        closeButton: {
-          color: '#111827', // nearlyBlack
-          '&:hover': {
-            backgroundColor: '#F3F4F6', // dark[1]
-          },
-        },
-      },
-      loading: false,
-    })
-  )
+  notifications.show({
+    id: 'success-toast',
+    withCloseButton: true,
+    onClose: () => console.log('unmounted'),
+    onOpen: () => console.log('mounted'),
+    autoClose: autoClose,
+    title: title,
+    message: message,
+    color: isError ? 'red' : 'green',
+    radius: 'lg',
+    icon: isError ? <IconAlertCircle /> : <IconCheck />,
+    className: 'my-notification-class',
+    style: { backgroundColor: '#15162c' },
+    loading: false,
+  })
 }

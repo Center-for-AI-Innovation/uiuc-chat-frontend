@@ -75,11 +75,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'conversations_folder_id_fkey'
-            columns: ['folder_id']
+            foreignKeyName: "conversations_folder_id_fkey"
+            columns: ["folder_id"]
             isOneToOne: false
-            referencedRelation: 'folders'
-            referencedColumns: ['id']
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -95,7 +95,7 @@ export type Database = {
         }
         Relationships: []
       }
-      'cropwizard-papers': {
+      "cropwizard-papers": {
         Row: {
           created_at: string
           doi: string | null
@@ -179,6 +179,7 @@ export type Database = {
           destination_project_id: number | null
           destination_project_name: string | null
           doc_group_id: number | null
+          doc_group_name: string | null
           id: number
         }
         Insert: {
@@ -186,6 +187,7 @@ export type Database = {
           destination_project_id?: number | null
           destination_project_name?: string | null
           doc_group_id?: number | null
+          doc_group_name?: string | null
           id?: number
         }
         Update: {
@@ -193,29 +195,30 @@ export type Database = {
           destination_project_id?: number | null
           destination_project_name?: string | null
           doc_group_id?: number | null
+          doc_group_name?: string | null
           id?: number
         }
         Relationships: [
           {
-            foreignKeyName: 'doc_groups_sharing_destination_project_id_fkey'
-            columns: ['destination_project_id']
+            foreignKeyName: "doc_groups_sharing_destination_project_id_fkey"
+            columns: ["destination_project_id"]
             isOneToOne: false
-            referencedRelation: 'projects'
-            referencedColumns: ['id']
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'doc_groups_sharing_destination_project_name_fkey'
-            columns: ['destination_project_name']
+            foreignKeyName: "doc_groups_sharing_destination_project_name_fkey"
+            columns: ["destination_project_name"]
             isOneToOne: false
-            referencedRelation: 'projects'
-            referencedColumns: ['course_name']
+            referencedRelation: "projects"
+            referencedColumns: ["course_name"]
           },
           {
-            foreignKeyName: 'doc_groups_sharing_doc_group_id_fkey'
-            columns: ['doc_group_id']
+            foreignKeyName: "doc_groups_sharing_doc_group_id_fkey"
+            columns: ["doc_group_id"]
             isOneToOne: false
-            referencedRelation: 'doc_groups'
-            referencedColumns: ['id']
+            referencedRelation: "doc_groups"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -255,25 +258,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'document_insights_context_id_fkey'
-            columns: ['context_id']
+            foreignKeyName: "document_insights_context_id_fkey"
+            columns: ["context_id"]
             isOneToOne: false
-            referencedRelation: 'llm-guided-contexts'
-            referencedColumns: ['id']
+            referencedRelation: "llm-guided-contexts"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'document_insights_document_id_fkey'
-            columns: ['document_id']
+            foreignKeyName: "document_insights_document_id_fkey"
+            columns: ["document_id"]
             isOneToOne: false
-            referencedRelation: 'llm-guided-docs'
-            referencedColumns: ['id']
+            referencedRelation: "llm-guided-docs"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'document_insights_section_id_fkey'
-            columns: ['section_id']
+            foreignKeyName: "document_insights_section_id_fkey"
+            columns: ["section_id"]
             isOneToOne: false
-            referencedRelation: 'llm-guided-sections'
-            referencedColumns: ['id']
+            referencedRelation: "llm-guided-sections"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -313,25 +316,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'document_metadata_context_id_fkey'
-            columns: ['context_id']
+            foreignKeyName: "document_metadata_context_id_fkey"
+            columns: ["context_id"]
             isOneToOne: false
-            referencedRelation: 'llm-guided-contexts'
-            referencedColumns: ['id']
+            referencedRelation: "llm-guided-contexts"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'document_metadata_document_id_fkey'
-            columns: ['document_id']
+            foreignKeyName: "document_metadata_document_id_fkey"
+            columns: ["document_id"]
             isOneToOne: false
-            referencedRelation: 'llm-guided-docs'
-            referencedColumns: ['id']
+            referencedRelation: "llm-guided-docs"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'document_metadata_section_id_fkey'
-            columns: ['section_id']
+            foreignKeyName: "document_metadata_section_id_fkey"
+            columns: ["section_id"]
             isOneToOne: false
-            referencedRelation: 'llm-guided-sections'
-            referencedColumns: ['id']
+            referencedRelation: "llm-guided-sections"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -386,18 +389,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'public_documents_doc_groups_doc_group_id_fkey'
-            columns: ['doc_group_id']
+            foreignKeyName: "public_documents_doc_groups_doc_group_id_fkey"
+            columns: ["doc_group_id"]
             isOneToOne: false
-            referencedRelation: 'doc_groups'
-            referencedColumns: ['id']
+            referencedRelation: "doc_groups"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'public_documents_doc_groups_document_id_fkey'
-            columns: ['document_id']
+            foreignKeyName: "public_documents_doc_groups_document_id_fkey"
+            columns: ["document_id"]
             isOneToOne: false
-            referencedRelation: 'documents'
-            referencedColumns: ['id']
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -482,24 +485,24 @@ export type Database = {
         }
         Relationships: []
       }
-      'email-newsletter': {
+      "email-newsletter": {
         Row: {
           created_at: string
           email: string | null
           id: string
-          'unsubscribed-from-newsletter': boolean | null
+          "unsubscribed-from-newsletter": boolean | null
         }
         Insert: {
           created_at?: string
           email?: string | null
           id?: string
-          'unsubscribed-from-newsletter'?: boolean | null
+          "unsubscribed-from-newsletter"?: boolean | null
         }
         Update: {
           created_at?: string
           email?: string | null
           id?: string
-          'unsubscribed-from-newsletter'?: boolean | null
+          "unsubscribed-from-newsletter"?: boolean | null
         }
         Relationships: []
       }
@@ -530,7 +533,7 @@ export type Database = {
         }
         Relationships: []
       }
-      'llm-convo-monitor': {
+      "llm-convo-monitor": {
         Row: {
           convo: Json | null
           convo_id: string | null
@@ -557,7 +560,7 @@ export type Database = {
         }
         Relationships: []
       }
-      'llm-guided-contexts': {
+      "llm-guided-contexts": {
         Row: {
           created_at: string
           doc_id: string | null
@@ -587,22 +590,22 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'llm-guided-contexts_doc_id_fkey'
-            columns: ['doc_id']
+            foreignKeyName: "llm-guided-contexts_doc_id_fkey"
+            columns: ["doc_id"]
             isOneToOne: false
-            referencedRelation: 'llm-guided-docs'
-            referencedColumns: ['id']
+            referencedRelation: "llm-guided-docs"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'llm-guided-contexts_section_id_fkey'
-            columns: ['section_id']
+            foreignKeyName: "llm-guided-contexts_section_id_fkey"
+            columns: ["section_id"]
             isOneToOne: false
-            referencedRelation: 'llm-guided-sections'
-            referencedColumns: ['id']
+            referencedRelation: "llm-guided-sections"
+            referencedColumns: ["id"]
           },
         ]
       }
-      'llm-guided-docs': {
+      "llm-guided-docs": {
         Row: {
           authors: string | null
           created_at: string
@@ -635,7 +638,7 @@ export type Database = {
         }
         Relationships: []
       }
-      'llm-guided-sections': {
+      "llm-guided-sections": {
         Row: {
           created_at: string
           doc_id: string | null
@@ -662,11 +665,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'llm-guided-sections_doc_id_fkey'
-            columns: ['doc_id']
+            foreignKeyName: "llm-guided-sections_doc_id_fkey"
+            columns: ["doc_id"]
             isOneToOne: false
-            referencedRelation: 'llm-guided-docs'
-            referencedColumns: ['id']
+            referencedRelation: "llm-guided-docs"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -677,6 +680,9 @@ export type Database = {
           contexts: Json | null
           conversation_id: string | null
           created_at: string
+          feedback_category: string | null
+          feedback_details: string | null
+          feedback_is_positive: boolean | null
           final_prompt_engineered_message: string | null
           id: string
           image_description: string | null
@@ -692,6 +698,9 @@ export type Database = {
           contexts?: Json | null
           conversation_id?: string | null
           created_at: string
+          feedback_category?: string | null
+          feedback_details?: string | null
+          feedback_is_positive?: boolean | null
           final_prompt_engineered_message?: string | null
           id: string
           image_description?: string | null
@@ -707,6 +716,9 @@ export type Database = {
           contexts?: Json | null
           conversation_id?: string | null
           created_at?: string
+          feedback_category?: string | null
+          feedback_details?: string | null
+          feedback_is_positive?: boolean | null
           final_prompt_engineered_message?: string | null
           id?: string
           image_description?: string | null
@@ -718,11 +730,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'messages_conversation_id_fkey'
-            columns: ['conversation_id']
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
             isOneToOne: false
-            referencedRelation: 'conversations'
-            referencedColumns: ['id']
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -752,6 +764,8 @@ export type Database = {
           license: string | null
           link: string | null
           metadata: Json | null
+          modified_date: string | null
+          notes: string | null
           publisher: string | null
           title: string | null
         }
@@ -765,6 +779,8 @@ export type Database = {
           license?: string | null
           link?: string | null
           metadata?: Json | null
+          modified_date?: string | null
+          notes?: string | null
           publisher?: string | null
           title?: string | null
         }
@@ -778,6 +794,8 @@ export type Database = {
           license?: string | null
           link?: string | null
           metadata?: Json | null
+          modified_date?: string | null
+          notes?: string | null
           publisher?: string | null
           title?: string | null
         }
@@ -785,25 +803,28 @@ export type Database = {
       }
       pre_authorized_api_keys: {
         Row: {
-          api_key: Json | null
           created_at: string
           emails: Json | null
           id: number
-          provider_name: Database['public']['Enums']['LLMProvider'] | null
+          notes: string | null
+          providerBodyNoModels: Json | null
+          providerName: Database["public"]["Enums"]["LLMProvider"] | null
         }
         Insert: {
-          api_key?: Json | null
           created_at?: string
           emails?: Json | null
           id?: number
-          provider_name?: Database['public']['Enums']['LLMProvider'] | null
+          notes?: string | null
+          providerBodyNoModels?: Json | null
+          providerName?: Database["public"]["Enums"]["LLMProvider"] | null
         }
         Update: {
-          api_key?: Json | null
           created_at?: string
           emails?: Json | null
           id?: number
-          provider_name?: Database['public']['Enums']['LLMProvider'] | null
+          notes?: string | null
+          providerBodyNoModels?: Json | null
+          providerName?: Database["public"]["Enums"]["LLMProvider"] | null
         }
         Relationships: []
       }
@@ -849,61 +870,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'projects_subscribed_fkey'
-            columns: ['subscribed']
+            foreignKeyName: "projects_subscribed_fkey"
+            columns: ["subscribed"]
             isOneToOne: false
-            referencedRelation: 'doc_groups'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      projects_duplicate: {
-        Row: {
-          convo_map_id: string | null
-          course_name: string | null
-          created_at: string
-          description: string | null
-          doc_map_id: string | null
-          id: number
-          last_uploaded_convo_id: number | null
-          last_uploaded_doc_id: number | null
-          metadata_schema: Json | null
-          n8n_api_key: string | null
-          subscribed: number | null
-        }
-        Insert: {
-          convo_map_id?: string | null
-          course_name?: string | null
-          created_at?: string
-          description?: string | null
-          doc_map_id?: string | null
-          id?: number
-          last_uploaded_convo_id?: number | null
-          last_uploaded_doc_id?: number | null
-          metadata_schema?: Json | null
-          n8n_api_key?: string | null
-          subscribed?: number | null
-        }
-        Update: {
-          convo_map_id?: string | null
-          course_name?: string | null
-          created_at?: string
-          description?: string | null
-          doc_map_id?: string | null
-          id?: number
-          last_uploaded_convo_id?: number | null
-          last_uploaded_doc_id?: number | null
-          metadata_schema?: Json | null
-          n8n_api_key?: string | null
-          subscribed?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'projects_duplicate_subscribed_fkey'
-            columns: ['subscribed']
-            isOneToOne: false
-            referencedRelation: 'doc_groups'
-            referencedColumns: ['id']
+            referencedRelation: "doc_groups"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -970,7 +941,7 @@ export type Database = {
         }
         Relationships: []
       }
-      'uiuc-course-table': {
+      "uiuc-course-table": {
         Row: {
           course_name: string | null
           created_at: string
@@ -1104,6 +1075,36 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      gtrgm_compress: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      gtrgm_decompress: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      gtrgm_in: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      gtrgm_options: {
+        Args: {
+          "": unknown
+        }
+        Returns: undefined
+      }
+      gtrgm_out: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
       hello: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1200,16 +1201,38 @@ export type Database = {
         }
         Returns: Json
       }
+      set_limit: {
+        Args: {
+          "": number
+        }
+        Returns: number
+      }
+      show_limit: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      show_trgm: {
+        Args: {
+          "": string
+        }
+        Returns: string[]
+      }
+      test_function: {
+        Args: {
+          id: number
+        }
+        Returns: string
+      }
     }
     Enums: {
       LLMProvider:
-        | 'Azure'
-        | 'OpenAI'
-        | 'Anthropic'
-        | 'Ollama'
-        | 'NCSAHosted'
-        | 'WebLLM'
-        | 'null'
+        | "Azure"
+        | "OpenAI"
+        | "Anthropic"
+        | "Ollama"
+        | "NCSAHosted"
+        | "WebLLM"
+        | "null"
     }
     CompositeTypes: {
       index_advisor_output: {
@@ -1223,27 +1246,27 @@ export type Database = {
   }
 }
 
-type PublicSchema = Database[Extract<keyof Database, 'public'>]
+type PublicSchema = Database[Extract<keyof Database, "public">]
 
 export type Tables<
   PublicTableNameOrOptions extends
-    | keyof (PublicSchema['Tables'] & PublicSchema['Views'])
+    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
     | { schema: keyof Database },
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions['schema']]['Tables'] &
-        Database[PublicTableNameOrOptions['schema']]['Views'])
+    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+        Database[PublicTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions['schema']]['Tables'] &
-      Database[PublicTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : PublicTableNameOrOptions extends keyof (PublicSchema['Tables'] &
-        PublicSchema['Views'])
-    ? (PublicSchema['Tables'] &
-        PublicSchema['Views'])[PublicTableNameOrOptions] extends {
+  : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
+        PublicSchema["Views"])
+    ? (PublicSchema["Tables"] &
+        PublicSchema["Views"])[PublicTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -1252,19 +1275,19 @@ export type Tables<
 
 export type TablesInsert<
   PublicTableNameOrOptions extends
-    | keyof PublicSchema['Tables']
+    | keyof PublicSchema["Tables"]
     | { schema: keyof Database },
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions['schema']]['Tables']
+    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema['Tables']
-    ? PublicSchema['Tables'][PublicTableNameOrOptions] extends {
+  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
+    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -1273,19 +1296,19 @@ export type TablesInsert<
 
 export type TablesUpdate<
   PublicTableNameOrOptions extends
-    | keyof PublicSchema['Tables']
+    | keyof PublicSchema["Tables"]
     | { schema: keyof Database },
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions['schema']]['Tables']
+    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema['Tables']
-    ? PublicSchema['Tables'][PublicTableNameOrOptions] extends {
+  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
+    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -1294,13 +1317,28 @@ export type TablesUpdate<
 
 export type Enums<
   PublicEnumNameOrOptions extends
-    | keyof PublicSchema['Enums']
+    | keyof PublicSchema["Enums"]
     | { schema: keyof Database },
   EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicEnumNameOrOptions['schema']]['Enums']
+    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : PublicEnumNameOrOptions extends keyof PublicSchema['Enums']
-    ? PublicSchema['Enums'][PublicEnumNameOrOptions]
+  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
+    ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof PublicSchema["CompositeTypes"]
+    | { schema: keyof Database },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
+    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never

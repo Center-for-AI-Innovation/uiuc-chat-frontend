@@ -38,3 +38,6 @@ We're a group of passionate indie hackers building the best AI Teaching Assistan
 <div align="center">
   <i>Upload anything, search everything, get answers - that's the UIUC.chat way!</i>
 </div>
+
+## Repo activity
+![Alt](https://repobeats.axiom.co/api/embed/0dbb8d9b2448fd4dbef44b00731f92f985f4163c.svg "Contributors")

@@ -50,6 +50,7 @@ import { VisionCapableModels } from '~/utils/modelProviders/LLMProvider'
 import { OpenAIModelID } from '~/utils/modelProviders/types/openai'
 import { UserSettings } from '~/components/Chat/UserSettings'
 import { IconChevronRight } from '@tabler/icons-react'
+import { showConfirmationToast } from '../UIUC-Components/api-inputs/LLMsApiKeyInputForm'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -170,7 +171,7 @@ export const ChatInput = ({
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     // TODO: Update this to use tokens, instead of characters
     const value = e.target.value
-    const maxLength = selectedConversation?.model.tokenLimit
+    const maxLength = selectedConversation?.model?.tokenLimit
 
     if (maxLength && value.length > maxLength) {
       alert(
@@ -378,21 +379,55 @@ export const ChatInput = ({
     [parseVariables, setContent, updatePromptListVisibility],
   )
 
-  const handleSubmit = useCallback(
-    (updatedVariables: string[]) => {
-      const newContent = content?.replace(/{{(.*?)}}/g, (match, variable) => {
-        const index = variables.indexOf(variable)
-        return updatedVariables[index] || ''
+  const handleSubmit = async () => {
+    if (messageIsStreaming) {
+      return
+    }
+
+    try {
+      // ... existing image handling code ...
+
+      const response = await fetch('/api/allNewRoutingChat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          conversation: selectedConversation,
+          // key: apiKey,
+          course_name: courseName,
+          // courseMetadata: courseMetadata,
+          stream: true,
+          // llmProviders: llmProviders,
+        }),
       })
 
-      setContent(newContent)
-
-      if (textareaRef && textareaRef.current) {
-        textareaRef.current.focus()
+      if (!response.ok) {
+        const errorResponse = await response.json()
+        const errorMessage =
+          errorResponse.error ||
+          'An error occurred while processing your request'
+        notifications.show({
+          message: errorMessage,
+          color: 'red',
+        })
+        return
       }
-    },
-    [variables, setContent, textareaRef],
-  ) // Add dependencies used in the function
+
+      // ... rest of success handling ...
+    } catch (error) {
+      console.error('Error in chat submission:', error)
+      notifications.show({
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Failed to send message. Please try again.',
+        color: 'red',
+      })
+    } finally {
+      setUploadingImage(false)
+    }
+  }
 
   // https://platform.openai.com/docs/guides/vision/what-type-of-files-can-i-upload
   const validImageTypes = ['.jpg', '.jpeg', '.png', '.webp', '.gif']
@@ -423,6 +458,20 @@ export const ChatInput = ({
 
   const handleImageUpload = useCallback(
     async (files: File[]) => {
+      // TODO: FIX IMAGE UPLOADS ASAP
+      showConfirmationToast({
+        title: `😢 We can't handle all these images...`,
+        message: `Image uploads are temporarily disabled. I'm really sorry, I'm working on getting them back. Email me if you want to complain: kvday2@illinois.edu`,
+        isError: true,
+        autoClose: 10000,
+      })
+
+      // Clear any selected files
+      if (imageUploadRef.current) {
+        imageUploadRef.current.value = ''
+      }
+      return // Exit early to prevent processing
+
       const validFiles = files.filter((file) => isImageValid(file.name))
       const invalidFilesCount = files.length - validFiles.length
 
@@ -556,7 +605,7 @@ export const ChatInput = ({
 
   useEffect(() => {
     if (
-      !VisionCapableModels.has(selectedConversation?.model.id as OpenAIModelID)
+      !VisionCapableModels.has(selectedConversation?.model?.id as OpenAIModelID)
     ) {
       return // Exit early if the model is not GPT-4 Vision
     }
@@ -598,7 +647,7 @@ export const ChatInput = ({
       document.removeEventListener('drop', handleDocumentDrop)
       document.removeEventListener('dragleave', handleDocumentDragLeave)
     }
-  }, [handleImageUpload, selectedConversation?.model.id])
+  }, [handleImageUpload, selectedConversation?.model?.id])
 
   useEffect(() => {
     if (imageError) {
@@ -716,7 +765,8 @@ export const ChatInput = ({
 
         {!messageIsStreaming &&
           selectedConversation &&
-          selectedConversation.messages.length > 0 && (
+          selectedConversation.messages &&
+          selectedConversation.messages?.length > 0 && (
             <button
               className={`absolute ${isSmallScreen ? '-top-28' : '-top-20'} left-0 right-0 mx-auto mb-24 flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white px-4 py-2 text-black hover:opacity-50 dark:border-neutral-600 dark:bg-[#343541] dark:text-white md:mb-0 md:mt-2`}
               onClick={onRegenerate}
@@ -730,9 +780,9 @@ export const ChatInput = ({
           className="absolute bottom-0 mx-4 flex w-[80%] flex-col self-center rounded-t-3xl border border-black/10 bg-[#070712] px-4 pb-8 pt-4 shadow-[0_0_10px_rgba(0,0,0,0.10)] dark:border-gray-900/50 dark:text-white dark:shadow-[0_0_15px_rgba(0,0,0,0.10)] md:mx-20 md:w-[70%]"
         >
           {/* BUTTON 2: Image Icon and Input */}
-          {selectedConversation?.model.id &&
+          {selectedConversation?.model?.id &&
             VisionCapableModels.has(
-              selectedConversation.model.id as OpenAIModelID,
+              selectedConversation.model?.id as OpenAIModelID,
             ) && (
               <button
                 className="absolute bottom-11 left-5 rounded-full p-1 text-neutral-800 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
@@ -849,7 +899,7 @@ export const ChatInput = ({
               className={`
                 ${
                   VisionCapableModels.has(
-                    selectedConversation?.model.id as OpenAIModelID,
+                    selectedConversation?.model?.id as OpenAIModelID,
                   )
                     ? 'pl-8'
                     : 'pl-1'
@@ -934,10 +984,10 @@ export const ChatInput = ({
             onClick={handleTextClick}
             style={{ cursor: 'pointer' }}
           >
-            {selectedConversation?.model.name}
+            {selectedConversation?.model?.name}
             {selectedConversation?.model &&
               webLLMModels.some(
-                (m) => m.name === selectedConversation.model.name,
+                (m) => m.name === selectedConversation?.model?.name,
               ) &&
               chat_ui?.isModelLoading() &&
               '  Please wait while the model is loading...'}

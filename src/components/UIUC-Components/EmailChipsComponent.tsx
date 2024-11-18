@@ -51,13 +51,7 @@ function EmailListItem({
 
 const EmailChipsComponent = ({
   course_name,
-  course_owner,
-  course_admins,
-  is_private,
   onEmailAddressesChange,
-  banner_image_s3,
-  course_intro_message,
-  openai_api_key,
   is_for_admins,
 }: {
   course_name: string
@@ -78,7 +72,6 @@ const EmailChipsComponent = ({
   const [courseName, setCourseName] = useState<string>(course_name)
   const [value, setValue] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
-  const isPrivate = is_private
 
   // fetch metadata on mount
   useEffect(() => {
@@ -229,27 +222,33 @@ const EmailChipsComponent = ({
     }
   }
 
-  const updateCourseMetadata = (admins: string[], emails: string[]) => {
-    if (!admins.includes('kvday2@illinois.edu')) {
-      admins.push('kvday2@illinois.edu')
+  const updateCourseMetadata = async (admins: string[], emails: string[]) => {
+    // Fetch current metadata
+    const currentMetadata = await fetchCourseMetadata(courseName);
+
+    if (!currentMetadata) {
+      console.error('Failed to fetch current course metadata');
+      return;
     }
-    const updatedMetadata = {
-      is_private: isPrivate,
-      course_owner: course_owner,
-      course_admins: admins, // Always update course_admins with the current state
-      approved_emails_list: emails, // Always update approved_emails_list with the current state
-      course_intro_message: course_intro_message,
-      banner_image_s3: banner_image_s3,
-      openai_api_key: openai_api_key,
-      example_questions: undefined,
-      system_prompt: undefined,
-      disabled_models: undefined,
-      project_description: undefined,
+
+    // Ensure 'kvday2@illinois.edu' is always included in admins
+    if (is_for_admins && !admins.includes('kvday2@illinois.edu')) {
+      admins.push('kvday2@illinois.edu');
     }
-    onEmailAddressesChange &&
-      onEmailAddressesChange(updatedMetadata, course_name)
-    callSetCourseMetadata(courseName, updatedMetadata)
-  }
+
+    // Create updated metadata by only updating the changed field
+    const updatedMetadata: CourseMetadata = {
+      ...currentMetadata,
+      course_admins: is_for_admins ? admins : currentMetadata.course_admins,
+      approved_emails_list: is_for_admins ? currentMetadata.approved_emails_list : emails,
+    };
+
+    await callSetCourseMetadata(courseName, updatedMetadata);
+
+    if (onEmailAddressesChange) {
+      onEmailAddressesChange(updatedMetadata, courseName);
+    }
+  };
 
   return (
     <div className="flex flex-col space-y-4">

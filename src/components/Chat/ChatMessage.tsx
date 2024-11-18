@@ -7,8 +7,20 @@ import {
   IconRobot,
   IconTrash,
   IconUser,
+  IconThumbUp,
+  IconThumbDown,
+  IconThumbUpFilled,
+  IconThumbDownFilled,
 } from '@tabler/icons-react'
-import { FC, memo, useContext, useEffect, useRef, useState } from 'react'
+import {
+  FC,
+  memo,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+} from 'react'
 
 import { useTranslation } from 'next-i18next'
 import { Content, ContextWithMetadata, Message } from '@/types/chat'
@@ -27,6 +39,7 @@ import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { IntermediateStateAccordion } from '../UIUC-Components/IntermediateStateAccordion'
+import { FeedbackModal } from './FeedbackModal'
 
 const useStyles = createStyles((theme) => ({
   imageContainerStyle: {
@@ -78,13 +91,19 @@ export interface Props {
   message: Message
   messageIndex: number
   onEdit?: (editedMessage: Message) => void
+  onFeedback?: (
+    message: Message,
+    isPositive: boolean,
+    category?: string,
+    details?: string,
+  ) => void
   context?: ContextWithMetadata[]
   contentRenderer?: (message: Message) => JSX.Element
   onImageUrlsUpdate?: (message: Message, messageIndex: number) => void
 }
 
 export const ChatMessage: FC<Props> = memo(
-  ({ message, messageIndex, onEdit, onImageUrlsUpdate }) => {
+  ({ message, messageIndex, onEdit, onFeedback, onImageUrlsUpdate }) => {
     const { t } = useTranslation('chat')
 
     const {
@@ -114,6 +133,19 @@ export const ChatMessage: FC<Props> = memo(
     // SET TIMER for message writing (from gpt-4)
     const [timerVisible, setTimerVisible] = useState(false)
     const { classes } = useStyles() // for Accordion
+
+    const [isThumbsUp, setIsThumbsUp] = useState<boolean>(false)
+    const [isThumbsDown, setIsThumbsDown] = useState<boolean>(false)
+    const [isPositiveFeedback, setIsPositiveFeedback] = useState<boolean>(false)
+    const [isFeedbackModalOpen, setIsFeedbackModalOpen] =
+      useState<boolean>(false)
+
+    // Cleanup effect for modal
+    useEffect(() => {
+      return () => {
+        setIsFeedbackModalOpen(false)
+      }
+    }, [message.id])
 
     useEffect(() => {
       if (message.role === 'assistant') {
@@ -313,6 +345,57 @@ export const ChatMessage: FC<Props> = memo(
     }
 
     useEffect(() => {
+      if (
+        message.feedback &&
+        message.feedback.isPositive !== undefined &&
+        message.feedback.isPositive !== null
+      ) {
+        setIsThumbsUp(message.feedback.isPositive)
+        setIsThumbsDown(!message.feedback.isPositive)
+      } else {
+        setIsThumbsUp(false)
+        setIsThumbsDown(false)
+      }
+    }, [message])
+
+    const handleThumbsUp = useCallback(() => {
+      if (isThumbsUp) return
+
+      setIsThumbsUp(true)
+      setIsThumbsDown(false)
+      setIsPositiveFeedback(true)
+
+      if (onFeedback) {
+        onFeedback(message, true)
+      }
+    }, [isThumbsUp, onFeedback, message])
+
+    const handleThumbsDown = useCallback(() => {
+      if (isThumbsDown) return
+
+      setIsThumbsUp(false)
+      setIsThumbsDown(false) // Don't set to true until feedback is submitted
+      setIsPositiveFeedback(false)
+      setIsFeedbackModalOpen(true)
+    }, [isThumbsDown])
+
+    const handleFeedbackSubmit = useCallback(
+      (feedback: string, category?: string) => {
+        // Create a deep copy of just the message
+        const messageCopy = JSON.parse(JSON.stringify(message))
+
+        setIsThumbsUp(isPositiveFeedback)
+        setIsThumbsDown(!isPositiveFeedback)
+
+        if (onFeedback) {
+          onFeedback(messageCopy, isPositiveFeedback, category, feedback)
+        }
+        setIsFeedbackModalOpen(false)
+      },
+      [isPositiveFeedback],
+    )
+
+    useEffect(() => {
       // setMessageContent(message.content)
       if (Array.isArray(message.content)) {
         const textContent = message.content
@@ -492,7 +575,7 @@ export const ChatMessage: FC<Props> = memo(
 
           <div className="dark:prose-invert prose mt-[-2px] flex w-full max-w-full flex-wrap lg:w-[90%]">
             {message.role === 'user' ? (
-              <div className="flex w-[90%] flex-row flex-wrap">
+              <div className="flex w-[90%] flex-col">
                 {isEditing ? (
                   <div className="flex w-full flex-col">
                     <textarea
@@ -512,7 +595,6 @@ export const ChatMessage: FC<Props> = memo(
                         overflow: 'hidden',
                       }}
                     />
-
                     <div className="mt-10 flex justify-center space-x-4">
                       <button
                         className="h-[40px] rounded-md bg-blue-500 px-4 py-1 text-sm font-medium text-white enabled:hover:bg-blue-600 disabled:opacity-50"
@@ -533,63 +615,89 @@ export const ChatMessage: FC<Props> = memo(
                     </div>
                   </div>
                 ) : (
-                  <div className="dark:prose-invert w-9/10 prose flex-1 whitespace-pre-wrap lg:mr-2">
-                    {Array.isArray(message.content) ? (
-                      <>
-                        <div className="mb-2 flex w-full flex-col items-start space-y-2">
-                          {/* User message text for all messages */}
-                          {message.content.map((content, index) => {
-                            if (content.type === 'text') {
-                              if (
-                                !(content.text as string)
-                                  .trim()
-                                  .startsWith('Image description:')
-                              ) {
-                                return (
-                                  <p
-                                    key={index}
-                                    className={`self-start text-base font-normal ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                  >
-                                    {content.text}
-                                  </p>
-                                )
+                  <>
+                    <div className="dark:prose-invert prose w-full flex-1 whitespace-pre-wrap">
+                      {Array.isArray(message.content) ? (
+                        <>
+                          <div className="mb-2 flex w-full flex-col items-start space-y-2">
+                            {/* User message text for all messages */}
+                            {message.content.map((content, index) => {
+                              if (content.type === 'text') {
+                                if (
+                                  !(content.text as string)
+                                    .trim()
+                                    .startsWith('Image description:')
+                                ) {
+                                  return (
+                                    <p
+                                      key={index}
+                                      className={`self-start text-base font-normal ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                    >
+                                      {content.text}
+                                    </p>
+                                  )
+                                }
                               }
-                            }
-                          })}
-                          {/* Image previews for all messages */}
-                          <div className="-m-1 flex w-full flex-wrap justify-start">
-                            {message.content
-                              .filter((item) => item.type === 'image_url')
-                              .map((content, index) => (
-                                <div
-                                  key={index}
-                                  className={classes.imageContainerStyle}
-                                >
-                                  <div className="overflow-hidden rounded-lg shadow-lg">
-                                    <ImagePreview
-                                      src={
-                                        Array.from(imageUrls)[index] as string
-                                      }
-                                      alt="Chat message"
-                                      className={classes.imageStyle}
-                                    />
+                            })}
+                            {/* Image previews for all messages */}
+                            <div className="-m-1 flex w-full flex-wrap justify-start">
+                              {message.content
+                                .filter((item) => item.type === 'image_url')
+                                .map((content, index) => (
+                                  <div
+                                    key={index}
+                                    className={classes.imageContainerStyle}
+                                  >
+                                    <div className="overflow-hidden rounded-lg shadow-lg">
+                                      <ImagePreview
+                                        src={
+                                          Array.from(imageUrls)[index] as string
+                                        }
+                                        alt="Chat message"
+                                        className={classes.imageStyle}
+                                      />
+                                    </div>
                                   </div>
-                                </div>
-                              ))}
-                          </div>
+                                ))}
+                            </div>
 
-                          {/* Image description loading state for last message */}
-                          {isImg2TextLoading &&
-                            (messageIndex ===
-                              (selectedConversation?.messages.length ?? 0) -
-                                1 ||
-                              messageIndex ===
+                            {/* Image description loading state for last message */}
+                            {isImg2TextLoading &&
+                              (messageIndex ===
                                 (selectedConversation?.messages.length ?? 0) -
-                                  2) && (
+                                  1 ||
+                                messageIndex ===
+                                  (selectedConversation?.messages.length ?? 0) -
+                                    2) && (
+                                <IntermediateStateAccordion
+                                  accordionKey="imageDescription"
+                                  title="Image Description"
+                                  isLoading={isImg2TextLoading}
+                                  error={false}
+                                  content={
+                                    message.content.find(
+                                      (content) =>
+                                        content.type === 'text' &&
+                                        content.text
+                                          ?.trim()
+                                          .startsWith('Image description:'),
+                                    )?.text ?? 'No image description found'
+                                  }
+                                />
+                              )}
+
+                            {/* Image description for all messages */}
+                            {message.content.some(
+                              (content) =>
+                                content.type === 'text' &&
+                                content.text
+                                  ?.trim()
+                                  .startsWith('Image description:'),
+                            ) && (
                               <IntermediateStateAccordion
                                 accordionKey="imageDescription"
                                 title="Image Description"
-                                isLoading={isImg2TextLoading}
+                                isLoading={false}
                                 error={false}
                                 content={
                                   message.content.find(
@@ -602,122 +710,185 @@ export const ChatMessage: FC<Props> = memo(
                                 }
                               />
                             )}
-
-                          {/* Image description for all messages */}
-                          {message.content.some(
-                            (content) =>
-                              content.type === 'text' &&
-                              content.text
-                                ?.trim()
-                                .startsWith('Image description:'),
-                          ) && (
-                            <IntermediateStateAccordion
-                              accordionKey="imageDescription"
-                              title="Image Description"
-                              isLoading={false}
-                              error={false}
-                              content={
-                                message.content.find(
-                                  (content) =>
-                                    content.type === 'text' &&
-                                    content.text
-                                      ?.trim()
-                                      .startsWith('Image description:'),
-                                )?.text ?? 'No image description found'
-                              }
-                            />
-                          )}
-                        </div>
-                      </>
-                    ) : (
-                      <>{message.content}</>
-                    )}
-                    <div className="flex w-full flex-col items-start space-y-2">
-                      {/* Retrieval results for all messages */}
-                      {message.contexts && message.contexts.length > 0 && (
-                        <IntermediateStateAccordion
-                          accordionKey="retrieval loading"
-                          title="Retrieved documents"
-                          isLoading={false}
-                          error={false}
-                          content={`Found ${message.contexts?.length} document chunks.`}
-                        />
+                          </div>
+                        </>
+                      ) : (
+                        <>{message.content}</>
                       )}
-
-                      {/* Retrieval loading state for last message */}
-                      {isRetrievalLoading &&
-                        (messageIndex ===
-                          (selectedConversation?.messages.length ?? 0) - 1 ||
-                          messageIndex ===
-                            (selectedConversation?.messages.length ?? 0) -
-                              2) && (
+                      <div className="flex w-full flex-col items-start space-y-2">
+                        {/* Retrieval results for all messages */}
+                        {message.contexts && message.contexts.length > 0 && (
                           <IntermediateStateAccordion
                             accordionKey="retrieval loading"
-                            title="Retrieving documents"
-                            isLoading={isRetrievalLoading}
+                            title="Retrieved documents"
+                            isLoading={false}
                             error={false}
                             content={`Found ${message.contexts?.length} document chunks.`}
                           />
                         )}
 
-                      {/* Tool Routing loading state for last message */}
-                      {isRouting &&
-                        (messageIndex ===
-                          (selectedConversation?.messages.length ?? 0) - 1 ||
-                          messageIndex ===
-                            (selectedConversation?.messages.length ?? 0) -
-                              2) && (
-                          <IntermediateStateAccordion
-                            accordionKey={`routing tools`}
-                            title={'Routing the request to relevant tools'}
-                            isLoading={isRouting}
-                            error={false}
-                            content={<></>}
-                          />
-                        )}
+                        {/* Retrieval loading state for last message */}
+                        {isRetrievalLoading &&
+                          (messageIndex ===
+                            (selectedConversation?.messages.length ?? 0) - 1 ||
+                            messageIndex ===
+                              (selectedConversation?.messages.length ?? 0) -
+                                2) && (
+                            <IntermediateStateAccordion
+                              accordionKey="retrieval loading"
+                              title="Retrieving documents"
+                              isLoading={isRetrievalLoading}
+                              error={false}
+                              content={`Found ${message.contexts?.length} document chunks.`}
+                            />
+                          )}
 
-                      {/* Tool input arguments state for last message */}
-                      {isRouting === false &&
-                        message.tools &&
-                        (messageIndex ===
+                        {/* Tool Routing loading state for last message */}
+                        {isRouting &&
+                          (messageIndex ===
+                            (selectedConversation?.messages.length ?? 0) - 1 ||
+                            messageIndex ===
+                              (selectedConversation?.messages.length ?? 0) -
+                                2) && (
+                            <IntermediateStateAccordion
+                              accordionKey={`routing tools`}
+                              title={'Routing the request to relevant tools'}
+                              isLoading={isRouting}
+                              error={false}
+                              content={<></>}
+                            />
+                          )}
+
+                        {/* Tool input arguments state for last message */}
+                        {isRouting === false &&
+                          message.tools &&
+                          (messageIndex ===
+                            (selectedConversation?.messages.length ?? 0) - 1 ||
+                            messageIndex ===
+                              (selectedConversation?.messages.length ?? 0) -
+                                2) && (
+                            <>
+                              {message.tools.map((response, index) => (
+                                <IntermediateStateAccordion
+                                  key={`routing-${index}`}
+                                  accordionKey={`routing-${index}`}
+                                  title={
+                                    <>
+                                      Routing the request to{' '}
+                                      <Badge
+                                        color="grape"
+                                        radius="md"
+                                        size="sm"
+                                      >
+                                        {response.readableName}
+                                      </Badge>
+                                    </>
+                                  }
+                                  isLoading={isRouting}
+                                  error={false}
+                                  content={
+                                    <>
+                                      Arguments :{' '}
+                                      {response.aiGeneratedArgumentValues
+                                        ?.image_urls ? (
+                                        <div>
+                                          <div className="flex overflow-x-auto">
+                                            {JSON.parse(
+                                              response.aiGeneratedArgumentValues
+                                                .image_urls,
+                                            ).length > 0 ? (
+                                              JSON.parse(
+                                                response
+                                                  .aiGeneratedArgumentValues
+                                                  .image_urls,
+                                              ).map(
+                                                (
+                                                  imageUrl: string,
+                                                  index: number,
+                                                ) => (
+                                                  <div
+                                                    key={index}
+                                                    className={
+                                                      classes.imageContainerStyle
+                                                    }
+                                                  >
+                                                    <div className="overflow-hidden rounded-lg shadow-lg">
+                                                      <ImagePreview
+                                                        src={imageUrl}
+                                                        alt={`Tool image argument ${index}`}
+                                                        className={
+                                                          classes.imageStyle
+                                                        }
+                                                      />
+                                                    </div>
+                                                  </div>
+                                                ),
+                                              )
+                                            ) : (
+                                              <p>No arguments provided</p>
+                                            )}
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <pre>
+                                          {JSON.stringify(
+                                            response.aiGeneratedArgumentValues,
+                                            null,
+                                            2,
+                                          )}
+                                        </pre>
+                                      )}
+                                    </>
+                                  }
+                                />
+                              ))}
+                            </>
+                          )}
+
+                        {/* Tool output states for last message */}
+                        {(messageIndex ===
                           (selectedConversation?.messages.length ?? 0) - 1 ||
                           messageIndex ===
                             (selectedConversation?.messages.length ?? 0) -
                               2) && (
                           <>
-                            {message.tools.map((response, index) => (
+                            {message.tools?.map((response, index) => (
                               <IntermediateStateAccordion
-                                key={`routing-${index}`}
-                                accordionKey={`routing-${index}`}
+                                key={`tool-${index}`}
+                                accordionKey={`tool-${index}`}
                                 title={
                                   <>
-                                    Routing the request to{' '}
-                                    <Badge color="grape" radius="md" size="sm">
+                                    Tool output from{' '}
+                                    <Badge
+                                      color={response.error ? 'red' : 'grape'}
+                                      radius="md"
+                                      size="sm"
+                                    >
                                       {response.readableName}
                                     </Badge>
                                   </>
                                 }
-                                isLoading={isRouting}
-                                error={false}
+                                isLoading={
+                                  response.output === undefined &&
+                                  response.error === undefined
+                                }
+                                error={response.error ? true : false}
                                 content={
                                   <>
-                                    Arguments :{' '}
-                                    {response.aiGeneratedArgumentValues
-                                      ?.image_urls ? (
-                                      <div>
-                                        <div className="flex overflow-x-auto">
-                                          {JSON.parse(
-                                            response.aiGeneratedArgumentValues
-                                              .image_urls,
-                                          ).length > 0 ? (
-                                            JSON.parse(
-                                              response.aiGeneratedArgumentValues
-                                                .image_urls,
-                                            ).map(
-                                              (
-                                                imageUrl: string,
-                                                index: number,
-                                              ) => (
+                                    {response.error ? (
+                                      <span>{response.error}</span>
+                                    ) : (
+                                      <>
+                                        <div
+                                          style={{
+                                            display: 'flex',
+                                            overflowX: 'auto',
+                                            gap: '10px',
+                                          }}
+                                        >
+                                          {response.output?.imageUrls &&
+                                            response.output?.imageUrls.map(
+                                              (imageUrl, index) => (
                                                 <div
                                                   key={index}
                                                   className={
@@ -727,7 +898,7 @@ export const ChatMessage: FC<Props> = memo(
                                                   <div className="overflow-hidden rounded-lg shadow-lg">
                                                     <ImagePreview
                                                       src={imageUrl}
-                                                      alt={`Tool image argument ${index}`}
+                                                      alt={`Tool output image ${index}`}
                                                       className={
                                                         classes.imageStyle
                                                       }
@@ -735,20 +906,18 @@ export const ChatMessage: FC<Props> = memo(
                                                   </div>
                                                 </div>
                                               ),
-                                            )
-                                          ) : (
-                                            <p>No arguments provided</p>
-                                          )}
+                                            )}
                                         </div>
-                                      </div>
-                                    ) : (
-                                      <pre>
-                                        {JSON.stringify(
-                                          response.aiGeneratedArgumentValues,
-                                          null,
-                                          2,
-                                        )}
-                                      </pre>
+                                        <div>
+                                          {response.output?.text
+                                            ? response.output.text
+                                            : JSON.stringify(
+                                                response.output?.data,
+                                                null,
+                                                2,
+                                              )}
+                                        </div>
+                                      </>
                                     )}
                                   </>
                                 }
@@ -756,169 +925,89 @@ export const ChatMessage: FC<Props> = memo(
                             ))}
                           </>
                         )}
-
-                      {/* Tool output states for last message */}
-                      {(messageIndex ===
-                        (selectedConversation?.messages.length ?? 0) - 1 ||
-                        messageIndex ===
-                          (selectedConversation?.messages.length ?? 0) - 2) && (
-                        <>
-                          {message.tools?.map((response, index) => (
-                            <IntermediateStateAccordion
-                              key={`tool-${index}`}
-                              accordionKey={`tool-${index}`}
-                              title={
-                                <>
-                                  Tool output from{' '}
-                                  <Badge
-                                    color={response.error ? 'red' : 'grape'}
-                                    radius="md"
-                                    size="sm"
-                                  >
-                                    {response.readableName}
-                                  </Badge>
-                                </>
-                              }
-                              isLoading={
-                                response.output === undefined &&
-                                response.error === undefined
-                              }
-                              error={response.error ? true : false}
-                              content={
-                                <>
-                                  {response.error ? (
-                                    <span>{response.error}</span>
-                                  ) : (
-                                    <>
-                                      <div
-                                        style={{
-                                          display: 'flex',
-                                          overflowX: 'auto',
-                                          gap: '10px',
-                                        }}
-                                      >
-                                        {response.output?.imageUrls &&
-                                          response.output?.imageUrls.map(
-                                            (imageUrl, index) => (
-                                              <div
-                                                key={index}
-                                                className={
-                                                  classes.imageContainerStyle
-                                                }
-                                              >
-                                                <div className="overflow-hidden rounded-lg shadow-lg">
-                                                  <ImagePreview
-                                                    src={imageUrl}
-                                                    alt={`Tool output image ${index}`}
-                                                    className={
-                                                      classes.imageStyle
-                                                    }
-                                                  />
-                                                </div>
-                                              </div>
-                                            ),
-                                          )}
-                                      </div>
-                                      <div>
-                                        {response.output?.text
-                                          ? response.output.text
-                                          : JSON.stringify(
-                                              response.output?.data,
-                                              null,
-                                              2,
-                                            )}
-                                      </div>
-                                    </>
-                                  )}
-                                </>
-                              }
-                            />
-                          ))}
-                        </>
-                      )}
-                      {(() => {
-                        if (
-                          messageIsStreaming === undefined ||
-                          !messageIsStreaming
-                        ) {
-                          // console.log(
-                          //   'isRouting: ',
-                          //   isRouting,
-                          //   'isRetrievalLoading: ',
-                          //   isRetrievalLoading,
-                          //   'isImg2TextLoading: ',
-                          //   isImg2TextLoading,
-                          //   'messageIsStreaming: ',
-                          //   messageIsStreaming,
-                          //   'loading: ',
-                          //   loading,
-                          // )
-                        }
-                        return null
-                      })()}
-                      {!isRouting &&
-                        !isRetrievalLoading &&
-                        !isImg2TextLoading &&
-                        loading &&
-                        (messageIndex ===
-                          (selectedConversation?.messages.length ?? 0) - 1 ||
-                          messageIndex ===
-                            (selectedConversation?.messages.length ?? 0) - 2) &&
-                        (!message.tools ||
-                          message.tools.every(
-                            (tool) =>
-                              tool.output !== undefined ||
-                              tool.error !== undefined,
-                          )) && (
-                          <>
-                            <div
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                marginLeft: '10px',
-                                marginTop: '10px',
-                              }}
-                            >
-                              <p
+                        {(() => {
+                          if (
+                            messageIsStreaming === undefined ||
+                            !messageIsStreaming
+                          ) {
+                            // console.log(
+                            //   'isRouting: ',
+                            //   isRouting,
+                            //   'isRetrievalLoading: ',
+                            //   isRetrievalLoading,
+                            //   'isImg2TextLoading: ',
+                            //   isImg2TextLoading,
+                            //   'messageIsStreaming: ',
+                            //   messageIsStreaming,
+                            //   'loading: ',
+                            //   loading,
+                            // )
+                          }
+                          return null
+                        })()}
+                        {!isRouting &&
+                          !isRetrievalLoading &&
+                          !isImg2TextLoading &&
+                          loading &&
+                          (messageIndex ===
+                            (selectedConversation?.messages.length ?? 0) - 1 ||
+                            messageIndex ===
+                              (selectedConversation?.messages.length ?? 0) -
+                                2) &&
+                          (!message.tools ||
+                            message.tools.every(
+                              (tool) =>
+                                tool.output !== undefined ||
+                                tool.error !== undefined,
+                            )) && (
+                            <>
+                              <div
                                 style={{
-                                  marginRight: '10px',
-                                  fontWeight: 'bold',
-                                  textShadow: '0 0 10px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  marginLeft: '10px',
+                                  marginTop: '10px',
                                 }}
-                                className={`pulsate text-base ${montserrat_paragraph.variable} font-montserratParagraph`}
                               >
-                                Generating final response:
-                              </p>
-                              <LoadingSpinner size="xs" />
-                            </div>
-                          </>
-                        )}
+                                <p
+                                  style={{
+                                    marginRight: '10px',
+                                    fontWeight: 'bold',
+                                    textShadow: '0 0 10px',
+                                  }}
+                                  className={`pulsate text-base ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                >
+                                  Generating final response:
+                                </p>
+                                <LoadingSpinner size="xs" />
+                              </div>
+                            </>
+                          )}
+                      </div>
                     </div>
-                  </div>
-                )}
-
-                {!isEditing && (
-                  <div className="w-1/10 mb-10 ml-1 flex flex-col items-end justify-start gap-4 md:-mr-8 md:ml-0 md:flex-row md:items-start md:justify-end md:gap-1">
-                    <button
-                      className={`invisible text-gray-500 hover:text-gray-700 focus:visible group-hover:visible dark:text-gray-400 dark:hover:text-gray-300 
-                        ${Array.isArray(message.content) && message.content.some((content) => content.type === 'image_url') ? 'hidden' : ''}`}
-                      onClick={toggleEditing}
-                    >
-                      <IconEdit size={20} />
-                    </button>
-                    <button
-                      className="invisible text-gray-500 hover:text-gray-700 focus:visible group-hover:visible dark:text-gray-400 dark:hover:text-gray-300"
-                      onClick={handleDeleteMessage}
-                    >
-                      <IconTrash size={20} />
-                    </button>
-                  </div>
+                    {!isEditing && (
+                      <div className="mt-2 flex items-center justify-start gap-4">
+                        <button
+                          className={`invisible text-gray-500 hover:text-gray-700 focus:visible group-hover:visible dark:text-gray-400 dark:hover:text-gray-300 
+                            ${Array.isArray(message.content) && message.content.some((content) => content.type === 'image_url') ? 'hidden' : ''}`}
+                          onClick={toggleEditing}
+                        >
+                          <IconEdit size={20} />
+                        </button>
+                        <button
+                          className="invisible text-gray-500 hover:text-gray-700 focus:visible group-hover:visible dark:text-gray-400 dark:hover:text-gray-300"
+                          onClick={handleDeleteMessage}
+                        >
+                          <IconTrash size={20} />
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             ) : (
-              <div className="flex w-[90%] flex-row flex-wrap">
-                {/* <div className='overflow-hidden'> */}
-                <div className="w-9/10 max-w-9/10 flex-1 overflow-hidden lg:mr-2">
+              <div className="flex w-[90%] flex-col">
+                <div className="w-full max-w-full flex-1 overflow-hidden">
                   <MemoizedReactMarkdown
                     className={`dark:prose-invert linkMarkDown supMarkdown codeBlock prose mb-2 flex-1 flex-col items-start space-y-2`}
                     remarkPlugins={[remarkGfm, remarkMath]}
@@ -1132,27 +1221,55 @@ export const ChatMessage: FC<Props> = memo(
                     })()}
                   </MemoizedReactMarkdown>
                 </div>
-                {/* <div className="ml-1 flex flex-col items-center justify-end gap-4 md:-mr-8 md:ml-0 md:flex-row md:items-start md:justify-start md:gap-1"> */}
-                <div className="w-1/10 mb-10 ml-1 flex flex-col items-end justify-start gap-4 md:-mr-8 md:ml-0 md:flex-row md:items-start md:justify-end md:gap-1">
-                  {messagedCopied ? (
-                    <IconCheck
-                      size={20}
-                      className="text-green-500 dark:text-green-400"
-                    />
-                  ) : (
-                    <button
-                      className="invisible text-gray-500 hover:text-gray-700 focus:visible group-hover:visible dark:text-gray-400 dark:hover:text-gray-300"
-                      onClick={copyOnClick}
-                    >
+                {/* FEEDBACK BUTTONS */}
+                <div className="-mt-1 flex items-center justify-start gap-2">
+                  <button
+                    className="text-gray-500 opacity-0 transition-opacity duration-200 hover:text-gray-700 focus:opacity-100 group-hover:opacity-100 dark:text-gray-400 dark:hover:text-gray-300"
+                    onClick={copyOnClick}
+                  >
+                    {messagedCopied ? (
+                      <IconCheck
+                        size={20}
+                        className="text-green-500 dark:text-green-400"
+                      />
+                    ) : (
                       <IconCopy size={20} />
-                    </button>
-                  )}
+                    )}
+                  </button>
+                  <button
+                    className="text-gray-500 opacity-0 transition-opacity duration-200 hover:text-gray-700 focus:opacity-100 group-hover:opacity-100 dark:text-gray-400 dark:hover:text-gray-300"
+                    onClick={handleThumbsUp}
+                  >
+                    <div className="opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                      {isThumbsUp ? (
+                        <IconThumbUpFilled size={20} />
+                      ) : (
+                        <IconThumbUp size={20} />
+                      )}
+                    </div>
+                  </button>
+                  <button
+                    className="text-gray-500 opacity-0 transition-opacity duration-200 hover:text-gray-700 focus:opacity-100 group-hover:opacity-100 dark:text-gray-400 dark:hover:text-gray-300"
+                    onClick={handleThumbsDown}
+                  >
+                    {isThumbsDown ? (
+                      <IconThumbDownFilled size={20} />
+                    ) : (
+                      <IconThumbDown size={20} />
+                    )}
+                  </button>
                 </div>
               </div>
             )}
-            {/* {message.role === 'assistant' && <Timer timerVisible={timerVisible} />} */}
           </div>
         </div>
+        {isFeedbackModalOpen && (
+          <FeedbackModal
+            isOpen={isFeedbackModalOpen}
+            onClose={() => setIsFeedbackModalOpen(false)}
+            onSubmit={handleFeedbackSubmit}
+          />
+        )}
       </div>
     )
   },

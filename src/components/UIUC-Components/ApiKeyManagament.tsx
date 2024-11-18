@@ -85,70 +85,84 @@ const ApiKeyManagement = ({
 			}
 		],
 		"openai_key": "YOUR-OPENAI-KEY-HERE",
-		"temperature": 0.7,
+    "api_key": ${apiKey ? `"${apiKey}"` : apiKeyPlaceholder},
+    "retrieval_only": false,
 		"course_name": "${course_name}",
 		"stream": true,
-		"api_key": ${apiKey ? `"${apiKey}"` : apiKeyPlaceholder}
+		"temperature": 0.1
 	}'`,
     python: `import requests
 	
-	url = "${baseUrl}/api/chat-api/chat"
-	headers = {
-		'Content-Type': 'application/json'
-	}
-	data = {
-		"model": "gpt-4o-mini",
-		"messages": [
-			{
-				"role": "system",
-				"content": "Your system prompt here"
-			},
-			{
-				"role": "user",
-				"content": "What is in these documents?"
-			}
-		],
-		"openai_key": "YOUR-OPENAI-KEY-HERE",
-		"temperature": 0.7,
-		"course_name": "${course_name}",
-		"stream": true,
-		"api_key": ${apiKey ? `"${apiKey}"` : apiKeyPlaceholder}
-	}
-	
-	response = requests.post(url, headers=headers, json=data)
-	print(response.text)`,
+url = "${baseUrl}/api/chat-api/chat"
+headers = {
+  'Content-Type': 'application/json'
+}
+stream = True
+data = {
+  "model": "gpt-4o-mini",
+  "messages": [
+    {
+      "role": "system",
+      "content": "Your system prompt here"
+    },
+    {
+      "role": "user",
+      "content": "What is in these documents?"
+    }
+  ],
+  "openai_key": "YOUR-OPENAI-KEY-HERE", # only necessary for OpenAI models
+  "api_key": ${apiKey ? `"${apiKey}"` : apiKeyPlaceholder},
+  "retrieval_only": False, # If true, the LLM will not be invoked (thus, zero cost). Only relevant documents will be returned.
+  "course_name": "${course_name}",
+  "stream": stream,
+  "temperature": 0.1
+}
+
+response = requests.post(url, headers=headers, json=data, stream=stream)
+# ⚡️ Stream
+if stream: 
+  for chunk in response.iter_content(chunk_size=None):
+    if chunk:
+      print(chunk.decode('utf-8'), end='', flush=True)
+# 🐌 No stream, but it includes the retrieved contexts.
+else:
+  import json
+  res = json.loads(response.text)
+  print(res['message'])
+  print("The contexts used to answer this question:", res['contexts'])`,
     node: `const axios = require('axios');
 	
-	const data = {
-		"model": "gpt-4o-mini",
-		"messages": [
-			{
-				"role": "system",
-				"content": "Your system prompt here"
-			},
-			{
-				"role": "user",
-				"content": "What is in these documents?"
-			}
-		],
-		"openai_key": "YOUR-OPENAI-KEY-HERE",
-		"temperature": 0.7,
-		"course_name": "${course_name}",
-		"stream": true,
-		"api_key": ${apiKey ? `"${apiKey}"` : apiKeyPlaceholder}
-	};
-	
-	axios.post('${baseUrl}/api/chat-api/chat', data, {
-		headers: {
-			'Content-Type': 'application/json'
-		}
-	})
-	.then((response) => {
-		console.log(response.data);
-	})
-	.catch((error) => {
-		console.error(error);
-	});`,
+const data = {
+  "model": "gpt-4o-mini",
+  "messages": [
+    {
+      "role": "system",
+      "content": "Your system prompt here"
+    },
+    {
+      "role": "user",
+      "content": "What is in these documents?"
+    }
+  ],
+  "openai_key": "YOUR-OPENAI-KEY-HERE", // only necessary for OpenAI models
+  "api_key": ${apiKey ? `"${apiKey}"` : apiKeyPlaceholder},
+  "course_name": "${course_name}",
+  "stream": true,
+  "retrieval_only": false, // If true, the LLM will not be invoked (thus, zero cost). Only relevant documents will be returned.
+  "temperature": 0.1
+};
+
+axios.post('${baseUrl}/api/chat-api/chat', data, {
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
+.then((response) => {
+  console.log(response.data);
+})
+.catch((error) => {
+  console.error(error);
+});`,
   }
 
   useEffect(() => {
@@ -302,7 +316,7 @@ const ApiKeyManagement = ({
                   rel="noopener noreferrer"
                   className={`text-purple-500 hover:underline ${montserrat_heading.variable} font-montserratHeading`}
                 >
-                  OpenAI API documentation
+                  OpenAI API documentation{' '}
                   <IconExternalLink
                     className="mr-2 inline-block"
                     style={{ position: 'relative', top: '-3px' }}
@@ -310,7 +324,33 @@ const ApiKeyManagement = ({
                 </a>
               </Title>
               <Title order={4} w={'90%'}>
-                Just add your{' '}
+                <code
+                  style={{
+                    backgroundColor: '#020307',
+                    borderRadius: '5px',
+                    padding: '1px 5px',
+                    fontFamily: 'monospace',
+                    alignItems: 'center',
+                    justifyItems: 'center',
+                  }}
+                >
+                  llama3.1:70b
+                </code>{' '}
+                is hosted by NCSA and it&apos;s free. However the best
+                price/performance LLM is{' '}
+                <code
+                  style={{
+                    backgroundColor: '#020307',
+                    borderRadius: '5px',
+                    padding: '1px 5px',
+                    fontFamily: 'monospace',
+                    alignItems: 'center',
+                    justifyItems: 'center',
+                  }}
+                >
+                  GPT-4o-mini
+                </code>
+                . For OpenAI models, just add your{' '}
                 <code
                   style={{
                     backgroundColor: '#020307',
@@ -324,6 +364,21 @@ const ApiKeyManagement = ({
                   openai_key
                 </code>{' '}
                 to the request.
+              </Title>
+              <Title order={4} w={'90%'}>
+                Read our UIUC.chat API docs:{' '}
+                <a
+                  href="https://docs.uiuc.chat/api/endpoints"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`text-purple-500 hover:underline ${montserrat_heading.variable} font-montserratHeading`}
+                >
+                  docs.uiuc.chat/api{' '}
+                  <IconExternalLink
+                    className="mr-2 inline-block"
+                    style={{ position: 'relative', top: '-3px' }}
+                  />
+                </a>
               </Title>
               <div
                 style={{
