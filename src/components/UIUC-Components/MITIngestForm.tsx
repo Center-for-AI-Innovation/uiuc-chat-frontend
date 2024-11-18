@@ -53,6 +53,7 @@ import { notifications } from '@mantine/notifications'
 import axios from 'axios'
 import { Montserrat } from 'next/font/google'
 import { FileUpload } from './UploadNotification'
+import Link from 'next/link'
 const montserrat_med = Montserrat({
   weight: '500',
   subsets: ['latin'],
@@ -364,10 +365,8 @@ export default function MITIngestForm({
             </div>
 
             <Text className="mb-4 text-sm leading-relaxed text-gray-400">
-              Import content from MIT OpenCourseWare, including lecture notes,
-              assignments, and course materials.
+              Import content from MIT OpenCourseWare, including lecture notes, assignments, and course materials.
             </Text>
-
             <div className="mt-auto flex items-center text-sm text-purple-400">
               <span>Configure import</span>
               <IconArrowRight
@@ -387,6 +386,35 @@ export default function MITIngestForm({
               {/* <Label htmlFor="canvas-url" className="text-white">
                 URL
               </Label> */}
+              <div className="break-words">
+
+                <strong>For MIT Open Course Ware</strong>, just enter a URL like{' '}
+                <code style={{
+                  backgroundColor: '#020307',
+                  borderRadius: '5px',
+                  padding: '1px 5px',
+                  fontFamily: 'monospace',
+                  alignItems: 'center',
+                  justifyItems: 'center',
+                }}>
+                  ocw.mit.edu/courses/ANY_COURSE
+                </code>{' '}
+                , for example:{' '}
+                <span className={'text-purple-600'}>
+                  <Link
+                    target="_blank"
+                    rel="noreferrer"
+                    href={
+                      'https://ocw.mit.edu/courses/8-321-quantum-theory-i-fall-2017'
+                    }
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    https://ocw.mit.edu/courses/8-321-quantum-theory-i-fall-2017
+                  </Link>
+                </span>
+                .
+              </div>
+              <div style={{ paddingBottom: '12px' }}></div>
               <Input
                 icon={<img
                   src={'/media/mitocw_logo.jpg'}

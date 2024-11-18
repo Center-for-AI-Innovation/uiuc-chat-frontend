@@ -15,6 +15,7 @@ import {
 import { Label } from '@radix-ui/react-label'
 import { useRouter } from 'next/router'
 import { FileUpload } from './UploadNotification'
+import Link from 'next/link'
 
 export default function CanvasIngestForm({
   project_name,
@@ -156,7 +157,6 @@ export default function CanvasIngestForm({
               Import content directly from your Canvas course, including
               assignments, discussions, files, and more.
             </Text>
-
             <div className="mt-auto flex items-center text-sm text-purple-400">
               <span>Configure import</span>
               <IconArrowRight
@@ -167,7 +167,7 @@ export default function CanvasIngestForm({
           </Card>
         </DialogTrigger>
 
-        <DialogContent className="max-w-2xl rounded-lg border-0 bg-[#1c1c2e] pt-10 px-10 text-white" style={{ padding: '50px', paddingBottom: '2px' }} >
+        <DialogContent className="max-w-2xl rounded-lg border-0 bg-[#1c1c2e] pt-10 px-10 text-white" style={{ padding: '50px', paddingBottom: '35px' }} >
           <DialogHeader>
             <DialogTitle className="text-xl font-bold pb-2">
               Ingest Canvas Course
@@ -179,6 +179,33 @@ export default function CanvasIngestForm({
                 {/* <Label htmlFor="canvas-url" className="text-white">
                   Canvas Course URL
                 </Label> */}
+                <div className="break-words">
+
+                  <strong>For Canvas</strong>, just enter a URL like{' '}
+                  <code style={{
+                    backgroundColor: '#020307',
+                    borderRadius: '5px',
+                    padding: '1px 5px',
+                    fontFamily: 'monospace',
+                    alignItems: 'center',
+                    justifyItems: 'center'
+                  }}>
+                    canvas.illinois.edu/courses/COURSE_CODE
+                  </code>
+                  , for example:{' '}
+                  <span className={'text-purple-600'}>
+                    <Link
+                      target="_blank"
+                      rel="noreferrer"
+                      href={'https://canvas.illinois.edu/courses/37348'}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      https://canvas.illinois.edu/courses/37348
+                    </Link>
+                  </span>
+                  .
+                </div>
+                <div style={{ paddingBottom: '10px' }}></div>
                 <Input
                   id="canvas-url"
                   icon={<img

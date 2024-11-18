@@ -15,6 +15,7 @@ import {
   SegmentedControl,
   Center,
   rem,
+  createStyles,
 } from '@mantine/core'
 import {
   IconAlertCircle,
@@ -53,6 +54,7 @@ import { notifications } from '@mantine/notifications'
 import axios from 'axios'
 import { Montserrat } from 'next/font/google'
 import { FileUpload } from './UploadNotification'
+import Link from 'next/link'
 const montserrat_med = Montserrat({
   weight: '500',
   subsets: ['latin'],
@@ -64,6 +66,84 @@ export default function GitHubIngestForm({
   project_name: string
   setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
 }): JSX.Element {
+  const useStyles = createStyles((theme) => ({
+    // For Logos
+    logos: {
+      // width: '30%',
+      aspectRatio: '3/2',
+      objectFit: 'contain',
+      width: '80px',
+    },
+
+    smallLogos: {
+      // width: '30%',
+      aspectRatio: '1/1',
+      objectFit: 'contain',
+      width: '45px',
+    },
+
+    codeStyledText: {
+      backgroundColor: '#020307',
+      borderRadius: '5px',
+      padding: '1px 5px',
+      fontFamily: 'monospace',
+      alignItems: 'center',
+      justifyItems: 'center',
+    },
+
+    // For Accordion
+    root: {
+      borderRadius: theme.radius.lg,
+      paddingLeft: 25,
+      width: '400px',
+      // outline: 'none',
+      paddingTop: 20,
+      paddingBottom: 20,
+
+      '&[data-active]': {
+        paddingTop: 20,
+      },
+    },
+    control: {
+      borderRadius: theme.radius.lg,
+      // outline: '0.5px solid ',
+      '&:hover': {
+        backgroundColor: 'rgba(255, 255, 255, 0.2)', // 20% white on hover
+      },
+    },
+    content: {
+      borderRadius: theme.radius.lg,
+    },
+    panel: {
+      borderRadius: theme.radius.lg,
+    },
+    item: {
+      backgroundColor: 'bg-transparent',
+      // border: `${rem(1)} solid transparent`,
+      border: `solid transparent`,
+      borderRadius: theme.radius.lg,
+      position: 'relative',
+      // zIndex: 0,
+      transition: 'transform 150ms ease',
+      outline: 'none',
+
+      '&[data-active]': {
+        transform: 'scale(1.03)',
+        backgroundColor: '#15162b',
+        borderRadius: theme.radius.lg,
+        boxShadow: theme.shadows.xl,
+      },
+      '&:hover': {
+        backgroundColor: 'bg-transparent',
+      },
+    },
+
+    chevron: {
+      '&[data-rotate]': {
+        transform: 'rotate(180deg)',
+      },
+    },
+  }))
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
   const [url, setUrl] = useState('')
@@ -87,6 +167,7 @@ export default function GitHubIngestForm({
   const logoRef = useRef(null) // Create a ref for the logo
   const [isEnabled, setIsEnabled] = useState(false)
   const [open, setOpen] = useState(false)
+  const { classes, theme } = useStyles()
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value
     setUrl(input)
@@ -315,12 +396,10 @@ export default function GitHubIngestForm({
                 </Text>
               </div>
             </div>
-
             <Text className="mb-4 text-sm leading-relaxed text-gray-400">
               Import content from GitHub repositories, including documentation,
               code, and README files.
             </Text>
-
             <div className="mt-auto flex items-center text-sm text-purple-400">
               <span>Configure import</span>
               <IconArrowRight
@@ -331,7 +410,7 @@ export default function GitHubIngestForm({
           </Card>
         </DialogTrigger>
 
-        <DialogContent className="max-w-2xl rounded-lg border-0 bg-[#1c1c2e] pt-10 px-10 text-white" style={{ padding: '50px', height: '35vh' }} >
+        <DialogContent className="max-w-2xl rounded-lg border-0 bg-[#1c1c2e] pt-10 px-10 text-white" style={{ padding: '50px', height: '43vh', paddingBottom: '20px' }} >
           <DialogTitle className="text-xl font-bold">
             Ingest Website
           </DialogTitle>
@@ -341,6 +420,24 @@ export default function GitHubIngestForm({
                 {/* <Label htmlFor="canvas-url" className="text-white">
                   URL
                 </Label> */}
+                <strong>For GitHub</strong>, just enter a URL like{' '}
+                <code className={classes.codeStyledText}>
+                  github.com/USER/REPO
+                </code>
+                , for example:{' '}
+                <span className={'text-purple-600'}>
+                  <Link
+                    target="_blank"
+                    rel="noreferrer"
+                    href={'https://github.com/langchain-ai/langchain'}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    https://github.com/langchain-ai/langchain
+                  </Link>
+                </span>
+                . We&apos;ll ingest all files in the main branch. Ensure the
+                repository is public.
+                <div style={{ paddingBottom: '12px' }}></div>
                 <Input
                   icon={<img
                     src="/media/github-mark-white.png"
@@ -436,3 +533,4 @@ export default function GitHubIngestForm({
     </motion.div>
   )
 }
+

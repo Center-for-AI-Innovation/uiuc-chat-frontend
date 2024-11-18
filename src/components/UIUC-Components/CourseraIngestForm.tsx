@@ -52,6 +52,7 @@ import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { notifications } from '@mantine/notifications'
 import axios from 'axios'
 import { Montserrat } from 'next/font/google'
+import Link from 'next/link'
 const montserrat_med = Montserrat({
   weight: '500',
   subsets: ['latin'],
@@ -264,12 +265,9 @@ export default function CourseraIngestForm(): JSX.Element {
                 </Text>
               </div>
             </div>
-
             <Text className="mb-4 text-sm leading-relaxed text-gray-400">
-              Import content from Coursera courses, including lectures,
-              assignments, and course materials.
+              Import content from Coursera courses, including lectures, assignments, and course materials.
             </Text>
-
             <div className="mt-auto flex items-center text-sm text-purple-400">
               <span>Configure import</span>
               <IconArrowRight
@@ -289,6 +287,24 @@ export default function CourseraIngestForm(): JSX.Element {
               {/* <Label htmlFor="canvas-url" className="text-white">
                 URL
               </Label> */}
+              <div className="break-words">
+
+                <strong>For Coursera</strong>, it&apos;s probably easiest to
+                manually export the content then upload it here. Or{' '}
+                <span className={'text-purple-600'}>
+                  <Link
+                    target="_blank"
+                    rel="noreferrer"
+                    href={'mailto:kvday2@illinois.edu'}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    email me
+                  </Link>
+                </span>{' '}
+                and we can do a direct ingest, we&apos;re limited by
+                Coursera&apos;s controls on login/auth.
+              </div>
+              <div style={{ paddingBottom: '12px' }}></div>
               <Input
                 icon={
                   <img
