@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import GlobalHeader from '~/components/UIUC-Components/navbars/GlobalHeader'
-import { Flex, Indicator, Tooltip } from '@mantine/core'
+import { Flex, Indicator } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
@@ -15,16 +15,14 @@ import {
 import {
   ChartDots3,
   MessageChatbot,
-  Folder,
   ReportAnalytics,
   MessageCode,
-  Key,
   Code,
   Brain,
-  Message,
 } from 'tabler-icons-react'
 import { useRouter } from 'next/router'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import { montserrat_heading } from 'fonts'
+import { IconHome } from '@tabler/icons-react'
 
 const styles: Record<string, React.CSSProperties> = {
   logoContainerBox: {
@@ -144,28 +142,16 @@ const Navbar = ({
   }
 
   const items = [
-    // {
-    //   name: (
-    //     <span
-    //       className={`${montserrat_heading.variable} font-montserratHeading`}
-    //     >
-    //       Chat
-    //     </span>
-    //   ),
-    // hi there
-    //   icon: <MessageChatIcon />,
-    //   link: `/${getCurrentCourseName()}/chat`,
-    // },
     {
       name: (
         <span
           className={`${montserrat_heading.variable} font-montserratHeading`}
         >
-          Materials
+          Dashboard
         </span>
       ),
-      icon: <FolderIcon />,
-      link: `/${getCurrentCourseName()}/materials`,
+      icon: <DashboardIcon />,
+      link: `/${getCurrentCourseName()}/dashboard`,
     },
     {
       name: (
@@ -382,12 +368,13 @@ export function MessageCodeIcon() {
   )
 }
 
-export function FolderIcon() {
+export function DashboardIcon() {
   return (
-    <Folder
-      size={18}
+    <IconHome
+      size={20}
       strokeWidth={2}
-      style={{ marginRight: '3px', marginLeft: '3px' }}
+      // color={'white'}
+      style={{ marginRight: '4px', marginLeft: '4px' }}
     />
   )
 }
