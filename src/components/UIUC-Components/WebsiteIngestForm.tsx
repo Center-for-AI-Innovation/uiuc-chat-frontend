@@ -136,36 +136,6 @@ export default function WebsiteIngestForm({
     return url
   }
 
-  // const handleIngest = async () => {
-  //   setOpen(false)
-  //   setUploadFiles((prevFiles) =>
-  //     prevFiles.map((file) =>
-  //       file.name === url ? { ...file, status: 'ingesting' } : file
-  //     )
-  //   )
-  //   try {
-  //     const response = await scrapeWeb(
-  //       url,
-  //       project_name,
-  //       maxUrls.trim() !== '' ? parseInt(maxUrls) : 50,
-  //       scrapeStrategy,
-  //     )
-  //     console.log('response.data', response)
-  //     if (response && response.includes("Crawl completed successfully")) {
-  //       // console.log("ingesting url", response.data.message)
-  //       setUploadFiles((prevFiles) =>
-  //         prevFiles.map((file) =>
-  //           file.name === url ? { ...file, status: 'complete' } : file
-  //         )
-  //       )
-  //     }
-  //   } catch (error: any) {
-  //     console.error('Error while scraping web:', error)
-  //   }
-  //   // let ingest finalize things. It should be finished, but the DB is slow.
-  //   await new Promise((resolve) => setTimeout(resolve, 8000))
-  // }
-
   const handleIngest = async () => {
     setOpen(false)
     if (isUrlValid) {

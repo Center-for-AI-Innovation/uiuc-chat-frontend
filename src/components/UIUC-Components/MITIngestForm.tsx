@@ -138,27 +138,27 @@ export default function MITIngestForm({
       )
       let data = null
       data = downloadMITCourse(url, project_name, 'local_dir') // no await -- do in background
-      if (
-        data &&
-        typeof data === 'string'
-        // && 
-        // data.includes('Crawl completed successfully') what is the response here?
-      ) {
-        setUploadFiles((prevFiles) =>
-          prevFiles.map((file) =>
-            file.name === url ? { ...file, status: 'complete' } : file,
-          ),
-        )
-      } else {
-        // Handle unsuccessful crawl
-        setUploadFiles((prevFiles) =>
-          prevFiles.map((file) =>
-            file.name === url ? { ...file, status: 'error' } : file,
-          ),
-        )
-        throw new Error('MIT course ingesting was not successful')
-      }
-      showToast()
+      // if (
+      //   data &&
+      //   typeof data === 'string'
+      //   // && 
+      //   // data.includes('Crawl completed successfully') what is the response here?
+      // ) {
+      //   setUploadFiles((prevFiles) =>
+      //     prevFiles.map((file) =>
+      //       file.name === url ? { ...file, status: 'complete' } : file,
+      //     ),
+      //   )
+      // } else {
+      //   // Handle unsuccessful crawl
+      //   setUploadFiles((prevFiles) =>
+      //     prevFiles.map((file) =>
+      //       file.name === url ? { ...file, status: 'error' } : file,
+      //     ),
+      //   )
+      //   throw new Error('MIT course ingesting was not successful')
+      // }
+      // showToast()
     }
   }
   const showToast = () => {
@@ -264,77 +264,6 @@ export default function MITIngestForm({
       setIsUrlUpdated(false)
     }
   }, [url])
-
-  // if (isLoading) {
-  //   return <Skeleton height={200} width={330} radius={'lg'} />
-  // }
-  const scrapeWeb = async (
-    url: string | null,
-    courseName: string | null,
-    maxUrls: number,
-    scrapeStrategy: string,
-  ) => {
-    try {
-      if (!url || !courseName) return null
-      console.log('SCRAPING', url)
-
-      const fullUrl = formatUrl(url)
-
-      const postParams = {
-        url: fullUrl,
-        courseName: courseName,
-        maxPagesToCrawl: maxUrls,
-        scrapeStrategy: scrapeStrategy,
-        match: formatUrlAndMatchRegex(fullUrl).matchRegex,
-        maxTokens: 2000000, // basically inf.
-      }
-      console.log(
-        'About to post to the web scraping endpoint, with params:',
-        postParams,
-      )
-
-      const response = await axios.post(
-        `https://crawlee-production.up.railway.app/crawl`,
-        {
-          params: postParams,
-        },
-      )
-      console.log('Response from web scraping endpoint:', response.data)
-      return response.data
-    } catch (error: any) {
-      console.error('Error during web scraping:', error)
-
-      notifications.show({
-        id: 'error-notification',
-        withCloseButton: true,
-        closeButtonProps: { color: 'red' },
-        onClose: () => console.log('error unmounted'),
-        onOpen: () => console.log('error mounted'),
-        autoClose: 12000,
-        title: (
-          <Text size={'lg'} className={`${montserrat_med.className}`}>
-            {'Error during web scraping. Please try again.'}
-          </Text>
-        ),
-        message: (
-          <Text className={`${montserrat_med.className} text-neutral-200`}>
-            {error.message}
-          </Text>
-        ),
-        color: 'red',
-        radius: 'lg',
-        icon: <IconAlertCircle />,
-        className: 'my-notification-class',
-        style: {
-          backgroundColor: 'rgba(42,42,64,0.3)',
-          backdropFilter: 'blur(10px)',
-          borderLeft: '5px solid red',
-        },
-        withBorder: true,
-        loading: false,
-      })
-    }
-  }
 
   return (
     <motion.div layout>
