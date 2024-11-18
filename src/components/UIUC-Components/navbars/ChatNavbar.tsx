@@ -247,7 +247,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
               </span>
             ),
             icon: <FolderIcon />,
-            link: `/${getCurrentCourseName()}/materials`,
+            link: `/${getCurrentCourseName()}/dashboard`,
           },
           // {
           //   name: (
