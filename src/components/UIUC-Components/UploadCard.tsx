@@ -120,7 +120,7 @@ export const UploadCard = memo(function UploadCard({
           }}
           className="min-h-full bg-gradient-to-r from-purple-900 via-indigo-800 to-blue-800"
         >
-          <div className="w-full border-b border-white/10 bg-black/20 px-3 py-2 sm:px-6 sm:py-4 md:px-8">
+          <div className="w-full border-b border-white/10 bg-black/20 px-4 py-3 sm:px-6 sm:py-4 md:px-8">
             <div className="flex items-center justify-between gap-2">
               <div className="flex min-w-0 flex-wrap items-center gap-2">
                 <Title
@@ -134,10 +134,11 @@ export const UploadCard = memo(function UploadCard({
                   order={3}
                   variant="gradient"
                   gradient={{ from: 'gold', to: 'white', deg: 50 }}
-                  className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base sm:text-xl ${projectName.length > 40
-                    ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
-                    : ''
-                    }`}
+                  className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base sm:text-xl ${
+                    projectName.length > 40
+                      ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
+                      : ''
+                  }`}
                 >
                   {projectName}
                 </Title>
@@ -164,7 +165,7 @@ export const UploadCard = memo(function UploadCard({
             </div>
           </div>
 
-          <div className="px-3 sm:px-6 md:px-8">
+          <div className="px-4 pt-4 sm:px-6 sm:pt-6 md:px-8">
             <LargeDropzone
               courseName={projectName}
               current_user_email={current_user_email as string}
@@ -183,7 +184,7 @@ export const UploadCard = memo(function UploadCard({
               { maxWidth: 1192, cols: 2, spacing: 'md' },
               { maxWidth: 768, cols: 1, spacing: 'sm' },
             ]}
-            className="px-3 py-4 sm:px-6 sm:py-8 md:px-8"
+            className="px-4 py-4 sm:px-6 sm:py-6 md:px-8"
           >
             <CanvasIngestForm
               project_name={projectName}
@@ -195,98 +196,90 @@ export const UploadCard = memo(function UploadCard({
               setUploadFiles={setUploadFiles}
             />
 
-            <GitHubIngestForm project_name={projectName} setUploadFiles={setUploadFiles}
+            <GitHubIngestForm
+              project_name={projectName}
+              setUploadFiles={setUploadFiles}
             />
 
-            <MITIngestForm project_name={projectName} setUploadFiles={setUploadFiles}
+            <MITIngestForm
+              project_name={projectName}
+              setUploadFiles={setUploadFiles}
             />
 
             <CourseraIngestForm />
           </SimpleGrid>
           <UploadNotification
             files={uploadFiles}
-            // ingestFiles={ }
             onClose={handleCloseNotification}
-          // onCancel={() => {
-          //   // Handle cancel logic
-          //   // setUploadInProgress(false)
-          //   // setFileUploads((prev) =>
-          //   //   prev.map((upload) => ({ ...upload, status: 'error' }))
-          //   // )
-          // }}
           />
         </div>
 
         <div
           style={{
             flex: isSmallScreen ? '1 1 100%' : '1 1 40%',
-            padding: '1rem',
             backgroundColor: '#15162c',
             color: 'white',
           }}
-          className="p-3 sm:p-6 md:p-8"
+          className="p-4 sm:p-6 md:p-8"
         >
-          <div className="card flex h-full flex-col justify-center">
-            <div className="card-body">
-              <div className="form-control relative">
-                <Title
-                  className={`label ${montserrat_heading.variable} font-montserratHeading`}
-                  variant="gradient"
-                  gradient={{ from: 'gold', to: 'white', deg: 170 }}
-                  order={3}
-                >
-                  Project Description
-                </Title>
-                <Textarea
-                  placeholder="Describe your project, goals, expected impact etc..."
-                  radius={'sm'}
-                  value={projectDescription}
-                  onChange={(e) => setProjectDescription(e.target.value)}
-                  size={'lg'}
-                  minRows={4}
-                  styles={{
-                    input: {
-                      backgroundColor: '#1A1B1E',
-                      fontSize: '16px',
-                      font: `${montserrat_paragraph.variable} font-montserratParagraph`,
-                    },
-                    label: {
-                      fontWeight: 'bold',
-                      color: 'white',
-                    },
-                  }}
-                  className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                />
-                <Button
-                  className={`w-1rem relative m-1 mt-3 self-end bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600`}
-                  type="submit"
-                  onClick={async () => {
-                    if (metadata) {
-                      metadata.project_description = projectDescription
-                      const resp = await callSetCourseMetadata(
-                        projectName,
-                        metadata,
-                      )
-                      if (!resp) {
-                        console.log(
-                          'Error upserting course metadata for course: ',
-                          projectName,
-                        )
-                      }
-                    }
-                  }}
-                >
-                  Update
-                </Button>
-              </div>
+          <div className="card flex h-full flex-col justify-start space-y-6">
+            <div className="form-control">
               <Title
-                className={`label ${montserrat_heading.variable} p-0 pl-1 pt-2 font-montserratHeading`}
+                className={`${montserrat_heading.variable} mb-4 font-montserratHeading`}
                 variant="gradient"
                 gradient={{ from: 'gold', to: 'white', deg: 170 }}
                 order={3}
               >
-                Branding{' '}
+                Project Description
               </Title>
+              <Textarea
+                placeholder="Describe your project, goals, expected impact etc..."
+                radius={'sm'}
+                value={projectDescription}
+                onChange={(e) => setProjectDescription(e.target.value)}
+                size={'lg'}
+                minRows={4}
+                styles={{
+                  input: {
+                    backgroundColor: '#1A1B1E',
+                    fontSize: '16px',
+                    font: `${montserrat_paragraph.variable} font-montserratParagraph`,
+                  },
+                }}
+                className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+              />
+              <Button
+                className="mt-3 w-24 self-end bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600"
+                onClick={async () => {
+                  if (metadata) {
+                    metadata.project_description = projectDescription
+                    const resp = await callSetCourseMetadata(
+                      projectName,
+                      metadata,
+                    )
+                    if (!resp) {
+                      console.log(
+                        'Error upserting course metadata for course: ',
+                        projectName,
+                      )
+                    }
+                  }
+                }}
+              >
+                Update
+              </Button>
+            </div>
+
+            <div className="space-y-6">
+              <Title
+                className={`${montserrat_heading.variable} font-montserratHeading`}
+                variant="gradient"
+                gradient={{ from: 'gold', to: 'white', deg: 170 }}
+                order={3}
+              >
+                Branding
+              </Title>
+
               <div className="form-control relative">
                 <label
                   className={`label ${montserrat_heading.variable} font-montserratHeading`}
