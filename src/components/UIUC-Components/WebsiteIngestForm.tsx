@@ -52,6 +52,7 @@ import { notifications } from '@mantine/notifications'
 import axios from 'axios'
 import { Montserrat } from 'next/font/google'
 import { FileUpload } from './UploadNotification'
+import { QueryClient } from '@tanstack/react-query'
 const montserrat_med = Montserrat({
   weight: '500',
   subsets: ['latin'],
@@ -59,9 +60,11 @@ const montserrat_med = Montserrat({
 export default function WebsiteIngestForm({
   project_name,
   setUploadFiles,
+  queryClient,
 }: {
   project_name: string
   setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
+  queryClient: QueryClient
 }): JSX.Element {
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
@@ -168,6 +171,9 @@ export default function WebsiteIngestForm({
               file.name === url ? { ...file, status: 'complete' } : file,
             ),
           )
+          await queryClient.invalidateQueries({
+            queryKey: ['documents', project_name]
+          })
         } else {
           // Handle unsuccessful crawl
           setUploadFiles((prevFiles) =>
@@ -303,6 +309,9 @@ export default function WebsiteIngestForm({
           setOpen(isOpen)
           if (!isOpen) {
             setUrl('')
+            setIsUrlValid(false)
+            setIsUrlUpdated(false)
+            setMaxUrls('50')
           }
         }}
       >

@@ -16,13 +16,16 @@ import { Label } from '@radix-ui/react-label'
 import { useRouter } from 'next/router'
 import { FileUpload } from './UploadNotification'
 import Link from 'next/link'
+import { QueryClient } from '@tanstack/react-query'
 
 export default function CanvasIngestForm({
   project_name,
-  setUploadFiles
+  setUploadFiles,
+  queryClient,
 }: {
   project_name: string
   setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
+  queryClient: QueryClient
 }): JSX.Element {
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
@@ -102,6 +105,9 @@ export default function CanvasIngestForm({
             file.name === url ? { ...file, status: 'complete' } : file
           )
         )
+        queryClient.invalidateQueries({
+          queryKey: ['documents', project_name]
+        })
       }
       if (!response.ok) {
         setUploadFiles((prevFiles) =>
@@ -128,6 +134,8 @@ export default function CanvasIngestForm({
         setOpen(isOpen);
         if (!isOpen) {
           setUrl('');
+          setIsUrlValid(false)
+          setIsUrlUpdated(false)
         }
       }}>
         <DialogTrigger asChild>

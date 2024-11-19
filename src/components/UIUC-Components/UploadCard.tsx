@@ -28,6 +28,7 @@ import { memo, useState } from 'react'
 import { IconShare } from '@tabler/icons-react'
 import ShareSettingsModal from './ShareSettingsModal'
 import UploadNotification, { FileUpload } from './UploadNotification'
+import { useQueryClient } from '@tanstack/react-query'
 
 const montserrat_light = Montserrat({
   weight: '400',
@@ -93,6 +94,7 @@ export const UploadCard = memo(function UploadCard({
   const [projectDescription, setProjectDescription] = useState(
     metadata?.project_description || '',
   )
+  const queryClient = useQueryClient() // Add this hook
   const [introMessage, setIntroMessage] = useState(
     metadata?.course_intro_message || '',
   )
@@ -134,11 +136,10 @@ export const UploadCard = memo(function UploadCard({
                   order={3}
                   variant="gradient"
                   gradient={{ from: 'gold', to: 'white', deg: 50 }}
-                  className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base sm:text-xl ${
-                    projectName.length > 40
-                      ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
-                      : ''
-                  }`}
+                  className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base sm:text-xl ${projectName.length > 40
+                    ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
+                    : ''
+                    }`}
                 >
                   {projectName}
                 </Title>
@@ -189,21 +190,25 @@ export const UploadCard = memo(function UploadCard({
             <CanvasIngestForm
               project_name={projectName}
               setUploadFiles={setUploadFiles}
+              queryClient={queryClient}
             />
 
             <WebsiteIngestForm
               project_name={projectName}
               setUploadFiles={setUploadFiles}
+              queryClient={queryClient}
             />
 
             <GitHubIngestForm
               project_name={projectName}
               setUploadFiles={setUploadFiles}
+              queryClient={queryClient}
             />
 
             <MITIngestForm
               project_name={projectName}
               setUploadFiles={setUploadFiles}
+              queryClient={queryClient}
             />
 
             <CourseraIngestForm />

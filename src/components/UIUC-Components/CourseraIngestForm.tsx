@@ -244,6 +244,9 @@ export default function CourseraIngestForm(): JSX.Element {
         setOpen(isOpen);
         if (!isOpen) {
           setUrl('');
+          setIsUrlValid(false)
+          setIsUrlUpdated(false)
+          setMaxUrls('50')
         }
       }}>
         <DialogTrigger asChild>

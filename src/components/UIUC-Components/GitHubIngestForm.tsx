@@ -55,6 +55,7 @@ import axios from 'axios'
 import { Montserrat } from 'next/font/google'
 import { FileUpload } from './UploadNotification'
 import Link from 'next/link'
+import { QueryClient } from '@tanstack/react-query'
 const montserrat_med = Montserrat({
   weight: '500',
   subsets: ['latin'],
@@ -62,9 +63,11 @@ const montserrat_med = Montserrat({
 export default function GitHubIngestForm({
   project_name,
   setUploadFiles,
+  queryClient,
 }: {
   project_name: string
   setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
+  queryClient: QueryClient
 }): JSX.Element {
   const useStyles = createStyles((theme) => ({
     // For Logos
@@ -213,6 +216,9 @@ export default function GitHubIngestForm({
               file.name === url ? { ...file, status: 'complete' } : file,
             ),
           )
+          await queryClient.invalidateQueries({
+            queryKey: ['documents', project_name]
+          })
         } else {
           // Handle unsuccessful crawl
           setUploadFiles((prevFiles) =>
@@ -380,6 +386,9 @@ export default function GitHubIngestForm({
         setOpen(isOpen);
         if (!isOpen) {
           setUrl('');
+          setIsUrlValid(false)
+          setIsUrlUpdated(false)
+          setMaxUrls('50')
         }
       }}>
         <DialogTrigger asChild>

@@ -54,6 +54,7 @@ import axios from 'axios'
 import { Montserrat } from 'next/font/google'
 import { FileUpload } from './UploadNotification'
 import Link from 'next/link'
+import { QueryClient } from '@tanstack/react-query'
 const montserrat_med = Montserrat({
   weight: '500',
   subsets: ['latin'],
@@ -61,9 +62,11 @@ const montserrat_med = Montserrat({
 export default function MITIngestForm({
   project_name,
   setUploadFiles,
+  queryClient,
 }: {
   project_name: string
   setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
+  queryClient: QueryClient
 }): JSX.Element {
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
@@ -271,6 +274,9 @@ export default function MITIngestForm({
         setOpen(isOpen);
         if (!isOpen) {
           setUrl('');
+          setIsUrlValid(false)
+          setIsUrlUpdated(false)
+          setMaxUrls('50')
         }
       }}>
         <DialogTrigger asChild>

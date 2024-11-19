@@ -88,7 +88,6 @@ function UploadNotificationContent({ files, onClose }: UploadNotificationProps) 
         <div className="mt-2 space-y-2">
           <AnimatePresence>
             {currentFiles.map((file, index) => {
-              console.log(file.status);
               return (
                 <motion.div
                   key={file.name}
