@@ -66,7 +66,7 @@ export function LargeDropzone({
   isDisabled?: boolean
   courseMetadata: CourseMetadata
   is_new_course: boolean
-  setUploadFiles: ((prevFiles: FileUpload[]) => FileUpload[])
+  setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
 }) {
   // upload-in-progress spinner control
   const [uploadInProgress, setUploadInProgress] = useState(false)
@@ -201,7 +201,7 @@ export function LargeDropzone({
         type: 'document' as const,
       }
     })
-    setUploadFiles(initialFileUploads)
+    setUploadFiles((prev) => [...prev, ...initialFileUploads])
     if (is_new_course) {
       await callSetCourseMetadata(
         courseName,

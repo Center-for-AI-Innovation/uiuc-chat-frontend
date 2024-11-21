@@ -106,10 +106,11 @@ export const UploadCard = memo(function UploadCard({
     setShowNotification(false)
     setUploadFiles([])
   }
-  const handleSetUploadFiles = (newFiles: FileUpload[]) => {
-    setUploadFiles((prev: FileUpload[]) => [...prev, ...newFiles]);
-  };
-
+  const handleSetUploadFiles = (
+    updateFn: React.SetStateAction<FileUpload[]>
+  ) => {
+    setUploadFiles(updateFn)
+  }
   return (
     <Card
       shadow="xs"
@@ -193,25 +194,25 @@ export const UploadCard = memo(function UploadCard({
           >
             <CanvasIngestForm
               project_name={projectName}
-              setUploadFiles={(newFiles) => setUploadFiles(prev => [...prev, ...newFiles])}
+              setUploadFiles={handleSetUploadFiles}
               queryClient={queryClient}
             />
 
             <WebsiteIngestForm
               project_name={projectName}
-              setUploadFiles={(newFiles) => setUploadFiles(prev => [...prev, ...newFiles])}
+              setUploadFiles={handleSetUploadFiles}
               queryClient={queryClient}
             />
 
             <GitHubIngestForm
               project_name={projectName}
-              setUploadFiles={setUploadFiles}
+              setUploadFiles={handleSetUploadFiles}
               queryClient={queryClient}
             />
 
             <MITIngestForm
               project_name={projectName}
-              setUploadFiles={setUploadFiles}
+              setUploadFiles={handleSetUploadFiles}
               queryClient={queryClient}
             />
 
