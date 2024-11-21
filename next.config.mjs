@@ -84,4 +84,4 @@ const config = {
   },
 }
 
-export default withBundleAnalyzer(bundleAnalyzerConfig)
+export default withBundleAnalyzer(bundleAnalyzerConfig)(config)

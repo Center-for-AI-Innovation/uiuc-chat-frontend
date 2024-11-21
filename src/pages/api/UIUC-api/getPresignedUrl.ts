@@ -3,19 +3,25 @@ import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import type { NextApiRequest, NextApiResponse } from 'next'
 
-const aws_config = {
-  bucketName: 'uiuc-chatbot',
-  region: 'us-east-1',
-  accessKeyId: process.env.AWS_KEY,
-  secretAccessKey: process.env.AWS_SECRET,
-}
-
 const s3Client = new S3Client({
-  region: aws_config.region,
+  region: process.env.AWS_REGION,
   credentials: {
-    accessKeyId: process.env.AWS_KEY as string,
-    secretAccessKey: process.env.AWS_SECRET as string,
+    // @ts-ignore -- it's fine, stop complaining
+    accessKeyId: process.env.AWS_KEY,
+    // @ts-ignore -- it's fine, stop complaining
+    secretAccessKey: process.env.AWS_SECRET,
   },
+  // If MINIO_ENDPOINT is defined, use it instead of AWS S3.
+  ...(process.env.MINIO_ENDPOINT
+    ? {
+        endpoint: process.env.MINIO_ENDPOINT,
+        forcePathStyle: true,
+        credentials: {
+          accessKeyId: process.env.MINIO_ACCESS_KEY,
+          secretAccessKey: process.env.MINIO_SECRET,
+        },
+      }
+    : {}),
 })
 
 export default async function handler(
@@ -26,7 +32,7 @@ export default async function handler(
     const { s3_path } = req.query
 
     const command = new GetObjectCommand({
-      Bucket: aws_config.bucketName,
+      Bucket: process.env.S3_BUCKET_NAME!,
       Key: s3_path as string,
     })
 

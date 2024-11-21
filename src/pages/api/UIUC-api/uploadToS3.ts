@@ -3,22 +3,25 @@ import { S3Client } from '@aws-sdk/client-s3'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post'
 
-export const aws_config = {
-  bucketName: 'uiuc-chatbot',
-  region: 'us-east-1',
-  accessKeyId: process.env.AWS_KEY,
-  secretAccessKey: process.env.AWS_SECRET,
-}
-
-console.log('bucket name ---------------', process.env.S3_BUCKET_NAME)
-console.log('aws ---------------', process.env.AWS_KEY)
-
 const s3Client = new S3Client({
-  region: aws_config.region,
+  region: process.env.AWS_REGION,
   credentials: {
-    accessKeyId: process.env.AWS_KEY as string,
-    secretAccessKey: process.env.AWS_SECRET as string,
+    // @ts-ignore -- it's fine, stop complaining
+    accessKeyId: process.env.AWS_KEY,
+    // @ts-ignore -- it's fine, stop complaining
+    secretAccessKey: process.env.AWS_SECRET,
   },
+  // If MINIO_ENDPOINT is defined, use it instead of AWS S3.
+  ...(process.env.MINIO_ENDPOINT
+    ? {
+        endpoint: process.env.MINIO_ENDPOINT,
+        forcePathStyle: true,
+        credentials: {
+          accessKeyId: process.env.MINIO_ACCESS_KEY,
+          secretAccessKey: process.env.MINIO_SECRET,
+        },
+      }
+    : {}),
 })
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
@@ -28,13 +31,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       courseName: string
     }
 
-    console.log('in uploadToS3.ts: CourseName:', courseName)
-    console.log('in uploadToS3.ts: uniqueFileName:', uniqueFileName)
     const s3_filepath = `courses/${courseName}/${uniqueFileName}`
-    console.log('S3 path to upload:', s3_filepath)
 
     const post = await createPresignedPost(s3Client, {
-      Bucket: aws_config.bucketName,
+      Bucket: process.env.S3_BUCKET_NAME!,
       Key: s3_filepath,
       Expires: 60 * 60, // 1 hour
     })
