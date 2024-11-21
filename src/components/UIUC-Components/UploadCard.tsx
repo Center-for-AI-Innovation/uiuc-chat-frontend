@@ -106,6 +106,10 @@ export const UploadCard = memo(function UploadCard({
     setShowNotification(false)
     setUploadFiles([])
   }
+  const handleSetUploadFiles = (newFiles: FileUpload[]) => {
+    setUploadFiles((prev: FileUpload[]) => [...prev, ...newFiles]);
+  };
+
   return (
     <Card
       shadow="xs"
@@ -174,7 +178,7 @@ export const UploadCard = memo(function UploadCard({
               isDisabled={false}
               courseMetadata={metadata as CourseMetadata}
               is_new_course={false}
-              setUploadFiles={setUploadFiles}
+              setUploadFiles={handleSetUploadFiles}
             />
           </div>
 
@@ -189,13 +193,13 @@ export const UploadCard = memo(function UploadCard({
           >
             <CanvasIngestForm
               project_name={projectName}
-              setUploadFiles={setUploadFiles}
+              setUploadFiles={(newFiles) => setUploadFiles(prev => [...prev, ...newFiles])}
               queryClient={queryClient}
             />
 
             <WebsiteIngestForm
               project_name={projectName}
-              setUploadFiles={setUploadFiles}
+              setUploadFiles={(newFiles) => setUploadFiles(prev => [...prev, ...newFiles])}
               queryClient={queryClient}
             />
 

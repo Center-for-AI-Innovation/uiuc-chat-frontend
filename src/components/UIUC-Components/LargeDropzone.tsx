@@ -66,7 +66,7 @@ export function LargeDropzone({
   isDisabled?: boolean
   courseMetadata: CourseMetadata
   is_new_course: boolean
-  setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
+  setUploadFiles: ((prevFiles: FileUpload[]) => FileUpload[])
 }) {
   // upload-in-progress spinner control
   const [uploadInProgress, setUploadInProgress] = useState(false)
@@ -85,29 +85,31 @@ export function LargeDropzone({
       )
       const data = await response.json()
       if (data && data.documents) {
-        setUploadFiles((prevFileUploads) =>
-          prevFileUploads.map((fileUpload) => {
+        setUploadFiles((prevFileUploads: FileUpload[]) => {
+          return prevFileUploads.map((fileUpload) => {
             const isIngested = data.documents.some(
               (doc: { readable_filename: string }) =>
                 doc.readable_filename === fileUpload.name,
-            )
-            return isIngested
-              ? { ...fileUpload, status: 'ingesting' }
-              : fileUpload
-          }),
-        )
-      } else {
-        setUploadFiles((prev) =>
-          prev.map((upload) => {
-            if (upload.type === "document" as string) {
-              const updatedUpload = { ...upload, status: 'complete' as const }
-              return updatedUpload
+            );
+            if (isIngested && fileUpload.status !== 'complete') {
+              return { ...fileUpload, status: 'ingesting' as const };
             }
-            return upload
-          })
-        )
+            return fileUpload;
+          });
+        });
+      } else {
+        // Mark all document uploads as complete if they're not in progress
+        setUploadFiles((prev) => {
+          return prev.map((upload) => {
+            if (upload.type === "document" && upload.status === 'ingesting') {
+              return { ...upload, status: 'complete' as const };
+            }
+            return upload;
+          });
+        });
       }
     }
+
 
     const intervalId = setInterval(fetchData, 3000) // Fetch data every 3000 milliseconds (3 seconds)
     return () => clearInterval(intervalId)
@@ -196,11 +198,10 @@ export function LargeDropzone({
       return {
         name: uniqueReadableFileName,
         status: 'uploading' as const,
-        type: 'document' as const
+        type: 'document' as const,
       }
     })
     setUploadFiles(initialFileUploads)
-
     if (is_new_course) {
       await callSetCourseMetadata(
         courseName,
