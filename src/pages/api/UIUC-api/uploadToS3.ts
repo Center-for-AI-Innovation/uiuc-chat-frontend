@@ -17,8 +17,8 @@ const s3Client = new S3Client({
         endpoint: process.env.MINIO_ENDPOINT,
         forcePathStyle: true,
         credentials: {
-          accessKeyId: process.env.MINIO_ACCESS_KEY,
-          secretAccessKey: process.env.MINIO_SECRET,
+          accessKeyId: process.env.AWS_KEY,
+          secretAccessKey: process.env.AWS_SECRET,
         },
       }
     : {}),
