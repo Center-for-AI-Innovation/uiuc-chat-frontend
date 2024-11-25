@@ -57,6 +57,10 @@ const Home = ({
   // Make a new conversation if the current one isn't empty
   const [hasMadeNewConvoAlready, setHasMadeNewConvoAlready] = useState(false)
 
+  // Add these two new state setters
+  const [isQueryRewriting, setIsQueryRewriting] = useState<boolean>(false)
+  const [queryRewriteResult, setQueryRewriteResult] = useState<string>('')
+
   // Hooks
   const { t } = useTranslation('chat')
   const { getModelsError } = useErrorService()
@@ -648,6 +652,8 @@ const Home = ({
           setIsRetrievalLoading,
           handleUpdateDocumentGroups,
           handleUpdateTools,
+          setIsQueryRewriting,
+          setQueryRewriteResult,
         }}
       >
         <Head>

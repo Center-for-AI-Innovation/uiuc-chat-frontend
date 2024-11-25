@@ -2,7 +2,7 @@
 'use client'
 import { type NextPage } from 'next'
 import MakeNewCoursePage from '~/components/UIUC-Components/MakeNewCoursePage'
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { Montserrat } from 'next/font/google'
 import { useRouter } from 'next/router'
 import { useUser } from '@clerk/nextjs'
@@ -28,6 +28,7 @@ import {
   Title,
   Tooltip,
   useMantineTheme,
+  Divider,
 } from '@mantine/core'
 import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
 import { DEFAULT_SYSTEM_PROMPT } from '~/utils/app/const'
@@ -52,6 +53,7 @@ import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
 import { debounce } from 'lodash'
 import CustomSwitch from '~/components/Switches/CustomSwitch' // Import the CustomSwitch component
 import CustomCopyButton from '~/components/Buttons/CustomCopyButton' // Import the CustomCopyButton component
+import { useDebouncedCallback } from 'use-debounce';
 
 const montserrat = Montserrat({
   weight: '700',
@@ -81,6 +83,11 @@ const GUIDED_LEARNING_PROMPT =
   '- **Resist Workarounds**: If a student seeks the answer, gently steer them back to thoughtful reflection, keeping the excitement alive in the process of discovery.\n' +
   '- **Encourage Independent Thinking**: Use probing questions to spark analysis and creative thinking, helping students feel empowered by their own problem-solving skills.\n' +
   '- **Support, Motivate, and Inspire**: Keep a warm, encouraging tone, showing genuine excitement about the learning journey. Celebrate their persistence and successes, no matter how small, to make learning enjoyable and fulfilling.'
+
+// Add this type to handle partial updates
+type PartialCourseMetadata = {
+  [K in keyof CourseMetadata]?: CourseMetadata[K];
+};
 
 const CourseMain: NextPage = () => {
   const theme = useMantineTheme()
@@ -114,6 +121,13 @@ const CourseMain: NextPage = () => {
   const [guidedLearning, setGuidedLearning] = useState(false)
   const [documentsOnly, setDocumentsOnly] = useState(false)
   const [systemPromptOnly, setSystemPromptOnly] = useState(false)
+  const [vectorSearchRewrite, setVectorSearchRewrite] = useState(false)
+
+  const courseMetadataRef = useRef<CourseMetadata | null>(null);
+  
+  useEffect(() => {
+    courseMetadataRef.current = courseMetadata;
+  }, [courseMetadata]);
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -134,10 +148,11 @@ const CourseMain: NextPage = () => {
         fetchedMetadata.system_prompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
       )
 
-      // Initialize checkbox states
+      // Initialize all state variables
       setGuidedLearning(fetchedMetadata.guidedLearning || false)
       setDocumentsOnly(fetchedMetadata.documentsOnly || false)
       setSystemPromptOnly(fetchedMetadata.systemPromptOnly || false)
+      setVectorSearchRewrite(!fetchedMetadata.vector_search_rewrite_disabled)
 
       setIsLoading(false)
     }
@@ -228,46 +243,134 @@ const CourseMain: NextPage = () => {
     return newPrompt
   }
 
-  const handleCheckboxChange = async (
-    updatedFields: Partial<CourseMetadata>,
-  ) => {
-    if (!courseMetadata || !course_name) {
-      showToastOnPromptUpdate(theme, true)
-      return
+  // Track initial state of switches
+  const initialSwitchStateRef = useRef<{
+    guidedLearning: boolean;
+    documentsOnly: boolean;
+    systemPromptOnly: boolean;
+    vectorSearchRewrite: boolean;
+  }>({
+    guidedLearning: false,
+    documentsOnly: false,
+    systemPromptOnly: false,
+    vectorSearchRewrite: false,
+  });
+
+  useEffect(() => {
+    if (courseMetadata) {
+      initialSwitchStateRef.current = {
+        guidedLearning: courseMetadata.guidedLearning || false,
+        documentsOnly: courseMetadata.documentsOnly || false,
+        systemPromptOnly: courseMetadata.systemPromptOnly || false,
+        vectorSearchRewrite: !courseMetadata.vector_search_rewrite_disabled,
+      };
+    }
+  }, [courseMetadata]);
+
+  const saveSettings = async () => {
+    if (!courseMetadataRef.current || !course_name) return;
+
+    const currentSwitchState = {
+      guidedLearning,
+      documentsOnly,
+      systemPromptOnly,
+      vectorSearchRewrite,
+    };
+
+    const initialSwitchState = initialSwitchStateRef.current;
+
+    const hasChanges = (Object.keys(currentSwitchState) as Array<keyof typeof currentSwitchState>).some(
+      (key) => currentSwitchState[key] !== initialSwitchState[key]
+    );
+
+    if (!hasChanges) {
+      return;
     }
 
-    // Immediately update local state
-    const newCourseMetadata = { ...courseMetadata, ...updatedFields }
-    const newSystemPrompt = updateSystemPrompt(updatedFields)
+    const updatedMetadata = {
+      ...courseMetadataRef.current,
+      guidedLearning,
+      documentsOnly,
+      systemPromptOnly,
+      vector_search_rewrite_disabled: !vectorSearchRewrite,
+    } as CourseMetadata;
 
-    setCourseMetadata(newCourseMetadata)
-    setBaseSystemPrompt(newSystemPrompt)
-
-    if (updatedFields.guidedLearning !== undefined) {
-      setGuidedLearning(updatedFields.guidedLearning)
-    }
-    if (updatedFields.documentsOnly !== undefined) {
-      setDocumentsOnly(updatedFields.documentsOnly)
-    }
-    if (updatedFields.systemPromptOnly !== undefined) {
-      setSystemPromptOnly(updatedFields.systemPromptOnly)
-    }
-
-    // Debounced API call
-    debouncedSave({ ...newCourseMetadata, system_prompt: newSystemPrompt })
-  }
-
-  const debouncedSave = useCallback(
-    debounce(async (updatedMetadata: CourseMetadata) => {
-      const success = await callSetCourseMetadata(course_name, updatedMetadata)
+    try {
+      const success = await callSetCourseMetadata(course_name, updatedMetadata);
       if (!success) {
-        showToastOnPromptUpdate(theme, true)
-      } else {
-        showToastOnPromptUpdate(theme)
+        showToastNotification(theme, 'Error', 'Failed to update settings', true);
+        return;
       }
-    }, 500),
-    [course_name, theme],
-  )
+
+      setCourseMetadata(updatedMetadata);
+      initialSwitchStateRef.current = currentSwitchState;
+
+      const changes: string[] = [];
+      if (initialSwitchState.vectorSearchRewrite !== currentSwitchState.vectorSearchRewrite) {
+        changes.push(`Smart Document Search ${currentSwitchState.vectorSearchRewrite ? 'enabled' : 'disabled'}`);
+      }
+      if (initialSwitchState.guidedLearning !== currentSwitchState.guidedLearning) {
+        changes.push(`Guided Learning ${currentSwitchState.guidedLearning ? 'enabled' : 'disabled'}`);
+      }
+      if (initialSwitchState.documentsOnly !== currentSwitchState.documentsOnly) {
+        changes.push(`Document-Based References Only ${currentSwitchState.documentsOnly ? 'enabled' : 'disabled'}`);
+      }
+      if (initialSwitchState.systemPromptOnly !== currentSwitchState.systemPromptOnly) {
+        changes.push(`Bypass UIUC.chat's internal prompting ${currentSwitchState.systemPromptOnly ? 'enabled' : 'disabled'}`);
+      }
+
+      if (changes.length > 0) {
+        showToastNotification(
+          theme,
+          changes.join(' & '),
+          'Settings have been saved successfully',
+          false
+        );
+      }
+    } catch (error) {
+      console.error('Error updating course settings:', error);
+      showToastNotification(theme, 'Error', 'Failed to update settings', true);
+    }
+  };
+
+  const debouncedSaveSettings = useDebouncedCallback(saveSettings, 500);
+
+  const handleSettingChange = (updates: PartialCourseMetadata) => {
+    if (!courseMetadata) return;
+
+    if ('vector_search_rewrite_disabled' in updates) {
+      setVectorSearchRewrite(!updates.vector_search_rewrite_disabled);
+    }
+
+    courseMetadataRef.current = {
+      ...courseMetadataRef.current!,
+      ...updates,
+    } as CourseMetadata;
+
+    debouncedSaveSettings();
+  };
+
+  const handleCheckboxChange = async (updatedFields: PartialCourseMetadata) => {
+    if (!courseMetadata || !course_name) {
+      showToastNotification(theme, 'Error', 'Failed to update settings', true);
+      return;
+    }
+
+    if ('guidedLearning' in updatedFields) setGuidedLearning(updatedFields.guidedLearning!);
+    if ('documentsOnly' in updatedFields) setDocumentsOnly(updatedFields.documentsOnly!);
+    if ('systemPromptOnly' in updatedFields) setSystemPromptOnly(updatedFields.systemPromptOnly!);
+
+    const newSystemPrompt = updateSystemPrompt(updatedFields);
+    setBaseSystemPrompt(newSystemPrompt);
+
+    courseMetadataRef.current = {
+      ...courseMetadataRef.current!,
+      ...updatedFields,
+      system_prompt: newSystemPrompt,
+    } as CourseMetadata;
+
+    debouncedSaveSettings();
+  };
 
   const handleCopyDefaultPrompt = async () => {
     try {
@@ -380,7 +483,7 @@ const CourseMain: NextPage = () => {
     }
     setApiKey(newApiKey)
 
-    console.log('apikey set to', apiKey)
+    // console.log('apikey set to', apiKey)
     e.preventDefault()
 
     const systemPrompt = `Understand the Task: Grasp the main objective, goals, requirements, constraints, and expected output.
@@ -773,6 +876,50 @@ The final prompt you output should adhere to the following structure below. Do n
                     >
                       <div className="card flex h-full flex-col">
                         <Flex direction="column" m="3rem" gap="md">
+                        <Flex align="center">
+                            <Title
+                              className={`${montserrat_heading.variable} font-montserratHeading`}
+                              variant="gradient" 
+                              gradient={{ from: 'gold', to: 'white', deg: 170 }}
+                              order={3}
+                              pl={'md'}
+                              pr={'md'}
+                              pt={'sm'}
+                              pb={'xs'}
+                              style={{ alignSelf: 'left', marginLeft: '-11px' }}
+                            >
+                              Document Search Optimization
+                            </Title>
+                            <Indicator
+                              label={
+                                <Text className={`${montserrat_heading.variable} font-montserratHeading`}>
+                                  New
+                                </Text>
+                              }
+                              color="hsl(280,100%,70%)"
+                              size={13}
+                              styles={{
+                                indicator: {
+                                  top: '-17px !important',
+                                  right: '7px !important',
+                                },
+                              }}
+                            >
+                              <span className={`${montserrat_heading.variable} font-montserratHeading`}></span>
+                            </Indicator>
+                          </Flex>
+
+                          <CustomSwitch
+                            label="Smart Document Search"
+                            tooltip="When enabled, UIUC.chat optimizes your queries to better search through course materials and find relevant content. Note: This only affects how documents are searched - your chat messages remain exactly as you write them."
+                            checked={vectorSearchRewrite}
+                            onChange={(value: boolean) => {
+                              handleSettingChange({ vector_search_rewrite_disabled: !value })
+                            }}
+                          />
+
+                          <Divider/>
+
                           <Flex align="center" style={{ paddingTop: '15px' }}>
                             <Title
                               className={`label ${montserrat_heading.variable} mr-[8px] font-montserratHeading`}
@@ -897,6 +1044,7 @@ export const showToastNotification = (
         borderColor: isError ? '#E53935' : '#6D28D9', // Red for errors, purple for success
         borderWidth: '1px',
         borderStyle: 'solid',
+        borderRadius: '8px', // Added rounded corners
       },
       title: {
         color: '#FFFFFF', // White text for the title
@@ -907,6 +1055,7 @@ export const showToastNotification = (
       },
       closeButton: {
         color: '#FFFFFF', // White color for the close button
+        borderRadius: '4px', // Added rounded corners to close button
         '&:hover': {
           backgroundColor: 'rgba(255, 255, 255, 0.1)', // Subtle hover effect
         },

@@ -98,7 +98,7 @@ export default async function handler(req: NextRequest, res: NextResponse) {
       course_name: string
     }
 
-    console.log('api_key', api_key, 'course_name', course_name)
+    // console.log('api_key', api_key, 'course_name', course_name)
 
     // Validate the API key and retrieve the user object.
     const { isValidApiKey, userObject } = await validateApiKeyAndRetrieveData(

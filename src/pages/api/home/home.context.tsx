@@ -31,6 +31,8 @@ export interface HomeContextProps {
   setIsRetrievalLoading: (isRetrievalLoading: boolean) => void
   handleUpdateDocumentGroups: (id: string) => void
   handleUpdateTools: (id: string) => void
+  setIsQueryRewriting: (isQueryRewriting: boolean) => void
+  setQueryRewriteResult: (queryText: string) => void
 }
 
 const HomeContext = createContext<HomeContextProps>(undefined!)

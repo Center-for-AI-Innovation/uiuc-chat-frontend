@@ -63,7 +63,7 @@ export default async function handler(req: NextRequest, res: NextResponse) {
         combined_metadata.openai_api_key,
         process.env.NEXT_PUBLIC_SIGNING_KEY as string,
       )
-      console.log('Signed api key: ', combined_metadata.openai_api_key)
+      // console.log('Signed api key: ', combined_metadata.openai_api_key)
     }
 
     // Save the combined metadata

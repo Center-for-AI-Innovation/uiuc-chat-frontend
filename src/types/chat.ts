@@ -39,6 +39,8 @@ export interface Message {
   created_at?: string
   updated_at?: string
   feedback?: MessageFeedback
+  wasQueryRewritten?: boolean
+  queryRewriteText?: string
 }
 
 export type MessageFeedback = {

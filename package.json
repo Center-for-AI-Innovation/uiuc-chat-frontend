@@ -87,6 +87,7 @@
     "remark-math": "^5.1.1",
     "styled-components": "^6.1.0",
     "tabler-icons-react": "^1.56.0",
+    "use-debounce": "^10.0.4",
     "vercel": "^31.0.1",
     "zod": "^3.22.3"
   },

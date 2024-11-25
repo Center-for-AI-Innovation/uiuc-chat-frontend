@@ -25,7 +25,7 @@ export default async function fetchKey(req: NextRequest, res: NextResponse) {
       .eq('user_id', currUserId)
       .eq('is_active', true)
 
-    console.log('data', data)
+    // console.log('data', data)
 
     if (error) {
       throw error

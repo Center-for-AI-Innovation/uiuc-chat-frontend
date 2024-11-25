@@ -86,7 +86,7 @@ export const migrateAllKeys = async () => {
         const decryptedKey = await legacy___parseOpenaiKey(
           metadata.openai_api_key,
         )
-        console.log('Decrypted key:', decryptedKey)
+        // console.log('Decrypted key:', decryptedKey)
 
         const encryptedKey = await encryptKeyIfNeeded(decryptedKey)
 
