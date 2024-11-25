@@ -108,6 +108,8 @@ export function ProjectFilesTable({
   const [showMultiSelect, setShowMultiSelect] = useState(false)
   const [isDeletingDocuments, setIsDeletingDocuments] = useState(false)
   const [exportModalOpened, setExportModalOpened] = useState(false)
+  const [showDeleteButton, setShowDeleteButton] = useState(false)
+  const [selectedCount, setSelectedCount] = useState(0)
   const router = useRouter()
 
   const getCurrentPageName = () => {
@@ -378,6 +380,8 @@ export function ProjectFilesTable({
     },
     onSettled: async () => {
       showToastOnFileDeleted(theme)
+      setShowDeleteButton(false)
+      setSelectedCount(0)
       const sleep = (ms: number) =>
         new Promise((resolve) => setTimeout(resolve, ms))
       console.debug('sleeping for 500ms')
@@ -663,37 +667,35 @@ export function ProjectFilesTable({
                   />
                 </div>
               )}
-              <Button
-                uppercase
-                leftIcon={<IconTrash size={16} />}
-                disabled={!selectedRecords.length}
-                onClick={() => {
-                  if (selectedRecords.length > 100) {
-                    showToast(
-                      theme,
-                      'Selection Limit Exceeded',
-                      'You have selected more than 100 documents. Please select less than or equal to 100 documents.',
-                      true,
-                    )
-                  } else {
-                    setRecordsToDelete(selectedRecords)
-                    setModalOpened(true)
-                  }
-                }}
-                style={{
-                  backgroundColor: selectedRecords.length
-                    ? '#8B0000'
-                    : 'transparent',
-                  // flex: 1
-                }}
-              >
-                {selectedRecords.length
-                  ? `Delete ${selectedRecords.length === 1
-                    ? '1 selected record'
-                    : `${selectedRecords.length} selected records`
-                  }`
-                  : 'Select records to delete'}
-              </Button>
+              {showDeleteButton && (
+                <Button
+                  uppercase
+                  leftIcon={<IconTrash size={16} />}
+                  disabled={!selectedCount}
+                  onClick={() => {
+                    if (selectedCount > 100) {
+                      showToast(
+                        theme,
+                        'Selection Limit Exceeded',
+                        'You have selected more than 100 documents. Please select less than or equal to 100 documents.',
+                        true,
+                      )
+                    } else {
+                      setRecordsToDelete(selectedRecords)
+                      setModalOpened(true)
+                    }
+                  }}
+                  style={{
+                    backgroundColor: selectedCount ? '#8B0000' : 'transparent',
+                  }}
+                >
+                  {selectedCount
+                    ? `Delete ${selectedCount === 1
+                      ? '1 selected record'
+                      : `${selectedCount} selected records`}`
+                    : 'Select records to delete'}
+                </Button>
+              )}
               {/* <Center> */}
 
               {/* </Center> */}
@@ -1108,6 +1110,8 @@ export function ProjectFilesTable({
         onSelectedRecordsChange={(newSelectedRecords) => {
           if (newSelectedRecords.length > 0) {
             setSelectedRecords(newSelectedRecords)
+            setShowDeleteButton(true)
+            setSelectedCount(newSelectedRecords.length)
             console.debug('New selection:', newSelectedRecords)
 
             // Use reduce to find the common document groups among all selected records
@@ -1125,6 +1129,8 @@ export function ProjectFilesTable({
           } else {
             setSelectedRecords([])
             setSelectedDocGroups([])
+            setShowDeleteButton(false)
+            setSelectedCount(0)
           }
         }}
       // Accessor not necessary when documents have an `id` property
@@ -1167,6 +1173,9 @@ export function ProjectFilesTable({
               deleteDocumentMutation.mutate(recordsToDelete)
               // await handleDelete(recordsToDelete)
               setRecordsToDelete([])
+              setSelectedRecords([])
+              setSelectedCount(0)
+              setShowDeleteButton(false)
               const sleep = (ms: number) =>
                 new Promise((resolve) => setTimeout(resolve, ms))
               console.debug('sleeping for 1s before refetching')
