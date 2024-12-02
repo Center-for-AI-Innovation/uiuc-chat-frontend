@@ -202,6 +202,12 @@ export function LargeDropzone({
       }
     })
     setUploadFiles((prev) => [...prev, ...initialFileUploads])
+    // setUploadFiles(prev => {
+    //   const newFiles = initialFileUploads.filter(
+    //     newFile => !prev.some(existingFile => existingFile.name === newFile.name)
+    //   )
+    //   return [...prev, ...newFiles]
+    // })
     if (is_new_course) {
       await callSetCourseMetadata(
         courseName,
@@ -436,7 +442,7 @@ export function LargeDropzone({
               </div>
             </div>
           </Dropzone>
-          {uploadInProgress && (
+          {/* {uploadInProgress && (
             <div className="flex flex-col items-center justify-center px-4 text-center">
               <Title
                 order={4}
@@ -452,7 +458,7 @@ export function LargeDropzone({
                 or ingest will fail.
               </Title>
             </div>
-          )}
+          )} */}
         </div>
         {/* END LEFT COLUMN */}
 

@@ -27,6 +27,31 @@ function UploadNotificationContent({ files, onClose }: UploadNotificationProps) 
       setCurrentFiles(files)
     }
   }, [files])
+  // useEffect(() => {
+  //   if (files && Array.isArray(files)) {
+  //     // Merge new files with existing ones, preventing duplicates and updating status
+  //     setCurrentFiles(prevFiles => {
+  //       const mergedFiles = [...prevFiles]
+
+  //       files.forEach(newFile => {
+  //         const existingFileIndex = mergedFiles.findIndex(f => f.name === newFile.name)
+
+  //         if (existingFileIndex === -1) {
+  //           // Add new file if it doesn't exist
+  //           mergedFiles.push(newFile)
+  //         } else {
+  //           // Update existing file's status
+  //           mergedFiles[existingFileIndex] = {
+  //             ...mergedFiles[existingFileIndex],
+  //             ...newFile
+  //           }
+  //         }
+  //       })
+
+  //       return mergedFiles
+  //     })
+  //   }
+  // }, [files])
 
 
   const allComplete = currentFiles.length > 0 && currentFiles.every(file => file.status === 'complete')
@@ -54,14 +79,25 @@ function UploadNotificationContent({ files, onClose }: UploadNotificationProps) 
       shadow="sm"
       padding="sm"
       radius="md"
-      className="fixed bottom-4 right-4 w-96 bg-[#292c5b] z-50"
+      className="fixed bottom-4 right-4 w-96 bg-[#292c5b] z-50 shadow-xl shadow-black/25"
     >
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between bg-[#12132b] -mx-4 -mt-3 p-4">
         <Text size="md" weight={500} c='white'>
           {allComplete
-            ? `${currentFiles.length} upload${currentFiles.length > 1 ? 's' : ''} complete`
-            : `Uploading ${currentFiles.length} item${currentFiles.length > 1 ? 's' : ''}`
+            ? `${currentFiles.length} ingestion${currentFiles.length > 1 ? 's' : ''} complete`
+            : `Indexing ${currentFiles.length} item${currentFiles.length > 1 ? 's' : ''}`
           }
+          {currentFiles.some(file => file.status === 'uploading') ? (
+            <>
+              <br />
+              Remain on this page until upload is complete or ingest will fail.
+            </>
+          ) : (
+            <>
+              <br />
+              You may leave the page now.
+            </>
+          )}
         </Text>
         <div className="flex items-center">
           <Button
@@ -116,17 +152,17 @@ function UploadNotificationContent({ files, onClose }: UploadNotificationProps) 
               );
             })}
           </AnimatePresence>
-          {anyUploading && (
-            <Button
-              variant="light"
-              color="red"
-              size="xs"
-              fullWidth
-            // onClick={onCancel}
-            >
-              Cancel
-            </Button>
-          )}
+          {/* {anyUploading && (
+          <Button
+            variant="light"
+            color="red"
+            size="xs"
+            fullWidth
+          // onClick={onCancel}
+          >
+            Cancel
+          </Button>
+        )} */}
         </div>
       )}
     </Card>
