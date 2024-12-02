@@ -33,10 +33,11 @@ import ConversationsPerDayChart from './ConversationsPerDayChart'
 import ConversationsPerHourChart from './ConversationsPerHourChart'
 import ConversationsPerDayOfWeekChart from './ConversationsPerDayOfWeekChart'
 import ConversationsHeatmapByHourChart from './ConversationsHeatmapByHourChart'
-import { 
+import {
   IconMessage2,
   IconUsers,
   IconMessageCircle2,
+  IconChartBar,
 } from '@tabler/icons-react'
 
 const useStyles = createStyles((theme: MantineTheme) => ({
@@ -93,6 +94,9 @@ interface CourseStats {
   total_conversations: number
   total_users: number
   total_messages: number
+  avg_conversations_per_user: number
+  avg_messages_per_user: number
+  avg_messages_per_conversation: number
 }
 
 const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
@@ -200,13 +204,18 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
       setCourseStatsLoading(true)
       setCourseStatsError(null)
       try {
-        const response = await getProjectStats(course_name)
+        const response = await getProjectStats('ECE408FA24')
 
         if (response.status === 200) {
           const mappedData = {
             total_conversations: response.data.total_conversations,
             total_messages: response.data.total_messages,
             total_users: response.data.unique_users,
+            avg_conversations_per_user:
+              response.data.avg_conversations_per_user,
+            avg_messages_per_user: response.data.avg_messages_per_user,
+            avg_messages_per_conversation:
+              response.data.avg_messages_per_conversation,
           }
 
           setCourseStats(mappedData)
@@ -328,8 +337,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
               {/* Usage Overview Banner */}
               <div className="my-6 w-[95%] rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
                 <div className="mb-6">
-                  <Title 
-                    order={4} 
+                  <Title
+                    order={4}
                     className={`${montserrat_heading.variable} font-montserratHeading text-white`}
                   >
                     Project Analytics
@@ -351,16 +360,20 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           Total chat sessions
                         </Text>
                       </div>
-                      <IconMessageCircle2 
-                        size={24} 
-                        className="text-purple-400 opacity-80" 
+                      <IconMessageCircle2
+                        size={24}
+                        className="text-purple-400 opacity-80"
                       />
                     </div>
                     <div className="flex items-center justify-start">
                       {courseStatsLoading ? (
                         <LoadingSpinner size="sm" />
                       ) : courseStatsError ? (
-                        <Text size="sm" color="red" className="flex items-center">
+                        <Text
+                          size="sm"
+                          color="red"
+                          className="flex items-center"
+                        >
                           <IconAlertTriangle size={16} className="mr-1" />
                           Error
                         </Text>
@@ -370,7 +383,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           weight={700}
                           className="text-purple-400"
                         >
-                          {courseStats?.total_conversations?.toLocaleString() || 0}
+                          {courseStats?.total_conversations?.toLocaleString() ||
+                            0}
                         </Text>
                       )}
                     </div>
@@ -387,16 +401,20 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           Total exchanges
                         </Text>
                       </div>
-                      <IconMessage2 
-                        size={24} 
-                        className="text-purple-400 opacity-80" 
+                      <IconMessage2
+                        size={24}
+                        className="text-purple-400 opacity-80"
                       />
                     </div>
                     <div className="flex items-center justify-start">
                       {courseStatsLoading ? (
                         <LoadingSpinner size="sm" />
                       ) : courseStatsError ? (
-                        <Text size="sm" color="red" className="flex items-center">
+                        <Text
+                          size="sm"
+                          color="red"
+                          className="flex items-center"
+                        >
                           <IconAlertTriangle size={16} className="mr-1" />
                           Error
                         </Text>
@@ -423,16 +441,20 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           Unique participants
                         </Text>
                       </div>
-                      <IconUsers 
-                        size={24} 
-                        className="text-purple-400 opacity-80" 
+                      <IconUsers
+                        size={24}
+                        className="text-purple-400 opacity-80"
                       />
                     </div>
                     <div className="flex items-center justify-start">
                       {courseStatsLoading ? (
                         <LoadingSpinner size="sm" />
                       ) : courseStatsError ? (
-                        <Text size="sm" color="red" className="flex items-center">
+                        <Text
+                          size="sm"
+                          color="red"
+                          className="flex items-center"
+                        >
                           <IconAlertTriangle size={16} className="mr-1" />
                           Error
                         </Text>
@@ -444,6 +466,77 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         >
                           {courseStats?.total_users?.toLocaleString() || 0}
                         </Text>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Average Stats */}
+                  <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
+                    <div className="mb-3 flex items-center justify-between">
+                      <div>
+                        <Text size="sm" color="dimmed" weight={500} mb={1}>
+                          Per User Average
+                        </Text>
+                        <Text size="xs" color="dimmed" opacity={0.7}>
+                          User engagement metrics
+                        </Text>
+                      </div>
+                      <IconChartBar
+                        size={24}
+                        className="text-purple-400 opacity-80"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      {courseStatsLoading ? (
+                        <LoadingSpinner size="sm" />
+                      ) : courseStatsError ? (
+                        <Text
+                          size="sm"
+                          color="red"
+                          className="flex items-center"
+                        >
+                          <IconAlertTriangle size={16} className="mr-1" />
+                          Error
+                        </Text>
+                      ) : (
+                        <>
+                          <div className="flex items-center justify-between">
+                            <Text size="sm" color="dimmed">
+                              Conversations/User:
+                            </Text>
+                            <Text
+                              size="sm"
+                              weight={700}
+                              className="text-purple-400"
+                            >
+                              {courseStats?.avg_conversations_per_user || 0}
+                            </Text>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <Text size="sm" color="dimmed">
+                              Messages/User:
+                            </Text>
+                            <Text
+                              size="sm"
+                              weight={700}
+                              className="text-purple-400"
+                            >
+                              {courseStats?.avg_messages_per_user || 0}
+                            </Text>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <Text size="sm" color="dimmed">
+                              Messages/Conversation:
+                            </Text>
+                            <Text
+                              size="sm"
+                              weight={700}
+                              className="text-purple-400"
+                            >
+                              {courseStats?.avg_messages_per_conversation || 0}
+                            </Text>
+                          </div>
+                        </>
                       )}
                     </div>
                   </div>
