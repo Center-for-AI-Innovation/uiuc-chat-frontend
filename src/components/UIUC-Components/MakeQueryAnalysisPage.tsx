@@ -39,6 +39,8 @@ import {
   IconMessageCircle2,
   IconChartBar,
 } from '@tabler/icons-react'
+import { IconTrendingUp, IconTrendingDown } from '@tabler/icons-react'
+import { getWeeklyTrends } from '../../pages/api/UIUC-api/getWeeklyTrends'
 
 const useStyles = createStyles((theme: MantineTheme) => ({
   downloadButton: {
@@ -99,6 +101,14 @@ interface CourseStats {
   avg_messages_per_conversation: number
 }
 
+// Update the WeeklyTrends interface to match the new data structure
+interface WeeklyTrend {
+  current_week_value: number
+  metric_name: string
+  percentage_change: number
+  previous_week_value: number
+}
+
 const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
   const { classes, theme } = useStyles()
@@ -124,6 +134,11 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   const [courseStatsLoading, setCourseStatsLoading] = useState(true)
   const [courseStats, setCourseStats] = useState<CourseStats | null>(null)
   const [courseStatsError, setCourseStatsError] = useState<string | null>(null)
+
+  // Update the state to use an array of WeeklyTrend
+  const [weeklyTrends, setWeeklyTrends] = useState<WeeklyTrend[]>([])
+  const [trendsLoading, setTrendsLoading] = useState(true)
+  const [trendsError, setTrendsError] = useState<string | null>(null)
 
   // TODO: remove this hook... we should already have this from the /materials props???
   useEffect(() => {
@@ -232,6 +247,28 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     fetchCourseStats()
   }, [course_name])
 
+  // Update the useEffect to handle the new data structure
+  useEffect(() => {
+    const fetchWeeklyTrends = async () => {
+      setTrendsLoading(true)
+      setTrendsError(null)
+      try {
+        const response = await getWeeklyTrends('ECE408FA24')
+        if (response.status === 200) {
+          setWeeklyTrends(response.data)
+        } else {
+          throw new Error('Failed to fetch weekly trends')
+        }
+      } catch (error) {
+        setTrendsError('Failed to load trends')
+      } finally {
+        setTrendsLoading(false)
+      }
+    }
+
+    fetchWeeklyTrends()
+  }, [course_name])
+
   if (!isLoaded || !courseMetadata) {
     return (
       <MainPageBackground>
@@ -334,7 +371,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
               <Divider className="w-full" color="gray.4" size="sm" />
 
-              {/* Usage Overview Banner */}
+              {/* Project Analytics Dashboard */}
               <div className="my-6 w-[95%] rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
                 <div className="mb-6">
                   <Title
@@ -348,10 +385,11 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                   </Text>
                 </div>
 
+                {/* Main Stats Grid with Integrated Weekly Trends */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                  {/* Total Conversations */}
-                  <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
-                    <div className="mb-3 flex items-center justify-between">
+                  {/* Conversations Card */}
+                  <div className="rounded-lg bg-[#232438] p-5 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
+                    <div className="mb-4 flex items-center justify-between">
                       <div>
                         <Text size="sm" color="dimmed" weight={500} mb={1}>
                           Conversations
@@ -361,78 +399,102 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         </Text>
                       </div>
                       <IconMessageCircle2
-                        size={24}
+                        size={28}
                         className="text-purple-400 opacity-80"
                       />
                     </div>
-                    <div className="flex items-center justify-start">
-                      {courseStatsLoading ? (
-                        <LoadingSpinner size="sm" />
-                      ) : courseStatsError ? (
-                        <Text
-                          size="sm"
-                          color="red"
-                          className="flex items-center"
-                        >
-                          <IconAlertTriangle size={16} className="mr-1" />
-                          Error
-                        </Text>
-                      ) : (
-                        <Text
-                          size="xl"
-                          weight={700}
-                          className="text-purple-400"
-                        >
-                          {courseStats?.total_conversations?.toLocaleString() ||
-                            0}
-                        </Text>
+                    <div>
+                      <Text size="2xl" weight={700} className="text-purple-400">
+                        {courseStats?.total_conversations?.toLocaleString() ||
+                          0}
+                      </Text>
+                      {weeklyTrends.find(
+                        (t) => t.metric_name === 'Total Conversations',
+                      ) && (
+                        <div className="mt-3 space-y-2">
+                          <div
+                            className={`flex items-center justify-between rounded-md ${
+                              weeklyTrends.find(
+                                (t) => t.metric_name === 'Total Conversations',
+                              )?.percentage_change > 0
+                                ? 'bg-green-400/10'
+                                : 'bg-red-400/10'
+                            } p-2`}
+                          >
+                            {trendsLoading ? (
+                              <LoadingSpinner size="xs" />
+                            ) : (
+                              <>
+                                <div className="flex items-center gap-2">
+                                  {weeklyTrends.find(
+                                    (t) =>
+                                      t.metric_name === 'Total Conversations',
+                                  )?.percentage_change > 0 ? (
+                                    <IconTrendingUp
+                                      size={18}
+                                      className="text-green-400"
+                                    />
+                                  ) : (
+                                    <IconTrendingDown
+                                      size={18}
+                                      className="text-red-400"
+                                    />
+                                  )}
+                                  <Text
+                                    size="sm"
+                                    weight={500}
+                                    className={`${
+                                      weeklyTrends.find(
+                                        (t) =>
+                                          t.metric_name ===
+                                          'Total Conversations',
+                                      )?.percentage_change > 0
+                                        ? 'text-green-400'
+                                        : 'text-red-400'
+                                    }`}
+                                  >
+                                    {weeklyTrends.find(
+                                      (t) =>
+                                        t.metric_name === 'Total Conversations',
+                                    )?.percentage_change > 0
+                                      ? '+'
+                                      : ''}
+                                    {weeklyTrends
+                                      .find(
+                                        (t) =>
+                                          t.metric_name ===
+                                          'Total Conversations',
+                                      )
+                                      ?.percentage_change.toFixed(1)}
+                                    %
+                                  </Text>
+                                </div>
+                                <div className="flex flex-col items-end">
+                                  <Text size="xs" color="dimmed">
+                                    vs last week
+                                  </Text>
+                                  <Text size="xs" color="dimmed">
+                                    Previous:{' '}
+                                    {weeklyTrends
+                                      .find(
+                                        (t) =>
+                                          t.metric_name ===
+                                          'Total Conversations',
+                                      )
+                                      ?.previous_week_value.toLocaleString()}
+                                  </Text>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Total Messages */}
-                  <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
-                    <div className="mb-3 flex items-center justify-between">
-                      <div>
-                        <Text size="sm" color="dimmed" weight={500} mb={1}>
-                          Messages
-                        </Text>
-                        <Text size="xs" color="dimmed" opacity={0.7}>
-                          Total exchanges
-                        </Text>
-                      </div>
-                      <IconMessage2
-                        size={24}
-                        className="text-purple-400 opacity-80"
-                      />
-                    </div>
-                    <div className="flex items-center justify-start">
-                      {courseStatsLoading ? (
-                        <LoadingSpinner size="sm" />
-                      ) : courseStatsError ? (
-                        <Text
-                          size="sm"
-                          color="red"
-                          className="flex items-center"
-                        >
-                          <IconAlertTriangle size={16} className="mr-1" />
-                          Error
-                        </Text>
-                      ) : (
-                        <Text
-                          size="xl"
-                          weight={700}
-                          className="text-purple-400"
-                        >
-                          {courseStats?.total_messages?.toLocaleString() || 0}
-                        </Text>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Unique Users */}
-                  <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
-                    <div className="mb-3 flex items-center justify-between">
+                  {/* Users Card */}
+                  <div className="rounded-lg bg-[#232438] p-5 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
+                    <div className="mb-4 flex items-center justify-between">
                       <div>
                         <Text size="sm" color="dimmed" weight={500} mb={1}>
                           Users
@@ -442,102 +504,302 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         </Text>
                       </div>
                       <IconUsers
-                        size={24}
+                        size={28}
                         className="text-purple-400 opacity-80"
                       />
                     </div>
-                    <div className="flex items-center justify-start">
-                      {courseStatsLoading ? (
-                        <LoadingSpinner size="sm" />
-                      ) : courseStatsError ? (
-                        <Text
-                          size="sm"
-                          color="red"
-                          className="flex items-center"
-                        >
-                          <IconAlertTriangle size={16} className="mr-1" />
-                          Error
+                    <div>
+                      <Text size="2xl" weight={700} className="text-purple-400">
+                        {courseStats?.total_users?.toLocaleString() || 0}
+                      </Text>
+                      {weeklyTrends.find(
+                        (t) => t.metric_name === 'Unique Users',
+                      ) && (
+                        <div className="mt-3 space-y-2">
+                          <div
+                            className={`flex items-center justify-between rounded-md ${
+                              weeklyTrends.find(
+                                (t) => t.metric_name === 'Unique Users',
+                              )?.percentage_change > 0
+                                ? 'bg-green-400/10'
+                                : 'bg-red-400/10'
+                            } p-2`}
+                          >
+                            {trendsLoading ? (
+                              <LoadingSpinner size="xs" />
+                            ) : (
+                              <>
+                                <div className="flex items-center gap-2">
+                                  {weeklyTrends.find(
+                                    (t) => t.metric_name === 'Unique Users',
+                                  )?.percentage_change > 0 ? (
+                                    <IconTrendingUp
+                                      size={18}
+                                      className="text-green-400"
+                                    />
+                                  ) : (
+                                    <IconTrendingDown
+                                      size={18}
+                                      className="text-red-400"
+                                    />
+                                  )}
+                                  <Text
+                                    size="sm"
+                                    weight={500}
+                                    className={`${
+                                      weeklyTrends.find(
+                                        (t) => t.metric_name === 'Unique Users',
+                                      )?.percentage_change > 0
+                                        ? 'text-green-400'
+                                        : 'text-red-400'
+                                    }`}
+                                  >
+                                    {weeklyTrends.find(
+                                      (t) => t.metric_name === 'Unique Users',
+                                    )?.percentage_change > 0
+                                      ? '+'
+                                      : ''}
+                                    {weeklyTrends
+                                      .find(
+                                        (t) => t.metric_name === 'Unique Users',
+                                      )
+                                      ?.percentage_change.toFixed(1)}
+                                    %
+                                  </Text>
+                                </div>
+                                <div className="flex flex-col items-end">
+                                  <Text size="xs" color="dimmed">
+                                    vs last week
+                                  </Text>
+                                  <Text size="xs" color="dimmed">
+                                    Previous:{' '}
+                                    {weeklyTrends
+                                      .find(
+                                        (t) => t.metric_name === 'Unique Users',
+                                      )
+                                      ?.previous_week_value.toLocaleString()}
+                                  </Text>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Messages Card */}
+                  <div className="rounded-lg bg-[#232438] p-5 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
+                    <div className="mb-4 flex items-center justify-between">
+                      <div>
+                        <Text size="sm" color="dimmed" weight={500} mb={1}>
+                          Messages
                         </Text>
-                      ) : (
+                        <Text size="xs" color="dimmed" opacity={0.7}>
+                          Total exchanges
+                        </Text>
+                      </div>
+                      <IconMessage2
+                        size={28}
+                        className="text-purple-400 opacity-80"
+                      />
+                    </div>
+                    <div>
+                      <Text size="2xl" weight={700} className="text-purple-400">
+                        {courseStats?.total_messages?.toLocaleString() || 0}
+                      </Text>
+                      {weeklyTrends.find(
+                        (t) => t.metric_name === 'Total Messages',
+                      ) && (
+                        <div className="mt-3 space-y-2">
+                          <div
+                            className={`flex items-center justify-between rounded-md ${
+                              weeklyTrends.find(
+                                (t) => t.metric_name === 'Total Messages',
+                              )?.percentage_change > 0
+                                ? 'bg-green-400/10'
+                                : 'bg-red-400/10'
+                            } p-2`}
+                          >
+                            {trendsLoading ? (
+                              <LoadingSpinner size="xs" />
+                            ) : (
+                              <>
+                                <div className="flex items-center gap-2">
+                                  {weeklyTrends.find(
+                                    (t) => t.metric_name === 'Total Messages',
+                                  )?.percentage_change > 0 ? (
+                                    <IconTrendingUp
+                                      size={18}
+                                      className="text-green-400"
+                                    />
+                                  ) : (
+                                    <IconTrendingDown
+                                      size={18}
+                                      className="text-red-400"
+                                    />
+                                  )}
+                                  <Text
+                                    size="sm"
+                                    weight={500}
+                                    className={`${
+                                      weeklyTrends.find(
+                                        (t) =>
+                                          t.metric_name === 'Total Messages',
+                                      )?.percentage_change > 0
+                                        ? 'text-green-400'
+                                        : 'text-red-400'
+                                    }`}
+                                  >
+                                    {weeklyTrends.find(
+                                      (t) => t.metric_name === 'Total Messages',
+                                    )?.percentage_change > 0
+                                      ? '+'
+                                      : ''}
+                                    {weeklyTrends
+                                      .find(
+                                        (t) =>
+                                          t.metric_name === 'Total Messages',
+                                      )
+                                      ?.percentage_change.toFixed(1)}
+                                    %
+                                  </Text>
+                                </div>
+                                <div className="flex flex-col items-end">
+                                  <Text size="xs" color="dimmed">
+                                    vs last week
+                                  </Text>
+                                  <Text size="xs" color="dimmed">
+                                    Previous:{' '}
+                                    {weeklyTrends
+                                      .find(
+                                        (t) =>
+                                          t.metric_name === 'Total Messages',
+                                      )
+                                      ?.previous_week_value.toLocaleString()}
+                                  </Text>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* User Engagement Metrics Section */}
+                <div className="mt-8">
+                  <div className="mb-4 flex items-center">
+                    <div className="flex-1">
+                      <Text
+                        size="lg"
+                        weight={600}
+                        color="dimmed"
+                        className={`${montserrat_heading.variable} font-montserratHeading`}
+                      >
+                        User Engagement Metrics
+                      </Text>
+                      <Text size="sm" color="dimmed" mt={1}>
+                        Detailed breakdown of user interaction patterns
+                      </Text>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                    {/* Average Conversations per User */}
+                    <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
+                      <div className="mb-3 flex items-center justify-between">
+                        <div>
+                          <Text size="sm" color="dimmed" weight={500} mb={1}>
+                            Conversations per User
+                          </Text>
+                          <Text size="xs" color="dimmed" opacity={0.7}>
+                            Average engagement frequency
+                          </Text>
+                        </div>
+                        <div className="rounded-full bg-purple-400/10 p-2">
+                          <IconMessageCircle2
+                            size={24}
+                            className="text-purple-400"
+                          />
+                        </div>
+                      </div>
+                      <div className="mt-4 flex items-baseline gap-2">
                         <Text
                           size="xl"
                           weight={700}
                           className="text-purple-400"
                         >
-                          {courseStats?.total_users?.toLocaleString() || 0}
+                          {courseStats?.avg_conversations_per_user?.toFixed(
+                            1,
+                          ) || '0'}
                         </Text>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Average Stats */}
-                  <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
-                    <div className="mb-3 flex items-center justify-between">
-                      <div>
-                        <Text size="sm" color="dimmed" weight={500} mb={1}>
-                          Per User Average
-                        </Text>
-                        <Text size="xs" color="dimmed" opacity={0.7}>
-                          User engagement metrics
+                        <Text size="sm" color="dimmed">
+                          conversations / user
                         </Text>
                       </div>
-                      <IconChartBar
-                        size={24}
-                        className="text-purple-400 opacity-80"
-                      />
                     </div>
-                    <div className="flex flex-col gap-2">
-                      {courseStatsLoading ? (
-                        <LoadingSpinner size="sm" />
-                      ) : courseStatsError ? (
+
+                    {/* Average Messages per User */}
+                    <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
+                      <div className="mb-3 flex items-center justify-between">
+                        <div>
+                          <Text size="sm" color="dimmed" weight={500} mb={1}>
+                            Messages per User
+                          </Text>
+                          <Text size="xs" color="dimmed" opacity={0.7}>
+                            Average interaction depth
+                          </Text>
+                        </div>
+                        <div className="rounded-full bg-purple-400/10 p-2">
+                          <IconMessage2 size={24} className="text-purple-400" />
+                        </div>
+                      </div>
+                      <div className="mt-4 flex items-baseline gap-2">
                         <Text
-                          size="sm"
-                          color="red"
-                          className="flex items-center"
+                          size="xl"
+                          weight={700}
+                          className="text-purple-400"
                         >
-                          <IconAlertTriangle size={16} className="mr-1" />
-                          Error
+                          {courseStats?.avg_messages_per_user?.toFixed(1) ||
+                            '0'}
                         </Text>
-                      ) : (
-                        <>
-                          <div className="flex items-center justify-between">
-                            <Text size="sm" color="dimmed">
-                              Conversations/User:
-                            </Text>
-                            <Text
-                              size="sm"
-                              weight={700}
-                              className="text-purple-400"
-                            >
-                              {courseStats?.avg_conversations_per_user || 0}
-                            </Text>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <Text size="sm" color="dimmed">
-                              Messages/User:
-                            </Text>
-                            <Text
-                              size="sm"
-                              weight={700}
-                              className="text-purple-400"
-                            >
-                              {courseStats?.avg_messages_per_user || 0}
-                            </Text>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <Text size="sm" color="dimmed">
-                              Messages/Conversation:
-                            </Text>
-                            <Text
-                              size="sm"
-                              weight={700}
-                              className="text-purple-400"
-                            >
-                              {courseStats?.avg_messages_per_conversation || 0}
-                            </Text>
-                          </div>
-                        </>
-                      )}
+                        <Text size="sm" color="dimmed">
+                          messages / user
+                        </Text>
+                      </div>
+                    </div>
+
+                    {/* Average Messages per Conversation */}
+                    <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
+                      <div className="mb-3 flex items-center justify-between">
+                        <div>
+                          <Text size="sm" color="dimmed" weight={500} mb={1}>
+                            Messages per Conversation
+                          </Text>
+                          <Text size="xs" color="dimmed" opacity={0.7}>
+                            Average conversation length
+                          </Text>
+                        </div>
+                        <div className="rounded-full bg-purple-400/10 p-2">
+                          <IconChartBar size={24} className="text-purple-400" />
+                        </div>
+                      </div>
+                      <div className="mt-4 flex items-baseline gap-2">
+                        <Text
+                          size="xl"
+                          weight={700}
+                          className="text-purple-400"
+                        >
+                          {courseStats?.avg_messages_per_conversation?.toFixed(
+                            1,
+                          ) || '0'}
+                        </Text>
+                        <Text size="sm" color="dimmed">
+                          messages / conversation
+                        </Text>
+                      </div>
                     </div>
                   </div>
                 </div>
