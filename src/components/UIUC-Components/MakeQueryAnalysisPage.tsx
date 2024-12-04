@@ -41,6 +41,8 @@ import {
 } from '@tabler/icons-react'
 import { IconTrendingUp, IconTrendingDown } from '@tabler/icons-react'
 import { getWeeklyTrends } from '../../pages/api/UIUC-api/getWeeklyTrends'
+import ModelUsageChart from './ModelUsageChart'
+import { getModelUsageCounts } from '../../pages/api/UIUC-api/getModelUsageCounts'
 
 const useStyles = createStyles((theme: MantineTheme) => ({
   downloadButton: {
@@ -139,6 +141,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   const [weeklyTrends, setWeeklyTrends] = useState<WeeklyTrend[]>([])
   const [trendsLoading, setTrendsLoading] = useState(true)
   const [trendsError, setTrendsError] = useState<string | null>(null)
+
+  const [modelUsageData, setModelUsageData] = useState<ModelUsage[]>([])
+  const [modelUsageLoading, setModelUsageLoading] = useState(true)
+  const [modelUsageError, setModelUsageError] = useState<string | null>(null)
 
   // TODO: remove this hook... we should already have this from the /materials props???
   useEffect(() => {
@@ -267,6 +273,27 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     }
 
     fetchWeeklyTrends()
+  }, [course_name])
+
+  useEffect(() => {
+    const fetchModelUsage = async () => {
+      setModelUsageLoading(true)
+      setModelUsageError(null)
+      try {
+        const response = await getModelUsageCounts('ECE408FA24')
+        if (response.status === 200) {
+          setModelUsageData(response.data)
+        } else {
+          throw new Error('Failed to fetch model usage data')
+        }
+      } catch (error) {
+        setModelUsageError('Failed to load model usage data')
+      } finally {
+        setModelUsageLoading(false)
+      }
+    }
+
+    fetchModelUsage()
   }, [course_name])
 
   if (!isLoaded || !courseMetadata) {
@@ -408,87 +435,66 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         {courseStats?.total_conversations?.toLocaleString() ||
                           0}
                       </Text>
-                      {weeklyTrends.find(
-                        (t) => t.metric_name === 'Total Conversations',
-                      ) && (
-                        <div className="mt-3 space-y-2">
-                          <div
-                            className={`flex items-center justify-between rounded-md ${
-                              weeklyTrends.find(
-                                (t) => t.metric_name === 'Total Conversations',
-                              )?.percentage_change > 0
-                                ? 'bg-green-400/10'
-                                : 'bg-red-400/10'
-                            } p-2`}
-                          >
-                            {trendsLoading ? (
-                              <LoadingSpinner size="xs" />
-                            ) : (
-                              <>
-                                <div className="flex items-center gap-2">
-                                  {weeklyTrends.find(
-                                    (t) =>
-                                      t.metric_name === 'Total Conversations',
-                                  )?.percentage_change > 0 ? (
-                                    <IconTrendingUp
-                                      size={18}
-                                      className="text-green-400"
-                                    />
-                                  ) : (
-                                    <IconTrendingDown
-                                      size={18}
-                                      className="text-red-400"
-                                    />
-                                  )}
-                                  <Text
-                                    size="sm"
-                                    weight={500}
-                                    className={`${
-                                      weeklyTrends.find(
-                                        (t) =>
-                                          t.metric_name ===
-                                          'Total Conversations',
-                                      )?.percentage_change > 0
-                                        ? 'text-green-400'
-                                        : 'text-red-400'
-                                    }`}
-                                  >
-                                    {weeklyTrends.find(
-                                      (t) =>
-                                        t.metric_name === 'Total Conversations',
-                                    )?.percentage_change > 0
-                                      ? '+'
-                                      : ''}
-                                    {weeklyTrends
-                                      .find(
-                                        (t) =>
-                                          t.metric_name ===
-                                          'Total Conversations',
-                                      )
-                                      ?.percentage_change.toFixed(1)}
-                                    %
-                                  </Text>
-                                </div>
-                                <div className="flex flex-col items-end">
-                                  <Text size="xs" color="dimmed">
-                                    vs last week
-                                  </Text>
-                                  <Text size="xs" color="dimmed">
-                                    Previous:{' '}
-                                    {weeklyTrends
-                                      .find(
-                                        (t) =>
-                                          t.metric_name ===
-                                          'Total Conversations',
-                                      )
-                                      ?.previous_week_value.toLocaleString()}
-                                  </Text>
-                                </div>
-                              </>
-                            )}
+                      {/* Conversations Card Trend Section */}
+                      {(() => {
+                        const trend = weeklyTrends.find(
+                          (t) => t.metric_name === 'Total Conversations',
+                        )
+                        if (!trend) return null
+
+                        return (
+                          <div className="mt-3 space-y-2">
+                            <div
+                              className={`flex items-center justify-between rounded-md ${
+                                trend.percentage_change > 0
+                                  ? 'bg-green-400/10'
+                                  : 'bg-red-400/10'
+                              } p-2`}
+                            >
+                              {trendsLoading ? (
+                                <LoadingSpinner size="xs" />
+                              ) : (
+                                <>
+                                  <div className="flex items-center gap-2">
+                                    {trend.percentage_change > 0 ? (
+                                      <IconTrendingUp
+                                        size={18}
+                                        className="text-green-400"
+                                      />
+                                    ) : (
+                                      <IconTrendingDown
+                                        size={18}
+                                        className="text-red-400"
+                                      />
+                                    )}
+                                    <Text
+                                      size="sm"
+                                      weight={500}
+                                      className={
+                                        trend.percentage_change > 0
+                                          ? 'text-green-400'
+                                          : 'text-red-400'
+                                      }
+                                    >
+                                      {trend.percentage_change > 0 ? '+' : ''}
+                                      {trend.percentage_change.toFixed(1)}%
+                                    </Text>
+                                  </div>
+                                  <div className="flex flex-col items-end">
+                                    <Text size="xs" color="dimmed">
+                                      vs last week
+                                    </Text>
+                                    <Text size="xs" color="dimmed">
+                                      Previous:{' '}
+                                      {trend.previous_week_value.toLocaleString()}
+                                    </Text>
+                                  </div>
+                                </>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )
+                      })()}
                     </div>
                   </div>
 
@@ -512,79 +518,66 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                       <Text size="2xl" weight={700} className="text-purple-400">
                         {courseStats?.total_users?.toLocaleString() || 0}
                       </Text>
-                      {weeklyTrends.find(
-                        (t) => t.metric_name === 'Unique Users',
-                      ) && (
-                        <div className="mt-3 space-y-2">
-                          <div
-                            className={`flex items-center justify-between rounded-md ${
-                              weeklyTrends.find(
-                                (t) => t.metric_name === 'Unique Users',
-                              )?.percentage_change > 0
-                                ? 'bg-green-400/10'
-                                : 'bg-red-400/10'
-                            } p-2`}
-                          >
-                            {trendsLoading ? (
-                              <LoadingSpinner size="xs" />
-                            ) : (
-                              <>
-                                <div className="flex items-center gap-2">
-                                  {weeklyTrends.find(
-                                    (t) => t.metric_name === 'Unique Users',
-                                  )?.percentage_change > 0 ? (
-                                    <IconTrendingUp
-                                      size={18}
-                                      className="text-green-400"
-                                    />
-                                  ) : (
-                                    <IconTrendingDown
-                                      size={18}
-                                      className="text-red-400"
-                                    />
-                                  )}
-                                  <Text
-                                    size="sm"
-                                    weight={500}
-                                    className={`${
-                                      weeklyTrends.find(
-                                        (t) => t.metric_name === 'Unique Users',
-                                      )?.percentage_change > 0
-                                        ? 'text-green-400'
-                                        : 'text-red-400'
-                                    }`}
-                                  >
-                                    {weeklyTrends.find(
-                                      (t) => t.metric_name === 'Unique Users',
-                                    )?.percentage_change > 0
-                                      ? '+'
-                                      : ''}
-                                    {weeklyTrends
-                                      .find(
-                                        (t) => t.metric_name === 'Unique Users',
-                                      )
-                                      ?.percentage_change.toFixed(1)}
-                                    %
-                                  </Text>
-                                </div>
-                                <div className="flex flex-col items-end">
-                                  <Text size="xs" color="dimmed">
-                                    vs last week
-                                  </Text>
-                                  <Text size="xs" color="dimmed">
-                                    Previous:{' '}
-                                    {weeklyTrends
-                                      .find(
-                                        (t) => t.metric_name === 'Unique Users',
-                                      )
-                                      ?.previous_week_value.toLocaleString()}
-                                  </Text>
-                                </div>
-                              </>
-                            )}
+                      {/* Users Card Trend Section */}
+                      {(() => {
+                        const trend = weeklyTrends.find(
+                          (t) => t.metric_name === 'Unique Users',
+                        )
+                        if (!trend) return null
+
+                        return (
+                          <div className="mt-3 space-y-2">
+                            <div
+                              className={`flex items-center justify-between rounded-md ${
+                                trend.percentage_change > 0
+                                  ? 'bg-green-400/10'
+                                  : 'bg-red-400/10'
+                              } p-2`}
+                            >
+                              {trendsLoading ? (
+                                <LoadingSpinner size="xs" />
+                              ) : (
+                                <>
+                                  <div className="flex items-center gap-2">
+                                    {trend.percentage_change > 0 ? (
+                                      <IconTrendingUp
+                                        size={18}
+                                        className="text-green-400"
+                                      />
+                                    ) : (
+                                      <IconTrendingDown
+                                        size={18}
+                                        className="text-red-400"
+                                      />
+                                    )}
+                                    <Text
+                                      size="sm"
+                                      weight={500}
+                                      className={
+                                        trend.percentage_change > 0
+                                          ? 'text-green-400'
+                                          : 'text-red-400'
+                                      }
+                                    >
+                                      {trend.percentage_change > 0 ? '+' : ''}
+                                      {trend.percentage_change.toFixed(1)}%
+                                    </Text>
+                                  </div>
+                                  <div className="flex flex-col items-end">
+                                    <Text size="xs" color="dimmed">
+                                      vs last week
+                                    </Text>
+                                    <Text size="xs" color="dimmed">
+                                      Previous:{' '}
+                                      {trend.previous_week_value.toLocaleString()}
+                                    </Text>
+                                  </div>
+                                </>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )
+                      })()}
                     </div>
                   </div>
 
@@ -608,82 +601,66 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                       <Text size="2xl" weight={700} className="text-purple-400">
                         {courseStats?.total_messages?.toLocaleString() || 0}
                       </Text>
-                      {weeklyTrends.find(
-                        (t) => t.metric_name === 'Total Messages',
-                      ) && (
-                        <div className="mt-3 space-y-2">
-                          <div
-                            className={`flex items-center justify-between rounded-md ${
-                              weeklyTrends.find(
-                                (t) => t.metric_name === 'Total Messages',
-                              )?.percentage_change > 0
-                                ? 'bg-green-400/10'
-                                : 'bg-red-400/10'
-                            } p-2`}
-                          >
-                            {trendsLoading ? (
-                              <LoadingSpinner size="xs" />
-                            ) : (
-                              <>
-                                <div className="flex items-center gap-2">
-                                  {weeklyTrends.find(
-                                    (t) => t.metric_name === 'Total Messages',
-                                  )?.percentage_change > 0 ? (
-                                    <IconTrendingUp
-                                      size={18}
-                                      className="text-green-400"
-                                    />
-                                  ) : (
-                                    <IconTrendingDown
-                                      size={18}
-                                      className="text-red-400"
-                                    />
-                                  )}
-                                  <Text
-                                    size="sm"
-                                    weight={500}
-                                    className={`${
-                                      weeklyTrends.find(
-                                        (t) =>
-                                          t.metric_name === 'Total Messages',
-                                      )?.percentage_change > 0
-                                        ? 'text-green-400'
-                                        : 'text-red-400'
-                                    }`}
-                                  >
-                                    {weeklyTrends.find(
-                                      (t) => t.metric_name === 'Total Messages',
-                                    )?.percentage_change > 0
-                                      ? '+'
-                                      : ''}
-                                    {weeklyTrends
-                                      .find(
-                                        (t) =>
-                                          t.metric_name === 'Total Messages',
-                                      )
-                                      ?.percentage_change.toFixed(1)}
-                                    %
-                                  </Text>
-                                </div>
-                                <div className="flex flex-col items-end">
-                                  <Text size="xs" color="dimmed">
-                                    vs last week
-                                  </Text>
-                                  <Text size="xs" color="dimmed">
-                                    Previous:{' '}
-                                    {weeklyTrends
-                                      .find(
-                                        (t) =>
-                                          t.metric_name === 'Total Messages',
-                                      )
-                                      ?.previous_week_value.toLocaleString()}
-                                  </Text>
-                                </div>
-                              </>
-                            )}
+                      {/* Messages Card Trend Section */}
+                      {(() => {
+                        const trend = weeklyTrends.find(
+                          (t) => t.metric_name === 'Total Messages',
+                        )
+                        if (!trend) return null
+
+                        return (
+                          <div className="mt-3 space-y-2">
+                            <div
+                              className={`flex items-center justify-between rounded-md ${
+                                trend.percentage_change > 0
+                                  ? 'bg-green-400/10'
+                                  : 'bg-red-400/10'
+                              } p-2`}
+                            >
+                              {trendsLoading ? (
+                                <LoadingSpinner size="xs" />
+                              ) : (
+                                <>
+                                  <div className="flex items-center gap-2">
+                                    {trend.percentage_change > 0 ? (
+                                      <IconTrendingUp
+                                        size={18}
+                                        className="text-green-400"
+                                      />
+                                    ) : (
+                                      <IconTrendingDown
+                                        size={18}
+                                        className="text-red-400"
+                                      />
+                                    )}
+                                    <Text
+                                      size="sm"
+                                      weight={500}
+                                      className={
+                                        trend.percentage_change > 0
+                                          ? 'text-green-400'
+                                          : 'text-red-400'
+                                      }
+                                    >
+                                      {trend.percentage_change > 0 ? '+' : ''}
+                                      {trend.percentage_change.toFixed(1)}%
+                                    </Text>
+                                  </div>
+                                  <div className="flex flex-col items-end">
+                                    <Text size="xs" color="dimmed">
+                                      vs last week
+                                    </Text>
+                                    <Text size="xs" color="dimmed">
+                                      Previous:{' '}
+                                      {trend.previous_week_value.toLocaleString()}
+                                    </Text>
+                                  </div>
+                                </>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -905,6 +882,26 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         data={conversationStats?.heatmap}
                         isLoading={statsLoading}
                         error={statsError}
+                      />
+                    </div>
+
+                    {/* Add this new chart */}
+                    <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
+                      <Title
+                        order={4}
+                        mb="md"
+                        align="left"
+                        className="text-white"
+                      >
+                        Model Usage Distribution
+                      </Title>
+                      <Text size="sm" color="dimmed" mb="xl">
+                        Distribution of AI models used across all conversations
+                      </Text>
+                      <ModelUsageChart
+                        data={modelUsageData}
+                        isLoading={modelUsageLoading}
+                        error={modelUsageError}
                       />
                     </div>
                   </>
