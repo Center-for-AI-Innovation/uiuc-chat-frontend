@@ -107,7 +107,7 @@ export const UploadCard = memo(function UploadCard({
     setUploadFiles([])
   }
   const handleSetUploadFiles = (
-    updateFn: React.SetStateAction<FileUpload[]>
+    updateFn: React.SetStateAction<FileUpload[]>,
   ) => {
     setUploadFiles(updateFn)
   }
@@ -141,10 +141,11 @@ export const UploadCard = memo(function UploadCard({
                   order={3}
                   variant="gradient"
                   gradient={{ from: 'gold', to: 'white', deg: 50 }}
-                  className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base sm:text-xl ${projectName.length > 40
-                    ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
-                    : ''
-                    }`}
+                  className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base sm:text-xl ${
+                    projectName.length > 40
+                      ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
+                      : ''
+                  }`}
                 >
                   {projectName}
                 </Title>
@@ -230,7 +231,7 @@ export const UploadCard = memo(function UploadCard({
             backgroundColor: '#15162c',
             color: 'white',
           }}
-          className="p-4 sm:p-6 md:p-8"
+          className="p-4 sm:p-6"
         >
           <div className="card flex h-full flex-col justify-start space-y-6">
             <div className="form-control">

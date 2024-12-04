@@ -1,12 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 import {
   Text,
-  Switch,
   Card,
-  Skeleton,
   Tooltip,
-  useMantineTheme,
-  Checkbox,
   Button,
   Input,
   ScrollArea,
@@ -18,36 +14,19 @@ import {
 } from '@mantine/core'
 import {
   IconAlertCircle,
-  IconCheck,
-  IconExternalLink,
   IconHome,
   IconSitemap,
   IconSubtask,
   IconWorld,
   IconWorldDownload,
-  IconX,
   IconArrowRight,
 } from '@tabler/icons-react'
 // import { APIKeyInput } from '../LLMsApiKeyInputForm'
 // import { ModelToggles } from '../ModelToggles'
-import {
-  AnthropicProvider,
-  ProviderNames,
-} from '~/utils/modelProviders/LLMProvider'
-import { motion, AnimatePresence } from 'framer-motion'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '../Dialog'
+import { motion } from 'framer-motion'
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '../Dialog'
 // import { Checkbox } from '@radix-ui/react-checkbox'
-import { Label } from '@radix-ui/react-label'
-import { ExternalLink } from 'tabler-icons-react'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import { montserrat_heading } from 'fonts'
 import { notifications } from '@mantine/notifications'
 import axios from 'axios'
 import { Montserrat } from 'next/font/google'
@@ -172,7 +151,7 @@ export default function WebsiteIngestForm({
             ),
           )
           await queryClient.invalidateQueries({
-            queryKey: ['documents', project_name]
+            queryKey: ['documents', project_name],
           })
         } else {
           // Handle unsuccessful crawl
@@ -381,35 +360,35 @@ export default function WebsiteIngestForm({
                   onChange={(e) => {
                     handleUrlChange(e)
                   }}
-                // disabled={isDisabled}
+                  // disabled={isDisabled}
 
-                // onKeyPress={(event) => {
-                //   if (event.key === 'Enter') {
-                //     handleSubmit()
-                //   }
-                // }}
-                // rightSection={
-                // <Button
-                //   onClick={(e) => {
-                //     e.preventDefault()
-                //     if (validateInputs() && validateUrl(url)) {
-                //       handleSubmit()
-                //     }
-                //   }}
-                //   size="md"
-                //   radius={'xl'}
-                //   className={`rounded-s-md ${
-                //     isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
-                //   } overflow-ellipsis text-ellipsis p-2 ${
-                //     isUrlUpdated ? 'text-white' : 'text-gray-500'
-                //   } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
-                //   w={`${isSmallScreen ? 'auto' : 'auto'}`}
-                //   disabled={isDisabled}
-                // >
-                //   Ingest
-                // </Button>
-                // }
-                // rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
+                  // onKeyPress={(event) => {
+                  //   if (event.key === 'Enter') {
+                  //     handleSubmit()
+                  //   }
+                  // }}
+                  // rightSection={
+                  // <Button
+                  //   onClick={(e) => {
+                  //     e.preventDefault()
+                  //     if (validateInputs() && validateUrl(url)) {
+                  //       handleSubmit()
+                  //     }
+                  //   }}
+                  //   size="md"
+                  //   radius={'xl'}
+                  //   className={`rounded-s-md ${
+                  //     isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
+                  //   } overflow-ellipsis text-ellipsis p-2 ${
+                  //     isUrlUpdated ? 'text-white' : 'text-gray-500'
+                  //   } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
+                  //   w={`${isSmallScreen ? 'auto' : 'auto'}`}
+                  //   disabled={isDisabled}
+                  // >
+                  //   Ingest
+                  // </Button>
+                  // }
+                  // rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
                 />
               </div>
               <form

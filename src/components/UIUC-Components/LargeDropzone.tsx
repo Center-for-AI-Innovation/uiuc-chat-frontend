@@ -78,43 +78,6 @@ export function LargeDropzone({
   const openRef = useRef<() => void>(null)
   const [files, setFiles] = useState<File[]>([])
 
-  useEffect(() => {
-    async function fetchData() {
-      const response = await fetch(
-        `/api/materialsTable/docsInProgress?course_name=${courseName}`,
-      )
-      const data = await response.json()
-      if (data && data.documents) {
-        setUploadFiles((prevFileUploads: FileUpload[]) => {
-          return prevFileUploads.map((fileUpload) => {
-            const isIngested = data.documents.some(
-              (doc: { readable_filename: string }) =>
-                doc.readable_filename === fileUpload.name,
-            );
-            if (isIngested && fileUpload.status !== 'complete') {
-              return { ...fileUpload, status: 'ingesting' as const };
-            }
-            return fileUpload;
-          });
-        });
-      } else {
-        // Mark all document uploads as complete if they're not in progress
-        setUploadFiles((prev) => {
-          return prev.map((upload) => {
-            if (upload.type === "document" && upload.status === 'ingesting') {
-              return { ...upload, status: 'complete' as const };
-            }
-            return upload;
-          });
-        });
-      }
-    }
-
-
-    const intervalId = setInterval(fetchData, 3000) // Fetch data every 3000 milliseconds (3 seconds)
-    return () => clearInterval(intervalId)
-  }, [courseName])
-
   const refreshOrRedirect = async (redirect_to_gpt_4: boolean) => {
     if (is_new_course) {
       // refresh current page
@@ -221,107 +184,95 @@ export function LargeDropzone({
         },
       )
     }
-
-    // this does parallel (use for loop for sequential)
-    const allSuccessOrFail = await Promise.all(
-      files.map(async (file, index) => {
-        // Sanitize the filename and retain the extension
-        const extension = file.name.slice(file.name.lastIndexOf('.'))
-        const nameWithoutExtension = file.name
-          .slice(0, file.name.lastIndexOf('.'))
-          .replace(/[^a-zA-Z0-9]/g, '-')
-        const uniqueFileName = `${uuidv4()}-${nameWithoutExtension}${extension}`
-        const uniqueReadableFileName = `${nameWithoutExtension}${extension}`
-
-        // return { ok: Math.random() < 0.5, s3_path: filename }; // For testing
-        try {
-          await uploadToS3(file, uniqueFileName)
-          setSuccessfulUploads((prev) => prev + 1) // Increment successful uploads
-
-          const response = await fetch(`/api/UIUC-api/ingest`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              uniqueFileName: uniqueFileName,
-              courseName: courseName,
-              readableFilename: uniqueReadableFileName,
-            }),
-          })
-          const res = await response.json()
-          console.debug('Ingest submitted...', res)
-          return { ok: true, s3_path: file.name }
-        } catch (error) {
-          console.error('Error during file upload or ingest:', error)
-          setUploadFiles((prev) =>
-            prev.map((upload, i) =>
-              i === index ? { ...upload, status: 'error' } : upload,
-            ),
-          )
-          return { ok: false, s3_path: file.name }
-        }
-      }),
-    )
-
-    setSuccessfulUploads(files.length)
-    setUploadComplete(true)
-    interface IngestResult {
-      ok: boolean
-      s3_path: string
-    }
-
-    interface ResultSummary {
-      success_ingest: IngestResult[]
-      failure_ingest: IngestResult[]
-    }
-
-    const resultSummary = allSuccessOrFail.reduce(
-      (acc: ResultSummary, curr: IngestResult) => {
-        if (curr.ok) {
-          acc.success_ingest.push(curr)
-        } else {
-          acc.failure_ingest.push(curr)
-        }
-        return acc
-      },
-      { success_ingest: [], failure_ingest: [] },
-    )
-
-    setUploadInProgress(false)
-
-    if (is_new_course) {
-      await router.push(`/${courseName}/materials`)
-      return
-    }
-
-    // Toasts... but just for submitted to queue.
-    // NOTE: Were just getting "SUBMISSION to task queue" status, not the success of the ingest job itself!!
-
-    // if (resultSummary.success_ingest.length > 0) {
-    //   showIngestInProgressToast(resultSummary.success_ingest.length)
-    // }
-
-    if (resultSummary.failure_ingest.length > 0) {
-      // some failures
-      showFailedIngestToast(
-        resultSummary.failure_ingest.map(
-          (ingestResult: IngestResult) => ingestResult.s3_path,
-        ),
-      )
-      showSuccessToast(resultSummary.success_ingest.length)
-    } else {
-      // 100% success
-      // TODO: Re-enable this great feature. But use ReactQuery to update the table, not full page refresh.
-      // await refreshOrRedirect(redirect_to_gpt_4)
-      // showSuccessToast(resultSummary.failure_ingest.map((ingestResult) => ingestResult.s3_path));
-    }
   }
+
+  // Add useEffect to check ingest status
+  useEffect(() => {
+    const checkIngestStatus = async () => {
+      console.log('Checking ingest status for course:', courseName)
+      const response = await fetch(
+        `/api/materialsTable/docsInProgress?course_name=${courseName}`,
+      )
+      const data = await response.json()
+      console.log('Received ingest status data:', data)
+
+      if (!data) {
+        console.log('No data received from API')
+        return
+      }
+
+      if (!data.documents) {
+        console.log('No documents found in API response')
+        setUploadFiles((prev) =>
+          prev.map((file) => ({ ...file, status: 'complete' as const })),
+        )
+        return
+      }
+
+      setUploadFiles((prev) => {
+        console.log('Current upload files:', prev)
+        const updated = prev.map((file) => {
+          console.log(
+            'Processing file:',
+            file.name,
+            'Current status:',
+            file.status,
+          )
+
+          // If file is in ingesting state, check if it's still in progress
+          if (file.status === 'ingesting') {
+            const isStillIngesting = data.documents.some(
+              (doc: { readable_filename: string }) =>
+                doc.readable_filename === file.name,
+            )
+            console.log(`File ${file.name} still ingesting:`, isStillIngesting)
+
+            // If not in progress anymore, mark as complete
+            if (!isStillIngesting) {
+              console.log(`File ${file.name} completed ingestion`)
+              return { ...file, status: 'complete' as const }
+            } else {
+              console.log(`File ${file.name} continues ingesting`)
+              return file
+            }
+          } else if (file.status === 'uploading') {
+            const isIngesting = data.documents.some(
+              (doc: { readable_filename: string }) =>
+                doc.readable_filename === file.name,
+            )
+            console.log(`File ${file.name} started ingesting:`, isIngesting)
+
+            if (isIngesting) {
+              console.log(
+                `File ${file.name} transitioning from uploading to ingesting`,
+              )
+              return { ...file, status: 'ingesting' as const }
+            } else {
+              console.log(`File ${file.name} still uploading`)
+              return file
+            }
+          } else {
+            console.log(
+              `File ${file.name} in status ${file.status}, no change needed`,
+            )
+            return file
+          }
+        })
+        console.log('Updated upload files:', updated)
+        return updated
+      })
+    }
+
+    console.log('Setting up ingest status check interval')
+    const interval = setInterval(checkIngestStatus, 3000)
+    return () => {
+      console.log('Cleaning up ingest status check interval')
+      clearInterval(interval)
+    }
+  }, [courseName]) // Only depend on courseName
 
   return (
     <>
-      {/* START LEFT COLUMN */}
-
       <div
         style={{
           display: 'flex',
@@ -329,7 +280,6 @@ export function LargeDropzone({
           justifyContent: 'space-between',
         }}
       >
-        {/* <div className={classes.wrapper} style={{ maxWidth: '320px' }}> */}
         <div
           className={classes.wrapper}
           style={{
@@ -341,18 +291,9 @@ export function LargeDropzone({
             paddingTop: rem(24),
           }}
         >
-          {/* {(uploadInProgress || uploadComplete) && (
-            <UploadProgressBar
-              numFiles={successfulUploads}
-              totalFiles={files.length}
-              isComplete={uploadComplete}
-            />
-          )} */}
-          {/* <div className={courseName ? 'pb-4 pt-3' : ''}>
-            {courseName && <IngestProgressBar courseName={courseName} />}
-          </div> */}
           <Dropzone
             openRef={openRef}
+            className="group relative cursor-pointer overflow-hidden rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
             style={{
               width: '100%',
               minHeight: rem(200),
@@ -363,11 +304,18 @@ export function LargeDropzone({
               borderStyle: 'dashed',
               borderColor: 'rgba(147, 51, 234, 0.3)',
               borderRadius: rem(12),
-              transition: 'all 0.2s ease',
               padding: '1rem',
               margin: '0 auto',
               maxWidth: '100%',
               overflow: 'hidden',
+              background: 'linear-gradient(135deg, #1c1c2e 0%, #2a2a40 100%)',
+              transition: 'all 0.3s ease, background-position 0.3s ease',
+              backgroundSize: '200% 200%',
+              backgroundPosition: '0% 0%',
+              ':hover': {
+                backgroundPosition: '100% 100%',
+                background: 'linear-gradient(135deg, #2a2a40 0%, #1c1c2e 100%)',
+              },
             }}
             onDrop={async (files) => {
               ingestFiles(files, is_new_course).catch((error) => {
@@ -375,8 +323,6 @@ export function LargeDropzone({
               })
             }}
             loading={uploadInProgress}
-            className={`hover:border-purple-500 hover:bg-[#2a2a40] ${isDisabled ? 'opacity-50' : ''
-              }`}
           >
             <div
               style={{ pointerEvents: 'none' }}
@@ -460,9 +406,6 @@ export function LargeDropzone({
             </div>
           )} */}
         </div>
-        {/* END LEFT COLUMN */}
-
-        {/* START RIGHT COLUMN */}
         <div
           style={{
             flex: 1,
@@ -473,7 +416,6 @@ export function LargeDropzone({
             textAlign: 'center',
           }}
         ></div>
-        {/* END RIGHT COLUMN */}
       </div>
     </>
   )
