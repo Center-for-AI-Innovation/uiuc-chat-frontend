@@ -67,7 +67,7 @@ const handler = async (req: Request): Promise<Response> => {
         }
         // console.log('deploymentName: ', deploymentName)
         url = `${endpoint}/openai/deployments/${deploymentName}/chat/completions?api-version=${OPENAI_API_VERSION}`
-        console.log('Created Azure url: ', url)
+        // console.log('Created Azure url: ', url)
       } catch (error) {
         console.error('Error fetching Azure deployments:', error)
         throw error

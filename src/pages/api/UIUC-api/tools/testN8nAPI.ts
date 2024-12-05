@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export default async function handler(req: any, res: any) {
   const { n8nApiKey } = req.body
-  console.log(`Testing API key: '${n8nApiKey}'`)
+  // console.log(`Testing API key: '${n8nApiKey}'`)
 
   const parsedPagination = true
   const limit = 1

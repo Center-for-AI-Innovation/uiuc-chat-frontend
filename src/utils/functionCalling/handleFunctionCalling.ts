@@ -21,7 +21,7 @@ export async function handleFunctionCall(
   try {
     // Convert UIUCTool to OpenAICompatibleTool
     const openAITools = getOpenAIToolFromUIUCTool(availableTools)
-    console.log('OpenAI compatible tools (handle tools): ', openaiKey)
+    // console.log('OpenAI compatible tools (handle tools): ', openaiKey)
     const url = base_url
       ? `${base_url}/api/chat/openaiFunctionCall`
       : '/api/chat/openaiFunctionCall'

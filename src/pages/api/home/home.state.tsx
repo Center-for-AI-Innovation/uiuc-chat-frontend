@@ -38,6 +38,9 @@ export interface HomeInitialState {
   isRouting: boolean | undefined
   isRunningTool: boolean | undefined
   isRetrievalLoading: boolean | undefined
+  isQueryRewriting: boolean | undefined
+  wasQueryRewritten: boolean | undefined
+  queryRewriteText: string | undefined
   documentGroups: Action[]
   tools: UIUCTool[]
   webLLMModelIdLoading: {
@@ -74,6 +77,9 @@ export const initialState: HomeInitialState = {
   isRouting: undefined,
   isRunningTool: undefined,
   isRetrievalLoading: undefined,
+  isQueryRewriting: undefined,
+  wasQueryRewritten: undefined,
+  queryRewriteText: undefined,
   isImg2TextLoading: false,
   documentGroups: [],
   tools: [],
