@@ -123,8 +123,6 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   const [courseStats, setCourseStats] = useState<CourseStats | null>(null)
   const [courseStatsError, setCourseStatsError] = useState<string | null>(null)
 
-  const [accordionOpened, setAccordionOpened] = useState(false)
-
   // TODO: remove this hook... we should already have this from the /materials props???
   useEffect(() => {
     const fetchData = async () => {
@@ -150,47 +148,6 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
     fetchData()
   }, [currentPageName, clerk_user.isLoaded])
-
-  const [nomicMapData, setNomicMapData] = useState<NomicMapData | null>(null)
-  const [nomicIsLoading, setNomicIsLoading] = useState(true)
-
-  // fetch nomicMapData
-  useEffect(() => {
-    const fetchNomicMapData = async () => {
-      try {
-        // Fix URL parameter syntax - change ? to &
-        const response = await fetch(
-          `/api/getNomicMapForQueries?course_name=${course_name}&map_type=conversation`,
-        )
-
-        // Log response details for debugging
-        console.log('Response status:', response.status)
-        const responseText = await response.text()
-
-        // Try parsing response text
-        let data
-        try {
-          data = JSON.parse(responseText)
-        } catch (parseError) {
-          console.error('Error parsing response:', responseText)
-          throw parseError
-        }
-
-        const parsedData: NomicMapData = {
-          map_id: data.map_id,
-          map_link: data.map_link,
-        }
-        console.log('Parsed nomic map data:', parsedData)
-        setNomicMapData(parsedData)
-        setNomicIsLoading(false)
-      } catch (error) {
-        console.error('Error fetching nomic map:', error)
-        setNomicIsLoading(false)
-      }
-    }
-
-    fetchNomicMapData()
-  }, [course_name])
 
   const [hasConversationData, setHasConversationData] = useState<boolean>(true)
 
@@ -316,7 +273,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                 <Title
                   order={3}
                   align="left"
-                  className={`px-2 text-[hsl(280,100%,70%)] ${montserrat_heading.variable} font-montserratHeading`}
+                  className={`px-4 text-[hsl(280,100%,70%)] ${montserrat_heading.variable} font-montserratHeading`}
                   style={{ flexGrow: 2 }}
                 >
                   Usage Overview
@@ -589,162 +546,9 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
               </div>
             </div>
           </Flex>
-
-          {/* NOMIC MAP VISUALIZATION  */}
-          <Flex direction="column" align="center" w="100%">
-            <div className="pt-5"></div>
-            <div
-              className="w-[98%] rounded-3xl"
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                background: '#15162c',
-                paddingTop: '1rem',
-              }}
-            >
-              <div className="w-full border-b border-white/10 bg-black/20 px-4 py-3 sm:px-6 sm:py-4 md:px-8">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <Title
-                      order={3}
-                      className={`pl-12 text-[hsl(280,100%,70%)] ${montserrat_heading.variable} font-montserratHeading text-lg sm:text-2xl`}
-                    >
-                      Nomic Map
-                    </Title>
-                    <ActionIcon
-                      variant="subtle"
-                      color="gray"
-                      onClick={() => setAccordionOpened(!accordionOpened)}
-                      className="hover:bg-white/10"
-                      title="More info on nomic map"
-                    >
-                      <IconInfoCircle className="text-white/60" />
-                    </ActionIcon>
-                  </div>
-                </div>
-              </div>
-
-              {/* Accordion info button */}
-              <AnimatePresence>
-                {accordionOpened && (
-                  <div className="bg-[#1e1f3a]/80 px-4 py-4 sm:px-6 sm:py-6 md:px-8">
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.2, ease: 'easeInOut' }}
-                      className=" overflow-hidden"
-                    >
-                      <div className="flex bg-[#1e1f3a]/80 backdrop-blur-sm">
-                        <div className="w-1 bg-violet-500/50" />
-                        <div
-                          className={`${montserrat_paragraph.variable}  flex-1 p-4 font-montserratParagraph`}
-                        >
-                          <Text
-                            className={`${montserrat_paragraph.variable} mb-4 font-montserratParagraph text-white/80`}
-                          >
-                            The Nomic Map visualizes relationships between
-                            student questions:
-                          </Text>
-                          <ul className="list-inside list-disc space-y-2 text-white/80">
-                            <li className="text-sm">
-                              <span className="text-violet-300">
-                                Similar topics
-                              </span>{' '}
-                              cluster together
-                            </li>
-                            <li className="text-sm">
-                              <span className="text-violet-300">
-                                Different topics
-                              </span>{' '}
-                              are positioned further apart
-                            </li>
-                            <li className="text-sm">
-                              <span className="text-violet-300">
-                                Common themes
-                              </span>{' '}
-                              and knowledge gaps become visible
-                            </li>
-                          </ul>
-                          <Text className="mt-3 text-gray-400" size="sm">
-                            Learn more about{' '}
-                            <a
-                              className="text-purple-400 underline hover:text-purple-300"
-                              href="https://atlas.nomic.ai/"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              semantic similarity visualizations
-                            </a>
-                          </Text>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </div>
-                )}
-              </AnimatePresence>
-
-              <div className="pt-6"></div>
-              {nomicIsLoading ? (
-                <>
-                  <span className="nomic-iframe skeleton-box w-full"></span>
-                </>
-              ) : nomicMapData && nomicMapData.map_id ? (
-                <>
-                  <iframe
-                    className="nomic-iframe w-full"
-                    id={nomicMapData.map_id}
-                    allow="clipboard-read; clipboard-write"
-                    src={nomicMapData.map_link}
-                    style={{ height: '80vh' }}
-                  />
-                  <div className="mt-4">
-                    <Text className="pb-4 text-gray-400" size="sm">
-                      Note you are unable to login or edit this map. It's for
-                      your visualization only. Please{' '}
-                      <a
-                        href="mailto:kvday2@illinois.edu"
-                        className="text-purple-400 underline hover:text-purple-300"
-                      >
-                        contact us
-                      </a>{' '}
-                      with questions.
-                    </Text>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="w-full">
-                    <Text
-                      className={`${montserrat_heading.variable} font-montserratHeading text-gray-200`}
-                      size="lg"
-                    >
-                      Visualization Not Available Yet
-                    </Text>
-                    <Text className="mt-2 text-gray-300">
-                      We need at least 20 questions to generate a meaningful
-                      visualization of how topics relate to each other. Please
-                      ask more questions and check back later!
-                    </Text>
-                    <Text className="mt-3 text-gray-400" size="sm">
-                      Learn more about{' '}
-                      <a
-                        className="text-purple-400 underline hover:text-purple-300"
-                        href="https://atlas.nomic.ai/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        semantic similarity visualizations
-                      </a>
-                    </Text>
-                  </div>
-                </>
-              )}
-            </div>
-          </Flex>
         </div>
 
+        <NomicDocumentMap course_name={course_name as string} />
         <GlobalFooter />
       </main>
     </>
@@ -785,6 +589,7 @@ import Navbar from './navbars/Navbar'
 import Link from 'next/link'
 import { Separator } from 'tabler-icons-react'
 import { AnimatePresence, motion } from 'framer-motion'
+import NomicDocumentMap from './NomicDocumentsMap'
 
 const CourseFilesList = ({ files }: CourseFilesListProps) => {
   const router = useRouter()

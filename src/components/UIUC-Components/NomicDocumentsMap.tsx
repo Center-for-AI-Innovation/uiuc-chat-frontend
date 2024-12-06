@@ -1,163 +1,255 @@
-import {
-  Card,
-  Title,
-  Tabs,
-  Indicator,
-  Tooltip,
-  Button,
-  Modal,
-  Text,
-  createStyles,
-} from '@mantine/core'
-import { ProjectFilesTable } from './ProjectFilesTable'
+import Head from 'next/head'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { type CourseMetadata } from '~/types/courseMetadata'
-import { useState } from 'react'
-import { useMediaQuery } from '@mantine/hooks'
-import { IconFileExport } from '@tabler/icons-react'
+// import { DropzoneS3Upload } from '~/components/UIUC-Components/Upload_S3'
+import { fetchPresignedUrl } from '~/utils/apiUtils'
+import {
+  // Badge,
+  // MantineProvider,
+  Button,
+  // Group,
+  // Stack,
+  // createStyles,
+  // FileInput,
+  // rem,
+  Title,
+  Text,
+  Flex,
+  createStyles,
+  // Divider,
+  MantineTheme,
+  Divider,
+  ActionIcon,
+  // TextInput,
+  // Tooltip,
+} from '@mantine/core'
+// const rubik_puddles = Rubik_Puddles({ weight: '400', subsets: ['latin'] })
+import React, { useEffect, useState } from 'react'
+import axios from 'axios'
 import { useRouter } from 'next/router'
-import { handleExport } from '~/pages/api/UIUC-api/exportAllDocuments'
-import { showToastOnUpdate } from './MakeQueryAnalysisPage'
+import { LoadingSpinner } from './LoadingSpinner'
+import { downloadConversationHistory } from '../../pages/api/UIUC-api/downloadConvoHistory'
+import { getConversationStats } from '../../pages/api/UIUC-api/getConversationStats'
+import { getProjectStats } from '../../pages/api/UIUC-api/getProjectStats'
+import ConversationsPerDayChart from './ConversationsPerDayChart'
+import ConversationsPerHourChart from './ConversationsPerHourChart'
+import ConversationsPerDayOfWeekChart from './ConversationsPerDayOfWeekChart'
+import ConversationsHeatmapByHourChart from './ConversationsHeatmapByHourChart'
+import {
+  IconMessage2,
+  IconUsers,
+  IconMessageCircle2,
+  IconInfoCircle,
+} from '@tabler/icons-react'
+import { AnimatePresence, motion } from 'framer-motion'
 
-const useStyles = createStyles(() => ({
-  tabsList: {
-    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-    padding: '0.5rem 2rem',
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    gap: '1rem',
-  },
-  tab: {
-    color: 'rgba(255, 255, 255, 0.9)',
-    '&[data-active]': {
-      backgroundColor: 'rgba(139, 92, 246, 0.3)',
-    },
-    '&:hover': {
-      backgroundColor: 'rgba(139, 92, 246, 0.2)',
-    },
-    borderRadius: '0.5rem',
-    padding: '0.5rem 1rem',
-  },
-  tableContainer: {
-    // backgroundColor: '#1e1f3a',
-    borderRadius: '0 0 0.75rem 0.75rem',
-    display: 'flex',
-    flexDirection: 'column',
-    flex: 1,
-    minHeight: 0,
-    '&::-webkit-scrollbar': {
-      width: '8px',
-    },
-    '&::-webkit-scrollbar-track': {
-      background: 'rgba(255, 255, 255, 0.1)',
-      borderRadius: '4px',
-    },
-    '&::-webkit-scrollbar-thumb': {
-      background: 'rgba(139, 92, 246, 0.5)',
-      borderRadius: '4px',
-    },
-  },
-}))
+function NomicDocumentMap({ course_name }: { course_name: string }) {
+  const [accordionOpened, setAccordionOpened] = useState(false)
 
-function DocumentsCard({
-  course_name,
-  metadata,
-}: {
-  course_name: string
-  metadata: CourseMetadata
-}) {
-  const [tabValue, setTabValue] = useState<string | null>('success')
-  const [failedCount, setFailedCount] = useState<number>(0)
-  const isSmallScreen = useMediaQuery('(max-width: 960px)')
-  const [exportModalOpened, setExportModalOpened] = useState(false)
-  const router = useRouter()
-  const { classes, theme } = useStyles()
+  const [nomicMapData, setNomicMapData] = useState<NomicMapData | null>(null)
+  const [nomicIsLoading, setNomicIsLoading] = useState(true)
 
-  const getCurrentPageName = () => {
-    return router.asPath.slice(1).split('/')[0] as string
-  }
+  // fetch nomicMapData
+  useEffect(() => {
+    const fetchNomicMapData = async () => {
+      try {
+        // Fix URL parameter syntax - change ? to &
+        const response = await fetch(
+          `/api/getNomicMapForQueries?course_name=${course_name}&map_type=conversation`,
+        )
+
+        // Log response details for debugging
+        console.log('Response status:', response.status)
+        const responseText = await response.text()
+
+        // Try parsing response text
+        let data
+        try {
+          data = JSON.parse(responseText)
+        } catch (parseError) {
+          console.error('Error parsing response:', responseText)
+          throw parseError
+        }
+
+        const parsedData: NomicMapData = {
+          map_id: data.map_id,
+          map_link: data.map_link,
+        }
+        console.log('Parsed nomic map data:', parsedData)
+        setNomicMapData(parsedData)
+        setNomicIsLoading(false)
+      } catch (error) {
+        console.error('Error fetching nomic map:', error)
+        setNomicIsLoading(false)
+      }
+    }
+
+    fetchNomicMapData()
+  }, [course_name])
 
   return (
-    <Card
-      shadow="xs"
-      padding="none"
-      radius="xl"
-      className="mt-[2%] w-[96%] md:w-[90%] 2xl:w-[90%]"
-    >
-      <div className="min-h-full bg-gradient-to-r from-purple-900 via-indigo-800 to-blue-800">
-        <Modal
-          opened={exportModalOpened}
-          onClose={() => setExportModalOpened(false)}
-          title="Please confirm your action"
+    <>
+      {/* NOMIC MAP VISUALIZATION  */}
+      <Flex direction="column" align="center" w="100%">
+        <div className="pt-5"></div>
+        <div
+          className="w-[98%] rounded-3xl"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            background: '#15162c',
+            paddingTop: '1rem',
+          }}
         >
-          <Text size="sm" style={{ color: 'white' }}>
-            {`Are you sure you want to export all the documents and embeddings?`}
-          </Text>
-          <div className="mt-5 flex justify-end gap-2">
-            <Button
-              className="rounded-md bg-transparent text-white hover:bg-indigo-600"
-              onClick={() => setExportModalOpened(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              className="rounded-md bg-purple-800 text-white hover:bg-indigo-600"
-              onClick={async () => {
-                setExportModalOpened(false)
-                const result = await handleExport(getCurrentPageName())
-                if (result && result.message) {
-                  showToastOnUpdate(theme, false, false, result.message)
-                }
-              }}
-            >
-              Export
-            </Button>
-          </div>
-        </Modal>
+          <div className="w-full px-4 py-3 sm:px-6 sm:py-4 md:px-8">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2">
+                <Title
+                  order={3}
+                  className={`pl-12 text-[hsl(280,100%,70%)] ${montserrat_heading.variable} font-montserratHeading text-lg sm:text-2xl`}
+                >
+                  Concept Map of User Queries
+                </Title>
 
-        <div className="w-full border-b border-white/10 bg-black/20 px-4 py-3 sm:px-6 sm:py-4 md:px-8">
-          <div className="flex items-center justify-between gap-2">
-            <Title
-              order={3}
-              className={`${montserrat_heading.variable} font-montserratHeading text-lg text-white/90 sm:text-2xl`}
-            >
-              Project Files
-            </Title>
-
-            <Button
-              variant="subtle"
-              leftIcon={<IconFileExport size={20} />}
-              onClick={() => setExportModalOpened(true)}
-              className={`
-                ${montserrat_paragraph.variable} 
-                rounded-3xl bg-purple-800 px-4 font-montserratParagraph
-                text-sm text-white transition-colors hover:bg-indigo-600 
-                sm:text-base
-              `}
-            >
-              <span className="hidden sm:inline">
-                Export All Documents & Embeddings
-              </span>
-              <span className="inline sm:hidden">Export All</span>
-            </Button>
-          </div>
-        </div>
-
-        <div className="bg-[#1e1f3a]/80">
-          {metadata && (
-            <div className={classes.tableContainer}>
-              <ProjectFilesTable
-                course_name={course_name}
-                setFailedCount={setFailedCount}
-                tabValue={tabValue as string}
-                onTabChange={(value) => setTabValue(value)}
-                failedCount={failedCount}
-              />
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  onClick={() => setAccordionOpened(!accordionOpened)}
+                  className="hover:bg-white/10"
+                  title="More info on nomic map"
+                >
+                  <IconInfoCircle className="text-white/60" />
+                </ActionIcon>
+              </div>
             </div>
+          </div>
+
+          <div className="pt-2"></div>
+          <Divider className="w-full" color="gray.4" size="sm" />
+
+          {/* Accordion info button */}
+          <AnimatePresence>
+            {accordionOpened && (
+              <>
+                <div className="pt-4"></div>
+                <div className="bg-[#1e1f3a]/80 px-4 py-4 sm:px-6 sm:py-6 md:px-8">
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2, ease: 'easeInOut' }}
+                    className=" overflow-hidden"
+                  >
+                    <div className="flex bg-[#1e1f3a]/80 backdrop-blur-sm">
+                      <div className="w-1 bg-violet-500/50" />
+                      <div
+                        className={`${montserrat_paragraph.variable}  flex-1 p-4 font-montserratParagraph`}
+                      >
+                        <Text
+                          className={`${montserrat_paragraph.variable} mb-4 font-montserratParagraph text-white/80`}
+                        >
+                          The Concept Map visualizes all queries made in this
+                          project:
+                        </Text>
+                        <ul className="list-inside list-disc space-y-2 text-white/80">
+                          <li className="text-sm">
+                            <span className="text-violet-300">
+                              Similar topics
+                            </span>{' '}
+                            cluster together
+                          </li>
+                          <li className="text-sm">
+                            <span className="text-violet-300">
+                              Different topics
+                            </span>{' '}
+                            are positioned further apart
+                          </li>
+                          <li className="text-sm">
+                            <span className="text-violet-300">
+                              Common themes
+                            </span>{' '}
+                            and knowledge gaps become visible
+                          </li>
+                        </ul>
+                        <Text className="mt-3 text-gray-400" size="sm">
+                          Learn more about{' '}
+                          <a
+                            className="text-purple-400 underline hover:text-purple-300"
+                            href="https://atlas.nomic.ai/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            semantic similarity visualizations
+                          </a>
+                        </Text>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+              </>
+            )}
+          </AnimatePresence>
+
+          <div className="pt-6"></div>
+          {nomicIsLoading ? (
+            <>
+              <span className="nomic-iframe skeleton-box w-full"></span>
+            </>
+          ) : nomicMapData && nomicMapData.map_id ? (
+            <>
+              <iframe
+                className="nomic-iframe w-full"
+                id={nomicMapData.map_id}
+                allow="clipboard-read; clipboard-write"
+                src={nomicMapData.map_link}
+                style={{ height: '80vh' }}
+              />
+              <div className="mt-4">
+                <Text className="pb-4 text-gray-400" size="sm">
+                  Note you are unable to login or edit this map. It's for your
+                  visualization only. Please{' '}
+                  <a
+                    href="mailto:kvday2@illinois.edu"
+                    className="text-purple-400 underline hover:text-purple-300"
+                  >
+                    contact us
+                  </a>{' '}
+                  with questions.
+                </Text>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="w-full">
+                <Text
+                  className={`${montserrat_heading.variable} font-montserratHeading text-gray-200`}
+                  size="lg"
+                >
+                  Visualization Not Available Yet
+                </Text>
+                <Text className="mt-2 text-gray-300">
+                  We need at least 20 questions to generate a meaningful
+                  visualization of how topics relate to each other. Please ask
+                  more questions and check back later!
+                </Text>
+                <Text className="mt-3 text-gray-400" size="sm">
+                  Learn more about{' '}
+                  <a
+                    className="text-purple-400 underline hover:text-purple-300"
+                    href="https://atlas.nomic.ai/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    semantic similarity visualizations
+                  </a>
+                </Text>
+              </div>
+            </>
           )}
         </div>
-      </div>
-    </Card>
+      </Flex>
+    </>
   )
 }
 
-export default DocumentsCard
+export default NomicDocumentMap
