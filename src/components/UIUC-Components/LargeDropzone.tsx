@@ -49,6 +49,13 @@ const useStyles = createStyles((theme) => ({
     left: `calc(50% - ${rem(125)})`,
     bottom: rem(-20),
   },
+  dropzone: {
+    backgroundPosition: '0% 0%',
+    '&:hover': {
+      backgroundPosition: '100% 100%',
+      background: 'linear-gradient(135deg, #2a2a40 0%, #1c1c2e 100%)',
+    },
+  },
 }))
 
 export function LargeDropzone({
@@ -311,11 +318,11 @@ export function LargeDropzone({
               background: 'linear-gradient(135deg, #1c1c2e 0%, #2a2a40 100%)',
               transition: 'all 0.3s ease, background-position 0.3s ease',
               backgroundSize: '200% 200%',
-              backgroundPosition: '0% 0%',
-              ':hover': {
-                backgroundPosition: '100% 100%',
-                background: 'linear-gradient(135deg, #2a2a40 0%, #1c1c2e 100%)',
-              },
+              // backgroundPosition: '0% 0%',
+              // ':hover': {
+              //   backgroundPosition: '100% 100%',
+              //   background: 'linear-gradient(135deg, #2a2a40 0%, #1c1c2e 100%)',
+              // }
             }}
             onDrop={async (files) => {
               ingestFiles(files, is_new_course).catch((error) => {
