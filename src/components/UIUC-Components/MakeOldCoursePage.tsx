@@ -105,6 +105,8 @@ const MakeOldCoursePage = ({
 
             {/* Project Files Section */}
             <DocumentsCard course_name={course_name} metadata={metadata} />
+
+            {/* <NomicDocumentsCard course_name={course_name} metadata={metadata} /> */}
           </Flex>
         </div>
         <GlobalFooter />
