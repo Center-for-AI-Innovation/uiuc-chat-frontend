@@ -168,8 +168,8 @@ function NomicDocumentMap({ course_name }: { course_name: string }) {
               />
               <div className="mt-4">
                 <Text className="pb-4 text-gray-400" size="sm">
-                  Note you are unable to login or edit this map. It's for your
-                  visualization only. Please{' '}
+                  Note you are unable to login or edit this map. It&apos;s for
+                  your visualization only. Please{' '}
                   <a
                     href="mailto:kvday2@illinois.edu"
                     className="text-purple-400 underline hover:text-purple-300"
