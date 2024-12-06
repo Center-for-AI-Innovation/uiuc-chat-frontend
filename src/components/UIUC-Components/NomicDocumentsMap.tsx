@@ -1,45 +1,7 @@
-import Head from 'next/head'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-// import { DropzoneS3Upload } from '~/components/UIUC-Components/Upload_S3'
-import { fetchPresignedUrl } from '~/utils/apiUtils'
-import {
-  // Badge,
-  // MantineProvider,
-  Button,
-  // Group,
-  // Stack,
-  // createStyles,
-  // FileInput,
-  // rem,
-  Title,
-  Text,
-  Flex,
-  createStyles,
-  // Divider,
-  MantineTheme,
-  Divider,
-  ActionIcon,
-  // TextInput,
-  // Tooltip,
-} from '@mantine/core'
-// const rubik_puddles = Rubik_Puddles({ weight: '400', subsets: ['latin'] })
+import { Title, Text, Flex, Divider, ActionIcon } from '@mantine/core'
 import React, { useEffect, useState } from 'react'
-import axios from 'axios'
-import { useRouter } from 'next/router'
-import { LoadingSpinner } from './LoadingSpinner'
-import { downloadConversationHistory } from '../../pages/api/UIUC-api/downloadConvoHistory'
-import { getConversationStats } from '../../pages/api/UIUC-api/getConversationStats'
-import { getProjectStats } from '../../pages/api/UIUC-api/getProjectStats'
-import ConversationsPerDayChart from './ConversationsPerDayChart'
-import ConversationsPerHourChart from './ConversationsPerHourChart'
-import ConversationsPerDayOfWeekChart from './ConversationsPerDayOfWeekChart'
-import ConversationsHeatmapByHourChart from './ConversationsHeatmapByHourChart'
-import {
-  IconMessage2,
-  IconUsers,
-  IconMessageCircle2,
-  IconInfoCircle,
-} from '@tabler/icons-react'
+import { IconInfoCircle } from '@tabler/icons-react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 function NomicDocumentMap({ course_name }: { course_name: string }) {
