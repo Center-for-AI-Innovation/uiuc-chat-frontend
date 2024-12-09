@@ -26,7 +26,6 @@ import { type CourseMetadata } from '~/types/courseMetadata'
 import SupportedFileUploadTypes from './SupportedFileUploadTypes'
 import { useMediaQuery } from '@mantine/hooks'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
-import { notifications } from '@mantine/notifications'
 import { v4 as uuidv4 } from 'uuid'
 import { FileUpload } from './UploadNotification'
 
@@ -172,12 +171,7 @@ export function LargeDropzone({
       }
     })
     setUploadFiles((prev) => [...prev, ...initialFileUploads])
-    // setUploadFiles(prev => {
-    //   const newFiles = initialFileUploads.filter(
-    //     newFile => !prev.some(existingFile => existingFile.name === newFile.name)
-    //   )
-    //   return [...prev, ...newFiles]
-    // })
+
     if (is_new_course) {
       await callSetCourseMetadata(
         courseName,
@@ -190,6 +184,60 @@ export function LargeDropzone({
           course_intro_message: undefined,
         },
       )
+    }
+
+    // Process files in parallel
+    const allSuccessOrFail = await Promise.all(
+      files.map(async (file) => {
+        const extension = file.name.slice(file.name.lastIndexOf('.'))
+        const nameWithoutExtension = file.name
+          .slice(0, file.name.lastIndexOf('.'))
+          .replace(/[^a-zA-Z0-9]/g, '-')
+        const uniqueFileName = `${uuidv4()}-${nameWithoutExtension}${extension}`
+        const uniqueReadableFileName = `${nameWithoutExtension}${extension}`
+
+        try {
+          await uploadToS3(file, uniqueFileName)
+          setSuccessfulUploads((prev) => prev + 1)
+
+          const response = await fetch(`/api/UIUC-api/ingest`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              uniqueFileName: uniqueFileName,
+              courseName: courseName,
+              readableFilename: uniqueReadableFileName,
+            }),
+          })
+          const res = await response.json()
+          console.debug('Ingest submitted...', res)
+          return { ok: true, s3_path: file.name }
+        } catch (error) {
+          console.error('Error during file upload or ingest:', error)
+          return { ok: false, s3_path: file.name }
+        }
+      }),
+    )
+
+    setSuccessfulUploads(files.length)
+    setUploadComplete(true)
+
+    // Process results
+    const resultSummary = allSuccessOrFail.reduce(
+      (acc: { success_ingest: any[]; failure_ingest: any[] }, curr) => {
+        if (curr.ok) acc.success_ingest.push(curr)
+        else acc.failure_ingest.push(curr)
+        return acc
+      },
+      { success_ingest: [], failure_ingest: [] },
+    )
+
+    setUploadInProgress(false)
+
+    if (is_new_course) {
+      await refreshOrRedirect(redirect_to_gpt_4)
     }
   }
 
@@ -429,45 +477,3 @@ export function LargeDropzone({
 }
 
 export default LargeDropzone
-
-const showFailedIngestToast = (error_files: string[]) => {
-  // docs: https://mantine.dev/others/notifications/
-
-  error_files.forEach((file, index) => {
-    notifications.show({
-      id: `failed-ingest-toast-${index}`,
-      withCloseButton: true,
-      // onClose: () => console.log('unmounted'),
-      // onOpen: () => console.log('mounted'),
-      autoClose: 30000,
-      title: `Failed to ingest file ${file}`,
-      message: `Please shoot me an email: kvday2@illinois.edu.`,
-      color: 'red',
-      radius: 'lg',
-      icon: <IconAlertCircle />,
-      className: 'my-notification-class',
-      style: { backgroundColor: '#15162c' },
-      loading: false,
-    })
-  })
-}
-
-const showSuccessToast = (num_success_files: number) => {
-  // success_files.forEach((file, index) => {
-  notifications.show({
-    id: `success-ingest-toast-${num_success_files}`,
-    withCloseButton: true,
-    // onClose: () => console.log('unmounted'),
-    // onOpen: () => console.log('mounted'),
-    autoClose: 30000,
-    title: `Successfully ingested ${num_success_files} files.`,
-    message: `Refresh page to see changes.`,
-    color: 'green',
-    radius: 'lg',
-    icon: <IconCheck />,
-    className: 'my-notification-class',
-    style: { backgroundColor: '#15162c' },
-    loading: false,
-    // })
-  })
-}

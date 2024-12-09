@@ -15,6 +15,7 @@ import {
 } from '~/components/shadcn/accordion'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { superAdmins } from '~/pages/api/UIUC-api/upsertCourseMetadata'
+import { useQueryClient } from '@tanstack/react-query'
 
 function EmailInput({
   value,
@@ -116,35 +117,98 @@ function EmailListAccordion({
   ) => void
   is_for_admins: boolean
 }) {
-  const [emailAddresses, setEmailAddresses] = useState<string[]>(
-    metadata.approved_emails_list || [],
-  )
-  const [courseAdmins, setCourseAdmins] = useState<string[]>(
-    metadata.course_admins || [],
-  )
+  const queryClient = useQueryClient()
+  const emailAddresses = metadata.approved_emails_list || []
+  const courseAdmins = metadata.course_admins || []
   const [value, setValue] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
+  const [isUpdating, setIsUpdating] = useState(false)
 
-  useEffect(() => {
-    setCourseAdmins(metadata.course_admins || [])
-    setEmailAddresses(metadata.approved_emails_list || [])
-  }, [metadata.course_admins, metadata.approved_emails_list])
+  const handleDelete = async (email_address: string) => {
+    if (isUpdating) return
+    setIsUpdating(true)
 
-  const handleKeyDown = (evt: KeyboardEvent<HTMLInputElement>) => {
+    try {
+      let updatedMetadata: CourseMetadata
+
+      if (is_for_admins) {
+        const updatedCourseAdmins = courseAdmins.filter(
+          (admin) => admin !== email_address && !superAdmins.includes(admin),
+        )
+        const finalAdmins = [
+          ...new Set([...updatedCourseAdmins, ...superAdmins]),
+        ]
+
+        updatedMetadata = {
+          ...metadata,
+          course_admins: finalAdmins,
+        }
+      } else {
+        const updatedEmailAddresses = emailAddresses.filter(
+          (email) => email !== email_address,
+        )
+
+        updatedMetadata = {
+          ...metadata,
+          approved_emails_list: updatedEmailAddresses,
+        }
+      }
+
+      // Update cache immediately
+      queryClient.setQueryData(['courseMetadata', course_name], updatedMetadata)
+
+      // Update parent state
+      if (onEmailAddressesChange) {
+        onEmailAddressesChange(updatedMetadata, course_name)
+      }
+
+      // Make API call
+      await callSetCourseMetadata(course_name, updatedMetadata)
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleKeyDown = async (evt: KeyboardEvent<HTMLInputElement>) => {
     if (['Enter', 'Tab', ','].includes(evt.key)) {
       evt.preventDefault()
       const trimmedValue = value.trim()
 
       if (trimmedValue && isValid(trimmedValue)) {
+        let updatedMetadata: CourseMetadata
+
         if (is_for_admins) {
           const updatedCourseAdmins = [...courseAdmins, trimmedValue]
-          setCourseAdmins(updatedCourseAdmins)
-          updateCourseMetadata(updatedCourseAdmins, emailAddresses)
+          const finalAdmins = [
+            ...new Set([...updatedCourseAdmins, ...superAdmins]),
+          ]
+
+          updatedMetadata = {
+            ...metadata,
+            course_admins: finalAdmins,
+          }
         } else {
           const updatedEmailAddresses = [...emailAddresses, trimmedValue]
-          setEmailAddresses(updatedEmailAddresses)
-          updateCourseMetadata(courseAdmins, updatedEmailAddresses)
+
+          updatedMetadata = {
+            ...metadata,
+            approved_emails_list: updatedEmailAddresses,
+          }
         }
+
+        // Update cache immediately
+        queryClient.setQueryData(
+          ['courseMetadata', course_name],
+          updatedMetadata,
+        )
+
+        // Update parent state
+        if (onEmailAddressesChange) {
+          onEmailAddressesChange(updatedMetadata, course_name)
+        }
+
+        // Make API call
+        await callSetCourseMetadata(course_name, updatedMetadata)
         setValue('')
       }
     }
@@ -155,23 +219,7 @@ function EmailListAccordion({
     setError(null)
   }
 
-  const handleDelete = (email_address: string) => {
-    if (is_for_admins) {
-      const updatedCourseAdmins = courseAdmins.filter(
-        (admin) => admin !== email_address,
-      )
-      setCourseAdmins(updatedCourseAdmins)
-      updateCourseMetadata(updatedCourseAdmins, emailAddresses)
-    } else {
-      const updatedEmailAddresses = emailAddresses.filter(
-        (email) => email !== email_address,
-      )
-      setEmailAddresses(updatedEmailAddresses)
-      updateCourseMetadata(courseAdmins, updatedEmailAddresses)
-    }
-  }
-
-  const handlePaste = (evt: React.ClipboardEvent<HTMLInputElement>) => {
+  const handlePaste = async (evt: React.ClipboardEvent<HTMLInputElement>) => {
     evt.preventDefault()
     const paste = evt.clipboardData.getData('text')
     const emails = paste.match(/[\w\d\.-]+@[\w\d\.-]+\.[\w\d\.-]+/g)
@@ -180,12 +228,37 @@ function EmailListAccordion({
       const toBeAdded = emails.filter((email: string) => !isInList(email))
       if (is_for_admins) {
         const updatedCourseAdmins = [...courseAdmins, ...toBeAdded]
-        setCourseAdmins(updatedCourseAdmins)
-        updateCourseMetadata(updatedCourseAdmins, emailAddresses)
+        const finalAdmins = [
+          ...new Set([...updatedCourseAdmins, ...superAdmins]),
+        ]
+
+        const updatedMetadata = {
+          ...metadata,
+          course_admins: finalAdmins,
+        }
+
+        const response = await callSetCourseMetadata(
+          course_name,
+          updatedMetadata,
+        )
+        if (response && onEmailAddressesChange) {
+          onEmailAddressesChange(updatedMetadata, course_name)
+        }
       } else {
         const updatedEmailAddresses = [...emailAddresses, ...toBeAdded]
-        setEmailAddresses(updatedEmailAddresses)
-        updateCourseMetadata(courseAdmins, updatedEmailAddresses)
+
+        const updatedMetadata = {
+          ...metadata,
+          approved_emails_list: updatedEmailAddresses,
+        }
+
+        const response = await callSetCourseMetadata(
+          course_name,
+          updatedMetadata,
+        )
+        if (response && onEmailAddressesChange) {
+          onEmailAddressesChange(updatedMetadata, course_name)
+        }
       }
     }
   }
@@ -215,25 +288,6 @@ function EmailListAccordion({
 
   const isEmail = (email: string) => {
     return /[\w\d\.-]+@[\w\d\.-]+\.[\w\d\.-]+/.test(email)
-  }
-
-  const updateCourseMetadata = async (admins: string[], emails: string[]) => {
-    if (is_for_admins && !admins.some((admin) => superAdmins.includes(admin))) {
-      admins.push(...superAdmins)
-    }
-
-    const updatedMetadata: CourseMetadata = {
-      ...metadata,
-      course_admins: is_for_admins ? admins : courseAdmins,
-      approved_emails_list: is_for_admins ? emailAddresses : emails,
-      is_private,
-    }
-
-    await callSetCourseMetadata(course_name, updatedMetadata)
-
-    if (onEmailAddressesChange) {
-      onEmailAddressesChange(updatedMetadata, course_name)
-    }
   }
 
   if (is_for_admins) {
