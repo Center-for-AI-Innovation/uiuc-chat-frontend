@@ -31,7 +31,7 @@ import {
   Divider,
 } from '@mantine/core'
 import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
-import { DEFAULT_SYSTEM_PROMPT } from '~/utils/app/const'
+import { DEFAULT_SYSTEM_PROMPT, GUIDED_LEARNING_PROMPT } from '~/utils/app/const'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
@@ -71,18 +71,6 @@ You must strictly adhere to the following rules:
 
 Your responses must be based solely on the content of the provided documents.
 `
-
-const GUIDED_LEARNING_PROMPT =
-  '\n\nYou are an AI tutor dedicated to helping students discover the joy of learning by guiding them to find answers on their own. Your role is not just to teach but to spark curiosity and excitement in each subject. You never provide direct answers or detailed step-by-step solutions, no matter the problem. Instead, with limitless patience and enthusiasm, you ask insightful questions and offer hints that inspire critical thinking and problem-solving. Your goal is to help learners experience the thrill of discovery and build confidence in their ability to find solutions independently—like a great teaching assistant who makes learning fun and rewarding.\n\n' +
-  'Key approaches:\n\n' +
-  '1. **Ask Open-Ended Questions**: Lead students with questions that encourage exploration, making problem-solving feel like an exciting challenge.\n' +
-  '2. **Guide Without Giving Specific Steps**: Offer general insights and hints that keep students thinking creatively without giving direct solutions.\n' +
-  '3. **Explain Concepts Without Revealing Answers**: Provide engaging explanations of concepts that deepen understanding while leaving the solution for the student to uncover.\n\n' +
-  'Strict guidelines:\n\n' +
-  '- **Never Provide Solutions**: Avoid any form of direct or partial solutions. Always redirect learners to approach the problem with fresh questions and ideas.\n' +
-  '- **Resist Workarounds**: If a student seeks the answer, gently steer them back to thoughtful reflection, keeping the excitement alive in the process of discovery.\n' +
-  '- **Encourage Independent Thinking**: Use probing questions to spark analysis and creative thinking, helping students feel empowered by their own problem-solving skills.\n' +
-  '- **Support, Motivate, and Inspire**: Keep a warm, encouraging tone, showing genuine excitement about the learning journey. Celebrate their persistence and successes, no matter how small, to make learning enjoyable and fulfilling.'
 
 // Add this type to handle partial updates
 type PartialCourseMetadata = {
@@ -955,58 +943,91 @@ The final prompt you output should adhere to the following structure below. Do n
                           </Flex>
 
                           {/* Enhanced Switches */}
-                          <CustomSwitch
-                            label="Guided Learning"
-                            tooltip="Enables a tutoring mode where the AI encourages independent problem-solving. It provides hints and asks questions instead of giving direct answers, promoting critical thinking and discovery."
-                            checked={guidedLearning}
-                            onChange={(value: boolean) =>
-                              handleCheckboxChange({ guidedLearning: value })
-                            }
-                          />
-
-                          <CustomSwitch
-                            label="Document-Based References Only"
-                            tooltip="Restricts the AI to use only information from the provided documents. Useful for maintaining accuracy in fields like legal research where external knowledge could be problematic."
-                            checked={documentsOnly}
-                            onChange={(value: boolean) =>
-                              handleCheckboxChange({ documentsOnly: value })
-                            }
-                          />
-
-                          <CustomSwitch
-                            label="Bypass UIUC.chat's internal prompting"
-                            tooltip="Internally, we prompt the model to (1) add citations and (2) always be as helpful as possible. You can bypass this for full un-modified control over your bot."
-                            checked={systemPromptOnly}
-                            onChange={(value: boolean) =>
-                              handleCheckboxChange({ systemPromptOnly: value })
-                            }
-                          />
-
-                          {/* Conditional Button */}
-                          {systemPromptOnly && (
-                            <Flex
-                              mt="sm"
-                              direction="column"
-                              gap="xs"
-                              className="mt-[-4px] pl-[82px]"
-                            >
-                              <CustomCopyButton
-                                label="Copy UIUC.chat's internal prompt"
-                                tooltip="You can use and customize our default internal prompting to suit your needs. Note, only the specific citation formatting described will work with our citation 'find and replace' system. This provides a solid starting point for defining AI behavior in raw prompt mode."
-                                onClick={handleCopyDefaultPrompt}
+                          <Flex direction="column" gap="md">
+                            <div className="flex flex-col gap-1">
+                              <CustomSwitch
+                                label="Guided Learning"
+                                tooltip="Enables a tutoring mode where the AI encourages independent problem-solving. It provides hints and asks questions instead of giving direct answers, promoting critical thinking and discovery."
+                                checked={guidedLearning}
+                                onChange={(value: boolean) =>
+                                  handleCheckboxChange({ guidedLearning: value })
+                                }
                               />
-                            </Flex>
-                          )}
 
-                          {/* Reset Button */}
-                          <Flex mt="md" justify="flex-start">
-                            <Button
-                              className="relative bg-red-500 text-white hover:border-red-600 hover:bg-red-600"
-                              onClick={resetSystemPrompt}
-                              style={{ minWidth: 'fit-content' }}
-                            >
-                              Reset
-                            </Button>
+                              {/* Add Guided Learning URL Copy Button - only show when guided learning is off */}
+                              {!guidedLearning && (
+                                <div className="ml-[82px] mt-2">
+                                  <CustomCopyButton
+                                    label="Copy Guided Learning URL"
+                                    tooltip="Copy a URL that enables Guided Learning mode for students, even if it's not enabled course-wide."
+                                    onClick={() => {
+                                      const currentUrl = window.location.origin;
+                                      const chatUrl = `${currentUrl}/${course_name}/chat?guided_learning=true`;
+                                      navigator.clipboard.writeText(chatUrl).then(() => {
+                                        showToastNotification(
+                                          theme,
+                                          'Copied',
+                                          'Guided Learning URL copied to clipboard',
+                                        );
+                                      }).catch((err) => {
+                                        console.error('Could not copy URL: ', err);
+                                        showToastNotification(
+                                          theme,
+                                          'Error Copying',
+                                          'Could not copy URL to clipboard',
+                                          true,
+                                        );
+                                      });
+                                    }}
+                                  />
+                                </div>
+                              )}
+                            </div>
+
+                            <CustomSwitch
+                              label="Document-Based References Only"
+                              tooltip="Restricts the AI to use only information from the provided documents. Useful for maintaining accuracy in fields like legal research where external knowledge could be problematic."
+                              checked={documentsOnly}
+                              onChange={(value: boolean) =>
+                                handleCheckboxChange({ documentsOnly: value })
+                              }
+                            />
+
+                            <CustomSwitch
+                              label="Bypass UIUC.chat's internal prompting"
+                              tooltip="Internally, we prompt the model to (1) add citations and (2) always be as helpful as possible. You can bypass this for full un-modified control over your bot."
+                              checked={systemPromptOnly}
+                              onChange={(value: boolean) =>
+                                handleCheckboxChange({ systemPromptOnly: value })
+                              }
+                            />
+
+                            {/* Conditional Button */}
+                            {systemPromptOnly && (
+                              <Flex
+                                mt="sm"
+                                direction="column"
+                                gap="xs"
+                                className="mt-[-4px] pl-[82px]"
+                              >
+                                <CustomCopyButton
+                                  label="Copy UIUC.chat's internal prompt"
+                                  tooltip="You can use and customize our default internal prompting to suit your needs. Note, only the specific citation formatting described will work with our citation 'find and replace' system. This provides a solid starting point for defining AI behavior in raw prompt mode."
+                                  onClick={handleCopyDefaultPrompt}
+                                />
+                              </Flex>
+                            )}
+
+                            {/* Reset Button */}
+                            <Flex mt="md" justify="flex-start">
+                              <Button
+                                className="relative bg-red-500 text-white hover:border-red-600 hover:bg-red-600"
+                                onClick={resetSystemPrompt}
+                                style={{ minWidth: 'fit-content' }}
+                              >
+                                Reset
+                              </Button>
+                            </Flex>
                           </Flex>
                         </Flex>
                       </div>
