@@ -947,7 +947,7 @@ The final prompt you output should adhere to the following structure below. Do n
                             <div className="flex flex-col gap-1">
                               <CustomSwitch
                                 label="Guided Learning"
-                                tooltip="Enables a tutoring mode where the AI encourages independent problem-solving. It provides hints and asks questions instead of giving direct answers, promoting critical thinking and discovery."
+                                tooltip="When enabled course-wide, this setting applies to all students and cannot be disabled by them. The AI will encourage independent problem-solving by providing hints and questions instead of direct answers, while still finding and citing relevant course materials. This promotes critical thinking while ensuring students have access to proper resources."
                                 checked={guidedLearning}
                                 onChange={(value: boolean) =>
                                   handleCheckboxChange({ guidedLearning: value })
@@ -958,8 +958,8 @@ The final prompt you output should adhere to the following structure below. Do n
                               {!guidedLearning && (
                                 <div className="ml-[82px] mt-2">
                                   <CustomCopyButton
-                                    label="Copy Guided Learning URL"
-                                    tooltip="Copy a URL that enables Guided Learning mode for students, even if it's not enabled course-wide."
+                                    label="Share Guided Learning Link"
+                                    tooltip="Share this URL with students who would benefit from a guided learning experience. When students use this link, the AI will encourage problem-solving through questions and hints while providing relevant course materials and citations. Students can return to standard mode by using the regular course URL."
                                     onClick={() => {
                                       const currentUrl = window.location.origin;
                                       const chatUrl = `${currentUrl}/${course_name}/chat?guided_learning=true`;
