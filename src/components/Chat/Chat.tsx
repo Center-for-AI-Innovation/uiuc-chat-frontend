@@ -1369,7 +1369,13 @@ export const Chat = memo(
                 <div
                   key={index}
                   className="w-full rounded-lg border-b-2 border-[rgba(42,42,64,0.4)] hover:cursor-pointer hover:bg-[rgba(42,42,64,0.9)]"
-                  onClick={() => setInputContent(statement)}
+                  onClick={() => {
+                    setInputContent('')  // First clear the input
+                    setTimeout(() => {   // Then set it with a small delay
+                      setInputContent(statement)
+                      textareaRef.current?.focus()
+                    }, 0)
+                  }}
                 >
                   <Button
                     variant="link"
