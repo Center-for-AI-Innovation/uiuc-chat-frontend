@@ -178,7 +178,7 @@ export default function CanvasIngestForm({
               Ingest Canvas Course
             </DialogTitle>
           </DialogHeader>
-          <ScrollArea className="mt-2 h-[60vh] pr-4">
+          <div className="mt-4 max-h-[60vh] overflow-y-auto pr-4">
             <div className="space-y-2">
               <div>
                 {/* <Label htmlFor="canvas-url" className="text-white">
@@ -298,7 +298,7 @@ export default function CanvasIngestForm({
                 Ingest Canvas Course
               </Button>
             </div>
-          </ScrollArea>
+          </div>
         </DialogContent>
       </Dialog>
     </motion.div>

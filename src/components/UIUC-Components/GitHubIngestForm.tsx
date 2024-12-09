@@ -419,127 +419,124 @@ export default function GitHubIngestForm({
           </Card>
         </DialogTrigger>
 
-        <DialogContent className="max-w-2xl rounded-lg border-0 bg-[#1c1c2e] pt-10 px-10 text-white" style={{ padding: '50px', height: '43vh', paddingBottom: '20px' }} >
+        <DialogContent
+          className="max-w-2xl rounded-lg border-0 bg-[#1c1c2e] pt-10 px-10 text-white"
+          style={{
+            padding: '50px',
+            paddingBottom: '40px'  // Changed from '20px' to '40px' to match MIT form
+          }}
+        >
           <DialogTitle className="text-xl font-bold">
-            Ingest Website
+            Ingest GitHub Website
           </DialogTitle>
-          <ScrollArea className="mt-4 h-[60vh] pr-4">
-            <div className="space-y-4">
-              <div>
-                {/* <Label htmlFor="canvas-url" className="text-white">
+          <div className="space-y-4">
+            <div>
+              {/* <Label htmlFor="canvas-url" className="text-white">
                   URL
                 </Label> */}
-                <strong>For GitHub</strong>, just enter a URL like{' '}
-                <code className={classes.codeStyledText}>
-                  github.com/USER/REPO
-                </code>
-                , for example:{' '}
-                <span className={'text-purple-600'}>
-                  <Link
-                    target="_blank"
-                    rel="noreferrer"
-                    href={'https://github.com/langchain-ai/langchain'}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    https://github.com/langchain-ai/langchain
-                  </Link>
-                </span>
-                . We&apos;ll ingest all files in the main branch. Ensure the
-                repository is public.
-                <div style={{ paddingBottom: '12px' }}></div>
-                <Input
-                  icon={<img
-                    src="/media/github-mark-white.png"
-                    alt="GitHub Logo"
-                    style={{ height: '50%', width: '50%' }}
-                  />}
-                  // I can't figure out how to change the background colors.
-                  className={`mt-4 w-[100%] min-w-[25rem] disabled:bg-purple-200 lg:w-[100%]`}
-                  // wrapperProps={{ borderRadius: 'xl' }}
-                  // styles={{ input: { backgroundColor: '#1A1B1E' } }}
-                  styles={{
-                    input: {
-                      backgroundColor: '#1A1B1E',
-                      // paddingRight: '6rem', // Adjust right padding to prevent text from hiding behind the button
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      '&:focus': {
-                        borderColor: '#9370DB', // Change border color to a lighter purple only on focus
-                      },
+              <strong>For GitHub</strong>, just enter a URL like{' '}
+              <code className={classes.codeStyledText}>
+                github.com/USER/REPO
+              </code>
+              , for example:{' '}
+              <span className={'text-purple-600'}>
+                <Link
+                  target="_blank"
+                  rel="noreferrer"
+                  href={'https://github.com/langchain-ai/langchain'}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  https://github.com/langchain-ai/langchain
+                </Link>
+              </span>
+              . We&apos;ll ingest all files in the main branch. Ensure the
+              repository is public.
+              <div style={{ paddingBottom: '12px' }}></div>
+              <Input
+                icon={<img
+                  src="/media/github-mark-white.png"
+                  alt="GitHub Logo"
+                  style={{ height: '50%', width: '50%' }}
+                />}
+                // I can't figure out how to change the background colors.
+                className={`mt-4 w-[100%] min-w-[25rem] disabled:bg-purple-200 lg:w-[100%]`}
+                // wrapperProps={{ borderRadius: 'xl' }}
+                // styles={{ input: { backgroundColor: '#1A1B1E' } }}
+                styles={{
+                  input: {
+                    backgroundColor: '#1A1B1E',
+                    // paddingRight: '6rem', // Adjust right padding to prevent text from hiding behind the button
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    '&:focus': {
+                      borderColor: '#9370DB', // Change border color to a lighter purple only on focus
                     },
-                  }}
-                  placeholder="Enter URL..."
-                  radius={'xl'}
-                  type="url" // Set the type to 'url' to avoid thinking it's a username or pw.
-                  value={url}
-                  size={'lg'}
-                  // disabled={isDisabled}
-                  onChange={(e) => {
-                    handleUrlChange(e)                    // setShowContentOptions(
-                    //   e.target.value.includes('canvas.illinois.edu'),
-                    // )
-                    if (e.target.value.includes('github.com')) {
-                      setIcon(
-                        <img
-                          src="/media/github-mark-white.png"
-                          alt="GitHub Logo"
-                          style={{ height: '50%', width: '50%' }}
-                        />,
-                      )
-                    }
-                    else {
-                      setIcon(<IconWorldDownload />)
-                    }
-                  }}
-                // onKeyPress={(event) => {
-                //   if (event.key === 'Enter') {
-                //     handleSubmit()
-                //   }
-                // }}
-                // rightSection={
-                // <Button
-                //   onClick={(e) => {
-                //     e.preventDefault()
-                //     if (validateInputs() && validateUrl(url)) {
-                //       handleSubmit()
-                //     }
-                //   }}
-                //   size="md"
-                //   radius={'xl'}
-                //   className={`rounded-s-md ${
-                //     isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
-                //   } overflow-ellipsis text-ellipsis p-2 ${
-                //     isUrlUpdated ? 'text-white' : 'text-gray-500'
-                //   } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
-                //   w={`${isSmallScreen ? 'auto' : 'auto'}`}
-                //   disabled={isDisabled}
-                // >
-                //   Ingest
-                // </Button>
-                // }
-                // rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
-                />
-              </div>
-              {/* <form
-                className="s:w-[30%] min-w-[20rem] w-[90%]"
-                onSubmit={(event) => {
-                  event.preventDefault()
+                  },
                 }}
-              >
-                 */}
-              <Button
-                onClick={handleIngest}
-                disabled={!isUrlValid}
-                className="w-full bg-purple-600 text-white hover:bg-purple-700"
-              >
-                Ingest the Website
-              </Button>
+                placeholder="Enter URL..."
+                radius={'xl'}
+                type="url" // Set the type to 'url' to avoid thinking it's a username or pw.
+                value={url}
+                size={'lg'}
+                // disabled={isDisabled}
+                onChange={(e) => {
+                  handleUrlChange(e)                    // setShowContentOptions(
+                  //   e.target.value.includes('canvas.illinois.edu'),
+                  // )
+                  if (e.target.value.includes('github.com')) {
+                    setIcon(
+                      <img
+                        src="/media/github-mark-white.png"
+                        alt="GitHub Logo"
+                        style={{ height: '50%', width: '50%' }}
+                      />,
+                    )
+                  }
+                  else {
+                    setIcon(<IconWorldDownload />)
+                  }
+                }}
+              // onKeyPress={(event) => {
+              //   if (event.key === 'Enter') {
+              //     handleSubmit()
+              //   }
+              // }}
+              // rightSection={
+              // <Button
+              //   onClick={(e) => {
+              //     e.preventDefault()
+              //     if (validateInputs() && validateUrl(url)) {
+              //       handleSubmit()
+              //     }
+              //   }}
+              //   size="md"
+              //   radius={'xl'}
+              //   className={`rounded-s-md ${
+              //     isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
+              //   } overflow-ellipsis text-ellipsis p-2 ${
+              //     isUrlUpdated ? 'text-white' : 'text-gray-500'
+              //   } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
+              //   w={`${isSmallScreen ? 'auto' : 'auto'}`}
+              //   disabled={isDisabled}
+              // >
+              //   Ingest
+              // </Button>
+              // }
+              // rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
+              />
             </div>
-          </ScrollArea>
+            <Button
+              onClick={handleIngest}
+              disabled={!isUrlValid}
+              className="w-full bg-purple-600 text-white hover:bg-purple-700"
+            >
+              Ingest the Website
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
-    </motion.div>
+    </motion.div >
   )
 }
 

@@ -326,13 +326,16 @@ export default function WebsiteIngestForm({
         </DialogTrigger>
 
         <DialogContent
-          className="max-w-2xl rounded-lg border-0 bg-[#1c1c2e] px-10 pt-10 text-white"
-          style={{ padding: '50px', paddingBottom: '40px' }}
+          className="max-w-2xl rounded-lg border-0 bg-[#1c1c2e] text-white"
+          style={{
+            padding: '50px',
+            paddingBottom: '40px'
+          }}
         >
           <DialogTitle className="text-xl font-bold">
             Ingest Website
           </DialogTitle>
-          <ScrollArea className="mt-4 h-[60vh] pr-4">
+          <div className="mt-4 max-h-[60vh] overflow-y-auto pr-4">
             <div className="space-y-4">
               <div>
                 <Input
@@ -360,35 +363,35 @@ export default function WebsiteIngestForm({
                   onChange={(e) => {
                     handleUrlChange(e)
                   }}
-                  // disabled={isDisabled}
+                // disabled={isDisabled}
 
-                  // onKeyPress={(event) => {
-                  //   if (event.key === 'Enter') {
-                  //     handleSubmit()
-                  //   }
-                  // }}
-                  // rightSection={
-                  // <Button
-                  //   onClick={(e) => {
-                  //     e.preventDefault()
-                  //     if (validateInputs() && validateUrl(url)) {
-                  //       handleSubmit()
-                  //     }
-                  //   }}
-                  //   size="md"
-                  //   radius={'xl'}
-                  //   className={`rounded-s-md ${
-                  //     isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
-                  //   } overflow-ellipsis text-ellipsis p-2 ${
-                  //     isUrlUpdated ? 'text-white' : 'text-gray-500'
-                  //   } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
-                  //   w={`${isSmallScreen ? 'auto' : 'auto'}`}
-                  //   disabled={isDisabled}
-                  // >
-                  //   Ingest
-                  // </Button>
-                  // }
-                  // rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
+                // onKeyPress={(event) => {
+                //   if (event.key === 'Enter') {
+                //     handleSubmit()
+                //   }
+                // }}
+                // rightSection={
+                // <Button
+                //   onClick={(e) => {
+                //     e.preventDefault()
+                //     if (validateInputs() && validateUrl(url)) {
+                //       handleSubmit()
+                //     }
+                //   }}
+                //   size="md"
+                //   radius={'xl'}
+                //   className={`rounded-s-md ${
+                //     isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
+                //   } overflow-ellipsis text-ellipsis p-2 ${
+                //     isUrlUpdated ? 'text-white' : 'text-gray-500'
+                //   } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
+                //   w={`${isSmallScreen ? 'auto' : 'auto'}`}
+                //   disabled={isDisabled}
+                // >
+                //   Ingest
+                // </Button>
+                // }
+                // rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
                 />
               </div>
               <form
@@ -558,7 +561,8 @@ export default function WebsiteIngestForm({
                 Ingest the Website
               </Button>
             </div>
-          </ScrollArea>
+          </div>
+          {/* </ScrollArea> */}
         </DialogContent>
       </Dialog>
     </motion.div>
