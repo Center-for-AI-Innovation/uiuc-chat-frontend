@@ -69,7 +69,7 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
           <ClerkLoaded>
             <GoogleOneTap />
             <QueryClientProvider client={queryClient}>
-              <ReactQueryDevtools initialIsOpen={false} />
+              <ReactQueryDevtools initialIsOpen={false} position="left" />
               <MantineProvider
                 withGlobalStyles
                 withNormalizeCSS

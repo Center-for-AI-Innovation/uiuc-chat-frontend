@@ -107,7 +107,7 @@ export default function ShareSettingsModal({
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.2 }}
-        className="relative mx-4 max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-[#15162c] shadow-2xl ring-1 ring-white/10"
+        className="relative mx-4 max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-[#15162c] shadow-2xl ring-1 ring-white/10 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-violet-500/40 [&::-webkit-scrollbar-track]:bg-[#1e1f3a] [&::-webkit-scrollbar]:w-2"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Add subtle gradient border */}

@@ -293,7 +293,12 @@ function EmailListAccordion({
   if (is_for_admins) {
     return (
       <div className="w-full rounded-lg bg-[#1e1f3d]/30">
-        <Accordion type="single" collapsible className="w-full">
+        <Accordion
+          type="single"
+          collapsible
+          className="w-full"
+          defaultValue={!is_private ? 'admins' : undefined}
+        >
           <AccordionItem value="admins" className="border-none">
             <AccordionTrigger className="px-4 py-3 hover:no-underline">
               <div className="flex items-center gap-3">
@@ -351,7 +356,12 @@ function EmailListAccordion({
 
   return (
     <div className="w-full rounded-lg bg-[#1e1f3d]/30">
-      <Accordion type="single" collapsible className="w-full">
+      <Accordion
+        type="single"
+        collapsible
+        className="w-full"
+        defaultValue={is_private ? 'members' : undefined}
+      >
         <AccordionItem value="members" className="border-none">
           <AccordionTrigger className="px-4 py-3 hover:no-underline">
             <div className="flex items-center gap-3">
