@@ -45,7 +45,13 @@ function UploadNotificationContent({
 
   useEffect(() => {
     if (files && Array.isArray(files)) {
-      setCurrentFiles(files)
+      setCurrentFiles((prevFiles) => {
+        const updatedFiles = files.map((newFile) => {
+          const existingFile = prevFiles.find((f) => f.name === newFile.name)
+          return existingFile || newFile
+        })
+        return updatedFiles
+      })
     }
   }, [files])
 
