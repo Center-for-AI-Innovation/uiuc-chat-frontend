@@ -320,30 +320,23 @@ export default async function handler(
         user_email?: string
         course_name?: string
       }
-      console.log(
-        'id: ',
-        id,
-        'userEmail: ',
-        userEmail,
-        'course_name: ',
-        course_name,
-      )
+      
       try {
         if (id) {
-          // Delete conversation
+          // Delete single conversation
           const { data, error } = await supabase
             .from('conversations')
             .delete()
             .eq('id', id)
           if (error) throw error
         } else if (userEmail && course_name) {
-          // Delete all conversations
-          console.log('deleting all conversations')
+          // Delete all conversations that are not in folders
           const { data, error } = await supabase
             .from('conversations')
             .delete()
             .eq('user_email', userEmail)
             .eq('project_name', course_name)
+            .is('folder_id', null)  // Only delete conversations that are not in folders
           if (error) throw error
         } else {
           res.status(400).json({ error: 'Invalid request parameters' })
