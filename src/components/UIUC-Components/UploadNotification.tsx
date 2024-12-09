@@ -48,7 +48,18 @@ function UploadNotificationContent({
       setCurrentFiles((prevFiles) => {
         const updatedFiles = files.map((newFile) => {
           const existingFile = prevFiles.find((f) => f.name === newFile.name)
-          return existingFile || newFile
+          if (existingFile) {
+            if (existingFile.status !== newFile.status) {
+              return {
+                ...existingFile,
+                status: newFile.status,
+                url: newFile.url,
+                error: newFile.error,
+              }
+            }
+            return existingFile
+          }
+          return newFile
         })
         return updatedFiles
       })

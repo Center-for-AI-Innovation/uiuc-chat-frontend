@@ -251,70 +251,30 @@ export function LargeDropzone({
       const data = await response.json()
       console.log('Received ingest status data:', data)
 
-      if (!data) {
-        console.log('No data received from API')
-        return
-      }
-
-      if (!data.documents) {
-        console.log('No documents found in API response')
-        setUploadFiles((prev) =>
-          prev.map((file) => ({ ...file, status: 'complete' as const })),
-        )
-        return
-      }
-
       setUploadFiles((prev) => {
-        console.log('Current upload files:', prev)
-        const updated = prev.map((file) => {
-          console.log(
-            'Processing file:',
-            file.name,
-            'Current status:',
-            file.status,
-          )
-
-          // If file is in ingesting state, check if it's still in progress
-          if (file.status === 'ingesting') {
-            const isStillIngesting = data.documents.some(
+        return prev.map((file) => {
+          // If file is uploading, check if it's started ingesting
+          if (file.status === 'uploading') {
+            const isIngesting = data?.documents?.some(
               (doc: { readable_filename: string }) =>
                 doc.readable_filename === file.name,
             )
-            console.log(`File ${file.name} still ingesting:`, isStillIngesting)
-
-            // If not in progress anymore, mark as complete
-            if (!isStillIngesting) {
-              console.log(`File ${file.name} completed ingestion`)
-              return { ...file, status: 'complete' as const }
-            } else {
-              console.log(`File ${file.name} continues ingesting`)
-              return file
-            }
-          } else if (file.status === 'uploading') {
-            const isIngesting = data.documents.some(
-              (doc: { readable_filename: string }) =>
-                doc.readable_filename === file.name,
-            )
-            console.log(`File ${file.name} started ingesting:`, isIngesting)
-
             if (isIngesting) {
-              console.log(
-                `File ${file.name} transitioning from uploading to ingesting`,
-              )
               return { ...file, status: 'ingesting' as const }
-            } else {
-              console.log(`File ${file.name} still uploading`)
-              return file
             }
-          } else {
-            console.log(
-              `File ${file.name} in status ${file.status}, no change needed`,
-            )
-            return file
           }
+          // If file is ingesting, check if it's completed
+          else if (file.status === 'ingesting') {
+            const isStillIngesting = data?.documents?.some(
+              (doc: { readable_filename: string }) =>
+                doc.readable_filename === file.name,
+            )
+            if (!isStillIngesting) {
+              return { ...file, status: 'complete' as const }
+            }
+          }
+          return file
         })
-        console.log('Updated upload files:', updated)
-        return updated
       })
     }
 
