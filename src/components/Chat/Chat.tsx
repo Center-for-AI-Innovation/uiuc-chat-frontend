@@ -548,7 +548,7 @@ export const Chat = memo(
           // console.log('vector_search_rewrite_disabled setting:', courseMetadata?.vector_search_rewrite_disabled)
 
           // Skip query rewrite if disabled in course metadata or if it's the first message
-          if (courseMetadata?.vector_search_rewrite_disabled || (selectedConversation?.messages?.length ?? 0) === 0) {
+          if (courseMetadata?.vector_search_rewrite_disabled || updatedConversation.messages.length <= 1) {
             console.log('Query rewrite disabled for this course or it is the first message, using original query')
             rewrittenQuery = searchQuery
             homeDispatch({ field: 'wasQueryRewritten', value: false })
