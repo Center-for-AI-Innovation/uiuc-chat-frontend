@@ -730,8 +730,10 @@ export const ChatMessage: FC<Props> = memo(
                         <>{message.content}</>
                       )}
                       <div className="flex w-full flex-col items-start space-y-2">
-                        {/* Query rewrite loading state */}
-                        {isQueryRewriting && (
+                        {/* Query rewrite loading state - only show for current message */}
+                        {isQueryRewriting && 
+                          (messageIndex === (selectedConversation?.messages.length ?? 0) - 1 ||
+                           messageIndex === (selectedConversation?.messages.length ?? 0) - 2) && (
                           <IntermediateStateAccordion
                             accordionKey="query-rewrite"
                             title="Optimizing search query"
@@ -741,26 +743,26 @@ export const ChatMessage: FC<Props> = memo(
                           />
                         )}
 
-                        {/* Query rewrite result - using message properties */}
+                        {/* Query rewrite result - show for any message that was optimized */}
                         {!isQueryRewriting &&
                           message.wasQueryRewritten !== undefined &&
                           message.wasQueryRewritten !== null && (
-                            <IntermediateStateAccordion
-                              accordionKey="query-rewrite-result"
-                              title={
-                                message.wasQueryRewritten
-                                  ? 'Optimized search query'
-                                  : 'No query optimization necessary'
-                              }
-                              isLoading={false}
-                              error={false}
-                              content={
-                                message.wasQueryRewritten
-                                  ? message.queryRewriteText
-                                  : "The LLM determined no optimization was necessary. We only optimize when it's necessary to turn a single message into a stand-alone search to retrieve the best documents."
-                              }
-                            />
-                          )}
+                          <IntermediateStateAccordion
+                            accordionKey="query-rewrite-result"
+                            title={
+                              message.wasQueryRewritten
+                                ? 'Optimized search query'
+                                : 'No query optimization necessary'
+                            }
+                            isLoading={false}
+                            error={false}
+                            content={
+                              message.wasQueryRewritten
+                                ? message.queryRewriteText
+                                : "The LLM determined no optimization was necessary. We only optimize when it's necessary to turn a single message into a stand-alone search to retrieve the best documents."
+                            }
+                          />
+                        )}
 
                         {/* Retrieval results for all messages */}
                         {message.contexts && message.contexts.length > 0 && (
