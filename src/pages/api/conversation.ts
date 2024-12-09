@@ -208,10 +208,19 @@ export default async function handler(
 
         if (error) throw error
 
-        // Convert and save messages
+        // First delete all existing messages for this conversation
+        await supabase
+          .from('messages')
+          .delete()
+          .eq('conversation_id', conversation.id)
+
+        // Then insert all messages in their current state
         for (const message of conversation.messages) {
           const dbMessage = convertChatToDBMessage(message, conversation.id)
-          await supabase.from('messages').upsert(dbMessage)
+          const { error: messageError } = await supabase
+            .from('messages')
+            .insert(dbMessage)
+          if (messageError) throw messageError
         }
 
         res.status(200).json({ message: 'Conversation saved successfully' })

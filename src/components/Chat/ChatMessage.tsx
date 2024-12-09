@@ -40,6 +40,7 @@ import utc from 'dayjs/plugin/utc'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { IntermediateStateAccordion } from '../UIUC-Components/IntermediateStateAccordion'
 import { FeedbackModal } from './FeedbackModal'
+import { saveConversationToServer } from '@/utils/app/conversation'
 
 const useStyles = createStyles((theme) => ({
   imageContainerStyle: {
@@ -292,7 +293,19 @@ export const ChatMessage: FC<Props> = memo(
     const handleEditMessage = () => {
       if (message.content != messageContent) {
         if (selectedConversation && onEdit) {
-          onEdit({ ...message, content: messageContent })
+          const editedMessage = { ...message, content: messageContent }
+          onEdit(editedMessage)
+          
+          // Save to server
+          const updatedConversation = {
+            ...selectedConversation,
+            messages: selectedConversation.messages.map(msg => 
+              msg.id === message.id ? editedMessage : msg
+            )
+          }
+          saveConversationToServer(updatedConversation).catch((error: Error) => {
+            console.error('Error saving edited message to server:', error)
+          })
         }
       }
       setIsEditing(false)
