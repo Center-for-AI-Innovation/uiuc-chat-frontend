@@ -203,7 +203,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   useEffect(() => {
     const fetchConversationStats = async () => {
       try {
-        const response = await getConversationStats('ece120')
+        const response = await getConversationStats(course_name)
         if (response.status === 200) {
           setConversationStats(response.data)
           setHasConversationData(Object.keys(response.data.per_day).length > 0)
@@ -225,7 +225,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
       setCourseStatsLoading(true)
       setCourseStatsError(null)
       try {
-        const response = await getProjectStats('ece120')
+        const response = await getProjectStats(course_name)
 
         if (response.status === 200) {
           const mappedData = {
@@ -259,7 +259,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
       setTrendsLoading(true)
       setTrendsError(null)
       try {
-        const response = await getWeeklyTrends('ece120')
+        const response = await getWeeklyTrends(course_name)
         if (response.status === 200) {
           setWeeklyTrends(response.data)
         } else {
@@ -280,7 +280,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
       setModelUsageLoading(true)
       setModelUsageError(null)
       try {
-        const response = await getModelUsageCounts('ece120')
+        const response = await getModelUsageCounts(course_name)
         if (response.status === 200) {
           setModelUsageData(response.data)
         } else {
