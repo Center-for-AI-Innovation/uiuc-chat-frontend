@@ -87,6 +87,12 @@ export const GetCurrentPageName = () => {
   return useRouter().asPath.slice(1).split('/')[0] as string
 }
 
+interface ModelUsage {
+  model_name: string
+  count: number
+  percentage: number
+}
+
 interface ConversationStats {
   per_day: { [date: string]: number }
   per_hour: { [hour: string]: number }
