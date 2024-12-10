@@ -256,20 +256,6 @@ export default function CanvasIngestForm({
                     <Checkbox
                       id={option.toLowerCase()}
                       color="violet"
-                      // styles={(theme) => ({
-                      //   inner: {
-                      //     // backgroundColor: 'purple !important',
-                      //     borderColor: 'hsl(280,100%,80%) !important',
-                      //   },
-                      //   input: {
-                      //     backgroundColor: 'transparent !important',
-                      //     borderColor: 'hsl(280,100%,80%) !important',
-                      //   },
-                      //   icon: {
-                      //     backgroundColor: 'purple !important',
-                      //     borderColor: 'hsl(280,100%,80%) !important',
-                      //   }
-                      // })}
                       checked={selectedOptions.includes(option.toLowerCase())}
                       onChange={() => handleOptionChange(option.toLowerCase())}
                       // onCheckedChange={() => handleOptionChange(option.toLowerCase())}

@@ -167,8 +167,6 @@ export default function GitHubIngestForm({
   const [icon, setIcon] = useState(<IconWorldDownload size={'50%'} />)
   const [scrapeStrategy, setScrapeStrategy] =
     useState<string>('equal-and-below')
-  const logoRef = useRef(null) // Create a ref for the logo
-  const [isEnabled, setIsEnabled] = useState(false)
   const [open, setOpen] = useState(false)
   const { classes, theme } = useStyles()
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -245,33 +243,6 @@ export default function GitHubIngestForm({
     await new Promise((resolve) => setTimeout(resolve, 8000))
   }
 
-  const validateInputs = () => {
-    const errors = {
-      maxUrls: { error: false, message: '' },
-      maxDepth: { error: false, message: '' },
-    }
-    // Check for maxUrls
-    if (!maxUrls) {
-      errors.maxUrls = {
-        error: true,
-        message: 'Please provide an input for Max URLs',
-      }
-    } else if (!/^\d+$/.test(maxUrls)) {
-      // Using regex to ensure the entire string is a number
-      errors.maxUrls = {
-        error: true,
-        message: 'Max URLs should be a valid number',
-      }
-    } else if (parseInt(maxUrls) < 1 || parseInt(maxUrls) > 500) {
-      errors.maxUrls = {
-        error: true,
-        message: 'Max URLs should be between 1 and 500',
-      }
-    }
-
-    setInputErrors(errors)
-    return !Object.values(errors).some((error) => error.error)
-  }
   const formatUrl = (url: string) => {
     if (!/^https?:\/\//i.test(url)) {
       url = 'http://' + url
@@ -481,9 +452,7 @@ export default function GitHubIngestForm({
                 size={'lg'}
                 // disabled={isDisabled}
                 onChange={(e) => {
-                  handleUrlChange(e)                    // setShowContentOptions(
-                  //   e.target.value.includes('canvas.illinois.edu'),
-                  // )
+                  handleUrlChange(e)
                   setIcon(
                     <img
                       src="/media/github-mark-white.png"

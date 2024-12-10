@@ -56,21 +56,45 @@ export default function WebsiteIngestForm({
     const value = e.target.value
     if (variable === 'maxUrls') {
       setMaxUrls(value)
-    } else if (variable === 'maxDepth') {
-      // TODO: implement depth again.
-      // setMaxDepth(value)
+
+      if (value && /^\d+$/.test(value)) {
+        const numValue = parseInt(value)
+        if (numValue >= 1 && numValue <= 500) {
+          setInputErrors(prev => ({
+            ...prev,
+            maxUrls: { error: false, message: '' }
+          }))
+          return
+        }
+      }
+
+      let errorMessage = ''
+      if (!value) {
+        errorMessage = 'Please provide an input for Max URLs'
+      } else if (!/^\d+$/.test(value)) {
+        errorMessage = 'Max URLs should be a valid number'
+      } else {
+        const numValue = parseInt(value)
+        if (numValue < 1 || numValue > 500) {
+          errorMessage = 'Max URLs should be between 1 and 500'
+        }
+      }
+
+      setInputErrors(prev => ({
+        ...prev,
+        maxUrls: {
+          error: !!errorMessage,
+          message: errorMessage
+        }
+      }))
     }
   }
   const [icon, setIcon] = useState(<IconWorldDownload size={'50%'} />)
   const [scrapeStrategy, setScrapeStrategy] =
     useState<string>('equal-and-below')
-  const logoRef = useRef(null) // Create a ref for the logo
-  const [isEnabled, setIsEnabled] = useState(false)
   const [open, setOpen] = useState(false)
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value
-    setUrl(input)
-    setIsUrlValid(validateUrl(input))
     setUrl(input)
     setIsUrlValid(validateUrl(input))
   }
@@ -84,33 +108,6 @@ export default function WebsiteIngestForm({
     maxDepth: { error: false, message: '' },
   })
 
-  const validateInputs = () => {
-    const errors = {
-      maxUrls: { error: false, message: '' },
-      maxDepth: { error: false, message: '' },
-    }
-    // Check for maxUrls
-    if (!maxUrls) {
-      errors.maxUrls = {
-        error: true,
-        message: 'Please provide an input for Max URLs',
-      }
-    } else if (!/^\d+$/.test(maxUrls)) {
-      // Using regex to ensure the entire string is a number
-      errors.maxUrls = {
-        error: true,
-        message: 'Max URLs should be a valid number',
-      }
-    } else if (parseInt(maxUrls) < 1 || parseInt(maxUrls) > 500) {
-      errors.maxUrls = {
-        error: true,
-        message: 'Max URLs should be between 1 and 500',
-      }
-    }
-
-    setInputErrors(errors)
-    return !Object.values(errors).some((error) => error.error)
-  }
   const formatUrl = (url: string) => {
     if (!/^https?:\/\//i.test(url)) {
       url = 'http://' + url
@@ -120,6 +117,12 @@ export default function WebsiteIngestForm({
 
   const handleIngest = async () => {
     setOpen(false)
+
+    if (inputErrors.maxUrls.error) {
+      alert('Invalid max URLs input (1 to 500)')
+      return;
+    }
+
     if (isUrlValid) {
       const newFile: FileUpload = {
         name: url,
@@ -291,6 +294,10 @@ export default function WebsiteIngestForm({
             setIsUrlValid(false)
             setIsUrlUpdated(false)
             setMaxUrls('50')
+            setInputErrors(prev => ({
+              ...prev,
+              maxUrls: { error: false, message: '' }
+            }));
           }
         }}
       >
@@ -363,35 +370,6 @@ export default function WebsiteIngestForm({
                   onChange={(e) => {
                     handleUrlChange(e)
                   }}
-                // disabled={isDisabled}
-
-                // onKeyPress={(event) => {
-                //   if (event.key === 'Enter') {
-                //     handleSubmit()
-                //   }
-                // }}
-                // rightSection={
-                // <Button
-                //   onClick={(e) => {
-                //     e.preventDefault()
-                //     if (validateInputs() && validateUrl(url)) {
-                //       handleSubmit()
-                //     }
-                //   }}
-                //   size="md"
-                //   radius={'xl'}
-                //   className={`rounded-s-md ${
-                //     isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
-                //   } overflow-ellipsis text-ellipsis p-2 ${
-                //     isUrlUpdated ? 'text-white' : 'text-gray-500'
-                //   } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
-                //   w={`${isSmallScreen ? 'auto' : 'auto'}`}
-                //   disabled={isDisabled}
-                // >
-                //   Ingest
-                // </Button>
-                // }
-                // rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
                 />
               </div>
               <form

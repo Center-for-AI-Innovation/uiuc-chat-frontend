@@ -1,55 +1,22 @@
 import React, { useEffect, useRef, useState } from 'react'
 import {
   Text,
-  Switch,
   Card,
-  Skeleton,
-  Tooltip,
   useMantineTheme,
-  Checkbox,
   Button,
   Input,
-  ScrollArea,
-  TextInput,
-  List,
-  SegmentedControl,
-  Center,
-  rem,
 } from '@mantine/core'
 import {
-  IconAlertCircle,
-  IconBrandGithub,
-  IconCheck,
-  IconExternalLink,
-  IconHome,
-  IconSitemap,
-  IconSubtask,
-  IconWorld,
   IconWorldDownload,
-  IconX,
   IconArrowRight,
 } from '@tabler/icons-react'
-// import { APIKeyInput } from '../LLMsApiKeyInputForm'
-// import { ModelToggles } from '../ModelToggles'
-import {
-  AnthropicProvider,
-  ProviderNames,
-} from '~/utils/modelProviders/LLMProvider'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '../Dialog'
-// import { Checkbox } from '@radix-ui/react-checkbox'
-import { Label } from '@radix-ui/react-label'
-import { ExternalLink } from 'tabler-icons-react'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { notifications } from '@mantine/notifications'
 import axios from 'axios'
 import { Montserrat } from 'next/font/google'
 import { FileUpload } from './UploadNotification'
@@ -141,98 +108,15 @@ export default function MITIngestForm({
       )
       let data = null
       data = downloadMITCourse(url, project_name, 'local_dir') // no await -- do in background
-      // if (
-      //   data &&
-      //   typeof data === 'string'
-      //   // && 
-      //   // data.includes('Crawl completed successfully') what is the response here?
-      // ) {
-      //   setUploadFiles((prevFiles) =>
-      //     prevFiles.map((file) =>
-      //       file.name === url ? { ...file, status: 'complete' } : file,
-      //     ),
-      //   )
-      // } else {
-      //   // Handle unsuccessful crawl
-      //   setUploadFiles((prevFiles) =>
-      //     prevFiles.map((file) =>
-      //       file.name === url ? { ...file, status: 'error' } : file,
-      //     ),
-      //   )
-      //   throw new Error('MIT course ingesting was not successful')
-      // }
-      // showToast()
+    } else {
+      alert('Invalid URL (please include https://)')
     }
-  }
-  const showToast = () => {
-    return (
-      // docs: https://mantine.dev/others/notifications/
-
-      notifications.show({
-        id: 'web-scrape-toast',
-        withCloseButton: true,
-        onClose: () => console.log('unmounted'),
-        onOpen: () => console.log('mounted'),
-        autoClose: 15000,
-        // position="top-center",
-        title: 'Web scraping started',
-        message:
-          "It'll scrape in the background, just wait for the results to show up in your project (~3 minutes total).\nThis feature is stable but the web is a messy place. If you have trouble, I'd love to fix it. Just shoot me an email: kvday2@illinois.edu.",
-        icon: <IconWorldDownload />,
-        styles: {
-          root: {
-            backgroundColor: theme.colors.nearlyWhite,
-            borderColor: theme.colors.aiPurple,
-          },
-          title: {
-            color: theme.colors.nearlyBlack,
-          },
-          description: {
-            color: theme.colors.nearlyBlack,
-          },
-          closeButton: {
-            color: theme.colors.nearlyBlack,
-            '&:hover': {
-              backgroundColor: theme.colors.dark[1],
-            },
-          },
-        },
-        loading: false,
-      })
-    )
   }
   const [inputErrors, setInputErrors] = useState({
     maxUrls: { error: false, message: '' },
     maxDepth: { error: false, message: '' },
   })
 
-  const validateInputs = () => {
-    const errors = {
-      maxUrls: { error: false, message: '' },
-      maxDepth: { error: false, message: '' },
-    }
-    // Check for maxUrls
-    if (!maxUrls) {
-      errors.maxUrls = {
-        error: true,
-        message: 'Please provide an input for Max URLs',
-      }
-    } else if (!/^\d+$/.test(maxUrls)) {
-      // Using regex to ensure the entire string is a number
-      errors.maxUrls = {
-        error: true,
-        message: 'Max URLs should be a valid number',
-      }
-    } else if (parseInt(maxUrls) < 1 || parseInt(maxUrls) > 500) {
-      errors.maxUrls = {
-        error: true,
-        message: 'Max URLs should be between 1 and 500',
-      }
-    }
-
-    setInputErrors(errors)
-    return !Object.values(errors).some((error) => error.error)
-  }
   const formatUrl = (url: string) => {
     if (!/^https?:\/\//i.test(url)) {
       url = 'http://' + url
@@ -243,7 +127,7 @@ export default function MITIngestForm({
     // fullUrl always starts with http://. Is the starting place of the scrape.
     // baseUrl is used to construct the match statement.
 
-    // Ensure the url starts with 'http://'
+    // Ensure the url starts with 'http://'ff
     if (!/^https?:\/\//i.test(url)) {
       url = 'http://' + url
     }
@@ -318,9 +202,6 @@ export default function MITIngestForm({
           </DialogTitle>
           <div className="space-y-4">
             <div>
-              {/* <Label htmlFor="canvas-url" className="text-white">
-                URL
-              </Label> */}
               <div className="break-words">
 
                 <strong>For MIT Open Course Ware</strong>, just enter a URL like{' '}
@@ -380,35 +261,6 @@ export default function MITIngestForm({
                 onChange={(e) => {
                   handleUrlChange(e)
                 }}
-              // disabled={isDisabled}
-
-              // onKeyPress={(event) => {
-              //   if (event.key === 'Enter') {
-              //     handleSubmit()
-              //   }
-              // }}
-              // rightSection={
-              // <Button
-              //   onClick={(e) => {
-              //     e.preventDefault()
-              //     if (validateInputs() && validateUrl(url)) {
-              //       handleSubmit()
-              //     }
-              //   }}
-              //   size="md"
-              //   radius={'xl'}
-              //   className={`rounded-s-md ${
-              //     isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
-              //   } overflow-ellipsis text-ellipsis p-2 ${
-              //     isUrlUpdated ? 'text-white' : 'text-gray-500'
-              //   } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
-              //   w={`${isSmallScreen ? 'auto' : 'auto'}`}
-              //   disabled={isDisabled}
-              // >
-              //   Ingest
-              // </Button>
-              // }
-              // rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
               />
             </div>
             <Button
