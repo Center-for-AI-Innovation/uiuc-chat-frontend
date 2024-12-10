@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   PieChart,
   Pie,
@@ -37,6 +37,16 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
   isLoading,
   error,
 }) => {
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== 'undefined' ? window.innerWidth : 1200,
+  )
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   if (isLoading) return <LoadingSpinner />
   if (error) return <Text color="red">{error}</Text>
   if (!data || data.length === 0)
@@ -60,6 +70,9 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
     },
   )
 
+  // Sort main data by percentage in descending order
+  groupedData.main.sort((a, b) => b.percentage - a.percentage)
+
   const finalData = [
     ...groupedData.main,
     ...(groupedData.other.count > 0 ? [groupedData.other] : []),
@@ -82,38 +95,71 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
     name,
   }: any) => {
     const RADIAN = Math.PI / 180
-    const radius = outerRadius * 1.2
+
+    // Adjust label visibility threshold based on screen size
+    const minPercentage = windowWidth < 768 ? 0.08 : 0.02 // 8% on mobile, 2% on desktop
+    if (percent < minPercentage) return null
+
+    // Adjust radius based on screen size
+    const radius =
+      windowWidth < 768
+        ? outerRadius * 1.1 // Closer to pie on mobile
+        : outerRadius * 1.2 // Further out on desktop
+
     const x = cx + radius * Math.cos(-midAngle * RADIAN)
     const y = cy + radius * Math.sin(-midAngle * RADIAN)
+    const textAnchor = x > cx ? 'start' : 'end'
 
-    // Only show label if percentage is >= 3%
-    if (percent < 0.03) return null
+    // Adjust name truncation based on screen size
+    const maxLength = windowWidth < 768 ? 8 : 15
+    const truncatedName =
+      name.length > maxLength ? name.substring(0, maxLength - 3) + '...' : name
+
+    // On mobile, only show percentage for small segments
+    const labelText =
+      windowWidth < 768 && percent < 0.15
+        ? `${(percent * 100).toFixed(1)}%`
+        : `${truncatedName} (${(percent * 100).toFixed(1)}%)`
 
     return (
-      <text
-        x={x}
-        y={y}
-        fill="#fff"
-        textAnchor={x > cx ? 'start' : 'end'}
-        dominantBaseline="central"
-        style={{ fontSize: '14px', fontWeight: 500 }}
-      >
-        {`${name} (${(percent * 100).toFixed(0)}%)`}
-      </text>
+      <>
+        <text
+          x={x}
+          y={y}
+          fill="#fff"
+          textAnchor={textAnchor}
+          dominantBaseline="middle"
+          style={{
+            fontSize: windowWidth < 768 ? '10px' : '12px',
+            fontWeight: 500,
+          }}
+        >
+          {labelText}
+        </text>
+        <path
+          d={`M${cx + (outerRadius + 2) * Math.cos(-midAngle * RADIAN)},${
+            cy + (outerRadius + 2) * Math.sin(-midAngle * RADIAN)
+          }L${x - (textAnchor === 'start' ? 5 : -5)},${y}`}
+          stroke="#fff"
+          fill="none"
+          strokeWidth={1}
+          opacity={0.5}
+        />
+      </>
     )
   }
 
   return (
-    <div style={{ width: '100%', height: 400 }}>
+    <div style={{ width: '100%', height: windowWidth < 768 ? 300 : 400 }}>
       <ResponsiveContainer>
         <PieChart>
           <Pie
             data={chartData}
             cx="50%"
             cy="50%"
-            labelLine={true}
+            labelLine={false}
             label={renderCustomizedLabel}
-            outerRadius={120}
+            outerRadius={windowWidth < 768 ? 60 : 80}
             fill="#8884d8"
             dataKey="value"
             paddingAngle={2}
@@ -146,12 +192,18 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
             align="right"
             verticalAlign="middle"
             wrapperStyle={{
-              fontSize: '14px',
-              paddingLeft: '20px',
+              fontSize: windowWidth < 768 ? '10px' : '12px',
+              paddingLeft: windowWidth < 768 ? '10px' : '20px',
+              maxWidth: windowWidth < 768 ? '45%' : '35%',
             }}
-            formatter={(value: string) => {
+            formatter={(value: string, entry: any) => {
               const item = chartData.find((d) => d.name === value)
-              return [`${value} (${item?.percentage}%)`]
+              const maxLength = windowWidth < 768 ? 10 : 15
+              const truncatedName =
+                value.length > maxLength
+                  ? value.substring(0, maxLength - 3) + '...'
+                  : value
+              return [`${truncatedName} (${item?.percentage}%)`]
             }}
           />
         </PieChart>

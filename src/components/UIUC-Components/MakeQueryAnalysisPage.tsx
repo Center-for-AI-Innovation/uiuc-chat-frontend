@@ -180,7 +180,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     const fetchNomicMapData = async () => {
       try {
         const response = await fetch(
-          `/api/getNomicMapForQueries?course_name=${course_name}`,
+          `/api/getNomicMapForQueries?course_name=${'cropwizard-1.5'}`,
         )
         const data = await response.json()
         const parsedData: NomicMapData = {
@@ -203,7 +203,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   useEffect(() => {
     const fetchConversationStats = async () => {
       try {
-        const response = await getConversationStats(course_name)
+        const response = await getConversationStats('ece120')
         if (response.status === 200) {
           setConversationStats(response.data)
           setHasConversationData(Object.keys(response.data.per_day).length > 0)
@@ -225,7 +225,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
       setCourseStatsLoading(true)
       setCourseStatsError(null)
       try {
-        const response = await getProjectStats('ECE408FA24')
+        const response = await getProjectStats('ece120')
 
         if (response.status === 200) {
           const mappedData = {
@@ -259,7 +259,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
       setTrendsLoading(true)
       setTrendsError(null)
       try {
-        const response = await getWeeklyTrends('ECE408FA24')
+        const response = await getWeeklyTrends('ece120')
         if (response.status === 200) {
           setWeeklyTrends(response.data)
         } else {
@@ -280,7 +280,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
       setModelUsageLoading(true)
       setModelUsageError(null)
       try {
-        const response = await getModelUsageCounts('ECE408FA24')
+        const response = await getModelUsageCounts('ece120')
         if (response.status === 200) {
           setModelUsageData(response.data)
         } else {
@@ -419,10 +419,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     <div className="mb-4 flex items-center justify-between">
                       <div>
                         <Text size="sm" color="dimmed" weight={500} mb={1}>
-                          Conversations
+                          Total Conversations
                         </Text>
                         <Text size="xs" color="dimmed" opacity={0.7}>
-                          Total chat sessions
+                          All-time chat sessions
                         </Text>
                       </div>
                       <IconMessageCircle2
@@ -435,7 +435,6 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         {courseStats?.total_conversations?.toLocaleString() ||
                           0}
                       </Text>
-                      {/* Conversations Card Trend Section */}
                       {(() => {
                         const trend = weeklyTrends.find(
                           (t) => t.metric_name === 'Total Conversations',
@@ -482,11 +481,15 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                                   </div>
                                   <div className="flex flex-col items-end">
                                     <Text size="xs" color="dimmed">
-                                      vs last week
+                                      Weekly Change
                                     </Text>
                                     <Text size="xs" color="dimmed">
-                                      Previous:{' '}
+                                      Last Week:{' '}
                                       {trend.previous_week_value.toLocaleString()}
+                                    </Text>
+                                    <Text size="xs" color="dimmed">
+                                      This Week:{' '}
+                                      {trend.current_week_value.toLocaleString()}
                                     </Text>
                                   </div>
                                 </>
@@ -503,10 +506,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     <div className="mb-4 flex items-center justify-between">
                       <div>
                         <Text size="sm" color="dimmed" weight={500} mb={1}>
-                          Users
+                          Total Users
                         </Text>
                         <Text size="xs" color="dimmed" opacity={0.7}>
-                          Unique participants
+                          All-time unique participants
                         </Text>
                       </div>
                       <IconUsers
@@ -518,7 +521,6 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                       <Text size="2xl" weight={700} className="text-purple-400">
                         {courseStats?.total_users?.toLocaleString() || 0}
                       </Text>
-                      {/* Users Card Trend Section */}
                       {(() => {
                         const trend = weeklyTrends.find(
                           (t) => t.metric_name === 'Unique Users',
@@ -565,11 +567,15 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                                   </div>
                                   <div className="flex flex-col items-end">
                                     <Text size="xs" color="dimmed">
-                                      vs last week
+                                      Weekly Change
                                     </Text>
                                     <Text size="xs" color="dimmed">
-                                      Previous:{' '}
+                                      Last Week:{' '}
                                       {trend.previous_week_value.toLocaleString()}
+                                    </Text>
+                                    <Text size="xs" color="dimmed">
+                                      This Week:{' '}
+                                      {trend.current_week_value.toLocaleString()}
                                     </Text>
                                   </div>
                                 </>
@@ -601,7 +607,6 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                       <Text size="2xl" weight={700} className="text-purple-400">
                         {courseStats?.total_messages?.toLocaleString() || 0}
                       </Text>
-                      {/* Messages Card Trend Section */}
                       {(() => {
                         const trend = weeklyTrends.find(
                           (t) => t.metric_name === 'Total Messages',
@@ -648,11 +653,15 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                                   </div>
                                   <div className="flex flex-col items-end">
                                     <Text size="xs" color="dimmed">
-                                      vs last week
+                                      Weekly Change
                                     </Text>
                                     <Text size="xs" color="dimmed">
-                                      Previous:{' '}
+                                      Last Week:{' '}
                                       {trend.previous_week_value.toLocaleString()}
+                                    </Text>
+                                    <Text size="xs" color="dimmed">
+                                      This Week:{' '}
+                                      {trend.current_week_value.toLocaleString()}
                                     </Text>
                                   </div>
                                 </>
@@ -913,58 +922,58 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
         {/* NOMIC VISUALIZATION  */}
         {/* {false ? ( */}
         {/* {true ? ( */}
-        {/* {nomicIsLoading ? (
-              <>
-                <span className="nomic-iframe skeleton-box pl-7 pr-7 pt-4"></span>
-              </>
-            ) : nomicMapData && nomicMapData.map_id ? (
-              <>
-                <iframe
-                  className="nomic-iframe pl-7 pr-7 pt-4 pt-4"
-                  id={nomicMapData.map_id}
-                  allow="clipboard-read; clipboard-write"
-                  src={nomicMapData.map_link}
-                />
-                <Title
-                  order={6}
-                  className={`w-full text-center ${montserrat_heading.variable} mt-2 font-montserratHeading`}
-                >
-                  A conceptual map of the questions asked by users on this page.
-                  <br></br>
-                  Read more about{' '}
-                  <a
-                    className={'text-purple-600'}
-                    href="https://atlas.nomic.ai/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ textDecoration: 'underline', paddingRight: '5px' }}
-                  >
-                    semantic similarity visualizations
-                  </a
-                </Title>
-              </>
-            ) : (
-              <>
-                <Title
-                  order={6}
-                  className={`w-full text-center ${montserrat_heading.variable} mt-2 font-montserratHeading`}
-                >
-                  Query visualization requires at least 20 queries to be made...
-                  go ask some questions and check back later :)
-                  <br></br>
-                  Read more about{' '}
-                  <a
-                    className={'text-purple-600'}
-                    href="https://atlas.nomic.ai/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ textDecoration: 'underline', paddingRight: '5px' }}
-                  >
-                    semantic similarity visualizations
-                  </a */}
-        {/* </Title> */}
-        {/* </> */}
-        {/* )}  */}
+        {nomicIsLoading ? (
+          <>
+            <span className="nomic-iframe skeleton-box pl-7 pr-7 pt-4"></span>
+          </>
+        ) : nomicMapData && nomicMapData.map_id ? (
+          <>
+            <iframe
+              className="nomic-iframe pl-7 pr-7 pt-4 pt-4"
+              id={nomicMapData.map_id}
+              allow="clipboard-read; clipboard-write"
+              src={nomicMapData.map_link}
+            />
+            <Title
+              order={6}
+              className={`w-full text-center ${montserrat_heading.variable} mt-2 font-montserratHeading`}
+            >
+              A conceptual map of the questions asked by users on this page.
+              <br></br>
+              Read more about{' '}
+              <a
+                className={'text-purple-600'}
+                href="https://atlas.nomic.ai/"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ textDecoration: 'underline', paddingRight: '5px' }}
+              >
+                semantic similarity visualizations
+              </a>
+            </Title>
+          </>
+        ) : (
+          <>
+            <Title
+              order={6}
+              className={`w-full text-center ${montserrat_heading.variable} mt-2 font-montserratHeading`}
+            >
+              Query visualization requires at least 20 queries to be made... go
+              ask some questions and check back later :)
+              <br></br>
+              Read more about{' '}
+              <a
+                className={'text-purple-600'}
+                href="https://atlas.nomic.ai/"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ textDecoration: 'underline', paddingRight: '5px' }}
+              >
+                semantic similarity visualizations
+              </a>
+            </Title>
+          </>
+        )}
         <GlobalFooter />
       </main>
     </>
@@ -1013,7 +1022,7 @@ const CourseFilesList = ({ files }: CourseFilesListProps) => {
       const response = await axios.delete(
         `https://flask-production-751b.up.railway.app/delete`,
         {
-          params: { s3_path, course_name },
+          params: { s3_path, course_name: 'ece120' },
         },
       )
       // Handle successful deletion, show a success message

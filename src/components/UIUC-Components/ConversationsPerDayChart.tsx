@@ -11,7 +11,7 @@ import {
   Legend,
 } from 'recharts'
 import axios from 'axios'
-import { Text, Title } from '@mantine/core'
+import { Text, Title, Switch } from '@mantine/core'
 import { LoadingSpinner } from './LoadingSpinner'
 import { montserrat_paragraph } from 'fonts'
 
@@ -54,6 +54,8 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
   isLoading,
   error,
 }) => {
+  const [useLogScale, setUseLogScale] = useState(false)
+
   if (isLoading) {
     return (
       <Text>
@@ -66,7 +68,7 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
     return <Text color="red">{error}</Text>
   }
 
-  if (!data) {
+  if (!data || Object.keys(data).length === 0) {
     return <Text>No data available</Text>
   }
 
@@ -76,6 +78,32 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
       date,
       count: data[date] || 0,
     }))
+
+  const values = chartData.map((item) => item.count)
+  const maxValue = Math.max(...values)
+  const minValue = Math.min(...values)
+
+  const yAxisDomain = useLogScale
+    ? [Math.max(1, minValue), Math.ceil(maxValue * 1.1)]
+    : [0, Math.ceil(maxValue * 1.1)]
+
+  const getCustomTicks = (min: number, max: number) => {
+    if (!useLogScale) return undefined
+
+    const ticks = []
+    let tick = 1
+    // Generate ticks: 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000
+    while (tick <= max) {
+      if (tick >= min) ticks.push(tick)
+      if (tick === 1) tick = 2
+      else if (tick === 2) tick = 5
+      else if (tick === 5) tick = 10
+      else if (tick.toString().startsWith('1')) tick *= 2
+      else if (tick.toString().startsWith('2')) tick = tick * 2.5
+      else tick *= 2
+    }
+    return ticks
+  }
 
   const determineInterval = (dataLength: number): number => {
     if (dataLength <= 25) return 0
@@ -90,68 +118,97 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
   const getYAxisLabelPadding = (data: { count: number }[]) => {
     const maxValue = Math.max(...data.map((item) => item.count))
     const digits = maxValue.toString().length
-    return -(10 + (digits - 1) * 5) // -10 for 1 digit, -15 for 2 digits, -20 for 3 digits, etc.
+    return -(10 + (digits - 1) * 7)
   }
 
   return (
-    <div style={{ width: '100%', height: 400 }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart
-          data={chartData}
-          margin={{ top: 20, right: 30, left: 20, bottom: 50 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" stroke="#3a3a4a" />
-          <XAxis
-            dataKey="date"
-            tick={{
-              fill: '#fff',
-              fontFamily: montserrat_paragraph.style.fontFamily,
-              fontSize: chartData.length > 30 ? 12 : 15,
-              dx: chartData.length > 30 ? -3 : -5,
-              dy: 8,
-            }}
-            angle={chartData.length > 15 ? -45 : 0}
-            label={{
-              value: 'Date',
-              position: 'insideBottom',
-              offset: -20,
-              fill: '#fff',
-              fontFamily: montserrat_paragraph.style.fontFamily,
-              dy: 25,
-            }}
-            tickFormatter={formatDate}
-            tickMargin={chartData.length > 30 ? 15 : 25}
-            interval={xAxisInterval}
-          />
+    <div>
+      <div className="mb-4 flex items-center justify-end gap-2">
+        <Text size="sm" color="dimmed">
+          Linear
+        </Text>
+        <Switch
+          checked={useLogScale}
+          onChange={(event) => setUseLogScale(event.currentTarget.checked)}
+          size="sm"
+          color="violet"
+        />
+        <Text size="sm" color="dimmed">
+          Logarithmic
+        </Text>
+      </div>
 
-          <YAxis
-            allowDecimals={false}
-            tick={{
-              fill: '#fff',
-              fontFamily: montserrat_paragraph.style.fontFamily,
-            }}
-            label={{
-              value: 'Number of Conversations',
-              angle: -90,
-              position: 'center',
-              fill: '#fff',
-              fontFamily: montserrat_paragraph.style.fontFamily,
-              dx: getYAxisLabelPadding(chartData),
-            }}
-          />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: '#15162c',
-              borderColor: '#3a3a4a',
-              color: '#fff',
-              fontFamily: montserrat_paragraph.style.fontFamily,
-            }}
-            formatter={(value) => [`Conversations: ${value}`]}
-            labelFormatter={(label) => `Date: ${label}`}
-          />
-          <Bar dataKey="count" fill="#7e57c2" name="Number of Conversations" />
-        </BarChart>
-      </ResponsiveContainer>
+      <div style={{ width: '100%', height: 400 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            data={chartData}
+            margin={{ top: 20, right: 30, left: 20, bottom: 50 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#3a3a4a" />
+            <XAxis
+              dataKey="date"
+              tick={{
+                fill: '#fff',
+                fontFamily: montserrat_paragraph.style.fontFamily,
+                fontSize: chartData.length > 30 ? 12 : 15,
+                dx: chartData.length > 30 ? -3 : -5,
+                dy: 8,
+              }}
+              angle={chartData.length > 15 ? -45 : 0}
+              label={{
+                value: 'Date',
+                position: 'insideBottom',
+                offset: -20,
+                fill: '#fff',
+                fontFamily: montserrat_paragraph.style.fontFamily,
+                dy: 25,
+              }}
+              tickFormatter={formatDate}
+              tickMargin={chartData.length > 30 ? 15 : 25}
+              interval={xAxisInterval}
+            />
+
+            <YAxis
+              allowDecimals={false}
+              tick={{
+                fill: '#fff',
+                fontFamily: montserrat_paragraph.style.fontFamily,
+              }}
+              label={{
+                value: useLogScale
+                  ? 'Number of Conversations (log scale)'
+                  : 'Number of Conversations',
+                angle: -90,
+                position: 'center',
+                fill: '#fff',
+                fontFamily: montserrat_paragraph.style.fontFamily,
+                dx: getYAxisLabelPadding(chartData),
+              }}
+              scale={useLogScale ? 'log' : 'linear'}
+              domain={yAxisDomain}
+              ticks={
+                useLogScale ? getCustomTicks(minValue, maxValue) : undefined
+              }
+              tickFormatter={(value) => Math.round(value).toString()}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: '#15162c',
+                borderColor: '#3a3a4a',
+                color: '#fff',
+                fontFamily: montserrat_paragraph.style.fontFamily,
+              }}
+              formatter={(value: number) => [`Conversations: ${value}`]}
+              labelFormatter={(label) => `Date: ${label}`}
+            />
+            <Bar
+              dataKey="count"
+              fill="#7e57c2"
+              name="Number of Conversations"
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   )
 }
