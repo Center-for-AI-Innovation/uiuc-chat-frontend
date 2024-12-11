@@ -35,6 +35,7 @@ import ConversationsPerHourChart from './ConversationsPerHourChart'
 import ConversationsPerDayOfWeekChart from './ConversationsPerDayOfWeekChart'
 import ConversationsHeatmapByHourChart from './ConversationsHeatmapByHourChart'
 import {
+import {
   IconMessage2,
   IconUsers,
   IconMessageCircle2,
@@ -84,7 +85,7 @@ const useStyles = createStyles((theme: MantineTheme) => ({
 import { useAuth, useUser } from '@clerk/nextjs'
 
 export const GetCurrentPageName = () => {
-  // /CS-125/materials --> CS-125
+  // /CS-125/dashboard --> CS-125
   return useRouter().asPath.slice(1).split('/')[0] as string
 }
 
@@ -415,6 +416,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
               {/* Project Analytics Dashboard */}
               <div className="my-6 w-[95%] rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
                 <div className="mb-6">
+                  <Title
+                    order={4}
                   <Title
                     order={4}
                     className={`${montserrat_heading.variable} font-montserratHeading text-white`}

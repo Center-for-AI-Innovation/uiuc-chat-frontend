@@ -11,11 +11,16 @@ import {
 } from '@/types/chat'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { AnySupportedModel } from '~/utils/modelProviders/LLMProvider'
-import { DEFAULT_SYSTEM_PROMPT } from '@/utils/app/const'
+import { DEFAULT_SYSTEM_PROMPT, GUIDED_LEARNING_PROMPT } from '@/utils/app/const'
 import { routeModelRequest } from '~/utils/streamProcessing'
 import { NextRequest, NextResponse } from 'next/server'
 
 import { encodingForModel } from 'js-tiktoken'
+
+// Extend the Conversation type to include guidedLearning
+interface ConversationWithGuidedLearning extends Conversation {
+  guidedLearning?: boolean
+}
 
 const encoding = encodingForModel('gpt-4o')
 
@@ -24,10 +29,10 @@ export const buildPrompt = async ({
   projectName,
   courseMetadata,
 }: {
-  conversation: Conversation | undefined
+  conversation: ConversationWithGuidedLearning | undefined
   projectName: string
   courseMetadata: CourseMetadata | undefined
-}): Promise<Conversation> => {
+}): Promise<ConversationWithGuidedLearning> => {
   /*
     System prompt -- defined by user. If documents are provided, add the citations instructions to it.
   
@@ -45,6 +50,9 @@ export const buildPrompt = async ({
     throw new Error('Conversation is undefined when building prompt.')
   }
 
+  // Check for guided learning in both course metadata and conversation parameters
+  const isGuidedLearningFromConversation = conversation.guidedLearning && !courseMetadata?.guidedLearning
+
   let remainingTokenBudget = conversation.model.tokenLimit - 1500 // Save space for images, OpenAI's handling, etc.
 
   try {
@@ -60,7 +68,9 @@ export const buildPrompt = async ({
         string | undefined,
       ]
 
-    const finalSystemPrompt = systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
+    // Only add GUIDED_LEARNING_PROMPT if guided learning is enabled via conversation but not course-wide
+    const finalSystemPrompt = (systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? '') + 
+      (isGuidedLearningFromConversation ? GUIDED_LEARNING_PROMPT : '')
 
     // Adjust remaining token budget based on the system prompt length
     if (encoding) {
@@ -131,7 +141,7 @@ export const buildPrompt = async ({
 
       // Add Tool Instructions and outputs
       const toolInstructions =
-        "<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool `tool name`...' or 'According to tool `tool name`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>"
+        "<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool \`tool name\`...' or 'According to tool \`tool name\`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>"
 
       // Add to user prompt sections
       userPromptSections.push(toolInstructions)
@@ -416,10 +426,12 @@ export const getSystemPostPrompt = ({
   conversation,
   courseMetadata,
 }: {
-  conversation: Conversation
+  conversation: ConversationWithGuidedLearning
   courseMetadata: CourseMetadata
 }): string => {
-  const { guidedLearning, systemPromptOnly, documentsOnly } = courseMetadata
+  // Check for guided learning in both course metadata and conversation parameters
+  const isGuidedLearning = courseMetadata.guidedLearning || conversation.guidedLearning
+  const { systemPromptOnly, documentsOnly } = courseMetadata
 
   // If systemPromptOnly is true, return an empty PostPrompt
   if (systemPromptOnly) {
@@ -432,12 +444,16 @@ export const getSystemPostPrompt = ({
   // The main system prompt
   PostPromptLines.push(
     `Please analyze and respond to the following question using the excerpts from the provided documents. These documents can be pdf files or web pages. Additionally, you may see the output from API calls (called 'tools') to the user's services which, when relevant, you should use to construct your answer. You may also see image descriptions from images uploaded by the user. Prioritize image descriptions, when helpful, to construct your answer.
-Integrate relevant information from these documents, ensuring each reference is linked to the document's number.
+Integrate relevant information from these documents, ensuring each reference is linked to the document's number.${
+      isGuidedLearning
+        ? '\n\nIMPORTANT: While in guided learning mode, you must still cite and link to ALL relevant course materials in the exact format described below, even if they contain direct answers. Never filter out or omit relevant materials - your role is to guide students to explore these materials through questions and hints while ensuring they have access to all relevant sources.'
+        : ''
+    }
 
 When quoting directly from a source document, cite with footnotes linked to the document number and page number, if provided. 
 Summarize or paraphrase other relevant information with inline citations, again referencing the document number and page number, if provided.
 If the answer is not in the provided documents, state so.${
-      guidedLearning || documentsOnly
+      isGuidedLearning || documentsOnly
         ? ''
         : ' Yet always provide as helpful a response as possible to directly answer the question.'
     }
@@ -503,7 +519,8 @@ export const getDefaultPostPrompt = (): string => {
       prompt: '',
       temperature: 0.7,
       folderId: null,
-    } as Conversation,
+      guidedLearning: false
+    } as ConversationWithGuidedLearning,
     courseMetadata: defaultCourseMetadata,
   })
 }
