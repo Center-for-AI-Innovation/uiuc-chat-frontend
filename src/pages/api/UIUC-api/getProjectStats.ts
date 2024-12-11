@@ -52,18 +52,33 @@ export async function getProjectStats(project_name: string) {
           total_conversations: 0,
           total_messages: 0,
           unique_users: 0,
+          avg_conversations_per_user: 0,
+          avg_messages_per_user: 0,
+          avg_messages_per_conversation: 0,
         },
       }
     }
 
     const data = await response.json()
+    const total_conversations = data.total_conversations || 0
+    const total_messages = data.total_messages || 0
+    const unique_users = data.unique_users || 0
 
     return {
       status: 200,
       data: {
-        total_conversations: data.total_conversations || 0,
-        total_messages: data.total_messages || 0,
-        unique_users: data.unique_users || 0,
+        total_conversations,
+        total_messages,
+        unique_users,
+        avg_conversations_per_user: unique_users
+          ? +(total_conversations / unique_users).toFixed(1)
+          : 0,
+        avg_messages_per_user: unique_users
+          ? +(total_messages / unique_users).toFixed(1)
+          : 0,
+        avg_messages_per_conversation: total_conversations
+          ? +(total_messages / total_conversations).toFixed(1)
+          : 0,
       },
     }
   } catch (error) {
@@ -74,6 +89,9 @@ export async function getProjectStats(project_name: string) {
         total_conversations: 0,
         total_messages: 0,
         unique_users: 0,
+        avg_conversations_per_user: 0,
+        avg_messages_per_user: 0,
+        avg_messages_per_conversation: 0,
       },
     }
   }
