@@ -2,7 +2,6 @@
 import { kv } from '@vercel/kv'
 import { NextResponse } from 'next/server'
 import { CourseMetadata } from '~/types/courseMetadata'
-import { log } from 'next-axiom'
 
 export const runtime = 'edge'
 
@@ -96,7 +95,6 @@ export default async (req: any, res: any) => {
     return NextResponse.json(all_course_metadata)
   } catch (error) {
     console.error('Error occurred while fetching courseMetadata', error)
-    log.error('Error occurred while fetching courseMetadata', { error: error })
     return NextResponse.json({ success: false, error: error })
   }
 }

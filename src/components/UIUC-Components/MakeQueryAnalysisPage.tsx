@@ -154,7 +154,6 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   useEffect(() => {
     const fetchNomicMapData = async () => {
       try {
-        console.log('Trying to fetch nomic!!')
         const response = await fetch(
           `/api/getNomicMapForQueries?course_name=${course_name}`,
         )
@@ -797,7 +796,6 @@ async function fetchCourseMetadata(course_name: string) {
     const response = await fetch(
       `/api/UIUC-api/getCourseMetadata?course_name=${course_name}`,
     )
-    console.log('REsponse received while fetching metadata:', response)
     if (response.ok) {
       const data = await response.json()
       if (data.success === false) {

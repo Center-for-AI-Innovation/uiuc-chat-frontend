@@ -10,7 +10,7 @@ export default async function handler(req: NextRequest, res: NextResponse) {
     // Fetch all keys from the KV store
     // Filter out keys that end with '_metadata'
     const oldMetadataKeys = await kv.keys('*_metadata')
-    console.log('Starting migration for keys: ', oldMetadataKeys.length)
+    // console.log('Starting migration for keys: ', oldMetadataKeys.length)
 
     // Create an array to store the old keys
     const processedKeys = []
@@ -46,7 +46,7 @@ export default async function handler(req: NextRequest, res: NextResponse) {
 
     // Print all the old keys
     fs.writeFileSync('processedKeys.json', JSON.stringify(processedKeys))
-    console.log('Processed keys:', processedKeys)
+    // console.log('Processed keys:', processedKeys)
 
     return NextResponse.json({ success: true })
   } catch (error) {

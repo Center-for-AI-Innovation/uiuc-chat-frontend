@@ -46,6 +46,10 @@ const setCourseMetadata = async (req: any, res: any) => {
   const systemPromptOnly = JSON.parse(
     req.nextUrl.searchParams.get('systemPromptOnly') || 'false',
   )
+  const vector_search_rewrite_disabled = JSON.parse(
+    req.nextUrl.searchParams.get('vector_search_rewrite_disabled') || 'false'
+  )
+
   try {
     const course_metadata: CourseMetadata = {
       is_private,
@@ -62,6 +66,7 @@ const setCourseMetadata = async (req: any, res: any) => {
       documentsOnly,
       guidedLearning,
       systemPromptOnly,
+      vector_search_rewrite_disabled,
     }
     console.log('Right before setting course_metadata with: ', course_metadata)
     await kv.hset('course_metadatas', { [course_name]: course_metadata })

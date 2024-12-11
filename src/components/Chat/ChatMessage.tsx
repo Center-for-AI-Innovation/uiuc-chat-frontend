@@ -115,6 +115,7 @@ export const ChatMessage: FC<Props> = memo(
         isRouting,
         isRunningTool,
         isRetrievalLoading,
+        isQueryRewriting,
         loading,
       },
       dispatch: homeDispatch,
@@ -716,6 +717,38 @@ export const ChatMessage: FC<Props> = memo(
                         <>{message.content}</>
                       )}
                       <div className="flex w-full flex-col items-start space-y-2">
+                        {/* Query rewrite loading state */}
+                        {isQueryRewriting && (
+                          <IntermediateStateAccordion
+                            accordionKey="query-rewrite"
+                            title="Optimizing search query"
+                            isLoading={isQueryRewriting}
+                            error={false}
+                            content={<></>}
+                          />
+                        )}
+
+                        {/* Query rewrite result - using message properties */}
+                        {!isQueryRewriting &&
+                          message.wasQueryRewritten !== undefined &&
+                          message.wasQueryRewritten !== null && (
+                            <IntermediateStateAccordion
+                              accordionKey="query-rewrite-result"
+                              title={
+                                message.wasQueryRewritten
+                                  ? 'Optimized search query'
+                                  : 'No query optimization necessary'
+                              }
+                              isLoading={false}
+                              error={false}
+                              content={
+                                message.wasQueryRewritten
+                                  ? message.queryRewriteText
+                                  : "The LLM determined no optimization was necessary. We only optimize when it's necessary to turn a single message into a stand-alone search to retrieve the best documents."
+                              }
+                            />
+                          )}
+
                         {/* Retrieval results for all messages */}
                         {message.contexts && message.contexts.length > 0 && (
                           <IntermediateStateAccordion
@@ -948,6 +981,7 @@ export const ChatMessage: FC<Props> = memo(
                         {!isRouting &&
                           !isRetrievalLoading &&
                           !isImg2TextLoading &&
+                          !isQueryRewriting &&
                           loading &&
                           (messageIndex ===
                             (selectedConversation?.messages.length ?? 0) - 1 ||
