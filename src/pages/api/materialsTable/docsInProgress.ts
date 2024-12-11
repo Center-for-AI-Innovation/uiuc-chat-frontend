@@ -39,6 +39,7 @@ export default async function docsInProgress(
     }
 
     if (data && data.length > 0) {
+      // console.log(data)
       return NextResponse.json({ documents: data }, { status: 200 })
     }
   } catch (error) {

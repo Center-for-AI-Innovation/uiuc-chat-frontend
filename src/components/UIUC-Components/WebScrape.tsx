@@ -229,7 +229,7 @@ export const WebScrape = ({
     setLoadingSpinner(false)
     setUrl('') // clear url
     if (is_new_course) {
-      await router.push(`/${courseName}/materials`)
+      await router.push(`/${courseName}/dashboard`)
     }
     // No need to refresh, our materials table auto-refreshes.
   }

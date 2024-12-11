@@ -373,7 +373,7 @@ export async function determineAndValidateModel(
   if (!activeModel) {
     console.error(`Model with ID ${modelId} not found in available models.`)
     throw new Error(
-      `The requested model '${modelId}' is not available in this project. It has likely been restricted by the project's admins. You can enable this model on the admin page here: https://uiuc.chat/${projectName}/materials. These models are available to use: ${Array.from(
+      `The requested model '${modelId}' is not available in this project. It has likely been restricted by the project's admins. You can enable this model on the admin page here: https://uiuc.chat/${projectName}/dashboard. These models are available to use: ${Array.from(
         availableModels,
       )
         .filter(
