@@ -35,13 +35,13 @@ import ConversationsPerHourChart from './ConversationsPerHourChart'
 import ConversationsPerDayOfWeekChart from './ConversationsPerDayOfWeekChart'
 import ConversationsHeatmapByHourChart from './ConversationsHeatmapByHourChart'
 import {
-import {
-  IconMessage2,
-  IconUsers,
-  IconMessageCircle2,
+  IconTrendingUp,
+  IconTrendingDown,
   IconChartBar,
+  IconMessage2,
+  IconMessageCircle2,
+  IconUsers,
 } from '@tabler/icons-react'
-import { IconTrendingUp, IconTrendingDown } from '@tabler/icons-react'
 import { getWeeklyTrends } from '../../pages/api/UIUC-api/getWeeklyTrends'
 import ModelUsageChart from './ModelUsageChart'
 import { getModelUsageCounts } from '../../pages/api/UIUC-api/getModelUsageCounts'
@@ -416,8 +416,6 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
               {/* Project Analytics Dashboard */}
               <div className="my-6 w-[95%] rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
                 <div className="mb-6">
-                  <Title
-                    order={4}
                   <Title
                     order={4}
                     className={`${montserrat_heading.variable} font-montserratHeading text-white`}
