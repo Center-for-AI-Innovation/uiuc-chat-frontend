@@ -352,6 +352,11 @@ function Navbar({
       link: `/${course_name}/dashboard`,
     },
     {
+      name: <NavText>LLMs</NavText>,
+      icon: <LLMIcon />,
+      link: `/${course_name}/llms`,
+    },
+    {
       name: (
         <Indicator
           label="New"
@@ -359,14 +364,9 @@ function Navbar({
           size={13}
           styles={{ indicator: { top: '-4px !important' } }}
         >
-          <NavText>LLMs</NavText>
+          <NavText>Analysis</NavText>
         </Indicator>
       ),
-      icon: <LLMIcon />,
-      link: `/${course_name}/llms`,
-    },
-    {
-      name: <NavText>Analysis</NavText>,
       icon: <ReportIcon />,
       link: `/${course_name}/analysis`,
     },
