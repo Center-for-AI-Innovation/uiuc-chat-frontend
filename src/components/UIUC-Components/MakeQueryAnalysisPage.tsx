@@ -18,6 +18,7 @@ import {
   // Divider,
   type MantineTheme,
   Divider,
+  ActionIcon,
   // TextInput,
   // Tooltip,
   Select,
@@ -40,6 +41,7 @@ import {
   IconChartBar,
   IconMessage2,
   IconMessageCircle2,
+  IconInfoCircle,
   IconUsers,
 } from '@tabler/icons-react'
 import { getWeeklyTrends } from '../../pages/api/UIUC-api/getWeeklyTrends'
@@ -385,7 +387,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                 <Title
                   order={3}
                   align="left"
-                  className={`px-2 text-[hsl(280,100%,70%)] ${montserrat_heading.variable} font-montserratHeading`}
+                  className={`px-4 text-[hsl(280,100%,70%)] ${montserrat_heading.variable} font-montserratHeading`}
                   style={{ flexGrow: 2 }}
                 >
                   Usage Overview
@@ -908,61 +910,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
             </div>
           </Flex>
         </div>
-        {/* NOMIC VISUALIZATION  */}
-        {/* {false ? ( */}
-        {/* {true ? ( */}
-        {nomicIsLoading ? (
-          <>
-            <span className="nomic-iframe skeleton-box pl-7 pr-7 pt-4"></span>
-          </>
-        ) : nomicMapData && nomicMapData.map_id ? (
-          <>
-            <iframe
-              className="nomic-iframe pl-7 pr-7 pt-4 pt-4"
-              id={nomicMapData.map_id}
-              allow="clipboard-read; clipboard-write"
-              src={nomicMapData.map_link}
-            />
-            <Title
-              order={6}
-              className={`w-full text-center ${montserrat_heading.variable} mt-2 font-montserratHeading`}
-            >
-              A conceptual map of the questions asked by users on this page.
-              <br></br>
-              Read more about{' '}
-              <a
-                className={'text-purple-600'}
-                href="https://atlas.nomic.ai/"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ textDecoration: 'underline', paddingRight: '5px' }}
-              >
-                semantic similarity visualizations
-              </a>
-            </Title>
-          </>
-        ) : (
-          <>
-            <Title
-              order={6}
-              className={`w-full text-center ${montserrat_heading.variable} mt-2 font-montserratHeading`}
-            >
-              Query visualization requires at least 20 queries to be made... go
-              ask some questions and check back later :)
-              <br></br>
-              Read more about{' '}
-              <a
-                className={'text-purple-600'}
-                href="https://atlas.nomic.ai/"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ textDecoration: 'underline', paddingRight: '5px' }}
-              >
-                semantic similarity visualizations
-              </a>
-            </Title>
-          </>
-        )}
+
+        <NomicDocumentMap course_name={course_name as string} />
         <GlobalFooter />
       </main>
     </>
@@ -979,7 +928,7 @@ import {
 
 import { CannotEditCourse } from './CannotEditCourse'
 import { type CourseMetadata } from '~/types/courseMetadata'
-// import { CannotViewCourse } from './CannotViewCourse'
+// import {CannotViewCourse} from './CannotViewCourse'
 
 interface CourseFile {
   name: string
@@ -1002,6 +951,8 @@ import GlobalFooter from './GlobalFooter'
 import Navbar from './navbars/Navbar'
 import Link from 'next/link'
 import { Separator } from 'tabler-icons-react'
+import { AnimatePresence, motion } from 'framer-motion'
+import NomicDocumentMap from './NomicDocumentsMap'
 
 const CourseFilesList = ({ files }: CourseFilesListProps) => {
   const router = useRouter()
