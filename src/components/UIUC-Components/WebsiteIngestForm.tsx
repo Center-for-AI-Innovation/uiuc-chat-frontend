@@ -342,205 +342,204 @@ export default function WebsiteIngestForm({
           <DialogTitle className="text-xl font-bold">
             Ingest Website
           </DialogTitle>
-          <div className="mt-4 max-h-[60vh] overflow-y-auto pr-4">
-            <div className="space-y-4">
-              <div>
-                <Input
-                  icon={icon}
-                  className={`mt-4 w-[100%] min-w-[25rem] disabled:bg-purple-200 lg:w-[100%]`}
-                  // wrapperProps={{ borderRadius: 'xl' }}
-                  // styles={{ input: { backgroundColor: '#1A1B1E' } }}
-                  styles={{
-                    input: {
-                      backgroundColor: '#1A1B1E',
-                      // paddingRight: '6rem', // Adjust right padding to prevent text from hiding behind the button
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      '&:focus': {
-                        borderColor: '#9370DB', // Change border color to a lighter purple only on focus
-                      },
+          {/* <div className="mt-4 max-h-[60vh] overflow-y-auto pr-4"> */}
+          <div className="space-y-4">
+            <div>
+              <Input
+                icon={icon}
+                className={`mt-4 w-[100%] min-w-[25rem] disabled:bg-purple-200 lg:w-[100%]`}
+                // wrapperProps={{ borderRadius: 'xl' }}
+                // styles={{ input: { backgroundColor: '#1A1B1E' } }}
+                styles={{
+                  input: {
+                    backgroundColor: '#1A1B1E',
+                    // paddingRight: '6rem', // Adjust right padding to prevent text from hiding behind the button
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    '&:focus': {
+                      borderColor: '#9370DB', // Change border color to a lighter purple only on focus
                     },
-                  }}
-                  placeholder="Enter URL..."
-                  radius={'xl'}
-                  type="url" // Set the type to 'url' to avoid thinking it's a username or pw.
-                  value={url}
-                  size={'lg'}
-                  onChange={(e) => {
-                    handleUrlChange(e)
-                  }}
-                />
-              </div>
-              <form
-                className="s:w-[30%] w-[90%] min-w-[20rem]"
-                onSubmit={(event) => {
-                  event.preventDefault()
+                  },
                 }}
-              >
-                <div className="pb-2 pt-2">
-                  <Tooltip
-                    multiline
-                    w={400}
-                    color="#15162b"
-                    arrowPosition="side"
-                    arrowSize={8}
-                    withArrow
-                    position="bottom-start"
-                    label="We will attempt to visit this number of pages, but not all will be scraped if they're duplicates, broken or otherwise inaccessible."
-                  >
-                    <div>
-                      <Text
-                        style={{ color: '#C1C2C5', fontSize: '16px' }}
-                        className={`${montserrat_heading.variable} font-montserratHeading`}
-                      >
-                        Max URLs (1 to 500)
-                      </Text>
-                      <TextInput
-                        styles={{
-                          input: {
-                            backgroundColor: '#1A1B1E',
-                            '&:focus': {
-                              borderColor: '#9370DB',
-                            },
-                          },
-                        }}
-                        name="maximumUrls"
-                        radius="md"
-                        placeholder="Default 50"
-                        value={maxUrls}
-                        onChange={(e) => {
-                          handleInputChange(e, 'maxUrls')
-                        }}
-                        error={inputErrors.maxUrls.error}
-                      />
-                    </div>
-                  </Tooltip>
-                </div>
-                {inputErrors.maxUrls.error && (
-                  <p style={{ color: 'red' }}>{inputErrors.maxUrls.message}</p>
-                )}
-                {inputErrors.maxDepth.error && (
-                  <p style={{ color: 'red' }}>{inputErrors.maxDepth.message}</p>
-                )}
-
-                <Text
-                  style={{ color: '#C1C2C5', fontSize: '16px' }}
-                  className={`${montserrat_heading.variable} font-montserratHeading`}
-                >
-                  Limit web crawl
-                </Text>
-                {/* <Text style={{ color: '#C1C2C5', fontSize: '16px' }} className={`${montserrat_paragraph.variable} font-montserratParagraph`}>Limit web crawl (from least to most inclusive)</Text> */}
-                <div className="pl-3">
-                  <List>
-                    <List.Item>
-                      <strong>Equal and Below:</strong> Only scrape content that
-                      starts will the given URL. E.g. nasa.gov/blogs will scrape
-                      all blogs like nasa.gov/blogs/new-rocket but never go to
-                      nasa.gov/events.
-                    </List.Item>
-                    <List.Item>
-                      <strong>Same subdomain:</strong> Crawl the entire
-                      subdomain. E.g. docs.nasa.gov will grab that entire
-                      subdomain, but not nasa.gov or api.nasa.gov.
-                    </List.Item>
-                    <List.Item>
-                      <strong>Entire domain:</strong> Crawl as much of this
-                      entire website as possible. E.g. nasa.gov also includes
-                      docs.nasa.gov
-                    </List.Item>
-                    <List.Item>
-                      <span>
-                        <strong>All:</strong> Start on the given URL and wander
-                        the web...{' '}
-                        <Text style={{ color: '#C1C2C5' }}>
-                          For more detail{' '}
-                          <a
-                            className={'text-purple-600'}
-                            href="https://docs.uiuc.chat/features/web-crawling-details"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            read the docs
-                          </a>
-                          .
-                        </Text>
-                      </span>
-                    </List.Item>
-                  </List>
-                </div>
-
-                <Text style={{ color: '#C1C2C5' }}>
-                  <strong>I suggest starting with Equal and Below</strong>, then
-                  just re-run this if you need more later.
-                </Text>
-                <div className="pt-2"></div>
-                <SegmentedControl
-                  fullWidth
-                  orientation="vertical"
-                  size="sm"
-                  radius="md"
-                  value={scrapeStrategy}
-                  onChange={(strat) => setScrapeStrategy(strat)}
-                  data={[
-                    {
-                      // Maybe use IconArrowBarDown ??
-                      value: 'equal-and-below',
-                      label: (
-                        <Center style={{ gap: 10 }}>
-                          <IconSitemap
-                            style={{ width: rem(16), height: rem(16) }}
-                          />
-                          <span>Equal and Below</span>
-                        </Center>
-                      ),
-                    },
-                    {
-                      value: 'same-hostname',
-                      label: (
-                        <Center style={{ gap: 10 }}>
-                          <IconSubtask
-                            style={{ width: rem(16), height: rem(16) }}
-                          />
-                          <span>Subdomain</span>
-                        </Center>
-                      ),
-                    },
-                    {
-                      value: 'same-domain',
-                      label: (
-                        <Center style={{ gap: 10 }}>
-                          <IconHome
-                            style={{ width: rem(16), height: rem(16) }}
-                          />
-                          <span>Entire domain</span>
-                        </Center>
-                      ),
-                    },
-                    {
-                      value: 'all',
-                      label: (
-                        <Center style={{ gap: 10 }}>
-                          <IconWorld
-                            style={{ width: rem(16), height: rem(16) }}
-                          />
-                          <span>All</span>
-                        </Center>
-                      ),
-                    },
-                  ]}
-                />
-              </form>
-              <Button
-                onClick={handleIngest}
-                disabled={!isUrlValid}
-                className="w-[80%] bg-purple-600 text-white hover:bg-purple-700"
-              >
-                Ingest the Website
-              </Button>
+                placeholder="Enter URL..."
+                radius={'xl'}
+                type="url" // Set the type to 'url' to avoid thinking it's a username or pw.
+                value={url}
+                size={'lg'}
+                onChange={(e) => {
+                  handleUrlChange(e)
+                }}
+              />
             </div>
+            <form
+              className="s:w-[30%] w-[90%] min-w-[20rem]"
+              onSubmit={(event) => {
+                event.preventDefault()
+              }}
+            >
+              <div className="pb-2 pt-2">
+                <Tooltip
+                  multiline
+                  w={400}
+                  color="#15162b"
+                  arrowPosition="side"
+                  arrowSize={8}
+                  withArrow
+                  position="bottom-start"
+                  label="We will attempt to visit this number of pages, but not all will be scraped if they're duplicates, broken or otherwise inaccessible."
+                >
+                  <div>
+                    <Text
+                      style={{ color: '#C1C2C5', fontSize: '16px' }}
+                      className={`${montserrat_heading.variable} font-montserratHeading`}
+                    >
+                      Max URLs (1 to 500)
+                    </Text>
+                    <TextInput
+                      styles={{
+                        input: {
+                          backgroundColor: '#1A1B1E',
+                          '&:focus': {
+                            borderColor: '#9370DB',
+                          },
+                        },
+                      }}
+                      name="maximumUrls"
+                      radius="md"
+                      placeholder="Default 50"
+                      value={maxUrls}
+                      onChange={(e) => {
+                        handleInputChange(e, 'maxUrls')
+                      }}
+                      error={inputErrors.maxUrls.error}
+                    />
+                  </div>
+                </Tooltip>
+              </div>
+              {inputErrors.maxUrls.error && (
+                <p style={{ color: 'red' }}>{inputErrors.maxUrls.message}</p>
+              )}
+              {inputErrors.maxDepth.error && (
+                <p style={{ color: 'red' }}>{inputErrors.maxDepth.message}</p>
+              )}
+
+              <Text
+                style={{ color: '#C1C2C5', fontSize: '16px' }}
+                className={`${montserrat_heading.variable} font-montserratHeading`}
+              >
+                Limit web crawl
+              </Text>
+              {/* <Text style={{ color: '#C1C2C5', fontSize: '16px' }} className={`${montserrat_paragraph.variable} font-montserratParagraph`}>Limit web crawl (from least to most inclusive)</Text> */}
+              <div className="pl-3">
+                <List>
+                  <List.Item>
+                    <strong>Equal and Below:</strong> Only scrape content that
+                    starts will the given URL. E.g. nasa.gov/blogs will scrape
+                    all blogs like nasa.gov/blogs/new-rocket but never go to
+                    nasa.gov/events.
+                  </List.Item>
+                  <List.Item>
+                    <strong>Same subdomain:</strong> Crawl the entire
+                    subdomain. E.g. docs.nasa.gov will grab that entire
+                    subdomain, but not nasa.gov or api.nasa.gov.
+                  </List.Item>
+                  <List.Item>
+                    <strong>Entire domain:</strong> Crawl as much of this
+                    entire website as possible. E.g. nasa.gov also includes
+                    docs.nasa.gov
+                  </List.Item>
+                  <List.Item>
+                    <span>
+                      <strong>All:</strong> Start on the given URL and wander
+                      the web...{' '}
+                      <Text style={{ color: '#C1C2C5' }}>
+                        For more detail{' '}
+                        <a
+                          className={'text-purple-600'}
+                          href="https://docs.uiuc.chat/features/web-crawling-details"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          read the docs
+                        </a>
+                        .
+                      </Text>
+                    </span>
+                  </List.Item>
+                </List>
+              </div>
+
+              <Text style={{ color: '#C1C2C5' }}>
+                <strong>I suggest starting with Equal and Below</strong>, then
+                just re-run this if you need more later.
+              </Text>
+              <div className="pt-2"></div>
+              <SegmentedControl
+                fullWidth
+                orientation="vertical"
+                size="sm"
+                radius="md"
+                value={scrapeStrategy}
+                onChange={(strat) => setScrapeStrategy(strat)}
+                data={[
+                  {
+                    // Maybe use IconArrowBarDown ??
+                    value: 'equal-and-below',
+                    label: (
+                      <Center style={{ gap: 10 }}>
+                        <IconSitemap
+                          style={{ width: rem(16), height: rem(16) }}
+                        />
+                        <span>Equal and Below</span>
+                      </Center>
+                    ),
+                  },
+                  {
+                    value: 'same-hostname',
+                    label: (
+                      <Center style={{ gap: 10 }}>
+                        <IconSubtask
+                          style={{ width: rem(16), height: rem(16) }}
+                        />
+                        <span>Subdomain</span>
+                      </Center>
+                    ),
+                  },
+                  {
+                    value: 'same-domain',
+                    label: (
+                      <Center style={{ gap: 10 }}>
+                        <IconHome
+                          style={{ width: rem(16), height: rem(16) }}
+                        />
+                        <span>Entire domain</span>
+                      </Center>
+                    ),
+                  },
+                  {
+                    value: 'all',
+                    label: (
+                      <Center style={{ gap: 10 }}>
+                        <IconWorld
+                          style={{ width: rem(16), height: rem(16) }}
+                        />
+                        <span>All</span>
+                      </Center>
+                    ),
+                  },
+                ]}
+              />
+            </form>
+            <Button
+              onClick={handleIngest}
+              disabled={!isUrlValid}
+              className="w-[80%] bg-purple-600 text-white hover:bg-purple-700"
+            >
+              Ingest the Website
+            </Button>
           </div>
-          {/* </ScrollArea> */}
+          {/* </div> */}
         </DialogContent>
       </Dialog>
     </motion.div>
