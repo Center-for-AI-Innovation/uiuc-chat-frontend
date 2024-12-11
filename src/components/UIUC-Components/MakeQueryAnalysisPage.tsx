@@ -20,6 +20,7 @@ import {
   Divider,
   // TextInput,
   // Tooltip,
+  Select,
 } from '@mantine/core'
 // const rubik_puddles = Rubik_Puddles({ weight: '400', subsets: ['latin'] })
 import React, { useEffect, useState } from 'react'
@@ -115,6 +116,86 @@ interface WeeklyTrend {
   metric_name: string
   percentage_change: number
   previous_week_value: number
+}
+
+const formatPercentageChange = (value: number | null | undefined) => {
+  if (value == null) return '0'
+  return value.toFixed(1)
+}
+
+const AggregatedConversationsChart = ({
+  hourData,
+  weekdayData,
+  isLoading,
+  error,
+}: {
+  hourData: { [key: string]: number }
+  weekdayData: { [key: string]: number }
+  isLoading: boolean
+  error: string | null
+}) => {
+  const [view, setView] = useState('hour')
+
+  return (
+    <>
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <Title order={4} className="text-white">
+            Aggregated Conversation Breakdown
+          </Title>
+          <Text size="sm" color="dimmed" mt={1}>
+            View conversation patterns by hour of day or day of week
+          </Text>
+        </div>
+        <Select
+          value={view}
+          onChange={(value) => setView(value || 'hour')}
+          data={[
+            { value: 'hour', label: 'By Hour' },
+            { value: 'weekday', label: 'By Day of Week' },
+          ]}
+          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+          styles={(theme) => ({
+            input: {
+              backgroundColor: '#232438',
+              borderColor: theme.colors.grape[8],
+              color: theme.white,
+              '&:hover': {
+                borderColor: theme.colors.grape[7],
+              },
+            },
+            item: {
+              backgroundColor: '#232438',
+              color: theme.white,
+              '&:hover': {
+                backgroundColor: theme.colors.grape[8],
+              },
+            },
+            dropdown: {
+              backgroundColor: '#232438',
+              borderColor: theme.colors.grape[8],
+            },
+          })}
+          size="xs"
+          w={150}
+        />
+      </div>
+
+      {view === 'hour' ? (
+        <ConversationsPerHourChart
+          data={hourData}
+          isLoading={isLoading}
+          error={error}
+        />
+      ) : (
+        <ConversationsPerDayOfWeekChart
+          data={weekdayData}
+          isLoading={isLoading}
+          error={error}
+        />
+      )}
+    </>
+  )
 }
 
 const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
@@ -302,6 +383,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     fetchModelUsage()
   }, [course_name])
 
+  const [view, setView] = useState('hour')
+
   if (!isLoaded || !courseMetadata) {
     return (
       <MainPageBackground>
@@ -482,7 +565,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                                       }
                                     >
                                       {trend.percentage_change > 0 ? '+' : ''}
-                                      {trend.percentage_change.toFixed(1)}%
+                                      {formatPercentageChange(
+                                        trend.percentage_change,
+                                      )}
+                                      %
                                     </Text>
                                   </div>
                                   <div className="flex flex-col items-end">
@@ -568,7 +654,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                                       }
                                     >
                                       {trend.percentage_change > 0 ? '+' : ''}
-                                      {trend.percentage_change.toFixed(1)}%
+                                      {formatPercentageChange(
+                                        trend.percentage_change,
+                                      )}
+                                      %
                                     </Text>
                                   </div>
                                   <div className="flex flex-col items-end">
@@ -654,7 +743,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                                       }
                                     >
                                       {trend.percentage_change > 0 ? '+' : ''}
-                                      {trend.percentage_change.toFixed(1)}%
+                                      {formatPercentageChange(
+                                        trend.percentage_change,
+                                      )}
+                                      %
                                     </Text>
                                   </div>
                                   <div className="flex flex-col items-end">
@@ -813,7 +905,27 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                   </div>
                 ) : (
                   <>
-                    {/* Chart 1 */}
+                    {/* Model Usage Chart - Moved to top */}
+                    <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
+                      <Title
+                        order={4}
+                        mb="md"
+                        align="left"
+                        className="text-white"
+                      >
+                        Model Usage Distribution
+                      </Title>
+                      <Text size="sm" color="dimmed" mb="xl">
+                        Distribution of AI models used across all conversations
+                      </Text>
+                      <ModelUsageChart
+                        data={modelUsageData}
+                        isLoading={modelUsageLoading}
+                        error={modelUsageError}
+                      />
+                    </div>
+
+                    {/* Conversations Per Day Chart */}
                     <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
                       <Title
                         order={4}
@@ -834,51 +946,68 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                       />
                     </div>
 
-                    {/* Chart 2 */}
+                    {/* Combined Hour/Weekday Chart */}
                     <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
-                      <Title
-                        order={4}
-                        mb="md"
-                        align="left"
-                        className="text-white"
-                      >
-                        Conversations Per Hour
-                      </Title>
-                      <Text size="sm" color="dimmed" mb="xl">
-                        Displays the total number of conversations that occurred
-                        during each hour of the day (24-hour format), aggregated
-                        across all days
-                      </Text>
-                      <ConversationsPerHourChart
-                        data={conversationStats?.per_hour}
-                        isLoading={statsLoading}
-                        error={statsError}
-                      />
+                      <div className="mb-4 flex items-center justify-between">
+                        <div>
+                          <Title order={4} className="text-white">
+                            Aggregated Conversation Breakdown
+                          </Title>
+                          <Text size="sm" color="dimmed" mt={1}>
+                            View conversation patterns by hour of day or day of
+                            week
+                          </Text>
+                        </div>
+                        <Select
+                          value={view}
+                          onChange={(value) => setView(value || 'hour')}
+                          data={[
+                            { value: 'hour', label: 'By Hour' },
+                            { value: 'weekday', label: 'By Day of Week' },
+                          ]}
+                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                          styles={(theme) => ({
+                            input: {
+                              backgroundColor: '#232438',
+                              borderColor: theme.colors.grape[8],
+                              color: theme.white,
+                              '&:hover': {
+                                borderColor: theme.colors.grape[7],
+                              },
+                            },
+                            item: {
+                              backgroundColor: '#232438',
+                              color: theme.white,
+                              '&:hover': {
+                                backgroundColor: theme.colors.grape[8],
+                              },
+                            },
+                            dropdown: {
+                              backgroundColor: '#232438',
+                              borderColor: theme.colors.grape[8],
+                            },
+                          })}
+                          size="xs"
+                          w={150}
+                        />
+                      </div>
+
+                      {view === 'hour' ? (
+                        <ConversationsPerHourChart
+                          data={conversationStats?.per_hour}
+                          isLoading={statsLoading}
+                          error={statsError}
+                        />
+                      ) : (
+                        <ConversationsPerDayOfWeekChart
+                          data={conversationStats?.per_weekday}
+                          isLoading={statsLoading}
+                          error={statsError}
+                        />
+                      )}
                     </div>
 
-                    {/* Chart 3 */}
-                    <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
-                      <Title
-                        order={4}
-                        mb="md"
-                        align="left"
-                        className="text-white"
-                      >
-                        Conversations Per Day of the Week
-                      </Title>
-                      <Text size="sm" color="dimmed" mb="xl">
-                        Shows the total number of conversations that occurred on
-                        each day of the week, helping identify which days are
-                        most active
-                      </Text>
-                      <ConversationsPerDayOfWeekChart
-                        data={conversationStats?.per_weekday}
-                        isLoading={statsLoading}
-                        error={statsError}
-                      />
-                    </div>
-
-                    {/* Chart 4 */}
+                    {/* Heatmap Chart */}
                     <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
                       <Title
                         order={4}
@@ -890,33 +1019,12 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                       </Title>
                       <Text size="sm" color="dimmed" mb="xl">
                         A heatmap showing conversation density across both days
-                        and hours, with darker colors indicating higher activity
-                        during those time periods
+                        and hours
                       </Text>
                       <ConversationsHeatmapByHourChart
                         data={conversationStats?.heatmap}
                         isLoading={statsLoading}
                         error={statsError}
-                      />
-                    </div>
-
-                    {/* Add this new chart */}
-                    <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
-                      <Title
-                        order={4}
-                        mb="md"
-                        align="left"
-                        className="text-white"
-                      >
-                        Model Usage Distribution
-                      </Title>
-                      <Text size="sm" color="dimmed" mb="xl">
-                        Distribution of AI models used across all conversations
-                      </Text>
-                      <ModelUsageChart
-                        data={modelUsageData}
-                        isLoading={modelUsageLoading}
-                        error={modelUsageError}
                       />
                     </div>
                   </>
