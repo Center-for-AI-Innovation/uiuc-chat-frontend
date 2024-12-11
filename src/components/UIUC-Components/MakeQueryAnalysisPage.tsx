@@ -656,7 +656,6 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                       <Text
                         size="lg"
                         weight={600}
-                        color="dimmed"
                         className={`${montserrat_heading.variable} font-montserratHeading`}
                       >
                         User Engagement Metrics
