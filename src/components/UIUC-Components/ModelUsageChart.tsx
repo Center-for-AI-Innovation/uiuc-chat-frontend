@@ -166,7 +166,7 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
         <text
           x={x}
           y={y}
-          fill={contrastColor}
+          fill="#ffffff"
           textAnchor={textAnchor}
           dominantBaseline="middle"
           style={{
@@ -181,7 +181,7 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
           d={`M${cx + (outerRadius + 2) * Math.cos(-midAngle * RADIAN)},${
             cy + (outerRadius + 2) * Math.sin(-midAngle * RADIAN)
           }L${x - (textAnchor === 'start' ? 5 : -5)},${y}`}
-          stroke={contrastColor}
+          stroke="#ffffff"
           fill="none"
           strokeWidth={1}
           opacity={0.5}
@@ -230,6 +230,7 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
               border: '1px solid #333',
               borderRadius: '4px',
               fontSize: '14px',
+              color: '#ffffff',
             }}
             itemStyle={{ color: '#fff' }}
             labelStyle={{ color: '#fff' }}
@@ -245,6 +246,7 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
               fontSize: windowWidth < 768 ? '10px' : '12px',
               paddingLeft: windowWidth < 768 ? '10px' : '20px',
               maxWidth: windowWidth < 768 ? '45%' : '35%',
+              color: '#ffffff',
             }}
             formatter={(value: string, entry: any) => {
               const item = chartData.find((d) => d.name === value)

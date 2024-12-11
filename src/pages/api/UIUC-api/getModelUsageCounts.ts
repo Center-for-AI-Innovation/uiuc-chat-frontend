@@ -24,7 +24,7 @@ export default async function handler(req: NextRequest, res: NextResponse) {
 
   try {
     const response = await fetch(
-      `http://127.0.0.1:8000/getModelUsageCounts?project_name=${project_name}`,
+      `https://flask-pr-319.up.railway.app/getModelUsageCounts?project_name=${project_name}`,
     )
 
     if (!response.ok) {

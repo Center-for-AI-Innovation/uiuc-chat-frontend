@@ -504,8 +504,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                 {/* Main Stats Grid with Integrated Weekly Trends */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                   {/* Conversations Card */}
-                  <div className="rounded-lg bg-[#232438] p-5 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
-                    <div className="mb-4 flex items-center justify-between">
+                  <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
+                    <div className="mb-3 flex items-center justify-between">
                       <div>
                         <Text size="sm" color="dimmed" weight={500} mb={1}>
                           Total Conversations
@@ -514,88 +514,73 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           All-time chat sessions
                         </Text>
                       </div>
-                      <IconMessageCircle2
-                        size={28}
-                        className="text-purple-400 opacity-80"
-                      />
+                      <div className="rounded-full bg-purple-400/10 p-2">
+                        <IconMessageCircle2
+                          size={24}
+                          className="text-purple-400"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <Text size="2xl" weight={700} className="text-purple-400">
-                        {courseStats?.total_conversations?.toLocaleString() ||
-                          0}
-                      </Text>
-                      {(() => {
-                        const trend = weeklyTrends.find(
-                          (t) => t.metric_name === 'Total Conversations',
-                        )
-                        if (!trend) return null
+                    <div className="mt-4">
+                      <div className="flex items-center gap-3">
+                        <Text
+                          size="xl"
+                          weight={700}
+                          className="text-purple-400"
+                        >
+                          {courseStats?.total_conversations?.toLocaleString() ||
+                            '0'}
+                        </Text>
+                        {(() => {
+                          const trend = weeklyTrends.find(
+                            (t) => t.metric_name === 'Total Conversations',
+                          )
+                          if (!trend) return null
 
-                        return (
-                          <div className="mt-3 space-y-2">
+                          return (
                             <div
-                              className={`flex items-center justify-between rounded-md ${
+                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
                                 trend.percentage_change > 0
                                   ? 'bg-green-400/10'
                                   : 'bg-red-400/10'
-                              } p-2`}
+                              }`}
                             >
-                              {trendsLoading ? (
-                                <LoadingSpinner size="xs" />
+                              {trend.percentage_change > 0 ? (
+                                <IconTrendingUp
+                                  size={18}
+                                  className="text-green-400"
+                                />
                               ) : (
-                                <>
-                                  <div className="flex items-center gap-2">
-                                    {trend.percentage_change > 0 ? (
-                                      <IconTrendingUp
-                                        size={18}
-                                        className="text-green-400"
-                                      />
-                                    ) : (
-                                      <IconTrendingDown
-                                        size={18}
-                                        className="text-red-400"
-                                      />
-                                    )}
-                                    <Text
-                                      size="sm"
-                                      weight={500}
-                                      className={
-                                        trend.percentage_change > 0
-                                          ? 'text-green-400'
-                                          : 'text-red-400'
-                                      }
-                                    >
-                                      {trend.percentage_change > 0 ? '+' : ''}
-                                      {formatPercentageChange(
-                                        trend.percentage_change,
-                                      )}
-                                      %
-                                    </Text>
-                                  </div>
-                                  <div className="flex flex-col items-end">
-                                    <Text size="xs" color="dimmed">
-                                      Weekly Change
-                                    </Text>
-                                    <Text size="xs" color="dimmed">
-                                      Last Week:{' '}
-                                      {trend.previous_week_value.toLocaleString()}
-                                    </Text>
-                                    <Text size="xs" color="dimmed">
-                                      This Week:{' '}
-                                      {trend.current_week_value.toLocaleString()}
-                                    </Text>
-                                  </div>
-                                </>
+                                <IconTrendingDown
+                                  size={18}
+                                  className="text-red-400"
+                                />
                               )}
+                              <Text
+                                size="sm"
+                                weight={500}
+                                className={
+                                  trend.percentage_change > 0
+                                    ? 'text-green-400'
+                                    : 'text-red-400'
+                                }
+                              >
+                                {trend.percentage_change > 0 ? '+' : ''}
+                                {formatPercentageChange(
+                                  trend.percentage_change,
+                                )}
+                                % vs last week
+                              </Text>
                             </div>
-                          </div>
-                        )
-                      })()}
+                          )
+                        })()}
+                      </div>
                     </div>
                   </div>
 
                   {/* Users Card */}
-                  <div className="rounded-lg bg-[#232438] p-5 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
-                    <div className="mb-4 flex items-center justify-between">
+                  <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
+                    <div className="mb-3 flex items-center justify-between">
                       <div>
                         <Text size="sm" color="dimmed" weight={500} mb={1}>
                           Total Users
@@ -604,87 +589,69 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           All-time unique participants
                         </Text>
                       </div>
-                      <IconUsers
-                        size={28}
-                        className="text-purple-400 opacity-80"
-                      />
+                      <div className="rounded-full bg-purple-400/10 p-2">
+                        <IconUsers size={24} className="text-purple-400" />
+                      </div>
                     </div>
-                    <div>
-                      <Text size="2xl" weight={700} className="text-purple-400">
-                        {courseStats?.total_users?.toLocaleString() || 0}
-                      </Text>
-                      {(() => {
-                        const trend = weeklyTrends.find(
-                          (t) => t.metric_name === 'Unique Users',
-                        )
-                        if (!trend) return null
+                    <div className="mt-4">
+                      <div className="flex items-center gap-3">
+                        <Text
+                          size="xl"
+                          weight={700}
+                          className="text-purple-400"
+                        >
+                          {courseStats?.total_users?.toLocaleString() || '0'}
+                        </Text>
+                        {(() => {
+                          const trend = weeklyTrends.find(
+                            (t) => t.metric_name === 'Unique Users',
+                          )
+                          if (!trend) return null
 
-                        return (
-                          <div className="mt-3 space-y-2">
+                          return (
                             <div
-                              className={`flex items-center justify-between rounded-md ${
+                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
                                 trend.percentage_change > 0
                                   ? 'bg-green-400/10'
                                   : 'bg-red-400/10'
-                              } p-2`}
+                              }`}
                             >
-                              {trendsLoading ? (
-                                <LoadingSpinner size="xs" />
+                              {trend.percentage_change > 0 ? (
+                                <IconTrendingUp
+                                  size={18}
+                                  className="text-green-400"
+                                />
                               ) : (
-                                <>
-                                  <div className="flex items-center gap-2">
-                                    {trend.percentage_change > 0 ? (
-                                      <IconTrendingUp
-                                        size={18}
-                                        className="text-green-400"
-                                      />
-                                    ) : (
-                                      <IconTrendingDown
-                                        size={18}
-                                        className="text-red-400"
-                                      />
-                                    )}
-                                    <Text
-                                      size="sm"
-                                      weight={500}
-                                      className={
-                                        trend.percentage_change > 0
-                                          ? 'text-green-400'
-                                          : 'text-red-400'
-                                      }
-                                    >
-                                      {trend.percentage_change > 0 ? '+' : ''}
-                                      {formatPercentageChange(
-                                        trend.percentage_change,
-                                      )}
-                                      %
-                                    </Text>
-                                  </div>
-                                  <div className="flex flex-col items-end">
-                                    <Text size="xs" color="dimmed">
-                                      Weekly Change
-                                    </Text>
-                                    <Text size="xs" color="dimmed">
-                                      Last Week:{' '}
-                                      {trend.previous_week_value.toLocaleString()}
-                                    </Text>
-                                    <Text size="xs" color="dimmed">
-                                      This Week:{' '}
-                                      {trend.current_week_value.toLocaleString()}
-                                    </Text>
-                                  </div>
-                                </>
+                                <IconTrendingDown
+                                  size={18}
+                                  className="text-red-400"
+                                />
                               )}
+                              <Text
+                                size="sm"
+                                weight={500}
+                                className={
+                                  trend.percentage_change > 0
+                                    ? 'text-green-400'
+                                    : 'text-red-400'
+                                }
+                              >
+                                {trend.percentage_change > 0 ? '+' : ''}
+                                {formatPercentageChange(
+                                  trend.percentage_change,
+                                )}
+                                % vs last week
+                              </Text>
                             </div>
-                          </div>
-                        )
-                      })()}
+                          )
+                        })()}
+                      </div>
                     </div>
                   </div>
 
                   {/* Messages Card */}
-                  <div className="rounded-lg bg-[#232438] p-5 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
-                    <div className="mb-4 flex items-center justify-between">
+                  <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
+                    <div className="mb-3 flex items-center justify-between">
                       <div>
                         <Text size="sm" color="dimmed" weight={500} mb={1}>
                           Messages
@@ -693,81 +660,63 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           Total exchanges
                         </Text>
                       </div>
-                      <IconMessage2
-                        size={28}
-                        className="text-purple-400 opacity-80"
-                      />
+                      <div className="rounded-full bg-purple-400/10 p-2">
+                        <IconMessage2 size={24} className="text-purple-400" />
+                      </div>
                     </div>
-                    <div>
-                      <Text size="2xl" weight={700} className="text-purple-400">
-                        {courseStats?.total_messages?.toLocaleString() || 0}
-                      </Text>
-                      {(() => {
-                        const trend = weeklyTrends.find(
-                          (t) => t.metric_name === 'Total Messages',
-                        )
-                        if (!trend) return null
+                    <div className="mt-4">
+                      <div className="flex items-center gap-3">
+                        <Text
+                          size="xl"
+                          weight={700}
+                          className="text-purple-400"
+                        >
+                          {courseStats?.total_messages?.toLocaleString() || '0'}
+                        </Text>
+                        {(() => {
+                          const trend = weeklyTrends.find(
+                            (t) => t.metric_name === 'Total Messages',
+                          )
+                          if (!trend) return null
 
-                        return (
-                          <div className="mt-3 space-y-2">
+                          return (
                             <div
-                              className={`flex items-center justify-between rounded-md ${
+                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
                                 trend.percentage_change > 0
                                   ? 'bg-green-400/10'
                                   : 'bg-red-400/10'
-                              } p-2`}
+                              }`}
                             >
-                              {trendsLoading ? (
-                                <LoadingSpinner size="xs" />
+                              {trend.percentage_change > 0 ? (
+                                <IconTrendingUp
+                                  size={18}
+                                  className="text-green-400"
+                                />
                               ) : (
-                                <>
-                                  <div className="flex items-center gap-2">
-                                    {trend.percentage_change > 0 ? (
-                                      <IconTrendingUp
-                                        size={18}
-                                        className="text-green-400"
-                                      />
-                                    ) : (
-                                      <IconTrendingDown
-                                        size={18}
-                                        className="text-red-400"
-                                      />
-                                    )}
-                                    <Text
-                                      size="sm"
-                                      weight={500}
-                                      className={
-                                        trend.percentage_change > 0
-                                          ? 'text-green-400'
-                                          : 'text-red-400'
-                                      }
-                                    >
-                                      {trend.percentage_change > 0 ? '+' : ''}
-                                      {formatPercentageChange(
-                                        trend.percentage_change,
-                                      )}
-                                      %
-                                    </Text>
-                                  </div>
-                                  <div className="flex flex-col items-end">
-                                    <Text size="xs" color="dimmed">
-                                      Weekly Change
-                                    </Text>
-                                    <Text size="xs" color="dimmed">
-                                      Last Week:{' '}
-                                      {trend.previous_week_value.toLocaleString()}
-                                    </Text>
-                                    <Text size="xs" color="dimmed">
-                                      This Week:{' '}
-                                      {trend.current_week_value.toLocaleString()}
-                                    </Text>
-                                  </div>
-                                </>
+                                <IconTrendingDown
+                                  size={18}
+                                  className="text-red-400"
+                                />
                               )}
+                              <Text
+                                size="sm"
+                                weight={500}
+                                className={
+                                  trend.percentage_change > 0
+                                    ? 'text-green-400'
+                                    : 'text-red-400'
+                                }
+                              >
+                                {trend.percentage_change > 0 ? '+' : ''}
+                                {formatPercentageChange(
+                                  trend.percentage_change,
+                                )}
+                                % vs last week
+                              </Text>
                             </div>
-                          </div>
-                        )
-                      })()}
+                          )
+                        })()}
+                      </div>
                     </div>
                   </div>
                 </div>
