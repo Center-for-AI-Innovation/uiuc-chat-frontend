@@ -15,7 +15,7 @@ export default async function handler(req: NextRequest, res: NextResponse) {
 
   try {
     const response = await fetch(
-      `https://flask-production-751b.up.railway.app/getProjectStats?project_name=${project_name}`,
+      `https://flask-production-751b.up.railway.app/api/getProjectStats?project_name=${project_name}`,
     )
 
     if (!response.ok) {
