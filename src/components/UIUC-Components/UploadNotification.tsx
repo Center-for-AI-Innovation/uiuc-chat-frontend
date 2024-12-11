@@ -179,7 +179,7 @@ function UploadNotificationContent({
             component="pre"
           >
             {currentFiles.some((file) => file.status === 'error')
-              ? 'If it still doesn&#39;t work, please try again and let us know!'
+              ? 'If it doesn&#39;t work, please try again and let us know!'
               : currentFiles.some((file) => file.status === 'uploading')
                 ? 'Please stay on this page while files are uploading'
                 : currentFiles.some((file) => file.status === 'ingesting')
