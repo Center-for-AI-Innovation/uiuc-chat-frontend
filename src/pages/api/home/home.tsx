@@ -321,6 +321,11 @@ const Home = ({
   }
 
   const handleNewConversation = () => {
+    // If we're already in an empty conversation, don't create a new one
+    if (selectedConversation && selectedConversation.messages.length === 0) {
+      return
+    }
+
     const lastConversation = conversations[conversations.length - 1]
 
     // Determine the model to use for the new conversation
@@ -328,7 +333,7 @@ const Home = ({
 
     const newConversation: Conversation = {
       id: uuidv4(),
-      name: t('New Conversation'),
+      name: '',
       messages: [],
       model: model,
       prompt: DEFAULT_SYSTEM_PROMPT,
@@ -340,17 +345,8 @@ const Home = ({
       updatedAt: new Date().toISOString(),
     }
 
-    const updatedConversations = [newConversation, ...conversations]
-
+    // Only update selectedConversation, don't add to conversations list yet
     dispatch({ field: 'selectedConversation', value: newConversation })
-    dispatch({ field: 'conversations', value: updatedConversations })
-
-    // saveConversation(newConversation)
-    // saveConversations(updatedConversations)
-    // saveConversationToServer(newConversation).catch((error) => {
-    //   console.error('Error saving updated conversation to server:', error)
-    // })
-
     dispatch({ field: 'loading', value: false })
     localStorage.setItem(
       'selectedConversation',
