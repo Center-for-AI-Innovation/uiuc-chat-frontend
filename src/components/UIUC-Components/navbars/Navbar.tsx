@@ -377,14 +377,15 @@ export default function Navbar({
 
   useEffect(() => {
     if (!router.isReady) return
-    setActiveLink(router.asPath.split('?')[0]!)
+    const path = router.asPath.split('?')[0]
+    if (path) setActiveLink(path)
   }, [router.asPath, router.isReady])
 
   const items: NavItem[] = [
     {
       name: <NavText>Dashboard</NavText>,
       icon: <DashboardIcon />,
-      link: `/${course_name}`,
+      link: `/${course_name}/dashboard`,
     },
     {
       name: <NavText>LLMs</NavText>,
