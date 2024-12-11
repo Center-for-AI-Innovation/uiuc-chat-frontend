@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 
 export const runtime = 'edge'
 
-export default async function handler(req: NextRequest, res: NextResponse) {
+export default async function handler(req: NextRequest) {
   const project_name = req.nextUrl.searchParams.get('project_name')
 
   if (!project_name) {
@@ -14,7 +14,7 @@ export default async function handler(req: NextRequest, res: NextResponse) {
 
   try {
     const response = await fetch(
-      `https://flask-pr-319.up.railway.app/getWeeklyTrends?project_name=${project_name}`,
+      `https://flask-production-751b.up.railway.app/getWeeklyTrends?project_name=${project_name}`,
     )
 
     if (!response.ok) {

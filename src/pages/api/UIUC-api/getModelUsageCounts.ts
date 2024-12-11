@@ -21,7 +21,7 @@ export default async function handler(req: NextRequest, res: NextResponse) {
   try {
     console.log('Making request to backend for project:', project_name)
     const response = await fetch(
-      `https://flask-pr-319.up.railway.app/getModelUsageCounts?project_name=${project_name}`,
+      `https://flask-production-751b.up.railway.app/getModelUsageCounts?project_name=${project_name}`,
     )
 
     if (!response.ok) {

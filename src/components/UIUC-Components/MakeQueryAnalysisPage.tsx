@@ -16,7 +16,7 @@ import {
   Flex,
   createStyles,
   // Divider,
-  MantineTheme,
+  type MantineTheme,
   Divider,
   // TextInput,
   // Tooltip,
@@ -123,81 +123,6 @@ const formatPercentageChange = (value: number | null | undefined) => {
   return value.toFixed(1)
 }
 
-const AggregatedConversationsChart = ({
-  hourData,
-  weekdayData,
-  isLoading,
-  error,
-}: {
-  hourData: { [key: string]: number }
-  weekdayData: { [key: string]: number }
-  isLoading: boolean
-  error: string | null
-}) => {
-  const [view, setView] = useState('hour')
-
-  return (
-    <>
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <Title order={4} className="text-white">
-            Aggregated Conversation Breakdown
-          </Title>
-          <Text size="sm" color="dimmed" mt={1}>
-            View conversation patterns by hour of day or day of week
-          </Text>
-        </div>
-        <Select
-          value={view}
-          onChange={(value) => setView(value || 'hour')}
-          data={[
-            { value: 'hour', label: 'By Hour' },
-            { value: 'weekday', label: 'By Day of Week' },
-          ]}
-          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-          styles={(theme) => ({
-            input: {
-              backgroundColor: '#232438',
-              borderColor: theme.colors.grape[8],
-              color: theme.white,
-              '&:hover': {
-                borderColor: theme.colors.grape[7],
-              },
-            },
-            item: {
-              backgroundColor: '#232438',
-              color: theme.white,
-              '&:hover': {
-                backgroundColor: theme.colors.grape[8],
-              },
-            },
-            dropdown: {
-              backgroundColor: '#232438',
-              borderColor: theme.colors.grape[8],
-            },
-          })}
-          size="xs"
-          w={150}
-        />
-      </div>
-
-      {view === 'hour' ? (
-        <ConversationsPerHourChart
-          data={hourData}
-          isLoading={isLoading}
-          error={error}
-        />
-      ) : (
-        <ConversationsPerDayOfWeekChart
-          data={weekdayData}
-          isLoading={isLoading}
-          error={error}
-        />
-      )}
-    </>
-  )
-}
-
 const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
   const { classes, theme } = useStyles()
@@ -257,7 +182,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     }
 
     fetchData()
-  }, [currentPageName, clerk_user.isLoaded])
+  }, [currentPageName, clerk_user.isLoaded, clerk_user.user])
 
   const [nomicMapData, setNomicMapData] = useState<NomicMapData | null>(null)
   const [nomicIsLoading, setNomicIsLoading] = useState(true)
