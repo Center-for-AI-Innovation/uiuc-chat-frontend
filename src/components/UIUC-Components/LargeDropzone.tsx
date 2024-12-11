@@ -88,7 +88,7 @@ export function LargeDropzone({
     if (is_new_course) {
       // refresh current page
       await new Promise((resolve) => setTimeout(resolve, 200))
-      await router.push(`/${courseName}/materials`)
+      await router.push(`/${courseName}/dashboard`)
       return
     }
 

@@ -73,7 +73,7 @@ const ChatPage: NextPage = () => {
       } else {
         // 🆕 MAKE A NEW COURSE
         console.log('Course does not exist, redirecting to materials page')
-        router.push(`/${courseName}/materials`)
+        router.push(`/${courseName}/dashboard`)
       }
       // console.log(
       //   'Changing user email to: ',

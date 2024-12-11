@@ -91,7 +91,7 @@ const MakeNewCoursePage = ({
       )
       console.log('Project created successfully:', result)
       if (is_new_course) {
-        await router.push(`/${projectName}/materials`)
+        await router.push(`/${projectName}/dashboard`)
         return
       }
     } catch (error) {
