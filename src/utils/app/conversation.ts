@@ -30,9 +30,35 @@ export async function fetchConversationHistory(
     }
 
     const { conversations, nextCursor } = await response.json()
+    
+    // Clean the conversations and ensure they're properly structured
+    const cleanedConversations = conversations.map((conversation: any) => {
+      // Ensure messages are properly ordered by creation time
+      if (conversation.messages) {
+        conversation.messages.sort((a: any, b: any) => {
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        })
+      }
+      return conversation
+    })
 
-    finalResponse = cleanConversationHistory(conversations)
+    finalResponse = cleanConversationHistory(cleanedConversations)
     finalResponse.nextCursor = nextCursor
+
+    // Sync with local storage
+    const selectedConversation = localStorage.getItem('selectedConversation')
+    if (selectedConversation) {
+      const parsed = JSON.parse(selectedConversation)
+      const serverConversation = finalResponse.conversations.find(
+        (c) => c.id === parsed.id
+      )
+      if (serverConversation) {
+        localStorage.setItem(
+          'selectedConversation',
+          JSON.stringify(serverConversation)
+        )
+      }
+    }
   } catch (error) {
     console.error('Error fetching conversation history:', error)
   }

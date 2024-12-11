@@ -6,9 +6,7 @@ import {
   Text,
   Textarea,
   Button,
-  Group,
   createStyles,
-  ActionIcon,
 } from '@mantine/core'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
@@ -24,10 +22,10 @@ import WebsiteIngestForm from './WebsiteIngestForm'
 import GitHubIngestForm from './GitHubIngestForm'
 import MITIngestForm from './MITIngestForm'
 import CourseraIngestForm from './CourseraIngestForm'
-import { memo, useState } from 'react'
+import { memo, useState, useEffect } from 'react'
 import { IconShare } from '@tabler/icons-react'
 import ShareSettingsModal from './ShareSettingsModal'
-import UploadNotification, { FileUpload } from './UploadNotification'
+import UploadNotification, { type FileUpload } from './UploadNotification'
 import { useQueryClient } from '@tanstack/react-query'
 
 const montserrat_light = Montserrat({
@@ -83,25 +81,48 @@ const useStyles = createStyles((theme) => ({
 export const UploadCard = memo(function UploadCard({
   projectName,
   current_user_email,
-  metadata,
+  metadata: initialMetadata,
 }: {
   projectName: string
   current_user_email: string
   metadata: CourseMetadata
 }) {
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
-  const { classes, theme } = useStyles()
   const [projectDescription, setProjectDescription] = useState(
-    metadata?.project_description || '',
+    initialMetadata?.project_description || '',
   )
-  const queryClient = useQueryClient() // Add this hook
+  const queryClient = useQueryClient()
   const [introMessage, setIntroMessage] = useState(
-    metadata?.course_intro_message || '',
+    initialMetadata?.course_intro_message || '',
   )
   const [showNotification, setShowNotification] = useState(false)
   const [isIntroMessageUpdated, setIsIntroMessageUpdated] = useState(false)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [uploadFiles, setUploadFiles] = useState<FileUpload[]>([])
+  const [metadata, setMetadata] = useState(initialMetadata)
+
+  useEffect(() => {
+    // Set initial query data
+    queryClient.setQueryData(['courseMetadata', projectName], initialMetadata)
+  }, [])
+
+  // Update local state when query data changes
+  useEffect(() => {
+    const unsubscribe = queryClient.getQueryCache().subscribe(() => {
+      const latestData = queryClient.getQueryData([
+        'courseMetadata',
+        projectName,
+      ])
+      if (latestData) {
+        setMetadata(latestData as CourseMetadata)
+      }
+    })
+
+    return () => {
+      unsubscribe()
+    }
+  }, [projectName, queryClient])
+
   const handleCloseNotification = () => {
     setShowNotification(false)
     setUploadFiles([])

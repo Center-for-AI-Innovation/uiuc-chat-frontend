@@ -13,6 +13,8 @@ import {
   createStyles,
   rem,
   Transition,
+  Tooltip,
+  Divider,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import {
@@ -23,7 +25,7 @@ import {
   Code,
   Brain,
 } from 'tabler-icons-react'
-import { IconHome } from '@tabler/icons-react'
+import { IconHome, IconFilePlus, IconClipboardText } from '@tabler/icons-react'
 
 interface NavbarProps {
   course_name?: string
@@ -81,6 +83,9 @@ const useStyles = createStyles((theme) => ({
     transition:
       'border-color 100ms ease, color 100ms ease, background-color 100ms ease',
     borderRadius: theme.radius.sm,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
 
     '&:hover': {
       color: 'hsl(280,100%,70%)',
@@ -117,6 +122,28 @@ const useStyles = createStyles((theme) => ({
     [theme.fn.largerThan('lg')]: {
       display: 'none',
     },
+  },
+
+  iconButton: {
+    color: '#f1f5f9',
+    width: '40px',
+    height: '40px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '8px',
+    transition: 'all 0.2s ease',
+
+    '&:hover': {
+      color: 'hsl(280,100%,70%)',
+      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    },
+  },
+
+  divider: {
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    height: '2rem',
+    marginTop: '0.25rem',
   },
 }))
 
@@ -330,19 +357,28 @@ export function ChartDots3Icon() {
   )
 }
 
-function Navbar({
+export function FileIcon() {
+  return <IconFilePlus size={20} strokeWidth={2} style={{ margin: '0' }} />
+}
+
+export function ClipboardIcon() {
+  return <IconClipboardText size={20} strokeWidth={2} style={{ margin: '0' }} />
+}
+
+export default function Navbar({
   course_name = '',
   bannerUrl = '',
   isPlain = false,
 }: NavbarProps) {
+  const [opened, { toggle, close }] = useDisclosure(false)
   const { classes } = useStyles()
   const router = useRouter()
   const [activeLink, setActiveLink] = useState<string>('')
-  const [opened, { toggle, close }] = useDisclosure(false)
 
   useEffect(() => {
     if (!router.isReady) return
-    setActiveLink(router.asPath.split('?')[0]!)
+    const path = router.asPath.split('?')[0]
+    if (path) setActiveLink(path)
   }, [router.asPath, router.isReady])
 
   const items: NavItem[] = [
@@ -352,6 +388,11 @@ function Navbar({
       link: `/${course_name}/dashboard`,
     },
     {
+      name: <NavText>LLMs</NavText>,
+      icon: <LLMIcon />,
+      link: `/${course_name}/llms`,
+    },
+    {
       name: (
         <Indicator
           label="New"
@@ -359,14 +400,9 @@ function Navbar({
           size={13}
           styles={{ indicator: { top: '-4px !important' } }}
         >
-          <NavText>LLMs</NavText>
+          <NavText>Analysis</NavText>
         </Indicator>
       ),
-      icon: <LLMIcon />,
-      link: `/${course_name}/llms`,
-    },
-    {
-      name: <NavText>Analysis</NavText>,
       icon: <ReportIcon />,
       link: `/${course_name}/analysis`,
     },
@@ -404,12 +440,32 @@ function Navbar({
                 courseName={course_name}
               />
             )}
-            <GlobalHeader isNavbar={true} />
+            <div className="flex items-center">
+              <div className="hidden items-center md:flex">
+                <Divider orientation="vertical" className={classes.divider} />
+                <div className="flex items-center gap-1 px-2">
+                  <Tooltip label="New Project" position="bottom" withArrow>
+                    <Link href="/new" className={classes.iconButton}>
+                      <FileIcon />
+                    </Link>
+                  </Tooltip>
+                  <Tooltip label="Documentation" position="bottom" withArrow>
+                    <Link
+                      href="https://docs.uiuc.chat/"
+                      className={classes.iconButton}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ClipboardIcon />
+                    </Link>
+                  </Tooltip>
+                </div>
+              </div>
+              <GlobalHeader isNavbar={true} />
+            </div>
           </div>
         </div>
       </Flex>
     </div>
   )
 }
-
-export default Navbar

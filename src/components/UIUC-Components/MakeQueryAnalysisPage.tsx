@@ -80,7 +80,7 @@ const useStyles = createStyles((theme: MantineTheme) => ({
 import { useAuth, useUser } from '@clerk/nextjs'
 
 export const GetCurrentPageName = () => {
-  // /CS-125/materials --> CS-125
+  // /CS-125/dashboard --> CS-125
   return useRouter().asPath.slice(1).split('/')[0] as string
 }
 
@@ -123,7 +123,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   const [courseStats, setCourseStats] = useState<CourseStats | null>(null)
   const [courseStatsError, setCourseStatsError] = useState<string | null>(null)
 
-  // TODO: remove this hook... we should already have this from the /materials props???
+  // TODO: remove this hook... we should already have this from the /dashboard props???
   useEffect(() => {
     const fetchData = async () => {
       const userEmail = extractEmailsFromClerk(clerk_user.user)

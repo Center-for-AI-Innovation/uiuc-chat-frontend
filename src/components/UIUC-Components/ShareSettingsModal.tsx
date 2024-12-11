@@ -12,6 +12,7 @@ import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Accordion } from '@/components/shadcn/accordion'
+import { useQueryClient } from '@tanstack/react-query'
 
 // Props interface for the ShareSettingsModal component
 interface ShareSettingsModalProps {
@@ -34,57 +35,52 @@ export default function ShareSettingsModal({
   opened,
   onClose,
   projectName,
-  metadata,
+  metadata: initialMetadata,
 }: ShareSettingsModalProps) {
-  // Add a state to track if this is the initial mount
-  const [isInitialMount, setIsInitialMount] = useState(true)
+  const queryClient = useQueryClient()
+  const [metadata, setMetadata] = useState<CourseMetadata>(initialMetadata)
 
-  // Update isInitialMount when modal opens/closes
+  // Only update from props when modal is opened
   useEffect(() => {
-    if (!opened) setIsInitialMount(true)
-    else {
-      // Small delay to ensure modal is visible first
-      const timer = setTimeout(() => setIsInitialMount(false), 100)
-      return () => clearTimeout(timer)
+    if (opened) {
+      setMetadata(initialMetadata)
     }
-  }, [opened])
+  }, [opened, initialMetadata])
 
-  // State management for privacy and members
-  const [isPrivate, setIsPrivate] = useDebouncedState(
-    metadata?.is_private || false,
-    500,
-  )
+  // Rest of the modal state
+  const isPrivate = metadata?.is_private || false
   const shareUrl = `${window.location.origin}/${projectName}`
   const [isCopied, setIsCopied] = useState(false)
 
-  /**
-   * Toggles project privacy setting and updates metadata
-   */
   const handlePrivacyChange = async () => {
     const newIsPrivate = !isPrivate
-    setIsPrivate(newIsPrivate)
-
-    if (metadata) {
-      const updatedMetadata = {
-        ...metadata,
-        is_private: newIsPrivate,
-      }
-      await callSetCourseMetadata(projectName, updatedMetadata)
+    const updatedMetadata = {
+      ...metadata,
+      is_private: newIsPrivate,
     }
+
+    // Update local state immediately
+    setMetadata(updatedMetadata)
+
+    // Update cache immediately
+    queryClient.setQueryData(['courseMetadata', projectName], updatedMetadata)
+
+    // Make API call
+    await callSetCourseMetadata(projectName, updatedMetadata)
   }
 
-  /**
-   * Updates course metadata when email addresses are changed
-   */
-  const handleEmailAddressesChange = async (
+  const handleEmailAddressesChange = (
     new_course_metadata: CourseMetadata,
     course_name: string,
   ) => {
-    const response = await callSetCourseMetadata(
-      course_name,
+    // Update local state immediately
+    setMetadata(new_course_metadata)
+
+    // Update cache immediately
+    queryClient.setQueryData(
+      ['courseMetadata', course_name],
       new_course_metadata,
     )
-    if (!response) console.error('Error updating course metadata')
   }
 
   /**
@@ -111,7 +107,7 @@ export default function ShareSettingsModal({
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.2 }}
-        className="relative mx-4 max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-[#15162c] shadow-2xl ring-1 ring-white/10"
+        className="relative mx-4 max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-[#15162c] shadow-2xl ring-1 ring-white/10 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-violet-500/40 [&::-webkit-scrollbar-track]:bg-[#1e1f3a] [&::-webkit-scrollbar]:w-2"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Add subtle gradient border */}

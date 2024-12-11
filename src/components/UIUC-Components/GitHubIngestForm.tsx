@@ -1,61 +1,28 @@
-import React, { useEffect, useRef, useState } from 'react'
-import {
-  Text,
-  Switch,
-  Card,
-  Skeleton,
-  Tooltip,
-  useMantineTheme,
-  Checkbox,
-  Button,
-  Input,
-  ScrollArea,
-  TextInput,
-  List,
-  SegmentedControl,
-  Center,
-  rem,
-  createStyles,
-} from '@mantine/core'
+import React, { useEffect, useState } from 'react'
+import { Text, Card, Button, Input, createStyles } from '@mantine/core'
 import {
   IconAlertCircle,
   IconBrandGithub,
-  IconCheck,
-  IconExternalLink,
-  IconHome,
-  IconSitemap,
-  IconSubtask,
-  IconWorld,
   IconWorldDownload,
-  IconX,
   IconArrowRight,
 } from '@tabler/icons-react'
 // import { APIKeyInput } from '../LLMsApiKeyInputForm'
 // import { ModelToggles } from '../ModelToggles'
-import {
-  AnthropicProvider,
-  ProviderNames,
-} from '~/utils/modelProviders/LLMProvider'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '../Dialog'
 // import { Checkbox } from '@radix-ui/react-checkbox'
-import { Label } from '@radix-ui/react-label'
-import { ExternalLink } from 'tabler-icons-react'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { notifications } from '@mantine/notifications'
 import axios from 'axios'
 import { Montserrat } from 'next/font/google'
-import { FileUpload } from './UploadNotification'
+import { type FileUpload } from './UploadNotification'
 import Link from 'next/link'
-import { QueryClient } from '@tanstack/react-query'
+import { type QueryClient } from '@tanstack/react-query'
 const montserrat_med = Montserrat({
   weight: '500',
   subsets: ['latin'],
@@ -167,8 +134,6 @@ export default function GitHubIngestForm({
   const [icon, setIcon] = useState(<IconWorldDownload size={'50%'} />)
   const [scrapeStrategy, setScrapeStrategy] =
     useState<string>('equal-and-below')
-  const logoRef = useRef(null) // Create a ref for the logo
-  const [isEnabled, setIsEnabled] = useState(false)
   const [open, setOpen] = useState(false)
   const { classes, theme } = useStyles()
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -181,10 +146,6 @@ export default function GitHubIngestForm({
     return regex.test(input)
   }
 
-  const [inputErrors, setInputErrors] = useState({
-    maxUrls: { error: false, message: '' },
-    maxDepth: { error: false, message: '' },
-  })
   const handleIngest = async () => {
     setOpen(false)
     if (isUrlValid) {
@@ -217,7 +178,7 @@ export default function GitHubIngestForm({
             ),
           )
           await queryClient.invalidateQueries({
-            queryKey: ['documents', project_name]
+            queryKey: ['documents', project_name],
           })
         } else {
           // Handle unsuccessful crawl
@@ -245,33 +206,6 @@ export default function GitHubIngestForm({
     await new Promise((resolve) => setTimeout(resolve, 8000))
   }
 
-  const validateInputs = () => {
-    const errors = {
-      maxUrls: { error: false, message: '' },
-      maxDepth: { error: false, message: '' },
-    }
-    // Check for maxUrls
-    if (!maxUrls) {
-      errors.maxUrls = {
-        error: true,
-        message: 'Please provide an input for Max URLs',
-      }
-    } else if (!/^\d+$/.test(maxUrls)) {
-      // Using regex to ensure the entire string is a number
-      errors.maxUrls = {
-        error: true,
-        message: 'Max URLs should be a valid number',
-      }
-    } else if (parseInt(maxUrls) < 1 || parseInt(maxUrls) > 500) {
-      errors.maxUrls = {
-        error: true,
-        message: 'Max URLs should be between 1 and 500',
-      }
-    }
-
-    setInputErrors(errors)
-    return !Object.values(errors).some((error) => error.error)
-  }
   const formatUrl = (url: string) => {
     if (!/^https?:\/\//i.test(url)) {
       url = 'http://' + url
@@ -382,18 +316,22 @@ export default function GitHubIngestForm({
 
   return (
     <motion.div layout>
-      <Dialog open={open} onOpenChange={(isOpen) => {
-        setOpen(isOpen);
-        if (!isOpen) {
-          setUrl('');
-          setIsUrlValid(false)
-          setIsUrlUpdated(false)
-          setMaxUrls('50')
-        }
-      }}>
+      <Dialog
+        open={open}
+        onOpenChange={(isOpen) => {
+          setOpen(isOpen)
+          if (!isOpen) {
+            setUrl('')
+            setIsUrlValid(false)
+            setIsUrlUpdated(false)
+            setMaxUrls('50')
+          }
+        }}
+      >
         <DialogTrigger asChild>
           <Card
-            className="group relative cursor-pointer overflow-hidden rounded-xl bg-gradient-to-br from-[#1c1c2e] to-[#2a2a40] p-6 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
+            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-gradient-to-br from-[#1c1c2e] to-[#2a2a40] p-6 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
+            style={{ height: '100%' }}
           >
             <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -419,127 +357,75 @@ export default function GitHubIngestForm({
           </Card>
         </DialogTrigger>
 
-        <DialogContent className="max-w-2xl rounded-lg border-0 bg-[#1c1c2e] pt-10 px-10 text-white" style={{ padding: '50px', height: '43vh', paddingBottom: '20px' }} >
-          <DialogTitle className="text-xl font-bold">
-            Ingest Website
-          </DialogTitle>
-          <ScrollArea className="mt-4 h-[60vh] pr-4">
+        <DialogContent className="mx-auto h-auto w-[95%] max-w-2xl !rounded-2xl border-0 bg-[#1c1c2e] px-4 py-6 text-white sm:px-6">
+          <DialogHeader>
+            <DialogTitle className="mb-4 text-left text-xl font-bold">
+              Ingest GitHub Website
+            </DialogTitle>
+          </DialogHeader>
+          <div className="border-t border-gray-800 pt-4">
             <div className="space-y-4">
               <div>
-                {/* <Label htmlFor="canvas-url" className="text-white">
-                  URL
-                </Label> */}
-                <strong>For GitHub</strong>, just enter a URL like{' '}
-                <code className={classes.codeStyledText}>
-                  github.com/USER/REPO
-                </code>
-                , for example:{' '}
-                <span className={'text-purple-600'}>
-                  <Link
-                    target="_blank"
-                    rel="noreferrer"
-                    href={'https://github.com/langchain-ai/langchain'}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    https://github.com/langchain-ai/langchain
-                  </Link>
-                </span>
-                . We&apos;ll ingest all files in the main branch. Ensure the
-                repository is public.
-                <div style={{ paddingBottom: '12px' }}></div>
+                <div className="break-words text-sm sm:text-base">
+                  <strong>For GitHub</strong>, just enter a URL like{' '}
+                  <code className={classes.codeStyledText}>
+                    github.com/USER/REPO
+                  </code>
+                  , for example:{' '}
+                  <span className={'text-purple-600'}>
+                    <Link
+                      target="_blank"
+                      rel="noreferrer"
+                      href={'https://github.com/langchain-ai/langchain'}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      https://github.com/langchain-ai/langchain
+                    </Link>
+                  </span>
+                  . We&apos;ll ingest all files in the main branch. Ensure the
+                  repository is public.
+                </div>
+                <div className="py-3"></div>
                 <Input
-                  icon={<img
-                    src="/media/github-mark-white.png"
-                    alt="GitHub Logo"
-                    style={{ height: '50%', width: '50%' }}
-                  />}
-                  // I can't figure out how to change the background colors.
-                  className={`mt-4 w-[100%] min-w-[25rem] disabled:bg-purple-200 lg:w-[100%]`}
-                  // wrapperProps={{ borderRadius: 'xl' }}
-                  // styles={{ input: { backgroundColor: '#1A1B1E' } }}
+                  icon={icon}
+                  className="w-full rounded-full"
                   styles={{
                     input: {
                       backgroundColor: '#1A1B1E',
-                      // paddingRight: '6rem', // Adjust right padding to prevent text from hiding behind the button
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       '&:focus': {
-                        borderColor: '#9370DB', // Change border color to a lighter purple only on focus
+                        borderColor: '#9370DB',
                       },
+                    },
+                    wrapper: {
+                      width: '100%',
                     },
                   }}
                   placeholder="Enter URL..."
-                  radius={'xl'}
-                  type="url" // Set the type to 'url' to avoid thinking it's a username or pw.
+                  radius="xl"
+                  type="url"
                   value={url}
-                  size={'lg'}
-                  // disabled={isDisabled}
+                  size="lg"
                   onChange={(e) => {
-                    handleUrlChange(e)                    // setShowContentOptions(
-                    //   e.target.value.includes('canvas.illinois.edu'),
-                    // )
-                    if (e.target.value.includes('github.com')) {
-                      setIcon(
-                        <img
-                          src="/media/github-mark-white.png"
-                          alt="GitHub Logo"
-                          style={{ height: '50%', width: '50%' }}
-                        />,
-                      )
-                    }
-                    else {
-                      setIcon(<IconWorldDownload />)
-                    }
+                    handleUrlChange(e)
                   }}
-                // onKeyPress={(event) => {
-                //   if (event.key === 'Enter') {
-                //     handleSubmit()
-                //   }
-                // }}
-                // rightSection={
-                // <Button
-                //   onClick={(e) => {
-                //     e.preventDefault()
-                //     if (validateInputs() && validateUrl(url)) {
-                //       handleSubmit()
-                //     }
-                //   }}
-                //   size="md"
-                //   radius={'xl'}
-                //   className={`rounded-s-md ${
-                //     isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
-                //   } overflow-ellipsis text-ellipsis p-2 ${
-                //     isUrlUpdated ? 'text-white' : 'text-gray-500'
-                //   } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
-                //   w={`${isSmallScreen ? 'auto' : 'auto'}`}
-                //   disabled={isDisabled}
-                // >
-                //   Ingest
-                // </Button>
-                // }
-                // rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
                 />
               </div>
-              {/* <form
-                className="s:w-[30%] min-w-[20rem] w-[90%]"
-                onSubmit={(event) => {
-                  event.preventDefault()
-                }}
-              >
-                 */}
-              <Button
-                onClick={handleIngest}
-                disabled={!isUrlValid}
-                className="w-full bg-purple-600 text-white hover:bg-purple-700"
-              >
-                Ingest the Website
-              </Button>
             </div>
-          </ScrollArea>
+          </div>
+          <div className="mt-4 border-t border-gray-800 pt-2">
+            <Button
+              onClick={handleIngest}
+              disabled={!isUrlValid}
+              className="h-11 w-full rounded-xl bg-purple-600 text-white transition-colors hover:bg-purple-700"
+            >
+              Ingest the Website
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </motion.div>
   )
 }
-

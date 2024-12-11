@@ -27,19 +27,19 @@ import GlobalFooter from './GlobalFooter'
 import { montserrat_heading } from 'fonts'
 
 export const GetCurrentPageName = () => {
-  // /CS-125/materials --> CS-125
+  // /CS-125/dashboard --> CS-125
   return useRouter().asPath.slice(1).split('/')[0] as string
 }
 
 export const CannotViewCourse = ({
   course_name,
 }: // creator_email_address,
-  // admins_email_addresses,
-  {
-    course_name: string
-    // creator_email_address: string
-    // admins_email_addresses: string
-  }) => {
+// admins_email_addresses,
+{
+  course_name: string
+  // creator_email_address: string
+  // admins_email_addresses: string
+}) => {
   // console.log('course_name in CannotViewCourse: ', course_name)
   const currentPageName = GetCurrentPageName()
 
@@ -64,7 +64,6 @@ export const CannotViewCourse = ({
             return null
           }
           return data.course_metadata
-
         } else {
           console.error(`Error fetching course metadata: ${response.status}`)
           return null
@@ -127,7 +126,7 @@ export const CannotViewCourse = ({
               gradient={{ from: 'gold', to: 'white', deg: 50 }}
               order={2}
               p="xl"
-            // size={20}
+              // size={20}
             >
               {' '}
               You are not authorized to view this page.
@@ -148,7 +147,7 @@ export const CannotViewCourse = ({
                   gradient={{ from: 'gold', to: 'white', deg: 50 }}
                   order={2}
                   p="lg"
-                // size={20}
+                  // size={20}
                 >
                   Email the creator or admins to request access:
                 </Title>

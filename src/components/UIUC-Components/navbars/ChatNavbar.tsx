@@ -1,6 +1,6 @@
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
-import { magicBellTheme } from '~/components/UIUC-Components/navbars/GlobalHeader'
+// import { magicBellTheme } from '~/components/UIUC-Components/navbars/GlobalHeader'
 import { useDisclosure } from '@mantine/hooks'
 import Image from 'next/image'
 import { useEffect, useState, useContext, useRef } from 'react'
@@ -30,9 +30,9 @@ import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelper
 import { type CourseMetadata } from '~/types/courseMetadata'
 import HomeContext from '~/pages/api/home/home.context'
 import { UserSettings } from '../../Chat/UserSettings'
-import MagicBell, {
-  FloatingNotificationInbox,
-} from '@magicbell/magicbell-react'
+// import MagicBell, {
+//   FloatingNotificationInbox,
+// } from '@magicbell/magicbell-react'
 import { usePostHog } from 'posthog-js/react'
 
 const styles: Record<string, React.CSSProperties> = {
@@ -611,7 +611,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                   {/* <div style={{ paddingLeft: '10px', paddingRight: '8px' }} /> */}
 
                   {/* render the MagicBell until userEmail is valid otherwise there is a warning message of userEmail */}
-                  {userEmail !== 'no_email' && (
+                  {/* {userEmail !== 'no_email' && (
                     <MagicBell
                       apiKey={process.env.NEXT_PUBLIC_MAGIC_BELL_API as string}
                       userEmail={userEmail}
@@ -630,7 +630,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                         />
                       )}
                     </MagicBell>
-                  )}
+                  )} */}
                   <UserButton afterSignOutUrl="/" />
                 </Group>
               </SignedIn>
