@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   PieChart,
   Pie,
@@ -9,6 +9,7 @@ import {
 } from 'recharts'
 import { LoadingSpinner } from './LoadingSpinner'
 import { Text } from '@mantine/core'
+import { IconAlertCircle } from '@tabler/icons-react'
 
 interface ModelUsage {
   model_name: string
@@ -32,6 +33,19 @@ const COLORS = [
   '#7f7f7f', // gray
 ]
 
+// Add color contrast utility
+const getContrastColor = (hexColor: string): string => {
+  // Convert hex to RGB
+  const r = parseInt(hexColor.slice(1, 3), 16)
+  const g = parseInt(hexColor.slice(3, 5), 16)
+  const b = parseInt(hexColor.slice(5, 7), 16)
+
+  // Calculate relative luminance
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+
+  return luminance > 0.5 ? '#000000' : '#ffffff'
+}
+
 const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
   data,
   isLoading,
@@ -47,44 +61,75 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  if (isLoading) return <LoadingSpinner />
-  if (error) return <Text color="red">{error}</Text>
-  if (!data || data.length === 0)
-    return <Text>No model usage data available</Text>
+  // Memoize data processing
+  const { chartData, finalData } = useMemo(() => {
+    if (!data || data.length === 0) return { chartData: [], finalData: [] }
 
-  // Group models with less than 1% usage into "Other"
-  const threshold = 1
-  const groupedData = data.reduce(
-    (acc, item) => {
-      if (item.percentage >= threshold) {
-        acc.main.push(item)
-      } else {
-        acc.other.count += item.count
-        acc.other.percentage += item.percentage
-      }
-      return acc
-    },
-    {
-      main: [] as ModelUsage[],
-      other: { model_name: 'Other', count: 0, percentage: 0 } as ModelUsage,
-    },
-  )
+    // Group models with less than 1% usage into "Other"
+    const threshold = 1
+    const groupedData = data.reduce(
+      (acc, item) => {
+        if (item.percentage >= threshold) {
+          acc.main.push(item)
+        } else {
+          acc.other.count += item.count
+          acc.other.percentage += item.percentage
+        }
+        return acc
+      },
+      {
+        main: [] as ModelUsage[],
+        other: { model_name: 'Other', count: 0, percentage: 0 } as ModelUsage,
+      },
+    )
 
-  // Sort main data by percentage in descending order
-  groupedData.main.sort((a, b) => b.percentage - a.percentage)
+    // Sort main data by percentage in descending order
+    groupedData.main.sort((a, b) => b.percentage - a.percentage)
 
-  const finalData = [
-    ...groupedData.main,
-    ...(groupedData.other.count > 0 ? [groupedData.other] : []),
-  ]
+    const finalData = [
+      ...groupedData.main,
+      ...(groupedData.other.count > 0 ? [groupedData.other] : []),
+    ]
 
-  const chartData = finalData.map((item) => ({
-    name: item.model_name,
-    value: item.count,
-    percentage: item.percentage.toFixed(1),
-  }))
+    const chartData = finalData.map((item) => ({
+      name: item.model_name,
+      value: item.count,
+      percentage: item.percentage.toFixed(1),
+    }))
 
-  // Custom label renderer with improved positioning
+    return { chartData, finalData }
+  }, [data])
+
+  // Now we can have conditional returns
+  if (error) {
+    return (
+      <div className="rounded-lg bg-red-500/10 p-4" role="alert">
+        <div className="flex items-center gap-2">
+          <IconAlertCircle className="text-red-400" size={20} />
+          <Text color="red">Error loading model usage data: {error}</Text>
+        </div>
+      </div>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2">
+        <LoadingSpinner />
+        <Text>Loading model usage data...</Text>
+      </div>
+    )
+  }
+
+  if (!data || data.length === 0 || chartData.length === 0) {
+    return (
+      <div className="rounded-lg bg-gray-800/50 p-4">
+        <Text align="center">No model usage data available</Text>
+      </div>
+    )
+  }
+
+  // Custom label renderer with improved accessibility
   const renderCustomizedLabel = ({
     cx,
     cy,
@@ -93,46 +138,42 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
     outerRadius,
     percent,
     name,
+    fill,
   }: any) => {
     const RADIAN = Math.PI / 180
+    const minPercentage = windowWidth < 768 ? 0.08 : 0.02
 
-    // Adjust label visibility threshold based on screen size
-    const minPercentage = windowWidth < 768 ? 0.08 : 0.02 // 8% on mobile, 2% on desktop
     if (percent < minPercentage) return null
 
-    // Adjust radius based on screen size
-    const radius =
-      windowWidth < 768
-        ? outerRadius * 1.1 // Closer to pie on mobile
-        : outerRadius * 1.2 // Further out on desktop
-
+    const radius = windowWidth < 768 ? outerRadius * 1.1 : outerRadius * 1.2
     const x = cx + radius * Math.cos(-midAngle * RADIAN)
     const y = cy + radius * Math.sin(-midAngle * RADIAN)
     const textAnchor = x > cx ? 'start' : 'end'
 
-    // Adjust name truncation based on screen size
     const maxLength = windowWidth < 768 ? 8 : 15
     const truncatedName =
       name.length > maxLength ? name.substring(0, maxLength - 3) + '...' : name
 
-    // On mobile, only show percentage for small segments
     const labelText =
       windowWidth < 768 && percent < 0.15
         ? `${(percent * 100).toFixed(1)}%`
         : `${truncatedName} (${(percent * 100).toFixed(1)}%)`
 
+    const contrastColor = getContrastColor(fill)
+
     return (
-      <>
+      <g>
         <text
           x={x}
           y={y}
-          fill="#fff"
+          fill={contrastColor}
           textAnchor={textAnchor}
           dominantBaseline="middle"
           style={{
             fontSize: windowWidth < 768 ? '10px' : '12px',
             fontWeight: 500,
           }}
+          aria-label={`${name}: ${(percent * 100).toFixed(1)}%`}
         >
           {labelText}
         </text>
@@ -140,17 +181,21 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
           d={`M${cx + (outerRadius + 2) * Math.cos(-midAngle * RADIAN)},${
             cy + (outerRadius + 2) * Math.sin(-midAngle * RADIAN)
           }L${x - (textAnchor === 'start' ? 5 : -5)},${y}`}
-          stroke="#fff"
+          stroke={contrastColor}
           fill="none"
           strokeWidth={1}
           opacity={0.5}
         />
-      </>
+      </g>
     )
   }
 
   return (
-    <div style={{ width: '100%', height: windowWidth < 768 ? 300 : 400 }}>
+    <div
+      style={{ width: '100%', height: windowWidth < 768 ? 300 : 400 }}
+      role="figure"
+      aria-label="Model usage distribution pie chart"
+    >
       <ResponsiveContainer>
         <PieChart>
           <Pie
@@ -170,6 +215,8 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
                 fill={COLORS[index % COLORS.length]}
                 stroke="#15162c"
                 strokeWidth={2}
+                role="graphics-symbol"
+                aria-label={`${entry.name}: ${entry.percentage}%`}
               />
             ))}
           </Pie>
@@ -186,6 +233,9 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
             }}
             itemStyle={{ color: '#fff' }}
             labelStyle={{ color: '#fff' }}
+            wrapperStyle={{ outline: 'none' }}
+            cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
+            aria-label="Model usage details"
           />
           <Legend
             layout="vertical"
@@ -203,7 +253,15 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
                 value.length > maxLength
                   ? value.substring(0, maxLength - 3) + '...'
                   : value
-              return [`${truncatedName} (${item?.percentage}%)`]
+              return [
+                <span
+                  key={value}
+                  role="text"
+                  aria-label={`${value}: ${item?.percentage}%`}
+                >
+                  {`${truncatedName} (${item?.percentage}%)`}
+                </span>,
+              ]
             }}
           />
         </PieChart>
@@ -212,4 +270,4 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
   )
 }
 
-export default ModelUsageChart
+export default React.memo(ModelUsageChart)

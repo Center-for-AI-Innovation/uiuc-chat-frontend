@@ -186,7 +186,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     const fetchNomicMapData = async () => {
       try {
         const response = await fetch(
-          `/api/getNomicMapForQueries?course_name=${'cropwizard-1.5'}`,
+          `/api/getNomicMapForQueries?course_name=${course_name}`,
         )
         const data = await response.json()
         const parsedData: NomicMapData = {

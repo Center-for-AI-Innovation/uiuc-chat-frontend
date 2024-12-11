@@ -1,5 +1,5 @@
 // src/components/UIUC-Components/ConversationsPerDayChart.tsx
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   BarChart,
   Bar,
@@ -56,6 +56,46 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
 }) => {
   const [useLogScale, setUseLogScale] = useState(false)
 
+  const getCustomTicks = useMemo(
+    () =>
+      (min: number, max: number): number[] => {
+        if (!useLogScale) return []
+
+        const ticks: number[] = []
+        let tick = 1
+        while (tick <= max) {
+          if (tick >= min) ticks.push(tick)
+          if (tick === 1) tick = 2
+          else if (tick === 2) tick = 5
+          else if (tick === 5) tick = 10
+          else if (tick.toString().startsWith('1')) tick *= 2
+          else if (tick.toString().startsWith('2')) tick = tick * 2.5
+          else tick *= 2
+        }
+        return ticks
+      },
+    [useLogScale],
+  )
+
+  const chartData = useMemo(
+    () =>
+      Object.keys(data || {})
+        .sort()
+        .map((date) => ({
+          date,
+          count: data?.[date] || 0,
+        })),
+    [data],
+  )
+
+  const { maxValue, minValue } = useMemo(() => {
+    const values = chartData.map((item) => item.count)
+    return {
+      maxValue: Math.max(...values),
+      minValue: Math.min(...values),
+    }
+  }, [chartData])
+
   if (isLoading) {
     return (
       <Text>
@@ -72,38 +112,9 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
     return <Text>No data available</Text>
   }
 
-  const chartData = Object.keys(data)
-    .sort()
-    .map((date) => ({
-      date,
-      count: data[date] || 0,
-    }))
-
-  const values = chartData.map((item) => item.count)
-  const maxValue = Math.max(...values)
-  const minValue = Math.min(...values)
-
   const yAxisDomain = useLogScale
     ? [Math.max(1, minValue), Math.ceil(maxValue * 1.1)]
     : [0, Math.ceil(maxValue * 1.1)]
-
-  const getCustomTicks = (min: number, max: number) => {
-    if (!useLogScale) return undefined
-
-    const ticks = []
-    let tick = 1
-    // Generate ticks: 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000
-    while (tick <= max) {
-      if (tick >= min) ticks.push(tick)
-      if (tick === 1) tick = 2
-      else if (tick === 2) tick = 5
-      else if (tick === 5) tick = 10
-      else if (tick.toString().startsWith('1')) tick *= 2
-      else if (tick.toString().startsWith('2')) tick = tick * 2.5
-      else tick *= 2
-    }
-    return ticks
-  }
 
   const determineInterval = (dataLength: number): number => {
     if (dataLength <= 25) return 0
@@ -132,13 +143,19 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
           onChange={(event) => setUseLogScale(event.currentTarget.checked)}
           size="sm"
           color="violet"
+          aria-label="Toggle between linear and logarithmic scale"
+          title="Switch between linear and logarithmic scale visualization"
         />
         <Text size="sm" color="dimmed">
           Logarithmic
         </Text>
       </div>
 
-      <div style={{ width: '100%', height: 400 }}>
+      <div
+        style={{ width: '100%', height: 400 }}
+        role="region"
+        aria-label="Conversations per day visualization"
+      >
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={chartData}
@@ -213,4 +230,4 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
   )
 }
 
-export default ConversationsPerDayChart
+export default React.memo(ConversationsPerDayChart)
