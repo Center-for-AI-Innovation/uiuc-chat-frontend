@@ -1,61 +1,28 @@
-import React, { useEffect, useRef, useState } from 'react'
-import {
-  Text,
-  Switch,
-  Card,
-  Skeleton,
-  Tooltip,
-  useMantineTheme,
-  Checkbox,
-  Button,
-  Input,
-  ScrollArea,
-  TextInput,
-  List,
-  SegmentedControl,
-  Center,
-  rem,
-  createStyles,
-} from '@mantine/core'
+import React, { useEffect, useState } from 'react'
+import { Text, Card, Button, Input, createStyles } from '@mantine/core'
 import {
   IconAlertCircle,
   IconBrandGithub,
-  IconCheck,
-  IconExternalLink,
-  IconHome,
-  IconSitemap,
-  IconSubtask,
-  IconWorld,
   IconWorldDownload,
-  IconX,
   IconArrowRight,
 } from '@tabler/icons-react'
 // import { APIKeyInput } from '../LLMsApiKeyInputForm'
 // import { ModelToggles } from '../ModelToggles'
-import {
-  AnthropicProvider,
-  ProviderNames,
-} from '~/utils/modelProviders/LLMProvider'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '../Dialog'
 // import { Checkbox } from '@radix-ui/react-checkbox'
-import { Label } from '@radix-ui/react-label'
-import { ExternalLink } from 'tabler-icons-react'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { notifications } from '@mantine/notifications'
 import axios from 'axios'
 import { Montserrat } from 'next/font/google'
-import { FileUpload } from './UploadNotification'
+import { type FileUpload } from './UploadNotification'
 import Link from 'next/link'
-import { QueryClient } from '@tanstack/react-query'
+import { type QueryClient } from '@tanstack/react-query'
 const montserrat_med = Montserrat({
   weight: '500',
   subsets: ['latin'],
@@ -179,10 +146,6 @@ export default function GitHubIngestForm({
     return regex.test(input)
   }
 
-  const [inputErrors, setInputErrors] = useState({
-    maxUrls: { error: false, message: '' },
-    maxDepth: { error: false, message: '' },
-  })
   const handleIngest = async () => {
     setOpen(false)
     if (isUrlValid) {
@@ -394,9 +357,9 @@ export default function GitHubIngestForm({
           </Card>
         </DialogTrigger>
 
-        <DialogContent className="mx-auto h-auto w-[95%] max-w-2xl rounded-2xl border-0 bg-[#1c1c2e] px-4 py-6 text-white sm:px-6">
+        <DialogContent className="mx-auto h-auto w-[95%] max-w-2xl !rounded-2xl border-0 bg-[#1c1c2e] px-4 py-6 text-white sm:px-6">
           <DialogHeader>
-            <DialogTitle className="mb-4 text-xl font-bold">
+            <DialogTitle className="mb-4 text-left text-xl font-bold">
               Ingest GitHub Website
             </DialogTitle>
           </DialogHeader>
@@ -425,14 +388,13 @@ export default function GitHubIngestForm({
                 <div className="py-3"></div>
                 <Input
                   icon={icon}
-                  className="w-full"
+                  className="w-full rounded-full"
                   styles={{
                     input: {
                       backgroundColor: '#1A1B1E',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
-                      borderRadius: '1rem',
                       '&:focus': {
                         borderColor: '#9370DB',
                       },

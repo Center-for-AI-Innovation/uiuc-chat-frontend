@@ -1,27 +1,19 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Text,
   Card,
-  Skeleton,
   Tooltip,
-  useMantineTheme,
-  Checkbox,
   Button,
   Input,
-  ScrollArea,
   TextInput,
   List,
   SegmentedControl,
   Center,
   rem,
 } from '@mantine/core'
-import { Label } from '@radix-ui/react-label'
-import NextLink from 'next/link'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -43,8 +35,8 @@ import { montserrat_heading } from 'fonts'
 import { notifications } from '@mantine/notifications'
 import axios from 'axios'
 import { Montserrat } from 'next/font/google'
-import { FileUpload } from './UploadNotification'
-import { QueryClient } from '@tanstack/react-query'
+import { type FileUpload } from './UploadNotification'
+import { type QueryClient } from '@tanstack/react-query'
 const montserrat_med = Montserrat({
   weight: '500',
   subsets: ['latin'],
@@ -102,7 +94,7 @@ export default function WebsiteIngestForm({
       }))
     }
   }
-  const [icon, setIcon] = useState(<IconWorldDownload size={'50%'} />)
+  const icon = <IconWorldDownload size={'50%'} />
   const [scrapeStrategy, setScrapeStrategy] =
     useState<string>('equal-and-below')
   const [open, setOpen] = useState(false)
@@ -178,7 +170,7 @@ export default function WebsiteIngestForm({
           )
           throw new Error('Crawl was not successful')
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Error while scraping web:', error)
         setUploadFiles((prevFiles) =>
           prevFiles.map((file) =>
@@ -347,7 +339,7 @@ export default function WebsiteIngestForm({
 
         <DialogContent className="mx-auto w-[95%] max-w-2xl rounded-2xl border-0 bg-[#1c1c2e] px-4 py-6 text-white sm:px-6">
           <DialogHeader>
-            <DialogTitle className="mb-4 text-xl font-bold">
+            <DialogTitle className="mb-4 text-left text-xl font-bold">
               Ingest Website
             </DialogTitle>
           </DialogHeader>
@@ -362,14 +354,13 @@ export default function WebsiteIngestForm({
                 >
                   <Input
                     icon={icon}
-                    className="w-full"
+                    className="w-full rounded-full"
                     styles={{
                       input: {
                         backgroundColor: '#1A1B1E',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
-                        borderRadius: '1rem',
                         '&:focus': {
                           borderColor: '#9370DB',
                         },

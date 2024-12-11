@@ -7,7 +7,6 @@ import {
   IconChevronDown,
   IconChevronUp,
   IconX,
-  IconLoader2,
   IconFileTypePdf,
   IconCode,
   IconFileTypeTxt,
@@ -82,9 +81,6 @@ function UploadNotificationContent({
   const allComplete =
     currentFiles.length > 0 &&
     currentFiles.every((file) => file.status === 'complete')
-  const anyUploading = currentFiles.some(
-    (file) => file.status === 'uploading' || file.status === 'ingesting',
-  )
 
   const toggleMinimize = () => setIsMinimized(!isMinimized)
 
@@ -160,7 +156,7 @@ function UploadNotificationContent({
       shadow="sm"
       padding={0}
       radius="md"
-      className={`fixed bottom-4 right-4 z-50 w-[320px] md:w-[420px] overflow-hidden bg-[#1a1b3b] shadow-xl shadow-black/25 ${montserrat_paragraph.variable}`}
+      className={`fixed bottom-4 right-4 z-50 w-[320px] overflow-hidden bg-[#1a1b3b] shadow-xl shadow-black/25 md:w-[420px] ${montserrat_paragraph.variable}`}
     >
       <div className="flex items-center justify-between border-b border-[#2a2c4c] bg-[#12132b] px-5 py-4">
         <div className="flex flex-col gap-1">
@@ -248,19 +244,19 @@ function UploadNotificationContent({
                   <div className="ml-2 flex items-center">
                     {(file.status === 'uploading' ||
                       file.status === 'ingesting') && (
-                        <Tooltip
-                          label={
-                            file.status === 'uploading'
-                              ? 'Uploading to secure storage'
-                              : 'Processing for chat'
-                          }
-                          classNames={{
-                            tooltip: `${montserrat_paragraph.variable} font-montserratParagraph`,
-                          }}
-                        >
-                          <LoadingSpinner size="xs" />
-                        </Tooltip>
-                      )}
+                      <Tooltip
+                        label={
+                          file.status === 'uploading'
+                            ? 'Uploading to secure storage'
+                            : 'Processing for chat'
+                        }
+                        classNames={{
+                          tooltip: `${montserrat_paragraph.variable} font-montserratParagraph`,
+                        }}
+                      >
+                        <LoadingSpinner size="xs" />
+                      </Tooltip>
+                    )}
                     {file.status === 'complete' && (
                       <Tooltip
                         label="Ready for chat"

@@ -6,9 +6,7 @@ import {
   Text,
   Textarea,
   Button,
-  Group,
   createStyles,
-  ActionIcon,
 } from '@mantine/core'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
@@ -27,7 +25,7 @@ import CourseraIngestForm from './CourseraIngestForm'
 import { memo, useState, useEffect } from 'react'
 import { IconShare } from '@tabler/icons-react'
 import ShareSettingsModal from './ShareSettingsModal'
-import UploadNotification, { FileUpload } from './UploadNotification'
+import UploadNotification, { type FileUpload } from './UploadNotification'
 import { useQueryClient } from '@tanstack/react-query'
 
 const montserrat_light = Montserrat({
@@ -90,7 +88,6 @@ export const UploadCard = memo(function UploadCard({
   metadata: CourseMetadata
 }) {
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
-  const { classes, theme } = useStyles()
   const [projectDescription, setProjectDescription] = useState(
     initialMetadata?.project_description || '',
   )

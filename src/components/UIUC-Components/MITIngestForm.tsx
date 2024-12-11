@@ -1,13 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react'
-import {
-  Text,
-  Card,
-  useMantineTheme,
-  Button,
-  Input,
-  Image,
-} from '@mantine/core'
-import { IconWorldDownload, IconArrowRight } from '@tabler/icons-react'
+import React, { useEffect, useState } from 'react'
+import { Text, Card, Button, Input, Image } from '@mantine/core'
+import { IconArrowRight } from '@tabler/icons-react'
 import { motion } from 'framer-motion'
 import {
   Dialog,
@@ -18,17 +11,11 @@ import {
 } from '../Dialog'
 import NextLink from 'next/link'
 import axios from 'axios'
-import { Montserrat } from 'next/font/google'
 import { FileUpload } from './UploadNotification'
 import { QueryClient } from '@tanstack/react-query'
-const montserrat_med = Montserrat({
-  weight: '500',
-  subsets: ['latin'],
-})
 export default function MITIngestForm({
   project_name,
   setUploadFiles,
-  queryClient,
 }: {
   project_name: string
   setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
@@ -38,24 +25,6 @@ export default function MITIngestForm({
   const [isUrlValid, setIsUrlValid] = useState(false)
   const [url, setUrl] = useState('')
   const [maxUrls, setMaxUrls] = useState('50')
-  const theme = useMantineTheme()
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    variable: string,
-  ) => {
-    const value = e.target.value
-    if (variable === 'maxUrls') {
-      setMaxUrls(value)
-    } else if (variable === 'maxDepth') {
-      // TODO: implement depth again.
-      // setMaxDepth(value)
-    }
-  }
-  const [icon, setIcon] = useState(<IconWorldDownload size={'50%'} />)
-  const [scrapeStrategy, setScrapeStrategy] =
-    useState<string>('equal-and-below')
-  const logoRef = useRef(null) // Create a ref for the logo
-  const [isEnabled, setIsEnabled] = useState(false)
   const [open, setOpen] = useState(false)
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value
@@ -116,33 +85,6 @@ export default function MITIngestForm({
     maxDepth: { error: false, message: '' },
   })
 
-  const formatUrl = (url: string) => {
-    if (!/^https?:\/\//i.test(url)) {
-      url = 'http://' + url
-    }
-    return url
-  }
-  const formatUrlAndMatchRegex = (url: string) => {
-    // fullUrl always starts with http://. Is the starting place of the scrape.
-    // baseUrl is used to construct the match statement.
-
-    // Ensure the url starts with 'http://'ff
-    if (!/^https?:\/\//i.test(url)) {
-      url = 'http://' + url
-    }
-
-    // Extract the base url including the path
-    const baseUrl = (
-      url.replace(/^https?:\/\//i, '').split('?')[0] as string
-    ).replace(/\/$/, '') // Remove protocol (http/s), split at '?', and remove trailing slash
-
-    const matchRegex = `http?(s)://**${baseUrl}/**`
-
-    return {
-      fullUrl: baseUrl,
-      matchRegex: matchRegex,
-    }
-  }
   useEffect(() => {
     if (url && url.length > 0 && validateUrl(url)) {
       setIsUrlUpdated(true)
@@ -173,10 +115,12 @@ export default function MITIngestForm({
             <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-900/30">
-                  <img
+                  <Image
                     src="/media/mitocw_logo.jpg"
                     alt="MIT OCW Logo"
-                    className="h-8 w-8 rounded-full object-contain"
+                    width={32}
+                    height={32}
+                    className="rounded-full object-contain"
                   />
                 </div>
                 <Text className="text-xl font-semibold text-gray-100">
@@ -199,9 +143,9 @@ export default function MITIngestForm({
           </Card>
         </DialogTrigger>
 
-        <DialogContent className="mx-auto h-auto w-[95%] max-w-2xl rounded-2xl border-0 bg-[#1c1c2e] px-4 py-6 text-white sm:px-6">
+        <DialogContent className="mx-auto h-auto w-[95%] max-w-2xl !rounded-2xl border-0 bg-[#1c1c2e] px-4 py-6 text-white sm:px-6">
           <DialogHeader>
-            <DialogTitle className="mb-4 text-xl font-bold">
+            <DialogTitle className="mb-4 text-left text-xl font-bold">
               Ingest MIT Course
             </DialogTitle>
           </DialogHeader>
@@ -240,14 +184,13 @@ export default function MITIngestForm({
                       className="object-contain"
                     />
                   }
-                  className="w-full"
+                  className="w-full rounded-full"
                   styles={{
                     input: {
                       backgroundColor: '#1A1B1E',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
-                      borderRadius: '1rem',
                       '&:focus': {
                         borderColor: '#9370DB',
                       },

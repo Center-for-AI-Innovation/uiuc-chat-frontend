@@ -12,8 +12,8 @@ import {
 import { Label } from '@radix-ui/react-label'
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
-import { FileUpload } from './UploadNotification'
-import { QueryClient } from '@tanstack/react-query'
+import { type FileUpload } from './UploadNotification'
+import { type QueryClient } from '@tanstack/react-query'
 import Image from 'next/image'
 
 export default function CanvasIngestForm({
@@ -36,10 +36,6 @@ export default function CanvasIngestForm({
     'discussions',
   ])
   const [url, setUrl] = useState('')
-  const logoRef = useRef(null) // Create a ref for the logo
-  const [showContentOptions, setShowContentOptions] = useState(false)
-  const [loadingSpinner, setLoadingSpinner] = useState(false)
-  const [isEnabled, setIsEnabled] = useState(false)
   const [open, setOpen] = useState(false)
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value
@@ -148,10 +144,12 @@ export default function CanvasIngestForm({
             <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-900/30">
-                  <img
+                  <Image
                     src="/media/canvas_logo.png"
                     alt="Canvas logo"
-                    className="h-8 w-8 object-contain"
+                    width={32}
+                    height={32}
+                    className="object-contain"
                   />
                 </div>
                 <Text className="text-xl font-semibold text-gray-100">
@@ -176,7 +174,7 @@ export default function CanvasIngestForm({
 
         <DialogContent className="mx-auto h-auto w-[95%] max-w-2xl rounded-2xl border-0 bg-[#1c1c2e] px-4 py-6 text-white sm:px-6">
           <DialogHeader>
-            <DialogTitle className="mb-4 text-xl font-bold">
+            <DialogTitle className="mb-4 text-left text-xl font-bold">
               Ingest Canvas Course
             </DialogTitle>
           </DialogHeader>
@@ -213,14 +211,13 @@ export default function CanvasIngestForm({
                       className="object-contain"
                     />
                   }
-                  className="w-full"
+                  className="w-full rounded-full"
                   styles={{
                     input: {
                       backgroundColor: '#1A1B1E',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
-                      borderRadius: '1rem',
                       '&:focus': {
                         borderColor: '#9370DB',
                       },
