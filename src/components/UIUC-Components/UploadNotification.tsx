@@ -160,7 +160,7 @@ function UploadNotificationContent({
       shadow="sm"
       padding={0}
       radius="md"
-      className={`fixed bottom-4 right-4 z-50 w-[420px] overflow-hidden bg-[#1a1b3b] shadow-xl shadow-black/25 ${montserrat_paragraph.variable}`}
+      className={`fixed bottom-4 right-4 z-50 w-[320px] md:w-[420px] overflow-hidden bg-[#1a1b3b] shadow-xl shadow-black/25 ${montserrat_paragraph.variable}`}
     >
       <div className="flex items-center justify-between border-b border-[#2a2c4c] bg-[#12132b] px-5 py-4">
         <div className="flex flex-col gap-1">
