@@ -215,7 +215,7 @@ export default function GitHubIngestForm({
             ),
           )
           await queryClient.invalidateQueries({
-            queryKey: ['documents', project_name]
+            queryKey: ['documents', project_name],
           })
         } else {
           // Handle unsuccessful crawl
@@ -353,18 +353,22 @@ export default function GitHubIngestForm({
 
   return (
     <motion.div layout>
-      <Dialog open={open} onOpenChange={(isOpen) => {
-        setOpen(isOpen);
-        if (!isOpen) {
-          setUrl('');
-          setIsUrlValid(false)
-          setIsUrlUpdated(false)
-          setMaxUrls('50')
-        }
-      }}>
+      <Dialog
+        open={open}
+        onOpenChange={(isOpen) => {
+          setOpen(isOpen)
+          if (!isOpen) {
+            setUrl('')
+            setIsUrlValid(false)
+            setIsUrlUpdated(false)
+            setMaxUrls('50')
+          }
+        }}
+      >
         <DialogTrigger asChild>
           <Card
-            className="group relative cursor-pointer overflow-hidden rounded-xl bg-gradient-to-br from-[#1c1c2e] to-[#2a2a40] p-6 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
+            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-gradient-to-br from-[#1c1c2e] to-[#2a2a40] p-6 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
+            style={{ height: '100%' }}
           >
             <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -390,89 +394,76 @@ export default function GitHubIngestForm({
           </Card>
         </DialogTrigger>
 
-        <DialogContent
-          className="max-w-2xl rounded-lg border-0 bg-[#1c1c2e] pt-10 px-10 text-white"
-          style={{
-            padding: '50px',
-            paddingBottom: '40px'
-          }}
-        >
-          <DialogTitle className="text-xl font-bold">
-            Ingest GitHub Website
-          </DialogTitle>
-          <div className="space-y-4 overflow-x-auto">
-            <div>
-              {/* <Label htmlFor="canvas-url" className="text-white">
-                  URL
-                </Label> */}
-              <strong>For GitHub</strong>, just enter a URL like{' '}
-              <code className={classes.codeStyledText}>
-                github.com/USER/REPO
-              </code>
-              , for example:{' '}
-              <span className={'text-purple-600'}>
-                <Link
-                  target="_blank"
-                  rel="noreferrer"
-                  href={'https://github.com/langchain-ai/langchain'}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  https://github.com/langchain-ai/langchain
-                </Link>
-              </span>
-              . We&apos;ll ingest all files in the main branch. Ensure the
-              repository is public.
-              <div style={{ paddingBottom: '12px' }}></div>
-              <Input
-                icon={<img
-                  src="/media/github-mark-white.png"
-                  alt="GitHub Logo"
-                  style={{ height: '50%', width: '50%' }}
-                />}
-                // I can't figure out how to change the background colors.
-                className={`mt-4 w-[40%] min-w-[18rem] disabled:bg-purple-200 lg:w-[100%]`}
-                // wrapperProps={{ borderRadius: 'xl' }}
-                // styles={{ input: { backgroundColor: '#1A1B1E' } }}
-                styles={{
-                  input: {
-                    backgroundColor: '#1A1B1E',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    '&:focus': {
-                      borderColor: '#9370DB',
+        <DialogContent className="mx-auto h-auto w-[95%] max-w-2xl rounded-2xl border-0 bg-[#1c1c2e] px-4 py-6 text-white sm:px-6">
+          <DialogHeader>
+            <DialogTitle className="mb-4 text-xl font-bold">
+              Ingest GitHub Website
+            </DialogTitle>
+          </DialogHeader>
+          <div className="border-t border-gray-800 pt-4">
+            <div className="space-y-4">
+              <div>
+                <div className="break-words text-sm sm:text-base">
+                  <strong>For GitHub</strong>, just enter a URL like{' '}
+                  <code className={classes.codeStyledText}>
+                    github.com/USER/REPO
+                  </code>
+                  , for example:{' '}
+                  <span className={'text-purple-600'}>
+                    <Link
+                      target="_blank"
+                      rel="noreferrer"
+                      href={'https://github.com/langchain-ai/langchain'}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      https://github.com/langchain-ai/langchain
+                    </Link>
+                  </span>
+                  . We&apos;ll ingest all files in the main branch. Ensure the
+                  repository is public.
+                </div>
+                <div className="py-3"></div>
+                <Input
+                  icon={icon}
+                  className="w-full"
+                  styles={{
+                    input: {
+                      backgroundColor: '#1A1B1E',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      borderRadius: '1rem',
+                      '&:focus': {
+                        borderColor: '#9370DB',
+                      },
                     },
-                  },
-                }}
-                placeholder="Enter URL..."
-                radius={'xl'}
-                type="url"
-                value={url}
-                size={'lg'}
-                // disabled={isDisabled}
-                onChange={(e) => {
-                  handleUrlChange(e)
-                  setIcon(
-                    <img
-                      src="/media/github-mark-white.png"
-                      alt="GitHub Logo"
-                      style={{ height: '50%', width: '50%' }}
-                    />,
-                  )
-                }}
-              />
+                    wrapper: {
+                      width: '100%',
+                    },
+                  }}
+                  placeholder="Enter URL..."
+                  radius="xl"
+                  type="url"
+                  value={url}
+                  size="lg"
+                  onChange={(e) => {
+                    handleUrlChange(e)
+                  }}
+                />
+              </div>
             </div>
+          </div>
+          <div className="mt-4 border-t border-gray-800 pt-2">
             <Button
               onClick={handleIngest}
               disabled={!isUrlValid}
-              className="w-full bg-purple-600 text-white hover:bg-purple-700"
+              className="h-11 w-full rounded-xl bg-purple-600 text-white transition-colors hover:bg-purple-700"
             >
               Ingest the Website
             </Button>
           </div>
         </DialogContent>
       </Dialog>
-    </motion.div >
+    </motion.div>
   )
 }
-

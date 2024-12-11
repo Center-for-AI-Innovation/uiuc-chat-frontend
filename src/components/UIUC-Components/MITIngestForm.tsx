@@ -5,22 +5,21 @@ import {
   useMantineTheme,
   Button,
   Input,
+  Image,
 } from '@mantine/core'
-import {
-  IconWorldDownload,
-  IconArrowRight,
-} from '@tabler/icons-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { IconWorldDownload, IconArrowRight } from '@tabler/icons-react'
+import { motion } from 'framer-motion'
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '../Dialog'
+import NextLink from 'next/link'
 import axios from 'axios'
 import { Montserrat } from 'next/font/google'
 import { FileUpload } from './UploadNotification'
-import Link from 'next/link'
 import { QueryClient } from '@tanstack/react-query'
 const montserrat_med = Montserrat({
   weight: '500',
@@ -154,18 +153,21 @@ export default function MITIngestForm({
 
   return (
     <motion.div layout>
-      <Dialog open={open} onOpenChange={(isOpen) => {
-        setOpen(isOpen);
-        if (!isOpen) {
-          setUrl('');
-          setIsUrlValid(false)
-          setIsUrlUpdated(false)
-          setMaxUrls('50')
-        }
-      }}>
+      <Dialog
+        open={open}
+        onOpenChange={(isOpen) => {
+          setOpen(isOpen)
+          if (!isOpen) {
+            setUrl('')
+            setIsUrlValid(false)
+            setIsUrlUpdated(false)
+            setMaxUrls('50')
+          }
+        }}
+      >
         <DialogTrigger asChild>
           <Card
-            className="group relative cursor-pointer overflow-hidden rounded-xl bg-gradient-to-br from-[#1c1c2e] to-[#2a2a40] p-6 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
+            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-gradient-to-br from-[#1c1c2e] to-[#2a2a40] p-6 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
             style={{ height: '100%' }}
           >
             <div className="mb-6 flex items-center justify-between">
@@ -184,7 +186,8 @@ export default function MITIngestForm({
             </div>
 
             <Text className="mb-4 text-sm leading-relaxed text-gray-400">
-              Import content from MIT OpenCourseWare, including lecture notes, assignments, and course materials.
+              Import content from MIT OpenCourseWare, including lecture notes,
+              assignments, and course materials.
             </Text>
             <div className="mt-auto flex items-center text-sm text-purple-400">
               <span>Configure import</span>
@@ -196,79 +199,82 @@ export default function MITIngestForm({
           </Card>
         </DialogTrigger>
 
-        <DialogContent className="max-w-2xl rounded-lg border-0 bg-[#1c1c2e] pt-10 px-10 text-white" style={{ padding: '50px', paddingBottom: '40px' }} >
-          <DialogTitle className="text-xl font-bold">
-            Ingest MIT Course
-          </DialogTitle>
-          <div className="space-y-4">
-            <div>
-              <div className="break-words">
-
-                <strong>For MIT Open Course Ware</strong>, just enter a URL like{' '}
-                <code style={{
-                  backgroundColor: '#020307',
-                  borderRadius: '5px',
-                  padding: '1px 5px',
-                  fontFamily: 'monospace',
-                  alignItems: 'center',
-                  justifyItems: 'center',
-                }}>
-                  ocw.mit.edu/courses/ANY_COURSE
-                </code>{' '}
-                , for example:{' '}
-                <span className={'text-purple-600'}>
-                  <Link
-                    target="_blank"
-                    rel="noreferrer"
-                    href={
-                      'https://ocw.mit.edu/courses/8-321-quantum-theory-i-fall-2017'
-                    }
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    https://ocw.mit.edu/courses/8-321-quantum-theory-i-fall-2017
-                  </Link>
-                </span>
-                .
-              </div>
-              <div style={{ paddingBottom: '12px' }}></div>
-              <Input
-                icon={<img
-                  src={'/media/mitocw_logo.jpg'}
-                  alt="MIT OCW Logo"
-                  style={{ height: '50%', width: '50%' }}
-                />}
-                // I can't figure out how to change the background colors.
-                className={`mt-4 w-[100%] min-w-[25rem] disabled:bg-purple-200 lg:w-[100%]`}
-                // wrapperProps={{ borderRadius: 'xl' }}
-                // styles={{ input: { backgroundColor: '#1A1B1E' } }}
-                styles={{
-                  input: {
-                    backgroundColor: '#1A1B1E',
-                    // paddingRight: '6rem', // Adjust right padding to prevent text from hiding behind the button
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    '&:focus': {
-                      borderColor: '#9370DB', // Change border color to a lighter purple only on focus
+        <DialogContent className="mx-auto h-auto w-[95%] max-w-2xl rounded-2xl border-0 bg-[#1c1c2e] px-4 py-6 text-white sm:px-6">
+          <DialogHeader>
+            <DialogTitle className="mb-4 text-xl font-bold">
+              Ingest MIT Course
+            </DialogTitle>
+          </DialogHeader>
+          <div className="border-t border-gray-800 pt-4">
+            <div className="space-y-4">
+              <div>
+                <div className="break-words text-sm sm:text-base">
+                  <strong>For MIT Open Course Ware</strong>, just enter a URL
+                  like{' '}
+                  <code className="inline-flex items-center rounded-md bg-[#020307] px-2 py-1 font-mono text-xs sm:text-sm">
+                    ocw.mit.edu/courses/ANY_COURSE
+                  </code>{' '}
+                  , for example:{' '}
+                  <span className="break-all text-purple-600">
+                    <NextLink
+                      target="_blank"
+                      rel="noreferrer"
+                      href={
+                        'https://ocw.mit.edu/courses/8-321-quantum-theory-i-fall-2017'
+                      }
+                      onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                    >
+                      https://ocw.mit.edu/courses/8-321-quantum-theory-i-fall-2017
+                    </NextLink>
+                  </span>
+                  .
+                </div>
+                <div className="py-3"></div>
+                <Input
+                  icon={
+                    <Image
+                      src="/media/mitocw_logo.jpg"
+                      alt="MIT OCW Logo"
+                      width={24}
+                      height={24}
+                      className="object-contain"
+                    />
+                  }
+                  className="w-full"
+                  styles={{
+                    input: {
+                      backgroundColor: '#1A1B1E',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      borderRadius: '1rem',
+                      '&:focus': {
+                        borderColor: '#9370DB',
+                      },
                     },
-                  },
-                }}
-                placeholder="Enter URL..."
-                radius={'xl'}
-                type="url" // Set the type to 'url' to avoid thinking it's a username or pw.
-                value={url}
-                size={'lg'}
-                onChange={(e) => {
-                  handleUrlChange(e)
-                }}
-              />
+                    wrapper: {
+                      width: '100%',
+                    },
+                  }}
+                  placeholder="Enter URL..."
+                  radius="xl"
+                  type="url"
+                  value={url}
+                  size="lg"
+                  onChange={(e) => {
+                    handleUrlChange(e)
+                  }}
+                />
+              </div>
             </div>
+          </div>
+          <div className="mt-4 border-t border-gray-800 pt-2">
             <Button
               onClick={handleIngest}
               disabled={!isUrlValid}
-              className="w-full bg-purple-600 text-white hover:bg-purple-700"
+              className="h-11 w-full rounded-xl bg-purple-600 text-white transition-colors hover:bg-purple-700"
             >
-              Ingest the Website
+              Ingest MIT Course
             </Button>
           </div>
         </DialogContent>
