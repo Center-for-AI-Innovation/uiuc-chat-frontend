@@ -16,6 +16,7 @@ import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 import {
   Button,
   Card,
+  Collapse,
   Flex,
   Group,
   Indicator,
@@ -31,7 +32,7 @@ import {
   Divider,
 } from '@mantine/core'
 import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
-import { DEFAULT_SYSTEM_PROMPT } from '~/utils/app/const'
+import { DEFAULT_SYSTEM_PROMPT, GUIDED_LEARNING_PROMPT } from '~/utils/app/const'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
@@ -46,6 +47,9 @@ import {
   IconSparkles,
   IconInfoCircle,
   IconCopy,
+  IconChevronDown,
+  IconChevronUp,
+  IconBook,
 } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import { useChat } from 'ai/react'
@@ -71,18 +75,6 @@ You must strictly adhere to the following rules:
 
 Your responses must be based solely on the content of the provided documents.
 `
-
-const GUIDED_LEARNING_PROMPT =
-  '\n\nYou are an AI tutor dedicated to helping students discover the joy of learning by guiding them to find answers on their own. Your role is not just to teach but to spark curiosity and excitement in each subject. You never provide direct answers or detailed step-by-step solutions, no matter the problem. Instead, with limitless patience and enthusiasm, you ask insightful questions and offer hints that inspire critical thinking and problem-solving. Your goal is to help learners experience the thrill of discovery and build confidence in their ability to find solutions independently—like a great teaching assistant who makes learning fun and rewarding.\n\n' +
-  'Key approaches:\n\n' +
-  '1. **Ask Open-Ended Questions**: Lead students with questions that encourage exploration, making problem-solving feel like an exciting challenge.\n' +
-  '2. **Guide Without Giving Specific Steps**: Offer general insights and hints that keep students thinking creatively without giving direct solutions.\n' +
-  '3. **Explain Concepts Without Revealing Answers**: Provide engaging explanations of concepts that deepen understanding while leaving the solution for the student to uncover.\n\n' +
-  'Strict guidelines:\n\n' +
-  '- **Never Provide Solutions**: Avoid any form of direct or partial solutions. Always redirect learners to approach the problem with fresh questions and ideas.\n' +
-  '- **Resist Workarounds**: If a student seeks the answer, gently steer them back to thoughtful reflection, keeping the excitement alive in the process of discovery.\n' +
-  '- **Encourage Independent Thinking**: Use probing questions to spark analysis and creative thinking, helping students feel empowered by their own problem-solving skills.\n' +
-  '- **Support, Motivate, and Inspire**: Keep a warm, encouraging tone, showing genuine excitement about the learning journey. Celebrate their persistence and successes, no matter how small, to make learning enjoyable and fulfilling.'
 
 // Add this type to handle partial updates
 type PartialCourseMetadata = {
@@ -122,6 +114,7 @@ const CourseMain: NextPage = () => {
   const [documentsOnly, setDocumentsOnly] = useState(false)
   const [systemPromptOnly, setSystemPromptOnly] = useState(false)
   const [vectorSearchRewrite, setVectorSearchRewrite] = useState(false)
+  const [insightsOpen, setInsightsOpen] = useState(false)
 
   const courseMetadataRef = useRef<CourseMetadata | null>(null);
   
@@ -557,6 +550,7 @@ The final prompt you output should adhere to the following structure below. Do n
                 direction={isSmallScreen ? 'column' : 'row'}
                 style={{ height: '100%' }}
               >
+                {/* Left Section: Prompt Guidance */}
                 <div
                   style={{
                     flex: isSmallScreen ? '1 1 100%' : '1 1 60%',
@@ -585,73 +579,155 @@ The final prompt you output should adhere to the following structure below. Do n
                         style={{ marginBottom: '0.5rem' }}
                         className={`label ${montserrat_heading.variable} font-montserratHeading`}
                       >
-                        Customize System Prompt
+                        Customize Your System Prompt
                       </Title>
+
+                      {/* Collapsible Insights Section */}
                       <Paper
-                        className="rounded-xl"
+                        className="rounded-xl w-full"
                         shadow="xs"
                         p="md"
-                        style={{
-                          width: '100%',
-                          backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                        sx={{
+                          backgroundColor: '#15162c',
+                          border: '1px solid rgba(147, 51, 234, 0.3)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          '&:hover': {
+                            backgroundColor: '#1a1b34',
+                            borderColor: 'rgba(147, 51, 234, 0.5)',
+                            transform: 'translateY(-1px)',
+                          },
                         }}
+                        onClick={() => setInsightsOpen(!insightsOpen)}
                       >
-                        <Text
-                          size={'md'}
-                          className={`${montserrat_paragraph.variable} select-text font-montserratParagraph`}
+                        <Flex 
+                          align="center" 
+                          justify="space-between" 
+                          sx={{
+                            padding: '4px 8px',
+                            borderRadius: '8px',
+                          }}
                         >
-                          For guidance on crafting prompts, consult
-                          <br />
-                          <List withPadding>
-                            <List.Item>
-                              the
-                              <a
-                                className={`pl-1 text-sm text-purple-600 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                href="https://platform.openai.com/docs/guides/prompt-engineering"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                official OpenAI prompt engineering guide
-                                <IconExternalLink
-                                  size={18}
-                                  className="inline-block pl-1"
-                                  style={{ position: 'relative', top: '-2px' }}
-                                />
-                              </a>
-                            </List.Item>
+                          <Flex align="center" gap="md">
+                            <IconBook
+                              size={24} 
+                              style={{ 
+                                color: 'hsl(280,100%,70%)',
+                              }} 
+                            />
+                            <Text
+                              size="md"
+                              weight={600}
+                              className={`${montserrat_paragraph.variable} select-text font-montserratParagraph`}
+                              variant="gradient"
+                              gradient={{ from: 'gold', to: 'white', deg: 50 }}
+                            >
+                              Prompt Engineering Guide
+                            </Text>
+                          </Flex>
+                          <div 
+                            className="transition-transform duration-200" 
+                            style={{ 
+                              transform: insightsOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                              color: 'hsl(280,100%,70%)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            <IconChevronDown size={24} />
+                          </div>
+                        </Flex>
 
-                            <List.Item>
-                              the
-                              <a
-                                className={`pl-1 text-sm text-purple-600 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                href="https://docs.anthropic.com/claude/prompt-library"
-                                target="_blank"
-                                rel="noopener noreferrer"
+                        <Collapse in={insightsOpen} transitionDuration={200}>
+                          <div className="mt-4 px-2">
+                            <Text
+                              size="md"
+                              className={`${montserrat_paragraph.variable} select-text font-montserratParagraph`}
+                            >
+                              For additional insights and best practices on prompt creation, please review:
+                              <List 
+                                withPadding 
+                                className="mt-2"
+                                spacing="sm"
+                                icon={
+                                  <div
+                                    style={{
+                                      width: '6px',
+                                      height: '6px',
+                                      borderRadius: '50%',
+                                      backgroundColor: 'hsl(280,100%,70%)',
+                                      marginTop: '8px'
+                                    }}
+                                  />
+                                }
                               >
-                                official Anthropic Prompt Library
-                                <IconExternalLink
-                                  size={18}
-                                  className="inline-block pl-1"
-                                  style={{ position: 'relative', top: '-2px' }}
-                                />
-                              </a>
-                            </List.Item>
-                          </List>
-                        </Text>
+                                <List.Item>
+                                  <a
+                                    className={`text-sm hover:text-purple-400 transition-colors duration-200 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                    style={{ color: 'hsl(280,100%,70%)' }}
+                                    href="https://platform.openai.com/docs/guides/prompt-engineering"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    The Official OpenAI Prompt Engineering Guide
+                                    <IconExternalLink
+                                      size={18}
+                                      className="inline-block pl-1"
+                                      style={{ position: 'relative', top: '-2px' }}
+                                    />
+                                  </a>
+                                </List.Item>
+                                <List.Item>
+                                  <a
+                                    className={`text-sm hover:text-purple-400 transition-colors duration-200 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                    style={{ color: 'hsl(280,100%,70%)' }}
+                                    href="https://docs.anthropic.com/claude/prompt-library"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    The Official Anthropic Prompt Library
+                                    <IconExternalLink
+                                      size={18}
+                                      className="inline-block pl-1"
+                                      style={{ position: 'relative', top: '-2px' }}
+                                    />
+                                  </a>
+                                </List.Item>
+                              </List>
 
-                        <Text
-                          className={`label ${montserrat_paragraph.variable} inline-block select-text font-montserratParagraph`}
-                          size={'md'}
-                        >
-                          The System Prompt is used during <i>all</i>{' '}
-                          conversations on this project. It is the most powerful
-                          form of instructions to the model. It is the most
-                          powerful form of instructions to the model.
-                          <br></br>
-                          Include the most salient information possible, like
-                          good examples, welcome greetings and links to where
-                          users can learn more about your work.
-                        </Text>
+                              <Text
+                                className={`label ${montserrat_paragraph.variable} inline-block select-text font-montserratParagraph`}
+                                size="md"
+                                style={{ marginTop: '1.5rem' }}
+                              >
+                                The System Prompt provides the foundation for every conversation in this project. It defines the model&apos;s role, tone, and behavior. Consider including:
+                                <List 
+                                  withPadding 
+                                  className="mt-2"
+                                  spacing="xs"
+                                  icon={
+                                    <div
+                                      style={{
+                                        width: '6px',
+                                        height: '6px',
+                                        borderRadius: '50%',
+                                        backgroundColor: 'hsl(280,100%,70%)',
+                                        marginTop: '8px'
+                                      }}
+                                    />
+                                  }
+                                >
+                                  <List.Item>Key instructions or examples</List.Item>
+                                  <List.Item>A warm welcome message</List.Item>
+                                  <List.Item>Helpful links for further learning</List.Item>
+                                </List>
+                              </Text>
+                            </Text>
+                          </div>
+                        </Collapse>
                       </Paper>
 
                       <div
@@ -729,6 +805,10 @@ The final prompt you output should adhere to the following structure below. Do n
                               styles={{
                                 input: {
                                   fontFamily: 'var(--font-montserratParagraph)',
+                                  '&:focus': {
+                                    borderColor: '#8441ba',
+                                    boxShadow: '0 0 0 1px #8441ba'
+                                  }
                                 },
                               }}
                             />
@@ -955,58 +1035,91 @@ The final prompt you output should adhere to the following structure below. Do n
                           </Flex>
 
                           {/* Enhanced Switches */}
-                          <CustomSwitch
-                            label="Guided Learning"
-                            tooltip="Enables a tutoring mode where the AI encourages independent problem-solving. It provides hints and asks questions instead of giving direct answers, promoting critical thinking and discovery."
-                            checked={guidedLearning}
-                            onChange={(value: boolean) =>
-                              handleCheckboxChange({ guidedLearning: value })
-                            }
-                          />
-
-                          <CustomSwitch
-                            label="Document-Based References Only"
-                            tooltip="Restricts the AI to use only information from the provided documents. Useful for maintaining accuracy in fields like legal research where external knowledge could be problematic."
-                            checked={documentsOnly}
-                            onChange={(value: boolean) =>
-                              handleCheckboxChange({ documentsOnly: value })
-                            }
-                          />
-
-                          <CustomSwitch
-                            label="Bypass UIUC.chat's internal prompting"
-                            tooltip="Internally, we prompt the model to (1) add citations and (2) always be as helpful as possible. You can bypass this for full un-modified control over your bot."
-                            checked={systemPromptOnly}
-                            onChange={(value: boolean) =>
-                              handleCheckboxChange({ systemPromptOnly: value })
-                            }
-                          />
-
-                          {/* Conditional Button */}
-                          {systemPromptOnly && (
-                            <Flex
-                              mt="sm"
-                              direction="column"
-                              gap="xs"
-                              className="mt-[-4px] pl-[82px]"
-                            >
-                              <CustomCopyButton
-                                label="Copy UIUC.chat's internal prompt"
-                                tooltip="You can use and customize our default internal prompting to suit your needs. Note, only the specific citation formatting described will work with our citation 'find and replace' system. This provides a solid starting point for defining AI behavior in raw prompt mode."
-                                onClick={handleCopyDefaultPrompt}
+                          <Flex direction="column" gap="md">
+                            <div className="flex flex-col gap-1">
+                              <CustomSwitch
+                                label="Guided Learning"
+                                tooltip="When enabled course-wide, this setting applies to all students and cannot be disabled by them. The AI will encourage independent problem-solving by providing hints and questions instead of direct answers, while still finding and citing relevant course materials. This promotes critical thinking while ensuring students have access to proper resources."
+                                checked={guidedLearning}
+                                onChange={(value: boolean) =>
+                                  handleCheckboxChange({ guidedLearning: value })
+                                }
                               />
-                            </Flex>
-                          )}
 
-                          {/* Reset Button */}
-                          <Flex mt="md" justify="flex-start">
-                            <Button
-                              className="relative bg-red-500 text-white hover:border-red-600 hover:bg-red-600"
-                              onClick={resetSystemPrompt}
-                              style={{ minWidth: 'fit-content' }}
-                            >
-                              Reset
-                            </Button>
+                              {/* Add Guided Learning URL Copy Button - only show when guided learning is off */}
+                              {!guidedLearning && (
+                                <div className="ml-[82px] mt-2">
+                                  <CustomCopyButton
+                                    label="Share Guided Learning Link"
+                                    tooltip="Share this URL with students who would benefit from a guided learning experience. When students use this link, the AI will encourage problem-solving through questions and hints while providing relevant course materials and citations. Students can return to standard mode by using the regular course URL."
+                                    onClick={() => {
+                                      const currentUrl = window.location.origin;
+                                      const chatUrl = `${currentUrl}/${course_name}/chat?guided_learning=true`;
+                                      navigator.clipboard.writeText(chatUrl).then(() => {
+                                        showToastNotification(
+                                          theme,
+                                          'Copied',
+                                          'Guided Learning URL copied to clipboard',
+                                        );
+                                      }).catch((err) => {
+                                        console.error('Could not copy URL: ', err);
+                                        showToastNotification(
+                                          theme,
+                                          'Error Copying',
+                                          'Could not copy URL to clipboard',
+                                          true,
+                                        );
+                                      });
+                                    }}
+                                  />
+                                </div>
+                              )}
+                            </div>
+
+                            <CustomSwitch
+                              label="Document-Based References Only"
+                              tooltip="Restricts the AI to use only information from the provided documents. Useful for maintaining accuracy in fields like legal research where external knowledge could be problematic."
+                              checked={documentsOnly}
+                              onChange={(value: boolean) =>
+                                handleCheckboxChange({ documentsOnly: value })
+                              }
+                            />
+
+                            <CustomSwitch
+                              label="Bypass UIUC.chat&apos;s internal prompting"
+                              tooltip="Internally, we prompt the model to (1) add citations and (2) always be as helpful as possible. You can bypass this for full un-modified control over your bot."
+                              checked={systemPromptOnly}
+                              onChange={(value: boolean) =>
+                                handleCheckboxChange({ systemPromptOnly: value })
+                              }
+                            />
+
+                            {/* Conditional Button */}
+                            {systemPromptOnly && (
+                              <Flex
+                                mt="sm"
+                                direction="column"
+                                gap="xs"
+                                className="mt-[-4px] pl-[82px]"
+                              >
+                                <CustomCopyButton
+                                  label="Copy UIUC.chat&apos;s internal prompt"
+                                  tooltip="You can use and customize our default internal prompting to suit your needs. Note, only the specific citation formatting described will work with our citation &apos;find and replace&apos; system. This provides a solid starting point for defining AI behavior in raw prompt mode."
+                                  onClick={handleCopyDefaultPrompt}
+                                />
+                              </Flex>
+                            )}
+
+                            {/* Reset Button */}
+                            <Flex mt="md" justify="flex-start">
+                              <Button
+                                className="relative bg-red-500 text-white hover:border-red-600 hover:bg-red-600"
+                                onClick={resetSystemPrompt}
+                                style={{ minWidth: 'fit-content' }}
+                              >
+                                Reset
+                              </Button>
+                            </Flex>
                           </Flex>
                         </Flex>
                       </div>

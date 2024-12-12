@@ -1,7 +1,6 @@
 import Head from 'next/head'
 import React, { useEffect, useState } from 'react'
 
-import EditCourseCard from '~/components/UIUC-Components/EditCourseCard'
 import Navbar from './navbars/Navbar'
 import {
   Button,
@@ -92,7 +91,7 @@ const MakeNewCoursePage = ({
       )
       console.log('Project created successfully:', result)
       if (is_new_course) {
-        await router.push(`/${projectName}/materials`)
+        await router.push(`/${projectName}/dashboard`)
         return
       }
     } catch (error) {

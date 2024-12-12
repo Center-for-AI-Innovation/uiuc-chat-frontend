@@ -12,6 +12,8 @@ import {
 import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { CourseMetadata } from '~/types/courseMetadata'
+import NomicDocumentMap from '~/components/UIUC-Components/NomicDocumentsMap'
+import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 
 const CourseMain: NextPage = () => {
   const router = useRouter()

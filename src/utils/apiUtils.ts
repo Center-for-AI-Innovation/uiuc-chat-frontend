@@ -1,6 +1,6 @@
 // utils/apiUtils.ts
 import {
-  CourseMetadataOptionalForUpsert,
+  type CourseMetadataOptionalForUpsert,
   type CourseMetadata,
 } from '~/types/courseMetadata'
 import { v4 as uuidv4 } from 'uuid'

@@ -39,7 +39,7 @@ import { useFetchAllWorkflows } from '~/utils/functionCalling/handleFunctionCall
 import { IntermediateStateAccordion } from './IntermediateStateAccordion'
 
 export const GetCurrentPageName = () => {
-  // /CS-125/materials --> CS-125
+  // /CS-125/dashboard --> CS-125
   return useRouter().asPath.slice(1).split('/')[0] as string
 }
 
