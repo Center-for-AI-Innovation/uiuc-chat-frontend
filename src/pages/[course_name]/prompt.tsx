@@ -16,6 +16,7 @@ import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 import {
   Button,
   Card,
+  Collapse,
   Flex,
   Group,
   Indicator,
@@ -46,6 +47,9 @@ import {
   IconSparkles,
   IconInfoCircle,
   IconCopy,
+  IconChevronDown,
+  IconChevronUp,
+  IconBook,
 } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import { useChat } from 'ai/react'
@@ -110,6 +114,7 @@ const CourseMain: NextPage = () => {
   const [documentsOnly, setDocumentsOnly] = useState(false)
   const [systemPromptOnly, setSystemPromptOnly] = useState(false)
   const [vectorSearchRewrite, setVectorSearchRewrite] = useState(false)
+  const [insightsOpen, setInsightsOpen] = useState(false)
 
   const courseMetadataRef = useRef<CourseMetadata | null>(null);
   
@@ -545,6 +550,7 @@ The final prompt you output should adhere to the following structure below. Do n
                 direction={isSmallScreen ? 'column' : 'row'}
                 style={{ height: '100%' }}
               >
+                {/* Left Section: Prompt Guidance */}
                 <div
                   style={{
                     flex: isSmallScreen ? '1 1 100%' : '1 1 60%',
@@ -573,73 +579,155 @@ The final prompt you output should adhere to the following structure below. Do n
                         style={{ marginBottom: '0.5rem' }}
                         className={`label ${montserrat_heading.variable} font-montserratHeading`}
                       >
-                        Customize System Prompt
+                        Customize Your System Prompt
                       </Title>
+
+                      {/* Collapsible Insights Section */}
                       <Paper
-                        className="rounded-xl"
+                        className="rounded-xl w-full"
                         shadow="xs"
                         p="md"
-                        style={{
-                          width: '100%',
-                          backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                        sx={{
+                          backgroundColor: '#15162c',
+                          border: '1px solid rgba(147, 51, 234, 0.3)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          '&:hover': {
+                            backgroundColor: '#1a1b34',
+                            borderColor: 'rgba(147, 51, 234, 0.5)',
+                            transform: 'translateY(-1px)',
+                          },
                         }}
+                        onClick={() => setInsightsOpen(!insightsOpen)}
                       >
-                        <Text
-                          size={'md'}
-                          className={`${montserrat_paragraph.variable} select-text font-montserratParagraph`}
+                        <Flex 
+                          align="center" 
+                          justify="space-between" 
+                          sx={{
+                            padding: '4px 8px',
+                            borderRadius: '8px',
+                          }}
                         >
-                          For guidance on crafting prompts, consult
-                          <br />
-                          <List withPadding>
-                            <List.Item>
-                              the
-                              <a
-                                className={`pl-1 text-sm text-purple-600 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                href="https://platform.openai.com/docs/guides/prompt-engineering"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                official OpenAI prompt engineering guide
-                                <IconExternalLink
-                                  size={18}
-                                  className="inline-block pl-1"
-                                  style={{ position: 'relative', top: '-2px' }}
-                                />
-                              </a>
-                            </List.Item>
+                          <Flex align="center" gap="md">
+                            <IconBook
+                              size={24} 
+                              style={{ 
+                                color: 'hsl(280,100%,70%)',
+                              }} 
+                            />
+                            <Text
+                              size="md"
+                              weight={600}
+                              className={`${montserrat_paragraph.variable} select-text font-montserratParagraph`}
+                              variant="gradient"
+                              gradient={{ from: 'gold', to: 'white', deg: 50 }}
+                            >
+                              Prompt Engineering Guide
+                            </Text>
+                          </Flex>
+                          <div 
+                            className="transition-transform duration-200" 
+                            style={{ 
+                              transform: insightsOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                              color: 'hsl(280,100%,70%)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            <IconChevronDown size={24} />
+                          </div>
+                        </Flex>
 
-                            <List.Item>
-                              the
-                              <a
-                                className={`pl-1 text-sm text-purple-600 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                href="https://docs.anthropic.com/claude/prompt-library"
-                                target="_blank"
-                                rel="noopener noreferrer"
+                        <Collapse in={insightsOpen} transitionDuration={200}>
+                          <div className="mt-4 px-2">
+                            <Text
+                              size="md"
+                              className={`${montserrat_paragraph.variable} select-text font-montserratParagraph`}
+                            >
+                              For additional insights and best practices on prompt creation, please review:
+                              <List 
+                                withPadding 
+                                className="mt-2"
+                                spacing="sm"
+                                icon={
+                                  <div
+                                    style={{
+                                      width: '6px',
+                                      height: '6px',
+                                      borderRadius: '50%',
+                                      backgroundColor: 'hsl(280,100%,70%)',
+                                      marginTop: '8px'
+                                    }}
+                                  />
+                                }
                               >
-                                official Anthropic Prompt Library
-                                <IconExternalLink
-                                  size={18}
-                                  className="inline-block pl-1"
-                                  style={{ position: 'relative', top: '-2px' }}
-                                />
-                              </a>
-                            </List.Item>
-                          </List>
-                        </Text>
+                                <List.Item>
+                                  <a
+                                    className={`text-sm hover:text-purple-400 transition-colors duration-200 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                    style={{ color: 'hsl(280,100%,70%)' }}
+                                    href="https://platform.openai.com/docs/guides/prompt-engineering"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    The Official OpenAI Prompt Engineering Guide
+                                    <IconExternalLink
+                                      size={18}
+                                      className="inline-block pl-1"
+                                      style={{ position: 'relative', top: '-2px' }}
+                                    />
+                                  </a>
+                                </List.Item>
+                                <List.Item>
+                                  <a
+                                    className={`text-sm hover:text-purple-400 transition-colors duration-200 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                    style={{ color: 'hsl(280,100%,70%)' }}
+                                    href="https://docs.anthropic.com/claude/prompt-library"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    The Official Anthropic Prompt Library
+                                    <IconExternalLink
+                                      size={18}
+                                      className="inline-block pl-1"
+                                      style={{ position: 'relative', top: '-2px' }}
+                                    />
+                                  </a>
+                                </List.Item>
+                              </List>
 
-                        <Text
-                          className={`label ${montserrat_paragraph.variable} inline-block select-text font-montserratParagraph`}
-                          size={'md'}
-                        >
-                          The System Prompt is used during <i>all</i>{' '}
-                          conversations on this project. It is the most powerful
-                          form of instructions to the model. It is the most
-                          powerful form of instructions to the model.
-                          <br></br>
-                          Include the most salient information possible, like
-                          good examples, welcome greetings and links to where
-                          users can learn more about your work.
-                        </Text>
+                              <Text
+                                className={`label ${montserrat_paragraph.variable} inline-block select-text font-montserratParagraph`}
+                                size="md"
+                                style={{ marginTop: '1.5rem' }}
+                              >
+                                The System Prompt provides the foundation for every conversation in this project. It defines the model's role, tone, and behavior. Consider including:
+                                <List 
+                                  withPadding 
+                                  className="mt-2"
+                                  spacing="xs"
+                                  icon={
+                                    <div
+                                      style={{
+                                        width: '6px',
+                                        height: '6px',
+                                        borderRadius: '50%',
+                                        backgroundColor: 'hsl(280,100%,70%)',
+                                        marginTop: '8px'
+                                      }}
+                                    />
+                                  }
+                                >
+                                  <List.Item>Key instructions or examples</List.Item>
+                                  <List.Item>A warm welcome message</List.Item>
+                                  <List.Item>Helpful links for further learning</List.Item>
+                                </List>
+                              </Text>
+                            </Text>
+                          </div>
+                        </Collapse>
                       </Paper>
 
                       <div
@@ -717,6 +805,10 @@ The final prompt you output should adhere to the following structure below. Do n
                               styles={{
                                 input: {
                                   fontFamily: 'var(--font-montserratParagraph)',
+                                  '&:focus': {
+                                    borderColor: '#8441ba',
+                                    boxShadow: '0 0 0 1px #8441ba'
+                                  }
                                 },
                               }}
                             />
