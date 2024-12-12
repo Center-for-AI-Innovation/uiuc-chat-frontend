@@ -703,7 +703,7 @@ The final prompt you output should adhere to the following structure below. Do n
                                 size="md"
                                 style={{ marginTop: '1.5rem' }}
                               >
-                                The System Prompt provides the foundation for every conversation in this project. It defines the model's role, tone, and behavior. Consider including:
+                                The System Prompt provides the foundation for every conversation in this project. It defines the model&apos;s role, tone, and behavior. Consider including:
                                 <List 
                                   withPadding 
                                   className="mt-2"
@@ -1086,7 +1086,7 @@ The final prompt you output should adhere to the following structure below. Do n
                             />
 
                             <CustomSwitch
-                              label="Bypass UIUC.chat's internal prompting"
+                              label="Bypass UIUC.chat&apos;s internal prompting"
                               tooltip="Internally, we prompt the model to (1) add citations and (2) always be as helpful as possible. You can bypass this for full un-modified control over your bot."
                               checked={systemPromptOnly}
                               onChange={(value: boolean) =>
@@ -1103,8 +1103,8 @@ The final prompt you output should adhere to the following structure below. Do n
                                 className="mt-[-4px] pl-[82px]"
                               >
                                 <CustomCopyButton
-                                  label="Copy UIUC.chat's internal prompt"
-                                  tooltip="You can use and customize our default internal prompting to suit your needs. Note, only the specific citation formatting described will work with our citation 'find and replace' system. This provides a solid starting point for defining AI behavior in raw prompt mode."
+                                  label="Copy UIUC.chat&apos;s internal prompt"
+                                  tooltip="You can use and customize our default internal prompting to suit your needs. Note, only the specific citation formatting described will work with our citation &apos;find and replace&apos; system. This provides a solid starting point for defining AI behavior in raw prompt mode."
                                   onClick={handleCopyDefaultPrompt}
                                 />
                               </Flex>
