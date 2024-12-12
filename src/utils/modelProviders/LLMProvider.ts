@@ -15,10 +15,8 @@ import {
   AzureModelID,
   AzureModels,
 } from '~/utils/modelProviders/azure'
-import { Conversation } from '../../types/chat'
 import { NCSAHostedModels } from '~/utils/modelProviders/NCSAHosted'
-import { findDefaultModel } from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
-import { all } from 'axios'
+
 
 export enum ProviderNames {
   Ollama = 'Ollama',
@@ -173,16 +171,9 @@ export const preferredModelIds = [
 export const selectBestModel = (
   allLLMProviders: AllLLMProviders,
 ): GenericSupportedModel => {
-
-  const globalDefaultModel = Object.values(allLLMProviders)
-    .filter((provider) => provider!.enabled)
-    .flatMap((provider) => provider!.models || [])
-    .filter((model) => model.default)
-  if (globalDefaultModel) {
-    // This will always return one record since the default model is unique. If there are two default models (that means default model functionality is broken), this will return the first one.
-    return globalDefaultModel[0] as GenericSupportedModel
-  }
-
+  // Find default model from the local Storage
+  // Currently, if the user ever specified a default model in local storage, this will ALWAYS override the default model specified by the admin, 
+  // especially for the creation of new chats. In the future we might want to create different functions to allow the admin selected default model to be the one that new chats use.
   const allModels = Object.values(allLLMProviders)
     .filter((provider) => provider!.enabled)
     .flatMap((provider) => provider!.models || [])
@@ -190,6 +181,9 @@ export const selectBestModel = (
 
   const defaultModelId = localStorage.getItem('defaultModel')
 
+  // Rohan, please remove this line after testing
+  localStorage.setItem('defaultModel', '')
+  
   if (defaultModelId && allModels.find((m) => m.id === defaultModelId)) {
     const defaultModel = allModels
       .filter((model) => model.enabled)
@@ -197,6 +191,16 @@ export const selectBestModel = (
     if (defaultModel) {
       return defaultModel
     }
+  }
+
+  // If the default model that a user specifies is not available, fall back to the admin selected default model. 
+  const globalDefaultModel = Object.values(allLLMProviders)
+    .filter((provider) => provider!.enabled)
+    .flatMap((provider) => provider!.models || [])
+    .filter((model) => model.default)
+  if (globalDefaultModel) {
+    // This will always return one record since the default model is unique. If there are two default models (that means default model functionality is broken), this will return the first one.
+    return globalDefaultModel[0] as GenericSupportedModel
   }
 
   // If the conversation model is not available or invalid, use the preferredModelIds
