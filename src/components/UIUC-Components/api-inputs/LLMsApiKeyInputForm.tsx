@@ -368,6 +368,7 @@ export const ModelItem = forwardRef<
 export function findDefaultModel(
   providers: AllLLMProviders,
 ): (AnySupportedModel & { provider: ProviderNames }) | undefined {
+  console.log('providers inside', providers)
   for (const providerKey in providers) {
     const provider = providers[providerKey as keyof typeof providers]
     if (provider && provider.models) {

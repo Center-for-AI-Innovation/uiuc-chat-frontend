@@ -452,6 +452,8 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
     const defaultModel = selectBestModel(llmProviders).id
     const [loadingModelId, setLoadingModelId] = useState<string | null>(null)
 
+    console.log('defaultModelId in chat page: ', defaultModelId)
+
     const handleModelClick = (modelId: string) => {
       // Get list of models from all providers
       const allModels = Object.values(llmProviders)

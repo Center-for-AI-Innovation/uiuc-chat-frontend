@@ -17,6 +17,8 @@ import {
 } from '~/utils/modelProviders/azure'
 import { Conversation } from '../../types/chat'
 import { NCSAHostedModels } from '~/utils/modelProviders/NCSAHosted'
+import { findDefaultModel } from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
+import { all } from 'axios'
 
 export enum ProviderNames {
   Ollama = 'Ollama',
@@ -171,6 +173,16 @@ export const preferredModelIds = [
 export const selectBestModel = (
   allLLMProviders: AllLLMProviders,
 ): GenericSupportedModel => {
+
+  const globalDefaultModel = Object.values(allLLMProviders)
+    .filter((provider) => provider!.enabled)
+    .flatMap((provider) => provider!.models || [])
+    .filter((model) => model.default)
+  if (globalDefaultModel) {
+    // This will always return one record since the default model is unique. If there are two default models (that means default model functionality is broken), this will return the first one.
+    return globalDefaultModel[0] as GenericSupportedModel
+  }
+
   const allModels = Object.values(allLLMProviders)
     .filter((provider) => provider!.enabled)
     .flatMap((provider) => provider!.models || [])

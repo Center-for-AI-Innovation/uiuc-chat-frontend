@@ -46,7 +46,7 @@ import ChatUI, {
   WebllmModel,
   webLLMModels,
 } from '~/utils/modelProviders/WebLLM'
-import { VisionCapableModels } from '~/utils/modelProviders/LLMProvider'
+import { selectBestModel, VisionCapableModels } from '~/utils/modelProviders/LLMProvider'
 import { OpenAIModelID } from '~/utils/modelProviders/types/openai'
 import { UserSettings } from '~/components/Chat/UserSettings'
 import { IconChevronRight } from '@tabler/icons-react'
@@ -986,7 +986,7 @@ export const ChatInput = ({
             onClick={handleTextClick}
             style={{ cursor: 'pointer' }}
           >
-            {findDefaultModel(llmProviders)?.name}
+            {selectBestModel(llmProviders)?.id}
             {selectedConversation?.model &&
               webLLMModels.some(
                 (m) => m.name === selectedConversation?.model?.name,
