@@ -173,16 +173,13 @@ export const selectBestModel = (
 ): GenericSupportedModel => {
   // Find default model from the local Storage
   // Currently, if the user ever specified a default model in local storage, this will ALWAYS override the default model specified by the admin, 
-  // especially for the creation of new chats. In the future we might want to create different functions to allow the admin selected default model to be the one that new chats use.
+  // especially for the creation of new chats. 
   const allModels = Object.values(allLLMProviders)
     .filter((provider) => provider!.enabled)
     .flatMap((provider) => provider!.models || [])
     .filter((model) => model.enabled)
 
   const defaultModelId = localStorage.getItem('defaultModel')
-
-  // Rohan, please remove this line after testing
-  localStorage.setItem('defaultModel', '')
   
   if (defaultModelId && allModels.find((m) => m.id === defaultModelId)) {
     const defaultModel = allModels
