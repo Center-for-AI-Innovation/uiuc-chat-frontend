@@ -6,9 +6,7 @@ import { clerkClient } from '@clerk/nextjs/server'
 import posthog from 'posthog-js'
 import { NextRequest, NextResponse } from 'next/server'
 
-export const config = {
-  runtime: 'edge',
-}
+
 
 /**
  * Validates the provided API key and retrieves the associated user data.

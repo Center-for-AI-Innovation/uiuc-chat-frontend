@@ -18,8 +18,6 @@ export default async function handler(req: NextRequest, res: NextResponse) {
       `https://flask-production-751b.up.railway.app/getConversationStats?course_name=${course_name}`,
     )
 
-    console.log(`Response status: ${response.status}`)
-
     if (!response.ok) {
       throw new Error(`Failed to fetch data: ${response.statusText}`)
     }

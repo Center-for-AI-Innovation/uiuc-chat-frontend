@@ -4,9 +4,7 @@ import { decryptKeyIfNeeded } from '~/utils/crypto'
 
 import { OpenAIError, OpenAIStream } from '@/utils/server'
 
-export const config = {
-  runtime: 'edge',
-}
+
 
 const handler = async (req: Request): Promise<NextResponse> => {
   try {
@@ -22,11 +20,11 @@ const handler = async (req: Request): Promise<NextResponse> => {
     const contentArray: Content[] = Array.isArray(lastMessageContents)
       ? lastMessageContents
       : [
-          {
-            type: 'text',
-            text: lastMessageContents as string,
-          },
-        ]
+        {
+          type: 'text',
+          text: lastMessageContents as string,
+        },
+      ]
 
     const messages: OpenAIChatMessage[] = [
       {

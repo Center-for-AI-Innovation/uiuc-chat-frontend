@@ -14,9 +14,8 @@ import {
   AccordionTrigger,
 } from '~/components/shadcn/accordion'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { superAdmins } from '~/pages/api/UIUC-api/upsertCourseMetadata'
 import { useQueryClient } from '@tanstack/react-query'
-
+import { superAdmins } from '~/utils/superAdmins'
 function EmailInput({
   value,
   error,

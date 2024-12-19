@@ -6,9 +6,7 @@ import {
 import { v4 as uuidv4 } from 'uuid'
 
 // Configuration for runtime environment
-export const config = {
-  runtime: 'edge',
-}
+
 
 export const getBaseUrl = () => {
   if (typeof window !== 'undefined') return '' // browser should use relative url

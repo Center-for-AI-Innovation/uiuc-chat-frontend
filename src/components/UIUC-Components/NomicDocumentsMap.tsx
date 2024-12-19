@@ -14,23 +14,12 @@ function NomicDocumentMap({ course_name }: { course_name: string }) {
   useEffect(() => {
     const fetchNomicMapData = async () => {
       try {
-        // Fix URL parameter syntax - change ? to &
         const response = await fetch(
           `/api/getNomicMapForQueries?course_name=${course_name}&map_type=conversation`,
         )
 
-        // Log response details for debugging
-        console.log('Response status:', response.status)
         const responseText = await response.text()
-
-        // Try parsing response text
-        let data
-        try {
-          data = JSON.parse(responseText)
-        } catch (parseError) {
-          console.error('Error parsing response:', responseText)
-          throw parseError
-        }
+        const data = JSON.parse(responseText)
 
         const parsedData: NomicMapData = {
           map_id: data.map_id,
@@ -40,7 +29,7 @@ function NomicDocumentMap({ course_name }: { course_name: string }) {
         setNomicMapData(parsedData)
         setNomicIsLoading(false)
       } catch (error) {
-        console.error('Error fetching nomic map:', error)
+        console.error('NomicDocumentsMap - Error fetching nomic map:', error)
         setNomicIsLoading(false)
       }
     }

@@ -1,5 +1,3 @@
-import { ContextWithMetadata } from '~/types/chat'
-
 export const createProject = async (
   project_name: string,
   project_description: string | undefined,

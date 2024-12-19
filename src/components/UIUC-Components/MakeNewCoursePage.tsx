@@ -11,6 +11,7 @@ import {
   TextInput,
   Title,
   Tooltip,
+  Loader,
 } from '@mantine/core'
 import { useMediaQuery } from '@mantine/hooks'
 import router from 'next/router'
@@ -38,6 +39,7 @@ const MakeNewCoursePage = ({
   const [isCourseAvailable, setIsCourseAvailable] = useState<
     boolean | undefined
   >(undefined)
+  const [isLoading, setIsLoading] = useState(false)
   const [allExistingCourseNames, setAllExistingCourseNames] = useState<
     string[]
   >([])
@@ -83,6 +85,7 @@ const MakeNewCoursePage = ({
     project_description: string | undefined,
     current_user_email: string,
   ) => {
+    setIsLoading(true)
     try {
       const result = await createProject(
         project_name,
@@ -96,6 +99,8 @@ const MakeNewCoursePage = ({
       }
     } catch (error) {
       console.error('Error creating project:', error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -256,8 +261,8 @@ const MakeNewCoursePage = ({
                     >
                       <span>
                         <Button
-                          onClick={(e) => {
-                            handleSubmit(
+                          onClick={async (e) => {
+                            await handleSubmit(
                               projectName,
                               projectDescription,
                               current_user_email,
@@ -272,9 +277,10 @@ const MakeNewCoursePage = ({
                           style={{
                             alignSelf: 'flex-end',
                           }}
-                          disabled={projectName === ''}
+                          disabled={projectName === '' || isLoading}
+                          leftIcon={isLoading ? <Loader size="xs" color="white" /> : null}
                         >
-                          Create
+                          {isLoading ? 'Creating...' : 'Create'}
                         </Button>
                       </span>
                     </Tooltip>

@@ -187,32 +187,6 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     fetchData()
   }, [currentPageName, clerk_user.isLoaded, clerk_user.user])
 
-  const [nomicMapData, setNomicMapData] = useState<NomicMapData | null>(null)
-  const [nomicIsLoading, setNomicIsLoading] = useState(true)
-
-  // fetch nomicMapData
-  useEffect(() => {
-    const fetchNomicMapData = async () => {
-      try {
-        const response = await fetch(
-          `/api/getNomicMapForQueries?course_name=${course_name}`,
-        )
-        const data = await response.json()
-        const parsedData: NomicMapData = {
-          map_id: data.map_id,
-          map_link: data.map_link,
-        }
-        setNomicMapData(parsedData)
-        setNomicIsLoading(false)
-      } catch (error) {
-        console.error('Error fetching nomic map:', error)
-        setNomicIsLoading(false) // Set nomicIsLoading to false even if there is an error
-      }
-    }
-
-    fetchNomicMapData()
-  }, [course_name])
-
   const [hasConversationData, setHasConversationData] = useState<boolean>(true)
 
   useEffect(() => {
@@ -331,7 +305,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     return (
       <CannotEditCourse
         course_name={currentPageName as string}
-        // current_email={currentEmail as string}
+      // current_email={currentEmail as string}
       />
     )
   }
@@ -467,11 +441,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
                           return (
                             <div
-                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
-                                trend.percentage_change > 0
-                                  ? 'bg-green-400/10'
-                                  : 'bg-red-400/10'
-                              }`}
+                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${trend.percentage_change > 0
+                                ? 'bg-green-400/10'
+                                : 'bg-red-400/10'
+                                }`}
                             >
                               {trend.percentage_change > 0 ? (
                                 <IconTrendingUp
@@ -538,11 +511,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
                           return (
                             <div
-                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
-                                trend.percentage_change > 0
-                                  ? 'bg-green-400/10'
-                                  : 'bg-red-400/10'
-                              }`}
+                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${trend.percentage_change > 0
+                                ? 'bg-green-400/10'
+                                : 'bg-red-400/10'
+                                }`}
                             >
                               {trend.percentage_change > 0 ? (
                                 <IconTrendingUp
@@ -609,11 +581,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
                           return (
                             <div
-                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
-                                trend.percentage_change > 0
-                                  ? 'bg-green-400/10'
-                                  : 'bg-red-400/10'
-                              }`}
+                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${trend.percentage_change > 0
+                                ? 'bg-green-400/10'
+                                : 'bg-red-400/10'
+                                }`}
                             >
                               {trend.percentage_change > 0 ? (
                                 <IconTrendingUp
@@ -1045,15 +1016,15 @@ const CourseFilesList = ({ files }: CourseFilesListProps) => {
                 // style={{ outline: 'solid 1px', outlineColor: 'white' }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = theme.colors.grape[8]
-                  ;(e.currentTarget.children[0] as HTMLElement).style.color =
-                    theme.colorScheme === 'dark'
-                      ? theme.colors.gray[2]
-                      : theme.colors.gray[1]
+                    ; (e.currentTarget.children[0] as HTMLElement).style.color =
+                      theme.colorScheme === 'dark'
+                        ? theme.colors.gray[2]
+                        : theme.colors.gray[1]
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = 'transparent'
-                  ;(e.currentTarget.children[0] as HTMLElement).style.color =
-                    theme.colors.gray[8]
+                    ; (e.currentTarget.children[0] as HTMLElement).style.color =
+                      theme.colors.gray[8]
                 }}
               >
                 <IconDownload className="h-5 w-5 text-gray-800" />
@@ -1070,15 +1041,15 @@ const CourseFilesList = ({ files }: CourseFilesListProps) => {
                 // style={{ outline: 'solid 1px', outlineColor: theme.white }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = theme.colors.grape[8]
-                  ;(e.currentTarget.children[0] as HTMLElement).style.color =
-                    theme.colorScheme === 'dark'
-                      ? theme.colors.gray[2]
-                      : theme.colors.gray[1]
+                    ; (e.currentTarget.children[0] as HTMLElement).style.color =
+                      theme.colorScheme === 'dark'
+                        ? theme.colors.gray[2]
+                        : theme.colors.gray[1]
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = 'transparent'
-                  ;(e.currentTarget.children[0] as HTMLElement).style.color =
-                    theme.colors.red[6]
+                    ; (e.currentTarget.children[0] as HTMLElement).style.color =
+                      theme.colors.red[6]
                 }}
               >
                 <IconTrash className="h-5 w-5 text-red-600" />
@@ -1114,8 +1085,7 @@ async function fetchCourseMetadata(course_name: string) {
       return data.course_metadata
     } else {
       throw new Error(
-        `Error fetching course metadata: ${
-          response.statusText || response.status
+        `Error fetching course metadata: ${response.statusText || response.status
         }`,
       )
     }

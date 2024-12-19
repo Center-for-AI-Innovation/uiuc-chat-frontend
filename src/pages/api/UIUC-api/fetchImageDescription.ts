@@ -3,9 +3,7 @@
 import { Conversation, ImageBody } from '@/types/chat'
 import { AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
 
-export const config = {
-  runtime: 'edge',
-}
+
 
 /**
  * Asynchronously fetches a description for images contained within a message.

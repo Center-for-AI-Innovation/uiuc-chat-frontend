@@ -1,30 +1,24 @@
 // upsertCourseMetadata.ts
-import { kv } from '@vercel/kv'
 import { type CourseMetadataOptionalForUpsert } from '~/types/courseMetadata'
-import { type NextRequest, NextResponse } from 'next/server'
+import type { NextApiRequest, NextApiResponse } from 'next'
 import { encrypt, isEncrypted } from '~/utils/crypto'
 import { getCourseMetadata } from './getCourseMetadata'
+import { redisClient } from '~/utils/redisClient'
+import { superAdmins } from '~/utils/superAdmins'
 
-export const runtime = 'edge'
-
-export const superAdmins = ['kvday2@illinois.edu', 'rohan13@illinois.edu']
-
-export default async function handler(req: NextRequest, res: NextResponse) {
-  const requestBody = await req.text()
-  const {
-    courseName,
-    courseMetadata,
-  }: { courseName: string; courseMetadata: CourseMetadataOptionalForUpsert } =
-    JSON.parse(requestBody)
-
-  // console.log('API Request:', requestBody)
-  // console.log('courseName:', courseName)
-  // console.log('courseMetadata:', courseMetadata)
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
+  const { courseName, courseMetadata } = req.body as {
+    courseName: string
+    courseMetadata: CourseMetadataOptionalForUpsert
+  }
 
   // Check if courseName is not null or undefined
   if (!courseName) {
     console.error('Error: courseName is null or undefined')
-    return
+    return res.status(400).json({ success: false, error: 'Missing courseName' })
   }
 
   try {
@@ -69,10 +63,12 @@ export default async function handler(req: NextRequest, res: NextResponse) {
     }
 
     // Save the combined metadata
-    await kv.hset('course_metadatas', { [courseName]: combined_metadata })
-    return NextResponse.json({ success: true })
+    await redisClient.hSet('course_metadatas', {
+      [courseName]: JSON.stringify(combined_metadata),
+    })
+    return res.status(200).json({ success: true })
   } catch (error) {
     console.error('Error setting course metadata:', error)
-    return NextResponse.json({ success: false })
+    return res.status(500).json({ success: false, error: error })
   }
 }

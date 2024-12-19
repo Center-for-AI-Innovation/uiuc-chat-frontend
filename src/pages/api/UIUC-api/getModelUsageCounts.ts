@@ -19,7 +19,6 @@ export default async function handler(req: NextRequest, res: NextResponse) {
   }
 
   try {
-    console.log('Making request to backend for project:', project_name)
     const response = await fetch(
       `https://flask-production-751b.up.railway.app/getModelUsageCounts?project_name=${project_name}`,
     )
@@ -34,7 +33,6 @@ export default async function handler(req: NextRequest, res: NextResponse) {
     }
 
     const data = (await response.json()) as ModelUsage[]
-    console.log('Successfully received data from backend:', data)
     return NextResponse.json(data)
   } catch (error) {
     console.error('Error in handler:', error)

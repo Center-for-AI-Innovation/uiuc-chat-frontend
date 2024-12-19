@@ -30,7 +30,7 @@ export async function fetchConversationHistory(
     }
 
     const { conversations, nextCursor } = await response.json()
-    
+
     // Clean the conversations and ensure they're properly structured
     const cleanedConversations = conversations.map((conversation: any) => {
       // Ensure messages are properly ordered by creation time
@@ -47,7 +47,7 @@ export async function fetchConversationHistory(
 
     // Sync with local storage
     const selectedConversation = localStorage.getItem('selectedConversation')
-    if (selectedConversation) {
+    if (selectedConversation && finalResponse?.conversations?.length > 0) {
       const parsed = JSON.parse(selectedConversation)
       const serverConversation = finalResponse.conversations.find(
         (c) => c.id === parsed.id
@@ -60,9 +60,8 @@ export async function fetchConversationHistory(
       }
     }
   } catch (error) {
-    console.error('Error fetching conversation history:', error)
+    console.error('utils/app/conversation.ts - Error fetching conversation history:', error)
   }
-  // console.log('finalResponse: ', finalResponse)
   return finalResponse
 }
 
@@ -88,7 +87,6 @@ export const deleteAllConversationsFromServer = async (
   user_email: string,
   course_name: string,
 ) => {
-  console.log('deleteAllConversationsFromServer')
   try {
     const response = await fetch('/api/conversation', {
       method: 'DELETE',
@@ -127,17 +125,17 @@ export const saveConversationToLocalStorage = (conversation: Conversation) => {
             feedback: existingMsg?.feedback || msg.feedback
           };
         });
-        
+
         const conversationWithFeedback = {
           ...conversation,
           messages: messagesWithFeedback
         };
-        
+
         localStorage.setItem('selectedConversation', JSON.stringify(conversationWithFeedback))
       } else {
         localStorage.setItem('selectedConversation', JSON.stringify(conversation))
       }
-      
+
       successful = true
     } catch (e) {
       console.debug(

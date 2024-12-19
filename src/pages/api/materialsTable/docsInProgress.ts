@@ -1,27 +1,28 @@
 // src/pages/api/materialsTable/docsInProgress.ts
-
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '@/utils/supabaseClient'
 import { getAuth } from '@clerk/nextjs/server'
 
-export const config = {
-  runtime: 'edge',
+type DocsInProgressResponse = {
+  documents?: { readable_filename: string }[]
+  apiKey?: null
+  error?: string
 }
 
 export default async function docsInProgress(
-  req: NextRequest,
-  res: NextResponse,
+  req: NextApiRequest,
+  res: NextApiResponse<DocsInProgressResponse>
 ) {
   if (req.method !== 'GET') {
-    return NextResponse.json({ error: 'Method not allowed' }, { status: 405 })
+    return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const url = new URL(req.url)
-  const course_name = url.searchParams.get('course_name')
+  const course_name = req.query.course_name as string
 
-  const currUserId = await getAuth(req).userId
+  const auth = getAuth(req)
+  const currUserId = auth.userId
   if (!currUserId) {
-    return NextResponse.json({ error: 'User ID is required' }, { status: 401 })
+    return res.status(401).json({ error: 'User ID is required' })
   }
 
   try {
@@ -35,18 +36,16 @@ export default async function docsInProgress(
     }
 
     if (!data || data.length === 0) {
-      return NextResponse.json({ apiKey: null }, { status: 200 })
+      return res.status(200).json({ documents: [] })
     }
 
     if (data && data.length > 0) {
-      // console.log(data)
-      return NextResponse.json({ documents: data }, { status: 200 })
+      return res.status(200).json({ documents: data })
     }
   } catch (error) {
     console.error('Failed to fetch documents:', error)
-    return NextResponse.json(
-      { error: (error as Error).message },
-      { status: 500 },
-    )
+    return res.status(500).json({
+      error: (error as Error).message
+    })
   }
 }

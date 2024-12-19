@@ -25,7 +25,6 @@ export default async function handler(req: NextRequest) {
     }
 
     const data = await response.json()
-    console.log('Fetched weekly trends data:', data)
     return NextResponse.json(data)
   } catch (error) {
     console.error('Error fetching weekly trends:', error)
@@ -60,7 +59,6 @@ export async function getWeeklyTrends(project_name: string) {
     }
 
     const data = await response.json()
-    console.log('Fetched weekly trends data:', data)
     return {
       status: 200,
       data: data,

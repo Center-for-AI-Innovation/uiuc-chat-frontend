@@ -4,10 +4,11 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '@/utils/supabaseClient'
 import { v4 as uuidv4 } from 'uuid'
 import { getAuth } from '@clerk/nextjs/server'
-import { NextRequest, NextResponse } from 'next/server'
 
-export const config = {
-  runtime: 'edge',
+type ApiResponse = {
+  message?: string
+  newApiKey?: string
+  error?: string
 }
 
 /**
@@ -17,21 +18,22 @@ export const config = {
  * @param {NextApiResponse} res - The outgoing HTTP response.
  * @returns A JSON response indicating the result of the key rotation operation.
  */
-export default async function rotateKey(req: NextRequest, res: NextResponse) {
+export default async function rotateKey(
+  req: NextApiRequest,
+  res: NextApiResponse<ApiResponse>
+) {
   // Only allow PUT requests, reject all others with method not allowed error.
   if (req.method !== 'PUT') {
-    return NextResponse.json({ error: 'Method not allowed' }, { status: 405 })
+    return res.status(405).json({ error: 'Method not allowed' })
   }
+
   // Get the current user's email
-  const currUserId = await getAuth(req).userId
+  const currUserId = getAuth(req).userId
   console.log('Rotating api key for: ', currUserId)
 
   // Ensure the user email is present
   if (!currUserId) {
-    return NextResponse.json(
-      { error: 'User email is required' },
-      { status: 401 },
-    )
+    return res.status(401).json({ error: 'User email is required' })
   }
 
   // Retrieve the existing API key for the user.
@@ -44,18 +46,14 @@ export default async function rotateKey(req: NextRequest, res: NextResponse) {
   // Handle potential errors during retrieval of the existing key.
   if (existingKeyError) {
     console.error('Error retrieving existing API key:', existingKeyError)
-    return NextResponse.json(
-      { error: existingKeyError.message },
-      { status: 500 },
-    )
+    return res.status(500).json({ error: existingKeyError.message })
   }
 
   // If no existing key is found, inform the user to generate one.
   if (!existingKey || existingKey.length === 0) {
-    return NextResponse.json(
-      { error: 'API key not found for user, please generate one!' },
-      { status: 404 },
-    )
+    return res.status(404).json({
+      error: 'API key not found for user, please generate one!'
+    })
   }
 
   // Generate a new API key.
@@ -73,12 +71,12 @@ export default async function rotateKey(req: NextRequest, res: NextResponse) {
   // Handle potential errors during the update operation.
   if (error) {
     console.error('Error updating API key:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return res.status(500).json({ error: error.message })
   }
 
   // Respond with a success message and the new API key.
-  return NextResponse.json(
-    { message: 'API key rotated successfully', newApiKey },
-    { status: 200 },
-  )
+  return res.status(200).json({
+    message: 'API key rotated successfully',
+    newApiKey
+  })
 }

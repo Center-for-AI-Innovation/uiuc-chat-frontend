@@ -48,7 +48,8 @@ export function convertDBToChatConversation(
   dbMessages: DBMessage[],
 ): ChatConversation {
   // console.log('dbConversation: ', dbConversation)
-  // console.log('dbMessages: ', dbMessages)
+  // console.log('AllSupportedModels: ', AllSupportedModels)
+  // console.log('AllSupportedModels: type of ', typeof AllSupportedModels)
   return {
     id: dbConversation.id,
     name: dbConversation.name,
@@ -87,10 +88,10 @@ export function convertDBToChatConversation(
 
       const feedbackObj = msg.feedback
         ? {
-            isPositive: msg.feedback.feedback_is_positive,
-            category: msg.feedback.feedback_category,
-            details: msg.feedback.feedback_details,
-          }
+          isPositive: msg.feedback.feedback_is_positive,
+          category: msg.feedback.feedback_category,
+          details: msg.feedback.feedback_details,
+        }
         : undefined
 
       const messageObj = {
@@ -285,8 +286,8 @@ export default async function handler(
 
         const nextCursor =
           count &&
-          count > (pageParam + 1) * pageSize &&
-          count > fetchedConversations.length
+            count > (pageParam + 1) * pageSize &&
+            count > fetchedConversations.length
             ? pageParam + 1
             : null
 
@@ -302,7 +303,7 @@ export default async function handler(
         })
       } catch (error) {
         res.status(500).json({ error: 'Error fetching conversation history' })
-        console.error('Error fetching conversation history:', error)
+        console.error('pages/api/conversation.ts - Error fetching conversation history:', error)
       }
       break
 
@@ -320,7 +321,7 @@ export default async function handler(
         user_email?: string
         course_name?: string
       }
-      
+
       try {
         if (id) {
           // Delete single conversation
