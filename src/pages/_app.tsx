@@ -1,7 +1,6 @@
 import { type AppType } from 'next/app'
 import { MantineProvider } from '@mantine/core'
 import { Notifications } from '@mantine/notifications'
-import { Analytics } from '@vercel/analytics/react'
 import { appWithTranslation } from 'next-i18next'
 import { ClerkLoaded, ClerkProvider, GoogleOneTap } from '@clerk/nextjs'
 import { dark } from '@clerk/themes'
@@ -15,6 +14,9 @@ import { useRouter } from 'next/router'
 import { useEffect } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+
+import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from '@vercel/analytics/next';
 
 // Check that PostHog is client-side (used to handle Next.js SSR)
 if (typeof window !== 'undefined') {
@@ -48,6 +50,8 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
   } else {
     return (
       <PostHogProvider client={posthog}>
+        <SpeedInsights />
+        <Analytics />
         <ClerkProvider
           allowedRedirectOrigins={[
             'https://chat.illinois.edu',
@@ -114,7 +118,6 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
               >
                 <Notifications position="bottom-center" zIndex={2077} />
                 <Component {...pageProps} />
-                <Analytics />
               </MantineProvider>
             </QueryClientProvider>
           </ClerkLoaded>
