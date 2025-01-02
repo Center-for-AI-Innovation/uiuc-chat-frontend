@@ -190,145 +190,145 @@ const NewModelDropdown: React.FC<
   state,
   showWebLLmModels,
 }) => {
-  const allModels = [
-    ...(models.Ollama || []).map((model: any) => ({
-      ...model,
-      provider: ProviderNames.Ollama,
-      group: 'NCSA Hosted Models, 100% free',
-    })),
-    ...(models.OpenAI || []).map((model: any) => ({
-      ...model,
-      provider: ProviderNames.OpenAI,
-      group: 'OpenAI',
-    })),
-    ...(models.Anthropic || []).map((model: any) => ({
-      ...model,
-      provider: ProviderNames.Anthropic,
-      group: 'Anthropic',
-    })),
-    ...(models.WebLLM && models.WebLLM.length > 0
-      ? models.WebLLM.map((model: any) => ({
+    const allModels = [
+      ...(models.Ollama || []).map((model: any) => ({
+        ...model,
+        provider: ProviderNames.Ollama,
+        group: 'NCSA Hosted Models, 100% free',
+      })),
+      ...(models.OpenAI || []).map((model: any) => ({
+        ...model,
+        provider: ProviderNames.OpenAI,
+        group: 'OpenAI',
+      })),
+      ...(models.Anthropic || []).map((model: any) => ({
+        ...model,
+        provider: ProviderNames.Anthropic,
+        group: 'Anthropic',
+      })),
+      ...(models.WebLLM && models.WebLLM.length > 0
+        ? models.WebLLM.map((model: any) => ({
           ...model,
           provider: ProviderNames.WebLLM,
           group: 'Local in Browser LLMs, runs on your device',
         }))
-      : []),
-  ]
-  const selectedModel = allModels.find((model) => model.id === value)
+        : []),
+    ]
+    const selectedModel = allModels.find((model) => model.id === value)
 
-  return (
-    <>
-      <div
-        tabIndex={0}
-        className="relative flex w-full flex-col items-start px-2"
-      >
-        <Select
-          className="menu z-[50] w-full"
-          size="md"
-          placeholder="Select a model"
-          searchable
-          value={value}
-          onChange={async (modelId: any) => {
-            if (state.webLLMModelIdLoading.isLoading) {
-              setLoadingModelId(modelId)
-              console.log('model id', modelId)
-              console.log('loading model id', loadingModelId)
-              console.log('model is loading', state.webLLMModelIdLoading.id)
-            } else if (!state.webLLMModelIdLoading.isLoading) {
-              setLoadingModelId(null)
-            }
-            await onChange(modelId!)
-          }}
-          data={allModels.map((model: any) => ({
-            value: model.id,
-            label: model.name,
-            downloadSize: model.downloadSize,
-            modelId: model.id,
-            selectedModelId: value,
-            modelType: model.provider,
-            group: model.group,
-            vram_required_MB: model.vram_required_MB,
-          }))}
-          itemComponent={(props: any) => (
-            <ModelItem
-              {...props}
-              loadingModelId={loadingModelId}
-              setLoadingModelId={setLoadingModelId}
-              showWebLLmModels={showWebLLmModels}
-            />
-          )}
-          maxDropdownHeight={480}
-          rightSectionWidth="auto"
-          icon={
-            selectedModel ? (
-              <Image
-                src={getModelLogo(selectedModel.provider)}
-                alt={`${selectedModel.provider} logo`}
-                width={20}
-                height={20}
-                style={{ marginLeft: '4px', borderRadius: '4px' }}
+    return (
+      <>
+        <div
+          tabIndex={0}
+          className="relative flex w-full flex-col items-start px-2"
+        >
+          <Select
+            className="menu z-[50] w-full"
+            size="md"
+            placeholder="Select a model"
+            searchable
+            value={value}
+            onChange={async (modelId: any) => {
+              if (state.webLLMModelIdLoading.isLoading) {
+                setLoadingModelId(modelId)
+                console.log('model id', modelId)
+                console.log('loading model id', loadingModelId)
+                console.log('model is loading', state.webLLMModelIdLoading.id)
+              } else if (!state.webLLMModelIdLoading.isLoading) {
+                setLoadingModelId(null)
+              }
+              await onChange(modelId!)
+            }}
+            data={allModels.map((model: any) => ({
+              value: model.id,
+              label: model.name,
+              downloadSize: model.downloadSize,
+              modelId: model.id,
+              selectedModelId: value,
+              modelType: model.provider,
+              group: model.group,
+              vram_required_MB: model.vram_required_MB,
+            }))}
+            itemComponent={(props: any) => (
+              <ModelItem
+                {...props}
+                loadingModelId={loadingModelId}
+                setLoadingModelId={setLoadingModelId}
+                showWebLLmModels={showWebLLmModels}
               />
-            ) : null
-          }
-          rightSection={<IconChevronDown size="1rem" />}
-          classNames={{
-            root: 'w-full',
-            wrapper: 'w-full',
-            input: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'} w-full`,
-            rightSection: 'pointer-events-none',
-            item: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`,
-          }}
-          styles={(theme: {
-            radius: { md: any }
-            shadows: { xs: any }
-            white: any
-          }) => ({
-            input: {
-              backgroundColor: 'rgb(107, 33, 168)',
-              border: 'none',
-              // color: theme.white,
-              // borderRadius: theme.radius.md,
-              // width: '24rem',
-              // [`@media (max-width: 960px)`]: {
-              //   width: '17rem', // Smaller width for small screens
-              // },
-            },
-            dropdown: {
-              backgroundColor: '#1d1f33',
-              border: '1px solid rgba(42,42,120,1)',
-              borderRadius: theme.radius.md,
-              marginTop: '2px',
-              boxShadow: theme.shadows.xs,
-              width: '100%',
-              maxWidth: '100%',
-              position: 'absolute',
-            },
-            item: {
-              backgroundColor: '#1d1f33',
-              borderRadius: theme.radius.md,
-              margin: '2px',
-              '&[data-selected]': {
-                '&': {
-                  backgroundColor: 'transparent',
+            )}
+            maxDropdownHeight={480}
+            rightSectionWidth="auto"
+            icon={
+              selectedModel ? (
+                <Image
+                  src={getModelLogo(selectedModel.provider)}
+                  alt={`${selectedModel.provider} logo`}
+                  width={20}
+                  height={20}
+                  style={{ marginLeft: '4px', borderRadius: '4px' }}
+                />
+              ) : null
+            }
+            rightSection={<IconChevronDown size="1rem" />}
+            classNames={{
+              root: 'w-full',
+              wrapper: 'w-full',
+              input: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'} w-full`,
+              rightSection: 'pointer-events-none',
+              item: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`,
+            }}
+            styles={(theme: {
+              radius: { md: any }
+              shadows: { xs: any }
+              white: any
+            }) => ({
+              input: {
+                backgroundColor: 'rgb(107, 33, 168)',
+                border: 'none',
+                // color: theme.white,
+                // borderRadius: theme.radius.md,
+                // width: '24rem',
+                // [`@media (max-width: 960px)`]: {
+                //   width: '17rem', // Smaller width for small screens
+                // },
+              },
+              dropdown: {
+                backgroundColor: '#1d1f33',
+                border: '1px solid rgba(42,42,120,1)',
+                borderRadius: theme.radius.md,
+                marginTop: '2px',
+                boxShadow: theme.shadows.xs,
+                width: '100%',
+                maxWidth: '100%',
+                position: 'absolute',
+              },
+              item: {
+                backgroundColor: '#1d1f33',
+                borderRadius: theme.radius.md,
+                margin: '2px',
+                '&[data-selected]': {
+                  '&': {
+                    backgroundColor: 'transparent',
+                  },
+                  '&:hover': {
+                    backgroundColor: 'rgb(107, 33, 168)',
+                    color: theme.white,
+                  },
                 },
-                '&:hover': {
+                '&[data-hovered]': {
                   backgroundColor: 'rgb(107, 33, 168)',
                   color: theme.white,
                 },
               },
-              '&[data-hovered]': {
-                backgroundColor: 'rgb(107, 33, 168)',
-                color: theme.white,
-              },
-            },
-          })}
-          dropdownPosition="bottom"
-          withinPortal
-        />
-      </div>
-    </>
-  )
-}
+            })}
+            dropdownPosition="bottom"
+            withinPortal
+          />
+        </div>
+      </>
+    )
+  }
 
 export default function APIKeyInputForm() {
   const projectName = GetCurrentPageName()
@@ -405,10 +405,6 @@ export default function APIKeyInputForm() {
       )
     },
   })
-
-  useEffect(() => {
-    console.log('form.state.isSubmitting', form.state.isSubmitting)
-  }, [form.state.isSubmitting])
 
   // if (isLoadingLLMProviders) {
   //   return (
