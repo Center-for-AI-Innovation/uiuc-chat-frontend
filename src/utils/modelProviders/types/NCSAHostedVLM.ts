@@ -32,7 +32,7 @@ export const NCSAHostedVLMModels: Record<
   [NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT]: {
     id: NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT,
     name: 'Qwen 2 VL 72B Instruct',
-    tokenLimit: 32768,
+    tokenLimit: 32000,
     enabled: true,
   },
 }
@@ -62,8 +62,8 @@ export const getNCSAHostedVLMModels = async (
       return {
         id: model.id,
         name: knownModel ? knownModel.name : 'Experimental: ' + model.id,
-        tokenLimit: model.max_tokens || 128000, // Default to 128000 if max_tokens is not provided
-        enabled: true,
+        tokenLimit: model.max_tokens || knownModel.tokenLimit, // Default to 128000 if max_tokens is not provided
+        enabled: data.enabled ? data.enabled : knownModel.enabled,
       }
     })
 

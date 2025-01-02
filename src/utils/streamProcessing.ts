@@ -800,12 +800,14 @@ export const getOpenAIKey = (
 import { runOllamaChat } from '~/app/utils/ollama'
 import { openAIAzureChat } from './modelProviders/OpenAIAzureChat'
 import { runAnthropicChat } from '~/app/utils/anthropic'
+import { NCSAHostedVLMModelID } from './modelProviders/types/NCSAHostedVLM'
 
 export const routeModelRequest = async (
   chatBody: ChatBody,
   controller?: AbortController,
   baseUrl?: string,
 ): Promise<any> => {
+  console.log('In routeModelRequest: ', chatBody, baseUrl)
   /*  Use this to call the LLM. It will call the appropriate endpoint based on the conversation.model.
       🧠 ADD NEW LLM PROVIDERS HERE 🧠
   */
@@ -828,12 +830,12 @@ export const routeModelRequest = async (
   })
 
   if (
-    Object.values(NCSAHostedModelID).includes(
+    Object.values(NCSAHostedVLMModelID).includes(
       selectedConversation.model.id as any,
     )
   ) {
     // NCSA Hosted LLMs
-    const url = `/api/chat/vlm`
+    const url = baseUrl ? `${baseUrl}/api/chat/vlm` : '/api/chat/vlm'
     response = await fetch(url, {
       method: 'POST',
       headers: {
