@@ -13,21 +13,21 @@ import {
 } from '@mantine/core'
 import Image from 'next/image'
 import { useQueryClient } from '@tanstack/react-query'
-import { useForm, FieldApi } from '@tanstack/react-form'
+import { useForm, type FieldApi } from '@tanstack/react-form'
 import {
   useGetProjectLLMProviders,
   useSetProjectLLMProviders,
 } from '~/hooks/useProjectAPIKeys'
 import {
-  AllLLMProviders,
-  AnthropicProvider,
-  AzureProvider,
-  NCSAHostedProvider,
-  NCSAHostedVLMProvider,
-  OllamaProvider,
-  OpenAIProvider,
+  type AllLLMProviders,
+  type AnthropicProvider,
+  type AzureProvider,
+  type NCSAHostedProvider,
+  type NCSAHostedVLMProvider,
+  type OllamaProvider,
+  type OpenAIProvider,
   ProviderNames,
-  WebLLMProvider,
+  type WebLLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
 import { notifications } from '@mantine/notifications'
 import {
