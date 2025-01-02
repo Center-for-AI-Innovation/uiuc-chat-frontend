@@ -28,6 +28,7 @@ export async function POST(req: Request) {
     const { messages } = await req.json()
 
     if (!apiKey || apiKey == 'undefined') {
+      console.debug("KEY IS UNDEFINED, using Vlad's key.")
       apiKey = process.env.VLADS_OPENAI_KEY as string
     }
     if (!apiKey.startsWith('sk')) {
@@ -35,7 +36,7 @@ export async function POST(req: Request) {
         apiKey,
         process.env.NEXT_PUBLIC_SIGNING_KEY as string,
       )) as string
-      console.log('apikey', apiKey)
+      console.debug('apikey', apiKey)
     }
 
     const openai = new OpenAI({

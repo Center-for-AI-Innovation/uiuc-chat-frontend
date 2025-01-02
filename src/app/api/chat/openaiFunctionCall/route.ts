@@ -7,7 +7,7 @@ import type {
 } from 'openai/resources/chat/completions'
 
 import { Conversation } from '~/types/chat'
-import { decrypt, isEncrypted } from '~/utils/crypto'
+import { decryptKeyIfNeeded } from '~/utils/crypto'
 
 export const runtime = 'edge'
 
@@ -25,8 +25,6 @@ const conversationToMessages = (
     }
     transformedData.push(simpleMessage)
   })
-
-  // console.log('Transformed messages array: ', transformedData)
 
   return transformedData
 }
@@ -46,21 +44,13 @@ export async function POST(req: Request) {
     openaiKey: string
   } = await req.json()
 
-  let decryptedKey = openaiKey
-  // console.log('Decrypted key before transform: ', decryptedKey)
-  if (openaiKey && isEncrypted(openaiKey)) {
-    // Decrypt the key
-    const decryptedText = await decrypt(
-      openaiKey,
-      process.env.NEXT_PUBLIC_SIGNING_KEY as string,
-    )
-    decryptedKey = decryptedText as string
-    // console.log('models.ts Decrypted api key: ', apiKey)
+  let decryptedKey
+  if (openaiKey) {
+    decryptedKey = await decryptKeyIfNeeded(openaiKey) as string
   }
 
-  if (decryptedKey && !decryptedKey.startsWith('sk-')) {
-    // console.log('api key: ', decryptedKey)
-    // console.log('process.env.VLADS_OPENAI_KEY: ', process.env.VLADS_OPENAI_KEY)
+  if (!decryptedKey || !decryptedKey.startsWith('sk-')) {
+    // fallback to Vlad's key
     decryptedKey = process.env.VLADS_OPENAI_KEY as string
   }
   // console.log('Decrypted key: ', decryptedKey)

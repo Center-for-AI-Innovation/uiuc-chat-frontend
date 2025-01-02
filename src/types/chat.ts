@@ -125,9 +125,9 @@ export interface ChatBody {
 }
 
 export interface ImageBody {
-  conversation: Conversation
-  course_name: string
+  contentArray: Content[]
   llmProviders: AllLLMProviders
+  model: AnySupportedModel
 }
 
 export interface ChatApiBody {
