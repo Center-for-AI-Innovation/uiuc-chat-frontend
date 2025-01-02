@@ -1,24 +1,26 @@
 import {
-  AllLLMProviders,
-  AnthropicProvider,
-  AzureProvider,
-  LLMProvider,
-  NCSAHostedProvider,
-  OllamaProvider,
-  OpenAIProvider,
+  type AllLLMProviders,
+  type AnthropicProvider,
+  type AzureProvider,
+  type LLMProvider,
+  type NCSAHostedProvider,
+  type NCSAHostedVLMProvider,
+  type OllamaProvider,
+  type OpenAIProvider,
   ProviderNames,
-  WebLLMProvider,
+  type WebLLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
 import { getOllamaModels } from '~/utils/modelProviders/ollama'
 import { getAzureModels } from '~/utils/modelProviders/azure'
 import { getAnthropicModels } from '~/utils/modelProviders/routes/anthropic'
 import { getWebLLMModels } from '~/utils/modelProviders/WebLLM'
-import { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiRequest, type NextApiResponse } from 'next'
 import { getNCSAHostedModels } from '~/utils/modelProviders/NCSAHosted'
 import { getOpenAIModels } from '~/utils/modelProviders/routes/openai'
 import { OpenAIModelID } from '~/utils/modelProviders/types/openai'
-import { ProjectWideLLMProviders } from '~/types/courseMetadata'
+import { type ProjectWideLLMProviders } from '~/types/courseMetadata'
 import { redisClient } from '~/utils/redisClient'
+import { getNCSAHostedVLMModels } from '~/utils/modelProviders/types/NCSAHostedVLM'
 
 export default async function handler(
   req: NextApiRequest,
@@ -104,6 +106,11 @@ export default async function handler(
         case ProviderNames.NCSAHosted:
           allLLMProviders[providerName] = await getNCSAHostedModels(
             llmProvider as NCSAHostedProvider,
+          )
+          break
+        case ProviderNames.NCSAHostedVLM:
+          allLLMProviders[providerName] = await getNCSAHostedVLMModels(
+            llmProvider as NCSAHostedVLMProvider,
           )
           break
         default:

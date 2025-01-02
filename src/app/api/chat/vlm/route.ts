@@ -1,4 +1,4 @@
-import { convertToCoreMessages, generateText, streamText } from 'ai'
+import { generateText, streamText } from 'ai'
 import { NextResponse } from 'next/server'
 import { createOpenAI } from '@ai-sdk/openai'
 import { convertConversationToCoreMessagesWithoutSystem } from '~/utils/apiUtils'
@@ -7,10 +7,10 @@ export async function POST(req: Request) {
   try {
     const { conversation, stream } = await req.json()
 
-    console.log('In POST handler for VLLM', conversation.messages[0].content)
+    console.log('In POST handler for VLM', conversation.messages[0].content)
 
     const openai = createOpenAI({
-      baseURL: process.env.NCSA_HOSTED_VLLM_BASE_URL,
+      baseURL: process.env.NCSA_HOSTED_VLM_BASE_URL,
       apiKey: 'non-empty',
       compatibility: 'compatible', // strict/compatible - enable 'strict' when using the OpenAI API
     })
