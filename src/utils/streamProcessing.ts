@@ -20,6 +20,7 @@ import {
   AnthropicProvider,
   GenericSupportedModel,
   NCSAHostedProvider,
+  NCSAHostedVLMProvider,
   OllamaProvider,
   VisionCapableModels,
 } from '~/utils/modelProviders/LLMProvider'
@@ -801,6 +802,7 @@ import { runOllamaChat } from '~/app/utils/ollama'
 import { openAIAzureChat } from './modelProviders/OpenAIAzureChat'
 import { runAnthropicChat } from '~/app/utils/anthropic'
 import { NCSAHostedVLMModelID } from './modelProviders/types/NCSAHostedVLM'
+import { runVLLM } from '~/app/utils/vllm'
 
 export const routeModelRequest = async (
   chatBody: ChatBody,
@@ -835,61 +837,25 @@ export const routeModelRequest = async (
     )
   ) {
     // NCSA Hosted LLMs
-    const url = baseUrl ? `${baseUrl}/api/chat/vlm` : '/api/chat/vlm'
-    response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    // const url = baseUrl ? `${baseUrl}/api/chat/vlm` : '/api/chat/vlm'
+    // response = await fetch(url, {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
 
-      body: JSON.stringify({
-        conversation: selectedConversation,
-        // ollamaProvider: newChatBody,
-        stream: chatBody.stream,
-      }),
-    })
-    return response
-  } else if (
-    Object.values(NCSAHostedModelID).includes(
-      selectedConversation.model.id as any,
+    //   body: JSON.stringify({
+    //     conversation: selectedConversation,
+    //     // ollamaProvider: newChatBody,
+    //     stream: chatBody.stream,
+    //   }),
+    // })
+    // return response
+    return await runVLLM(
+      selectedConversation,
+      chatBody?.llmProviders?.NCSAHostedVLM as NCSAHostedVLMProvider,
+      chatBody.stream,
     )
-  ) {
-    // Ollama model
-    console.log('Ollama provider in stream: ', chatBody!.llmProviders!.Ollama)
-
-    response = await fetch('/api/chat/ollama', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        conversation: selectedConversation,
-        ollamaProvider: chatBody!.llmProviders!.Ollama as OllamaProvider,
-      }),
-    })
-    return response
-  } else if (
-    Object.values(AnthropicModelID).includes(
-      selectedConversation.model.id as any,
-    )
-  ) {
-    console.log('Anthropic model: ', chatBody)
-    const url = baseUrl
-      ? `${baseUrl}/api/chat/anthropic`
-      : '/api/chat/anthropic'
-    response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-
-      body: JSON.stringify({
-        conversation: selectedConversation,
-        ollamaProvider: chatBody,
-        stream: chatBody.stream,
-      }),
-    })
-    return response
   } else if (
     Object.values(OllamaModelIDs).includes(selectedConversation.model.id as any)
   ) {
