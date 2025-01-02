@@ -39,7 +39,7 @@ import { useFetchAllWorkflows } from '~/utils/functionCalling/handleFunctionCall
 import { IntermediateStateAccordion } from './IntermediateStateAccordion'
 
 export const GetCurrentPageName = () => {
-  // /CS-125/materials --> CS-125
+  // /CS-125/dashboard --> CS-125
   return useRouter().asPath.slice(1).split('/')[0] as string
 }
 
@@ -191,7 +191,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
           }),
         })
         const data = await response.json()
-        console.log('data!!!', data)
+        // console.log('data!!!', data)
         setN8nApiKeyTextbox(data.api_key[0].n8n_api_key)
         setN8nApiKey(data.api_key[0].n8n_api_key)
         // return data.success

@@ -1,98 +1,92 @@
 // upsertCourseMetadata.ts
-import { kv } from '@vercel/kv'
-import { type NextRequest, NextResponse } from 'next/server'
+import type { NextApiRequest, NextApiResponse } from 'next'
+import { ProjectWideLLMProviders } from '~/types/courseMetadata'
 import { encryptKeyIfNeeded } from '~/utils/crypto'
 import {
-  ProjectWideLLMProviders,
-  ProviderNames,
+  AllLLMProviders,
+  LLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
+import { redisClient } from '~/utils/redisClient'
 
-export const runtime = 'edge'
-
-export default async function handler(req: NextRequest, res: NextResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
   // Ensure it's a POST request
   if (req.method !== 'POST') {
-    return NextResponse.json({ error: 'Method not allowed' }, { status: 405 })
+    return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const requestBody = await req.text()
   let courseName: string
-  let llmProviders: ProjectWideLLMProviders
+  let llmProviders: AllLLMProviders
+  let defaultModelID: string
+  let defaultTemperature: number
 
   try {
-    const parsedBody = JSON.parse(requestBody)
+    const parsedBody = JSON.parse(req.body)
     courseName = parsedBody.projectName as string
-    llmProviders = parsedBody.llmProviders as ProjectWideLLMProviders
+    llmProviders = parsedBody.llmProviders as AllLLMProviders
+    defaultModelID = parsedBody.defaultModelID as string
+    defaultTemperature = parsedBody.defaultTemperature as number
   } catch (error) {
     console.error('Error parsing request body:', error)
-    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+    return res.status(400).json({ error: 'Invalid request body' })
   }
 
   // Check if all required variables are defined
-  if (!courseName || !llmProviders || !llmProviders.providers) {
+  if (!courseName || !llmProviders || !defaultModelID || !defaultTemperature) {
     console.error('Error: Missing required parameters')
-    return NextResponse.json(
-      { error: 'Missing required parameters' },
-      { status: 400 },
-    )
+    return res.status(400).json({ error: 'Missing required parameters' })
   }
 
   // Type checking
-  if (typeof courseName !== 'string') {
+  if (
+    typeof courseName !== 'string' ||
+    typeof defaultModelID !== 'string' ||
+    typeof defaultTemperature !== 'string'
+  ) {
     console.error('Error: Invalid parameter types')
-    return NextResponse.json(
-      { error: 'Invalid parameter types' },
-      { status: 400 },
-    )
+    return res.status(400).json({ error: 'Invalid parameter types' })
   }
 
   if (typeof llmProviders !== 'object' || llmProviders === null) {
     console.error('Error: Invalid llmProviders')
-    return NextResponse.json({ error: 'Invalid llmProviders' }, { status: 400 })
+    return res.status(400).json({ error: 'Invalid llmProviders' })
   }
 
   try {
+    console.debug('llmProviders BEFORE being cleaned and such', llmProviders)
+
     const redisKey = `${courseName}-llms`
-    const existingLLMs = (await kv.get(redisKey)) as ProjectWideLLMProviders
+    const existingLLMs = (await redisClient.get(
+      redisKey,
+    )) as ProjectWideLLMProviders
 
     // Ensure all keys are encrypted, then save to DB.
     const processProviders = async () => {
-      for (const [providerName, provider] of Object.entries(
-        llmProviders.providers,
-      )) {
+      for (const providerName in llmProviders) {
+        const typedProviderName = providerName as keyof AllLLMProviders
+        const provider = llmProviders[typedProviderName]
         if (provider && 'apiKey' in provider) {
-          // @ts-ignore - stupid.
-          llmProviders.providers[
-            providerName as keyof typeof llmProviders.providers
-          ] = {
+          llmProviders[typedProviderName] = {
             ...provider,
-            // @ts-ignore - it's because this function could throw an error. But we don't care about it here.
             apiKey:
               (await encryptKeyIfNeeded(provider.apiKey!)) ?? provider.apiKey,
-          }
-        } else {
-          llmProviders.providers[
-            providerName as keyof typeof llmProviders.providers
-          ] = provider as any
+          } as LLMProvider & { provider: typeof typedProviderName }
         }
       }
     }
     await processProviders()
 
-    // Combine the existing metadata with the new metadata, prioritizing the new values
+    // Now await the existing LLMs and combine with encrypted providers
     const combined_llms = { ...existingLLMs, ...llmProviders }
 
-    // Delete all the old providers, they're now nested inside.
-    Object.values(ProviderNames).forEach((provider) => {
-      delete (combined_llms as any)[provider]
-    })
-
-    if (llmProviders.defaultModel) {
-      combined_llms.defaultModel = llmProviders.defaultModel
+    if (defaultModelID) {
+      combined_llms.defaultModel = defaultModelID
     }
 
-    if (llmProviders.defaultTemp) {
-      combined_llms.defaultTemp = llmProviders.defaultTemp
+    if (defaultTemperature) {
+      combined_llms.defaultTemp = defaultTemperature
     }
 
     console.debug('-----------------------------------------')
@@ -102,10 +96,10 @@ export default async function handler(req: NextRequest, res: NextResponse) {
     console.debug('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
 
     // Save the combined metadata
-    await kv.set(redisKey, combined_llms)
-    return NextResponse.json({ success: true })
+    await redisClient.set(redisKey, JSON.stringify(combined_llms))
+    return res.status(200).json({ success: true })
   } catch (error) {
-    console.error('Error setting course metadata:', error)
-    return NextResponse.json({ success: false })
+    console.error('Error upserting LLM providers:', error)
+    return res.status(500).json({ success: false })
   }
 }

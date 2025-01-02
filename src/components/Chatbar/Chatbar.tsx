@@ -130,6 +130,7 @@ export const Chatbar = ({
         !isConversationHistoryLoading &&
         conversationHistory
       ) {
+        // console.log('Raw conversation history:', conversationHistory)
         const allConversations = conversationHistory.pages
           .flatMap((page) => (Array.isArray(page) ? page : []))
           .filter((conversation) => conversation !== undefined)
@@ -222,8 +223,10 @@ export const Chatbar = ({
   }
 
   const handleClearConversations = () => {
-    deleteAllConversationMutation.mutate()
+    homeDispatch({ field: 'conversations', value: [] })
+    chatDispatch({ field: 'searchTerm', value: '' })
     handleNewConversation()
+    deleteAllConversationMutation.mutate()
   }
 
   const handleDeleteConversation = (conversation: Conversation) => {

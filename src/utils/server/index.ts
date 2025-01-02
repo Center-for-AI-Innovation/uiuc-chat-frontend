@@ -26,16 +26,14 @@ import {
 import { AzureModels } from '../modelProviders/azure'
 
 export class OpenAIError extends Error {
-  type: string
-  param: string
-  code: string
-
-  constructor(message: string, type: string, param: string, code: string) {
+  constructor(
+    message: string,
+    public type?: string,
+    public param?: string,
+    public code?: string,
+  ) {
     super(message)
     this.name = 'OpenAIError'
-    this.type = type
-    this.param = param
-    this.code = code
   }
 }
 
@@ -102,10 +100,6 @@ export const OpenAIStream = async (
     throw new Error('URL is undefined')
   }
 
-  if (!url) {
-    throw new Error('URL is undefined')
-  }
-
   const res = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
@@ -117,8 +111,8 @@ export const OpenAIStream = async (
       }),
       ...(apiType === ProviderNames.OpenAI &&
         OPENAI_ORGANIZATION && {
-          'OpenAI-Organization': OPENAI_ORGANIZATION,
-        }),
+        'OpenAI-Organization': OPENAI_ORGANIZATION,
+      }),
     },
     method: 'POST',
     body: body,
@@ -138,8 +132,7 @@ export const OpenAIStream = async (
       )
     } else {
       throw new Error(
-        `OpenAI API returned an error: ${
-          decoder.decode(result?.value) || result.statusText
+        `OpenAI API returned an error: ${decoder.decode(result?.value) || result.statusText
         }`,
       )
     }
@@ -200,12 +193,10 @@ export const OpenAIStream = async (
         }
       },
     })
-
     return apiStream
   } else {
-    console.log('Non Streaming response ')
+    console.log('Non Streaming response from OpenAI')
     const json = await res.json()
-    console.log('Final OpenAI response: ', json)
     return json
   }
 }

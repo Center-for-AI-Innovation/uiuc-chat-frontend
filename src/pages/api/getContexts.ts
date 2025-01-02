@@ -1,8 +1,6 @@
 import { ContextWithMetadata } from '~/types/chat'
 
-export const config = {
-  runtime: 'edge',
-}
+
 
 export const fetchContexts = async (
   course_name: string,

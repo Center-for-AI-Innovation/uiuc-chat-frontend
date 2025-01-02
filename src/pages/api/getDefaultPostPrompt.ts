@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { getDefaultPostPrompt } from '~/pages/api/chat'
+import { getDefaultPostPrompt } from '~/app/utils/buildPromptUtils'
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {

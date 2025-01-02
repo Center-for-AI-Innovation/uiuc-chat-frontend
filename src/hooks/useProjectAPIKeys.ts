@@ -1,10 +1,8 @@
 import { QueryClient, useMutation, useQuery } from '@tanstack/react-query'
+import { debounce } from 'lodash'
+import { useMemo, useRef } from 'react'
 import { showConfirmationToast } from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
-import {
-  AllLLMProviders,
-  AnySupportedModel,
-  ProjectWideLLMProviders,
-} from '~/utils/modelProviders/LLMProvider'
+import { AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
 
 export function useGetProjectLLMProviders({
   projectName,
@@ -37,37 +35,58 @@ export function useGetProjectLLMProviders({
       }
 
       const data = await response.json()
-      return data as ProjectWideLLMProviders
+      return data as AllLLMProviders
     },
     retry: 1, // Limit retries to 1
   })
 }
 
 export function useSetProjectLLMProviders(queryClient: QueryClient) {
-  return useMutation({
-    mutationFn: async ({
-      projectName,
-      llmProviders,
-    }: {
-      projectName: string
-      queryClient: QueryClient
-      llmProviders: ProjectWideLLMProviders
-    }) => {
-      const response = await fetch('/api/UIUC-api/upsertLLMProviders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+  const debouncedApiCall = useMemo(
+    () =>
+      debounce(
+        (
+          variables: {
+            projectName: string
+            llmProviders: AllLLMProviders
+            defaultModelID: string
+            defaultTemperature: string
+          },
+          resolve: (value: any) => void,
+          reject: (reason?: any) => void,
+        ) => {
+          fetch('/api/UIUC-api/upsertLLMProviders', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(variables),
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error('Failed to set LLM settings.')
+              }
+              return response.json()
+            })
+            .then(resolve)
+            .catch(reject)
         },
-        body: JSON.stringify({
-          projectName: projectName,
-          llmProviders: llmProviders,
-        }),
-      })
+        1000,
+        { maxWait: 10000 },
+      ),
+    [],
+  )
 
-      if (!response.ok) {
-        throw new Error('Failed to set LLM providers')
-      }
-      return response.json()
+  return useMutation({
+    mutationFn: async (variables: {
+      projectName: string
+      llmProviders: AllLLMProviders
+      defaultModelID: string
+      defaultTemperature: string
+    }) => {
+      return new Promise((resolve, reject) => {
+        debouncedApiCall(variables, resolve, reject)
+      })
     },
     onMutate: async (variables) => {
       // Cancel any outgoing refetches
@@ -81,50 +100,6 @@ export function useSetProjectLLMProviders(queryClient: QueryClient) {
         variables.projectName,
       ])
 
-      // Optimistically update to the new value
-      queryClient.setQueryData(['projectLLMProviders', variables.projectName], {
-        ...variables.llmProviders,
-      })
-
-      // if (variables.llmProviders.defaultModel) {
-      //   // Find the provider that matches the default model
-      //   let defaultProvider: variables.llmProviders.defaultModel.name
-      //   switch (defaultProvider) {
-      //     case 'OpenAI':
-      //       if (!variables.llmProviders.providers.OpenAI.isEnabled) {
-      //         variables.llmProviders.defaultModel = undefined
-      //       }
-      //       break;
-      //     case 'Anthropic':
-      //       if (!variables.llmProviders.providers.Anthropic.isEnabled) {
-      //         variables.llmProviders.defaultModel = undefined
-      //       }
-      //       break;
-      //     case 'Azure':
-      //       if (!variables.llmProviders.providers.Azure.isEnabled) {
-      //         variables.llmProviders.defaultModel = undefined
-      //       }
-      //       break;
-      //     case 'Ollama':
-      //       if (!variables.llmProviders.providers.Ollama.isEnabled) {
-      //         variables.llmProviders.defaultModel = undefined
-      //       }
-      //       break;
-      //     case 'WebLLM':
-      //       if (!variables.llmProviders.providers.WebLLM.isEnabled) {
-      //         variables.llmProviders.defaultModel = undefined
-      //       }
-      //       break;
-      //     case 'NCSAHosted':
-      //       if (!variables.llmProviders.providers.NCSAHosted.isEnabled) {
-      //         variables.llmProviders.defaultModel = undefined
-      //       }
-      //       break;
-      //     default:
-      //       console.warn(`Unknown provider for default model: ${variables.llmProviders.defaultModel.provider}`);
-      //   }
-      // }
-
       // Return a context object with the snapshotted value
       return { previousLLMProviders }
     },
@@ -134,22 +109,19 @@ export function useSetProjectLLMProviders(queryClient: QueryClient) {
         ['projectLLMProviders', newData.projectName],
         context?.previousLLMProviders,
       )
-      showConfirmationToast({
-        title: 'Failed to set LLM providers',
-        message: `The database request failed with error: ${err.name} -- ${err.message}`,
-        isError: true,
-      })
     },
-    onSuccess: (data, variables, context) => {
-      // Optionally, you can show a success toast here
+    onSuccess: (data, variables) => {
       // showConfirmationToast({
       //   title: 'Updated LLM providers',
-      //   message: `Now your project's users can use the supplied LLMs!`,
-      //   isError: false,
+      //   message: `Successfully updated your project's LLM settings!`,
       // })
     },
-    onSettled: (data, error, variables, context) => {
-      // Always refetch after error or success to ensure we have the latest data
+    onSettled: (data, error, variables) => {
+      // showConfirmationToast({
+      //   title: 'onSettled',
+      //   message: `Settled.`,
+      // })
+      // Always invalidate the query after mutation settles(success or error)
       queryClient.invalidateQueries({
         queryKey: ['projectLLMProviders', variables.projectName],
       })

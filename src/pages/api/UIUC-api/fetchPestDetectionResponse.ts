@@ -1,7 +1,5 @@
 // src/pages/api/UIUC-api/callPestDetection.ts
-export const config = {
-  runtime: 'edge',
-}
+
 
 /**
  * Fetches the pest detection response from the pest detection API.

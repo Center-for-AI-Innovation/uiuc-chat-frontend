@@ -49,10 +49,10 @@ export const AuthComponent = ({ course_name }: { course_name: string }) => {
             <SignInButton
               mode="modal"
               fallbackRedirectUrl={
-                course_name === 'new' ? '/new' : `/${course_name}/materials`
+                course_name === 'new' ? '/new' : `/${course_name}/dashboard`
               }
               // redirectUrl={
-              //   course_name === 'new' ? '/new' : `/${course_name}/materials`
+              //   course_name === 'new' ? '/new' : `/${course_name}/dashboard`
               // }
             >
               <Button

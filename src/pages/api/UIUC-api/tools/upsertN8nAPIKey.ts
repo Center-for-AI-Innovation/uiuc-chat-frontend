@@ -1,13 +1,11 @@
 import { supabase } from '@/utils/supabaseClient'
 import { NextRequest, NextResponse } from 'next/server'
 
-export const config = {
-  runtime: 'edge',
-}
+
 
 export default async function handler(req: NextRequest, res: NextResponse) {
   const requestBody = await req.json()
-  console.log('upsertN8nAPIKey course_name and n8n_api_key:', requestBody)
+  // console.log('upsertN8nAPIKey course_name and n8n_api_key:', requestBody)
   const { course_name, n8n_api_key } = requestBody
   if (!course_name) {
     return new NextResponse(
@@ -31,7 +29,7 @@ export default async function handler(req: NextRequest, res: NextResponse) {
     )
     .eq('course_name', course_name)
     .select()
-  console.log('upsertN8nAPIKey data:', data)
+  // console.log('upsertN8nAPIKey data:', data)
 
   if (error) {
     console.error('Error upserting N8n key to Supabase:', error)

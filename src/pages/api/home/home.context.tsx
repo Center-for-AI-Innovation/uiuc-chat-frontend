@@ -20,6 +20,10 @@ export interface HomeContextProps {
     conversation: Conversation,
     data: KeyValuePair,
   ) => void
+  handleFeedbackUpdate: (
+    conversation: Conversation,
+    data: KeyValuePair,
+  ) => void
   setIsImg2TextLoading: (isImg2TextLoading: boolean) => void
   setIsRouting: (isRouting: boolean) => void
   // setRoutingResponse: (routingResponse: RoutingResponse) => void
@@ -27,6 +31,8 @@ export interface HomeContextProps {
   setIsRetrievalLoading: (isRetrievalLoading: boolean) => void
   handleUpdateDocumentGroups: (id: string) => void
   handleUpdateTools: (id: string) => void
+  setIsQueryRewriting: (isQueryRewriting: boolean) => void
+  setQueryRewriteResult: (queryText: string) => void
 }
 
 const HomeContext = createContext<HomeContextProps>(undefined!)

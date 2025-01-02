@@ -21,7 +21,7 @@ export async function handleFunctionCall(
   try {
     // Convert UIUCTool to OpenAICompatibleTool
     const openAITools = getOpenAIToolFromUIUCTool(availableTools)
-    console.log('OpenAI compatible tools (handle tools): ', openaiKey)
+    // console.log('OpenAI compatible tools (handle tools): ', openaiKey)
     const url = base_url
       ? `${base_url}/api/chat/openaiFunctionCall`
       : '/api/chat/openaiFunctionCall'
@@ -45,7 +45,7 @@ export async function handleFunctionCall(
     }
     const openaiFunctionCallResponse = await response.json()
     if (openaiFunctionCallResponse.message === 'No tools invoked by OpenAI') {
-      console.error('No tools invoked by OpenAI')
+      console.debug('No tools invoked by OpenAI')
       return []
     }
 
@@ -342,32 +342,32 @@ export function getOpenAIToolFromUIUCTool(
         description: tool.description,
         parameters: tool.inputParameters
           ? {
-              type: 'object',
-              properties: Object.keys(tool.inputParameters.properties).reduce(
-                (acc, key) => {
-                  const param = tool.inputParameters?.properties[key]
-                  acc[key] = {
-                    type:
-                      param?.type === 'number'
-                        ? 'number'
-                        : param?.type === 'Boolean'
-                          ? 'Boolean'
-                          : 'string',
-                    description: param?.description,
-                    enum: param?.enum,
-                  }
-                  return acc
-                },
-                {} as {
-                  [key: string]: {
-                    type: 'string' | 'number' | 'Boolean'
-                    description?: string
-                    enum?: string[]
-                  }
-                },
-              ),
-              required: tool.inputParameters.required,
-            }
+            type: 'object',
+            properties: Object.keys(tool.inputParameters.properties).reduce(
+              (acc, key) => {
+                const param = tool.inputParameters?.properties[key]
+                acc[key] = {
+                  type:
+                    param?.type === 'number'
+                      ? 'number'
+                      : param?.type === 'Boolean'
+                        ? 'Boolean'
+                        : 'string',
+                  description: param?.description,
+                  enum: param?.enum,
+                }
+                return acc
+              },
+              {} as {
+                [key: string]: {
+                  type: 'string' | 'number' | 'Boolean'
+                  description?: string
+                  enum?: string[]
+                }
+              },
+            ),
+            required: tool.inputParameters.required,
+          }
           : undefined,
       },
     }

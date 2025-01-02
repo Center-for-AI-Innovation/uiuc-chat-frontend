@@ -23,7 +23,12 @@ export default function AzureProviderInput({
   }
   return (
     <motion.div layout>
-      <Card shadow="sm" p="lg" radius="lg" className="w-[310px] bg-[#15162c]">
+      <Card
+        shadow="sm"
+        p="lg"
+        radius="lg"
+        className="max-w-[330px] bg-[#15162c] md:w-[330px]"
+      >
         <div
           style={{
             display: 'flex',
@@ -62,15 +67,6 @@ export default function AzureProviderInput({
                 checked={field.state.value}
                 onChange={(event) => {
                   field.handleChange(event.currentTarget.checked)
-
-                  const newValue = event.currentTarget.checked
-                  field.handleChange(newValue)
-                  provider.enabled = newValue
-
-                  if (form.state.values.defaultModel && form.state.values.defaultModel.provider === ProviderNames.Azure) {
-                    form.setFieldValue('defaultModel', newValue ? form.state.values.defaultModel : null)
-                  }
-
                   form.handleSubmit() // Trigger form submission
                 }}
                 thumbIcon={
@@ -111,8 +107,6 @@ export default function AzureProviderInput({
                 borderRadius: '4px',
                 backgroundColor: 'rgba(255, 0, 0, 0.1)',
                 border: '1px solid rgba(255, 0, 0, 0.2)',
-                wordBreak: 'break-all', // Add this line
-                overflowWrap: 'break-word', // Add this line for better compatibility
               }}
             >
               {provider.error}

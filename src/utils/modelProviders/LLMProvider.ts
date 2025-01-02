@@ -15,16 +15,8 @@ import {
   AzureModelID,
   AzureModels,
 } from '~/utils/modelProviders/azure'
-import {
-  NCSAHostedModelID,
-  NCSAHostedModels,
-} from '~/utils/modelProviders/NCSAHosted'
-import {
-  NCSAHostedVLLMModel,
-  NCSAHostedVLLMModelID,
-  NCSAHostedVLLMModels,
-} from '~/utils/modelProviders/types/NCSAHostedVLLM'
-import { Conversation } from '~/types/chat'
+import { Conversation } from '../../types/chat'
+import { NCSAHostedModels } from '~/utils/modelProviders/NCSAHosted'
 
 export enum ProviderNames {
   Ollama = 'Ollama',
@@ -33,7 +25,6 @@ export enum ProviderNames {
   Anthropic = 'Anthropic',
   WebLLM = 'WebLLM',
   NCSAHosted = 'NCSAHosted',
-  NCSAHostedVLLM = 'NCSAHostedVLLM',
 }
 
 export type AnySupportedModel =
@@ -42,11 +33,10 @@ export type AnySupportedModel =
   | WebllmModel
   | AnthropicModel
   | AzureModel
-  | NCSAHostedVLLMModel
 
 // Add other vision capable models as needed
 export const VisionCapableModels: Set<
-  OpenAIModelID | AzureModelID | AnthropicModelID | NCSAHostedVLLMModelID
+  OpenAIModelID | AzureModelID | AnthropicModelID
 > = new Set([
   OpenAIModelID.GPT_4_Turbo,
   OpenAIModelID.GPT_4o,
@@ -63,15 +53,36 @@ export const VisionCapableModels: Set<
   NCSAHostedVLLMModelID.MOLMO_7B_D_0924,
 ])
 
-export const AllSupportedModels: Set<AnySupportedModel> = new Set([
+export const AllSupportedModels: Set<GenericSupportedModel> = new Set([
   ...Object.values(AnthropicModels),
   ...Object.values(OpenAIModels),
   ...Object.values(AzureModels),
   ...Object.values(OllamaModels),
   ...Object.values(NCSAHostedModels),
-  ...Object.values(NCSAHostedVLLMModels),
   // ...webLLMModels,
 ])
+// e.g. Easily validate ALL POSSIBLE models that we support. They may be offline or disabled, but they are supported.
+// {
+//   id: 'llama3.1:70b',
+//   name: 'Llama 3.1 70b',
+//   parameterSize: '70b',
+//   tokenLimit: 16385,
+//   enabled: false
+// },
+//   {
+//   id: 'gpt-3.5-turbo',
+//   name: 'GPT-3.5',
+//   tokenLimit: 16385,
+//   enabled: false
+// },
+
+export interface GenericSupportedModel {
+  id: string
+  name: string
+  tokenLimit: number
+  enabled: boolean
+  parameterSize?: string
+}
 
 export interface BaseLLMProvider {
   provider: ProviderNames
@@ -79,11 +90,6 @@ export interface BaseLLMProvider {
   baseUrl?: string
   apiKey?: string
   error?: string
-}
-
-export interface NCSAHostedVLLMProvider extends BaseLLMProvider {
-  provider: ProviderNames.NCSAHostedVLLM
-  models?: NCSAHostedVLLMModel[]
 }
 
 export interface OllamaProvider extends BaseLLMProvider {
@@ -128,31 +134,27 @@ export type LLMProvider =
   | AnthropicProvider
   | WebLLMProvider
   | NCSAHostedProvider
-  | NCSAHostedVLLMProvider
+
+// export type AllLLMProviders = {
+//   [P in ProviderNames]?: LLMProvider & { provider: P }
+// }
+
+// export interface AllLLMProviders {
+//   [key: string]: LLMProvider & { provider: ProviderNames } | undefined;
+// }
 
 export type AllLLMProviders = {
   [key in ProviderNames]: LLMProvider
 }
 
-export type ProjectWideLLMProviders = {
-  providers: {
-    [P in ProviderNames]: LLMProvider & { provider: P }
-  }
-  defaultModel?: AnySupportedModel
-  defaultTemp?: number
-}
-
 // Ordered list of preferred model IDs -- the first available model will be used as default
-// Priority 1: Admin-defined default model
-// Priority 2: Last used model, if actively chosen by end user.
-// Priority 3: First available model in preferredModelIds
 export const preferredModelIds = [
   AnthropicModelID.Claude_3_5_Sonnet,
 
   OpenAIModelID.GPT_4o_mini,
   AzureModelID.GPT_4o_mini,
 
-  AnthropicModelID.Claude_3_Haiku,
+  AnthropicModelID.Claude_3_5_Haiku,
 
   OpenAIModelID.GPT_4o,
   AzureModelID.GPT_4o,
@@ -170,28 +172,24 @@ export const preferredModelIds = [
 
 export const selectBestModel = (
   allLLMProviders: AllLLMProviders,
-  convo?: Conversation,
-): AnySupportedModel => {
+): GenericSupportedModel => {
   const allModels = Object.values(allLLMProviders)
     .filter((provider) => provider!.enabled)
     .flatMap((provider) => provider!.models || [])
     .filter((model) => model.enabled)
 
   const defaultModelId = localStorage.getItem('defaultModel')
-  // console.log('defaultModelId from localstorage: ', defaultModelId)
+
   if (defaultModelId && allModels.find((m) => m.id === defaultModelId)) {
     const defaultModel = allModels
       .filter((model) => model.enabled)
       .find((m) => m.id === defaultModelId)
     if (defaultModel) {
-      console.log(
-        'Using default model from localStorage:',
-        JSON.stringify(defaultModel),
-      )
       return defaultModel
     }
   }
 
+  // If the conversation model is not available or invalid, use the preferredModelIds
   for (const preferredId of preferredModelIds) {
     const model = allModels
       .filter((model) => model.enabled)
@@ -202,7 +200,11 @@ export const selectBestModel = (
     }
   }
 
-  console.log('No preferred models found, falling back to Llama 3.1 70b')
-  localStorage.setItem('defaultModel', NCSAHostedModelID.LLAMA31_70b)
-  return NCSAHostedModels['llama3.1:70b']
+  // If no preferred models are available, fallback to llama3.1:8b-instruct-fp16
+  return {
+    id: 'llama3.1:8b-instruct-fp16',
+    name: 'Llama 3.1 8b (FP16)',
+    tokenLimit: 128000,
+    enabled: true,
+  }
 }

@@ -10,7 +10,6 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { CourseMetadata } from '~/types/courseMetadata'
 import {
   attachContextsToLastMessage,
-  constructChatBody,
   constructSearchQuery,
   determineAndValidateModel,
   fetchKeyToUse,
@@ -25,18 +24,18 @@ import { DEFAULT_SYSTEM_PROMPT, DEFAULT_TEMPERATURE } from '~/utils/app/const'
 import { v4 as uuidv4 } from 'uuid'
 import { getBaseUrl } from '~/utils/apiUtils'
 import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
-import { buildPrompt } from '../chat'
 import {
   fetchTools,
   handleToolsServer,
 } from '~/utils/functionCalling/handleFunctionCalling'
 import {
   AllLLMProviders,
-  AnySupportedModel,
+  GenericSupportedModel,
   OpenAIProvider,
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { fetchEnabledDocGroups } from '~/utils/dbUtils'
+import { buildPrompt } from '~/app/utils/buildPromptUtils'
 
 export const maxDuration = 60
 /**
@@ -134,7 +133,7 @@ export default async function chat(
   const key = await fetchKeyToUse(openai_key, courseMetadata)
 
   // Determine and validate the model to use
-  let selectedModel: AnySupportedModel
+  let selectedModel: GenericSupportedModel
   let llmProviders: AllLLMProviders
   try {
     const { activeModel, modelsWithProviders } =
@@ -296,7 +295,6 @@ export default async function chat(
   attachContextsToLastMessage(lastMessage, contexts)
 
   // Handle tools
-  console.log('Tools start with openai_key:', key)
   let updatedConversation = conversation
   if (availableTools.length > 0) {
     updatedConversation = await handleToolsServer(
@@ -310,17 +308,15 @@ export default async function chat(
       getBaseUrl(),
     )
   }
-  console.log('Tools complete, conversation:', conversation)
 
-  // Construct the chat body for the API request
-  const chatBody: ChatBody = constructChatBody(
+  const chatBody: ChatBody = {
     conversation,
     key,
     course_name,
     stream,
     courseMetadata,
     llmProviders,
-  )
+  }
 
   // Build the prompt
   const buildPromptResponse = await buildPrompt({

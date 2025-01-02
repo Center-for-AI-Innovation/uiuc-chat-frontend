@@ -1,21 +1,29 @@
 import { S3Client } from '@aws-sdk/client-s3'
 import { GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import { NextApiRequest, NextApiResponse } from 'next'
+import type { NextApiRequest, NextApiResponse } from 'next'
 
-const aws_config = {
-  bucketName: 'uiuc-chatbot',
-  region: 'us-east-1',
-  accessKeyId: process.env.AWS_KEY,
-  secretAccessKey: process.env.AWS_SECRET,
+const region = process.env.MINIO_REGION || process.env.AWS_REGION
+const accessKey = process.env.MINIO_ACCESS_KEY || process.env.AWS_KEY
+const secretKey = process.env.MINIO_SECRET_KEY || process.env.AWS_SECRET
+const bucketName = process.env.MINIO_BUCKET_NAME || process.env.S3_BUCKET_NAME
+
+if (!region || !accessKey || !secretKey || !bucketName) {
+  throw new Error(
+    'Missing required AWS credentials or bucket name in environment variables',
+  )
 }
 
 const s3Client = new S3Client({
-  region: aws_config.region,
+  region,
   credentials: {
-    accessKeyId: process.env.AWS_KEY as string,
-    secretAccessKey: process.env.AWS_SECRET as string,
+    accessKeyId: accessKey,
+    secretAccessKey: secretKey,
   },
+  ...(process.env.MINIO_ENDPOINT && {
+    endpoint: process.env.MINIO_ENDPOINT,
+    forcePathStyle: true,
+  }),
 })
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
@@ -36,7 +44,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     }
 
     const command = new GetObjectCommand({
-      Bucket: aws_config.bucketName,
+      Bucket: bucketName,
       Key: filePath,
       ResponseContentDisposition: 'inline',
       ResponseContentType: ResponseContentType,

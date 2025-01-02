@@ -1,19 +1,16 @@
 // ~/src/pages/api/UIUC-api/getAllCourseNames.ts
-import { kv } from '@vercel/kv'
-import { NextResponse } from 'next/server'
-// import { performance } from 'perf_hooks'; // not available in Edge runtime
-// it's taking a while 2134 ms (2.1 seconds!!) for just 150 to 200 courses.
+import type { NextApiRequest, NextApiResponse } from 'next'
+import { redisClient } from '~/utils/redisClient'
 
-export const runtime = 'edge'
-
-const getAllCourseNames = async (req: any, res: any) => {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
   try {
-    const all_course_names = await kv.hkeys('course_metadatas')
-    return NextResponse.json({ all_course_names })
+    const all_course_names = await redisClient.hKeys('course_metadatas')
+    return res.status(200).json({ all_course_names })
   } catch (error) {
     console.log(error)
-    return NextResponse.json({ success: false })
+    return res.status(500).json({ success: false })
   }
 }
-
-export default getAllCourseNames

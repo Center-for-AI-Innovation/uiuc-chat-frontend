@@ -1,5 +1,5 @@
 import { type NextPage } from 'next'
-import MakeNomicVisualizationPage from '~/components/UIUC-Components/MakeQueryAnalysisPage'
+import MakeQueryAnalysisPage from '~/components/UIUC-Components/MakeQueryAnalysisPage'
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { useUser } from '@clerk/nextjs'
@@ -12,6 +12,8 @@ import {
 import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { CourseMetadata } from '~/types/courseMetadata'
+import NomicDocumentMap from '~/components/UIUC-Components/NomicDocumentsMap'
+import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 
 const CourseMain: NextPage = () => {
   const router = useRouter()
@@ -62,7 +64,7 @@ const CourseMain: NextPage = () => {
 
   return (
     <>
-      <MakeNomicVisualizationPage course_name={courseName as string} />
+      <MakeQueryAnalysisPage course_name={courseName as string} />
     </>
   )
 }

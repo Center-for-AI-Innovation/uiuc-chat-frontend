@@ -1,7 +1,6 @@
 import { type AppType } from 'next/app'
 import { MantineProvider } from '@mantine/core'
 import { Notifications } from '@mantine/notifications'
-import { Analytics } from '@vercel/analytics/react'
 import { appWithTranslation } from 'next-i18next'
 import { ClerkLoaded, ClerkProvider, GoogleOneTap } from '@clerk/nextjs'
 import { dark } from '@clerk/themes'
@@ -9,17 +8,15 @@ import { dark } from '@clerk/themes'
 import '~/styles/globals.css'
 import Maintenance from '~/components/UIUC-Components/Maintenance'
 
-import { useReportWebVitals } from 'next-axiom'
-
-// For axiom Web Vitals logging: https://axiom.co/docs/apps/vercel#sending-logs-to-axiom
-import { NextWebVitalsMetric } from 'next/app'
-
 import posthog from 'posthog-js'
 import { PostHogProvider } from 'posthog-js/react'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+
+import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from '@vercel/analytics/next';
 
 // Check that PostHog is client-side (used to handle Next.js SSR)
 if (typeof window !== 'undefined') {
@@ -35,10 +32,6 @@ if (typeof window !== 'undefined') {
 }
 
 const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
-  useReportWebVitals(((metric: NextWebVitalsMetric) => {
-    console.log(metric)
-  }) as any)
-
   const router = useRouter()
   const queryClient = new QueryClient()
 
@@ -57,6 +50,8 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
   } else {
     return (
       <PostHogProvider client={posthog}>
+        <SpeedInsights />
+        <Analytics />
         <ClerkProvider
           allowedRedirectOrigins={[
             'https://chat.illinois.edu',
@@ -78,7 +73,11 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
           <ClerkLoaded>
             <GoogleOneTap />
             <QueryClientProvider client={queryClient}>
-              <ReactQueryDevtools initialIsOpen={false} />
+              <ReactQueryDevtools
+                initialIsOpen={false}
+                position="left"
+                buttonPosition="bottom-left"
+              />
               <MantineProvider
                 withGlobalStyles
                 withNormalizeCSS
@@ -119,7 +118,6 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
               >
                 <Notifications position="bottom-center" zIndex={2077} />
                 <Component {...pageProps} />
-                <Analytics />
               </MantineProvider>
             </QueryClientProvider>
           </ClerkLoaded>

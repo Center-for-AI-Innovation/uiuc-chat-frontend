@@ -26,8 +26,6 @@ const conversationToMessages = (
     transformedData.push(simpleMessage)
   })
 
-  // console.log('Transformed messages array: ', transformedData)
-
   return transformedData
 }
 
@@ -46,10 +44,22 @@ export async function POST(req: Request) {
     openaiKey: string
   } = await req.json()
 
-  let decryptedKey = await decryptKeyIfNeeded(openaiKey)
-  if (decryptedKey && !decryptedKey.startsWith('sk-')) {
+  let decryptedKey
+  if (openaiKey) {
+    decryptedKey = await decryptKeyIfNeeded(openaiKey) as string
+  }
+
+  if (!decryptedKey || !decryptedKey.startsWith('sk-')) {
+    // fallback to Vlad's key
     decryptedKey = process.env.VLADS_OPENAI_KEY as string
   }
+  // console.log('Decrypted key: ', decryptedKey)
+
+  // Create an OpenAI API client (that's edge friendly!)
+  // const openai = new OpenAI({ apiKey: decryptedKey })
+
+  // Cloudflare proxy format: https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_slug}/openai
+  // const openai = new OpenAI({ apiKey: decryptedKey, baseURL: "https://gateway.ai.cloudflare.com/v1/74022ae0779bc80e94e2346e1720449d/uiucchat/openai" })
 
   // Auto-trace LLM calls w/ langsmith
   const openai = wrapOpenAI(new OpenAI({ apiKey: decryptedKey }), {

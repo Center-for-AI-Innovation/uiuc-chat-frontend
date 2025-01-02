@@ -18,6 +18,15 @@ export interface CourseMetadata {
   documentsOnly: boolean | undefined
   guidedLearning: boolean | undefined
   systemPromptOnly: boolean | undefined
+  vector_search_rewrite_disabled: boolean | undefined
+}
+
+export type ProjectWideLLMProviders = {
+  [P in ProviderNames]?: LLMProvider & { provider: P }
+} & {
+  llmProviders?: LLMProvider[]
+  defaultModel?: string
+  defaultTemp?: number
 }
 
 export interface CourseMetadataOptionalForUpsert {
@@ -35,4 +44,5 @@ export interface CourseMetadataOptionalForUpsert {
   documentsOnly: boolean | undefined
   guidedLearning: boolean | undefined
   systemPromptOnly: boolean | undefined
+  vector_search_rewrite_disabled: boolean | undefined
 }

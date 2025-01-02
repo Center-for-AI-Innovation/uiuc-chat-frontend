@@ -12,7 +12,7 @@ import { Database } from 'database.types'
 import { v4 as uuidv4 } from 'uuid'
 import {
   AllSupportedModels,
-  AnySupportedModel,
+  GenericSupportedModel,
 } from '~/utils/modelProviders/LLMProvider'
 
 export const config = {
@@ -48,19 +48,20 @@ export function convertDBToChatConversation(
   dbMessages: DBMessage[],
 ): ChatConversation {
   // console.log('dbConversation: ', dbConversation)
-  // console.log('dbMessages: ', dbMessages)
+  // console.log('AllSupportedModels: ', AllSupportedModels)
+  // console.log('AllSupportedModels: type of ', typeof AllSupportedModels)
   return {
     id: dbConversation.id,
     name: dbConversation.name,
     model: Array.from(AllSupportedModels).find(
       (model) => model.id === dbConversation.model,
-    ) as AnySupportedModel,
+    ) as GenericSupportedModel,
     prompt: dbConversation.prompt,
     temperature: dbConversation.temperature,
     userEmail: dbConversation.user_email || undefined,
     projectName: dbConversation.project_name,
     folderId: dbConversation.folder_id,
-    messages: (dbMessages || []).map((msg) => {
+    messages: (dbMessages || []).map((msg: any) => {
       const content: Content[] = []
       if (msg.content_text) {
         content.push({
@@ -85,7 +86,15 @@ export function convertDBToChatConversation(
         }
       }
 
-      return {
+      const feedbackObj = msg.feedback
+        ? {
+          isPositive: msg.feedback.feedback_is_positive,
+          category: msg.feedback.feedback_category,
+          details: msg.feedback.feedback_details,
+        }
+        : undefined
+
+      const messageObj = {
         id: msg.id,
         role: msg.role as Role,
         content: content,
@@ -97,7 +106,12 @@ export function convertDBToChatConversation(
         responseTimeSec: msg.response_time_sec || undefined,
         created_at: msg.created_at || undefined,
         updated_at: msg.updated_at || undefined,
+        feedback: feedbackObj,
+        wasQueryRewritten: msg.was_query_rewritten ?? null,
+        queryRewriteText: msg.query_rewrite_text ?? null,
       }
+
+      return messageObj
     }),
     createdAt: dbConversation.created_at || undefined,
     updatedAt: dbConversation.updated_at || undefined,
@@ -108,14 +122,6 @@ export function convertChatToDBMessage(
   chatMessage: ChatMessage,
   conversationId: string,
 ): DBMessage {
-  console.log(
-    'chatMessage',
-    'for id: ',
-    conversationId,
-    'for message: ',
-    // chatMessage,
-  )
-  // console.log('chatMessage.content type: ', typeof chatMessage.content)
   let content_text = ''
   let content_image_urls: string[] = []
   let image_description = ''
@@ -163,6 +169,11 @@ export function convertChatToDBMessage(
     conversation_id: conversationId,
     created_at: chatMessage.created_at || new Date().toISOString(),
     updated_at: chatMessage.updated_at || new Date().toISOString(),
+    feedback_is_positive: chatMessage.feedback?.isPositive ?? null,
+    feedback_category: chatMessage.feedback?.category ?? null,
+    feedback_details: chatMessage.feedback?.details ?? null,
+    was_query_rewritten: chatMessage.wasQueryRewritten ?? null,
+    query_rewrite_text: chatMessage.queryRewriteText ?? null,
   }
 }
 
@@ -198,10 +209,19 @@ export default async function handler(
 
         if (error) throw error
 
-        // Convert and save messages
+        // First delete all existing messages for this conversation
+        await supabase
+          .from('messages')
+          .delete()
+          .eq('conversation_id', conversation.id)
+
+        // Then insert all messages in their current state
         for (const message of conversation.messages) {
           const dbMessage = convertChatToDBMessage(message, conversation.id)
-          await supabase.from('messages').upsert(dbMessage)
+          const { error: messageError } = await supabase
+            .from('messages')
+            .insert(dbMessage)
+          if (messageError) throw messageError
         }
 
         res.status(200).json({ message: 'Conversation saved successfully' })
@@ -232,7 +252,7 @@ export default async function handler(
       try {
         const pageSize = 8
 
-        const { data, error } = await supabase.rpc('search_conversations', {
+        const { data, error } = await supabase.rpc('search_conversations_v3', {
           p_user_email: user_email,
           p_project_name: courseName,
           p_search_term: searchTerm || null,
@@ -266,8 +286,8 @@ export default async function handler(
 
         const nextCursor =
           count &&
-          count > (pageParam + 1) * pageSize &&
-          count > fetchedConversations.length
+            count > (pageParam + 1) * pageSize &&
+            count > fetchedConversations.length
             ? pageParam + 1
             : null
 
@@ -283,7 +303,7 @@ export default async function handler(
         })
       } catch (error) {
         res.status(500).json({ error: 'Error fetching conversation history' })
-        console.error('Error fetching conversation history:', error)
+        console.error('pages/api/conversation.ts - Error fetching conversation history:', error)
       }
       break
 
@@ -301,30 +321,23 @@ export default async function handler(
         user_email?: string
         course_name?: string
       }
-      console.log(
-        'id: ',
-        id,
-        'userEmail: ',
-        userEmail,
-        'course_name: ',
-        course_name,
-      )
+
       try {
         if (id) {
-          // Delete conversation
+          // Delete single conversation
           const { data, error } = await supabase
             .from('conversations')
             .delete()
             .eq('id', id)
           if (error) throw error
         } else if (userEmail && course_name) {
-          // Delete all conversations
-          console.log('deleting all conversations')
+          // Delete all conversations that are not in folders
           const { data, error } = await supabase
             .from('conversations')
             .delete()
             .eq('user_email', userEmail)
             .eq('project_name', course_name)
+            .is('folder_id', null)  // Only delete conversations that are not in folders
           if (error) throw error
         } else {
           res.status(400).json({ error: 'Invalid request parameters' })

@@ -1,10 +1,12 @@
 import { supabase } from '@/utils/supabaseClient'
 import { getAuth } from '@clerk/nextjs/server'
 import posthog from 'posthog-js'
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextApiRequest, NextApiResponse } from 'next'
 
-export const config = {
-  runtime: 'edge',
+type ApiResponse = {
+  message?: string
+  data?: any
+  error?: string
 }
 
 /**
@@ -14,23 +16,22 @@ export const config = {
  * @param {NextApiResponse} res - The outgoing HTTP response.
  * @returns A JSON response indicating the result of the delete operation.
  */
-export default async function deleteKey(req: NextRequest, res: NextResponse) {
+export default async function deleteKey(
+  req: NextApiRequest,
+  res: NextApiResponse<ApiResponse>
+) {
   // Check for the DELETE request method.
   if (req.method !== 'DELETE') {
-    return NextResponse.json({ error: 'Method not allowed' }, { status: 405 })
-    return
+    return res.status(405).json({ error: 'Method not allowed' })
   }
 
   // Get the current user's email
-  const currUserId = await getAuth(req).userId
+  const currUserId = getAuth(req).userId
   console.log('Deleting api key for: ', currUserId)
 
   // Ensure the user email is present
   if (!currUserId) {
-    return NextResponse.json(
-      { error: 'User email is required' },
-      { status: 401 },
-    )
+    return res.status(401).json({ error: 'User email is required' })
   }
 
   try {
@@ -51,10 +52,10 @@ export default async function deleteKey(req: NextRequest, res: NextResponse) {
     })
 
     // Respond with a success message and the data of the deleted key.
-    return NextResponse.json(
-      { message: 'API key deleted successfully', data },
-      { status: 200 },
-    )
+    return res.status(200).json({
+      message: 'API key deleted successfully',
+      data,
+    })
   } catch (error) {
     // Log the error for server-side debugging.
     console.error('Failed to delete API key:', error)
@@ -65,9 +66,8 @@ export default async function deleteKey(req: NextRequest, res: NextResponse) {
     })
 
     // Respond with a server error status and the error message.
-    return NextResponse.json(
-      { error: (error as Error).message },
-      { status: 500 },
-    )
+    return res.status(500).json({
+      error: (error as Error).message,
+    })
   }
 }

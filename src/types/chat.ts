@@ -38,6 +38,15 @@ export interface Message {
   conversation_id?: string
   created_at?: string
   updated_at?: string
+  feedback?: MessageFeedback
+  wasQueryRewritten?: boolean
+  queryRewriteText?: string
+}
+
+export type MessageFeedback = {
+  isPositive: boolean | null
+  category: string | null
+  details: string | null
 }
 
 export interface UIUCTool {
@@ -116,9 +125,9 @@ export interface ChatBody {
 }
 
 export interface ImageBody {
-  conversation: Conversation
-  course_name: string
+  contentArray: Content[]
   llmProviders: AllLLMProviders
+  model: AnySupportedModel
 }
 
 export interface ChatApiBody {

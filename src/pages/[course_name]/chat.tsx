@@ -11,6 +11,8 @@ import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { montserrat_heading } from 'fonts'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
+import Head from 'next/head'
+import { GUIDED_LEARNING_PROMPT } from '~/utils/app/const'
 
 const ChatPage: NextPage = () => {
   const clerk_user_outer = useUser()
@@ -27,6 +29,14 @@ const ChatPage: NextPage = () => {
     null,
   )
   const [isCourseMetadataLoading, setIsCourseMetadataLoading] = useState(true)
+  const [urlGuidedLearning, setUrlGuidedLearning] = useState(false)
+
+  // UseEffect to check URL parameters
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const guidedLearningParam = urlParams.get('guided_learning')
+    setUrlGuidedLearning(guidedLearningParam === 'true')
+  }, [router.query])
 
   // UseEffect to fetch course metadata
   useEffect(() => {
@@ -44,13 +54,26 @@ const ChatPage: NextPage = () => {
         `/api/UIUC-api/getCourseMetadata?course_name=${curr_course_name}`,
       )
       const data = await response.json()
+      
+      // If URL guided learning is enabled and course-wide guided learning is not,
+      // append the GUIDED_LEARNING_PROMPT to the system prompt if it's not already there
+      if (data.course_metadata && !data.course_metadata.guidedLearning) {
+        const urlParams = new URLSearchParams(window.location.search)
+        const guidedLearningParam = urlParams.get('guided_learning')
+        if (guidedLearningParam === 'true' && 
+            data.course_metadata.system_prompt && 
+            !data.course_metadata.system_prompt.includes(GUIDED_LEARNING_PROMPT)) {
+          data.course_metadata.system_prompt = data.course_metadata.system_prompt + GUIDED_LEARNING_PROMPT
+        }
+      }
+      
       setCourseMetadata(data.course_metadata)
       // console.log("Course Metadata in home: ", data.course_metadata)
       setIsCourseMetadataLoading(false)
       setIsLoading(false) // Set loading to false after fetching data
     }
     courseMetadata()
-  }, [courseName])
+  }, [courseName, urlGuidedLearning])
 
   // UseEffect to check user permissions and fetch user email
   useEffect(() => {
@@ -72,7 +95,7 @@ const ChatPage: NextPage = () => {
       } else {
         // 🆕 MAKE A NEW COURSE
         console.log('Course does not exist, redirecting to materials page')
-        router.push(`/${courseName}/materials`)
+        router.push(`/${courseName}/dashboard`)
       }
       // console.log(
       //   'Changing user email to: ',

@@ -66,11 +66,8 @@ export const getModelLogo = (modelType: string) => {
       return 'https://assets.kastan.ai/UofI-logo-white.jpg'
     case ProviderNames.Azure:
       return 'https://assets.kastan.ai/uiuc-chat-emails/msft-logo.png'
-    case ProviderNames.NCSAHostedVLLM:
-      return 'https://assets.kastan.ai/UofI-logo-white.jpg'
     default:
-      console.warn('Unknown model type: ', modelType)
-    // throw new Error(`Unknown model type: ${modelType}`)
+      throw new Error(`Unknown model type: ${modelType}`)
   }
 }
 export const ModelItem = forwardRef<
@@ -147,7 +144,7 @@ export const ModelItem = forwardRef<
           <div>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <Image
-                src={getModelLogo(modelType) || ''}
+                src={getModelLogo(modelType)}
                 alt={`${modelType} logo`}
                 width={20}
                 height={20}

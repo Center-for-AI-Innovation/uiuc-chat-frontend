@@ -12,7 +12,7 @@ const logConversationToSupabase = async (req: any, res: any) => {
     [
       {
         convo: conversation,
-        convo_id: conversation.id,
+        convo_id: await conversation.id.toString(),
         course_name: course_name,
         user_email: conversation.userEmail,
       },
@@ -22,7 +22,7 @@ const logConversationToSupabase = async (req: any, res: any) => {
     },
   )
   if (error) {
-    console.log('error form supabase:', error)
+    console.log('new error form supabase in logConversationToSupabase:', error)
   }
 
   // console.log('👇👇👇👇👇👇👇👇👇👇👇👇👇')
