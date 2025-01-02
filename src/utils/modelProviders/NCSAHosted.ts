@@ -83,7 +83,7 @@ export const getNCSAHostedModels = async (
       return ncsaHostedProvider as NCSAHostedProvider
     }
 
-    // ✅ HARD CODE ONLY ONE MODEL 
+    // ✅ HARD CODE ONLY ONE MODEL
     const ollamaModels = [NCSAHostedModels['llama3.1:8b-instruct-fp16']]
 
     // ❌ DYNAMICALLY show all HOT AND LOADED models
