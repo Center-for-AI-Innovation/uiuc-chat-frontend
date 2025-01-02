@@ -797,7 +797,6 @@ export const getOpenAIKey = (
   return key
 }
 
-import { POST as ollamaPost } from '@/app/api/chat/ollama/route'
 import { runOllamaChat } from '~/app/utils/ollama'
 import { openAIAzureChat } from './modelProviders/OpenAIAzureChat'
 import { runAnthropicChat } from '~/app/utils/anthropic'
@@ -811,7 +810,7 @@ export const routeModelRequest = async (
       🧠 ADD NEW LLM PROVIDERS HERE 🧠
   */
   const selectedConversation = chatBody.conversation!
-
+  let response: Response
   // Add this check at the beginning of the function
   if (!selectedConversation.model || !selectedConversation.model.id) {
     throw new Error('Conversation model is undefined or missing "id" property.')
@@ -834,7 +833,7 @@ export const routeModelRequest = async (
     )
   ) {
     // NCSA Hosted LLMs
-    const url = `/api/chat/vllm`
+    const url = `/api/chat/vlm`
     response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -847,6 +846,7 @@ export const routeModelRequest = async (
         stream: chatBody.stream,
       }),
     })
+    return response
   } else if (
     Object.values(NCSAHostedModelID).includes(
       selectedConversation.model.id as any,
@@ -865,6 +865,7 @@ export const routeModelRequest = async (
         ollamaProvider: chatBody!.llmProviders!.Ollama as OllamaProvider,
       }),
     })
+    return response
   } else if (
     Object.values(AnthropicModelID).includes(
       selectedConversation.model.id as any,
@@ -886,6 +887,7 @@ export const routeModelRequest = async (
         stream: chatBody.stream,
       }),
     })
+    return response
   } else if (
     Object.values(OllamaModelIDs).includes(selectedConversation.model.id as any)
   ) {
