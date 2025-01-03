@@ -157,7 +157,7 @@ const Home = ({
   // Use effects for setting up the course metadata and models depending on the course/project
   useEffect(() => {
     // Set model after we fetch available models
-    if (!llmProviders || Object.keys(llmProviders).length === 0) return
+    if (Object.keys(llmProviders).length == 0) return
     const model = selectBestModel(llmProviders)
 
     dispatch({

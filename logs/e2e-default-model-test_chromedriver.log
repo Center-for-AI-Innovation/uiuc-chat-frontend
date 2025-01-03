@@ -1,0 +1,3813 @@
+Starting ChromeDriver 131.0.6778.69 (77e2244bbcda3ab9362d5b8aeeb006a86a6d4832-refs/branch-heads/6778@{#2141}) on port 9515
+Only local connections are allowed.
+Please see https://chromedriver.chromium.org/security-considerations for suggestions on keeping ChromeDriver safe.
+ChromeDriver was started successfully on port 9515.
+[1735945261.732][INFO]: [bccd62d8d64911c9ef11a5672e37f382] COMMAND InitSession {
+   "capabilities": {
+      "alwaysMatch": {
+         "browserName": "chrome",
+         "goog:chromeOptions": {
+            "args": [ "--headless=new", "--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu" ]
+         }
+      },
+      "firstMatch": [ {
+      } ]
+   }
+}
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/ai-ta-frontend/node_modules/chromedriver/lib/chromedriver/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/ai-ta-frontend/node_modules/chromedriver/lib/chromedriver/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/ai-ta-frontend/node_modules/chromedriver/lib/chromedriver/Google Chrome.app/Contents/MacOS/Google Chrome
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/ai-ta-frontend/node_modules/chromedriver/lib/chromedriver/Chromium.app/Contents/MacOS/Chromium
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/Applications/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Applications/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/ai-ta-frontend/node_modules/chromedriver/lib/chromedriver/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/ai-ta-frontend/node_modules/.bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/ai-ta-frontend/node_modules/.bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/node_modules/.bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/node_modules/.bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /node_modules/.bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/.nvm/versions/node/v18.20.4/lib/node_modules/npm/node_modules/@npmcli/run-script/lib/node-gyp-bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /opt/homebrew/opt/postgresql@15/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/.nvm/versions/node/v18.20.4/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/.gem/ruby/3.3.6/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/.rubies/ruby-3.3.6/lib/ruby/gems/3.3.0/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/.rubies/ruby-3.3.6/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /opt/homebrew/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /opt/homebrew/sbin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /usr/local/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /System/Cryptexes/App/usr/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /usr/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /usr/sbin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /sbin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /usr/local/munki/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /usr/local/munkireport/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /opt/homebrew/opt/postgresql@15/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/.nvm/versions/node/v18.20.4/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/Library/Application Support/JetBrains/Toolbox/scripts/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/Library/Application Support/JetBrains/Toolbox/scripts/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/Applications/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Applications/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/ai-ta-frontend/node_modules/chromedriver/lib/chromedriver/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/ai-ta-frontend/node_modules/.bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/ai-ta-frontend/node_modules/.bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/node_modules/.bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/node_modules/.bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /node_modules/.bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/.nvm/versions/node/v18.20.4/lib/node_modules/npm/node_modules/@npmcli/run-script/lib/node-gyp-bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /opt/homebrew/opt/postgresql@15/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/.nvm/versions/node/v18.20.4/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/.gem/ruby/3.3.6/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/.rubies/ruby-3.3.6/lib/ruby/gems/3.3.0/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/.rubies/ruby-3.3.6/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /opt/homebrew/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /opt/homebrew/sbin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /usr/local/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /System/Cryptexes/App/usr/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /usr/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /usr/sbin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /sbin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /usr/local/munki/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /usr/local/munkireport/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /opt/homebrew/opt/postgresql@15/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/.nvm/versions/node/v18.20.4/bin/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/Library/Application Support/JetBrains/Toolbox/scripts/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/Library/Application Support/JetBrains/Toolbox/scripts/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[1735945261.732][INFO]: Browser search. Trying... /Users/drshika2/Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+[1735945261.732][INFO]: Browser search. Trying... /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+[1735945261.732][INFO]: Browser search. Found at  /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+[1735945261.733][INFO]: Populating Preferences file: {
+   "alternate_error_pages": {
+      "enabled": false
+   },
+   "autofill": {
+      "enabled": false
+   },
+   "browser": {
+      "check_default_browser": false
+   },
+   "distribution": {
+      "import_bookmarks": false,
+      "import_history": false,
+      "import_search_engine": false,
+      "make_chrome_default_for_user": false,
+      "skip_first_run_ui": true
+   },
+   "dns_prefetching": {
+      "enabled": false
+   },
+   "profile": {
+      "content_settings": {
+         "pattern_pairs": {
+            "https://*,*": {
+               "media-stream": {
+                  "audio": "Default",
+                  "video": "Default"
+               }
+            }
+         }
+      },
+      "default_content_setting_values": {
+         "geolocation": 1
+      },
+      "default_content_settings": {
+         "geolocation": 1,
+         "mouselock": 1,
+         "notifications": 1,
+         "popups": 1,
+         "ppapi-broker": 1
+      },
+      "password_manager_enabled": false
+   },
+   "safebrowsing": {
+      "enabled": false
+   },
+   "search": {
+      "suggest_enabled": false
+   },
+   "translate": {
+      "enabled": false
+   }
+}
+[1735945261.733][INFO]: Populating Local State file: {
+   "background_mode": {
+      "enabled": false
+   },
+   "ssl": {
+      "rev_checking": {
+         "enabled": false
+      }
+   }
+}
+[1735945261.733][INFO]: ChromeDriver supports communication with Chrome via pipes. This is more reliable and more secure.
+[1735945261.733][INFO]: Use the --remote-debugging-pipe Chrome switch instead of the default --remote-debugging-port to enable this communication mode.
+[1735945261.733][INFO]: Launching chrome: /Applications/Google Chrome.app/Contents/MacOS/Google Chrome --allow-pre-commit-input --disable-background-networking --disable-client-side-phishing-detection --disable-default-apps --disable-dev-shm-usage --disable-gpu --disable-hang-monitor --disable-popup-blocking --disable-prompt-on-repost --disable-sync --enable-automation --enable-logging=stderr --headless=new --log-level=0 --no-first-run --no-sandbox --no-service-autorun --password-store=basic --remote-debugging-port=0 --test-type=webdriver --use-mock-keychain --user-data-dir=/var/folders/zq/zxp8f4td2vx7dq5m0kctlj380000gq/T/.org.chromium.Chromium.POdJHW data:,
+[71297:259:0103/180101.808669:WARNING:chrome_main_delegate.cc(672)] This is Chrome version 131.0.6778.205 (not a warning)
+[71297:259:0103/180102.008423:INFO:chrome_browser_cloud_management_controller.cc(196)] No machine level policy manager exists.
+
+DevTools listening on ws://127.0.0.1:58992/devtools/browser/ac7a8c57-a17b-4e18-8507-221fe1f2ba6c
+[71303:259:0103/180102.054027:WARNING:viz_main_impl.cc(85)] VizNullHypothesis is disabled (not a warning)
+[1735945262.059][DEBUG]: DevTools HTTP Request: http://localhost:58992/json/version
+[1735945262.116][DEBUG]: DevTools HTTP Response: {
+   "Browser": "Chrome/131.0.6778.205",
+   "Protocol-Version": "1.3",
+   "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.0.0 Safari/537.36",
+   "V8-Version": "13.1.201.19",
+   "WebKit-Version": "537.36 (@81b36b9535e3e3b610a52df3da48cd81362ec860)",
+   "webSocketDebuggerUrl": "ws://localhost:58992/devtools/browser/ac7a8c57-a17b-4e18-8507-221fe1f2ba6c"
+}
+
+[1735945262.116][DEBUG]: DevTools HTTP Request: http://localhost:58992/json/list
+[1735945262.125][DEBUG]: DevTools HTTP Response: [ {
+   "description": "",
+   "devtoolsFrontendUrl": "/devtools/inspector.html?ws=localhost:58992/devtools/page/7D9E071CBFC0B9A381ED840CAFE62D1D",
+   "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+   "title": "",
+   "type": "page",
+   "url": "data:,",
+   "webSocketDebuggerUrl": "ws://localhost:58992/devtools/page/7D9E071CBFC0B9A381ED840CAFE62D1D"
+} ]
+
+[1735945262.128][INFO]: resolved localhost to ["::1","127.0.0.1"]
+[1735945262.139][DEBUG]: DevTools WebSocket Command: Target.getTargets (id=1) (session_id=) browser {
+}
+[1735945262.141][DEBUG]: DevTools WebSocket Response: Target.getTargets (id=1) (session_id=) browser {
+   "targetInfos": [ {
+      "attached": false,
+      "browserContextId": "2BF0F90608BDF73C4BADD9DFD6BE9CB6",
+      "canAccessOpener": false,
+      "targetId": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+      "title": "data:,",
+      "type": "page",
+      "url": "data:,"
+   } ]
+}
+[1735945262.141][DEBUG]: DevTools WebSocket Command: Target.attachToTarget (id=2) (session_id=) browser {
+   "flatten": true,
+   "targetId": "7D9E071CBFC0B9A381ED840CAFE62D1D"
+}
+[1735945262.144][DEBUG]: DevTools WebSocket Event: Target.attachedToTarget (session_id=) browser {
+   "sessionId": "75641A6361A3B7AD5256EC08CB6D3E5D",
+   "targetInfo": {
+      "attached": true,
+      "browserContextId": "2BF0F90608BDF73C4BADD9DFD6BE9CB6",
+      "canAccessOpener": false,
+      "targetId": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+      "title": "data:,",
+      "type": "page",
+      "url": "data:,"
+   },
+   "waitingForDebugger": false
+}
+[1735945262.144][DEBUG]: DevTools WebSocket Response: Target.attachToTarget (id=2) (session_id=) browser {
+   "sessionId": "75641A6361A3B7AD5256EC08CB6D3E5D"
+}
+[1735945262.144][DEBUG]: DevTools WebSocket Command: Page.enable (id=3) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945262.144][DEBUG]: DevTools WebSocket Command: Page.addScriptToEvaluateOnNewDocument (id=4) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "source": "(function () {window.cdc_adoQpoasnfa76pfcZLmcfl_Array = window.Array;window.cdc_adoQpoasnfa76pfcZLmcfl_Object = window.Object;window.cdc_adoQpoasnfa76pfcZLmcfl_Promise = window.Promise;window.cdc_a..."
+}
+[1735945262.146][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=5) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "(function () {window.cdc_adoQpoasnfa76pfcZLmcfl_Array = window.Array;window.cdc_adoQpoasnfa76pfcZLmcfl_Object = window.Object;window.cdc_adoQpoasnfa76pfcZLmcfl_Promise = window.Promise;window.cdc_a..."
+}
+[1735945262.146][DEBUG]: DevTools WebSocket Command: Log.enable (id=6) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945262.146][DEBUG]: DevTools WebSocket Command: Target.setAutoAttach (id=7) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "autoAttach": true,
+   "flatten": true,
+   "waitForDebuggerOnStart": false
+}
+[1735945262.146][DEBUG]: DevTools WebSocket Response: Page.enable (id=3) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945262.149][DEBUG]: DevTools WebSocket Response: Page.addScriptToEvaluateOnNewDocument (id=4) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "identifier": "1"
+}
+[1735945262.151][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=5) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "type": "undefined"
+   }
+}
+[1735945262.151][DEBUG]: DevTools WebSocket Response: Log.enable (id=6) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945262.152][DEBUG]: DevTools WebSocket Response: Target.setAutoAttach (id=7) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945262.152][DEBUG]: DevTools WebSocket Command: Runtime.enable (id=8) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945262.153][DEBUG]: DevTools WebSocket Event: Runtime.executionContextCreated (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "context": {
+      "auxData": {
+         "frameId": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "isDefault": true,
+         "type": "default"
+      },
+      "id": 1,
+      "name": "",
+      "origin": "://",
+      "uniqueId": "-8852619775380334257.-6734327230448715343"
+   }
+}
+[1735945262.153][DEBUG]: DevTools WebSocket Response: Runtime.enable (id=8) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945262.153][DEBUG]: DevTools WebSocket Command: Runtime.enable (id=9) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945262.153][DEBUG]: DevTools WebSocket Response: Runtime.enable (id=9) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945262.153][INFO]: [bccd62d8d64911c9ef11a5672e37f382] RESPONSE InitSession {
+   "capabilities": {
+      "acceptInsecureCerts": false,
+      "browserName": "chrome",
+      "browserVersion": "131.0.6778.205",
+      "chrome": {
+         "chromedriverVersion": "131.0.6778.69 (77e2244bbcda3ab9362d5b8aeeb006a86a6d4832-refs/branch-heads/6778@{#2141})",
+         "userDataDir": "/var/folders/zq/zxp8f4td2vx7dq5m0kctlj380000gq/T/.org.chromium.Chromium.POdJHW"
+      },
+      "fedcm:accounts": true,
+      "goog:chromeOptions": {
+         "debuggerAddress": "localhost:58992"
+      },
+      "networkConnectionEnabled": false,
+      "pageLoadStrategy": "normal",
+      "platformName": "mac",
+      "proxy": {
+      },
+      "setWindowRect": true,
+      "strictFileInteractability": false,
+      "timeouts": {
+         "implicit": 0,
+         "pageLoad": 300000,
+         "script": 30000
+      },
+      "unhandledPromptBehavior": "dismiss and notify",
+      "webauthn:extension:credBlob": true,
+      "webauthn:extension:largeBlob": true,
+      "webauthn:extension:minPinLength": true,
+      "webauthn:extension:prf": true,
+      "webauthn:virtualAuthenticators": true
+   },
+   "sessionId": "bccd62d8d64911c9ef11a5672e37f382"
+}
+[1735945262.176][DEBUG]: DevTools WebSocket Event: Page.frameResized (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945262.178][INFO]: [bccd62d8d64911c9ef11a5672e37f382] COMMAND SetWindowRect {
+   "height": 800,
+   "width": 1200
+}
+[1735945262.178][INFO]: Waiting for pending navigations...
+[1735945262.178][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=10) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945262.179][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=10) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945262.179][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=11) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "document",
+   "objectGroup": "69168b94-0e9f-4861-8ee0-5f93cfc02751"
+}
+[1735945262.179][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=11) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "className": "HTMLDocument",
+      "description": "#document",
+      "objectId": "-3431650343928411367.1.1",
+      "subtype": "node",
+      "type": "object"
+   }
+}
+[1735945262.179][DEBUG]: DevTools WebSocket Command: DOM.describeNode (id=12) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "objectId": "-3431650343928411367.1.1"
+}
+[1735945262.179][DEBUG]: DevTools WebSocket Response: DOM.describeNode (id=12) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "node": {
+      "backendNodeId": 1,
+      "baseURL": "data:,",
+      "childNodeCount": 1,
+      "compatibilityMode": "NoQuirksMode",
+      "documentURL": "data:,",
+      "localName": "",
+      "nodeId": 0,
+      "nodeName": "#document",
+      "nodeType": 9,
+      "nodeValue": "",
+      "xmlVersion": ""
+   }
+}
+[1735945262.180][DEBUG]: DevTools WebSocket Command: Runtime.releaseObjectGroup (id=13) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "objectGroup": "69168b94-0e9f-4861-8ee0-5f93cfc02751"
+}
+[1735945262.180][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=14) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "awaitPromise": false,
+   "expression": "document.readyState",
+   "returnByValue": true,
+   "uniqueContextId": "-8852619775380334257.-6734327230448715343"
+}
+[1735945262.180][DEBUG]: DevTools WebSocket Response: Runtime.releaseObjectGroup (id=13) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945262.180][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=14) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "type": "string",
+      "value": "complete"
+   }
+}
+[1735945262.180][INFO]: Done waiting for pending navigations. Status: ok
+[1735945262.180][DEBUG]: DevTools WebSocket Command: Browser.getWindowForTarget (id=15) (session_id=) browser {
+   "targetId": "7D9E071CBFC0B9A381ED840CAFE62D1D"
+}
+[1735945262.180][DEBUG]: DevTools WebSocket Response: Browser.getWindowForTarget (id=15) (session_id=) browser {
+   "bounds": {
+      "height": 1011,
+      "left": 22,
+      "top": 47,
+      "width": 1200,
+      "windowState": "normal"
+   },
+   "windowId": 1523040908
+}
+[1735945262.180][DEBUG]: DevTools WebSocket Command: Browser.setWindowBounds (id=16) (session_id=) browser {
+   "bounds": {
+      "height": 800,
+      "width": 1200
+   },
+   "windowId": 1523040908
+}
+[1735945262.182][DEBUG]: DevTools WebSocket Response: Browser.setWindowBounds (id=16) (session_id=) browser {
+}
+[1735945262.194][DEBUG]: DevTools WebSocket Command: Browser.getWindowBounds (id=17) (session_id=) browser {
+   "windowId": 1523040908
+}
+[1735945262.194][DEBUG]: DevTools WebSocket Event: Page.frameResized (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945262.194][DEBUG]: DevTools WebSocket Response: Browser.getWindowBounds (id=17) (session_id=) browser {
+   "bounds": {
+      "height": 800,
+      "left": 22,
+      "top": 47,
+      "width": 1200,
+      "windowState": "normal"
+   }
+}
+[1735945262.194][DEBUG]: DevTools WebSocket Command: Browser.getWindowForTarget (id=18) (session_id=) browser {
+   "targetId": "7D9E071CBFC0B9A381ED840CAFE62D1D"
+}
+[1735945262.194][DEBUG]: DevTools WebSocket Response: Browser.getWindowForTarget (id=18) (session_id=) browser {
+   "bounds": {
+      "height": 800,
+      "left": 22,
+      "top": 47,
+      "width": 1200,
+      "windowState": "normal"
+   },
+   "windowId": 1523040908
+}
+[1735945262.194][INFO]: Waiting for pending navigations...
+[1735945262.194][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=19) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945262.194][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=19) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945262.194][INFO]: Done waiting for pending navigations. Status: ok
+[1735945262.194][INFO]: [bccd62d8d64911c9ef11a5672e37f382] RESPONSE SetWindowRect {
+   "height": 800,
+   "width": 1200,
+   "x": 22,
+   "y": 47
+}
+[1735945262.196][INFO]: [bccd62d8d64911c9ef11a5672e37f382] COMMAND Navigate {
+   "url": "https://www.uiuc.chat/ece120/chat"
+}
+[1735945262.196][INFO]: Waiting for pending navigations...
+[1735945262.196][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=20) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945262.197][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=20) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945262.197][INFO]: Done waiting for pending navigations. Status: ok
+[1735945262.197][DEBUG]: DevTools WebSocket Command: Page.navigate (id=21) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "url": "https://www.uiuc.chat/ece120/chat"
+}
+[1735945262.199][DEBUG]: DevTools WebSocket Event: Page.frameStartedLoading (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameId": "7D9E071CBFC0B9A381ED840CAFE62D1D"
+}
+[1735945262.494][DEBUG]: DevTools WebSocket Response: Page.navigate (id=21) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameId": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+   "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5"
+}
+[1735945262.494][INFO]: Waiting for pending navigations...
+[1735945262.494][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=22) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945262.496][DEBUG]: DevTools WebSocket Event: Runtime.executionContextsCleared (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945262.497][DEBUG]: DevTools WebSocket Event: Runtime.executionContextsCleared (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945262.497][DEBUG]: DevTools WebSocket Event: Page.frameNavigated (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frame": {
+      "adFrameStatus": {
+         "adFrameType": "none"
+      },
+      "crossOriginIsolatedContextType": "NotIsolated",
+      "domainAndRegistry": "uiuc.chat",
+      "gatedAPIFeatures": [  ],
+      "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+      "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+      "mimeType": "text/html",
+      "secureContextType": "Secure",
+      "securityOrigin": "https://uiuc.chat",
+      "url": "https://uiuc.chat/ece120/chat"
+   },
+   "type": "Navigation"
+}
+[1735945262.506][DEBUG]: DevTools WebSocket Event: Runtime.executionContextCreated (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "context": {
+      "auxData": {
+         "frameId": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "isDefault": true,
+         "type": "default"
+      },
+      "id": 1,
+      "name": "",
+      "origin": "https://uiuc.chat",
+      "uniqueId": "-2161854669971170314.-7625416526549133954"
+   }
+}
+[1735945262.509][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=22) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945263.009][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=23) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945263.032][DEBUG]: DevTools WebSocket Event: Page.navigatedWithinDocument (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameId": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+   "navigationType": "historyApi",
+   "url": "https://uiuc.chat/ece120/chat"
+}
+[1735945263.032][DEBUG]: DevTools WebSocket Event: Page.domContentEventFired (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "timestamp": 24858.422831
+}
+[1735945263.032][DEBUG]: DevTools WebSocket Event: Page.loadEventFired (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "timestamp": 24858.424283
+}
+[1735945263.032][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=24) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "awaitPromise": false,
+   "expression": "document.readyState",
+   "returnByValue": true,
+   "uniqueContextId": "-2161854669971170314.-7625416526549133954"
+}
+[1735945263.032][DEBUG]: DevTools WebSocket Event: Page.frameStoppedLoading (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameId": "7D9E071CBFC0B9A381ED840CAFE62D1D"
+}
+[1735945263.032][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=23) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945263.039][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=24) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "type": "string",
+      "value": "complete"
+   }
+}
+[1735945263.039][INFO]: Done waiting for pending navigations. Status: ok
+[1735945263.039][INFO]: [bccd62d8d64911c9ef11a5672e37f382] RESPONSE Navigate
+[1735945263.045][DEBUG]: DevTools WebSocket Event: Target.attachedToTarget (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "sessionId": "6CE58BC25756AB1AB36E29C52605AD13",
+   "targetInfo": {
+      "attached": true,
+      "browserContextId": "2BF0F90608BDF73C4BADD9DFD6BE9CB6",
+      "canAccessOpener": false,
+      "targetId": "875B32180A5C6E836A41CE2F08CE3AA4",
+      "title": "clerk-timers",
+      "type": "worker",
+      "url": "blob:https://uiuc.chat/42ec575f-2281-4dcd-a6b1-9fc43a65ea3f"
+   },
+   "waitingForDebugger": false
+}
+[71297:259:0103/180103.045261:INFO:CONSOLE(0)] "<meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">", source: https://uiuc.chat/ece120/chat (0)
+[1735945263.045][DEBUG]: DevTools WebSocket Event: Log.entryAdded (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "entry": {
+      "level": "warning",
+      "source": "other",
+      "text": "\u003Cmeta name=\"apple-mobile-web-app-capable\" content=\"yes\"> is deprecated. Please include \u003Cmeta name=\"mobile-web-app-capable\" content=\"yes\">",
+      "timestamp": 1.735945263045213e+12,
+      "url": "https://uiuc.chat/ece120/chat"
+   }
+}
+[1735945263.046][DEBUG]: DevTools WebSocket Event: Page.frameStartedLoading (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameId": "7D9E071CBFC0B9A381ED840CAFE62D1D"
+}
+[1735945263.046][DEBUG]: DevTools WebSocket Event: Page.navigatedWithinDocument (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameId": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+   "navigationType": "historyApi",
+   "url": "https://uiuc.chat/ece120/chat"
+}
+[1735945263.046][DEBUG]: DevTools WebSocket Event: Page.frameStoppedLoading (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameId": "7D9E071CBFC0B9A381ED840CAFE62D1D"
+}
+[71297:259:0103/180103.190969:INFO:CONSOLE(1)] "Maintenance mode [object Object]", source: https://uiuc.chat/_next/static/chunks/pages/_app-ea8bec5069a60aac.js (1)
+[1735945263.191][DEBUG]: DevTools WebSocket Event: Runtime.consoleAPICalled (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "args": [ {
+      "type": "string",
+      "value": "Maintenance mode"
+   }, {
+      "className": "Object",
+      "description": "Object",
+      "objectId": "65743134801603097.1.1",
+      "preview": {
+         "description": "Object",
+         "overflow": false,
+         "properties": [ {
+            "name": "isMaintenanceMode",
+            "type": "boolean",
+            "value": "false"
+         } ],
+         "type": "object"
+      },
+      "type": "object"
+   } ],
+   "executionContextId": 1,
+   "stackTrace": {
+      "callFrames": [ {
+         "columnNumber": 201371,
+         "functionName": "checkMaintenanceMode",
+         "lineNumber": 0,
+         "scriptId": "12",
+         "url": "https://uiuc.chat/_next/static/chunks/pages/_app-ea8bec5069a60aac.js"
+      } ]
+   },
+   "timestamp": 1.735945263190895e+12,
+   "type": "log"
+}
+[1735945263.342][DEBUG]: DevTools WebSocket Event: Page.frameAttached (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameId": "795B0DFC9AB4AC9F59B5FD76D6BFA22B",
+   "parentFrameId": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+   "stack": {
+      "callFrames": [ {
+         "columnNumber": 21543,
+         "functionName": "de",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 21801,
+         "functionName": "he",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 22655,
+         "functionName": "shadowRoot",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 26343,
+         "functionName": "De",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 76784,
+         "functionName": "onSerialize",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 16896,
+         "functionName": "ae",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 17635,
+         "functionName": "ae",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 75722,
+         "functionName": "Tt.t.mirror",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 76507,
+         "functionName": "Tt",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 78942,
+         "functionName": "q",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 79050,
+         "functionName": "Vt",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 271481,
+         "functionName": "value",
+         "lineNumber": 0,
+         "scriptId": "12",
+         "url": "https://uiuc.chat/_next/static/chunks/pages/_app-ea8bec5069a60aac.js"
+      }, {
+         "columnNumber": 269133,
+         "functionName": "",
+         "lineNumber": 0,
+         "scriptId": "12",
+         "url": "https://uiuc.chat/_next/static/chunks/pages/_app-ea8bec5069a60aac.js"
+      }, {
+         "columnNumber": 224506,
+         "functionName": "y.onload",
+         "lineNumber": 0,
+         "scriptId": "12",
+         "url": "https://uiuc.chat/_next/static/chunks/pages/_app-ea8bec5069a60aac.js"
+      } ]
+   }
+}
+[1735945263.342][DEBUG]: DevTools WebSocket Event: Page.frameRequestedNavigation (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "disposition": "currentTab",
+   "frameId": "795B0DFC9AB4AC9F59B5FD76D6BFA22B",
+   "reason": "initialFrameNavigation",
+   "url": "about:blank"
+}
+[1735945263.342][DEBUG]: DevTools WebSocket Event: Page.frameNavigated (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frame": {
+      "adFrameStatus": {
+         "adFrameType": "none",
+         "explanations": [  ]
+      },
+      "crossOriginIsolatedContextType": "NotIsolated",
+      "domainAndRegistry": "",
+      "gatedAPIFeatures": [  ],
+      "id": "795B0DFC9AB4AC9F59B5FD76D6BFA22B",
+      "loaderId": "8641DBE895ACC3E594EB1A0AC14F3C03",
+      "mimeType": "text/html",
+      "name": "",
+      "parentId": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+      "secureContextType": "Secure",
+      "securityOrigin": "://",
+      "url": "about:blank"
+   },
+   "type": "Navigation"
+}
+[1735945263.342][DEBUG]: DevTools WebSocket Event: Page.frameStartedLoading (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameId": "795B0DFC9AB4AC9F59B5FD76D6BFA22B"
+}
+[1735945263.343][DEBUG]: DevTools WebSocket Event: Runtime.executionContextCreated (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "context": {
+      "auxData": {
+         "frameId": "795B0DFC9AB4AC9F59B5FD76D6BFA22B",
+         "isDefault": true,
+         "type": "default"
+      },
+      "id": 2,
+      "name": "",
+      "origin": "https://uiuc.chat",
+      "uniqueId": "1382237411437925334.-6910272359283766111"
+   }
+}
+[1735945263.343][DEBUG]: DevTools WebSocket Event: Page.frameStoppedLoading (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameId": "795B0DFC9AB4AC9F59B5FD76D6BFA22B"
+}
+[1735945263.343][DEBUG]: DevTools WebSocket Event: Page.frameSubtreeWillBeDetached (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameId": "795B0DFC9AB4AC9F59B5FD76D6BFA22B"
+}
+[1735945263.344][DEBUG]: DevTools WebSocket Event: Page.frameDetached (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameId": "795B0DFC9AB4AC9F59B5FD76D6BFA22B",
+   "reason": "remove"
+}
+[1735945263.344][DEBUG]: DevTools WebSocket Event: Runtime.executionContextDestroyed (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "executionContextId": 2,
+   "executionContextUniqueId": "1382237411437925334.-6910272359283766111"
+}
+[1735945263.344][DEBUG]: DevTools WebSocket Event: Page.frameAttached (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameId": "E97A3A6AC690B61DBE84410A88238B5B",
+   "parentFrameId": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+   "stack": {
+      "callFrames": [ {
+         "columnNumber": 2760,
+         "functionName": "v",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 3033,
+         "functionName": "b",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 3815,
+         "functionName": "shadowRoot",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 16978,
+         "functionName": "ae",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 17635,
+         "functionName": "ae",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 75722,
+         "functionName": "Tt.t.mirror",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 76507,
+         "functionName": "Tt",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 78942,
+         "functionName": "q",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 79050,
+         "functionName": "Vt",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 271481,
+         "functionName": "value",
+         "lineNumber": 0,
+         "scriptId": "12",
+         "url": "https://uiuc.chat/_next/static/chunks/pages/_app-ea8bec5069a60aac.js"
+      }, {
+         "columnNumber": 269133,
+         "functionName": "",
+         "lineNumber": 0,
+         "scriptId": "12",
+         "url": "https://uiuc.chat/_next/static/chunks/pages/_app-ea8bec5069a60aac.js"
+      }, {
+         "columnNumber": 224506,
+         "functionName": "y.onload",
+         "lineNumber": 0,
+         "scriptId": "12",
+         "url": "https://uiuc.chat/_next/static/chunks/pages/_app-ea8bec5069a60aac.js"
+      } ]
+   }
+}
+[1735945263.344][DEBUG]: DevTools WebSocket Event: Page.frameRequestedNavigation (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "disposition": "currentTab",
+   "frameId": "E97A3A6AC690B61DBE84410A88238B5B",
+   "reason": "initialFrameNavigation",
+   "url": "about:blank"
+}
+[1735945263.344][DEBUG]: DevTools WebSocket Event: Page.frameNavigated (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frame": {
+      "adFrameStatus": {
+         "adFrameType": "none",
+         "explanations": [  ]
+      },
+      "crossOriginIsolatedContextType": "NotIsolated",
+      "domainAndRegistry": "",
+      "gatedAPIFeatures": [  ],
+      "id": "E97A3A6AC690B61DBE84410A88238B5B",
+      "loaderId": "DC878C210F293C25333B0F55D53251B4",
+      "mimeType": "text/html",
+      "name": "",
+      "parentId": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+      "secureContextType": "Secure",
+      "securityOrigin": "://",
+      "url": "about:blank"
+   },
+   "type": "Navigation"
+}
+[1735945263.344][DEBUG]: DevTools WebSocket Event: Page.frameStartedLoading (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameId": "E97A3A6AC690B61DBE84410A88238B5B"
+}
+[1735945263.345][DEBUG]: DevTools WebSocket Event: Runtime.executionContextCreated (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "context": {
+      "auxData": {
+         "frameId": "E97A3A6AC690B61DBE84410A88238B5B",
+         "isDefault": true,
+         "type": "default"
+      },
+      "id": 3,
+      "name": "",
+      "origin": "https://uiuc.chat",
+      "uniqueId": "4176962157807066414.-5526257794184326081"
+   }
+}
+[1735945263.345][DEBUG]: DevTools WebSocket Event: Page.frameStoppedLoading (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameId": "E97A3A6AC690B61DBE84410A88238B5B"
+}
+[1735945263.345][DEBUG]: DevTools WebSocket Event: Page.frameSubtreeWillBeDetached (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameId": "E97A3A6AC690B61DBE84410A88238B5B"
+}
+[1735945263.359][DEBUG]: DevTools WebSocket Event: Page.frameDetached (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameId": "E97A3A6AC690B61DBE84410A88238B5B",
+   "reason": "remove"
+}
+[1735945263.359][DEBUG]: DevTools WebSocket Event: Runtime.executionContextDestroyed (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "executionContextId": 3,
+   "executionContextUniqueId": "4176962157807066414.-5526257794184326081"
+}
+[1735945263.362][DEBUG]: DevTools WebSocket Event: Target.attachedToTarget (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "sessionId": "E05B1324484D62EAC84B01B309A88398",
+   "targetInfo": {
+      "attached": true,
+      "browserContextId": "2BF0F90608BDF73C4BADD9DFD6BE9CB6",
+      "canAccessOpener": false,
+      "targetId": "D9735545A77FAFDADA2F7002CE4C5BE3",
+      "title": "clerk-timers",
+      "type": "worker",
+      "url": "blob:https://uiuc.chat/dbc6cbf9-5b3a-4bb9-82c3-d3102596f612"
+   },
+   "waitingForDebugger": false
+}
+[71297:259:0103/180103.395187:INFO:CONSOLE(1)] "setting user email as posthog user:  01942e66-9735-78e5-bc3a-5951591760d5", source: https://app.posthog.com/static/recorder-v2.js?v=1.96.0 (1)
+[1735945263.395][DEBUG]: DevTools WebSocket Event: Runtime.consoleAPICalled (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "args": [ {
+      "type": "string",
+      "value": "setting user email as posthog user: "
+   }, {
+      "type": "string",
+      "value": "01942e66-9735-78e5-bc3a-5951591760d5"
+   } ],
+   "executionContextId": 1,
+   "stackTrace": {
+      "callFrames": [ {
+         "columnNumber": 103626,
+         "functionName": "",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 2569,
+         "functionName": "",
+         "lineNumber": 0,
+         "scriptId": "19",
+         "url": "https://uiuc.chat/_next/static/chunks/pages/%5Bcourse_name%5D/chat-3e29c2557075a7a6.js"
+      }, {
+         "columnNumber": 84179,
+         "functionName": "Rj",
+         "lineNumber": 8,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      }, {
+         "columnNumber": 113178,
+         "functionName": "Ik",
+         "lineNumber": 8,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      }, {
+         "columnNumber": 107726,
+         "functionName": "w",
+         "lineNumber": 8,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      }, {
+         "columnNumber": 1363,
+         "functionName": "J",
+         "lineNumber": 32,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      }, {
+         "columnNumber": 1893,
+         "functionName": "R",
+         "lineNumber": 32,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      } ]
+   },
+   "timestamp": 1.735945263395145e+12,
+   "type": "log"
+}
+[71297:259:0103/180103.396478:INFO:CONSOLE(1)] "react-i18next:: You will need to pass in an i18next instance by using initReactI18next", source: https://app.posthog.com/static/recorder-v2.js?v=1.96.0 (1)
+[1735945263.397][DEBUG]: DevTools WebSocket Event: Runtime.consoleAPICalled (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "args": [ {
+      "type": "string",
+      "value": "react-i18next:: You will need to pass in an i18next instance by using initReactI18next"
+   } ],
+   "executionContextId": 1,
+   "stackTrace": {
+      "callFrames": [ {
+         "columnNumber": 103626,
+         "functionName": "",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 91642,
+         "functionName": "utils_warn",
+         "lineNumber": 15,
+         "scriptId": "12",
+         "url": "https://uiuc.chat/_next/static/chunks/pages/_app-ea8bec5069a60aac.js"
+      }, {
+         "columnNumber": 91872,
+         "functionName": "utils_warnOnce",
+         "lineNumber": 15,
+         "scriptId": "12",
+         "url": "https://uiuc.chat/_next/static/chunks/pages/_app-ea8bec5069a60aac.js"
+      }, {
+         "columnNumber": 94423,
+         "functionName": "useTranslation_useTranslation",
+         "lineNumber": 15,
+         "scriptId": "12",
+         "url": "https://uiuc.chat/_next/static/chunks/pages/_app-ea8bec5069a60aac.js"
+      }, {
+         "columnNumber": 126634,
+         "functionName": "home",
+         "lineNumber": 0,
+         "scriptId": "29",
+         "url": "https://uiuc.chat/_next/static/chunks/7754-71f6bba5aaebcd9f.js"
+      }, {
+         "columnNumber": 60991,
+         "functionName": "Xh",
+         "lineNumber": 8,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      }, {
+         "columnNumber": 119446,
+         "functionName": "x",
+         "lineNumber": 8,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      }, {
+         "columnNumber": 99131,
+         "functionName": "Vk",
+         "lineNumber": 8,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      }, {
+         "columnNumber": 98998,
+         "functionName": "",
+         "lineNumber": 8,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      }, {
+         "columnNumber": 99005,
+         "functionName": "Jk",
+         "lineNumber": 8,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      }, {
+         "columnNumber": 94049,
+         "functionName": "Hk",
+         "lineNumber": 8,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      }, {
+         "columnNumber": 1363,
+         "functionName": "J",
+         "lineNumber": 32,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      }, {
+         "columnNumber": 1893,
+         "functionName": "R",
+         "lineNumber": 32,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      } ]
+   },
+   "timestamp": 1.735945263396446e+12,
+   "type": "warning"
+}
+[71297:259:0103/180103.398242:INFO:CONSOLE(1)] "isInitialSetupDone:  false", source: https://app.posthog.com/static/recorder-v2.js?v=1.96.0 (1)
+[1735945263.398][DEBUG]: DevTools WebSocket Event: Runtime.consoleAPICalled (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "args": [ {
+      "type": "string",
+      "value": "isInitialSetupDone: "
+   }, {
+      "type": "boolean",
+      "value": false
+   } ],
+   "executionContextId": 1,
+   "stackTrace": {
+      "callFrames": [ {
+         "columnNumber": 103626,
+         "functionName": "",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 132020,
+         "functionName": "initialSetup",
+         "lineNumber": 0,
+         "scriptId": "29",
+         "url": "https://uiuc.chat/_next/static/chunks/7754-71f6bba5aaebcd9f.js"
+      }, {
+         "columnNumber": 132860,
+         "functionName": "",
+         "lineNumber": 0,
+         "scriptId": "29",
+         "url": "https://uiuc.chat/_next/static/chunks/7754-71f6bba5aaebcd9f.js"
+      }, {
+         "columnNumber": 84179,
+         "functionName": "Rj",
+         "lineNumber": 8,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      }, {
+         "columnNumber": 113178,
+         "functionName": "Ik",
+         "lineNumber": 8,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      }, {
+         "columnNumber": 107726,
+         "functionName": "w",
+         "lineNumber": 8,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      }, {
+         "columnNumber": 1363,
+         "functionName": "J",
+         "lineNumber": 32,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      }, {
+         "columnNumber": 1893,
+         "functionName": "R",
+         "lineNumber": 32,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      } ]
+   },
+   "timestamp": 1.735945263398216e+12,
+   "type": "log"
+}
+[71297:259:0103/180103.506911:INFO:CONSOLE(1)] "isInitialSetupDone:  false", source: https://app.posthog.com/static/recorder-v2.js?v=1.96.0 (1)
+[1735945263.507][DEBUG]: DevTools WebSocket Event: Runtime.consoleAPICalled (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "args": [ {
+      "type": "string",
+      "value": "isInitialSetupDone: "
+   }, {
+      "type": "boolean",
+      "value": false
+   } ],
+   "executionContextId": 1,
+   "stackTrace": {
+      "callFrames": [ {
+         "columnNumber": 103626,
+         "functionName": "",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 132020,
+         "functionName": "initialSetup",
+         "lineNumber": 0,
+         "scriptId": "29",
+         "url": "https://uiuc.chat/_next/static/chunks/7754-71f6bba5aaebcd9f.js"
+      }, {
+         "columnNumber": 132860,
+         "functionName": "",
+         "lineNumber": 0,
+         "scriptId": "29",
+         "url": "https://uiuc.chat/_next/static/chunks/7754-71f6bba5aaebcd9f.js"
+      }, {
+         "columnNumber": 84179,
+         "functionName": "Rj",
+         "lineNumber": 8,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      }, {
+         "columnNumber": 113178,
+         "functionName": "Ik",
+         "lineNumber": 8,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      }, {
+         "columnNumber": 107726,
+         "functionName": "w",
+         "lineNumber": 8,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      }, {
+         "columnNumber": 1363,
+         "functionName": "J",
+         "lineNumber": 32,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      }, {
+         "columnNumber": 1893,
+         "functionName": "R",
+         "lineNumber": 32,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      } ]
+   },
+   "timestamp": 1.73594526350687e+12,
+   "type": "log"
+}
+[71297:259:0103/180103.715679:INFO:CONSOLE(1)] "No need to migrate conversations", source: https://app.posthog.com/static/recorder-v2.js?v=1.96.0 (1)
+[1735945263.716][DEBUG]: DevTools WebSocket Event: Runtime.consoleAPICalled (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "args": [ {
+      "type": "string",
+      "value": "No need to migrate conversations"
+   } ],
+   "executionContextId": 1,
+   "stackTrace": {
+      "callFrames": [ {
+         "columnNumber": 103626,
+         "functionName": "",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 114382,
+         "functionName": "",
+         "lineNumber": 0,
+         "scriptId": "29",
+         "url": "https://uiuc.chat/_next/static/chunks/7754-71f6bba5aaebcd9f.js"
+      }, {
+         "columnNumber": 84179,
+         "functionName": "Rj",
+         "lineNumber": 8,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      }, {
+         "columnNumber": 113178,
+         "functionName": "Ik",
+         "lineNumber": 8,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      }, {
+         "columnNumber": 111562,
+         "functionName": "",
+         "lineNumber": 8,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      }, {
+         "columnNumber": 111628,
+         "functionName": "Qk",
+         "lineNumber": 8,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      }, {
+         "columnNumber": 96297,
+         "functionName": "Fk",
+         "lineNumber": 8,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      }, {
+         "columnNumber": 44900,
+         "functionName": "jg",
+         "lineNumber": 8,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      }, {
+         "columnNumber": 93662,
+         "functionName": "",
+         "lineNumber": 8,
+         "scriptId": "11",
+         "url": "https://uiuc.chat/_next/static/chunks/framework-d2b05977d59d0194.js"
+      } ]
+   },
+   "timestamp": 1.735945263715637e+12,
+   "type": "log"
+}
+[71297:259:0103/180103.818787:INFO:CONSOLE(1)] "[GSI_LOGGER]: Your client application uses one of the Google One Tap prompt UI status methods that may stop functioning when FedCM becomes mandatory. Refer to the migration guide to update your code accordingly and opt-in to FedCM to test your changes. Learn more: https://developers.google.com/identity/gsi/web/guides/fedcm-migration?s=dc#display_moment and https://developers.google.com/identity/gsi/web/guides/fedcm-migration?s=dc#skipped_moment", source: https://app.posthog.com/static/recorder-v2.js?v=1.96.0 (1)
+[1735945263.819][DEBUG]: DevTools WebSocket Event: Runtime.consoleAPICalled (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "args": [ {
+      "type": "string",
+      "value": "[GSI_LOGGER]: Your client application uses one of the Google One Tap prompt UI status methods that may stop functioning when FedCM becomes mandatory. Refer to the migration guide to update your cod..."
+   } ],
+   "executionContextId": 1,
+   "stackTrace": {
+      "callFrames": [ {
+         "columnNumber": 103626,
+         "functionName": "",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 418,
+         "functionName": "_.O",
+         "lineNumber": 171,
+         "scriptId": "45",
+         "url": "https://accounts.google.com/gsi/client"
+      }, {
+         "columnNumber": 256,
+         "functionName": "ls.ga",
+         "lineNumber": 309,
+         "scriptId": "45",
+         "url": "https://accounts.google.com/gsi/client"
+      }, {
+         "columnNumber": 303,
+         "functionName": "ar.ga",
+         "lineNumber": 344,
+         "scriptId": "45",
+         "url": "https://accounts.google.com/gsi/client"
+      }, {
+         "columnNumber": 33,
+         "functionName": "fr",
+         "lineNumber": 277,
+         "scriptId": "45",
+         "url": "https://accounts.google.com/gsi/client"
+      }, {
+         "columnNumber": 1118,
+         "functionName": "",
+         "lineNumber": 0,
+         "scriptId": "44",
+         "url": "https://clerk.uiuc.chat/npm/@clerk/clerk-js@5.43.2/dist/onetap_26a90a_5.43.2.js"
+      }, {
+         "columnNumber": 84198,
+         "functionName": "uI",
+         "lineNumber": 0,
+         "scriptId": "39",
+         "url": "https://clerk.uiuc.chat/npm/@clerk/clerk-js@5.43.2/dist/framework_26a90a_5.43.2.js"
+      }, {
+         "columnNumber": 113254,
+         "functionName": "oU",
+         "lineNumber": 0,
+         "scriptId": "39",
+         "url": "https://clerk.uiuc.chat/npm/@clerk/clerk-js@5.43.2/dist/framework_26a90a_5.43.2.js"
+      }, {
+         "columnNumber": 111640,
+         "functionName": "",
+         "lineNumber": 0,
+         "scriptId": "39",
+         "url": "https://clerk.uiuc.chat/npm/@clerk/clerk-js@5.43.2/dist/framework_26a90a_5.43.2.js"
+      }, {
+         "columnNumber": 111706,
+         "functionName": "oI",
+         "lineNumber": 0,
+         "scriptId": "39",
+         "url": "https://clerk.uiuc.chat/npm/@clerk/clerk-js@5.43.2/dist/framework_26a90a_5.43.2.js"
+      }, {
+         "columnNumber": 96326,
+         "functionName": "o_",
+         "lineNumber": 0,
+         "scriptId": "39",
+         "url": "https://clerk.uiuc.chat/npm/@clerk/clerk-js@5.43.2/dist/framework_26a90a_5.43.2.js"
+      }, {
+         "columnNumber": 44950,
+         "functionName": "r8",
+         "lineNumber": 0,
+         "scriptId": "39",
+         "url": "https://clerk.uiuc.chat/npm/@clerk/clerk-js@5.43.2/dist/framework_26a90a_5.43.2.js"
+      }, {
+         "columnNumber": 93689,
+         "functionName": "",
+         "lineNumber": 0,
+         "scriptId": "39",
+         "url": "https://clerk.uiuc.chat/npm/@clerk/clerk-js@5.43.2/dist/framework_26a90a_5.43.2.js"
+      } ]
+   },
+   "timestamp": 1.735945263818702e+12,
+   "type": "warning"
+}
+[71297:259:0103/180103.820228:INFO:CONSOLE(0)] "Not signed in with the identity provider.", source: https://uiuc.chat/ece120/chat (0)
+[1735945263.820][DEBUG]: DevTools WebSocket Event: Log.entryAdded (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "entry": {
+      "level": "error",
+      "source": "other",
+      "text": "Not signed in with the identity provider.",
+      "timestamp": 1.73594526382016e+12,
+      "url": "https://uiuc.chat/ece120/chat"
+   }
+}
+[71297:259:0103/180103.823080:INFO:CONSOLE(1)] "No N8N API key found, can't fetch tools", source: https://app.posthog.com/static/recorder-v2.js?v=1.96.0 (1)
+[1735945263.823][DEBUG]: DevTools WebSocket Event: Runtime.consoleAPICalled (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "args": [ {
+      "type": "string",
+      "value": "No N8N API key found, can't fetch tools"
+   } ],
+   "executionContextId": 1,
+   "stackTrace": {
+      "callFrames": [ {
+         "columnNumber": 103626,
+         "functionName": "",
+         "lineNumber": 0,
+         "scriptId": "38",
+         "url": "https://app.posthog.com/static/recorder-v2.js?v=1.96.0"
+      }, {
+         "columnNumber": 145693,
+         "functionName": "fetchTools",
+         "lineNumber": 0,
+         "scriptId": "29",
+         "url": "https://uiuc.chat/_next/static/chunks/7754-71f6bba5aaebcd9f.js"
+      } ]
+   },
+   "timestamp": 1.735945263823043e+12,
+   "type": "debug"
+}
+[1735945265.051][INFO]: [bccd62d8d64911c9ef11a5672e37f382] COMMAND FindElements {
+   "using": "css selector",
+   "value": "textarea"
+}
+[1735945265.051][INFO]: Waiting for pending navigations...
+[1735945265.051][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=25) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945265.052][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=25) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945265.052][INFO]: Done waiting for pending navigations. Status: ok
+[1735945265.052][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=26) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.053][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=26) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945265.053][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=27) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.053][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=27) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945265.054][DEBUG]: DevTools WebSocket Command: Runtime.callFunctionOn (id=28) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "arguments": [  ],
+   "awaitPromise": true,
+   "functionDeclaration": "function(){ return (function() { // Copyright 2012 The Chromium Authors\n// Use of this source code is governed by a BSD-style license that can be\n// found in the LICENSE file.\n\n/**\n * Enum for WebD...",
+   "serializationOptions": {
+      "serialization": "deep"
+   },
+   "uniqueContextId": "-2161854669971170314.-7625416526549133954"
+}
+[1735945265.062][DEBUG]: DevTools WebSocket Response: Runtime.callFunctionOn (id=28) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "className": "Array",
+      "deepSerializedValue": {
+         "type": "array",
+         "value": [ {
+            "type": "string",
+            "value": "{\"status\":0,\"value\":[{\"element-6066-11e4-a52e-4f735466cecf\":0}]}"
+         }, {
+            "type": "node",
+            "value": {
+               "attributes": {
+                  "class": "chat-input m-0 h-[24px] max-h-[400px] w-full resize-none bg-transparent py-2 pr-8 pl-2 text-white outline-none border-blue-500",
+                  "placeholder": "Type a message or type \"/\" to select a prompt...",
+                  "rows": "1",
+                  "style": "resize: none; max-height: 400px; overflow: hidden; height: 32px; bottom: 32px;"
+               },
+               "backendNodeId": 7,
+               "childNodeCount": 0,
+               "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+               "localName": "textarea",
+               "namespaceURI": "http://www.w3.org/1999/xhtml",
+               "nodeType": 1,
+               "shadowRoot": {
+                  "type": "node",
+                  "value": {
+                     "backendNodeId": 13,
+                     "childNodeCount": 2,
+                     "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+                     "mode": "closed",
+                     "nodeType": 11
+                  }
+               }
+            }
+         } ]
+      },
+      "description": "Array(2)",
+      "objectId": "65743134801603097.1.2",
+      "subtype": "array",
+      "type": "object"
+   }
+}
+[1735945265.062][INFO]: Waiting for pending navigations...
+[1735945265.062][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=29) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945265.062][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=29) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945265.062][INFO]: Done waiting for pending navigations. Status: ok
+[1735945265.062][INFO]: [bccd62d8d64911c9ef11a5672e37f382] RESPONSE FindElements [ {
+   "element-6066-11e4-a52e-4f735466cecf": "f.7D9E071CBFC0B9A381ED840CAFE62D1D.d.B8CA2AE554423D68FB43CDCBACEC33A5.e.7"
+} ]
+[1735945265.064][INFO]: [bccd62d8d64911c9ef11a5672e37f382] COMMAND ExecuteScript {
+   "args": [ {
+      "ELEMENT": "f.7D9E071CBFC0B9A381ED840CAFE62D1D.d.B8CA2AE554423D68FB43CDCBACEC33A5.e.7",
+      "element-6066-11e4-a52e-4f735466cecf": "f.7D9E071CBFC0B9A381ED840CAFE62D1D.d.B8CA2AE554423D68FB43CDCBACEC33A5.e.7"
+   } ],
+   "script": "/* isDisplayed */return (function(){return (function(){var g=this||self;\nfunction aa(a){var b=typeof a;if(\"object\"==b)if(a){if(a instanceof Array)return\"array\";if(a instanceof Object)return b;var c=Object.prototype.toString.call(a);if(\"[object Window]\"==c)return\"object\";if(\"[object Array]\"==c||\"number\"==typeof a.length&&\"undefined\"!=typeof a.splice&&\"undefined\"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable(\"splice\"))return\"array\";if(\"[object Function]\"==c||\"undefined\"!=typeof a.call&&\"undefined\"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable(\"call\"))return\"function\"}else return\"null\";else if(\"function\"==\nb&&\"undefined\"==typeof a.call)return\"object\";return b}function ca(a,b){function c(){}c.prototype=b.prototype;a.prototype=new c;a.prototype.constructor=a};var da=Array.prototype.indexOf?function(a,b){return Array.prototype.indexOf.call(a,b,void 0)}:function(a,b){if(\"string\"===typeof a)return\"string\"!==typeof b||1!=b.length?-1:a.indexOf(b,0);for(var c=0;c\u003Ca.length;c++)if(c in a&&a[c]===b)return c;return-1},ea=Array.prototype.some?function(a,b){return Array.prototype.some.call(a,b,void 0)}:function(a,b){for(var c=a.length,e=\"string\"===typeof a?a.split(\"\"):a,d=0;d\u003Cc;d++)if(d in e&&b.call(void 0,e[d],d,a))return!0;return!1},fa=Array.prototype.every?function(a,\nb){return Array.prototype.every.call(a,b,void 0)}:function(a,b){for(var c=a.length,e=\"string\"===typeof a?a.split(\"\"):a,d=0;d\u003Cc;d++)if(d in e&&!b.call(void 0,e[d],d,a))return!1;return!0};var ha={aliceblue:\"#f0f8ff\",antiquewhite:\"#faebd7\",aqua:\"#00ffff\",aquamarine:\"#7fffd4\",azure:\"#f0ffff\",beige:\"#f5f5dc\",bisque:\"#ffe4c4\",black:\"#000000\",blanchedalmond:\"#ffebcd\",blue:\"#0000ff\",blueviolet:\"#8a2be2\",brown:\"#a52a2a\",burlywood:\"#deb887\",cadetblue:\"#5f9ea0\",chartreuse:\"#7fff00\",chocolate:\"#d2691e\",coral:\"#ff7f50\",cornflowerblue:\"#6495ed\",cornsilk:\"#fff8dc\",crimson:\"#dc143c\",cyan:\"#00ffff\",darkblue:\"#00008b\",darkcyan:\"#008b8b\",darkgoldenrod:\"#b8860b\",darkgray:\"#a9a9a9\",darkgreen:\"#006400\",\ndarkgrey:\"#a9a9a9\",darkkhaki:\"#bdb76b\",darkmagenta:\"#8b008b\",darkolivegreen:\"#556b2f\",darkorange:\"#ff8c00\",darkorchid:\"#9932cc\",darkred:\"#8b0000\",darksalmon:\"#e9967a\",darkseagreen:\"#8fbc8f\",darkslateblue:\"#483d8b\",darkslategray:\"#2f4f4f\",darkslategrey:\"#2f4f4f\",darkturquoise:\"#00ced1\",darkviolet:\"#9400d3\",deeppink:\"#ff1493\",deepskyblue:\"#00bfff\",dimgray:\"#696969\",dimgrey:\"#696969\",dodgerblue:\"#1e90ff\",firebrick:\"#b22222\",floralwhite:\"#fffaf0\",forestgreen:\"#228b22\",fuchsia:\"#ff00ff\",gainsboro:\"#dcdcdc\",\nghostwhite:\"#f8f8ff\",gold:\"#ffd700\",goldenrod:\"#daa520\",gray:\"#808080\",green:\"#008000\",greenyellow:\"#adff2f\",grey:\"#808080\",honeydew:\"#f0fff0\",hotpink:\"#ff69b4\",indianred:\"#cd5c5c\",indigo:\"#4b0082\",ivory:\"#fffff0\",khaki:\"#f0e68c\",lavender:\"#e6e6fa\",lavenderblush:\"#fff0f5\",lawngreen:\"#7cfc00\",lemonchiffon:\"#fffacd\",lightblue:\"#add8e6\",lightcoral:\"#f08080\",lightcyan:\"#e0ffff\",lightgoldenrodyellow:\"#fafad2\",lightgray:\"#d3d3d3\",lightgreen:\"#90ee90\",lightgrey:\"#d3d3d3\",lightpink:\"#ffb6c1\",lightsalmon:\"#ffa07a\",\nlightseagreen:\"#20b2aa\",lightskyblue:\"#87cefa\",lightslategray:\"#778899\",lightslategrey:\"#778899\",lightsteelblue:\"#b0c4de\",lightyellow:\"#ffffe0\",lime:\"#00ff00\",limegreen:\"#32cd32\",linen:\"#faf0e6\",magenta:\"#ff00ff\",maroon:\"#800000\",mediumaquamarine:\"#66cdaa\",mediumblue:\"#0000cd\",mediumorchid:\"#ba55d3\",mediumpurple:\"#9370db\",mediumseagreen:\"#3cb371\",mediumslateblue:\"#7b68ee\",mediumspringgreen:\"#00fa9a\",mediumturquoise:\"#48d1cc\",mediumvioletred:\"#c71585\",midnightblue:\"#191970\",mintcream:\"#f5fffa\",mistyrose:\"#ffe4e1\",\nmoccasin:\"#ffe4b5\",navajowhite:\"#ffdead\",navy:\"#000080\",oldlace:\"#fdf5e6\",olive:\"#808000\",olivedrab:\"#6b8e23\",orange:\"#ffa500\",orangered:\"#ff4500\",orchid:\"#da70d6\",palegoldenrod:\"#eee8aa\",palegreen:\"#98fb98\",paleturquoise:\"#afeeee\",palevioletred:\"#db7093\",papayawhip:\"#ffefd5\",peachpuff:\"#ffdab9\",peru:\"#cd853f\",pink:\"#ffc0cb\",plum:\"#dda0dd\",powderblue:\"#b0e0e6\",purple:\"#800080\",red:\"#ff0000\",rosybrown:\"#bc8f8f\",royalblue:\"#4169e1\",saddlebrown:\"#8b4513\",salmon:\"#fa8072\",sandybrown:\"#f4a460\",seagreen:\"#2e8b57\",\nseashell:\"#fff5ee\",sienna:\"#a0522d\",silver:\"#c0c0c0\",skyblue:\"#87ceeb\",slateblue:\"#6a5acd\",slategray:\"#708090\",slategrey:\"#708090\",snow:\"#fffafa\",springgreen:\"#00ff7f\",steelblue:\"#4682b4\",tan:\"#d2b48c\",teal:\"#008080\",thistle:\"#d8bfd8\",tomato:\"#ff6347\",turquoise:\"#40e0d0\",violet:\"#ee82ee\",wheat:\"#f5deb3\",white:\"#ffffff\",whitesmoke:\"#f5f5f5\",yellow:\"#ffff00\",yellowgreen:\"#9acd32\"};var ia=\"backgroundColor borderTopColor borderRightColor borderBottomColor borderLeftColor color outlineColor\".split(\" \"),ja=/#([0-9a-fA-F])([0-9a-fA-F])([0-9a-fA-F])/,ka=/^#(?:[0-9a-f]{3}){1,2}$/i,la=/^(?:rgba)?\\((\\d{1,3}),\\s?(\\d{1,3}),\\s?(\\d{1,3}),\\s?(0|1|0\\.\\d*)\\)$/i,ma=/^(?:rgb)?\\((0|[1-9]\\d{0,2}),\\s?(0|[1-9]\\d{0,2}),\\s?(0|[1-9]\\d{0,2})\\)$/i;function m(a,b){this.code=a;this.a=p[a]||r;this.message=b||\"\";a=this.a.replace(/((?:^|\\s+)[a-z])/g,function(c){return c.toUpperCase().replace(/^[\\s\\xa0]+/g,\"\")});b=a.length-5;if(0>b||a.indexOf(\"Error\",b)!=b)a+=\"Error\";this.name=a;a=Error(this.message);a.name=this.name;this.stack=a.stack||\"\"}ca(m,Error);var r=\"unknown error\",p={15:\"element not selectable\",11:\"element not visible\"};p[31]=r;p[30]=r;p[24]=\"invalid cookie domain\";p[29]=\"invalid element coordinates\";p[12]=\"invalid element state\";\np[32]=\"invalid selector\";p[51]=\"invalid selector\";p[52]=\"invalid selector\";p[17]=\"javascript error\";p[405]=\"unsupported operation\";p[34]=\"move target out of bounds\";p[27]=\"no such alert\";p[7]=\"no such element\";p[8]=\"no such frame\";p[23]=\"no such window\";p[28]=\"script timeout\";p[33]=\"session not created\";p[10]=\"stale element reference\";p[21]=\"timeout\";p[25]=\"unable to set cookie\";p[26]=\"unexpected alert open\";p[13]=r;p[9]=\"unknown command\";var u=String.prototype.trim?function(a){return a.trim()}:function(a){return/^[\\s\\xa0]*([\\s\\S]*?)[\\s\\xa0]*$/.exec(a)[1]};\nfunction na(a,b){var c=0;a=u(String(a)).split(\".\");b=u(String(b)).split(\".\");for(var e=Math.max(a.length,b.length),d=0;0==c&&d\u003Ce;d++){var f=a[d]||\"\",h=b[d]||\"\";do{f=/(\\d*)(\\D*)(.*)/.exec(f)||[\"\",\"\",\"\",\"\"];h=/(\\d*)(\\D*)(.*)/.exec(h)||[\"\",\"\",\"\",\"\"];if(0==f[0].length&&0==h[0].length)break;c=v(0==f[1].length?0:parseInt(f[1],10),0==h[1].length?0:parseInt(h[1],10))||v(0==f[2].length,0==h[2].length)||v(f[2],h[2]);f=f[3];h=h[3]}while(0==c)}return c}function v(a,b){return a\u003Cb?-1:a>b?1:0};var w;a:{var oa=g.navigator;if(oa){var sa=oa.userAgent;if(sa){w=sa;break a}}w=\"\"}function x(a){return-1!=w.indexOf(a)};function y(){return x(\"Firefox\")||x(\"FxiOS\")}function A(){return(x(\"Chrome\")||x(\"CriOS\"))&&!x(\"Edge\")};function ta(a){return String(a).replace(/\\-([a-z])/g,function(b,c){return c.toUpperCase()})};function B(){return x(\"iPhone\")&&!x(\"iPod\")&&!x(\"iPad\")};function ua(a,b){var c=va;return Object.prototype.hasOwnProperty.call(c,a)?c[a]:c[a]=b(a)};var wa=x(\"Opera\"),C=x(\"Trident\")||x(\"MSIE\"),xa=x(\"Edge\"),ya=x(\"Gecko\")&&!(-1!=w.toLowerCase().indexOf(\"webkit\")&&!x(\"Edge\"))&&!(x(\"Trident\")||x(\"MSIE\"))&&!x(\"Edge\"),za=-1!=w.toLowerCase().indexOf(\"webkit\")&&!x(\"Edge\");function Aa(){var a=g.document;return a?a.documentMode:void 0}var E;\na:{var F=\"\",G=function(){var a=w;if(ya)return/rv:([^\\);]+)(\\)|;)/.exec(a);if(xa)return/Edge\\/([\\d\\.]+)/.exec(a);if(C)return/\\b(?:MSIE|rv)[: ]([^\\);]+)(\\)|;)/.exec(a);if(za)return/WebKit\\/(\\S+)/.exec(a);if(wa)return/(?:Version)[ \\/]?(\\S+)/.exec(a)}();G&&(F=G?G[1]:\"\");if(C){var H=Aa();if(null!=H&&H>parseFloat(F)){E=String(H);break a}}E=F}var va={};function Ba(a){return ua(a,function(){return 0\u003C=na(E,a)})}var I;I=g.document&&C?Aa():void 0;var Ca=y(),Da=B()||x(\"iPod\"),Ea=x(\"iPad\"),Fa=x(\"Android\")&&!(A()||y()||x(\"Opera\")||x(\"Silk\")),Ga=A(),Ha=x(\"Safari\")&&!(A()||x(\"Coast\")||x(\"Opera\")||x(\"Edge\")||x(\"Edg/\")||x(\"OPR\")||y()||x(\"Silk\")||x(\"Android\"))&&!(B()||x(\"iPad\")||x(\"iPod\"));function J(a){return(a=a.exec(w))?a[1]:\"\"}(function(){if(Ca)return J(/Firefox\\/([0-9.]+)/);if(C||xa||wa)return E;if(Ga)return B()||x(\"iPad\")||x(\"iPod\")?J(/CriOS\\/([0-9.]+)/):J(/Chrome\\/([0-9.]+)/);if(Ha&&!(B()||x(\"iPad\")||x(\"iPod\")))return J(/Version\\/([0-9.]+)/);if(Da||Ea){var a=/Version\\/(\\S+).*Mobile\\/(\\S+)/.exec(w);if(a)return a[1]+\".\"+a[2]}else if(Fa)return(a=J(/Android\\s+([0-9.]+)/))?a:J(/Version\\/([0-9.]+)/);return\"\"})();var K;if(K=C)K=!(9\u003C=Number(I));var Ia=K;function L(a,b){this.x=void 0!==a?a:0;this.y=void 0!==b?b:0}L.prototype.ceil=function(){this.x=Math.ceil(this.x);this.y=Math.ceil(this.y);return this};L.prototype.floor=function(){this.x=Math.floor(this.x);this.y=Math.floor(this.y);return this};L.prototype.round=function(){this.x=Math.round(this.x);this.y=Math.round(this.y);return this};function M(a,b){this.width=a;this.height=b}M.prototype.aspectRatio=function(){return this.width/this.height};M.prototype.ceil=function(){this.width=Math.ceil(this.width);this.height=Math.ceil(this.height);return this};M.prototype.floor=function(){this.width=Math.floor(this.width);this.height=Math.floor(this.height);return this};M.prototype.round=function(){this.width=Math.round(this.width);this.height=Math.round(this.height);return this};function N(a){return 9==a.nodeType?a:a.ownerDocument||a.document}function Ja(a,b){a&&(a=a.parentNode);for(var c=0;a;){if(b(a))return a;a=a.parentNode;c++}return null}function Ka(a){this.a=a||g.document||document};function P(a,b){b&&\"string\"!==typeof b&&(b=b.toString());return a instanceof HTMLFormElement?!!a&&1==a.nodeType&&(!b||\"FORM\"==b):!!a&&1==a.nodeType&&(!b||a.tagName.toUpperCase()==b)};function Q(a,b,c,e){this.f=a;this.a=b;this.b=c;this.c=e}Q.prototype.ceil=function(){this.f=Math.ceil(this.f);this.a=Math.ceil(this.a);this.b=Math.ceil(this.b);this.c=Math.ceil(this.c);return this};Q.prototype.floor=function(){this.f=Math.floor(this.f);this.a=Math.floor(this.a);this.b=Math.floor(this.b);this.c=Math.floor(this.c);return this};Q.prototype.round=function(){this.f=Math.round(this.f);this.a=Math.round(this.a);this.b=Math.round(this.b);this.c=Math.round(this.c);return this};function R(a,b,c,e){this.a=a;this.b=b;this.width=c;this.height=e}R.prototype.ceil=function(){this.a=Math.ceil(this.a);this.b=Math.ceil(this.b);this.width=Math.ceil(this.width);this.height=Math.ceil(this.height);return this};R.prototype.floor=function(){this.a=Math.floor(this.a);this.b=Math.floor(this.b);this.width=Math.floor(this.width);this.height=Math.floor(this.height);return this};\nR.prototype.round=function(){this.a=Math.round(this.a);this.b=Math.round(this.b);this.width=Math.round(this.width);this.height=Math.round(this.height);return this};var La=\"function\"===typeof ShadowRoot;function S(a){for(a=a.parentNode;a&&1!=a.nodeType&&9!=a.nodeType&&11!=a.nodeType;)a=a.parentNode;return P(a)?a:null}\nfunction T(a,b){b=ta(b);if(\"float\"==b||\"cssFloat\"==b||\"styleFloat\"==b)b=Ia?\"styleFloat\":\"cssFloat\";a:{var c=b;var e=N(a);if(e.defaultView&&e.defaultView.getComputedStyle&&(e=e.defaultView.getComputedStyle(a,null))){c=e[c]||e.getPropertyValue(c)||\"\";break a}c=\"\"}a=c||Ma(a,b);if(null===a)a=null;else if(0\u003C=da(ia,b)){b:{var d=a.match(la);if(d&&(b=Number(d[1]),c=Number(d[2]),e=Number(d[3]),d=Number(d[4]),0\u003C=b&&255>=b&&0\u003C=c&&255>=c&&0\u003C=e&&255>=e&&0\u003C=d&&1>=d)){b=[b,c,e,d];break b}b=null}if(!b)b:{if(e=a.match(ma))if(b=\nNumber(e[1]),c=Number(e[2]),e=Number(e[3]),0\u003C=b&&255>=b&&0\u003C=c&&255>=c&&0\u003C=e&&255>=e){b=[b,c,e,1];break b}b=null}if(!b)b:{b=a.toLowerCase();c=ha[b.toLowerCase()];if(!c&&(c=\"#\"==b.charAt(0)?b:\"#\"+b,4==c.length&&(c=c.replace(ja,\"#$1$1$2$2$3$3\")),!ka.test(c))){b=null;break b}b=[parseInt(c.substr(1,2),16),parseInt(c.substr(3,2),16),parseInt(c.substr(5,2),16),1]}a=b?\"rgba(\"+b.join(\", \")+\")\":a}return a}\nfunction Ma(a,b){var c=a.currentStyle||a.style,e=c[b];void 0===e&&\"function\"==aa(c.getPropertyValue)&&(e=c.getPropertyValue(b));return\"inherit\"!=e?void 0!==e?e:null:(a=S(a))?Ma(a,b):null}\nfunction U(a,b,c){function e(h){var n=V(h);return 0\u003Cn.height&&0\u003Cn.width?!0:P(h,\"PATH\")&&(0\u003Cn.height||0\u003Cn.width)?(h=T(h,\"stroke-width\"),!!h&&0\u003CparseInt(h,10)):\"hidden\"!=T(h,\"overflow\")&&ea(h.childNodes,function(D){return 3==D.nodeType||P(D)&&e(D)})}function d(h){return Na(h)==W&&fa(h.childNodes,function(n){return!P(n)||d(n)||!e(n)})}if(!P(a))throw Error(\"Argument to isShown must be of type Element\");if(P(a,\"BODY\"))return!0;if(P(a,\"OPTION\")||P(a,\"OPTGROUP\"))return a=Ja(a,function(h){return P(h,\"SELECT\")}),\n!!a&&U(a,!0,c);var f=Oa(a);if(f)return!!f.image&&0\u003Cf.rect.width&&0\u003Cf.rect.height&&U(f.image,b,c);if(P(a,\"INPUT\")&&\"hidden\"==a.type.toLowerCase()||P(a,\"NOSCRIPT\"))return!1;f=T(a,\"visibility\");return\"collapse\"!=f&&\"hidden\"!=f&&c(a)&&(b||0!=Pa(a))&&e(a)?!d(a):!1}var W=\"hidden\";\nfunction Na(a){function b(k){function l(ba){if(ba==h)return!0;var pa=T(ba,\"display\");return 0==pa.lastIndexOf(\"inline\",0)||\"contents\"==pa||\"absolute\"==qa&&\"static\"==T(ba,\"position\")?!1:!0}var qa=T(k,\"position\");if(\"fixed\"==qa)return ra=!0,k==h?null:h;for(k=S(k);k&&!l(k);)k=S(k);return k}function c(k){var l=k;if(\"visible\"==D)if(k==h&&n)l=n;else if(k==n)return{x:\"visible\",y:\"visible\"};l={x:T(l,\"overflow-x\"),y:T(l,\"overflow-y\")};k==h&&(l.x=\"visible\"==l.x?\"auto\":l.x,l.y=\"visible\"==l.y?\"auto\":l.y);return l}\nfunction e(k){if(k==h){var l=(new Ka(f)).a;k=l.scrollingElement?l.scrollingElement:za||\"CSS1Compat\"!=l.compatMode?l.body||l.documentElement:l.documentElement;l=l.parentWindow||l.defaultView;k=C&&Ba(\"10\")&&l.pageYOffset!=k.scrollTop?new L(k.scrollLeft,k.scrollTop):new L(l.pageXOffset||k.scrollLeft,l.pageYOffset||k.scrollTop)}else k=new L(k.scrollLeft,k.scrollTop);return k}var d=Qa(a),f=N(a),h=f.documentElement,n=f.body,D=T(h,\"overflow\"),ra;for(a=b(a);a;a=b(a)){var q=c(a);if(\"visible\"!=q.x||\"visible\"!=\nq.y){var t=V(a);if(0==t.width||0==t.height)return W;var z=d.a\u003Ct.a,O=d.b\u003Ct.b;if(z&&\"hidden\"==q.x||O&&\"hidden\"==q.y)return W;if(z&&\"visible\"!=q.x||O&&\"visible\"!=q.y){z=e(a);O=d.b\u003Ct.b-z.y;if(d.a\u003Ct.a-z.x&&\"visible\"!=q.x||O&&\"visible\"!=q.x)return W;d=Na(a);return d==W?W:\"scroll\"}z=d.c>=t.a+t.width;t=d.f>=t.b+t.height;if(z&&\"hidden\"==q.x||t&&\"hidden\"==q.y)return W;if(z&&\"visible\"!=q.x||t&&\"visible\"!=q.y){if(ra&&(q=e(a),d.c>=h.scrollWidth-q.x||d.a>=h.scrollHeight-q.y))return W;d=Na(a);return d==W?W:\"scroll\"}}}return\"none\"}\nfunction V(a){var b=Oa(a);if(b)return b.rect;if(P(a,\"HTML\"))return a=N(a),a=((a?a.parentWindow||a.defaultView:window)||window).document,a=\"CSS1Compat\"==a.compatMode?a.documentElement:a.body,a=new M(a.clientWidth,a.clientHeight),new R(0,0,a.width,a.height);try{var c=a.getBoundingClientRect()}catch(e){return new R(0,0,0,0)}b=new R(c.left,c.top,c.right-c.left,c.bottom-c.top);C&&a.ownerDocument.body&&(a=N(a),b.a-=a.documentElement.clientLeft+a.body.clientLeft,b.b-=a.documentElement.clientTop+a.body.clientTop);\nreturn b}\nfunction Oa(a){var b=P(a,\"MAP\");if(!b&&!P(a,\"AREA\"))return null;var c=b?a:P(a.parentNode,\"MAP\")?a.parentNode:null,e=null,d=null;if(c&&c.name){e='*[usemap=\"#'+c.name+'\"]';c=N(c);var f;if(f=\"function\"!=aa(c.querySelector)&&C&&(C?0\u003C=na(I,8):Ba(8))){f=c.querySelector;var h=typeof f;f=!(\"object\"==h&&null!=f||\"function\"==h)}if(f)throw Error(\"CSS selection is not supported\");if(!e)throw new m(32,\"No selector specified\");e=u(e);try{var n=c.querySelector(e)}catch(D){throw new m(32,\"An invalid or illegal selector was specified\");}if(e=\nn&&1==n.nodeType?n:null)d=V(e),b||\"default\"==a.shape.toLowerCase()||(a=Ra(a),b=Math.min(Math.max(a.a,0),d.width),n=Math.min(Math.max(a.b,0),d.height),d=new R(b+d.a,n+d.b,Math.min(a.width,d.width-b),Math.min(a.height,d.height-n)))}return{image:e,rect:d||new R(0,0,0,0)}}\nfunction Ra(a){var b=a.shape.toLowerCase();a=a.coords.split(\",\");if(\"rect\"==b&&4==a.length){b=a[0];var c=a[1];return new R(b,c,a[2]-b,a[3]-c)}if(\"circle\"==b&&3==a.length)return b=a[2],new R(a[0]-b,a[1]-b,2*b,2*b);if(\"poly\"==b&&2\u003Ca.length){b=a[0];c=a[1];for(var e=b,d=c,f=2;f+1\u003Ca.length;f+=2)b=Math.min(b,a[f]),e=Math.max(e,a[f]),c=Math.min(c,a[f+1]),d=Math.max(d,a[f+1]);return new R(b,c,e-b,d-c)}return new R(0,0,0,0)}function Qa(a){a=V(a);return new Q(a.b,a.a+a.width,a.b+a.height,a.a)}\nfunction Pa(a){if(Ia){if(\"relative\"==T(a,\"position\"))return 1;a=T(a,\"filter\");return(a=a.match(/^alpha\\(opacity=(\\d*)\\)/)||a.match(/^progid:DXImageTransform.Microsoft.Alpha\\(Opacity=(\\d*)\\)/))?Number(a[1])/100:1}return Sa(a)}function Sa(a){var b=1,c=T(a,\"opacity\");c&&(b=Number(c));(a=S(a))&&(b*=Sa(a));return b};function Ta(a,b){function c(e){if(P(e)&&\"none\"==T(e,\"display\"))return!1;var d;if((d=e.parentNode)&&d.shadowRoot&&void 0!==e.assignedSlot)d=e.assignedSlot?e.assignedSlot.parentNode:null;else if(e.getDestinationInsertionPoints){var f=e.getDestinationInsertionPoints();0\u003Cf.length&&(d=f[f.length-1])}if(La&&d instanceof ShadowRoot){if(d.host.shadowRoot&&d.host.shadowRoot!==d)return!1;d=d.host}return!d||9!=d.nodeType&&11!=d.nodeType?d&&P(d,\"DETAILS\")&&!d.open&&!P(e,\"SUMMARY\")?!1:!!d&&c(d):!0}return U(a,\n!!b,c)}var X=[\"_\"],Y=g;X[0]in Y||\"undefined\"==typeof Y.execScript||Y.execScript(\"var \"+X[0]);for(var Z;X.length&&(Z=X.shift());)X.length||void 0===Ta?Y[Z]&&Y[Z]!==Object.prototype[Z]?Y=Y[Z]:Y=Y[Z]={}:Y[Z]=Ta;; return this._.apply(null,arguments);}).apply({navigator:typeof window!='undefined'?window.navigator:null,document:typeof window!='undefined'?window.document:null}, arguments);}).apply(null, arguments)"
+}
+[1735945265.064][INFO]: Waiting for pending navigations...
+[1735945265.064][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=30) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945265.064][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=30) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945265.064][INFO]: Done waiting for pending navigations. Status: ok
+[1735945265.064][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=31) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.064][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=31) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945265.064][DEBUG]: DevTools WebSocket Command: DOM.resolveNode (id=32) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "backendNodeId": 7,
+   "objectGroup": "527d5146-54b5-4f10-b9a2-6fbfce39370a"
+}
+[1735945265.065][DEBUG]: DevTools WebSocket Response: DOM.resolveNode (id=32) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "object": {
+      "className": "HTMLTextAreaElement",
+      "description": "textarea.chat-input.m-0.h-[24px].max-h-[400px].w-full.resize-none.bg-transparent.py-2.pr-8.pl-2.text-white.outline-none.border-blue-500",
+      "objectId": "65743134801603097.1.3",
+      "subtype": "node",
+      "type": "object"
+   }
+}
+[1735945265.065][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=33) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.065][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=33) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945265.065][DEBUG]: DevTools WebSocket Command: Runtime.callFunctionOn (id=34) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "arguments": [ {
+      "objectId": "65743134801603097.1.3"
+   } ],
+   "awaitPromise": true,
+   "functionDeclaration": "function(){ return (function() { // Copyright 2012 The Chromium Authors\n// Use of this source code is governed by a BSD-style license that can be\n// found in the LICENSE file.\n\n/**\n * Enum for WebD...",
+   "objectGroup": "527d5146-54b5-4f10-b9a2-6fbfce39370a",
+   "serializationOptions": {
+      "serialization": "deep"
+   },
+   "uniqueContextId": "-2161854669971170314.-7625416526549133954"
+}
+[1735945265.068][DEBUG]: DevTools WebSocket Response: Runtime.callFunctionOn (id=34) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "className": "Array",
+      "deepSerializedValue": {
+         "type": "array",
+         "value": [ {
+            "type": "string",
+            "value": "{\"status\":0,\"value\":true}"
+         } ]
+      },
+      "description": "Array(1)",
+      "objectId": "65743134801603097.1.4",
+      "subtype": "array",
+      "type": "object"
+   }
+}
+[1735945265.068][DEBUG]: DevTools WebSocket Command: Runtime.releaseObjectGroup (id=35) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "objectGroup": "527d5146-54b5-4f10-b9a2-6fbfce39370a"
+}
+[1735945265.068][INFO]: Waiting for pending navigations...
+[1735945265.068][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=36) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945265.068][DEBUG]: DevTools WebSocket Response: Runtime.releaseObjectGroup (id=35) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.068][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=36) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945265.068][INFO]: Done waiting for pending navigations. Status: ok
+[1735945265.068][INFO]: [bccd62d8d64911c9ef11a5672e37f382] RESPONSE ExecuteScript true
+[1735945265.070][INFO]: [bccd62d8d64911c9ef11a5672e37f382] COMMAND FindElements {
+   "using": "css selector",
+   "value": "textarea"
+}
+[1735945265.070][INFO]: Waiting for pending navigations...
+[1735945265.070][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=37) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945265.070][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=37) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945265.070][INFO]: Done waiting for pending navigations. Status: ok
+[1735945265.070][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=38) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.070][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=38) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945265.070][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=39) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.070][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=39) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945265.070][DEBUG]: DevTools WebSocket Command: Runtime.callFunctionOn (id=40) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "arguments": [  ],
+   "awaitPromise": true,
+   "functionDeclaration": "function(){ return (function() { // Copyright 2012 The Chromium Authors\n// Use of this source code is governed by a BSD-style license that can be\n// found in the LICENSE file.\n\n/**\n * Enum for WebD...",
+   "serializationOptions": {
+      "serialization": "deep"
+   },
+   "uniqueContextId": "-2161854669971170314.-7625416526549133954"
+}
+[1735945265.071][DEBUG]: DevTools WebSocket Response: Runtime.callFunctionOn (id=40) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "className": "Array",
+      "deepSerializedValue": {
+         "type": "array",
+         "value": [ {
+            "type": "string",
+            "value": "{\"status\":0,\"value\":[{\"element-6066-11e4-a52e-4f735466cecf\":0}]}"
+         }, {
+            "type": "node",
+            "value": {
+               "attributes": {
+                  "class": "chat-input m-0 h-[24px] max-h-[400px] w-full resize-none bg-transparent py-2 pr-8 pl-2 text-white outline-none border-blue-500",
+                  "placeholder": "Type a message or type \"/\" to select a prompt...",
+                  "rows": "1",
+                  "style": "resize: none; max-height: 400px; overflow: hidden; height: 32px; bottom: 32px;"
+               },
+               "backendNodeId": 7,
+               "childNodeCount": 0,
+               "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+               "localName": "textarea",
+               "namespaceURI": "http://www.w3.org/1999/xhtml",
+               "nodeType": 1,
+               "shadowRoot": {
+                  "type": "node",
+                  "value": {
+                     "backendNodeId": 13,
+                     "childNodeCount": 2,
+                     "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+                     "mode": "closed",
+                     "nodeType": 11
+                  }
+               }
+            }
+         } ]
+      },
+      "description": "Array(2)",
+      "objectId": "65743134801603097.1.5",
+      "subtype": "array",
+      "type": "object"
+   }
+}
+[1735945265.071][INFO]: Waiting for pending navigations...
+[1735945265.071][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=41) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945265.072][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=41) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945265.072][INFO]: Done waiting for pending navigations. Status: ok
+[1735945265.072][INFO]: [bccd62d8d64911c9ef11a5672e37f382] RESPONSE FindElements [ {
+   "element-6066-11e4-a52e-4f735466cecf": "f.7D9E071CBFC0B9A381ED840CAFE62D1D.d.B8CA2AE554423D68FB43CDCBACEC33A5.e.7"
+} ]
+[1735945265.073][INFO]: [bccd62d8d64911c9ef11a5672e37f382] COMMAND ClearElement {
+   "id": "f.7D9E071CBFC0B9A381ED840CAFE62D1D.d.B8CA2AE554423D68FB43CDCBACEC33A5.e.7"
+}
+[1735945265.073][INFO]: Waiting for pending navigations...
+[1735945265.073][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=42) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945265.073][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=42) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945265.073][INFO]: Done waiting for pending navigations. Status: ok
+[1735945265.073][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=43) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.073][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=43) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945265.073][DEBUG]: DevTools WebSocket Command: DOM.resolveNode (id=44) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "backendNodeId": 7,
+   "objectGroup": "9bf1d6d7-c6a3-4990-810b-55a1f2f14070"
+}
+[1735945265.073][DEBUG]: DevTools WebSocket Response: DOM.resolveNode (id=44) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "object": {
+      "className": "HTMLTextAreaElement",
+      "description": "textarea.chat-input.m-0.h-[24px].max-h-[400px].w-full.resize-none.bg-transparent.py-2.pr-8.pl-2.text-white.outline-none.border-blue-500",
+      "objectId": "65743134801603097.1.6",
+      "subtype": "node",
+      "type": "object"
+   }
+}
+[1735945265.073][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=45) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.073][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=45) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945265.073][DEBUG]: DevTools WebSocket Command: Runtime.callFunctionOn (id=46) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "arguments": [ {
+      "objectId": "65743134801603097.1.6"
+   } ],
+   "awaitPromise": true,
+   "functionDeclaration": "function(){ return (function() { // Copyright 2012 The Chromium Authors\n// Use of this source code is governed by a BSD-style license that can be\n// found in the LICENSE file.\n\n/**\n * Enum for WebD...",
+   "objectGroup": "9bf1d6d7-c6a3-4990-810b-55a1f2f14070",
+   "serializationOptions": {
+      "serialization": "deep"
+   },
+   "uniqueContextId": "-2161854669971170314.-7625416526549133954"
+}
+[1735945265.074][DEBUG]: DevTools WebSocket Response: Runtime.callFunctionOn (id=46) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "className": "Array",
+      "deepSerializedValue": {
+         "type": "array",
+         "value": [ {
+            "type": "string",
+            "value": "{\"status\":0,\"value\":\"textarea\"}"
+         } ]
+      },
+      "description": "Array(1)",
+      "objectId": "65743134801603097.1.7",
+      "subtype": "array",
+      "type": "object"
+   }
+}
+[1735945265.074][DEBUG]: DevTools WebSocket Command: Runtime.releaseObjectGroup (id=47) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "objectGroup": "9bf1d6d7-c6a3-4990-810b-55a1f2f14070"
+}
+[1735945265.074][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=48) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.074][DEBUG]: DevTools WebSocket Response: Runtime.releaseObjectGroup (id=47) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.074][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=48) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945265.074][DEBUG]: DevTools WebSocket Command: DOM.resolveNode (id=49) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "backendNodeId": 7,
+   "objectGroup": "a0e65f94-9ffe-46d3-8e2f-8a08525969ea"
+}
+[1735945265.074][DEBUG]: DevTools WebSocket Response: DOM.resolveNode (id=49) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "object": {
+      "className": "HTMLTextAreaElement",
+      "description": "textarea.chat-input.m-0.h-[24px].max-h-[400px].w-full.resize-none.bg-transparent.py-2.pr-8.pl-2.text-white.outline-none.border-blue-500",
+      "objectId": "65743134801603097.1.8",
+      "subtype": "node",
+      "type": "object"
+   }
+}
+[1735945265.074][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=50) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.074][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=50) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945265.075][DEBUG]: DevTools WebSocket Command: Runtime.callFunctionOn (id=51) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "arguments": [ {
+      "objectId": "65743134801603097.1.8"
+   } ],
+   "awaitPromise": true,
+   "functionDeclaration": "function(){ return (function() { // Copyright 2012 The Chromium Authors\n// Use of this source code is governed by a BSD-style license that can be\n// found in the LICENSE file.\n\n/**\n * Enum for WebD...",
+   "objectGroup": "a0e65f94-9ffe-46d3-8e2f-8a08525969ea",
+   "serializationOptions": {
+      "serialization": "deep"
+   },
+   "uniqueContextId": "-2161854669971170314.-7625416526549133954"
+}
+[1735945265.075][DEBUG]: DevTools WebSocket Response: Runtime.callFunctionOn (id=51) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "className": "Array",
+      "deepSerializedValue": {
+         "type": "array",
+         "value": [ {
+            "type": "string",
+            "value": "{\"status\":0,\"value\":false}"
+         } ]
+      },
+      "description": "Array(1)",
+      "objectId": "65743134801603097.1.9",
+      "subtype": "array",
+      "type": "object"
+   }
+}
+[1735945265.075][DEBUG]: DevTools WebSocket Command: Runtime.releaseObjectGroup (id=52) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "objectGroup": "a0e65f94-9ffe-46d3-8e2f-8a08525969ea"
+}
+[1735945265.075][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=53) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.075][DEBUG]: DevTools WebSocket Response: Runtime.releaseObjectGroup (id=52) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.075][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=53) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945265.075][DEBUG]: DevTools WebSocket Command: DOM.resolveNode (id=54) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "backendNodeId": 7,
+   "objectGroup": "916abf3d-093e-4302-abfa-7ca9c448b31d"
+}
+[1735945265.075][DEBUG]: DevTools WebSocket Response: DOM.resolveNode (id=54) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "object": {
+      "className": "HTMLTextAreaElement",
+      "description": "textarea.chat-input.m-0.h-[24px].max-h-[400px].w-full.resize-none.bg-transparent.py-2.pr-8.pl-2.text-white.outline-none.border-blue-500",
+      "objectId": "65743134801603097.1.10",
+      "subtype": "node",
+      "type": "object"
+   }
+}
+[1735945265.075][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=55) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.076][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=55) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945265.076][DEBUG]: DevTools WebSocket Command: Runtime.callFunctionOn (id=56) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "arguments": [ {
+      "objectId": "65743134801603097.1.10"
+   } ],
+   "awaitPromise": true,
+   "functionDeclaration": "function(){ return (function() { // Copyright 2012 The Chromium Authors\n// Use of this source code is governed by a BSD-style license that can be\n// found in the LICENSE file.\n\n/**\n * Enum for WebD...",
+   "objectGroup": "916abf3d-093e-4302-abfa-7ca9c448b31d",
+   "serializationOptions": {
+      "serialization": "deep"
+   },
+   "uniqueContextId": "-2161854669971170314.-7625416526549133954"
+}
+[1735945265.078][DEBUG]: DevTools WebSocket Response: Runtime.callFunctionOn (id=56) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "className": "Array",
+      "deepSerializedValue": {
+         "type": "array",
+         "value": [ {
+            "type": "string",
+            "value": "{\"status\":0,\"value\":true}"
+         } ]
+      },
+      "description": "Array(1)",
+      "objectId": "65743134801603097.1.11",
+      "subtype": "array",
+      "type": "object"
+   }
+}
+[1735945265.078][DEBUG]: DevTools WebSocket Command: Runtime.releaseObjectGroup (id=57) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "objectGroup": "916abf3d-093e-4302-abfa-7ca9c448b31d"
+}
+[1735945265.079][INFO]: 
+	=== NOTE: ===
+	The Clear command in ChromeDriver 2.43 and above
+	has been updated to conform to the current standard,
+	including raising blur event after clearing.
+
+[1735945265.079][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=58) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.079][DEBUG]: DevTools WebSocket Response: Runtime.releaseObjectGroup (id=57) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.079][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=58) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945265.079][DEBUG]: DevTools WebSocket Command: DOM.resolveNode (id=59) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "backendNodeId": 7,
+   "objectGroup": "2726bbbc-3564-493a-9fc0-ac64e24e942f"
+}
+[1735945265.079][DEBUG]: DevTools WebSocket Response: DOM.resolveNode (id=59) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "object": {
+      "className": "HTMLTextAreaElement",
+      "description": "textarea.chat-input.m-0.h-[24px].max-h-[400px].w-full.resize-none.bg-transparent.py-2.pr-8.pl-2.text-white.outline-none.border-blue-500",
+      "objectId": "65743134801603097.1.12",
+      "subtype": "node",
+      "type": "object"
+   }
+}
+[1735945265.079][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=60) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.079][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=60) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945265.080][DEBUG]: DevTools WebSocket Command: Runtime.callFunctionOn (id=61) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "arguments": [ {
+      "objectId": "65743134801603097.1.12"
+   } ],
+   "awaitPromise": true,
+   "functionDeclaration": "function(){ return (function() { // Copyright 2012 The Chromium Authors\n// Use of this source code is governed by a BSD-style license that can be\n// found in the LICENSE file.\n\n/**\n * Enum for WebD...",
+   "objectGroup": "2726bbbc-3564-493a-9fc0-ac64e24e942f",
+   "serializationOptions": {
+      "serialization": "deep"
+   },
+   "uniqueContextId": "-2161854669971170314.-7625416526549133954"
+}
+[1735945265.083][DEBUG]: DevTools WebSocket Response: Runtime.callFunctionOn (id=61) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "className": "Array",
+      "deepSerializedValue": {
+         "type": "array",
+         "value": [ {
+            "type": "string",
+            "value": "{\"status\":0,\"value\":null}"
+         } ]
+      },
+      "description": "Array(1)",
+      "objectId": "65743134801603097.1.13",
+      "subtype": "array",
+      "type": "object"
+   }
+}
+[1735945265.083][DEBUG]: DevTools WebSocket Command: Runtime.releaseObjectGroup (id=62) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "objectGroup": "2726bbbc-3564-493a-9fc0-ac64e24e942f"
+}
+[1735945265.083][INFO]: Waiting for pending navigations...
+[1735945265.083][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=63) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945265.083][DEBUG]: DevTools WebSocket Response: Runtime.releaseObjectGroup (id=62) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.083][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=63) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945265.083][INFO]: Done waiting for pending navigations. Status: ok
+[1735945265.083][INFO]: [bccd62d8d64911c9ef11a5672e37f382] RESPONSE ClearElement
+[1735945265.084][INFO]: [bccd62d8d64911c9ef11a5672e37f382] COMMAND GetElementProperty {
+   "id": "f.7D9E071CBFC0B9A381ED840CAFE62D1D.d.B8CA2AE554423D68FB43CDCBACEC33A5.e.7",
+   "name": "value"
+}
+[1735945265.084][INFO]: Waiting for pending navigations...
+[1735945265.084][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=64) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945265.084][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=64) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945265.084][INFO]: Done waiting for pending navigations. Status: ok
+[1735945265.084][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=65) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.084][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=65) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945265.084][DEBUG]: DevTools WebSocket Command: DOM.resolveNode (id=66) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "backendNodeId": 7,
+   "objectGroup": "7a2c4965-02a0-40da-99fd-d71dc1b18d91"
+}
+[1735945265.084][DEBUG]: DevTools WebSocket Response: DOM.resolveNode (id=66) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "object": {
+      "className": "HTMLTextAreaElement",
+      "description": "textarea.chat-input.m-0.h-[24px].max-h-[400px].w-full.resize-none.bg-transparent.py-2.pr-8.pl-2.text-white.outline-none.border-blue-500",
+      "objectId": "65743134801603097.1.14",
+      "subtype": "node",
+      "type": "object"
+   }
+}
+[1735945265.084][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=67) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.084][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=67) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945265.084][DEBUG]: DevTools WebSocket Command: Runtime.callFunctionOn (id=68) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "arguments": [ {
+      "objectId": "65743134801603097.1.14"
+   } ],
+   "awaitPromise": true,
+   "functionDeclaration": "function(){ return (function() { // Copyright 2012 The Chromium Authors\n// Use of this source code is governed by a BSD-style license that can be\n// found in the LICENSE file.\n\n/**\n * Enum for WebD...",
+   "objectGroup": "7a2c4965-02a0-40da-99fd-d71dc1b18d91",
+   "serializationOptions": {
+      "serialization": "deep"
+   },
+   "uniqueContextId": "-2161854669971170314.-7625416526549133954"
+}
+[1735945265.085][DEBUG]: DevTools WebSocket Response: Runtime.callFunctionOn (id=68) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "className": "Array",
+      "deepSerializedValue": {
+         "type": "array",
+         "value": [ {
+            "type": "string",
+            "value": "{\"status\":0,\"value\":\"\"}"
+         } ]
+      },
+      "description": "Array(1)",
+      "objectId": "65743134801603097.1.15",
+      "subtype": "array",
+      "type": "object"
+   }
+}
+[1735945265.085][DEBUG]: DevTools WebSocket Command: Runtime.releaseObjectGroup (id=69) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "objectGroup": "7a2c4965-02a0-40da-99fd-d71dc1b18d91"
+}
+[1735945265.085][INFO]: Waiting for pending navigations...
+[1735945265.085][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=70) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945265.085][DEBUG]: DevTools WebSocket Response: Runtime.releaseObjectGroup (id=69) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.085][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=70) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945265.085][INFO]: Done waiting for pending navigations. Status: ok
+[1735945265.085][INFO]: [bccd62d8d64911c9ef11a5672e37f382] RESPONSE GetElementProperty ""
+[1735945265.086][INFO]: [bccd62d8d64911c9ef11a5672e37f382] COMMAND TypeElement {
+   "id": "f.7D9E071CBFC0B9A381ED840CAFE62D1D.d.B8CA2AE554423D68FB43CDCBACEC33A5.e.7",
+   "text": "hi",
+   "value": [ "h", "i" ]
+}
+[1735945265.086][INFO]: Waiting for pending navigations...
+[1735945265.086][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=71) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945265.086][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=71) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945265.086][INFO]: Done waiting for pending navigations. Status: ok
+[1735945265.087][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=72) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.087][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=72) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945265.087][DEBUG]: DevTools WebSocket Command: DOM.resolveNode (id=73) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "backendNodeId": 7,
+   "objectGroup": "38d97b5c-29a9-46a1-a1ee-5d0b8e4966ae"
+}
+[1735945265.087][DEBUG]: DevTools WebSocket Response: DOM.resolveNode (id=73) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "object": {
+      "className": "HTMLTextAreaElement",
+      "description": "textarea.chat-input.m-0.h-[24px].max-h-[400px].w-full.resize-none.bg-transparent.py-2.pr-8.pl-2.text-white.outline-none.border-blue-500",
+      "objectId": "65743134801603097.1.16",
+      "subtype": "node",
+      "type": "object"
+   }
+}
+[1735945265.087][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=74) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.087][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=74) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945265.087][DEBUG]: DevTools WebSocket Command: Runtime.callFunctionOn (id=75) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "arguments": [ {
+      "objectId": "65743134801603097.1.16"
+   } ],
+   "awaitPromise": true,
+   "functionDeclaration": "function(){ return (function() { // Copyright 2012 The Chromium Authors\n// Use of this source code is governed by a BSD-style license that can be\n// found in the LICENSE file.\n\n/**\n * Enum for WebD...",
+   "objectGroup": "38d97b5c-29a9-46a1-a1ee-5d0b8e4966ae",
+   "serializationOptions": {
+      "serialization": "deep"
+   },
+   "uniqueContextId": "-2161854669971170314.-7625416526549133954"
+}
+[1735945265.090][DEBUG]: DevTools WebSocket Response: Runtime.callFunctionOn (id=75) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "className": "Array",
+      "deepSerializedValue": {
+         "type": "array",
+         "value": [ {
+            "type": "string",
+            "value": "{\"status\":0,\"value\":\"TEXTAREA\"}"
+         } ]
+      },
+      "description": "Array(1)",
+      "objectId": "65743134801603097.1.17",
+      "subtype": "array",
+      "type": "object"
+   }
+}
+[1735945265.090][DEBUG]: DevTools WebSocket Command: Runtime.releaseObjectGroup (id=76) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "objectGroup": "38d97b5c-29a9-46a1-a1ee-5d0b8e4966ae"
+}
+[1735945265.090][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=77) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.090][DEBUG]: DevTools WebSocket Response: Runtime.releaseObjectGroup (id=76) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.090][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=77) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945265.090][DEBUG]: DevTools WebSocket Command: DOM.resolveNode (id=78) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "backendNodeId": 7,
+   "objectGroup": "a1d8f57c-ba38-4371-aea1-24fa9049861b"
+}
+[1735945265.090][DEBUG]: DevTools WebSocket Response: DOM.resolveNode (id=78) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "object": {
+      "className": "HTMLTextAreaElement",
+      "description": "textarea.chat-input.m-0.h-[24px].max-h-[400px].w-full.resize-none.bg-transparent.py-2.pr-8.pl-2.text-white.outline-none.border-blue-500",
+      "objectId": "65743134801603097.1.18",
+      "subtype": "node",
+      "type": "object"
+   }
+}
+[1735945265.090][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=79) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.090][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=79) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945265.090][DEBUG]: DevTools WebSocket Command: Runtime.callFunctionOn (id=80) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "arguments": [ {
+      "objectId": "65743134801603097.1.18"
+   } ],
+   "awaitPromise": true,
+   "functionDeclaration": "function(){ return (function() { // Copyright 2012 The Chromium Authors\n// Use of this source code is governed by a BSD-style license that can be\n// found in the LICENSE file.\n\n/**\n * Enum for WebD...",
+   "objectGroup": "a1d8f57c-ba38-4371-aea1-24fa9049861b",
+   "serializationOptions": {
+      "serialization": "deep"
+   },
+   "uniqueContextId": "-2161854669971170314.-7625416526549133954"
+}
+[1735945265.092][DEBUG]: DevTools WebSocket Response: Runtime.callFunctionOn (id=80) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "className": "Array",
+      "deepSerializedValue": {
+         "type": "array",
+         "value": [ {
+            "type": "string",
+            "value": "{\"status\":0,\"value\":\"textarea\"}"
+         } ]
+      },
+      "description": "Array(1)",
+      "objectId": "65743134801603097.1.19",
+      "subtype": "array",
+      "type": "object"
+   }
+}
+[1735945265.092][DEBUG]: DevTools WebSocket Command: Runtime.releaseObjectGroup (id=81) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "objectGroup": "a1d8f57c-ba38-4371-aea1-24fa9049861b"
+}
+[1735945265.092][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=82) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.092][DEBUG]: DevTools WebSocket Response: Runtime.releaseObjectGroup (id=81) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.092][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=82) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945265.092][DEBUG]: DevTools WebSocket Command: DOM.resolveNode (id=83) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "backendNodeId": 7,
+   "objectGroup": "d8a009bc-4021-41a2-b866-44411728ba8f"
+}
+[1735945265.092][DEBUG]: DevTools WebSocket Response: DOM.resolveNode (id=83) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "object": {
+      "className": "HTMLTextAreaElement",
+      "description": "textarea.chat-input.m-0.h-[24px].max-h-[400px].w-full.resize-none.bg-transparent.py-2.pr-8.pl-2.text-white.outline-none.border-blue-500",
+      "objectId": "65743134801603097.1.20",
+      "subtype": "node",
+      "type": "object"
+   }
+}
+[1735945265.092][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=84) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.092][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=84) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945265.092][DEBUG]: DevTools WebSocket Command: Runtime.callFunctionOn (id=85) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "arguments": [ {
+      "objectId": "65743134801603097.1.20"
+   } ],
+   "awaitPromise": true,
+   "functionDeclaration": "function(){ return (function() { // Copyright 2012 The Chromium Authors\n// Use of this source code is governed by a BSD-style license that can be\n// found in the LICENSE file.\n\n/**\n * Enum for WebD...",
+   "objectGroup": "d8a009bc-4021-41a2-b866-44411728ba8f",
+   "serializationOptions": {
+      "serialization": "deep"
+   },
+   "uniqueContextId": "-2161854669971170314.-7625416526549133954"
+}
+[1735945265.093][DEBUG]: DevTools WebSocket Response: Runtime.callFunctionOn (id=85) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "className": "Array",
+      "deepSerializedValue": {
+         "type": "array",
+         "value": [ {
+            "type": "string",
+            "value": "{\"status\":0,\"value\":false}"
+         } ]
+      },
+      "description": "Array(1)",
+      "objectId": "65743134801603097.1.21",
+      "subtype": "array",
+      "type": "object"
+   }
+}
+[1735945265.093][DEBUG]: DevTools WebSocket Command: Runtime.releaseObjectGroup (id=86) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "objectGroup": "d8a009bc-4021-41a2-b866-44411728ba8f"
+}
+[1735945265.093][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=87) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.093][DEBUG]: DevTools WebSocket Response: Runtime.releaseObjectGroup (id=86) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.093][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=87) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945265.093][DEBUG]: DevTools WebSocket Command: DOM.resolveNode (id=88) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "backendNodeId": 7,
+   "objectGroup": "f08bc9d8-b05d-4758-83bb-72c6d89319f9"
+}
+[1735945265.093][DEBUG]: DevTools WebSocket Response: DOM.resolveNode (id=88) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "object": {
+      "className": "HTMLTextAreaElement",
+      "description": "textarea.chat-input.m-0.h-[24px].max-h-[400px].w-full.resize-none.bg-transparent.py-2.pr-8.pl-2.text-white.outline-none.border-blue-500",
+      "objectId": "65743134801603097.1.22",
+      "subtype": "node",
+      "type": "object"
+   }
+}
+[1735945265.093][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=89) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.093][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=89) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945265.094][DEBUG]: DevTools WebSocket Command: Runtime.callFunctionOn (id=90) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "arguments": [ {
+      "objectId": "65743134801603097.1.22"
+   } ],
+   "awaitPromise": true,
+   "functionDeclaration": "function(){ return (function() { // Copyright 2012 The Chromium Authors\n// Use of this source code is governed by a BSD-style license that can be\n// found in the LICENSE file.\n\n/**\n * Enum for WebD...",
+   "objectGroup": "f08bc9d8-b05d-4758-83bb-72c6d89319f9",
+   "serializationOptions": {
+      "serialization": "deep"
+   },
+   "uniqueContextId": "-2161854669971170314.-7625416526549133954"
+}
+[1735945265.094][DEBUG]: DevTools WebSocket Response: Runtime.callFunctionOn (id=90) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "className": "Array",
+      "deepSerializedValue": {
+         "type": "array",
+         "value": [ {
+            "type": "string",
+            "value": "{\"status\":0,\"value\":\"TEXTAREA\"}"
+         } ]
+      },
+      "description": "Array(1)",
+      "objectId": "65743134801603097.1.23",
+      "subtype": "array",
+      "type": "object"
+   }
+}
+[1735945265.094][DEBUG]: DevTools WebSocket Command: Runtime.releaseObjectGroup (id=91) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "objectGroup": "f08bc9d8-b05d-4758-83bb-72c6d89319f9"
+}
+[1735945265.094][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=92) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "awaitPromise": false,
+   "expression": "document.hasFocus()",
+   "returnByValue": true
+}
+[1735945265.094][DEBUG]: DevTools WebSocket Response: Runtime.releaseObjectGroup (id=91) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.094][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=92) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "type": "boolean",
+      "value": true
+   }
+}
+[1735945265.094][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=93) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.095][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=93) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945265.095][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=94) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.095][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=94) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945265.095][DEBUG]: DevTools WebSocket Command: Runtime.callFunctionOn (id=95) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "arguments": [  ],
+   "awaitPromise": true,
+   "functionDeclaration": "function(){ return (function() { // Copyright 2012 The Chromium Authors\n// Use of this source code is governed by a BSD-style license that can be\n// found in the LICENSE file.\n\n/**\n * Enum for WebD...",
+   "serializationOptions": {
+      "serialization": "deep"
+   },
+   "uniqueContextId": "-2161854669971170314.-7625416526549133954"
+}
+[1735945265.095][DEBUG]: DevTools WebSocket Response: Runtime.callFunctionOn (id=95) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "className": "Array",
+      "deepSerializedValue": {
+         "type": "array",
+         "value": [ {
+            "type": "string",
+            "value": "{\"status\":0,\"value\":{\"element-6066-11e4-a52e-4f735466cecf\":0}}"
+         }, {
+            "type": "node",
+            "value": {
+               "attributes": {
+                  "class": "chat-input m-0 h-[24px] max-h-[400px] w-full resize-none bg-transparent py-2 pr-8 pl-2 text-white outline-none border-blue-500",
+                  "placeholder": "Type a message or type \"/\" to select a prompt...",
+                  "rows": "1",
+                  "style": "resize: none; max-height: 400px; overflow: hidden; height: 32px; bottom: 32px;"
+               },
+               "backendNodeId": 7,
+               "childNodeCount": 0,
+               "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+               "localName": "textarea",
+               "namespaceURI": "http://www.w3.org/1999/xhtml",
+               "nodeType": 1,
+               "shadowRoot": {
+                  "type": "node",
+                  "value": {
+                     "backendNodeId": 13,
+                     "childNodeCount": 2,
+                     "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+                     "mode": "closed",
+                     "nodeType": 11
+                  }
+               }
+            }
+         } ]
+      },
+      "description": "Array(2)",
+      "objectId": "65743134801603097.1.24",
+      "subtype": "array",
+      "type": "object"
+   }
+}
+[1735945265.138][DEBUG]: DevTools WebSocket Command: Input.dispatchKeyEvent (id=96) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "code": "KeyH",
+   "key": "h",
+   "modifiers": 0,
+   "text": "h",
+   "type": "rawKeyDown",
+   "unmodifiedText": "h",
+   "windowsVirtualKeyCode": 72
+}
+[1735945265.138][DEBUG]: DevTools WebSocket Command: Input.dispatchKeyEvent (id=97) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "code": "KeyH",
+   "key": "h",
+   "modifiers": 0,
+   "text": "h",
+   "type": "char",
+   "unmodifiedText": "h",
+   "windowsVirtualKeyCode": 72
+}
+[1735945265.138][DEBUG]: DevTools WebSocket Command: Input.dispatchKeyEvent (id=98) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "code": "KeyH",
+   "key": "h",
+   "modifiers": 0,
+   "text": "h",
+   "type": "keyUp",
+   "unmodifiedText": "h",
+   "windowsVirtualKeyCode": 72
+}
+[1735945265.138][DEBUG]: DevTools WebSocket Command: Input.dispatchKeyEvent (id=99) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "code": "KeyI",
+   "key": "i",
+   "modifiers": 0,
+   "text": "i",
+   "type": "rawKeyDown",
+   "unmodifiedText": "i",
+   "windowsVirtualKeyCode": 73
+}
+[1735945265.138][DEBUG]: DevTools WebSocket Command: Input.dispatchKeyEvent (id=100) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "code": "KeyI",
+   "key": "i",
+   "modifiers": 0,
+   "text": "i",
+   "type": "char",
+   "unmodifiedText": "i",
+   "windowsVirtualKeyCode": 73
+}
+[1735945265.138][DEBUG]: DevTools WebSocket Command: Input.dispatchKeyEvent (id=101) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "code": "KeyI",
+   "key": "i",
+   "modifiers": 0,
+   "text": "i",
+   "type": "keyUp",
+   "unmodifiedText": "i",
+   "windowsVirtualKeyCode": 73
+}
+[1735945265.139][DEBUG]: DevTools WebSocket Response: Input.dispatchKeyEvent (id=96) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.141][DEBUG]: DevTools WebSocket Response: Input.dispatchKeyEvent (id=97) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.141][DEBUG]: DevTools WebSocket Response: Input.dispatchKeyEvent (id=98) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.141][DEBUG]: DevTools WebSocket Response: Input.dispatchKeyEvent (id=99) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.142][DEBUG]: DevTools WebSocket Response: Input.dispatchKeyEvent (id=100) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.142][DEBUG]: DevTools WebSocket Response: Input.dispatchKeyEvent (id=101) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945265.142][INFO]: Waiting for pending navigations...
+[1735945265.142][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=102) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945265.142][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=102) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945265.142][INFO]: Done waiting for pending navigations. Status: ok
+[1735945265.142][INFO]: [bccd62d8d64911c9ef11a5672e37f382] RESPONSE TypeElement
+[1735945265.144][INFO]: [bccd62d8d64911c9ef11a5672e37f382] COMMAND Type {
+   "value": [ "" ]
+}
+[1735945265.144][INFO]: [bccd62d8d64911c9ef11a5672e37f382] RESPONSE Type ERROR unknown command: Cannot call non W3C standard command while in W3C mode
+[1735945267.151][INFO]: [bccd62d8d64911c9ef11a5672e37f382] COMMAND FindElements {
+   "using": "css selector",
+   "value": ".mantine-Select-root.menu.z\\[50\\]"
+}
+[1735945267.151][INFO]: Waiting for pending navigations...
+[1735945267.151][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=103) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945267.153][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=103) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945267.153][INFO]: Done waiting for pending navigations. Status: ok
+[1735945267.153][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=104) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945267.154][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=104) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945267.154][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=105) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945267.155][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=105) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945267.157][DEBUG]: DevTools WebSocket Command: Runtime.callFunctionOn (id=106) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "arguments": [  ],
+   "awaitPromise": true,
+   "functionDeclaration": "function(){ return (function() { // Copyright 2012 The Chromium Authors\n// Use of this source code is governed by a BSD-style license that can be\n// found in the LICENSE file.\n\n/**\n * Enum for WebD...",
+   "serializationOptions": {
+      "serialization": "deep"
+   },
+   "uniqueContextId": "-2161854669971170314.-7625416526549133954"
+}
+[1735945267.164][DEBUG]: DevTools WebSocket Response: Runtime.callFunctionOn (id=106) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "className": "Array",
+      "deepSerializedValue": {
+         "type": "array",
+         "value": [ {
+            "type": "string",
+            "value": "{\"status\":0,\"value\":[]}"
+         } ]
+      },
+      "description": "Array(1)",
+      "objectId": "65743134801603097.1.25",
+      "subtype": "array",
+      "type": "object"
+   }
+}
+[1735945267.165][INFO]: Waiting for pending navigations...
+[1735945267.165][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=107) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945267.165][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=107) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945267.165][INFO]: Done waiting for pending navigations. Status: ok
+[1735945267.165][INFO]: [bccd62d8d64911c9ef11a5672e37f382] RESPONSE FindElements [  ]
+[1735945267.673][INFO]: [bccd62d8d64911c9ef11a5672e37f382] COMMAND FindElements {
+   "using": "css selector",
+   "value": ".mantine-Select-root.menu.z\\[50\\]"
+}
+[1735945267.674][INFO]: Waiting for pending navigations...
+[1735945267.674][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=108) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945267.675][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=108) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945267.675][INFO]: Done waiting for pending navigations. Status: ok
+[1735945267.675][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=109) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945267.676][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=109) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945267.676][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=110) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945267.677][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=110) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945267.678][DEBUG]: DevTools WebSocket Command: Runtime.callFunctionOn (id=111) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "arguments": [  ],
+   "awaitPromise": true,
+   "functionDeclaration": "function(){ return (function() { // Copyright 2012 The Chromium Authors\n// Use of this source code is governed by a BSD-style license that can be\n// found in the LICENSE file.\n\n/**\n * Enum for WebD...",
+   "serializationOptions": {
+      "serialization": "deep"
+   },
+   "uniqueContextId": "-2161854669971170314.-7625416526549133954"
+}
+[1735945267.682][DEBUG]: DevTools WebSocket Response: Runtime.callFunctionOn (id=111) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "className": "Array",
+      "deepSerializedValue": {
+         "type": "array",
+         "value": [ {
+            "type": "string",
+            "value": "{\"status\":0,\"value\":[]}"
+         } ]
+      },
+      "description": "Array(1)",
+      "objectId": "65743134801603097.1.26",
+      "subtype": "array",
+      "type": "object"
+   }
+}
+[1735945267.682][INFO]: Waiting for pending navigations...
+[1735945267.682][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=112) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945267.683][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=112) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945267.683][INFO]: Done waiting for pending navigations. Status: ok
+[1735945267.683][INFO]: [bccd62d8d64911c9ef11a5672e37f382] RESPONSE FindElements [  ]
+[1735945268.190][INFO]: [bccd62d8d64911c9ef11a5672e37f382] COMMAND FindElements {
+   "using": "css selector",
+   "value": ".mantine-Select-root.menu.z\\[50\\]"
+}
+[1735945268.190][INFO]: Waiting for pending navigations...
+[1735945268.190][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=113) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945268.192][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=113) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945268.192][INFO]: Done waiting for pending navigations. Status: ok
+[1735945268.192][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=114) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945268.194][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=114) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945268.194][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=115) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945268.195][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=115) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945268.196][DEBUG]: DevTools WebSocket Command: Runtime.callFunctionOn (id=116) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "arguments": [  ],
+   "awaitPromise": true,
+   "functionDeclaration": "function(){ return (function() { // Copyright 2012 The Chromium Authors\n// Use of this source code is governed by a BSD-style license that can be\n// found in the LICENSE file.\n\n/**\n * Enum for WebD...",
+   "serializationOptions": {
+      "serialization": "deep"
+   },
+   "uniqueContextId": "-2161854669971170314.-7625416526549133954"
+}
+[1735945268.200][DEBUG]: DevTools WebSocket Response: Runtime.callFunctionOn (id=116) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "className": "Array",
+      "deepSerializedValue": {
+         "type": "array",
+         "value": [ {
+            "type": "string",
+            "value": "{\"status\":0,\"value\":[]}"
+         } ]
+      },
+      "description": "Array(1)",
+      "objectId": "65743134801603097.1.27",
+      "subtype": "array",
+      "type": "object"
+   }
+}
+[1735945268.200][INFO]: Waiting for pending navigations...
+[1735945268.200][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=117) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945268.201][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=117) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945268.201][INFO]: Done waiting for pending navigations. Status: ok
+[1735945268.201][INFO]: [bccd62d8d64911c9ef11a5672e37f382] RESPONSE FindElements [  ]
+[1735945268.708][INFO]: [bccd62d8d64911c9ef11a5672e37f382] COMMAND FindElements {
+   "using": "css selector",
+   "value": ".mantine-Select-root.menu.z\\[50\\]"
+}
+[1735945268.708][INFO]: Waiting for pending navigations...
+[1735945268.708][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=118) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945268.709][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=118) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945268.709][INFO]: Done waiting for pending navigations. Status: ok
+[1735945268.709][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=119) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945268.710][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=119) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945268.710][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=120) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945268.711][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=120) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945268.713][DEBUG]: DevTools WebSocket Command: Runtime.callFunctionOn (id=121) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "arguments": [  ],
+   "awaitPromise": true,
+   "functionDeclaration": "function(){ return (function() { // Copyright 2012 The Chromium Authors\n// Use of this source code is governed by a BSD-style license that can be\n// found in the LICENSE file.\n\n/**\n * Enum for WebD...",
+   "serializationOptions": {
+      "serialization": "deep"
+   },
+   "uniqueContextId": "-2161854669971170314.-7625416526549133954"
+}
+[1735945268.716][DEBUG]: DevTools WebSocket Response: Runtime.callFunctionOn (id=121) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "className": "Array",
+      "deepSerializedValue": {
+         "type": "array",
+         "value": [ {
+            "type": "string",
+            "value": "{\"status\":0,\"value\":[]}"
+         } ]
+      },
+      "description": "Array(1)",
+      "objectId": "65743134801603097.1.28",
+      "subtype": "array",
+      "type": "object"
+   }
+}
+[1735945268.716][INFO]: Waiting for pending navigations...
+[1735945268.716][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=122) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945268.717][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=122) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945268.717][INFO]: Done waiting for pending navigations. Status: ok
+[1735945268.717][INFO]: [bccd62d8d64911c9ef11a5672e37f382] RESPONSE FindElements [  ]
+[1735945269.220][INFO]: [bccd62d8d64911c9ef11a5672e37f382] COMMAND FindElements {
+   "using": "css selector",
+   "value": ".mantine-Select-root.menu.z\\[50\\]"
+}
+[1735945269.220][INFO]: Waiting for pending navigations...
+[1735945269.220][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=123) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945269.221][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=123) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945269.221][INFO]: Done waiting for pending navigations. Status: ok
+[1735945269.221][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=124) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945269.221][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=124) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945269.221][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=125) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945269.221][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=125) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945269.222][DEBUG]: DevTools WebSocket Command: Runtime.callFunctionOn (id=126) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "arguments": [  ],
+   "awaitPromise": true,
+   "functionDeclaration": "function(){ return (function() { // Copyright 2012 The Chromium Authors\n// Use of this source code is governed by a BSD-style license that can be\n// found in the LICENSE file.\n\n/**\n * Enum for WebD...",
+   "serializationOptions": {
+      "serialization": "deep"
+   },
+   "uniqueContextId": "-2161854669971170314.-7625416526549133954"
+}
+[1735945269.223][DEBUG]: DevTools WebSocket Response: Runtime.callFunctionOn (id=126) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "className": "Array",
+      "deepSerializedValue": {
+         "type": "array",
+         "value": [ {
+            "type": "string",
+            "value": "{\"status\":0,\"value\":[]}"
+         } ]
+      },
+      "description": "Array(1)",
+      "objectId": "65743134801603097.1.29",
+      "subtype": "array",
+      "type": "object"
+   }
+}
+[1735945269.223][INFO]: Waiting for pending navigations...
+[1735945269.223][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=127) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945269.224][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=127) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945269.224][INFO]: Done waiting for pending navigations. Status: ok
+[1735945269.224][INFO]: [bccd62d8d64911c9ef11a5672e37f382] RESPONSE FindElements [  ]
+[1735945269.729][INFO]: [bccd62d8d64911c9ef11a5672e37f382] COMMAND FindElements {
+   "using": "css selector",
+   "value": ".mantine-Select-root.menu.z\\[50\\]"
+}
+[1735945269.729][INFO]: Waiting for pending navigations...
+[1735945269.729][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=128) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945269.730][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=128) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945269.730][INFO]: Done waiting for pending navigations. Status: ok
+[1735945269.730][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=129) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945269.731][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=129) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945269.731][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=130) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945269.731][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=130) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945269.733][DEBUG]: DevTools WebSocket Command: Runtime.callFunctionOn (id=131) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "arguments": [  ],
+   "awaitPromise": true,
+   "functionDeclaration": "function(){ return (function() { // Copyright 2012 The Chromium Authors\n// Use of this source code is governed by a BSD-style license that can be\n// found in the LICENSE file.\n\n/**\n * Enum for WebD...",
+   "serializationOptions": {
+      "serialization": "deep"
+   },
+   "uniqueContextId": "-2161854669971170314.-7625416526549133954"
+}
+[1735945269.736][DEBUG]: DevTools WebSocket Response: Runtime.callFunctionOn (id=131) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "className": "Array",
+      "deepSerializedValue": {
+         "type": "array",
+         "value": [ {
+            "type": "string",
+            "value": "{\"status\":0,\"value\":[]}"
+         } ]
+      },
+      "description": "Array(1)",
+      "objectId": "65743134801603097.1.30",
+      "subtype": "array",
+      "type": "object"
+   }
+}
+[1735945269.736][INFO]: Waiting for pending navigations...
+[1735945269.736][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=132) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945269.737][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=132) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945269.737][INFO]: Done waiting for pending navigations. Status: ok
+[1735945269.737][INFO]: [bccd62d8d64911c9ef11a5672e37f382] RESPONSE FindElements [  ]
+[1735945270.244][INFO]: [bccd62d8d64911c9ef11a5672e37f382] COMMAND FindElements {
+   "using": "css selector",
+   "value": ".mantine-Select-root.menu.z\\[50\\]"
+}
+[1735945270.244][INFO]: Waiting for pending navigations...
+[1735945270.244][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=133) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945270.245][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=133) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945270.245][INFO]: Done waiting for pending navigations. Status: ok
+[1735945270.245][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=134) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945270.246][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=134) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945270.246][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=135) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945270.247][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=135) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945270.248][DEBUG]: DevTools WebSocket Command: Runtime.callFunctionOn (id=136) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "arguments": [  ],
+   "awaitPromise": true,
+   "functionDeclaration": "function(){ return (function() { // Copyright 2012 The Chromium Authors\n// Use of this source code is governed by a BSD-style license that can be\n// found in the LICENSE file.\n\n/**\n * Enum for WebD...",
+   "serializationOptions": {
+      "serialization": "deep"
+   },
+   "uniqueContextId": "-2161854669971170314.-7625416526549133954"
+}
+[1735945270.251][DEBUG]: DevTools WebSocket Response: Runtime.callFunctionOn (id=136) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "className": "Array",
+      "deepSerializedValue": {
+         "type": "array",
+         "value": [ {
+            "type": "string",
+            "value": "{\"status\":0,\"value\":[]}"
+         } ]
+      },
+      "description": "Array(1)",
+      "objectId": "65743134801603097.1.31",
+      "subtype": "array",
+      "type": "object"
+   }
+}
+[1735945270.252][INFO]: Waiting for pending navigations...
+[1735945270.252][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=137) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945270.252][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=137) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945270.252][INFO]: Done waiting for pending navigations. Status: ok
+[1735945270.252][INFO]: [bccd62d8d64911c9ef11a5672e37f382] RESPONSE FindElements [  ]
+[1735945270.759][INFO]: [bccd62d8d64911c9ef11a5672e37f382] COMMAND FindElements {
+   "using": "css selector",
+   "value": ".mantine-Select-root.menu.z\\[50\\]"
+}
+[1735945270.759][INFO]: Waiting for pending navigations...
+[1735945270.759][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=138) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945270.760][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=138) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945270.760][INFO]: Done waiting for pending navigations. Status: ok
+[1735945270.760][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=139) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945270.760][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=139) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945270.760][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=140) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945270.761][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=140) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945270.762][DEBUG]: DevTools WebSocket Command: Runtime.callFunctionOn (id=141) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "arguments": [  ],
+   "awaitPromise": true,
+   "functionDeclaration": "function(){ return (function() { // Copyright 2012 The Chromium Authors\n// Use of this source code is governed by a BSD-style license that can be\n// found in the LICENSE file.\n\n/**\n * Enum for WebD...",
+   "serializationOptions": {
+      "serialization": "deep"
+   },
+   "uniqueContextId": "-2161854669971170314.-7625416526549133954"
+}
+[1735945270.764][DEBUG]: DevTools WebSocket Response: Runtime.callFunctionOn (id=141) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "className": "Array",
+      "deepSerializedValue": {
+         "type": "array",
+         "value": [ {
+            "type": "string",
+            "value": "{\"status\":0,\"value\":[]}"
+         } ]
+      },
+      "description": "Array(1)",
+      "objectId": "65743134801603097.1.32",
+      "subtype": "array",
+      "type": "object"
+   }
+}
+[1735945270.764][INFO]: Waiting for pending navigations...
+[1735945270.764][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=142) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945270.765][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=142) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945270.765][INFO]: Done waiting for pending navigations. Status: ok
+[1735945270.765][INFO]: [bccd62d8d64911c9ef11a5672e37f382] RESPONSE FindElements [  ]
+[1735945271.269][INFO]: [bccd62d8d64911c9ef11a5672e37f382] COMMAND FindElements {
+   "using": "css selector",
+   "value": ".mantine-Select-root.menu.z\\[50\\]"
+}
+[1735945271.269][INFO]: Waiting for pending navigations...
+[1735945271.269][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=143) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945271.270][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=143) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945271.270][INFO]: Done waiting for pending navigations. Status: ok
+[1735945271.270][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=144) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945271.271][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=144) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945271.271][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=145) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945271.271][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=145) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945271.272][DEBUG]: DevTools WebSocket Command: Runtime.callFunctionOn (id=146) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "arguments": [  ],
+   "awaitPromise": true,
+   "functionDeclaration": "function(){ return (function() { // Copyright 2012 The Chromium Authors\n// Use of this source code is governed by a BSD-style license that can be\n// found in the LICENSE file.\n\n/**\n * Enum for WebD...",
+   "serializationOptions": {
+      "serialization": "deep"
+   },
+   "uniqueContextId": "-2161854669971170314.-7625416526549133954"
+}
+[1735945271.275][DEBUG]: DevTools WebSocket Response: Runtime.callFunctionOn (id=146) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "className": "Array",
+      "deepSerializedValue": {
+         "type": "array",
+         "value": [ {
+            "type": "string",
+            "value": "{\"status\":0,\"value\":[]}"
+         } ]
+      },
+      "description": "Array(1)",
+      "objectId": "65743134801603097.1.33",
+      "subtype": "array",
+      "type": "object"
+   }
+}
+[1735945271.275][INFO]: Waiting for pending navigations...
+[1735945271.275][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=147) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945271.276][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=147) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945271.276][INFO]: Done waiting for pending navigations. Status: ok
+[1735945271.276][INFO]: [bccd62d8d64911c9ef11a5672e37f382] RESPONSE FindElements [  ]
+[1735945271.783][INFO]: [bccd62d8d64911c9ef11a5672e37f382] COMMAND FindElements {
+   "using": "css selector",
+   "value": ".mantine-Select-root.menu.z\\[50\\]"
+}
+[1735945271.783][INFO]: Waiting for pending navigations...
+[1735945271.783][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=148) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945271.784][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=148) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945271.784][INFO]: Done waiting for pending navigations. Status: ok
+[1735945271.784][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=149) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945271.784][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=149) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945271.784][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=150) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945271.785][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=150) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945271.786][DEBUG]: DevTools WebSocket Command: Runtime.callFunctionOn (id=151) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "arguments": [  ],
+   "awaitPromise": true,
+   "functionDeclaration": "function(){ return (function() { // Copyright 2012 The Chromium Authors\n// Use of this source code is governed by a BSD-style license that can be\n// found in the LICENSE file.\n\n/**\n * Enum for WebD...",
+   "serializationOptions": {
+      "serialization": "deep"
+   },
+   "uniqueContextId": "-2161854669971170314.-7625416526549133954"
+}
+[1735945271.790][DEBUG]: DevTools WebSocket Response: Runtime.callFunctionOn (id=151) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "className": "Array",
+      "deepSerializedValue": {
+         "type": "array",
+         "value": [ {
+            "type": "string",
+            "value": "{\"status\":0,\"value\":[]}"
+         } ]
+      },
+      "description": "Array(1)",
+      "objectId": "65743134801603097.1.34",
+      "subtype": "array",
+      "type": "object"
+   }
+}
+[1735945271.790][INFO]: Waiting for pending navigations...
+[1735945271.790][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=152) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945271.791][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=152) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945271.791][INFO]: Done waiting for pending navigations. Status: ok
+[1735945271.791][INFO]: [bccd62d8d64911c9ef11a5672e37f382] RESPONSE FindElements [  ]
+[1735945272.297][INFO]: [bccd62d8d64911c9ef11a5672e37f382] COMMAND FindElements {
+   "using": "css selector",
+   "value": ".mantine-Select-root.menu.z\\[50\\]"
+}
+[1735945272.297][INFO]: Waiting for pending navigations...
+[1735945272.297][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=153) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945272.298][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=153) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945272.298][INFO]: Done waiting for pending navigations. Status: ok
+[1735945272.298][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=154) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945272.299][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=154) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945272.299][DEBUG]: DevTools WebSocket Command: Page.getFrameTree (id=155) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+}
+[1735945272.299][DEBUG]: DevTools WebSocket Response: Page.getFrameTree (id=155) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "frameTree": {
+      "frame": {
+         "adFrameStatus": {
+            "adFrameType": "none"
+         },
+         "crossOriginIsolatedContextType": "NotIsolated",
+         "domainAndRegistry": "uiuc.chat",
+         "gatedAPIFeatures": [  ],
+         "id": "7D9E071CBFC0B9A381ED840CAFE62D1D",
+         "loaderId": "B8CA2AE554423D68FB43CDCBACEC33A5",
+         "mimeType": "text/html",
+         "secureContextType": "Secure",
+         "securityOrigin": "https://uiuc.chat",
+         "url": "https://uiuc.chat/ece120/chat"
+      }
+   }
+}
+[1735945272.300][DEBUG]: DevTools WebSocket Command: Runtime.callFunctionOn (id=156) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "arguments": [  ],
+   "awaitPromise": true,
+   "functionDeclaration": "function(){ return (function() { // Copyright 2012 The Chromium Authors\n// Use of this source code is governed by a BSD-style license that can be\n// found in the LICENSE file.\n\n/**\n * Enum for WebD...",
+   "serializationOptions": {
+      "serialization": "deep"
+   },
+   "uniqueContextId": "-2161854669971170314.-7625416526549133954"
+}
+[1735945272.304][DEBUG]: DevTools WebSocket Response: Runtime.callFunctionOn (id=156) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "className": "Array",
+      "deepSerializedValue": {
+         "type": "array",
+         "value": [ {
+            "type": "string",
+            "value": "{\"status\":0,\"value\":[]}"
+         } ]
+      },
+      "description": "Array(1)",
+      "objectId": "65743134801603097.1.35",
+      "subtype": "array",
+      "type": "object"
+   }
+}
+[1735945272.304][INFO]: Waiting for pending navigations...
+[1735945272.304][DEBUG]: DevTools WebSocket Command: Runtime.evaluate (id=157) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "expression": "1"
+}
+[1735945272.304][DEBUG]: DevTools WebSocket Response: Runtime.evaluate (id=157) (session_id=75641A6361A3B7AD5256EC08CB6D3E5D) 7D9E071CBFC0B9A381ED840CAFE62D1D {
+   "result": {
+      "description": "1",
+      "type": "number",
+      "value": 1
+   }
+}
+[1735945272.304][INFO]: Done waiting for pending navigations. Status: ok
+[1735945272.304][INFO]: [bccd62d8d64911c9ef11a5672e37f382] RESPONSE FindElements [  ]
+[71297:259:0103/180112.716712:WARNING:controller_impl.cc(1192)] Background download complete, client: 6, completion type: 0, file size:5155
+[71297:259:0103/180112.936519:WARNING:controller_impl.cc(1192)] Background download complete, client: 6, completion type: 0, file size:265059
+[71297:259:0103/180113.045340:WARNING:controller_impl.cc(1192)] Background download complete, client: 6, completion type: 0, file size:883094
+[71297:259:0103/180113.314011:WARNING:controller_impl.cc(1192)] Background download complete, client: 6, completion type: 0, file size:2200227
+[1735945273.371][INFO]: [bccd62d8d64911c9ef11a5672e37f382] COMMAND Quit {
+}
+[1735945273.426][INFO]: [bccd62d8d64911c9ef11a5672e37f382] RESPONSE Quit
+[1735945273.426][DEBUG]: Log type 'driver' lost 0 entries on destruction
+[1735945273.426][DEBUG]: Log type 'browser' lost 4 entries on destruction
