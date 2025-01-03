@@ -121,7 +121,7 @@ export const getCourseDocuments = async (
 //   const course_name = req.nextUrl.searchParams.get('course_name')
 //   log.debug('getCourseMetadata() request', { course_name: course_name })
 //   try {
-//     const course_metadata = (await kv.hget(
+//     const course_metadata = (await redisClient.hget(
 //       'course_metadatas',
 //       course_name,
 //     )) as CourseMetadata

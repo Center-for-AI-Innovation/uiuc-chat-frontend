@@ -1,11 +1,31 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Title, Text } from '@mantine/core'
 import Link from 'next/link'
 
-const Maintenance = ({}: {
+const Maintenance = ({ }: {
   // Prevent search engine indexing of Maintenance page (because it'll ruin our entire search results): https://github.com/vercel/next.js/discussions/12850#discussioncomment-3335807
   // in _document.tsx
 }) => {
+  const [maintenanceBodyText, setMaintenanceBodyText] = useState('')
+  const [maintenanceTitleText, setMaintenanceTitleText] = useState('')
+
+  useEffect(() => {
+    const checkMaintenanceMode = async () => {
+      try {
+        const response = await fetch('/api/UIUC-api/getMaintenanceModeDetails')
+        const data = await response.json()
+        // setIsMaintenanceMode(data.isMaintenanceMode)
+        setMaintenanceBodyText(data.maintenanceBodyText)
+        setMaintenanceTitleText(data.maintenanceTitleText)
+      } catch (error) {
+        console.error('Failed to check maintenance mode:', error)
+        // setIsMaintenanceMode(false)
+      }
+    }
+
+    checkMaintenanceMode()
+  }, [])
+
   return (
     <>
       <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
@@ -17,13 +37,11 @@ const Maintenance = ({}: {
           </Link>
 
           <Title className="mt-8 text-amber-400" order={1}>
-            We&apos;ll Be Right Back
+            {maintenanceTitleText}
           </Title>
 
           <Text size="xl" className="max-w-2xl text-gray-200">
-            Due to a surge in new documents, we are experiencing some technical
-            difficulties. Our team is working hard to resolve this and
-            we&apos;ll be back online shortly. Thank you for your patience.
+            {maintenanceBodyText}
           </Text>
 
           <div className="mt-8 animate-pulse">

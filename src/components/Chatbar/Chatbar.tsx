@@ -223,8 +223,10 @@ export const Chatbar = ({
   }
 
   const handleClearConversations = () => {
-    deleteAllConversationMutation.mutate()
+    homeDispatch({ field: 'conversations', value: [] })
+    chatDispatch({ field: 'searchTerm', value: '' })
     handleNewConversation()
+    deleteAllConversationMutation.mutate()
   }
 
   const handleDeleteConversation = (conversation: Conversation) => {

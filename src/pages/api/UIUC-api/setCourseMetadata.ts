@@ -1,6 +1,6 @@
-import { kv } from '@vercel/kv'
 import { NextResponse } from 'next/server'
 import { type CourseMetadata } from '~/types/courseMetadata'
+import { redisClient } from '~/utils/redisClient'
 
 const setCourseMetadata = async (req: any, res: any) => {
   if (req.method !== 'POST') {
@@ -17,7 +17,9 @@ const setCourseMetadata = async (req: any, res: any) => {
     'course_intro_message',
   )
   const banner_image_s3 = req.nextUrl.searchParams.get('banner_image_s3')
-  const is_private = JSON.parse(req.nextUrl.searchParams.get('is_private') || 'false')
+  const is_private = JSON.parse(
+    req.nextUrl.searchParams.get('is_private') || 'false',
+  )
   const course_admins = JSON.parse(
     req.nextUrl.searchParams.get('course_admins') || '["kvday2@illinois.edu"]',
   )
@@ -47,7 +49,7 @@ const setCourseMetadata = async (req: any, res: any) => {
     req.nextUrl.searchParams.get('systemPromptOnly') || 'false',
   )
   const vector_search_rewrite_disabled = JSON.parse(
-    req.nextUrl.searchParams.get('vector_search_rewrite_disabled') || 'false'
+    req.nextUrl.searchParams.get('vector_search_rewrite_disabled') || 'false',
   )
 
   try {
@@ -69,7 +71,9 @@ const setCourseMetadata = async (req: any, res: any) => {
       vector_search_rewrite_disabled,
     }
     console.log('Right before setting course_metadata with: ', course_metadata)
-    await kv.hset('course_metadatas', { [course_name]: course_metadata })
+    await redisClient.hSet('course_metadatas', {
+      [course_name]: JSON.stringify(course_metadata),
+    })
 
     return NextResponse.json({ success: true })
   } catch (error) {

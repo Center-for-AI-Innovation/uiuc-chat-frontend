@@ -1,27 +1,25 @@
-import { NextApiRequest } from 'next'
-import { NextResponse } from 'next/server'
+import { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '~/utils/supabaseClient'
 import posthog from 'posthog-js'
 
-export const config = {
-  runtime: 'edge',
+type IngestResponse = {
+  task_id?: string
+  error?: string
 }
 
-const handler = async (req: NextApiRequest) => {
+const handler = async (
+  req: NextApiRequest,
+  res: NextApiResponse<IngestResponse>
+) => {
   try {
     if (req.method !== 'POST') {
       console.error('Request method not allowed')
-      return NextResponse.json(
-        { error: '❌❌ Request method not allowed' },
-        { status: 405 },
-      )
+      return res.status(405).json({
+        error: '❌❌ Request method not allowed'
+      })
     }
 
-    // Assuming the body is a ReadableStream, we need to read it correctly.
-    // First, we convert the stream into a Response object, then use .json() to parse it.
-    const data = await new Response(req.body).json()
-
-    const { uniqueFileName, courseName, readableFilename } = data
+    const { uniqueFileName, courseName, readableFilename } = req.body
 
     console.log(
       '👉 Submitting to ingest queue:',
@@ -32,15 +30,12 @@ const handler = async (req: NextApiRequest) => {
 
     if (!uniqueFileName || !courseName || !readableFilename) {
       console.error('Missing body parameters')
-      return NextResponse.json(
-        { error: '❌❌ Missing body parameters' },
-        { status: 400 },
-      )
+      return res.status(400).json({
+        error: '❌❌ Missing body parameters'
+      })
     }
-    // Continue with your logic as before...
-    const s3_filepath = `courses/${courseName}/${uniqueFileName}`
 
-    // console.log('👉 Submitting to ingest queue/:', s3_filepath)
+    const s3_filepath = `courses/${courseName}/${uniqueFileName}`
 
     const response = await fetch(
       'https://app.beam.cloud/taskqueue/ingest_task_queue/latest',
@@ -88,11 +83,12 @@ const handler = async (req: NextApiRequest) => {
       })
     }
 
-    return NextResponse.json(responseBody, { status: 200 })
+    return res.status(200).json(responseBody)
   } catch (error) {
     const err = `❌❌ -- Bottom of /ingest -- Internal Server Error during ingest submission to Beam: ${error}`
     console.error(err)
-    return NextResponse.json({ error: err }, { status: 500 })
+    return res.status(500).json({ error: err })
   }
 }
+
 export default handler

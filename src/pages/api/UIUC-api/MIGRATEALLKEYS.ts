@@ -1,4 +1,3 @@
-import { kv } from '@vercel/kv'
 import { type NextRequest, NextResponse } from 'next/server'
 import { getAllCourseMetadata } from './getAllCourseMetadata'
 import { CourseMetadata } from '~/types/courseMetadata'
@@ -9,6 +8,7 @@ import {
 } from '~/utils/modelProviders/types/openai'
 import { ProviderNames } from '~/utils/modelProviders/LLMProvider'
 import { encryptKeyIfNeeded } from '~/utils/crypto'
+import { redisClient } from '~/utils/redisClient'
 
 export const runtime = 'edge'
 export const maxDuration = 60
@@ -112,7 +112,7 @@ export const migrateAllKeys = async () => {
 
         // HERE WE UPSERT --
 
-        const llmProvidersInDB = await kv.get(`${courseName}-llms`)
+        const llmProvidersInDB = await redisClient.get(`${courseName}-llms`)
 
         if (!llmProvidersInDB) {
           console.log('No LLMs in DB, setting new LLMs...')
@@ -128,7 +128,10 @@ export const migrateAllKeys = async () => {
           }
           console.log('Setting new LLMs:', final_LLMs)
 
-          await kv.set(`${courseName}-llms`, final_LLMs)
+          await redisClient.set(
+            `${courseName}-llms`,
+            JSON.stringify(final_LLMs),
+          )
           newlyMigratedCourses++
         } else {
           console.log('LLMs already exist in DB :)')

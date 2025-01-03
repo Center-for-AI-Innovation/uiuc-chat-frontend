@@ -48,7 +48,8 @@ export function convertDBToChatConversation(
   dbMessages: DBMessage[],
 ): ChatConversation {
   // console.log('dbConversation: ', dbConversation)
-  // console.log('dbMessages: ', dbMessages)
+  // console.log('AllSupportedModels: ', AllSupportedModels)
+  // console.log('AllSupportedModels: type of ', typeof AllSupportedModels)
   return {
     id: dbConversation.id,
     name: dbConversation.name,
@@ -87,10 +88,10 @@ export function convertDBToChatConversation(
 
       const feedbackObj = msg.feedback
         ? {
-            isPositive: msg.feedback.feedback_is_positive,
-            category: msg.feedback.feedback_category,
-            details: msg.feedback.feedback_details,
-          }
+          isPositive: msg.feedback.feedback_is_positive,
+          category: msg.feedback.feedback_category,
+          details: msg.feedback.feedback_details,
+        }
         : undefined
 
       const messageObj = {
@@ -208,10 +209,19 @@ export default async function handler(
 
         if (error) throw error
 
-        // Convert and save messages
+        // First delete all existing messages for this conversation
+        await supabase
+          .from('messages')
+          .delete()
+          .eq('conversation_id', conversation.id)
+
+        // Then insert all messages in their current state
         for (const message of conversation.messages) {
           const dbMessage = convertChatToDBMessage(message, conversation.id)
-          await supabase.from('messages').upsert(dbMessage)
+          const { error: messageError } = await supabase
+            .from('messages')
+            .insert(dbMessage)
+          if (messageError) throw messageError
         }
 
         res.status(200).json({ message: 'Conversation saved successfully' })
@@ -276,8 +286,8 @@ export default async function handler(
 
         const nextCursor =
           count &&
-          count > (pageParam + 1) * pageSize &&
-          count > fetchedConversations.length
+            count > (pageParam + 1) * pageSize &&
+            count > fetchedConversations.length
             ? pageParam + 1
             : null
 
@@ -293,7 +303,7 @@ export default async function handler(
         })
       } catch (error) {
         res.status(500).json({ error: 'Error fetching conversation history' })
-        console.error('Error fetching conversation history:', error)
+        console.error('pages/api/conversation.ts - Error fetching conversation history:', error)
       }
       break
 
@@ -311,30 +321,23 @@ export default async function handler(
         user_email?: string
         course_name?: string
       }
-      console.log(
-        'id: ',
-        id,
-        'userEmail: ',
-        userEmail,
-        'course_name: ',
-        course_name,
-      )
+
       try {
         if (id) {
-          // Delete conversation
+          // Delete single conversation
           const { data, error } = await supabase
             .from('conversations')
             .delete()
             .eq('id', id)
           if (error) throw error
         } else if (userEmail && course_name) {
-          // Delete all conversations
-          console.log('deleting all conversations')
+          // Delete all conversations that are not in folders
           const { data, error } = await supabase
             .from('conversations')
             .delete()
             .eq('user_email', userEmail)
             .eq('project_name', course_name)
+            .is('folder_id', null)  // Only delete conversations that are not in folders
           if (error) throw error
         } else {
           res.status(400).json({ error: 'Invalid request parameters' })

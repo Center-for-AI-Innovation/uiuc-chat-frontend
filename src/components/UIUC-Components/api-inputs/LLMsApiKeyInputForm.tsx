@@ -535,6 +535,25 @@ export default function APIKeyInputForm() {
     },
   })
 
+  // if (isLoadingLLMProviders) {
+  //   return (
+  //     <div className="flex h-screen items-center justify-center">
+  //       <Text>Loading...</Text>
+  //     </div>
+  //   )
+  // }
+
+  // if (isErrorLLMProviders) {
+  //   return (
+  //     <div className="flex h-screen items-center justify-center">
+  //       <Text>
+  //         Failed to load API keys. Please try again later.{' '}
+  //         {errorLLMProviders?.message}
+  //       </Text>
+  //     </div>
+  //   )
+  // }
+
   return (
     <>
       <Navbar course_name={projectName} />

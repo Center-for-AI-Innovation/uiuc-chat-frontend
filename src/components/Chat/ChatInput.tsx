@@ -126,8 +126,21 @@ export const ChatInput = ({
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [imageUrls, setImageUrls] = useState<string[]>([])
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
-  // const [showModelSettings, setShowModelSettings] = useState(false);
   const modelSelectContainerRef = useRef<HTMLDivElement | null>(null)
+
+  const handleFocus = () => {
+    setIsFocused(true)
+    if (chatInputParentContainerRef.current) {
+      chatInputParentContainerRef.current.style.boxShadow = `0 0 2px rgba(42,42,120, 1)`
+    }
+  }
+
+  const handleBlur = () => {
+    setIsFocused(false)
+    if (chatInputParentContainerRef.current) {
+      chatInputParentContainerRef.current.style.boxShadow = 'none'
+    }
+  }
 
   const handleTextClick = () => {
     console.log('handleTextClick')
@@ -208,10 +221,10 @@ export const ChatInput = ({
           imageUrls.length > 0
             ? imageUrls
             : await Promise.all(
-                imageFiles.map((file) =>
-                  uploadImageAndGetUrl(file, courseName),
-                ),
-              )
+              imageFiles.map((file) =>
+                uploadImageAndGetUrl(file, courseName),
+              ),
+            )
 
         // Construct image content for the message
         imageContent = imageUrlsToUse
@@ -461,18 +474,18 @@ export const ChatInput = ({
   const handleImageUpload = useCallback(
     async (files: File[]) => {
       // TODO: FIX IMAGE UPLOADS ASAP
-      showConfirmationToast({
-        title: `😢 We can't handle all these images...`,
-        message: `Image uploads are temporarily disabled. I'm really sorry, I'm working on getting them back. Email me if you want to complain: kvday2@illinois.edu`,
-        isError: true,
-        autoClose: 10000,
-      })
+      // showConfirmationToast({
+      //   title: `😢 We can't handle all these images...`,
+      //   message: `Image uploads are temporarily disabled. I'm really sorry, I'm working on getting them back. Email me if you want to complain: kvday2@illinois.edu`,
+      //   isError: true,
+      //   autoClose: 10000,
+      // })
 
       // Clear any selected files
       if (imageUploadRef.current) {
         imageUploadRef.current.value = ''
       }
-      return // Exit early to prevent processing
+      // return // Exit early to prevent processing
 
       const validFiles = files.filter((file) => isImageValid(file.name))
       const invalidFilesCount = files.length - validFiles.length
@@ -668,9 +681,8 @@ export const ChatInput = ({
     if (textareaRef && textareaRef.current) {
       textareaRef.current.style.height = 'inherit'
       textareaRef.current.style.height = `${textareaRef.current?.scrollHeight}px`
-      textareaRef.current.style.overflow = `${
-        textareaRef?.current?.scrollHeight > 400 ? 'auto' : 'hidden'
-      }`
+      textareaRef.current.style.overflow = `${textareaRef?.current?.scrollHeight > 400 ? 'auto' : 'hidden'
+        }`
     }
   }, [content])
 
@@ -899,23 +911,28 @@ export const ChatInput = ({
             {/* Button 3: main input text area  */}
             <div
               className={`
-                ${
-                  VisionCapableModels.has(
-                    selectedConversation?.model?.id as OpenAIModelID,
-                  )
-                    ? 'pl-8'
-                    : 'pl-1'
+                ${VisionCapableModels.has(
+                selectedConversation?.model?.id as OpenAIModelID,
+              )
+                  ? 'pl-8'
+                  : 'pl-1'
                 }
                   `}
             >
               <textarea
-                autoFocus
                 ref={textareaRef}
-                className="m-0 w-full flex-grow resize-none bg-[#070712] p-0 py-2 pr-8 text-black dark:bg-[#070712] dark:text-white md:py-2"
+                className={`chat-input m-0 h-[24px] max-h-[400px] w-full resize-none bg-transparent py-2 pr-8 pl-2 text-white outline-none ${isFocused ? 'border-blue-500' : ''
+                  }`}
+                style={{
+                  resize: 'none',
+                  bottom: `${textareaRef?.current?.scrollHeight}px`,
+                  maxHeight: '400px',
+                  overflow: `${textareaRef.current && textareaRef.current.scrollHeight > 400
+                      ? 'auto'
+                      : 'hidden'
+                    }`,
+                }}
                 placeholder={
-                  t('Type a message or type "/" to select a prompt...') || ''
-                }
-                aria-label={
                   t('Type a message or type "/" to select a prompt...') || ''
                 }
                 value={content}
@@ -924,14 +941,8 @@ export const ChatInput = ({
                 onCompositionEnd={() => setIsTyping(false)}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
-                style={{
-                  resize: 'none',
-                  maxHeight: '400px',
-                  overflow: 'hidden',
-                  outline: 'none', // Add this line to remove the outline from the textarea
-                  paddingTop: '14px',
-                  paddingBottom: '14px',
-                }}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
               />
             </div>
 

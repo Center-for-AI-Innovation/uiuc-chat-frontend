@@ -1,11 +1,9 @@
 // src/pages/api/UIUC-api/fetchImageDescription.ts
 
-import { Conversation, ImageBody } from '@/types/chat'
+import { Content, Conversation, ImageBody } from '@/types/chat'
 import { AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
 
-export const config = {
-  runtime: 'edge',
-}
+
 
 /**
  * Asynchronously fetches a description for images contained within a message.
@@ -24,11 +22,23 @@ export const fetchImageDescription = async (
   llmProviders: AllLLMProviders,
   controller: AbortController,
 ): Promise<string> => {
+
+  const lastMessageContents =
+    updatedConversation.messages[updatedConversation.messages.length - 1]?.content
+  const contentArray: Content[] = Array.isArray(lastMessageContents)
+    ? lastMessageContents
+    : [
+      {
+        type: 'text',
+        text: lastMessageContents as string,
+      },
+    ]
+
   // Construct the body for the chat API request
   const imageBody: ImageBody = {
-    conversation: updatedConversation,
+    contentArray,
     llmProviders: llmProviders,
-    course_name: course_name,
+    model: updatedConversation.model
   }
 
   try {
@@ -50,8 +60,7 @@ export const fetchImageDescription = async (
 
     // Parse the JSON response and return the image description
     const data = await response.json()
-    console.log('Image description data:', data)
-    return data.choices[0].message.content || ''
+    return data.choices[0].message.content || 'Error: no image description available...'
   } catch (error) {
     // Log the error to the console and abort the fetch request
     console.error('Error fetching image description:', error)

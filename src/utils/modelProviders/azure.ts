@@ -6,9 +6,7 @@ import {
 import { decryptKeyIfNeeded } from '../crypto'
 import { OPENAI_API_VERSION } from '../app/const'
 
-export const config = {
-  runtime: 'edge',
-}
+
 
 // OMG azure sucks
 // the azureDeploymentID is require to make requests. Grab it from the /deployments list in getAzureModels()

@@ -11,6 +11,7 @@ import {
   IconThumbDown,
   IconThumbUpFilled,
   IconThumbDownFilled,
+  IconX,
 } from '@tabler/icons-react'
 import {
   FC,
@@ -40,6 +41,7 @@ import utc from 'dayjs/plugin/utc'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { IntermediateStateAccordion } from '../UIUC-Components/IntermediateStateAccordion'
 import { FeedbackModal } from './FeedbackModal'
+import { saveConversationToServer } from '@/utils/app/conversation'
 
 const useStyles = createStyles((theme) => ({
   imageContainerStyle: {
@@ -276,7 +278,28 @@ export const ChatMessage: FC<Props> = memo(
     }, [message.content, messageIndex, isRunningTool])
 
     const toggleEditing = () => {
+      if (!isEditing) {
+        // Set the initial content when starting to edit
+        if (Array.isArray(message.content)) {
+          const textContent = message.content
+            .filter((content) => content.type === 'text')
+            .map((content) => content.text)
+            .join(' ')
+          setMessageContent(textContent)
+        } else {
+          setMessageContent(message.content as string)
+        }
+      }
       setIsEditing(!isEditing)
+      // Focus the textarea after the state update and component re-render
+      setTimeout(() => {
+        if (!isEditing && textareaRef.current) {
+          textareaRef.current.focus()
+          // Place cursor at the end of the text
+          const length = textareaRef.current.value.length
+          textareaRef.current.setSelectionRange(length, length)
+        }
+      }, 0)
     }
 
     const handleInputChange = (
@@ -290,9 +313,24 @@ export const ChatMessage: FC<Props> = memo(
     }
 
     const handleEditMessage = () => {
-      if (message.content != messageContent) {
+      const trimmedContent = messageContent.trim()
+      if (trimmedContent.length === 0) return
+      
+      if (message.content !== trimmedContent) {
         if (selectedConversation && onEdit) {
-          onEdit({ ...message, content: messageContent })
+          const editedMessage = { ...message, content: trimmedContent }
+          onEdit(editedMessage)
+          
+          // Save to server
+          const updatedConversation = {
+            ...selectedConversation,
+            messages: selectedConversation.messages.map(msg => 
+              msg.id === message.id ? editedMessage : msg
+            )
+          }
+          saveConversationToServer(updatedConversation).catch((error: Error) => {
+            console.error('Error saving edited message to server:', error)
+          })
         }
       }
       setIsEditing(false)
@@ -330,7 +368,10 @@ export const ChatMessage: FC<Props> = memo(
     const handlePressEnter = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === 'Enter' && !isTyping && !e.shiftKey) {
         e.preventDefault()
-        handleEditMessage()
+        const trimmedContent = messageContent.trim()
+        if (trimmedContent.length > 0) {
+          handleEditMessage()
+        }
       }
     }
 
@@ -581,7 +622,7 @@ export const ChatMessage: FC<Props> = memo(
                   <div className="flex w-full flex-col">
                     <textarea
                       ref={textareaRef}
-                      className="w-full resize-none whitespace-pre-wrap border-none dark:bg-[#343541]"
+                      className="w-full resize-none whitespace-pre-wrap rounded-md border border-gray-300 bg-transparent p-3 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:border-gray-600 dark:bg-[#1E1E3F] dark:focus:border-purple-400"
                       value={messageContent}
                       onChange={handleInputChange}
                       onKeyDown={handlePressEnter}
@@ -591,27 +632,27 @@ export const ChatMessage: FC<Props> = memo(
                         fontFamily: 'inherit',
                         fontSize: 'inherit',
                         lineHeight: 'inherit',
-                        padding: '0',
-                        margin: '0',
-                        overflow: 'hidden',
+                        minHeight: '100px',
                       }}
                     />
-                    <div className="mt-10 flex justify-center space-x-4">
+                    <div className="mt-4 flex justify-end space-x-3">
                       <button
-                        className="h-[40px] rounded-md bg-blue-500 px-4 py-1 text-sm font-medium text-white enabled:hover:bg-blue-600 disabled:opacity-50"
-                        onClick={handleEditMessage}
-                        disabled={messageContent.trim().length <= 0}
-                      >
-                        {t('Save & Submit')}
-                      </button>
-                      <button
-                        className="h-[40px] rounded-md border border-neutral-300 px-4 py-1 text-sm font-medium text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
+                        className="flex items-center gap-2 rounded-md border border-gray-300 bg-transparent px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
                         onClick={() => {
                           setMessageContent(messageContent)
                           setIsEditing(false)
                         }}
                       >
+                        <IconX size={16} />
                         {t('Cancel')}
+                      </button>
+                      <button
+                        className="flex items-center gap-2 rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-purple-500 dark:hover:bg-purple-600"
+                        onClick={handleEditMessage}
+                        disabled={messageContent.trim().length <= 0}
+                      >
+                        <IconCheck size={16} />
+                        {t('Save & Submit')}
                       </button>
                     </div>
                   </div>
@@ -717,8 +758,10 @@ export const ChatMessage: FC<Props> = memo(
                         <>{message.content}</>
                       )}
                       <div className="flex w-full flex-col items-start space-y-2">
-                        {/* Query rewrite loading state */}
-                        {isQueryRewriting && (
+                        {/* Query rewrite loading state - only show for current message */}
+                        {isQueryRewriting && 
+                          (messageIndex === (selectedConversation?.messages.length ?? 0) - 1 ||
+                           messageIndex === (selectedConversation?.messages.length ?? 0) - 2) && (
                           <IntermediateStateAccordion
                             accordionKey="query-rewrite"
                             title="Optimizing search query"
@@ -728,26 +771,26 @@ export const ChatMessage: FC<Props> = memo(
                           />
                         )}
 
-                        {/* Query rewrite result - using message properties */}
+                        {/* Query rewrite result - show for any message that was optimized */}
                         {!isQueryRewriting &&
                           message.wasQueryRewritten !== undefined &&
                           message.wasQueryRewritten !== null && (
-                            <IntermediateStateAccordion
-                              accordionKey="query-rewrite-result"
-                              title={
-                                message.wasQueryRewritten
-                                  ? 'Optimized search query'
-                                  : 'No query optimization necessary'
-                              }
-                              isLoading={false}
-                              error={false}
-                              content={
-                                message.wasQueryRewritten
-                                  ? message.queryRewriteText
-                                  : "The LLM determined no optimization was necessary. We only optimize when it's necessary to turn a single message into a stand-alone search to retrieve the best documents."
-                              }
-                            />
-                          )}
+                          <IntermediateStateAccordion
+                            accordionKey="query-rewrite-result"
+                            title={
+                              message.wasQueryRewritten
+                                ? 'Optimized search query'
+                                : 'No query optimization necessary'
+                            }
+                            isLoading={false}
+                            error={false}
+                            content={
+                              message.wasQueryRewritten
+                                ? message.queryRewriteText
+                                : "The LLM determined no optimization was necessary. We only optimize when it's necessary to turn a single message into a stand-alone search to retrieve the best documents."
+                            }
+                          />
+                        )}
 
                         {/* Retrieval results for all messages */}
                         {message.contexts && message.contexts.length > 0 && (

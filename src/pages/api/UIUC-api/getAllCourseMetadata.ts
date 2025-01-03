@@ -1,100 +1,104 @@
 // ~/src/pages/api/UIUC-api/getAllCourseMetadata.ts
-import { kv } from '@vercel/kv'
-import { NextResponse } from 'next/server'
-import { CourseMetadata } from '~/types/courseMetadata'
-
-export const runtime = 'edge'
+import type { NextApiRequest, NextApiResponse } from 'next'
+import type { CourseMetadata } from '~/types/courseMetadata'
+import { redisClient } from '~/utils/redisClient'
 
 export const getCoursesByOwnerOrAdmin = async (
   currUserEmail: string,
-): Promise<{ [key: string]: CourseMetadata }[] | null> => {
-  /*
-  I return a list of dictionaries of course metadata where the currUserEmail is an owner or admin
-    The key is the courseName
-    The value is the CourseMetadata object
-  */
-
+): Promise<{ [key: string]: CourseMetadata }[]> => {
+  let all_course_metadata_raw: { [key: string]: string } | null = null
   try {
-    const all_course_metadata_raw = await kv.hgetall('course_metadatas')
-    if (all_course_metadata_raw) {
-      const all_course_metadata = Object.entries(all_course_metadata_raw)
-        .map(([key, value]) => {
-          const courseMetadata = value as CourseMetadata
-          if (!courseMetadata) {
-            console.error('Invalid course metadata:', value)
-            return null
-          }
-          // Check if the current user is the course owner or a course admin
+    all_course_metadata_raw = await redisClient.hGetAll('course_metadatas')
+    if (!all_course_metadata_raw) {
+      console.error('No course metadata found for ANY course!')
+      return []
+    }
+
+    const course_metadatas = Object.entries(all_course_metadata_raw).reduce(
+      (acc, [key, value]) => {
+        let courseMetadata: CourseMetadata | null = null
+        try {
+          courseMetadata = JSON.parse(value) as CourseMetadata
           if (
             courseMetadata.course_owner &&
             courseMetadata.course_admins &&
             (courseMetadata.course_owner === currUserEmail ||
               courseMetadata.course_admins.includes(currUserEmail))
           ) {
-            return { [key]: courseMetadata }
+            acc.push({ [key]: courseMetadata })
           }
-          // return null;
-        })
-        .filter(
-          (item) =>
-            item !== null && item !== undefined && Object.keys(item).length > 0,
-        ) as { [key: string]: CourseMetadata }[]
-      return all_course_metadata
-    } else {
-      console.error(
-        'Error occurred while fetching courseMetadata: No course metadata found for ANY course!',
-      )
-      return null
-    }
+        } catch (parseError) {
+          console.error('Invalid course metadata:', courseMetadata, key, value)
+          console.error('Parse error:', parseError)
+        }
+        return acc
+      },
+      [] as { [key: string]: CourseMetadata }[],
+    )
+
+    return course_metadatas
   } catch (error) {
-    console.error('Error occurred while fetching courseMetadata', error)
-    return null
+    console.error(
+      'Error occurred while fetching courseMetadata',
+      error,
+      all_course_metadata_raw,
+    )
+    return []
   }
 }
 
 export const getAllCourseMetadata = async (): Promise<
-  { [key: string]: CourseMetadata }[] | null
+  { [key: string]: CourseMetadata }[]
 > => {
-  /*
-  I return a list of dictionaries of course metadata
-    The key is the courseName
-    The value is the CourseMetadata object
-  */
-
+  let all_course_metadata_raw: { [key: string]: string } | null = null
   try {
-    const all_course_metadata_raw = await kv.hgetall('course_metadatas')
-
-    if (all_course_metadata_raw) {
-      const all_course_metadata = Object.entries(all_course_metadata_raw)
-        .map(([key, value]) => {
-          const courseMetadata = value as CourseMetadata
-          if (!courseMetadata) {
-            console.error('Invalid course metadata:', value)
-            return null
-          }
-          return { [key]: courseMetadata }
-        })
-        .filter((item) => item !== null) as { [key: string]: CourseMetadata }[]
-      return all_course_metadata
-    } else {
-      console.error(
-        'Error occurred while fetching courseMetadata: No course metadata found for ANY course!',
-      )
-      return null
+    all_course_metadata_raw = await redisClient.hGetAll('course_metadatas')
+    if (!all_course_metadata_raw) {
+      console.error('No course metadata found for ANY course!')
+      return []
     }
+
+    // const all_course_metadata = Object.entries(all_course_metadata_raw).reduce(
+    //   (acc, [key, value]) => {
+    //     try {
+    //       console.log('Parsing course metadata for key:', key, 'value:', value)
+    //       const courseMetadata = JSON.parse(value) as CourseMetadata
+    //       acc.push({ [key]: courseMetadata })
+    //     } catch (parseError) {
+    //       console.error('Invalid course metadata:', value, parseError)
+    //     }
+    //     return acc
+    //   },
+    //   [] as { [key: string]: CourseMetadata }[],
+    // )
+    const all_course_metadata = Object.entries(all_course_metadata_raw).map(
+      ([key, value]) => {
+        return { [key]: JSON.parse(value) as CourseMetadata }
+      },
+    )
+    console.log('all_course_metadata', all_course_metadata)
+
+    return all_course_metadata
   } catch (error) {
-    console.error('Error occurred while fetching courseMetadata', error)
-    return null
+    console.error(
+      'Error occurred while fetching courseMetadata',
+      error,
+      all_course_metadata_raw,
+    )
+    return []
   }
 }
 
-export default async (req: any, res: any) => {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
   try {
-    const currUserEmail = req.nextUrl.searchParams.get('currUserEmail')
+    const currUserEmail = req.query.currUserEmail as string
     const all_course_metadata = await getCoursesByOwnerOrAdmin(currUserEmail)
-    return NextResponse.json(all_course_metadata)
+    return res.status(200).json(all_course_metadata)
   } catch (error) {
-    console.error('Error occurred while fetching courseMetadata', error)
-    return NextResponse.json({ success: false, error: error })
+    console.log('Error occurred while fetching courseMetadata', error)
+    return res.status(500).json({ success: false, error: error })
   }
 }

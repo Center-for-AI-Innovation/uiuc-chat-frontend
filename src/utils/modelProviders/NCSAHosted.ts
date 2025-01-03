@@ -82,14 +82,19 @@ export const getNCSAHostedModels = async (
       ncsaHostedProvider.models = [] // clear any previous models.
       return ncsaHostedProvider as NCSAHostedProvider
     }
-    const data = await response.json()
-    const ollamaModels: OllamaModel[] = data.models
-      .filter((model: any) =>
-        Object.values(NCSAHostedModelID).includes(model.model),
-      )
-      .map((model: any): OllamaModel => {
-        return NCSAHostedModels[model.model as NCSAHostedModelID]
-      })
+
+    // ✅ HARD CODE ONLY ONE MODEL 
+    const ollamaModels = [NCSAHostedModels['llama3.1:8b-instruct-fp16']]
+
+    // ❌ DYNAMICALLY show all HOT AND LOADED models
+    // const data = await response.json()
+    // const ollamaModels: OllamaModel[] = data.models
+    //   .filter((model: any) =>
+    //     Object.values(NCSAHostedModelID).includes(model.model),
+    //   )
+    //   .map((model: any): OllamaModel => {
+    //     return NCSAHostedModels[model.model as NCSAHostedModelID]
+    //   })
 
     ncsaHostedProvider.models = ollamaModels
     return ncsaHostedProvider as NCSAHostedProvider

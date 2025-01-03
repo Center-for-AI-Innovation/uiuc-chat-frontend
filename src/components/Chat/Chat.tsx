@@ -73,7 +73,7 @@ import { useUpdateConversation } from '~/hooks/conversationQueries'
 import { motion } from 'framer-motion'
 import { useDeleteMessages } from '~/hooks/messageQueries'
 import { AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
-import util from 'util';
+import util from 'util'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -100,7 +100,7 @@ export const Chat = memo(
     // const
     const [bannerUrl, setBannerUrl] = useState<string | null>(null)
     const getCurrentPageName = () => {
-      // /CS-125/materials --> CS-125
+      // /CS-125/dashboard --> CS-125
       return router.asPath.slice(1).split('/')[0] as string
     }
     const user_email = extractEmailsFromClerk(clerk_obj.user)[0]
@@ -285,37 +285,10 @@ export const Chat = memo(
             }),
           },
         )
-        const data = await response.json()
+        // const data = await response.json()
         // return data.success
       } catch (error) {
         console.error('Error setting course data:', error)
-        // return false
-      }
-
-      try {
-        // Log conversation to our Flask Backend (especially Nomic)
-        const response = await fetch(
-          `https://flask-production-751b.up.railway.app/onResponseCompletion`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              course_name: getCurrentPageName(),
-              conversation: conversation,
-            }),
-          },
-        )
-        const data = await response.json()
-        if (!response.ok) throw new Error(data.message)
-        return data.success
-      } catch (error) {
-        console.error(
-          'Error in chat.tsx running onResponseCompletion():',
-          error,
-        )
-        return false
       }
     }
 
@@ -376,8 +349,8 @@ export const Chat = memo(
             message.contexts = []
             message.content = Array.isArray(message.content)
               ? message.content.filter(
-                  (content) => content.type !== 'tool_image_url',
-                )
+                (content) => content.type !== 'tool_image_url',
+              )
               : message.content
 
             const updatedMessages = [...(selectedConversation.messages || [])]
@@ -541,25 +514,26 @@ export const Chat = memo(
             - Be concise while containing all necessary context
             - Contain ONLY the search terms inside the XML tags
 
-            Remember: This query optimization is for vector database retrieval only, not for the final LLM prompt.`;
+            Remember: This query optimization is for vector database retrieval only, not for the final LLM prompt.`
 
           let rewrittenQuery = searchQuery // Default to original query
 
           // console.log('vector_search_rewrite_disabled setting:', courseMetadata?.vector_search_rewrite_disabled)
 
           // Skip query rewrite if disabled in course metadata or if it's the first message
-          if (courseMetadata?.vector_search_rewrite_disabled || (selectedConversation?.messages?.length ?? 0) === 0) {
+          if (courseMetadata?.vector_search_rewrite_disabled || updatedConversation.messages.length <= 1) {
             console.log('Query rewrite disabled for this course or it is the first message, using original query')
             rewrittenQuery = searchQuery
             homeDispatch({ field: 'wasQueryRewritten', value: false })
             homeDispatch({ field: 'queryRewriteText', value: null })
-            message.wasQueryRewritten = undefined;
-            message.queryRewriteText = undefined;
+            message.wasQueryRewritten = undefined
+            message.queryRewriteText = undefined
           } else {
             homeDispatch({ field: 'isQueryRewriting', value: true })
             try {
               // Get conversation context (last 6 messages or fewer)
-              const contextMessages = selectedConversation?.messages?.slice(-6) || []
+              const contextMessages =
+                selectedConversation?.messages?.slice(-6) || []
 
               const queryRewriteConversation: Conversation = {
                 id: uuidv4(),
@@ -572,32 +546,42 @@ export const Chat = memo(
                       .map((msg) => {
                         const contentText = Array.isArray(msg.content)
                           ? msg.content
-                              .filter(content => content.type === 'text' && content.text)
-                              .map(content => content.text!)
-                              .join(' ')
+                            .filter(
+                              (content) =>
+                                content.type === 'text' && content.text,
+                            )
+                            .map((content) => content.text!)
+                            .join(' ')
                           : typeof msg.content === 'string'
                             ? msg.content
                             : ''
                         return `${msg.role}: ${contentText.trim()}`
                       })
-                      .filter(text => text.length > 0)
-                      .join('\n')}\n\nCurrent query: "${searchQuery}"\n\nEnhanced query:`,
+                      .filter((text) => text.length > 0)
+                      .join(
+                        '\n',
+                      )}\n\nCurrent query: "${searchQuery}"\n\nEnhanced query:`,
                     latestSystemMessage: QUERY_REWRITE_PROMPT,
                     finalPromtEngineeredMessage: `\n<User Query>\nPrevious conversation:\n${contextMessages
                       .map((msg) => {
                         const contentText = Array.isArray(msg.content)
                           ? msg.content
-                              .filter(content => content.type === 'text' && content.text)
-                              .map(content => content.text!)
-                              .join(' ')
+                            .filter(
+                              (content) =>
+                                content.type === 'text' && content.text,
+                            )
+                            .map((content) => content.text!)
+                            .join(' ')
                           : typeof msg.content === 'string'
                             ? msg.content
                             : ''
                         return `${msg.role}: ${contentText.trim()}`
                       })
-                      .filter(text => text.length > 0)
-                      .join('\n')}\n\nCurrent query: "${searchQuery}"\n\nEnhanced query:\n</User Query>`
-                  }
+                      .filter((text) => text.length > 0)
+                      .join(
+                        '\n',
+                      )}\n\nCurrent query: "${searchQuery}"\n\nEnhanced query:\n</User Query>`,
+                  },
                 ],
                 model: selectedConversation.model,
                 prompt: QUERY_REWRITE_PROMPT,
@@ -612,14 +596,18 @@ export const Chat = memo(
               const queryRewriteBody: ChatBody = {
                 conversation: {
                   ...queryRewriteConversation,
-                  messages: queryRewriteConversation.messages.map(msg => ({
+                  messages: queryRewriteConversation.messages.map((msg) => ({
                     ...msg,
-                    content: typeof msg.content === 'string' 
-                      ? msg.content.trim()
-                      : Array.isArray(msg.content)
-                        ? msg.content.map(c => c.text).join(' ').trim()
-                        : ''
-                  }))
+                    content:
+                      typeof msg.content === 'string'
+                        ? msg.content.trim()
+                        : Array.isArray(msg.content)
+                          ? msg.content
+                            .map((c) => c.text)
+                            .join(' ')
+                            .trim()
+                          : '',
+                  })),
                 },
                 key: getOpenAIKey(courseMetadata, apiKey),
                 course_name: courseName,
@@ -633,7 +621,10 @@ export const Chat = memo(
                 queryRewriteBody.model = selectedConversation.model
               }
 
-              let rewriteResponse: Response | AsyncIterable<webllm.ChatCompletionChunk> | undefined
+              let rewriteResponse:
+                | Response
+                | AsyncIterable<webllm.ChatCompletionChunk>
+                | undefined
 
               if (
                 selectedConversation.model &&
@@ -653,7 +644,9 @@ export const Chat = memo(
                 } catch (error) {
                   errorToast({
                     title: 'Error running query rewrite',
-                    message: (error as Error).message || 'An unexpected error occurred',
+                    message:
+                      (error as Error).message ||
+                      'An unexpected error occurred',
                   })
                 }
               } else {
@@ -673,29 +666,32 @@ export const Chat = memo(
               }
 
               // console.log('query rewriteResponse:', rewriteResponse)
-              
+
               // After processing the query rewrite response
               if (rewriteResponse instanceof Response) {
                 try {
-                  const responseData = await rewriteResponse.json();
-                  let choices = responseData.choices;
+                  const responseData = await rewriteResponse.json()
+                  let choices = responseData.choices
 
                   if (Array.isArray(choices)) {
                     // 'choices' is already an array, do nothing
                   } else if (typeof choices === 'object' && choices !== null) {
                     // Convert 'choices' object to array
-                    choices = Object.values(choices);
+                    choices = Object.values(choices)
                   } else {
-                    throw new Error('Invalid format for choices in response data.');
+                    throw new Error(
+                      'Invalid format for choices in response data.',
+                    )
                   }
 
-                  rewrittenQuery = choices?.[0]?.message?.content?.choices?.[0]?.message?.content || 
-                                  choices?.[0]?.message?.content ||
-                                  searchQuery;
-
+                  rewrittenQuery =
+                    choices?.[0]?.message?.content?.choices?.[0]?.message
+                      ?.content ||
+                    choices?.[0]?.message?.content ||
+                    searchQuery
                 } catch (error) {
-                  console.error('Error parsing non-streaming response:', error);
-                  message.wasQueryRewritten = false;
+                  console.error('Error parsing non-streaming response:', error)
+                  message.wasQueryRewritten = false
                 }
               }
 
@@ -705,41 +701,49 @@ export const Chat = memo(
                 rewrittenQuery = searchQuery
                 homeDispatch({ field: 'wasQueryRewritten', value: false })
                 homeDispatch({ field: 'queryRewriteText', value: null })
-                message.wasQueryRewritten = false;
-                message.queryRewriteText = undefined;
+                message.wasQueryRewritten = false
+                message.queryRewriteText = undefined
               } else {
                 // Extract vector query from XML tags if present
-                const vectorQueryMatch = rewrittenQuery.match(/<\s*vector_query\s*>(.*?)<\s*\/\s*vector_query\s*>/) || null;
-                const extractedQuery = vectorQueryMatch?.[1]?.trim();
-                
+                const vectorQueryMatch =
+                  rewrittenQuery.match(
+                    /<\s*vector_query\s*>(.*?)<\s*\/\s*vector_query\s*>/,
+                  ) || null
+                const extractedQuery = vectorQueryMatch?.[1]?.trim()
+
                 // Check if the response is NO_REWRITE_REQUIRED or if we couldn't extract a valid query
                 if (
-                  rewrittenQuery.trim().toUpperCase() === 'NO_REWRITE_REQUIRED' || 
+                  rewrittenQuery.trim().toUpperCase() ===
+                  'NO_REWRITE_REQUIRED' ||
                   !extractedQuery
                 ) {
-                  console.log('Query rewrite not required or invalid format, using original query')
+                  console.log(
+                    'Query rewrite not required or invalid format, using original query',
+                  )
                   rewrittenQuery = searchQuery
                   homeDispatch({ field: 'wasQueryRewritten', value: false })
                   homeDispatch({ field: 'queryRewriteText', value: null })
-                  message.wasQueryRewritten = false;
-                  message.queryRewriteText = undefined;
+                  message.wasQueryRewritten = false
+                  message.queryRewriteText = undefined
                 } else {
                   // Use the extracted query
-                  rewrittenQuery = extractedQuery;
+                  rewrittenQuery = extractedQuery
                   // console.log('Using rewritten query:', rewrittenQuery)
                   homeDispatch({ field: 'wasQueryRewritten', value: true })
-                  homeDispatch({ field: 'queryRewriteText', value: rewrittenQuery })
-                  message.wasQueryRewritten = true;
-                  message.queryRewriteText = rewrittenQuery;
+                  homeDispatch({
+                    field: 'queryRewriteText',
+                    value: rewrittenQuery,
+                  })
+                  message.wasQueryRewritten = true
+                  message.queryRewriteText = rewrittenQuery
                 }
               }
-
             } catch (error) {
               console.error('Error in query rewriting:', error)
               homeDispatch({ field: 'wasQueryRewritten', value: false })
               homeDispatch({ field: 'queryRewriteText', value: null })
-              message.wasQueryRewritten = false;
-              message.queryRewriteText = undefined;
+              message.wasQueryRewritten = false
+              message.queryRewriteText = undefined
             } finally {
               homeDispatch({ field: 'isQueryRewriting', value: false })
             }
@@ -757,7 +761,7 @@ export const Chat = memo(
             rewrittenQuery,
             enabledDocumentGroups,
           )
-          
+
           homeDispatch({ field: 'isRetrievalLoading', value: false })
 
           // Action 3: Tool Execution
@@ -997,7 +1001,7 @@ export const Chat = memo(
                       contexts: message.contexts,
                       feedback: message.feedback,
                       wasQueryRewritten: message.wasQueryRewritten,
-                      queryRewriteText: message.queryRewriteText
+                      queryRewriteText: message.queryRewriteText,
                     },
                   ]
 
@@ -1136,7 +1140,7 @@ export const Chat = memo(
                   contexts: message.contexts,
                   feedback: message.feedback,
                   wasQueryRewritten: message.wasQueryRewritten,
-                  queryRewriteText: message.queryRewriteText
+                  queryRewriteText: message.queryRewriteText,
                 },
               ]
               updatedConversation = {
@@ -1207,7 +1211,7 @@ export const Chat = memo(
 
         if (imgDescIndex !== -1) {
           // Remove the existing image description
-          ;(currentMessage.content as Content[]).splice(imgDescIndex, 1)
+          ; (currentMessage.content as Content[]).splice(imgDescIndex, 1)
         }
         if (
           selectedConversation?.messages[
@@ -1336,13 +1340,13 @@ export const Chat = memo(
 
     const statements =
       courseMetadata?.example_questions &&
-      courseMetadata.example_questions.length > 0
+        courseMetadata.example_questions.length > 0
         ? courseMetadata.example_questions
         : [
-            'Make a bullet point list of key takeaways from this project.',
-            'What are the best practices for [Activity or Process] in [Context or Field]?',
-            'Can you explain the concept of [Specific Concept] in simple terms?',
-          ]
+          'Make a bullet point list of key takeaways from this project.',
+          'What are the best practices for [Activity or Process] in [Context or Field]?',
+          'Can you explain the concept of [Specific Concept] in simple terms?',
+        ]
 
     // Add this function to create dividers with statements
     const renderIntroductoryStatements = () => {
@@ -1369,7 +1373,13 @@ export const Chat = memo(
                 <div
                   key={index}
                   className="w-full rounded-lg border-b-2 border-[rgba(42,42,64,0.4)] hover:cursor-pointer hover:bg-[rgba(42,42,64,0.9)]"
-                  onClick={() => setInputContent(statement)}
+                  onClick={() => {
+                    setInputContent('')  // First clear the input
+                    setTimeout(() => {   // Then set it with a small delay
+                      setInputContent(statement)
+                      textareaRef.current?.focus()
+                    }, 0)
+                  }}
                 >
                   <Button
                     variant="link"
@@ -1587,8 +1597,8 @@ export const Chat = memo(
                   transition={{ duration: 0.25, ease: 'easeInOut' }}
                 >
                   {selectedConversation &&
-                  selectedConversation.messages &&
-                  selectedConversation.messages?.length === 0 ? (
+                    selectedConversation.messages &&
+                    selectedConversation.messages?.length === 0 ? (
                     <>
                       <div className="mt-16">
                         {renderIntroductoryStatements()}

@@ -7,7 +7,7 @@ const Gpt4 = () => {
   const router = useRouter()
 
   const getCurrentPageName = () => {
-    // /CS-125/materials --> CS-125
+    // /CS-125/dashboard --> CS-125
     return router.asPath.slice(1).split('/')[0] as string
   }
 
