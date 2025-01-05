@@ -99,14 +99,41 @@ const CourseMain: NextPage = () => {
   const [baseSystemPrompt, setBaseSystemPrompt] = useState('')
   const [opened, { close, open }] = useDisclosure(false)
   const [resetModalOpened, { close: closeResetModal, open: openResetModal }] = useDisclosure(false)
-  const [apiKey, setApiKey] = useState<string | undefined>(undefined)
+  const [llmProviders, setLLMProviders] = useState<any>(null)
+
+  useEffect(() => {
+    const fetchProviders = async () => {
+      try {
+        const response = await fetch('/api/models', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ projectName: course_name }),
+        })
+        if (!response.ok) throw new Error('Failed to fetch providers')
+        const providers = await response.json()
+        setLLMProviders(providers)
+      } catch (error) {
+        console.error('Error fetching LLM providers:', error)
+      }
+    }
+    if (course_name) {
+      fetchProviders()
+    }
+  }, [course_name])
+
   const { messages, input, handleInputChange, reload, setMessages, setInput } =
     useChat({
       api: '/api/chat/openAI',
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${llmProviders?.OpenAI?.apiKey || ''}`,
       },
+      body: {
+        model: 'gpt-4o'  // Using GPT-4o for enhanced prompt optimization with higher context window
+      }
     })
+
   const [optimizedSystemPrompt, setOptimizedSystemPrompt] = useState('')
   const [isRightSideVisible, setIsRightSideVisible] = useState(true)
 
@@ -137,6 +164,10 @@ const CourseMain: NextPage = () => {
         `/api/UIUC-api/getCourseMetadata?course_name=${course_name}`,
       )
       const fetchedMetadata = (await response_metadata.json()).course_metadata
+      console.log('Course metadata loaded:', {
+        hasMetadata: !!fetchedMetadata,
+        hasOpenAIKey: !!fetchedMetadata?.openai_api_key
+      })
       setCourseMetadata(fetchedMetadata)
       setBaseSystemPrompt(
         fetchedMetadata.system_prompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
@@ -471,14 +502,37 @@ const CourseMain: NextPage = () => {
     reload: any,
     setMessages: any,
   ) => {
-    let newApiKey
-    if (courseMetadata?.openai_api_key) {
-      newApiKey = courseMetadata.openai_api_key
-    }
-    setApiKey(newApiKey)
-
-    // console.log('apikey set to', apiKey)
     e.preventDefault()
+
+    if (!llmProviders) {
+      showToastNotification(
+        theme,
+        'Error',
+        'Provider configuration not loaded. Please refresh the page and try again.',
+        true
+      )
+      return
+    }
+
+    if (!llmProviders.OpenAI?.enabled) {
+      showToastNotification(
+        theme,
+        'Error',
+        'OpenAI provider is not enabled. Please enable it on the LLM page in your course settings.',
+        true
+      )
+      return
+    }
+
+    if (!llmProviders.OpenAI?.apiKey) {
+      showToastNotification(
+        theme,
+        'API Key Required',
+        'Please add your OpenAI API key on the LLM page in your course settings to use this feature.',
+        true
+      )
+      return
+    }
 
     const systemPrompt = `Understand the Task: Grasp the main objective, goals, requirements, constraints, and expected output.
 
