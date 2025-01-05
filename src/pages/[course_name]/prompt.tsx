@@ -507,8 +507,8 @@ const CourseMain: NextPage = () => {
     if (!llmProviders) {
       showToastNotification(
         theme,
-        'Error',
-        'Provider configuration not loaded. Please refresh the page and try again.',
+        'Configuration Error',
+        'The Optimize System Prompt feature requires provider configuration to be loaded. Please refresh the page and try again.',
         true
       )
       return
@@ -517,8 +517,8 @@ const CourseMain: NextPage = () => {
     if (!llmProviders.OpenAI?.enabled) {
       showToastNotification(
         theme,
-        'Error',
-        'OpenAI provider is not enabled. Please enable it on the LLM page in your course settings.',
+        'OpenAI Required',
+        'The Optimize System Prompt feature requires OpenAI to be enabled. Please enable OpenAI on the LLM page in your course settings to use this feature.',
         true
       )
       return
@@ -527,8 +527,8 @@ const CourseMain: NextPage = () => {
     if (!llmProviders.OpenAI?.apiKey) {
       showToastNotification(
         theme,
-        'API Key Required',
-        'Please add your OpenAI API key on the LLM page in your course settings to use this feature.',
+        'OpenAI API Key Required',
+        'The Optimize System Prompt feature requires an OpenAI API key. Please add your OpenAI API key on the LLM page in your course settings to use this feature.',
         true
       )
       return
@@ -902,8 +902,41 @@ The final prompt you output should adhere to the following structure below. Do n
                                   Update System Prompt
                                 </Button>
                                 <Button
-                                  type="submit"
-                                  onClick={open}
+                                  onClick={(e) => {
+                                    if (!llmProviders) {
+                                      showToastNotification(
+                                        theme,
+                                        'Configuration Error',
+                                        'The Optimize System Prompt feature requires provider configuration to be loaded. Please refresh the page and try again.',
+                                        true
+                                      )
+                                      return
+                                    }
+
+                                    if (!llmProviders.OpenAI?.enabled) {
+                                      showToastNotification(
+                                        theme,
+                                        'OpenAI Required',
+                                        'The Optimize System Prompt feature requires OpenAI to be enabled. Please enable OpenAI on the LLM page in your course settings to use this feature.',
+                                        true
+                                      )
+                                      return
+                                    }
+
+                                    if (!llmProviders.OpenAI?.apiKey) {
+                                      showToastNotification(
+                                        theme,
+                                        'OpenAI API Key Required',
+                                        'The Optimize System Prompt feature requires an OpenAI API key. Please add your OpenAI API key on the LLM page in your course settings to use this feature.',
+                                        true
+                                      )
+                                      return
+                                    }
+
+                                    handleSubmitPromptOptimization(e, reload, setMessages)
+                                    open()
+                                  }}
+                                  className={`relative text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
                                   style={{
                                     minWidth: 'fit-content',
                                     background:
@@ -920,7 +953,6 @@ The final prompt you output should adhere to the following structure below. Do n
                                     backgroundOrigin: 'border-box',
                                     backgroundClip: 'border-box',
                                   }}
-                                  className={`relative text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
                                   onMouseEnter={(e) =>
                                   (e.currentTarget.style.background =
                                     'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%)')
@@ -1397,9 +1429,14 @@ export const showToastNotification = (
   isError = false,
   icon?: React.ReactNode,
 ) => {
+  // Calculate duration based on message length (minimum 5 seconds, add 1 second for every 20 characters)
+  const baseDuration = 5000;
+  const durationPerChar = 50;  // 50ms per character
+  const duration = Math.max(baseDuration, Math.min(15000, message.length * durationPerChar));
+
   notifications.show({
     withCloseButton: true,
-    autoClose: 5000,
+    autoClose: duration,
     title: title,
     message: message,
     icon: icon || (isError ? <IconAlertTriangle /> : <IconCheck />),
