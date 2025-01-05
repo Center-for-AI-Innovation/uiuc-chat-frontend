@@ -1,4 +1,3 @@
-
 // src/pages/home/home.tsx
 import { useCallback, useEffect, useRef, useState } from 'react'
 
@@ -45,10 +44,12 @@ const Home = ({
   current_email,
   course_metadata,
   course_name,
+  document_count,
 }: {
   current_email: string
   course_metadata: CourseMetadata | null
   course_name: string
+  document_count: number | null
 }) => {
   // States
   const [isInitialSetupDone, setIsInitialSetupDone] = useState(false)
@@ -694,6 +695,7 @@ const Home = ({
                     courseMetadata={course_metadata}
                     courseName={course_name}
                     currentEmail={current_email}
+                    documentCount={document_count}
                   />
                 )}
               </div>

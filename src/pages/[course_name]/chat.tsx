@@ -30,6 +30,7 @@ const ChatPage: NextPage = () => {
   )
   const [isCourseMetadataLoading, setIsCourseMetadataLoading] = useState(true)
   const [urlGuidedLearning, setUrlGuidedLearning] = useState(false)
+  const [documentCount, setDocumentCount] = useState<number | null>(null)
 
   // UseEffect to check URL parameters
   useEffect(() => {
@@ -42,7 +43,7 @@ const ChatPage: NextPage = () => {
   useEffect(() => {
     if (!courseName && curr_route_path != '/gpt4') return
     const courseMetadata = async () => {
-      setIsLoading(true) // Set loading to true before fetching data
+      setIsLoading(true)
 
       // Handle /gpt4 page (special non-course page)
       let curr_course_name = courseName
@@ -50,27 +51,33 @@ const ChatPage: NextPage = () => {
         curr_course_name = 'gpt4'
       }
 
-      const response = await fetch(
-        `/api/UIUC-api/getCourseMetadata?course_name=${curr_course_name}`,
-      )
-      const data = await response.json()
+      // Fetch course metadata and document count in parallel
+      const [metadataResponse, documentsResponse] = await Promise.all([
+        fetch(`/api/UIUC-api/getCourseMetadata?course_name=${curr_course_name}`),
+        fetch(`/api/materialsTable/fetchProjectMaterials?from=0&to=0&course_name=${curr_course_name}`)
+      ])
+
+      const [metadataData, documentsData] = await Promise.all([
+        metadataResponse.json(),
+        documentsResponse.json()
+      ])
       
       // If URL guided learning is enabled and course-wide guided learning is not,
       // append the GUIDED_LEARNING_PROMPT to the system prompt if it's not already there
-      if (data.course_metadata && !data.course_metadata.guidedLearning) {
+      if (metadataData.course_metadata && !metadataData.course_metadata.guidedLearning) {
         const urlParams = new URLSearchParams(window.location.search)
         const guidedLearningParam = urlParams.get('guided_learning')
         if (guidedLearningParam === 'true' && 
-            data.course_metadata.system_prompt && 
-            !data.course_metadata.system_prompt.includes(GUIDED_LEARNING_PROMPT)) {
-          data.course_metadata.system_prompt = data.course_metadata.system_prompt + GUIDED_LEARNING_PROMPT
+            metadataData.course_metadata.system_prompt && 
+            !metadataData.course_metadata.system_prompt.includes(GUIDED_LEARNING_PROMPT)) {
+          metadataData.course_metadata.system_prompt = metadataData.course_metadata.system_prompt + GUIDED_LEARNING_PROMPT
         }
       }
       
-      setCourseMetadata(data.course_metadata)
-      // console.log("Course Metadata in home: ", data.course_metadata)
+      setCourseMetadata(metadataData.course_metadata)
+      setDocumentCount(documentsData.total_count || 0)
       setIsCourseMetadataLoading(false)
-      setIsLoading(false) // Set loading to false after fetching data
+      setIsLoading(false)
     }
     courseMetadata()
   }, [courseName, urlGuidedLearning])
@@ -135,6 +142,7 @@ const ChatPage: NextPage = () => {
           current_email={currentEmail}
           course_metadata={courseMetadata}
           course_name={courseName}
+          document_count={documentCount}
         />
       )}
       {isLoading && !currentEmail && (
