@@ -437,7 +437,7 @@ export const Chat = memo(
           }
 
           // Action 2: Context Retrieval: Vector Search
-          let rewrittenQuery = searchQuery // Default to original query
+          const rewrittenQuery = searchQuery // Default to original query
           
           // Skip vector search entirely if there are no documents
           if (documentCount === 0 || documentCount === null) {
