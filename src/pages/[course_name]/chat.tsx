@@ -79,7 +79,7 @@ const ChatPage: NextPage = () => {
     if (!courseName) return
     const fetchDocumentCount = async () => {
       try {
-        let curr_course_name = courseName === '/gpt4' ? 'gpt4' : courseName
+        const curr_course_name = courseName === '/gpt4' ? 'gpt4' : courseName
         const documentsResponse = await fetch(`/api/materialsTable/fetchProjectMaterials?from=0&to=0&course_name=${curr_course_name}`)
         const documentsData = await documentsResponse.json()
         setDocumentCount(documentsData.total_count || 0)
