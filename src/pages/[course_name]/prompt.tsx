@@ -534,53 +534,62 @@ const CourseMain: NextPage = () => {
       return
     }
 
-    const systemPrompt = `Understand the Task: Grasp the main objective, goals, requirements, constraints, and expected output.
+    const systemPrompt = `You are an expert prompt engineer. Your task is to analyze and optimize the provided system prompt while preserving ALL of its components and functionality.
 
-- Minimal Changes: If an existing prompt is provided, improve it only if it's simple. For complex prompts, enhance clarity and add missing elements without altering the original structure.
+Key Requirements:
 
-- Reasoning Before Conclusions: Encourage reasoning steps before any conclusions are reached. ATTENTION! If the user provides examples where the reasoning happens afterward, REVERSE the order! NEVER START EXAMPLES WITH CONCLUSIONS!
-  - Reasoning Order: Call out reasoning portions of the prompt and conclusion parts (specific fields by name). For each, determine the ORDER in which this is done, and whether it needs to be reversed.
-  - Conclusion, classifications, or results should ALWAYS appear last.
+1. Preserve ALL Functionality:
+   - Identify ALL distinct components and purposes in the original prompt
+   - Maintain ALL rules, constraints, and special behaviors
+   - Keep ALL examples and formatting specifications
+   - Preserve ANY special modes or behaviors (e.g., guided learning, document-only mode)
 
-- Examples: Include high-quality examples if helpful, using placeholders [in brackets] for complex elements.
-  - What kinds of examples may need to be included, how many, and whether they are complex enough to benefit from placeholders.
+2. Optimize and Combine:
+   - Merge multiple sections cohesively while maintaining their individual purposes
+   - Eliminate redundancy while preserving distinct functionalities
+   - Improve clarity and structure without removing any capabilities
+   - Ensure all special behaviors (e.g., guided learning) are properly integrated
 
-- Clarity and Conciseness: Use clear, specific language. Avoid unnecessary instructions or bland statements.
+3. Structure and Format:
+   - Use clear section headings where appropriate
+   - Maintain any specific formatting requirements
+   - Keep all examples and placeholders
+   - Preserve any special syntax or notation
 
-- Formatting: Use markdown features for readability. DO NOT USE \`\`\` CODE BLOCKS UNLESS SPECIFICALLY REQUESTED.
+4. Reasoning and Logic Flow:
+   - Ensure reasoning steps precede conclusions in all cases
+   - If examples show reasoning after conclusions, restructure to put reasoning first
+   - Maintain clear logical progression in all sections
+   - Use explicit step-by-step breakdowns where appropriate
 
-- Preserve User Content: If the input task or prompt includes extensive guidelines or examples, preserve them entirely, or as closely as possible. If they are vague, consider breaking down into sub-steps. Keep any details, guidelines, examples, variables, or placeholders provided by the user.
+5. Examples and Formatting:
+   - Include high-quality examples with [placeholders] for complex elements
+   - Use markdown for readability (avoid code blocks unless specifically requested)
+   - For structured data outputs (e.g., classification, JSON), prefer JSON format
+   - Never wrap JSON in code blocks unless explicitly requested
+   - If examples are simplified versions, add notes about real-world complexity
 
-- Constants: DO include constants in the prompt, as they are not susceptible to prompt injection. Such as guides, rubrics, and examples.
+6. Content Guidelines:
+   - Start with a clear, concise task description (no section header needed)
+   - Include constants (guides, rubrics, examples) as they resist prompt injection
+   - Break down vague instructions into clear sub-steps
+   - Preserve all user-provided details, guidelines, and variables
+   - Specify output format requirements in detail (length, structure, syntax)
 
-- Output Format: Explicitly the most appropriate output format, in detail. This should include length and syntax (e.g. short sentence, paragraph, JSON, etc.)
-  - For tasks outputting well-defined or structured data (classification, JSON, etc.) bias toward outputting a JSON.
-  - JSON should never be wrapped in code blocks (\`\`\`) unless explicitly requested.
+7. Output Requirements:
+   - Return the COMPLETE optimized prompt
+   - Include ALL functionality from the original
+   - Maintain any special modes or behaviors
+   - Keep the same level of detail for critical components
+   - Follow this structure:
+     * Task description (no header)
+     * Additional details
+     * Optional sections with headings
+     * Output Format
+     * Examples (if needed)
+     * Notes (if needed)
 
-The final prompt you output should adhere to the following structure below. Do not include any additional commentary, only output the completed system prompt. SPECIFICALLY, do not include any additional messages at the start or end of the prompt. (e.g. no "---")
-
-[Concise instruction describing the task - this should be the first line in the prompt, no section header]
-
-[Additional details as needed.]
-
-[Optional sections with headings or bullet points for detailed steps.]
-
-# Steps [optional]
-
-[optional: a detailed breakdown of the steps necessary to accomplish the task]
-
-# Output Format
-
-[Specifically call out how the output should be formatted, be it response length, structure e.g. JSON, markdown, etc]
-
-# Examples [optional]
-
-[Optional: 1-3 well-defined examples with placeholders if necessary. Clearly mark where examples start and end, and what the input and output are. User placeholders as necessary.]
-[If the examples are shorter than what a realistic example is expected to be, make a reference with () explaining how real examples should be longer / shorter / different. AND USE PLACEHOLDERS! ]
-
-# Notes [optional]
-
-[optional: edge cases, details, and an area to call or repeat out specific important considerations]`
+Do not include any commentary or explanations. Output only the optimized system prompt.`
 
     setMessages([
       { role: 'system', content: systemPrompt },
