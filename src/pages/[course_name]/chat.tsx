@@ -42,7 +42,7 @@ const ChatPage: NextPage = () => {
   // UseEffect to fetch course metadata
   useEffect(() => {
     if (!courseName && curr_route_path != '/gpt4') return
-    const courseMetadata = async () => {
+    const fetchData = async () => {
       setIsLoading(true)
 
       // Handle /gpt4 page (special non-course page)
@@ -51,16 +51,9 @@ const ChatPage: NextPage = () => {
         curr_course_name = 'gpt4'
       }
 
-      // Fetch course metadata and document count in parallel
-      const [metadataResponse, documentsResponse] = await Promise.all([
-        fetch(`/api/UIUC-api/getCourseMetadata?course_name=${curr_course_name}`),
-        fetch(`/api/materialsTable/fetchProjectMaterials?from=0&to=0&course_name=${curr_course_name}`)
-      ])
-
-      const [metadataData, documentsData] = await Promise.all([
-        metadataResponse.json(),
-        documentsResponse.json()
-      ])
+      // Fetch course metadata
+      const metadataResponse = await fetch(`/api/UIUC-api/getCourseMetadata?course_name=${curr_course_name}`)
+      const metadataData = await metadataResponse.json()
       
       // If URL guided learning is enabled and course-wide guided learning is not,
       // append the GUIDED_LEARNING_PROMPT to the system prompt if it's not already there
@@ -75,12 +68,28 @@ const ChatPage: NextPage = () => {
       }
       
       setCourseMetadata(metadataData.course_metadata)
-      setDocumentCount(documentsData.total_count || 0)
       setIsCourseMetadataLoading(false)
       setIsLoading(false)
     }
-    courseMetadata()
+    fetchData()
   }, [courseName, urlGuidedLearning])
+
+  // UseEffect to fetch document count in the background
+  useEffect(() => {
+    if (!courseName) return
+    const fetchDocumentCount = async () => {
+      try {
+        let curr_course_name = courseName === '/gpt4' ? 'gpt4' : courseName
+        const documentsResponse = await fetch(`/api/materialsTable/fetchProjectMaterials?from=0&to=0&course_name=${curr_course_name}`)
+        const documentsData = await documentsResponse.json()
+        setDocumentCount(documentsData.total_count || 0)
+      } catch (error) {
+        console.error('Error fetching document count:', error)
+        setDocumentCount(0)
+      }
+    }
+    fetchDocumentCount()
+  }, [courseName])
 
   // UseEffect to check user permissions and fetch user email
   useEffect(() => {
