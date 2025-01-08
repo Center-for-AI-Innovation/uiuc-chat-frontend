@@ -54,9 +54,6 @@ export async function POST(req: Request) {
             status: 401,
           })
         }
-
-        const maskedKey = apiKey.slice(0, 4) + '...' + apiKey.slice(-4);
-        console.log('Decrypted OpenAI key (showing first/last 4 chars):', maskedKey)
       } catch (error) {
         console.error('Error decrypting OpenAI key:', error)
         return new Response(JSON.stringify({ 

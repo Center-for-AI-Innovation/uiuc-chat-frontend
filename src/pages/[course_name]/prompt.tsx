@@ -164,10 +164,6 @@ const CourseMain: NextPage = () => {
         `/api/UIUC-api/getCourseMetadata?course_name=${course_name}`,
       )
       const fetchedMetadata = (await response_metadata.json()).course_metadata
-      console.log('Course metadata loaded:', {
-        hasMetadata: !!fetchedMetadata,
-        hasOpenAIKey: !!fetchedMetadata?.openai_api_key
-      })
       setCourseMetadata(fetchedMetadata)
       setBaseSystemPrompt(
         fetchedMetadata.system_prompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
