@@ -436,9 +436,6 @@ export const Chat = memo(
             }
           }
 
-          // Action 2: Context Retrieval: Vector Search
-          const rewrittenQuery = searchQuery // Default to original query
-          
           // Skip vector search entirely if there are no documents
           if (documentCount === 0 || documentCount === null) {
             console.log('Vector search skipped: no documents available')
@@ -446,74 +443,11 @@ export const Chat = memo(
             homeDispatch({ field: 'queryRewriteText', value: null })
             message.wasQueryRewritten = undefined
             message.queryRewriteText = undefined
+            message.contexts = []
           } else {
-            // TODO: add toggle to turn queryRewrite on and off on materials page
-            const QUERY_REWRITE_PROMPT = `You are a vector database query optimizer that improves search queries for semantic vector retrieval.
-
-              INPUT:
-              The input will include:
-              1. Previous conversation messages (if any)
-              2. Current search query
-
-              OUTPUT FORMAT:
-              You must respond in ONE of these two formats ONLY:
-              1. The exact string "NO_REWRITE_REQUIRED" or
-              2. An XML tag containing the vector query: <vector_query>your optimized query here</vector_query>
-
-              WHEN TO OUTPUT "NO_REWRITE_REQUIRED":
-              Return "NO_REWRITE_REQUIRED" if ALL of these conditions are met:
-              - Query contains specific, unique terms that would match relevant documents
-              - Query includes all necessary context without requiring conversation history
-              - Query has no ambiguous references (like "it", "this", "that example", "option one")
-              - Query would yield effective vector embeddings without modification
-
-              WHEN TO REWRITE THE QUERY:
-              Rewrite the query if ANY of these conditions are met:
-              - Query contains references to items from previous messages
-              - Query uses pronouns or demonstratives without clear referents
-              - Query lacks technical terms or context needed for effective matching
-              - Query requires conversation history to be fully understood
-
-              REWRITING RULES:
-              When rewriting, follow these rules:
-              1. Replace references to previous items with their specific content
-                Example: "explain the first option" →
-                <vector_query>explain the gradient descent optimization algorithm</vector_query>
-
-              2. Add essential context from conversation history
-                Example: "what are the steps" →
-                <vector_query>what are the steps for implementing backpropagation in neural networks</vector_query>
-
-              3. Resolve all pronouns and demonstratives
-                Example: "how does it work" →
-                <vector_query>how does the transformer attention mechanism work</vector_query>
-
-              4. Include key technical terms and synonyms
-                Example: "what causes this" →
-                <vector_query>root causes and mechanisms of gradient vanishing in deep neural networks</vector_query>
-
-              IMPORTANT OUTPUT RULES:
-              - Do not include ANY explanatory text
-              - Do not include multiple options
-              - Do not include reasoning or notes
-              - Output ONLY "NO_REWRITE_REQUIRED" or a <vector_query> tag
-              - Never include both formats in one response
-              - Never nest tags or use other XML tags
-              - Never add punctuation or text outside the tags
-
-              The final rewritten query must:
-              - Be self-contained and understandable without conversation context
-              - Maintain the original search intent
-              - Include specific details that enable accurate vector matching
-              - Be concise while containing all necessary context
-              - Contain ONLY the search terms inside the XML tags
-
-              Remember: This query optimization is for vector database retrieval only, not for the final LLM prompt.`
-
+            // Action 2: Context Retrieval: Vector Search
             let rewrittenQuery = searchQuery // Default to original query
-
-            // console.log('vector_search_rewrite_disabled setting:', courseMetadata?.vector_search_rewrite_disabled)
-
+            
             // Skip query rewrite if disabled in course metadata, if it's the first message, or if there are no documents
             if (courseMetadata?.vector_search_rewrite_disabled || 
                 updatedConversation.messages.length <= 1 || 
@@ -528,6 +462,69 @@ export const Chat = memo(
             } else {
               homeDispatch({ field: 'isQueryRewriting', value: true })
               try {
+                // TODO: add toggle to turn queryRewrite on and off on materials page
+                const QUERY_REWRITE_PROMPT = `You are a vector database query optimizer that improves search queries for semantic vector retrieval.
+
+                  INPUT:
+                  The input will include:
+                  1. Previous conversation messages (if any)
+                  2. Current search query
+
+                  OUTPUT FORMAT:
+                  You must respond in ONE of these two formats ONLY:
+                  1. The exact string "NO_REWRITE_REQUIRED" or
+                  2. An XML tag containing the vector query: <vector_query>your optimized query here</vector_query>
+
+                  WHEN TO OUTPUT "NO_REWRITE_REQUIRED":
+                  Return "NO_REWRITE_REQUIRED" if ALL of these conditions are met:
+                  - Query contains specific, unique terms that would match relevant documents
+                  - Query includes all necessary context without requiring conversation history
+                  - Query has no ambiguous references (like "it", "this", "that example", "option one")
+                  - Query would yield effective vector embeddings without modification
+
+                  WHEN TO REWRITE THE QUERY:
+                  Rewrite the query if ANY of these conditions are met:
+                  - Query contains references to items from previous messages
+                  - Query uses pronouns or demonstratives without clear referents
+                  - Query lacks technical terms or context needed for effective matching
+                  - Query requires conversation history to be fully understood
+
+                  REWRITING RULES:
+                  When rewriting, follow these rules:
+                  1. Replace references to previous items with their specific content
+                    Example: "explain the first option" →
+                    <vector_query>explain the gradient descent optimization algorithm</vector_query>
+
+                  2. Add essential context from conversation history
+                    Example: "what are the steps" →
+                    <vector_query>what are the steps for implementing backpropagation in neural networks</vector_query>
+
+                  3. Resolve all pronouns and demonstratives
+                    Example: "how does it work" →
+                    <vector_query>how does the transformer attention mechanism work</vector_query>
+
+                  4. Include key technical terms and synonyms
+                    Example: "what causes this" →
+                    <vector_query>root causes and mechanisms of gradient vanishing in deep neural networks</vector_query>
+
+                  IMPORTANT OUTPUT RULES:
+                  - Do not include ANY explanatory text
+                  - Do not include multiple options
+                  - Do not include reasoning or notes
+                  - Output ONLY "NO_REWRITE_REQUIRED" or a <vector_query> tag
+                  - Never include both formats in one response
+                  - Never nest tags or use other XML tags
+                  - Never add punctuation or text outside the tags
+
+                  The final rewritten query must:
+                  - Be self-contained and understandable without conversation context
+                  - Maintain the original search intent
+                  - Include specific details that enable accurate vector matching
+                  - Be concise while containing all necessary context
+                  - Contain ONLY the search terms inside the XML tags
+
+                  Remember: This query optimization is for vector database retrieval only, not for the final LLM prompt.`
+
                 // Get conversation context (last 6 messages or fewer)
                 const contextMessages =
                   selectedConversation?.messages?.slice(-6) || []
@@ -745,22 +742,20 @@ export const Chat = memo(
                 homeDispatch({ field: 'isQueryRewriting', value: false })
               }
             }
+
+            homeDispatch({ field: 'isRetrievalLoading', value: true })
+
+            // Use enhanced query for context search
+            await handleContextSearch(
+              message,
+              courseName,
+              selectedConversation,
+              rewrittenQuery,
+              enabledDocumentGroups,
+            )
+
+            homeDispatch({ field: 'isRetrievalLoading', value: false })
           }
-
-          // console.log('Final query used for context search:', rewrittenQuery)
-
-          homeDispatch({ field: 'isRetrievalLoading', value: true })
-
-          // Use enhanced query for context search
-          await handleContextSearch(
-            message,
-            courseName,
-            selectedConversation,
-            rewrittenQuery,
-            enabledDocumentGroups,
-          )
-
-          homeDispatch({ field: 'isRetrievalLoading', value: false })
 
           // Action 3: Tool Execution
           if (tools.length > 0) {
