@@ -32,7 +32,7 @@ export const NCSAHostedVLMModels: Record<
   [NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT]: {
     id: NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT,
     name: 'Qwen 2 VL 72B Instruct',
-    tokenLimit: 20480,
+    tokenLimit: 8192,
     enabled: true,
   },
 }

@@ -30,7 +30,7 @@ export async function runVLLM(
     model: model,
     messages: convertConversationToVercelAISDKv3(conversation),
     temperature: conversation.temperature,
-    maxTokens: 4096,
+    maxTokens: 8192,
   }
 
   console.log('commonParams', commonParams)
