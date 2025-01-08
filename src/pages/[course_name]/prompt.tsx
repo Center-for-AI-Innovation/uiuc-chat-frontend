@@ -584,7 +584,7 @@ The final prompt you output should adhere to the following structure below. Do n
 
     setMessages([
       { role: 'system', content: systemPrompt },
-      { role: 'user', content: e.target[0].value },
+      { role: 'user', content: baseSystemPrompt },
     ])
     reload()
   }
