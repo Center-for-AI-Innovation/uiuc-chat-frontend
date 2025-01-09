@@ -11,7 +11,7 @@ import {
 } from '@/types/chat'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { AnySupportedModel } from '~/utils/modelProviders/LLMProvider'
-import { DEFAULT_SYSTEM_PROMPT, GUIDED_LEARNING_PROMPT } from '@/utils/app/const'
+import { DEFAULT_SYSTEM_PROMPT, GUIDED_LEARNING_PROMPT, DOCUMENT_FOCUS_PROMPT } from '@/utils/app/const'
 import { routeModelRequest } from '~/utils/streamProcessing'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -52,6 +52,8 @@ export const buildPrompt = async ({
 
   // Check for guided learning in both course metadata and conversation parameters
   const isGuidedLearningFromConversation = conversation.guidedLearning && !courseMetadata?.guidedLearning
+  const isDocumentsOnly = courseMetadata?.documentsOnly || false
+  const isSystemPromptOnly = courseMetadata?.systemPromptOnly || false
 
   let remainingTokenBudget = conversation.model.tokenLimit - 1500 // Save space for images, OpenAI's handling, etc.
 
@@ -68,9 +70,31 @@ export const buildPrompt = async ({
         string | undefined,
       ]
 
-    // Only add GUIDED_LEARNING_PROMPT if guided learning is enabled via conversation but not course-wide
-    const finalSystemPrompt = (systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? '') + 
-      (isGuidedLearningFromConversation ? GUIDED_LEARNING_PROMPT : '')
+    // Build the final system prompt with all components
+    let finalSystemPrompt = systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
+
+    // Add guided learning prompt if enabled via conversation or course metadata
+    if (isGuidedLearningFromConversation || courseMetadata?.guidedLearning) {
+      if (!finalSystemPrompt.includes(GUIDED_LEARNING_PROMPT)) {
+        finalSystemPrompt += GUIDED_LEARNING_PROMPT
+      }
+    }
+
+    // Add documents only prompt if enabled
+    if (isDocumentsOnly) {
+      if (!finalSystemPrompt.includes(DOCUMENT_FOCUS_PROMPT)) {
+        finalSystemPrompt += DOCUMENT_FOCUS_PROMPT
+      }
+    }
+
+    console.log('Building final system prompt:', {
+      baseSystemPrompt: systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? '',
+      isGuidedLearningFromConversation,
+      isDocumentsOnly,
+      isSystemPromptOnly,
+      guidedLearningPromptAdded: isGuidedLearningFromConversation || courseMetadata?.guidedLearning,
+      finalSystemPrompt
+    });
 
     // Adjust remaining token budget based on the system prompt length
     if (encoding) {
@@ -169,6 +193,11 @@ export const buildPrompt = async ({
     conversation.messages[
       conversation.messages.length - 1
     ]!.latestSystemMessage = finalSystemPrompt
+
+    console.log('Final prompts set in conversation:', {
+      finalSystemPrompt: conversation.messages[conversation.messages.length - 1]!.latestSystemMessage,
+      finalUserPrompt: conversation.messages[conversation.messages.length - 1]!.finalPromtEngineeredMessage
+    });
 
     return conversation
   } catch (error) {
@@ -378,6 +407,23 @@ const _getSystemPrompt = async ({
   courseMetadata: CourseMetadata | undefined
   conversation: Conversation
 }): Promise<string> => {
+  // If systemPromptOnly is true, only use the default system prompt
+  if (courseMetadata?.systemPromptOnly) {
+    let basePrompt = DEFAULT_SYSTEM_PROMPT
+
+    // Even with systemPromptOnly, we should still add guided learning if enabled
+    if (courseMetadata?.guidedLearning || (conversation as ConversationWithGuidedLearning)?.guidedLearning) {
+      basePrompt += GUIDED_LEARNING_PROMPT
+    }
+
+    // Add documents only prompt if enabled
+    if (courseMetadata?.documentsOnly) {
+      basePrompt += DOCUMENT_FOCUS_PROMPT
+    }
+
+    return basePrompt
+  }
+
   let userDefinedSystemPrompt: string | undefined | null
   if (courseMetadata?.system_prompt) {
     userDefinedSystemPrompt = courseMetadata.system_prompt
@@ -390,10 +436,20 @@ const _getSystemPrompt = async ({
       })
   }
 
-  // If userDefinedSystemPrompt is null or undefined, use DEFAULT_SYSTEM_PROMPT
+  // Start with either user defined prompt or default
   let systemPrompt = userDefinedSystemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
 
-  // Necessary for math notation. See https://docs.mathjax.org/en/latest/input/tex/index.html
+  // Add guided learning prompt if enabled via conversation or course metadata
+  if (courseMetadata?.guidedLearning || (conversation as ConversationWithGuidedLearning)?.guidedLearning) {
+    systemPrompt += GUIDED_LEARNING_PROMPT
+  }
+
+  // Add documents only prompt if enabled
+  if (courseMetadata?.documentsOnly) {
+    systemPrompt += DOCUMENT_FOCUS_PROMPT
+  }
+
+  // Add math notation instructions
   systemPrompt += `\nWhen responding with equations, use MathJax/KaTeX notation. Equations should be wrapped in either:
 
   * Single dollar signs $...$ for inline math
@@ -413,7 +469,7 @@ const _getSystemPrompt = async ({
   } else {
     // Documents are present, combine system prompt with system post prompt
     const systemPostPrompt = getSystemPostPrompt({
-      conversation,
+      conversation: conversation as ConversationWithGuidedLearning,
       courseMetadata: courseMetadata ?? ({} as CourseMetadata),
     })
     return [systemPrompt, systemPostPrompt]
@@ -429,14 +485,14 @@ export const getSystemPostPrompt = ({
   conversation: ConversationWithGuidedLearning
   courseMetadata: CourseMetadata
 }): string => {
-  // Check for guided learning in both course metadata and conversation parameters
-  const isGuidedLearning = courseMetadata.guidedLearning || conversation.guidedLearning
-  const { systemPromptOnly, documentsOnly } = courseMetadata
-
-  // If systemPromptOnly is true, return an empty PostPrompt
-  if (systemPromptOnly) {
+  // If systemPromptOnly is true, return an empty string
+  if (courseMetadata.systemPromptOnly) {
     return ''
   }
+
+  // Check for guided learning in both course metadata and conversation parameters
+  const isGuidedLearning = courseMetadata.guidedLearning || conversation.guidedLearning
+  const isDocumentsOnly = courseMetadata.documentsOnly || false
 
   // Initialize PostPrompt as an array of strings for easy manipulation
   const PostPromptLines: string[] = []
@@ -453,7 +509,7 @@ Integrate relevant information from these documents, ensuring each reference is 
 When quoting directly from a source document, cite with footnotes linked to the document number and page number, if provided. 
 Summarize or paraphrase other relevant information with inline citations, again referencing the document number and page number, if provided.
 If the answer is not in the provided documents, state so.${
-      isGuidedLearning || documentsOnly
+      isGuidedLearning || isDocumentsOnly
         ? ''
         : ' Yet always provide as helpful a response as possible to directly answer the question.'
     }

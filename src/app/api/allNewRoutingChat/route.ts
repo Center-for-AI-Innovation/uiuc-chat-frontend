@@ -33,6 +33,20 @@ export async function POST(req: NextRequest, res: NextResponse) {
 
   body.conversation = newConversation
 
+  // Log the final state before sending to model
+  const lastMessage = newConversation.messages[newConversation.messages.length - 1]
+  console.log('Final conversation state before model request:', {
+    systemPrompt: lastMessage?.latestSystemMessage,
+    userPrompt: lastMessage?.finalPromtEngineeredMessage,
+    courseSettings: {
+      documentsOnly: courseMetadata?.documentsOnly,
+      systemPromptOnly: courseMetadata?.systemPromptOnly,
+      guidedLearning: courseMetadata?.guidedLearning
+    },
+    model: newConversation.model.id,
+    temperature: newConversation.temperature
+  });
+
   try {
     const result = await routeModelRequest(body as ChatBody)
 

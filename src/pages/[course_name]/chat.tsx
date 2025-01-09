@@ -30,20 +30,29 @@ const ChatPage: NextPage = () => {
   )
   const [isCourseMetadataLoading, setIsCourseMetadataLoading] = useState(true)
   const [urlGuidedLearning, setUrlGuidedLearning] = useState(false)
+  const [urlDocumentsOnly, setUrlDocumentsOnly] = useState(false)
+  const [urlSystemPromptOnly, setUrlSystemPromptOnly] = useState(false)
   const [documentCount, setDocumentCount] = useState<number | null>(null)
 
   // UseEffect to check URL parameters
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search)
-    const guidedLearningParam = urlParams.get('guided_learning')
-    setUrlGuidedLearning(guidedLearningParam === 'true')
-  }, [router.query])
-
-  // UseEffect to fetch course metadata
-  useEffect(() => {
-    if (!courseName && curr_route_path != '/gpt4') return
     const fetchData = async () => {
+      if (!router.isReady) return;
+
+      // Get URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlGuidedLearning = urlParams.get('guidedLearning') === 'true';
+      const urlDocumentsOnly = urlParams.get('documentsOnly') === 'true';
+      const urlSystemPromptOnly = urlParams.get('systemPromptOnly') === 'true';
+
+      console.log('URL parameters:', {
+        guidedLearning: urlGuidedLearning,
+        documentsOnly: urlDocumentsOnly,
+        systemPromptOnly: urlSystemPromptOnly
+      });
+
       setIsLoading(true)
+      setIsCourseMetadataLoading(true)
 
       // Handle /gpt4 page (special non-course page)
       let curr_course_name = courseName
@@ -55,16 +64,40 @@ const ChatPage: NextPage = () => {
       const metadataResponse = await fetch(`/api/UIUC-api/getCourseMetadata?course_name=${curr_course_name}`)
       const metadataData = await metadataResponse.json()
       
-      // If URL guided learning is enabled and course-wide guided learning is not,
-      // append the GUIDED_LEARNING_PROMPT to the system prompt if it's not already there
-      if (metadataData.course_metadata && !metadataData.course_metadata.guidedLearning) {
-        const urlParams = new URLSearchParams(window.location.search)
-        const guidedLearningParam = urlParams.get('guided_learning')
-        if (guidedLearningParam === 'true' && 
-            metadataData.course_metadata.system_prompt && 
-            !metadataData.course_metadata.system_prompt.includes(GUIDED_LEARNING_PROMPT)) {
-          metadataData.course_metadata.system_prompt = metadataData.course_metadata.system_prompt + GUIDED_LEARNING_PROMPT
+      // If URL parameters are enabled and course-wide settings are not,
+      // override the course metadata settings
+      if (metadataData.course_metadata) {
+        console.log('Original course metadata settings:', {
+          guidedLearning: metadataData.course_metadata.guidedLearning,
+          documentsOnly: metadataData.course_metadata.documentsOnly,
+          systemPromptOnly: metadataData.course_metadata.systemPromptOnly,
+          system_prompt: metadataData.course_metadata.system_prompt
+        });
+
+        // Handle guided learning
+        if (!metadataData.course_metadata.guidedLearning && urlGuidedLearning) {
+          metadataData.course_metadata.guidedLearning = true
+          console.log('Enabled guided learning from URL parameter');
         }
+
+        // Handle documents only
+        if (!metadataData.course_metadata.documentsOnly && urlDocumentsOnly) {
+          metadataData.course_metadata.documentsOnly = true
+          console.log('Enabled documents only from URL parameter');
+        }
+
+        // Handle system prompt only
+        if (!metadataData.course_metadata.systemPromptOnly && urlSystemPromptOnly) {
+          metadataData.course_metadata.systemPromptOnly = true
+          console.log('Enabled system prompt only from URL parameter');
+        }
+
+        console.log('Final course metadata settings after URL parameters:', {
+          guidedLearning: metadataData.course_metadata.guidedLearning,
+          documentsOnly: metadataData.course_metadata.documentsOnly,
+          systemPromptOnly: metadataData.course_metadata.systemPromptOnly,
+          system_prompt: metadataData.course_metadata.system_prompt
+        });
       }
       
       setCourseMetadata(metadataData.course_metadata)
@@ -72,7 +105,7 @@ const ChatPage: NextPage = () => {
       setIsLoading(false)
     }
     fetchData()
-  }, [courseName, urlGuidedLearning])
+  }, [courseName, urlGuidedLearning, urlDocumentsOnly, urlSystemPromptOnly])
 
   // UseEffect to fetch document count in the background
   useEffect(() => {
