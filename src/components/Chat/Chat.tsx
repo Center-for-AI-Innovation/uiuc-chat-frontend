@@ -12,7 +12,7 @@ import {
 import { Button, Text } from '@mantine/core'
 import { useTranslation } from 'next-i18next'
 
-import { saveConversations } from '@/utils/app/conversation'
+import posthog from 'posthog-js'
 import { throttle } from '@/utils/data/throttle'
 import { v4 as uuidv4 } from 'uuid'
 import {
@@ -832,6 +832,7 @@ export const Chat = memo(
             | Response
             | undefined
           let reader
+          let startOfCallToLLM
 
           if (
             selectedConversation.model &&
@@ -862,6 +863,7 @@ export const Chat = memo(
               // response = await routeModelRequest(chatBody, controller)
 
               // CALL OUR NEW ENDPOINT... /api/chat
+              startOfCallToLLM = performance.now()
               response = await fetch('/api/allNewRoutingChat', {
                 method: 'POST',
                 headers: {
@@ -947,6 +949,18 @@ export const Chat = memo(
 
           if (!plugin) {
             homeDispatch({ field: 'loading', value: false })
+
+            if (startOfCallToLLM) {
+              // Calculate TTFT (Time To First Token)
+              console.log("IN TFTT LOGIC")
+              const ttft = performance.now() - startOfCallToLLM
+              // LLM Starts responding 
+              posthog.capture('ttft', {
+                course_name: chatBody.course_name,
+                model: chatBody.model,
+                ttft: Math.round(ttft), // Round to whole number of milliseconds
+              })
+            }
 
             const decoder = new TextDecoder()
             let done = false
