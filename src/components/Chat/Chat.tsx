@@ -313,6 +313,7 @@ export const Chat = memo(
           'handleSend called with model:',
           selectedConversation?.model,
         )
+        const startOfHandleSend = performance.now()
         setCurrentMessage(message)
         resetMessageStates()
 
@@ -952,13 +953,14 @@ export const Chat = memo(
 
             if (startOfCallToLLM) {
               // Calculate TTFT (Time To First Token)
-              console.log("IN TFTT LOGIC")
               const ttft = performance.now() - startOfCallToLLM
+              const fromSendToLLMResponse = performance.now() - startOfHandleSend
               // LLM Starts responding 
               posthog.capture('ttft', {
                 course_name: chatBody.course_name,
                 model: chatBody.model,
-                ttft: Math.round(ttft), // Round to whole number of milliseconds
+                llmRequestToFirstToken: Math.round(ttft), // Round to whole number of milliseconds
+                fromSendToLLMResponse: Math.round(fromSendToLLMResponse)
               })
             }
 
