@@ -64,23 +64,19 @@ export default async function middleware(request: NextRequest) {
   // return authMiddleware(request, {} as NextFetchEvent)
   const { pathname } = request.nextUrl
 
-  // Check if this is an auth callback URL (has state, session_state, code params)
+  // Add specific handling for maintenance mode API endpoint
+  if (pathname === '/api/UIUC-api/getMaintenanceModeFast') {
+    return NextResponse.redirect(new URL('/', request.url))
+  }
+
+  // Check if this is an auth callback URL
   const hasAuthCallbackParams = request.nextUrl.searchParams.has('state') &&
     request.nextUrl.searchParams.has('session_state') &&
     request.nextUrl.searchParams.has('code')
 
-  console.log('[Middleware] Request:', {
-    pathname,
-    hasAuthCallbackParams,
-    fullUrl: request.url
-  })
-  if (AUTH_CALLBACK_ROUTES.includes(pathname) && hasAuthCallbackParams) {
-    console.log('[Middleware] Allowing auth callback to proceed')
-    return NextResponse.next()
-  }
-
-  // Allow auth callback routes to pass through
-  if ((pathname === '/sign-in' || pathname === '/sign-up') && hasAuthCallbackParams) {
+  // IMPORTANT: Allow ALL auth callback requests to proceed without interference
+  if (hasAuthCallbackParams) {
+    console.log('[Middleware] Allowing auth callback to proceed:', pathname)
     return NextResponse.next()
   }
 
@@ -96,11 +92,6 @@ export default async function middleware(request: NextRequest) {
     }
     return pathname === route
   })) {
-    return NextResponse.next()
-  }
-
-  // Handle sign-in/sign-up routes without auth params
-  if (AUTH_CALLBACK_ROUTES.includes(pathname) && !hasAuthCallbackParams) {
     return NextResponse.next()
   }
 
