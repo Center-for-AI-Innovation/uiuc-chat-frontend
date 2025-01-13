@@ -16,36 +16,7 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
     response_type: 'code',
     loadUserInfo: true,
     onSigninCallback: () => {
-      if (typeof window !== 'undefined') {
-        console.log('[KeycloakProvider] Processing signin callback')
-        
-        // Get the current URL parameters
-        const params = new URLSearchParams(window.location.search)
-        const state = params.get('state')
-        
-        // Clear URL parameters first
-        window.history.replaceState(
-          {},
-          document.title,
-          window.location.pathname
-        )
-        
-        // Then handle redirect
-        let redirectUrl = '/'
-        if (state) {
-          try {
-            const stateObj = JSON.parse(decodeURIComponent(state))
-            if (stateObj.redirect) {
-              redirectUrl = stateObj.redirect
-            }
-          } catch (e) {
-            console.error('[KeycloakProvider] Failed to parse state:', e)
-          }
-        }
-        
-        // Use replace instead of push to avoid adding to history
-        window.location.replace(redirectUrl)
-      }
+      return
     }
   })
 

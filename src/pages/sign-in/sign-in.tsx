@@ -18,17 +18,17 @@ export default function SignInPage() {
       activeNavigator: auth.activeNavigator
     })
 
-    // If we're processing a callback, don't do anything else
-    if (window.location.search.includes('code=')) {
-      console.log('[SignInPage] Processing callback, waiting...')
-      setIsProcessingCallback(true)
-      return
-    }
-
-    // If authenticated, redirect to the intended page
+    // If already authenticated, redirect to the intended page
     if (auth.isAuthenticated) {
       console.log('[SignInPage] Authenticated, redirecting to:', redirect)
       void router.replace(redirect as string)
+      return
+    }
+
+    // If we're processing a callback, just wait
+    if (window.location.search.includes('code=')) {
+      console.log('[SignInPage] Processing callback, waiting...')
+      setIsProcessingCallback(true)
       return
     }
 
