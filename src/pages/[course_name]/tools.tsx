@@ -14,6 +14,8 @@ import { Title } from '@mantine/core'
 import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
 import MakeToolsPage from '~/components/UIUC-Components/N8NPage'
 import posthog from 'posthog-js'
+import { useAuth } from 'react-oidc-context'
+import { ProtectedRoute } from '~/components/ProtectedRoute'
 
 const montserrat = Montserrat({
   weight: '700',
@@ -62,14 +64,24 @@ const ToolsPage: NextPage = () => {
     fetchCourseData()
   }, [router.isReady])
 
-  // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
-  if (!isLoaded || isLoading || courseExists === null) {
+  // // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
+  // if (!isLoaded || isLoading || courseExists === null) {
+  //   return <LoadingPlaceholderForAdminPages />
+  // }
+
+  // if (!isSignedIn) {
+  //   console.log('User not logged in', isSignedIn, isLoaded, course_name)
+  //   return <AuthComponent course_name={course_name} />
+  // }
+
+  const auth = useAuth()
+
+  if (auth.isLoading) {
     return <LoadingPlaceholderForAdminPages />
   }
 
-  if (!isSignedIn) {
-    console.log('User not logged in', isSignedIn, isLoaded, course_name)
-    return <AuthComponent course_name={course_name} />
+  if (!auth.isAuthenticated) {
+    return <ProtectedRoute><AuthComponent course_name={course_name} /></ProtectedRoute>
   }
 
   const user_emails = extractEmailsFromClerk(user)
