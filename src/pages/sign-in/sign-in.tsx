@@ -11,47 +11,66 @@ export default function SignInPage() {
   const [isProcessingCallback, setIsProcessingCallback] = useState(false)
 
   useEffect(() => {
-    console.log('[SignInPage] Current URL:', window.location.href)
-    console.log('[SignInPage] Auth state:', {
-      isAuthenticated: auth.isAuthenticated,
+    console.log('[SignInPage][Debug] Auth state changed:', {
       isLoading: auth.isLoading,
-      activeNavigator: auth.activeNavigator
+      isAuthenticated: auth.isAuthenticated,
+      activeNavigator: auth.activeNavigator,
+      isProcessingCallback,
+      currentUrl: window.location.href,
+      search: window.location.search,
+      redirect
     })
 
-    // If already authenticated, redirect to the intended page
-    if (auth.isAuthenticated) {
-      console.log('[SignInPage] Authenticated, redirecting to:', redirect)
-      void router.replace(redirect as string)
-      return
-    }
-
-    // If we're processing a callback, just wait
+    // If we're processing a callback, don't do anything else
     if (window.location.search.includes('code=')) {
-      console.log('[SignInPage] Processing callback, waiting...')
+      console.log('[SignInPage] Found code in URL, processing callback')
       setIsProcessingCallback(true)
       return
     }
 
-    // Only initiate signin if:
-    // 1. Not processing callback
-    // 2. Not loading
-    // 3. Not authenticated
-    // 4. No active navigator
+    // Only initiate signin if no auth process is ongoing
     if (!isProcessingCallback && 
         !auth.isLoading && 
         !auth.isAuthenticated && 
         !auth.activeNavigator) {
-      console.log('[SignInPage] Initiating signin redirect')
+      console.log('[SignInPage] Initiating signin redirect with state:', {
+        redirect,
+        currentPath: window.location.pathname
+      })
       void auth.signinRedirect({
-        redirect_uri: window.location.origin + '/sign-in',
         state: JSON.stringify({ redirect })
+      }).catch(error => {
+        console.error('[SignInPage] Error during signin redirect:', error)
       })
     }
-  }, [auth.isLoading, auth.isAuthenticated, isProcessingCallback])
+  }, [auth.isLoading, auth.isAuthenticated])
 
-  return (
-    <MainPageBackground>
-      <LoadingSpinner />
-    </MainPageBackground>
-  )
+  // Log state changes
+  useEffect(() => {
+    console.log('[SignInPage][StateChange] Component state updated:', {
+      isProcessingCallback,
+      authLoading: auth.isLoading,
+      authAuthenticated: auth.isAuthenticated,
+      redirect
+    })
+  }, [isProcessingCallback, auth.isLoading, auth.isAuthenticated, redirect])
+
+  // Show loading state during authentication
+  if (auth.isLoading || isProcessingCallback) {
+    console.log('[SignInPage] Showing loading state:', {
+      authLoading: auth.isLoading,
+      isProcessingCallback
+    })
+    return <LoadingSpinner />
+  }
+
+  // Redirect if already authenticated
+  if (auth.isAuthenticated) {
+    console.log('[SignInPage] User authenticated, redirecting to:', redirect)
+    void router.replace(redirect as string)
+    return null
+  }
+
+  console.log('[SignInPage] Rendering null - waiting for auth flow')
+  return null
 }
