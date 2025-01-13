@@ -8,16 +8,15 @@ interface AuthProviderProps {
 export const KeycloakProvider = ({ children }: AuthProviderProps) => {
   const [oidcConfig, setOidcConfig] = useState({
     authority: process.env.NEXT_PUBLIC_KEYCLOAK_URL + '/realms/myrealm',
-    client_id: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'uiuc-chat',
-    redirect_uri: '',
-    silent_redirect_uri: '',
-    post_logout_redirect_uri: '',
+    client_id: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'uiucchat',
+    redirect_uri: typeof window !== 'undefined' ? window.location.origin + '/sign-in' : '',
+    silent_redirect_uri: typeof window !== 'undefined' ? window.location.origin + '/silent-renew' : '',
+    post_logout_redirect_uri: typeof window !== 'undefined' ? window.location.origin : '',
     scope: 'openid profile email',
     response_type: 'code',
     loadUserInfo: true,
     onSigninCallback: async () => {
       if (typeof window !== 'undefined') {
-        // Get the current URL parameters
         const params = new URLSearchParams(window.location.search)
         const state = params.get('state')
         const code = params.get('code')
@@ -30,7 +29,8 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
 
         // Only process if this is actually an auth callback
         if (!code) {
-          console.log('[KeycloakProvider][onSigninCallback] No code found, skipping callback processing')
+          console.log('[KeycloakProvider][onSigninCallback] No code found, redirecting to homepage')
+          window.location.replace('/')
           return
         }
 
@@ -56,14 +56,17 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
               return
             } catch (parseError) {
               console.error('[KeycloakProvider][onSigninCallback] Error parsing state:', parseError)
+              console.log('[KeycloakProvider][onSigninCallback] Error parsing state, redirecting to homepage')
+              window.location.replace('/')
             }
+          } else {
+            // No state parameter, redirect to homepage
+            console.log('[KeycloakProvider][onSigninCallback] No state found, redirecting to homepage')
+            window.location.replace('/')
           }
-          
-          // Default redirect
-          console.log('[KeycloakProvider][onSigninCallback] No state found, redirecting to /')
-          window.location.replace('/')
         } catch (e) {
           console.error('[KeycloakProvider][onSigninCallback] Error processing callback:', e)
+          console.log('[KeycloakProvider][onSigninCallback] Error in callback, redirecting to homepage')
           window.location.replace('/')
         }
       }
@@ -79,31 +82,29 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
         isCallback,
         search: window.location.search,
         hasCode: params.has('code'),
-        hasState: params.has('state')
+        hasState: params.has('state'),
+        currentConfig: oidcConfig
       })
-      
-      // Don't update config during callback processing
-      if (!isCallback) {
-        console.log('[KeycloakProvider][useEffect] Initializing with origin:', window.location.origin)
-        setOidcConfig(config => ({
-          ...config,
-          redirect_uri: window.location.origin + '/sign-in',
-          silent_redirect_uri: window.location.origin + '/silent-renew',
-          post_logout_redirect_uri: window.location.origin,
-        }))
-      } else {
-        console.log('[KeycloakProvider][useEffect] Skipping config update during callback')
+
+      // If we don't have a redirect_uri, redirect to homepage
+      if (!oidcConfig.redirect_uri) {
+        console.log('[KeycloakProvider][useEffect] No redirect URI found, redirecting to homepage')
+        window.location.replace('/')
+        return
       }
     }
-  }, [])
+  }, [oidcConfig])
 
-  if (typeof window === 'undefined' || !oidcConfig.redirect_uri) {
-    console.log('[KeycloakProvider] Not rendering - SSR or missing config:', {
-      isSSR: typeof window === 'undefined',
-      hasRedirectUri: !!oidcConfig.redirect_uri
-    })
+  if (typeof window === 'undefined') {
+    console.log('[KeycloakProvider] Not rendering - SSR')
     return null
   }
+
+  console.log('[KeycloakProvider] Rendering with config:', {
+    hasRedirectUri: !!oidcConfig.redirect_uri,
+    redirectUri: oidcConfig.redirect_uri,
+    currentUrl: window.location.href
+  })
 
   return (
     <AuthProvider {...oidcConfig}>
