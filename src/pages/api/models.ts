@@ -34,12 +34,12 @@ export default async function handler(
     }
 
     // Fetch the project's API keys
-    let llmProviders: ProjectWideLLMProviders
+    let llmProviders: AllLLMProviders
     const redisValue = await redisClient.get(`${projectName}-llms`)
     if (!redisValue) {
-      llmProviders = {} as ProjectWideLLMProviders
+      llmProviders = {} as AllLLMProviders
     } else {
-      llmProviders = JSON.parse(redisValue) as ProjectWideLLMProviders
+      llmProviders = JSON.parse(redisValue) as AllLLMProviders
     }
 
     // Define a function to create a placeholder provider with default values
@@ -58,14 +58,6 @@ export default async function handler(
         // @ts-ignore -- I can't figure out why Ollama complains about undefined.
         llmProviders[providerName] = createPlaceholderProvider(providerName)
       }
-    }
-
-    // Ensure defaultModel and defaultTemp are set
-    if (!llmProviders.defaultModel) {
-      llmProviders.defaultModel = OpenAIModelID.GPT_4o_mini
-    }
-    if (!llmProviders.defaultTemp) {
-      llmProviders.defaultTemp = 0.1
     }
 
     const allLLMProviders: Partial<AllLLMProviders> = {}

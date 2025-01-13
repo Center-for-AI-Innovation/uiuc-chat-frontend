@@ -9,6 +9,8 @@ export interface OllamaModel {
   parameterSize: string
   tokenLimit: number
   enabled: boolean
+  default?: boolean
+  temperature?: number
 }
 
 export enum OllamaModelIDs {

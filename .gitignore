@@ -44,3 +44,5 @@ yarn-error.log*
 
 # cursor
 .cursorrules
+
+tests_output/
