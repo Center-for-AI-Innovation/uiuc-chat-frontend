@@ -44,10 +44,11 @@ export const getNCSAHostedVLMModels = async (
 ): Promise<NCSAHostedVLMProvider> => {
   delete vlmProvider.error // Clear any previous errors
   vlmProvider.provider = ProviderNames.NCSAHostedVLM
-  let wasDefault = false
+  const existingDefaults = new Map<string, boolean>()
   if (vlmProvider.models) {
-    // WARNING! This assumes that the only model you're touching is the first one. We should change this later as needed.
-    wasDefault = vlmProvider.models[0]?.default ? true : false
+    vlmProvider.models.forEach(model => {
+      existingDefaults.set(model.id, !!model.default)
+    })
   }
   try {
     vlmProvider.baseUrl = process.env.NCSA_HOSTED_VLM_BASE_URL
@@ -66,18 +67,16 @@ export const getNCSAHostedVLMModels = async (
     const data = await response.json()
     const vlmModels: NCSAHostedVLMModel[] = data.data.map((model: any) => {
       const knownModel = NCSAHostedVLMModels[model.id as NCSAHostedVLMModelID]
-      console.log("data default:",data.default)
       return {
         id: model.id,
         name: knownModel ? knownModel.name : 'Experimental: ' + model.id,
         tokenLimit: model.max_tokens || knownModel.tokenLimit, // Default to 128000 if max_tokens is not provided
         enabled: data.enabled ? data.enabled : knownModel.enabled,
-        default: wasDefault ? true : false,
+        default: existingDefaults.get(model.id) || false,
       }
     })
 
     vlmProvider.models = vlmModels
-    console.log("VLM Provider", vlmProvider)
     return vlmProvider as NCSAHostedVLMProvider
   } catch (error: any) {
     console.warn('Error fetching VLM models:', error)
