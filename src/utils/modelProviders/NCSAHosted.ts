@@ -10,6 +10,7 @@ export interface OllamaModel {
   parameterSize: string
   tokenLimit: number
   enabled: boolean
+  default?: boolean
 }
 
 export enum NCSAHostedModelID {
@@ -72,6 +73,11 @@ export const getNCSAHostedModels = async (
 ): Promise<NCSAHostedProvider> => {
   delete ncsaHostedProvider.error // Remove the error property if it exists
   ncsaHostedProvider.provider = ProviderNames.NCSAHosted
+  let wasDefault = false
+  if (ncsaHostedProvider.models) {
+    // WARNING! This assumes that the only model you're touching is the first one. We should change this later as needed.
+    wasDefault = ncsaHostedProvider.models[0]?.default ? true : false
+  }
   try {
     // /api/tags - all downloaded models - might not have room on the GPUs.
     // /api/ps - all HOT AND LOADED models
@@ -97,6 +103,9 @@ export const getNCSAHostedModels = async (
     //   })
 
     ncsaHostedProvider.models = ollamaModels
+    if (ncsaHostedProvider.models[0]) {
+      ncsaHostedProvider.models[0].default = wasDefault
+    }
     return ncsaHostedProvider as NCSAHostedProvider
   } catch (error: any) {
     ncsaHostedProvider.error = error.message
