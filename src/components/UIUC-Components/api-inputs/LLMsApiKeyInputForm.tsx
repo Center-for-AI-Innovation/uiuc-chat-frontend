@@ -718,6 +718,13 @@ export default function APIKeyInputForm() {
                                 form={form}
                                 isLoading={isLoadingLLMProviders}
                               />
+                              <NCSAHostedVLMProviderInput
+                                provider={
+                                  llmProviders?.NCSAHostedVLM as NCSAHostedVLMProvider
+                                }
+                                form={form}
+                                isLoading={isLoadingLLMProviders}
+                              />
                               <OllamaProviderInput
                                 provider={
                                   llmProviders?.Ollama as OllamaProvider
@@ -728,13 +735,6 @@ export default function APIKeyInputForm() {
                               <WebLLMProviderInput
                                 provider={
                                   llmProviders?.WebLLM as WebLLMProvider
-                                }
-                                form={form}
-                                isLoading={isLoadingLLMProviders}
-                              />
-                              <NCSAHostedVLMProviderInput
-                                provider={
-                                  llmProviders?.NCSAHostedVLM as NCSAHostedVLMProvider
                                 }
                                 form={form}
                                 isLoading={isLoadingLLMProviders}
