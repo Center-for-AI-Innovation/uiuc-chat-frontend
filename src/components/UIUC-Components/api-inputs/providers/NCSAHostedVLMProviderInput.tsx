@@ -49,7 +49,7 @@ export default function NCSAHostedVLMProviderInput({
                   mb="xs"
                   style={{ paddingRight: '8px' }}
                 >
-                  NCSA Vision LLMs
+                  NCSA Hosted VLMs
                 </Text>
                 <IconExternalLink size={16} className="mb-3" />
               </div>
@@ -62,7 +62,7 @@ export default function NCSAHostedVLMProviderInput({
                 labelPosition="left"
                 onLabel="ON"
                 offLabel="OFF"
-                aria-label="Enable NCSA Vision LLMs provider"
+                aria-label="Enable NCSA Hosted VLMs provider"
                 checked={field.state.value}
                 onChange={(event) => {
                   field.handleChange(event.currentTarget.checked)
