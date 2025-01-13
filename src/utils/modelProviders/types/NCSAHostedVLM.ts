@@ -5,6 +5,8 @@ export interface NCSAHostedVLMModel {
   name: string
   tokenLimit: number
   enabled: boolean
+  default?: boolean
+  temperature?: number
 }
 
 export enum NCSAHostedVLMModelID {

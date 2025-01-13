@@ -21,16 +21,17 @@ import {
   useSetProjectLLMProviders,
 } from '~/hooks/useProjectAPIKeys'
 import {
-  AllLLMProviders,
-  AnthropicProvider,
-  AnySupportedModel,
-  AzureProvider,
-  LLMProvider,
-  NCSAHostedProvider,
-  OllamaProvider,
-  OpenAIProvider,
-  ProviderNames,
+  type AllLLMProviders,
+  type AnthropicProvider,
+  type AnySupportedModel,
+  type AzureProvider,
+  type LLMProvider,
+  type NCSAHostedProvider,
+  type OllamaProvider,
+  type OpenAIProvider,
+  type ProviderNames,
   type WebLLMProvider,
+  type NCSAHostedVLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
 import { notifications } from '@mantine/notifications'
 import {
