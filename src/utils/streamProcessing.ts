@@ -20,6 +20,7 @@ import {
   AnthropicProvider,
   GenericSupportedModel,
   NCSAHostedProvider,
+  NCSAHostedVLMProvider,
   OllamaProvider,
   VisionCapableModels,
 } from '~/utils/modelProviders/LLMProvider'
@@ -768,12 +769,12 @@ export async function handleImageContent(
     )
 
     if (imgDescIndex !== -1) {
-      ; (message.content as Content[])[imgDescIndex] = {
+      ;(message.content as Content[])[imgDescIndex] = {
         type: 'text',
         text: `Image description: ${imgDesc}`,
       }
     } else {
-      ; (message.content as Content[]).push({
+      ;(message.content as Content[]).push({
         type: 'text',
         text: `Image description: ${imgDesc}`,
       })
@@ -797,21 +798,23 @@ export const getOpenAIKey = (
   return key
 }
 
-import { POST as ollamaPost } from '@/app/api/chat/ollama/route'
 import { runOllamaChat } from '~/app/utils/ollama'
 import { openAIAzureChat } from './modelProviders/OpenAIAzureChat'
 import { runAnthropicChat } from '~/app/utils/anthropic'
+import { NCSAHostedVLMModelID } from './modelProviders/types/NCSAHostedVLM'
+import { runVLLM } from '~/app/utils/vllm'
 
 export const routeModelRequest = async (
   chatBody: ChatBody,
   controller?: AbortController,
   baseUrl?: string,
 ): Promise<any> => {
+  console.log('In routeModelRequest: ', chatBody, baseUrl)
   /*  Use this to call the LLM. It will call the appropriate endpoint based on the conversation.model.
       🧠 ADD NEW LLM PROVIDERS HERE 🧠
   */
   const selectedConversation = chatBody.conversation!
-
+  let response: Response
   // Add this check at the beginning of the function
   if (!selectedConversation.model || !selectedConversation.model.id) {
     throw new Error('Conversation model is undefined or missing "id" property.')
@@ -829,17 +832,28 @@ export const routeModelRequest = async (
   })
 
   if (
-    Object.values(NCSAHostedModelID).includes(
+    Object.values(NCSAHostedVLMModelID).includes(
       selectedConversation.model.id as any,
     )
   ) {
     // NCSA Hosted LLMs
-    const newChatBody = chatBody!.llmProviders!.NCSAHosted as NCSAHostedProvider
-    newChatBody.baseUrl = process.env.OLLAMA_SERVER_URL // inject proper baseURL
+    // const url = baseUrl ? `${baseUrl}/api/chat/vlm` : '/api/chat/vlm'
+    // response = await fetch(url, {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
 
-    return await runOllamaChat(
-      chatBody.conversation!,
-      chatBody!.llmProviders!.Ollama as OllamaProvider,
+    //   body: JSON.stringify({
+    //     conversation: selectedConversation,
+    //     // ollamaProvider: newChatBody,
+    //     stream: chatBody.stream,
+    //   }),
+    // })
+    // return response
+    return await runVLLM(
+      selectedConversation,
+      chatBody?.llmProviders?.NCSAHostedVLM as NCSAHostedVLMProvider,
       chatBody.stream,
     )
   } else if (

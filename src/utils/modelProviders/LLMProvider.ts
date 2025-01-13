@@ -1,21 +1,26 @@
-import { OllamaModel, OllamaModels } from '~/utils/modelProviders/ollama'
-import { WebllmModel } from '~/utils/modelProviders/WebLLM'
+import { type OllamaModel, OllamaModels } from '~/utils/modelProviders/ollama'
+import { type WebllmModel } from '~/utils/modelProviders/WebLLM'
 import {
-  OpenAIModel,
+  type OpenAIModel,
   OpenAIModelID,
   OpenAIModels,
 } from '~/utils/modelProviders/types/openai'
 import {
-  AnthropicModel,
+  type AnthropicModel,
   AnthropicModelID,
   AnthropicModels,
 } from '~/utils/modelProviders/types/anthropic'
 import {
-  AzureModel,
+  type AzureModel,
   AzureModelID,
   AzureModels,
 } from '~/utils/modelProviders/azure'
 import { NCSAHostedModels } from '~/utils/modelProviders/NCSAHosted'
+import {
+  type NCSAHostedVLMModel,
+  NCSAHostedVLMModelID,
+  NCSAHostedVLMModels,
+} from '~/utils/modelProviders/types/NCSAHostedVLM'
 
 
 export enum ProviderNames {
@@ -25,6 +30,7 @@ export enum ProviderNames {
   Anthropic = 'Anthropic',
   WebLLM = 'WebLLM',
   NCSAHosted = 'NCSAHosted',
+  NCSAHostedVLM = 'NCSAHostedVLM',
 }
 
 export type AnySupportedModel =
@@ -33,10 +39,10 @@ export type AnySupportedModel =
   | WebllmModel
   | AnthropicModel
   | AzureModel
-
+  | NCSAHostedVLMModel
 // Add other vision capable models as needed
 export const VisionCapableModels: Set<
-  OpenAIModelID | AzureModelID | AnthropicModelID
+  OpenAIModelID | AzureModelID | AnthropicModelID | NCSAHostedVLMModelID
 > = new Set([
   OpenAIModelID.GPT_4_Turbo,
   OpenAIModelID.GPT_4o,
@@ -47,6 +53,11 @@ export const VisionCapableModels: Set<
   AzureModelID.GPT_4o_mini,
   // claude-3.5....
   AnthropicModelID.Claude_3_5_Sonnet,
+
+  // VLM
+  NCSAHostedVLMModelID.Llama_3_2_11B_Vision_Instruct,
+  NCSAHostedVLMModelID.MOLMO_7B_D_0924,
+  NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT,
 ])
 
 export const AllSupportedModels: Set<GenericSupportedModel> = new Set([
@@ -55,6 +66,7 @@ export const AllSupportedModels: Set<GenericSupportedModel> = new Set([
   ...Object.values(AzureModels),
   ...Object.values(OllamaModels),
   ...Object.values(NCSAHostedModels),
+  ...Object.values(NCSAHostedVLMModels),
   // ...webLLMModels,
 ])
 // e.g. Easily validate ALL POSSIBLE models that we support. They may be offline or disabled, but they are supported.
@@ -101,6 +113,12 @@ export interface NCSAHostedProvider extends BaseLLMProvider {
   models?: OllamaModel[]
 }
 
+export interface NCSAHostedVLMProvider extends BaseLLMProvider {
+  // This uses Ollama, but hosted by NCSA. Keep it separate.
+  provider: ProviderNames.NCSAHostedVLM
+  models?: NCSAHostedVLMModel[]
+}
+
 export interface OpenAIProvider extends BaseLLMProvider {
   provider: ProviderNames.OpenAI
   models?: OpenAIModel[]
@@ -132,6 +150,7 @@ export type LLMProvider =
   | AnthropicProvider
   | WebLLMProvider
   | NCSAHostedProvider
+  | NCSAHostedVLMProvider
 
 // export type AllLLMProviders = {
 //   [P in ProviderNames]?: LLMProvider & { provider: P }
@@ -166,6 +185,7 @@ export const preferredModelIds = [
   AzureModelID.GPT_4,
 
   OpenAIModelID.GPT_3_5,
+  NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT,
 ]
 
 export const selectBestModel = (

@@ -1,6 +1,5 @@
-import { NextApiRequest, NextApiResponse } from 'next'
-import { ChatBody, Content, ImageBody, OpenAIChatMessage } from '~/types/chat'
-import { decryptKeyIfNeeded } from '~/utils/crypto'
+import { type NextApiRequest, type NextApiResponse } from 'next'
+import { type ImageBody, type OpenAIChatMessage } from '~/types/chat'
 
 import { OpenAIError, OpenAIStream } from '@/utils/server'
 

@@ -15,22 +15,23 @@ import {
 } from '@mantine/core'
 import Image from 'next/image'
 import { useQueryClient } from '@tanstack/react-query'
-import { useForm, FieldApi } from '@tanstack/react-form'
+import { useForm, type FieldApi } from '@tanstack/react-form'
 import {
   useGetProjectLLMProviders,
   useSetProjectLLMProviders,
 } from '~/hooks/useProjectAPIKeys'
 import {
-  AllLLMProviders,
-  AnthropicProvider,
-  AnySupportedModel,
-  AzureProvider,
-  LLMProvider,
-  NCSAHostedProvider,
-  OllamaProvider,
-  OpenAIProvider,
-  ProviderNames,
-  WebLLMProvider,
+  type AllLLMProviders,
+  type AnthropicProvider,
+  type AnySupportedModel,
+  type AzureProvider,
+  type LLMProvider,
+  type NCSAHostedProvider,
+  type OllamaProvider,
+  type OpenAIProvider,
+  type ProviderNames,
+  type WebLLMProvider,
+  type NCSAHostedVLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
 import { notifications } from '@mantine/notifications'
 import {
@@ -51,6 +52,7 @@ import OllamaProviderInput from './providers/OllamaProviderInput'
 import WebLLMProviderInput from './providers/WebLLMProviderInput'
 import NCSAHostedLLmsProviderInput from './providers/NCSAHostedProviderInput'
 import { getModelLogo } from '~/components/Chat/ModelSelect'
+import NCSAHostedVLMProviderInput from './providers/NCSAHostedVLMProviderInput'
 import { t } from 'i18next'
 
 const isSmallScreen = false
@@ -368,7 +370,7 @@ export const ModelItem = forwardRef<
 export function findDefaultModel(
   providers: AllLLMProviders,
 ): (AnySupportedModel & { provider: ProviderNames }) | undefined {
-  console.log('providers inside', providers)
+  // console.log('providers inside', providers)
   for (const providerKey in providers) {
     const provider = providers[providerKey as keyof typeof providers]
     if (provider && provider.models) {
@@ -712,6 +714,13 @@ export default function APIKeyInputForm() {
                               <NCSAHostedLLmsProviderInput
                                 provider={
                                   llmProviders?.NCSAHosted as NCSAHostedProvider
+                                }
+                                form={form}
+                                isLoading={isLoadingLLMProviders}
+                              />
+                              <NCSAHostedVLMProviderInput
+                                provider={
+                                  llmProviders?.NCSAHostedVLM as NCSAHostedVLMProvider
                                 }
                                 form={form}
                                 isLoading={isLoadingLLMProviders}
