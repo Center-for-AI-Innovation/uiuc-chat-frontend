@@ -22,6 +22,7 @@ import {
   NCSAHostedVLMModels,
 } from '~/utils/modelProviders/types/NCSAHostedVLM'
 
+
 export enum ProviderNames {
   Ollama = 'Ollama',
   OpenAI = 'OpenAI',
@@ -89,6 +90,8 @@ export interface GenericSupportedModel {
   tokenLimit: number
   enabled: boolean
   parameterSize?: string
+  default?: boolean
+  temperature?: number
 }
 
 export interface BaseLLMProvider {
@@ -188,13 +191,16 @@ export const preferredModelIds = [
 export const selectBestModel = (
   allLLMProviders: AllLLMProviders,
 ): GenericSupportedModel => {
+  // Find default model from the local Storage
+  // Currently, if the user ever specified a default model in local storage, this will ALWAYS override the default model specified by the admin, 
+  // especially for the creation of new chats. 
   const allModels = Object.values(allLLMProviders)
     .filter((provider) => provider!.enabled)
     .flatMap((provider) => provider!.models || [])
     .filter((model) => model.enabled)
 
   const defaultModelId = localStorage.getItem('defaultModel')
-
+  
   if (defaultModelId && allModels.find((m) => m.id === defaultModelId)) {
     const defaultModel = allModels
       .filter((model) => model.enabled)
@@ -203,7 +209,15 @@ export const selectBestModel = (
       return defaultModel
     }
   }
-
+  // If the default model that a user specifies is not available, fall back to the admin selected default model. 
+  const globalDefaultModel = Object.values(allLLMProviders)
+    .filter((provider) => provider!.enabled)
+    .flatMap((provider) => provider!.models || [])
+    .filter((model) => model.default)
+  if (globalDefaultModel[0]) {
+    // This will always return one record since the default model is unique. If there are two default models (that means default model functionality is broken), this will return the first one.
+    return globalDefaultModel[0] as GenericSupportedModel
+  }
   // If the conversation model is not available or invalid, use the preferredModelIds
   for (const preferredId of preferredModelIds) {
     const model = allModels
@@ -214,7 +228,6 @@ export const selectBestModel = (
       return model
     }
   }
-
   // If no preferred models are available, fallback to llama3.1:8b-instruct-fp16
   return {
     id: 'llama3.1:8b-instruct-fp16',

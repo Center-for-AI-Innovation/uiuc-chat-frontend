@@ -11,6 +11,7 @@ import { CoreMessage } from 'ai'
 
 export const getBaseUrl = () => {
   if (typeof window !== 'undefined') return '' // browser should use relative url
+  if (process.env.VERCEL_ENV == 'production') return 'https://uiuc.chat'
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}` // SSR should use vercel url
   return `http://localhost:${process.env.PORT ?? 3000}` // dev SSR should use localhost
 }
@@ -135,7 +136,9 @@ export async function fetchPresignedUrl(
  */
 export async function fetchCourseMetadata(course_name: string): Promise<any> {
   try {
+    console.log("Vercel base URL", process.env.VERCEL_URL)
     const endpoint = `${getBaseUrl()}/api/UIUC-api/getCourseMetadata?course_name=${course_name}`
+    console.log("endpoint url of metadata:", endpoint)
     const response = await fetch(endpoint)
 
     if (!response.ok) {

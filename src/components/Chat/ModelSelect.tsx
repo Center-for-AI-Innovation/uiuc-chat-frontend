@@ -344,9 +344,9 @@ const ModelDropdown: React.FC<
           onChange={async (modelId) => {
             if (state.webLLMModelIdLoading.isLoading) {
               setLoadingModelId(modelId)
-              console.log('model id', modelId)
-              console.log('loading model id', loadingModelId)
-              console.log('model is loading', state.webLLMModelIdLoading.id)
+              // console.log('model id', modelId)
+              // console.log('loading model id', loadingModelId)
+              // console.log('model is loading', state.webLLMModelIdLoading.id)
             } else if (!state.webLLMModelIdLoading.isLoading) {
               setLoadingModelId(null)
             }
@@ -456,6 +456,8 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
     const defaultModel = selectBestModel(llmProviders).id
     const [loadingModelId, setLoadingModelId] = useState<string | null>(null)
     const [isAccordionOpen, setIsAccordionOpen] = useState(false)
+
+    // console.log('defaultModelId in chat page: ', defaultModelId)
 
     const handleModelClick = (modelId: string) => {
       // Get list of models from all providers
