@@ -65,6 +65,7 @@ export async function processChunkWithStateMachine(
   lastMessage: Message,
   stateMachineContext: { state: State; buffer: string },
   citationLinkCache: Map<number, string>,
+  courseName: string
 ): Promise<string> {
   let { state, buffer } = stateMachineContext
   let processedChunk = ''
@@ -164,6 +165,7 @@ export async function processChunkWithStateMachine(
             buffer + char,
             lastMessage,
             citationLinkCache,
+            courseName,
           )
           buffer = ''
           // console.log('Clearing buffer after citation replacement')
@@ -187,6 +189,7 @@ export async function processChunkWithStateMachine(
             buffer + char,
             lastMessage,
             citationLinkCache,
+            courseName,
           )
           buffer = ''
           // console.log('Clearing buffer after citation page replacement')
@@ -211,6 +214,7 @@ export async function processChunkWithStateMachine(
             buffer,
             lastMessage,
             citationLinkCache,
+            courseName,
           )
           buffer = char
           // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
@@ -227,6 +231,7 @@ export async function processChunkWithStateMachine(
             buffer + char,
             lastMessage,
             citationLinkCache,
+            courseName,
           )
           buffer = ''
           // console.log('Clearing buffer after filename replacement')
@@ -299,6 +304,7 @@ export async function processChunkWithStateMachine(
       buffer,
       lastMessage,
       citationLinkCache,
+      courseName,
     )
     buffer = ''
   }
@@ -573,6 +579,7 @@ export async function handleStreamingResponse(
         lastMessage,
         stateMachineContext,
         citationLinkCache,
+        course_name,
       )
       fullAssistantResponse += decodedChunk
       res.write(decodedChunk)
@@ -585,6 +592,7 @@ export async function handleStreamingResponse(
         lastMessage,
         stateMachineContext,
         citationLinkCache,
+        course_name,
       )
       fullAssistantResponse += finalChunk
       res.write(finalChunk)
@@ -633,6 +641,7 @@ async function processResponseData(
       lastMessage,
       stateMachineContext,
       citationLinkCache,
+      course_name,
     )
     await updateConversationInDatabase(conversation, course_name, req)
     return processedData
@@ -769,12 +778,12 @@ export async function handleImageContent(
     )
 
     if (imgDescIndex !== -1) {
-      ;(message.content as Content[])[imgDescIndex] = {
+      ; (message.content as Content[])[imgDescIndex] = {
         type: 'text',
         text: `Image description: ${imgDesc}`,
       }
     } else {
-      ;(message.content as Content[]).push({
+      ; (message.content as Content[]).push({
         type: 'text',
         text: `Image description: ${imgDesc}`,
       })

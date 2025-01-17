@@ -109,6 +109,7 @@ export const uploadToS3 = async (
  */
 export async function fetchPresignedUrl(
   filePath: string,
+  courseName?: string,
   page?: string,
 ): Promise<string | null> {
   try {
@@ -116,7 +117,7 @@ export async function fetchPresignedUrl(
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ filePath, page }),
+      body: JSON.stringify({ filePath, courseName, page }),
     })
 
     if (!response.ok)

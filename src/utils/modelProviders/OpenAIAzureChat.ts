@@ -104,7 +104,7 @@ const convertConversationToOpenAIMessages = (
           messageIndex === messages.length - 1 &&
           !content.text?.startsWith('Image description:')
         ) {
-          console.debug('Replacing the text: ', content.text)
+          // console.debug('Replacing the text: ', content.text)
           content.text = strippedMessage.finalPromtEngineeredMessage
         }
         return content

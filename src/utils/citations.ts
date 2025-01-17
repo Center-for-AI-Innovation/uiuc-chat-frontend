@@ -12,6 +12,7 @@ export async function replaceCitationLinks(
   content: string,
   lastMessage: Message,
   citationLinkCache: Map<number, string>,
+  courseName: string,
 ): Promise<string> {
   console.log('Chunk before replacement: ', content)
   if (lastMessage.contexts) {
@@ -26,6 +27,7 @@ export async function replaceCitationLinks(
           context,
           citationLinkCache,
           citationIndex,
+          courseName,
         )
         const replacementText = pageNumber
           ? `[${citationIndex}](${link}#page=${pageNumber})`
@@ -49,6 +51,7 @@ export async function replaceCitationLinks(
           context,
           citationLinkCache,
           filenameIndex,
+          courseName,
         )
         content = content.replace(
           new RegExp(`(\\b${filenameIndex}\\.)\\s*\\[(.*?)\\]\\(\\#\\)`, 'g'),
@@ -57,7 +60,7 @@ export async function replaceCitationLinks(
             const pageNumber = pageNumberMatch
               ? `#page=${pageNumberMatch[1]}`
               : ''
-            console.log('pageNumber: ', pageNumber)
+            // console.log('pageNumber: ', pageNumber)
             return `${index} [${index} ${filename}](${link}${pageNumber})`
           },
         )
@@ -87,13 +90,14 @@ const getCitationLink = async (
   context: ContextWithMetadata,
   citationLinkCache: Map<number, string>,
   citationIndex: number,
+  courseName: string,
 ): Promise<string> => {
-  console.log('getting link for citationIndex: ', citationIndex)
+  // console.log('getting link for citationIndex: ', citationIndex)
   const cachedLink = citationLinkCache.get(citationIndex)
   if (cachedLink) {
     return cachedLink
   } else {
-    const link = (await generateCitationLink(context)) as string
+    const link = (await generateCitationLink(context, courseName)) as string
     citationLinkCache.set(citationIndex, link)
     return link
   }
@@ -106,11 +110,12 @@ const getCitationLink = async (
  */
 const generateCitationLink = async (
   context: ContextWithMetadata,
+  courseName: string
 ): Promise<string | null> => {
   if (context.url) {
     return context.url
   } else if (context.s3_path) {
-    return fetchPresignedUrl(context.s3_path)
+    return fetchPresignedUrl(context.s3_path, courseName)
   }
   return ''
 }
