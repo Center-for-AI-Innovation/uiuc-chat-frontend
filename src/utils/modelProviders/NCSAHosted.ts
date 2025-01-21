@@ -3,78 +3,7 @@ import {
   type NCSAHostedProvider,
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
-
-export interface OllamaModel {
-  id: string
-  name: string
-  parameterSize: string
-  tokenLimit: number
-  enabled: boolean
-  default?: boolean
-}
-
-export enum NCSAHostedModelID {
-  // Use "official" IDs from the Ollama API. Human-readable names in 'OllamaModels' below.
-  LLAMA31_8b = 'llama3.1:8b',
-  LLAMA31_8b_instruct_fp16 = 'llama3.1:8b-instruct-fp16',
-  LLAMA31_70b_instruct_fp16 = 'llama3.1:70b-instruct-fp16',
-  LLAMA31_latest = 'llama3.1:latest', // maps to LLAMA31_8b
-  LLAMA31_70b = 'llama3.1:70b',
-  LLAMA31_405b = 'llama3.1:405b',
-  DEEPSEEK_R1_14b_qwen_fp16 = 'deepseek-r1:14b-qwen-distill-fp16',
-}
-
-export const NCSAHostedModels: Record<NCSAHostedModelID, OllamaModel> = {
-  [NCSAHostedModelID.DEEPSEEK_R1_14b_qwen_fp16]: {
-    id: NCSAHostedModelID.DEEPSEEK_R1_14b_qwen_fp16,
-    name: 'Deepseek R1 14b (Qwen FP16)',
-    parameterSize: '14b',
-    tokenLimit: 128000,
-    enabled: true,
-  },
-  [NCSAHostedModelID.LLAMA31_8b]: {
-    id: NCSAHostedModelID.LLAMA31_8b,
-    name: 'Llama 3.1 8b (quantized)',
-    parameterSize: '8b',
-    tokenLimit: 128000,
-    enabled: true,
-  },
-  [NCSAHostedModelID.LLAMA31_70b_instruct_fp16]: {
-    id: NCSAHostedModelID.LLAMA31_70b_instruct_fp16,
-    name: 'Llama 3.1 70b (FP16)',
-    parameterSize: '8b',
-    tokenLimit: 128000,
-    enabled: true,
-  },
-  [NCSAHostedModelID.LLAMA31_8b_instruct_fp16]: {
-    id: NCSAHostedModelID.LLAMA31_8b_instruct_fp16,
-    name: 'Llama 3.1 8b (FP16)',
-    parameterSize: '8b',
-    tokenLimit: 128000,
-    enabled: true,
-  },
-  [NCSAHostedModelID.LLAMA31_70b]: {
-    id: NCSAHostedModelID.LLAMA31_70b,
-    name: 'Llama 3.1 70b (Quantized, Poor Quality Model)',
-    parameterSize: '70b',
-    tokenLimit: 128000,
-    enabled: true,
-  },
-  [NCSAHostedModelID.LLAMA31_latest]: {
-    id: NCSAHostedModelID.LLAMA31_latest,
-    name: 'Llama 3.1 8b (quantized)',
-    parameterSize: '8b',
-    tokenLimit: 128000,
-    enabled: true,
-  },
-  [NCSAHostedModelID.LLAMA31_405b]: {
-    id: NCSAHostedModelID.LLAMA31_405b,
-    name: 'Llama 3.1 405b (quantized)',
-    parameterSize: '405b',
-    tokenLimit: 128000,
-    enabled: true,
-  },
-}
+import { OllamaModels, OllamaModelIDs } from './ollama'
 
 export const getNCSAHostedModels = async (
   ncsaHostedProvider: NCSAHostedProvider,
@@ -107,8 +36,9 @@ export const getNCSAHostedModels = async (
     // ✅ HARD CODE ONLY ONE MODEL
     // const ollamaModels = [NCSAHostedModels['llama3.1:8b-instruct-fp16']]
     const ollamaModels = [
-      NCSAHostedModels['llama3.1:8b-instruct-fp16'],
-      NCSAHostedModels['deepseek-r1:14b-qwen-distill-fp16'],
+      OllamaModels[OllamaModelIDs.LLAMA31_8b_instruct_fp16],
+      OllamaModels[OllamaModelIDs.DEEPSEEK_R1_14b_qwen_fp16],
+      OllamaModels[OllamaModelIDs.QWEN25_14b_fp16],
     ]
 
     // ❌ DYNAMICALLY show all HOT AND LOADED models

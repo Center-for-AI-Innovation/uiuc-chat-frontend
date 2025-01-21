@@ -32,7 +32,6 @@ import { OpenAIModelID } from './modelProviders/types/openai'
 import { v4 as uuidv4 } from 'uuid'
 import { AzureModelID } from './modelProviders/azure'
 import { AnthropicModelID } from './modelProviders/types/anthropic'
-import { NCSAHostedModelID } from './modelProviders/NCSAHosted'
 import { NextApiRequest, NextApiResponse } from 'next'
 
 export const maxDuration = 60

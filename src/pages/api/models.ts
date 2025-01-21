@@ -17,8 +17,6 @@ import { getWebLLMModels } from '~/utils/modelProviders/WebLLM'
 import { type NextApiRequest, type NextApiResponse } from 'next'
 import { getNCSAHostedModels } from '~/utils/modelProviders/NCSAHosted'
 import { getOpenAIModels } from '~/utils/modelProviders/routes/openai'
-import { OpenAIModelID } from '~/utils/modelProviders/types/openai'
-import { type ProjectWideLLMProviders } from '~/types/courseMetadata'
 import { redisClient } from '~/utils/redisClient'
 import { getNCSAHostedVLMModels } from '~/utils/modelProviders/types/NCSAHostedVLM'
 

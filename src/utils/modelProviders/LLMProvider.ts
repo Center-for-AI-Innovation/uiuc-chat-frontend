@@ -1,4 +1,4 @@
-import { type OllamaModel, OllamaModels } from '~/utils/modelProviders/ollama'
+import { type OllamaModel, OllamaModelIDs, OllamaModels } from '~/utils/modelProviders/ollama'
 import { type WebllmModel } from '~/utils/modelProviders/WebLLM'
 import {
   type OpenAIModel,
@@ -15,7 +15,6 @@ import {
   AzureModelID,
   AzureModels,
 } from '~/utils/modelProviders/azure'
-import { NCSAHostedModels } from '~/utils/modelProviders/NCSAHosted'
 import {
   type NCSAHostedVLMModel,
   NCSAHostedVLMModelID,
@@ -65,7 +64,6 @@ export const AllSupportedModels: Set<GenericSupportedModel> = new Set([
   ...Object.values(OpenAIModels),
   ...Object.values(AzureModels),
   ...Object.values(OllamaModels),
-  ...Object.values(NCSAHostedModels),
   ...Object.values(NCSAHostedVLMModels),
   // ...webLLMModels,
 ])
@@ -200,7 +198,7 @@ export const selectBestModel = (
     .filter((model) => model.enabled)
 
   const defaultModelId = localStorage.getItem('defaultModel')
-  
+
   if (defaultModelId && allModels.find((m) => m.id === defaultModelId)) {
     const defaultModel = allModels
       .filter((model) => model.enabled)
@@ -229,10 +227,5 @@ export const selectBestModel = (
     }
   }
   // If no preferred models are available, fallback to llama3.1:8b-instruct-fp16
-  return {
-    id: 'llama3.1:8b-instruct-fp16',
-    name: 'Llama 3.1 8b (FP16)',
-    tokenLimit: 128000,
-    enabled: true,
-  }
+  return OllamaModels[OllamaModelIDs.QWEN25_14b_fp16]
 }
