@@ -21,9 +21,17 @@ export enum NCSAHostedModelID {
   LLAMA31_latest = 'llama3.1:latest', // maps to LLAMA31_8b
   LLAMA31_70b = 'llama3.1:70b',
   LLAMA31_405b = 'llama3.1:405b',
+  DEEPSEEK_R1_14b_qwen_fp16 = 'deepseek-r1:14b-qwen-distill-fp16',
 }
 
 export const NCSAHostedModels: Record<NCSAHostedModelID, OllamaModel> = {
+  [NCSAHostedModelID.DEEPSEEK_R1_14b_qwen_fp16]: {
+    id: NCSAHostedModelID.DEEPSEEK_R1_14b_qwen_fp16,
+    name: 'Deepseek R1 14b (Qwen FP16)',
+    parameterSize: '14b',
+    tokenLimit: 128000,
+    enabled: true,
+  },
   [NCSAHostedModelID.LLAMA31_8b]: {
     id: NCSAHostedModelID.LLAMA31_8b,
     name: 'Llama 3.1 8b (quantized)',
@@ -97,7 +105,11 @@ export const getNCSAHostedModels = async (
     }
 
     // ✅ HARD CODE ONLY ONE MODEL
-    const ollamaModels = [NCSAHostedModels['llama3.1:8b-instruct-fp16']]
+    // const ollamaModels = [NCSAHostedModels['llama3.1:8b-instruct-fp16']]
+    const ollamaModels = [
+      NCSAHostedModels['llama3.1:8b-instruct-fp16'],
+      NCSAHostedModels['deepseek-r1:14b-qwen-distill-fp16'],
+    ]
 
     // ❌ DYNAMICALLY show all HOT AND LOADED models
     // const ollamaModels: OllamaModel[] = data.models

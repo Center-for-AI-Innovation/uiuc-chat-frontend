@@ -928,8 +928,8 @@ export const ChatInput = ({
                   bottom: `${textareaRef?.current?.scrollHeight}px`,
                   maxHeight: '400px',
                   overflow: `${textareaRef.current && textareaRef.current.scrollHeight > 400
-                      ? 'auto'
-                      : 'hidden'
+                    ? 'auto'
+                    : 'hidden'
                     }`,
                 }}
                 placeholder={
@@ -997,7 +997,7 @@ export const ChatInput = ({
             onClick={handleTextClick}
             style={{ cursor: 'pointer' }}
           >
-            {selectBestModel(llmProviders)?.id}
+            {selectBestModel(llmProviders)?.name}
             {selectedConversation?.model &&
               webLLMModels.some(
                 (m) => m.name === selectedConversation?.model?.name,
