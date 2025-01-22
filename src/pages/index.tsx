@@ -350,6 +350,7 @@ function CourseCard() {
             style={{
               width: '80vw',
               height: 'auto',
+              color: '#c1c2c5',
             }}
             shadow="sm"
             padding="lg"
