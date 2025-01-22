@@ -6,12 +6,15 @@ interface AuthProviderProps {
 }
 
 export const KeycloakProvider = ({ children }: AuthProviderProps) => {
+  // Add state to track if we're on client side
+  const [isMounted, setIsMounted] = useState(false)
+  
   const [oidcConfig, setOidcConfig] = useState({
     authority: process.env.NEXT_PUBLIC_KEYCLOAK_URL + '/realms/myrealm',
     client_id: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'uiucchat',
-    redirect_uri: typeof window !== 'undefined' ? window.location.origin + '/sign-in' : '',
-    silent_redirect_uri: typeof window !== 'undefined' ? window.location.origin + '/silent-renew' : '',
-    post_logout_redirect_uri: typeof window !== 'undefined' ? window.location.origin : '',
+    redirect_uri: '',  // Initialize empty, will set in useEffect
+    silent_redirect_uri: '',
+    post_logout_redirect_uri: '',
     scope: 'openid profile email',
     response_type: 'code',
     loadUserInfo: true,
@@ -73,8 +76,21 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
     }
   })
 
+  // Set up client-side values after mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      setIsMounted(true)
+      setOidcConfig(prev => ({
+        ...prev,
+        redirect_uri: window.location.origin + '/sign-in',
+        silent_redirect_uri: window.location.origin + '/silent-renew',
+        post_logout_redirect_uri: window.location.origin
+      }))
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && isMounted) {
       const params = new URLSearchParams(window.location.search)
       const isCallback = params.has('code') && params.has('state')
       
@@ -93,10 +109,11 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
         return
       }
     }
-  }, [oidcConfig])
+  }, [oidcConfig, isMounted])
 
-  if (typeof window === 'undefined') {
-    console.log('[KeycloakProvider] Not rendering - SSR')
+  // Don't render anything during SSR or before client-side mount
+  if (typeof window === 'undefined' || !isMounted) {
+    console.log('[KeycloakProvider] Not rendering - SSR or not mounted')
     return null
   }
 
