@@ -12,7 +12,7 @@ import {
 import { Button, Text } from '@mantine/core'
 import { useTranslation } from 'next-i18next'
 
-import { saveConversations } from '@/utils/app/conversation'
+import posthog from 'posthog-js'
 import { throttle } from '@/utils/data/throttle'
 import { v4 as uuidv4 } from 'uuid'
 import {
@@ -141,7 +141,7 @@ export const Chat = memo(
         courseMetadata?.banner_image_s3 &&
         courseMetadata.banner_image_s3 !== ''
       ) {
-        fetchPresignedUrl(courseMetadata.banner_image_s3).then((url) => {
+        fetchPresignedUrl(courseMetadata.banner_image_s3, courseName).then((url) => {
           setBannerUrl(url)
         })
       }
@@ -311,6 +311,7 @@ export const Chat = memo(
         documentGroups: string[],
         llmProviders: AllLLMProviders,
       ) => {
+        const startOfHandleSend = performance.now()
         setCurrentMessage(message)
         resetMessageStates()
 
@@ -826,6 +827,7 @@ export const Chat = memo(
             | Response
             | undefined
           let reader
+          let startOfCallToLLM
 
           if (
             selectedConversation.model &&
@@ -856,6 +858,7 @@ export const Chat = memo(
               // response = await routeModelRequest(chatBody, controller)
 
               // CALL OUR NEW ENDPOINT... /api/chat
+              startOfCallToLLM = performance.now()
               response = await fetch('/api/allNewRoutingChat', {
                 method: 'POST',
                 headers: {
@@ -941,6 +944,19 @@ export const Chat = memo(
 
           if (!plugin) {
             homeDispatch({ field: 'loading', value: false })
+
+            if (startOfCallToLLM) {
+              // Calculate TTFT (Time To First Token)
+              const ttft = performance.now() - startOfCallToLLM
+              const fromSendToLLMResponse = performance.now() - startOfHandleSend
+              // LLM Starts responding 
+              posthog.capture('ttft', {
+                course_name: finalChatBody.course_name,
+                model: finalChatBody.model,
+                llmRequestToFirstToken: Math.round(ttft), // Round to whole number of milliseconds
+                fromSendToLLMResponse: Math.round(fromSendToLLMResponse)
+              })
+            }
 
             const decoder = new TextDecoder()
             let done = false
@@ -1030,6 +1046,7 @@ export const Chat = memo(
                           lastUserMessage,
                           stateMachineContext,
                           citationLinkCache,
+                          getCurrentPageName()
                         )
 
                       // Update the last message with the new content
@@ -1618,6 +1635,7 @@ export const Chat = memo(
                           }}
                           onFeedback={handleFeedback}
                           onImageUrlsUpdate={onImageUrlsUpdate}
+                          courseName={courseName}
                         />
                       ))}
                       {loading && <ChatLoader />}

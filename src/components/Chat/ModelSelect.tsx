@@ -5,22 +5,24 @@ import {
   IconExternalLink,
   IconSparkles,
   IconAlertTriangleFilled,
+  IconInfoCircle,
 } from '@tabler/icons-react'
 import { forwardRef, useContext, useEffect, useState } from 'react'
 import { useMediaQuery } from '@mantine/hooks'
 import HomeContext from '~/pages/api/home/home.context'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { Group, Select, Title, Text } from '@mantine/core'
+import { Group, Select, Title, Text, ActionIcon } from '@mantine/core'
 import Link from 'next/link'
 import React from 'react'
-import { OpenAIModel } from '~/utils/modelProviders/types/openai'
-import ChatUI from '~/utils/modelProviders/WebLLM'
+import { type OpenAIModel } from '~/utils/modelProviders/types/openai'
+import type ChatUI from '~/utils/modelProviders/WebLLM'
 import { modelCached } from './UserSettings'
 import Image from 'next/image'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
-  AllLLMProviders,
-  AnySupportedModel,
-  LLMProvider,
+  type AllLLMProviders,
+  type AnySupportedModel,
+  type LLMProvider,
   ProviderNames,
   selectBestModel,
 } from '~/utils/modelProviders/LLMProvider'
@@ -63,6 +65,8 @@ export const getModelLogo = (modelType: string) => {
     case ProviderNames.Anthropic:
       return 'https://www.anthropic.com/images/icons/safari-pinned-tab.svg'
     case ProviderNames.NCSAHosted:
+      return 'https://assets.kastan.ai/UofI-logo-white.jpg'
+    case ProviderNames.NCSAHostedVLM:
       return 'https://assets.kastan.ai/UofI-logo-white.jpg'
     case ProviderNames.Azure:
       return 'https://assets.kastan.ai/uiuc-chat-emails/msft-logo.png'
@@ -340,9 +344,9 @@ const ModelDropdown: React.FC<
           onChange={async (modelId) => {
             if (state.webLLMModelIdLoading.isLoading) {
               setLoadingModelId(modelId)
-              console.log('model id', modelId)
-              console.log('loading model id', loadingModelId)
-              console.log('model is loading', state.webLLMModelIdLoading.id)
+              // console.log('model id', modelId)
+              // console.log('loading model id', loadingModelId)
+              // console.log('model is loading', state.webLLMModelIdLoading.id)
             } else if (!state.webLLMModelIdLoading.isLoading) {
               setLoadingModelId(null)
             }
@@ -451,6 +455,9 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
     const isSmallScreen = useMediaQuery('(max-width: 960px)')
     const defaultModel = selectBestModel(llmProviders).id
     const [loadingModelId, setLoadingModelId] = useState<string | null>(null)
+    const [isAccordionOpen, setIsAccordionOpen] = useState(false)
+
+    // console.log('defaultModelId in chat page: ', defaultModelId)
 
     const handleModelClick = (modelId: string) => {
       // Get list of models from all providers
@@ -481,17 +488,9 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
             <ModelDropdown
               title="Select Model"
               value={selectedConversation?.model.id || defaultModelId}
-              onChange={
-                // async (modelId) => {
-                // // if (state.webLLMModelIdLoading) {
-                // //   setLoadingModelId(modelId)
-                // //   console.log('model is loading', state.webLLMModelIdLoading.id)
-                // // }
-                // await handleModelClick(modelId)
-                async (modelId) => {
-                  handleModelClick(modelId)
-                }
-              }
+              onChange={async (modelId) => {
+                handleModelClick(modelId)
+              }}
               llmProviders={llmProviders}
               isSmallScreen={isSmallScreen}
               loadingModelId={loadingModelId}
@@ -499,146 +498,259 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
               chat_ui={chat_ui}
             />
             <div className="px-5">
-              <Title
-                className={`pb-1 pl-4 pt-2 ${montserrat_heading.variable} font-montserratHeading`}
-                // variant="gradient"
-                // gradient={{ from: 'gold', to: 'white', deg: 170 }}
-                variant="gradient"
-                gradient={{
-                  from: 'hsl(280,100%,70%)',
-                  to: 'white',
-                  deg: 185,
-                }}
-                order={5}
-              >
-                NCSA Hosted Models, 100% free
-              </Title>
-              <Text
-                size={'sm'}
-                className={`ms-4 text-gray-400 ${montserrat_paragraph.variable} font-montserratParagraph`}
-              >
-                The best free option is the Llama 3.1 70b model, hosted by NCSA.
-              </Text>
-              <Title
-                className={`pb-1 pl-4 pt-2 ${montserrat_heading.variable} font-montserratHeading`}
-                // variant="gradient"
-                // gradient={{ from: 'gold', to: 'white', deg: 170 }}
-                variant="gradient"
-                gradient={{
-                  from: 'hsl(280,100%,70%)',
-                  to: 'white',
-                  deg: 185,
-                }}
-                order={5}
-              >
-                OpenAI
-              </Title>
-              <Text
-                size={'sm'}
-                className={`ms-4 text-gray-400 ${montserrat_paragraph.variable} font-montserratParagraph`}
-              >
-                OpenAI{' '}
-                <Link
-                  href="https://platform.openai.com/docs/models"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 visited:text-purple-600 hover:text-blue-700 hover:underline"
+              <div className="flex items-center justify-between">
+                <Title
+                  className={`pb-1 pl-4 pt-2 ${montserrat_heading.variable} font-montserratHeading`}
+                  variant="gradient"
+                  gradient={{
+                    from: 'hsl(280,100%,70%)',
+                    to: 'white',
+                    deg: 185,
+                  }}
+                  order={5}
                 >
-                  model details and pricing.{' '}
-                  <IconExternalLink
-                    size={15}
-                    style={{ position: 'relative', top: '2px' }}
-                    className={'mb-2 inline'}
-                  />
-                </Link>{' '}
-                An OpenAI API key is required, and you may face rate-limit
-                issues until you complete your first billing cycle.
-              </Text>
-
-              {/* <div
-              className="w-[95%] items-start rounded-2xl shadow-md shadow-purple-600 md:w-[93%] xl:w-[85%]"
-              style={{ zIndex: 1, background: '#15162c' }}
-            >
-
-              <Title
-                className={`${montserrat_heading.variable} font-montserratHeading`}
-                variant="gradient"
-                gradient={{
-                  from: 'hsl(280,100%,70%)',
-                  to: 'white',
-                  deg: 185,
-                }}
-                order={3}
-                p="xl"
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                On-device LLMs
-              </Title>
-            </div> */}
-              <Title
-                className={`pb-1 pl-4 pt-2 ${montserrat_heading.variable} font-montserratHeading`}
-                // variant="gradient"
-                // gradient={{ from: 'gold', to: 'white', deg: 170 }}
-                variant="gradient"
-                gradient={{
-                  from: 'hsl(280,100%,70%)',
-                  to: 'white',
-                  deg: 185,
-                }}
-                order={5}
-              >
-                On-device LLMs
-              </Title>
-              <Text
-                size={'sm'}
-                className={`ms-4 text-gray-400 ${montserrat_paragraph.variable} font-montserratParagraph`}
-              >
-                We support running some models in your web browser on your
-                device. That&apos;s 100% local, on-device AI. It even uses your
-                GPU. For this, your browser{' '}
-                <Link
-                  href={'https://webgpureport.org/'}
-                  className="text-blue-500 visited:text-purple-600 hover:text-blue-700 hover:underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  More info on Available Models
+                </Title>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  onClick={() => setIsAccordionOpen(!isAccordionOpen)}
+                  className="ml-2 hover:bg-white/10"
+                  title="More info on available models"
                 >
-                  must pass this compatability check for WebGPU.{' '}
-                  <IconExternalLink
-                    size={15}
-                    style={{ position: 'relative', top: '2px' }}
-                    className={'mb-2 inline'}
-                  />
-                </Link>
-                <br />
-                If you see lots of text, it&apos;s working. If you see
-                &quot;webgpu not available on this browser&quot;, it&apos;s not
-                working.
-              </Text>
-              <Title
-                className={`pb-1 pl-4 pt-2 ${montserrat_heading.variable} font-montserratHeading`}
-                // variant="gradient"
-                // gradient={{ from: 'gold', to: 'white', deg: 170 }}
-                variant="gradient"
-                gradient={{
-                  from: 'hsl(280,100%,70%)',
-                  to: 'white',
-                  deg: 185,
-                }}
-                order={5}
-              >
-                Coming soon
-              </Title>
-              <Text
-                size={'sm'}
-                className={`ms-4 text-gray-400 ${montserrat_paragraph.variable} font-montserratParagraph`}
-              >
-                Anthropic, Google Gemini, Azure OpenAI, customizable OpenAI
-                compatible servers.
-              </Text>
+                  <IconInfoCircle className="text-white/60" />
+                </ActionIcon>
+              </div>
+              <AnimatePresence>
+                {isAccordionOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2, ease: 'easeInOut' }}
+                    className="mb-6 overflow-hidden"
+                  >
+                    <div className="flex bg-[#1e1f3a]/80 backdrop-blur-sm">
+                      <div className="w-1 bg-violet-500/50" />
+                      <div
+                        className={`${montserrat_paragraph.variable} flex-1 p-4 font-montserratParagraph`}
+                      >
+                        <div className="space-y-6">
+                          {/* NCSA VLM Section */}
+                          <div>
+                            <Text
+                              size={'sm'}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
+                            >
+                              NCSA Hosted VLM Models (100% free)
+                            </Text>
+                            <Text
+                              size={'sm'}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
+                            >
+                              The best free option is the Qwen 2 72B model,
+                              hosted by NCSA.
+                            </Text>
+                          </div>
+
+                          {/* NCSA LLM Section */}
+                          <div>
+                            <Text
+                              size={'sm'}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
+                            >
+                              NCSA Hosted LLM Models (100% free)
+                            </Text>
+                            <Text
+                              size={'sm'}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
+                            >
+                              The best free option is the Llama 3.1 8b model,
+                              hosted by NCSA.
+                            </Text>
+                          </div>
+
+                          {/* OpenAI Section */}
+                          <div>
+                            <Text
+                              size={'sm'}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
+                            >
+                              OpenAI
+                            </Text>
+                            <Text
+                              size={'sm'}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
+                            >
+                              OpenAI{' '}
+                              <Link
+                                href="https://platform.openai.com/docs/models"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-500 visited:text-purple-600 hover:text-blue-700 hover:underline"
+                              >
+                                model details and pricing.{' '}
+                                <IconExternalLink
+                                  size={15}
+                                  style={{ position: 'relative', top: '2px' }}
+                                  className={'mb-2 inline'}
+                                />
+                              </Link>{' '}
+                              An OpenAI API key is required, and you may face
+                              rate-limit issues until you complete your first
+                              billing cycle.
+                            </Text>
+                          </div>
+
+                          {/* Azure OpenAI Section */}
+                          <div>
+                            <Text
+                              size={'sm'}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
+                            >
+                              Azure OpenAI
+                            </Text>
+                            <Text
+                              size={'sm'}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
+                            >
+                              Azure OpenAI Service provides enterprise-grade
+                              security and regional availability. Check out{' '}
+                              <Link
+                                href="https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-500 visited:text-purple-600 hover:text-blue-700 hover:underline"
+                              >
+                                Azure OpenAI models{' '}
+                                <IconExternalLink
+                                  size={15}
+                                  style={{ position: 'relative', top: '2px' }}
+                                  className={'mb-2 inline'}
+                                />
+                              </Link>{' '}
+                              for details on available models and features.
+                            </Text>
+                          </div>
+
+                          {/* Anthropic Section */}
+                          <div>
+                            <Text
+                              size={'sm'}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
+                            >
+                              Anthropic
+                            </Text>
+                            <Text
+                              size={'sm'}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
+                            >
+                              Access Claude models through{' '}
+                              <Link
+                                href="https://www.anthropic.com/api"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-500 visited:text-purple-600 hover:text-blue-700 hover:underline"
+                              >
+                                Anthropic&apos;s API{' '}
+                                <IconExternalLink
+                                  size={15}
+                                  style={{ position: 'relative', top: '2px' }}
+                                  className={'mb-2 inline'}
+                                />
+                              </Link>
+                              . Claude excels at complex reasoning and analysis
+                              tasks.
+                            </Text>
+                          </div>
+
+                          {/* Ollama Section */}
+                          <div>
+                            <Text
+                              size={'sm'}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
+                            >
+                              OpenAI Compatible via Ollama
+                            </Text>
+                            <Text
+                              size={'sm'}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
+                            >
+                              Run various open-source models locally through{' '}
+                              <Link
+                                href="https://ollama.ai"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-500 visited:text-purple-600 hover:text-blue-700 hover:underline"
+                              >
+                                Ollama{' '}
+                                <IconExternalLink
+                                  size={15}
+                                  style={{ position: 'relative', top: '2px' }}
+                                  className={'mb-2 inline'}
+                                />
+                              </Link>
+                              . Supports models like Llama 2, Mistral, and more
+                              with OpenAI-compatible API.
+                            </Text>
+                          </div>
+
+                          {/* On-device LLMs Section */}
+                          <div>
+                            <Text
+                              size={'sm'}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
+                            >
+                              On-device LLMs
+                            </Text>
+                            <Text
+                              size={'sm'}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
+                            >
+                              We support running some models in your web browser
+                              on your device. That&apos;s 100% local, on-device
+                              AI. It even uses your GPU. For this, your browser{' '}
+                              <Link
+                                href={'https://webgpureport.org/'}
+                                className="text-blue-500 visited:text-purple-600 hover:text-blue-700 hover:underline"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                must pass this compatability check for WebGPU.{' '}
+                                <IconExternalLink
+                                  size={15}
+                                  style={{ position: 'relative', top: '2px' }}
+                                  className={'mb-2 inline'}
+                                />
+                              </Link>
+                              <br />
+                              If you see lots of text, it&apos;s working. If you
+                              see &quot;webgpu not available on this
+                              browser&quot;, it&apos;s not working.
+                            </Text>
+                          </div>
+
+                          {/* Coming Soon Section */}
+                          <div>
+                            <Text
+                              size={'sm'}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
+                            >
+                              Coming Soon
+                            </Text>
+                            <Text
+                              size={'sm'}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
+                            >
+                              Google Gemini
+                            </Text>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>

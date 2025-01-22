@@ -4,12 +4,14 @@ import {
   type CourseMetadata,
 } from '~/types/courseMetadata'
 import { v4 as uuidv4 } from 'uuid'
+import { Conversation, Message } from '~/types/chat'
+import { CoreMessage } from 'ai'
 
 // Configuration for runtime environment
 
-
 export const getBaseUrl = () => {
   if (typeof window !== 'undefined') return '' // browser should use relative url
+  if (process.env.VERCEL_ENV == 'production') return 'https://uiuc.chat'
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}` // SSR should use vercel url
   return `http://localhost:${process.env.PORT ?? 3000}` // dev SSR should use localhost
 }
@@ -107,6 +109,7 @@ export const uploadToS3 = async (
  */
 export async function fetchPresignedUrl(
   filePath: string,
+  courseName?: string,
   page?: string,
 ): Promise<string | null> {
   try {
@@ -114,7 +117,7 @@ export async function fetchPresignedUrl(
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ filePath, page }),
+      body: JSON.stringify({ filePath, courseName, page }),
     })
 
     if (!response.ok)
@@ -134,7 +137,9 @@ export async function fetchPresignedUrl(
  */
 export async function fetchCourseMetadata(course_name: string): Promise<any> {
   try {
+    console.log("Vercel base URL", process.env.VERCEL_URL)
     const endpoint = `${getBaseUrl()}/api/UIUC-api/getCourseMetadata?course_name=${course_name}`
+    console.log("endpoint url of metadata:", endpoint)
     const response = await fetch(endpoint)
 
     if (!response.ok) {
@@ -163,6 +168,109 @@ export async function fetchCourseMetadata(course_name: string): Promise<any> {
     console.error('Error fetching course metadata', { course_name, error })
     throw error
   }
+}
+
+export function convertConversatonToVercelAISDKv3(
+  conversation: Conversation,
+): CoreMessage[] {
+  const coreMessages: CoreMessage[] = []
+
+  // Add system message as the first message
+  const systemMessage = conversation.messages.findLast(
+    (msg) => msg.latestSystemMessage !== undefined,
+  )
+  if (systemMessage) {
+    console.log(
+      'Found system message, latestSystemMessage: ',
+      systemMessage.latestSystemMessage,
+    )
+    coreMessages.push({
+      role: 'system',
+      content: systemMessage.latestSystemMessage || '',
+    })
+  }
+
+  // Convert other messages
+  conversation.messages.forEach((message, index) => {
+    if (message.role === 'system') return // Skip system message as it's already added
+
+    let content: string
+    if (index === conversation.messages.length - 1 && message.role === 'user') {
+      // Use finalPromtEngineeredMessage for the most recent user message
+      content = message.finalPromtEngineeredMessage || ''
+
+      // just for Llama 3.1 70b, remind it to use proper citation format.
+      content +=
+        '\n\nIf you use the <Potentially Relevant Documents> in your response, please remember cite your sources using the required formatting, e.g. "The grass is green. [29, page: 11]'
+    } else if (Array.isArray(message.content)) {
+      // Combine text content from array
+      content = message.content
+        .filter((c) => c.type === 'text')
+        .map((c) => c.text)
+        .join('\n')
+    } else {
+      content = message.content as string
+    }
+
+    coreMessages.push({
+      role: message.role as 'user' | 'assistant',
+      content: content,
+    })
+  })
+
+  return coreMessages
+}
+
+export function convertConversationToCoreMessagesWithoutSystem(
+  conversation: Conversation,
+): CoreMessage[] {
+  function processMessageContent(message: Message, isLastUserMessage: boolean) {
+    let content: any[]
+
+    if (isLastUserMessage && message.finalPromtEngineeredMessage) {
+      content = [{ type: 'text', text: message.finalPromtEngineeredMessage }]
+    } else if (Array.isArray(message.content)) {
+      content = message.content.map((c) => {
+        if (c.type === 'text') {
+          return { type: 'text', text: c.text }
+        } else if (c.type === 'image_url') {
+          return { type: 'image', image: c.image_url!.url }
+        }
+        return c
+      })
+    } else {
+      content = [{ type: 'text', text: message.content as string }]
+    }
+
+    if (isLastUserMessage) {
+      const citationReminder =
+        '\n\nIf you use the <Potentially Relevant Documents> in your response, please remember cite your sources using the required formatting, e.g. "The grass is green. [29, page: 11]'
+      if (content[0].type === 'text') {
+        content[0].text += citationReminder
+      } else {
+        content.push({ type: 'text', text: citationReminder })
+      }
+    }
+
+    return content
+  }
+
+  return conversation.messages
+    .filter((message) => message.role !== 'system')
+    .map((message, index) => {
+      const isLastUserMessage =
+        index === conversation.messages.length - 1 && message.role === 'user'
+      console.log(
+        'Processing message:',
+        message.role,
+        isLastUserMessage ? '(last user message)' : '',
+      )
+
+      return {
+        role: message.role as 'user' | 'assistant',
+        content: processMessageContent(message, isLastUserMessage),
+      }
+    })
 }
 
 // Helper Types

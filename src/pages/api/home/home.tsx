@@ -39,6 +39,7 @@ import { useUpdateConversation } from '~/hooks/conversationQueries'
 import { FolderType, FolderWithConversation } from '~/types/folder'
 import { useQueryClient } from '@tanstack/react-query'
 import { useCreateFolder } from '~/hooks/folderQueries'
+import { selectBestTemperature } from '~/components/Chat/Temperature'
 
 const Home = ({
   current_email,
@@ -157,7 +158,7 @@ const Home = ({
   // Use effects for setting up the course metadata and models depending on the course/project
   useEffect(() => {
     // Set model after we fetch available models
-    if (!llmProviders || Object.keys(llmProviders).length === 0) return
+    if (Object.keys(llmProviders).length == 0) return
     const model = selectBestModel(llmProviders)
 
     dispatch({
@@ -338,7 +339,7 @@ const Home = ({
       messages: [],
       model: model,
       prompt: DEFAULT_SYSTEM_PROMPT,
-      temperature: lastConversation?.temperature ?? DEFAULT_TEMPERATURE,
+      temperature: selectBestTemperature(lastConversation, model, llmProviders),
       folderId: null,
       userEmail: current_email || undefined,
       projectName: course_name,

@@ -9,6 +9,8 @@ export interface OllamaModel {
   parameterSize: string
   tokenLimit: number
   enabled: boolean
+  default?: boolean
+  temperature?: number
 }
 
 export enum OllamaModelIDs {
@@ -19,48 +21,66 @@ export enum OllamaModelIDs {
   LLAMA31_405b = 'llama3.1:405b',
   LLAMA31_8b_instruct_fp16 = 'llama3.1:8b-instruct-fp16',
   LLAMA31_70b_instruct_fp16 = 'llama3.1:70b-instruct-fp16',
+
+  DEEPSEEK_R1_14b_qwen_fp16 = 'deepseek-r1:14b-qwen-distill-fp16',
+
+  QWEN25_14b_fp16 = 'qwen2.5:14b-instruct-fp16',
 }
 
 export const OllamaModels: Record<OllamaModelIDs, OllamaModel> = {
+  [OllamaModelIDs.QWEN25_14b_fp16]: {
+    id: OllamaModelIDs.QWEN25_14b_fp16,
+    name: 'Qwen 14B (FP16)',
+    parameterSize: '14B',
+    tokenLimit: 128000,
+    enabled: true,
+  },
+  [OllamaModelIDs.DEEPSEEK_R1_14b_qwen_fp16]: {
+    id: OllamaModelIDs.DEEPSEEK_R1_14b_qwen_fp16,
+    name: 'Deepseek R1 14B (based on Qwen FP16)',
+    parameterSize: '14B',
+    tokenLimit: 128000,
+    enabled: true,
+  },
   [OllamaModelIDs.LLAMA31_70b_instruct_fp16]: {
     id: OllamaModelIDs.LLAMA31_70b_instruct_fp16,
-    name: 'Llama 3.1 70b (FP16)',
-    parameterSize: '8b',
+    name: 'Llama 3.1 7B (FP16)',
+    parameterSize: '70B',
     tokenLimit: 128000,
     enabled: true,
   },
   [OllamaModelIDs.LLAMA31_8b_instruct_fp16]: {
     id: OllamaModelIDs.LLAMA31_8b_instruct_fp16,
-    name: 'Llama 3.1 8b (FP16)',
-    parameterSize: '8b',
+    name: 'Llama 3.1 8B (FP16)',
+    parameterSize: '8B',
     tokenLimit: 128000,
     enabled: true,
   },
   [OllamaModelIDs.LLAMA31_8b]: {
     id: OllamaModelIDs.LLAMA31_8b,
-    name: 'Llama 3.1 8b',
-    parameterSize: '8b',
+    name: 'Llama 3.1 8B (quantized)',
+    parameterSize: '8B',
     tokenLimit: 128000,
     enabled: true,
   },
   [OllamaModelIDs.LLAMA31_latest]: {
     id: OllamaModelIDs.LLAMA31_latest,
-    name: 'Llama 3.1 (Latest)',
-    parameterSize: '8b',
+    name: 'Llama 3.1 8B (quantized)',
+    parameterSize: '8B',
     tokenLimit: 128000,
     enabled: true,
   },
   [OllamaModelIDs.LLAMA31_70b]: {
     id: OllamaModelIDs.LLAMA31_70b,
-    name: 'Llama 3.1 70b (Quantized, Poor Quality Model)',
-    parameterSize: '70b',
+    name: 'Llama 3.1 70B (Quantized, Poor Quality Model!)',
+    parameterSize: '70B',
     tokenLimit: 128000,
     enabled: true,
   },
   [OllamaModelIDs.LLAMA31_405b]: {
     id: OllamaModelIDs.LLAMA31_405b,
-    name: 'Llama 3.1 405b',
-    parameterSize: '405b',
+    name: 'Llama 3.1 405B (Quantized)',
+    parameterSize: '405B',
     tokenLimit: 128000,
     enabled: true,
   },

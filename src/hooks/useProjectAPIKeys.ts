@@ -49,8 +49,6 @@ export function useSetProjectLLMProviders(queryClient: QueryClient) {
           variables: {
             projectName: string
             llmProviders: AllLLMProviders
-            defaultModelID: string
-            defaultTemperature: string
           },
           resolve: (value: any) => void,
           reject: (reason?: any) => void,
@@ -81,8 +79,6 @@ export function useSetProjectLLMProviders(queryClient: QueryClient) {
     mutationFn: async (variables: {
       projectName: string
       llmProviders: AllLLMProviders
-      defaultModelID: string
-      defaultTemperature: string
     }) => {
       return new Promise((resolve, reject) => {
         debouncedApiCall(variables, resolve, reject)
