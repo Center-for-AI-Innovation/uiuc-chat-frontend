@@ -19,6 +19,7 @@ const StyledRow = styled.tr`
   &:hover {
     background-color: hsla(280, 100%, 70%, 0.5);
   }
+    color: #C1C2C5;
 `
 
 const StyledTable = styled(Table)`
