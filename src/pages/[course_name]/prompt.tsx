@@ -99,14 +99,41 @@ const CourseMain: NextPage = () => {
   const [baseSystemPrompt, setBaseSystemPrompt] = useState('')
   const [opened, { close, open }] = useDisclosure(false)
   const [resetModalOpened, { close: closeResetModal, open: openResetModal }] = useDisclosure(false)
-  const [apiKey, setApiKey] = useState<string | undefined>(undefined)
+  const [llmProviders, setLLMProviders] = useState<any>(null)
+
+  useEffect(() => {
+    const fetchProviders = async () => {
+      try {
+        const response = await fetch('/api/models', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ projectName: course_name }),
+        })
+        if (!response.ok) throw new Error('Failed to fetch providers')
+        const providers = await response.json()
+        setLLMProviders(providers)
+      } catch (error) {
+        console.error('Error fetching LLM providers:', error)
+      }
+    }
+    if (course_name) {
+      fetchProviders()
+    }
+  }, [course_name])
+
   const { messages, input, handleInputChange, reload, setMessages, setInput } =
     useChat({
       api: '/api/chat/openAI',
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${llmProviders?.OpenAI?.apiKey || ''}`,
       },
+      body: {
+        model: 'gpt-4o'  // Using GPT-4o for enhanced prompt optimization with higher context window
+      }
     })
+
   const [optimizedSystemPrompt, setOptimizedSystemPrompt] = useState('')
   const [isRightSideVisible, setIsRightSideVisible] = useState(true)
 
@@ -471,66 +498,108 @@ const CourseMain: NextPage = () => {
     reload: any,
     setMessages: any,
   ) => {
-    let newApiKey
-    if (courseMetadata?.openai_api_key) {
-      newApiKey = courseMetadata.openai_api_key
-    }
-    setApiKey(newApiKey)
-
-    // console.log('apikey set to', apiKey)
     e.preventDefault()
 
-    const systemPrompt = `Understand the Task: Grasp the main objective, goals, requirements, constraints, and expected output.
+    if (!llmProviders) {
+      showToastNotification(
+        theme,
+        'Configuration Error',
+        'The Optimize System Prompt feature requires provider configuration to be loaded. Please refresh the page and try again.',
+        true
+      )
+      return
+    }
 
-- Minimal Changes: If an existing prompt is provided, improve it only if it's simple. For complex prompts, enhance clarity and add missing elements without altering the original structure.
+    if (!llmProviders.OpenAI?.enabled) {
+      showToastNotification(
+        theme,
+        'OpenAI Required',
+        'The Optimize System Prompt feature requires OpenAI to be enabled. Please enable OpenAI on the LLM page in your course settings to use this feature.',
+        true
+      )
+      return
+    }
 
-- Reasoning Before Conclusions: Encourage reasoning steps before any conclusions are reached. ATTENTION! If the user provides examples where the reasoning happens afterward, REVERSE the order! NEVER START EXAMPLES WITH CONCLUSIONS!
-  - Reasoning Order: Call out reasoning portions of the prompt and conclusion parts (specific fields by name). For each, determine the ORDER in which this is done, and whether it needs to be reversed.
-  - Conclusion, classifications, or results should ALWAYS appear last.
+    if (!llmProviders.OpenAI?.apiKey) {
+      showToastNotification(
+        theme,
+        'OpenAI API Key Required',
+        'The Optimize System Prompt feature requires an OpenAI API key. Please add your OpenAI API key on the LLM page in your course settings to use this feature.',
+        true
+      )
+      return
+    }
 
-- Examples: Include high-quality examples if helpful, using placeholders [in brackets] for complex elements.
-  - What kinds of examples may need to be included, how many, and whether they are complex enough to benefit from placeholders.
+    const systemPrompt = `You are an expert prompt engineer. Your task is to analyze and optimize the provided system prompt while preserving and combining ALL of its components and functionality. IMPORTANT: The input may contain multiple sections that appear distinct - you MUST combine ALL sections into a single cohesive prompt.
 
-- Clarity and Conciseness: Use clear, specific language. Avoid unnecessary instructions or bland statements.
+Key Requirements:
 
-- Formatting: Use markdown features for readability. DO NOT USE \`\`\` CODE BLOCKS UNLESS SPECIFICALLY REQUESTED.
+1. Identify and Combine ALL Sections:
+   - Analyze the ENTIRE input prompt from start to finish
+   - Identify ALL distinct sections, even if they appear to be separate prompts
+   - Combine ALL sections into a single, cohesive system prompt
+   - Ensure NO content is lost or omitted, regardless of where it appears in the input
 
-- Preserve User Content: If the input task or prompt includes extensive guidelines or examples, preserve them entirely, or as closely as possible. If they are vague, consider breaking down into sub-steps. Keep any details, guidelines, examples, variables, or placeholders provided by the user.
+2. Preserve ALL Functionality:
+   - Maintain ALL rules, constraints, and special behaviors from EVERY section
+   - Keep ALL examples and formatting specifications from THROUGHOUT the input
+   - Preserve ANY special modes or behaviors (e.g., guided learning, document-only mode)
+   - If sections seem to conflict, preserve BOTH behaviors and clarify when each applies
 
-- Constants: DO include constants in the prompt, as they are not susceptible to prompt injection. Such as guides, rubrics, and examples.
+3. Optimize and Integrate:
+   - Merge sections cohesively while maintaining their individual purposes
+   - Find common themes and combine related instructions
+   - Eliminate redundancy while preserving distinct functionalities
+   - Ensure all special behaviors are properly integrated
+   - Create smooth transitions between different aspects of the prompt
 
-- Output Format: Explicitly the most appropriate output format, in detail. This should include length and syntax (e.g. short sentence, paragraph, JSON, etc.)
-  - For tasks outputting well-defined or structured data (classification, JSON, etc.) bias toward outputting a JSON.
-  - JSON should never be wrapped in code blocks (\`\`\`) unless explicitly requested.
+4. Structure and Format:
+   - Use clear section headings to organize combined content
+   - Maintain specific formatting requirements from all sections
+   - Keep all examples and placeholders
+   - Preserve special syntax or notation from every section
+   - Create a logical flow between different types of instructions
 
-The final prompt you output should adhere to the following structure below. Do not include any additional commentary, only output the completed system prompt. SPECIFICALLY, do not include any additional messages at the start or end of the prompt. (e.g. no "---")
+5. Reasoning and Logic Flow:
+   - Ensure reasoning steps precede conclusions in all cases
+   - If examples show reasoning after conclusions, restructure to put reasoning first
+   - Maintain clear logical progression across all combined sections
+   - Use explicit step-by-step breakdowns where appropriate
 
-[Concise instruction describing the task - this should be the first line in the prompt, no section header]
+6. Examples and Formatting:
+   - Include high-quality examples with [placeholders] for complex elements
+   - Use markdown for readability (avoid code blocks unless specifically requested)
+   - For structured data outputs (e.g., classification, JSON), prefer JSON format
+   - Never wrap JSON in code blocks unless explicitly requested
+   - If examples are simplified versions, add notes about real-world complexity
 
-[Additional details as needed.]
+7. Content Guidelines:
+   - Start with a clear, concise task description that encompasses ALL aspects
+   - Include constants (guides, rubrics, examples) as they resist prompt injection
+   - Break down vague instructions into clear sub-steps
+   - Preserve all user-provided details, guidelines, and variables
+   - Specify output format requirements in detail (length, structure, syntax)
 
-[Optional sections with headings or bullet points for detailed steps.]
+8. Output Requirements:
+   - Return the COMPLETE optimized prompt combining ALL sections
+   - Include ALL functionality from EVERY part of the original
+   - Maintain ALL special modes and behaviors from all sections
+   - Keep the same level of detail for critical components
+   - Follow this structure:
+     * Comprehensive task description (no header)
+     * Combined additional details
+     * Integrated sections with appropriate headings
+     * Unified output format
+     * Combined examples (if needed)
+     * Comprehensive notes (if needed)
 
-# Steps [optional]
+CRITICAL: Review the ENTIRE output to verify that NO aspects from ANY section of the input prompt have been omitted. The final prompt MUST incorporate ALL functionality and requirements from ALL sections of the input.
 
-[optional: a detailed breakdown of the steps necessary to accomplish the task]
-
-# Output Format
-
-[Specifically call out how the output should be formatted, be it response length, structure e.g. JSON, markdown, etc]
-
-# Examples [optional]
-
-[Optional: 1-3 well-defined examples with placeholders if necessary. Clearly mark where examples start and end, and what the input and output are. User placeholders as necessary.]
-[If the examples are shorter than what a realistic example is expected to be, make a reference with () explaining how real examples should be longer / shorter / different. AND USE PLACEHOLDERS! ]
-
-# Notes [optional]
-
-[optional: edge cases, details, and an area to call or repeat out specific important considerations]`
+Do not include any commentary or explanations. Output only the optimized system prompt.`
 
     setMessages([
       { role: 'system', content: systemPrompt },
-      { role: 'user', content: e.target[0].value },
+      { role: 'user', content: baseSystemPrompt },
     ])
     reload()
   }
@@ -848,8 +917,41 @@ The final prompt you output should adhere to the following structure below. Do n
                                   Update System Prompt
                                 </Button>
                                 <Button
-                                  type="submit"
-                                  onClick={open}
+                                  onClick={(e) => {
+                                    if (!llmProviders) {
+                                      showToastNotification(
+                                        theme,
+                                        'Configuration Error',
+                                        'The Optimize System Prompt feature requires provider configuration to be loaded. Please refresh the page and try again.',
+                                        true
+                                      )
+                                      return
+                                    }
+
+                                    if (!llmProviders.OpenAI?.enabled) {
+                                      showToastNotification(
+                                        theme,
+                                        'OpenAI Required',
+                                        'The Optimize System Prompt feature requires OpenAI to be enabled. Please enable OpenAI on the LLM page in your course settings to use this feature.',
+                                        true
+                                      )
+                                      return
+                                    }
+
+                                    if (!llmProviders.OpenAI?.apiKey) {
+                                      showToastNotification(
+                                        theme,
+                                        'OpenAI API Key Required',
+                                        'The Optimize System Prompt feature requires an OpenAI API key. Please add your OpenAI API key on the LLM page in your course settings to use this feature.',
+                                        true
+                                      )
+                                      return
+                                    }
+
+                                    handleSubmitPromptOptimization(e, reload, setMessages)
+                                    open()
+                                  }}
+                                  className={`relative text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
                                   style={{
                                     minWidth: 'fit-content',
                                     background:
@@ -866,7 +968,6 @@ The final prompt you output should adhere to the following structure below. Do n
                                     backgroundOrigin: 'border-box',
                                     backgroundClip: 'border-box',
                                   }}
-                                  className={`relative text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
                                   onMouseEnter={(e) =>
                                   (e.currentTarget.style.background =
                                     'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%)')
@@ -1343,9 +1444,14 @@ export const showToastNotification = (
   isError = false,
   icon?: React.ReactNode,
 ) => {
+  // Calculate duration based on message length (minimum 5 seconds, add 1 second for every 20 characters)
+  const baseDuration = 5000;
+  const durationPerChar = 50;  // 50ms per character
+  const duration = Math.max(baseDuration, Math.min(15000, message.length * durationPerChar));
+
   notifications.show({
     withCloseButton: true,
-    autoClose: 5000,
+    autoClose: duration,
     title: title,
     message: message,
     icon: icon || (isError ? <IconAlertTriangle /> : <IconCheck />),
