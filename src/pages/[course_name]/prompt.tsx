@@ -897,11 +897,31 @@ Do not include any commentary or explanations. Output only the optimized system 
                               />
                               <Group mt="md" spacing="sm">
                                 <Button
-                                  className={`relative bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                  variant="filled"
+                                  radius="md"
+                                  className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                                   type="button"
                                   onClick={() => {
                                     handleSystemPromptSubmit(baseSystemPrompt)
                                   }}
+                                  sx={(theme) => ({
+                                    backgroundColor: `${theme.colors?.purple?.[8] || '#6d28d9'} !important`,
+                                    border: 'none',
+                                    color: '#fff',
+                                    padding: '10px 20px',
+                                    fontWeight: 600,
+                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    transition: 'all 0.2s ease',
+                                    '&:hover': {
+                                      backgroundColor: `${theme.colors?.purple?.[9] || '#5b21b6'} !important`,
+                                      transform: 'translateY(-1px)',
+                                      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
+                                    },
+                                    '&:active': {
+                                      transform: 'translateY(0)',
+                                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    },
+                                  })}
                                   style={{ minWidth: 'fit-content' }}
                                 >
                                   Update System Prompt
@@ -941,36 +961,30 @@ Do not include any commentary or explanations. Output only the optimized system 
                                     handleSubmitPromptOptimization(e, reload, setMessages)
                                     open()
                                   }}
-                                  className={`relative text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                  style={{
-                                    minWidth: 'fit-content',
-                                    background:
-                                      'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%)',
-                                    transition: 'background 0.3s ease-in-out',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    padding: '0 8px',
-                                    backgroundSize: '100% 100%',
-                                    backgroundRepeat: 'no-repeat',
-                                    boxSizing: 'border-box',
+                                  variant="filled"
+                                  radius="md"
+                                  leftIcon={<IconSparkles stroke={1} />}
+                                  className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                  sx={(theme) => ({
+                                    background: 'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%) !important',
                                     border: 'none',
-                                    outline: 'none',
-                                    backgroundOrigin: 'border-box',
-                                    backgroundClip: 'border-box',
-                                  }}
-                                  onMouseEnter={(e) =>
-                                  (e.currentTarget.style.background =
-                                    'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%)')
-                                  }
-                                  onMouseLeave={(e) =>
-                                  (e.currentTarget.style.background =
-                                    'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%)')
-                                  }
+                                    color: '#fff',
+                                    padding: '10px 20px',
+                                    fontWeight: 600,
+                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    transition: 'all 0.2s ease',
+                                    '&:hover': {
+                                      background: 'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%) !important',
+                                      transform: 'translateY(-1px)',
+                                      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
+                                    },
+                                    '&:active': {
+                                      transform: 'translateY(0)',
+                                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    },
+                                  })}
+                                  style={{ minWidth: 'fit-content' }}
                                 >
-                                  <IconSparkles
-                                    stroke={1}
-                                    style={{ marginRight: '4px' }}
-                                  />
                                   Optimize System Prompt
                                 </Button>
                               </Group>
@@ -1015,7 +1029,7 @@ Do not include any commentary or explanations. Output only the optimized system 
                                   {/* TODO: add the return value if there is no message found
                                     double confirm the handleSystemPromptSubmit */}
                                   <Button
-                                    className="relative m-1 self-end bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600"
+                                    className="relative m-1 self-end bg-purple-800 text-white hover:border-indigo-600"
                                     type="button"
                                     onClick={() => {
                                       const lastMessage =
@@ -1350,7 +1364,7 @@ Do not include any commentary or explanations. Output only the optimized system 
                               </Modal>
 
                               {/* Reset and Share Link buttons */}
-                              <Flex mt="md" justify="space-between" align="center" gap="md">
+                              <Flex mt="md" justify="flex-start" align="center" gap="md">
                                 <Button
                                   variant="filled"
                                   color="red"
