@@ -9,18 +9,6 @@ export const openAIAzureChat = async (
   chatBody: ChatBody,
   stream: boolean,
 ): Promise<any> => {
-  const selectedConversation = chatBody.conversation!
-  const messages = selectedConversation.messages
-  const lastMessage = messages[messages.length - 1]
-
-  console.log('Final prompts being sent to model:', {
-    systemPrompt: lastMessage?.latestSystemMessage,
-    userPrompt: lastMessage?.finalPromtEngineeredMessage,
-    documentsOnly: chatBody.courseMetadata?.documentsOnly,
-    systemPromptOnly: chatBody.courseMetadata?.systemPromptOnly,
-    guidedLearning: chatBody.courseMetadata?.guidedLearning
-  });
-
   // OpenAI's main chat endpoint
   try {
     const { conversation, llmProviders } = chatBody
