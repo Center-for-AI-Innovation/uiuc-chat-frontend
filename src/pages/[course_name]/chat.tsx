@@ -41,18 +41,23 @@ const ChatPage: NextPage = () => {
 
       // Get URL parameters
       const urlParams = new URLSearchParams(window.location.search);
-      const urlGuidedLearning = urlParams.get('guidedLearning') === 'true';
-      const urlDocumentsOnly = urlParams.get('documentsOnly') === 'true';
-      const urlSystemPromptOnly = urlParams.get('systemPromptOnly') === 'true';
+      const guidedLearning = urlParams.get('guidedLearning') === 'true';
+      const documentsOnly = urlParams.get('documentsOnly') === 'true';
+      const systemPromptOnly = urlParams.get('systemPromptOnly') === 'true';
+
+      // Update the state with URL parameters
+      setUrlGuidedLearning(guidedLearning);
+      setUrlDocumentsOnly(documentsOnly);
+      setUrlSystemPromptOnly(systemPromptOnly);
 
       console.log('URL parameters:', {
-        guidedLearning: urlGuidedLearning,
-        documentsOnly: urlDocumentsOnly,
-        systemPromptOnly: urlSystemPromptOnly
+        guidedLearning,
+        documentsOnly,
+        systemPromptOnly
       });
 
-      setIsLoading(true)
-      setIsCourseMetadataLoading(true)
+      setIsLoading(true);
+      setIsCourseMetadataLoading(true);
 
       // Handle /gpt4 page (special non-course page)
       let curr_course_name = courseName
@@ -64,35 +69,9 @@ const ChatPage: NextPage = () => {
       const metadataResponse = await fetch(`/api/UIUC-api/getCourseMetadata?course_name=${curr_course_name}`)
       const metadataData = await metadataResponse.json()
       
-      // If URL parameters are enabled and course-wide settings are not,
-      // override the course metadata settings
+      // Log original course metadata settings without modifying them
       if (metadataData.course_metadata) {
-        console.log('Original course metadata settings:', {
-          guidedLearning: metadataData.course_metadata.guidedLearning,
-          documentsOnly: metadataData.course_metadata.documentsOnly,
-          systemPromptOnly: metadataData.course_metadata.systemPromptOnly,
-          system_prompt: metadataData.course_metadata.system_prompt
-        });
-
-        // Handle guided learning
-        if (!metadataData.course_metadata.guidedLearning && urlGuidedLearning) {
-          metadataData.course_metadata.guidedLearning = true
-          console.log('Enabled guided learning from URL parameter');
-        }
-
-        // Handle documents only
-        if (!metadataData.course_metadata.documentsOnly && urlDocumentsOnly) {
-          metadataData.course_metadata.documentsOnly = true
-          console.log('Enabled documents only from URL parameter');
-        }
-
-        // Handle system prompt only
-        if (!metadataData.course_metadata.systemPromptOnly && urlSystemPromptOnly) {
-          metadataData.course_metadata.systemPromptOnly = true
-          console.log('Enabled system prompt only from URL parameter');
-        }
-
-        console.log('Final course metadata settings after URL parameters:', {
+        console.log('Course metadata settings:', {
           guidedLearning: metadataData.course_metadata.guidedLearning,
           documentsOnly: metadataData.course_metadata.documentsOnly,
           systemPromptOnly: metadataData.course_metadata.systemPromptOnly,
@@ -185,6 +164,11 @@ const ChatPage: NextPage = () => {
           course_metadata={courseMetadata}
           course_name={courseName}
           document_count={documentCount}
+          link_parameters={{
+            guidedLearning: urlGuidedLearning,
+            documentsOnly: urlDocumentsOnly,
+            systemPromptOnly: urlSystemPromptOnly
+          }}
         />
       )}
       {isLoading && !currentEmail && (

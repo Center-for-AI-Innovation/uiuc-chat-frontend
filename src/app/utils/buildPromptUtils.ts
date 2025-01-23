@@ -16,6 +16,7 @@ import { routeModelRequest } from '~/utils/streamProcessing'
 import { NextRequest, NextResponse } from 'next/server'
 
 import { encodingForModel } from 'js-tiktoken'
+import { v4 as uuidv4 } from 'uuid'
 
 // Define interface for URL link parameters
 interface LinkParameters {
@@ -24,51 +25,37 @@ interface LinkParameters {
   systemPromptOnly?: boolean
 }
 
-// Extend Conversation to include link parameters
-interface ConversationWithLinkParams extends Conversation {
-  linkParameters?: LinkParameters
-}
-
 // Helper functions for feature flags
 const isGuidedLearningEnabled = (
-  conversation: ConversationWithLinkParams,
+  conversation: Conversation,
   courseMetadata?: CourseMetadata
 ): boolean => {
-  return !!(
-    (conversation.linkParameters?.guidedLearning && !courseMetadata?.guidedLearning) ||
-    courseMetadata?.guidedLearning
-  )
+  return !!(conversation.linkParameters?.guidedLearning || courseMetadata?.guidedLearning)
 }
 
 const isDocumentsOnlyEnabled = (
-  conversation: ConversationWithLinkParams,
+  conversation: Conversation,
   courseMetadata?: CourseMetadata
 ): boolean => {
-  return !!(
-    (conversation.linkParameters?.documentsOnly && !courseMetadata?.documentsOnly) ||
-    courseMetadata?.documentsOnly
-  )
+  return !!(conversation.linkParameters?.documentsOnly || courseMetadata?.documentsOnly)
 }
 
 const isSystemPromptOnlyEnabled = (
-  conversation: ConversationWithLinkParams,
+  conversation: Conversation,
   courseMetadata?: CourseMetadata
 ): boolean => {
-  return !!(
-    (conversation.linkParameters?.systemPromptOnly && !courseMetadata?.systemPromptOnly) ||
-    courseMetadata?.systemPromptOnly
-  )
+  return !!(conversation.linkParameters?.systemPromptOnly || courseMetadata?.systemPromptOnly)
 }
 
 const shouldAppendGuidedLearningPrompt = (
-  conversation: ConversationWithLinkParams,
+  conversation: Conversation,
   courseMetadata?: CourseMetadata
 ): boolean => {
   return !!(conversation.linkParameters?.guidedLearning && !courseMetadata?.guidedLearning)
 }
 
 const shouldAppendDocumentsOnlyPrompt = (
-  conversation: ConversationWithLinkParams,
+  conversation: Conversation,
   courseMetadata?: CourseMetadata
 ): boolean => {
   return !!(conversation.linkParameters?.documentsOnly && !courseMetadata?.documentsOnly)
@@ -81,10 +68,10 @@ export const buildPrompt = async ({
   projectName,
   courseMetadata,
 }: {
-  conversation: ConversationWithLinkParams | undefined
+  conversation: Conversation | undefined
   projectName: string
   courseMetadata: CourseMetadata | undefined
-}): Promise<ConversationWithLinkParams> => {
+}): Promise<Conversation> => {
   /*
     System prompt -- defined by user. If documents are provided, add the citations instructions to it.
   
@@ -120,15 +107,11 @@ export const buildPrompt = async ({
     // Build the final system prompt with all components
     let finalSystemPrompt = systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
 
-    // Add guided learning prompt if enabled via conversation but not course-wide
-    if (shouldAppendGuidedLearningPrompt(conversation, courseMetadata)) {
-      finalSystemPrompt += GUIDED_LEARNING_PROMPT
-    }
-
-    // Add documents only prompt if enabled locally but not course-wide
-    if (shouldAppendDocumentsOnlyPrompt(conversation, courseMetadata)) {
-      finalSystemPrompt += DOCUMENT_FOCUS_PROMPT
-    }
+    console.log('Debug guided learning state:', {
+      linkParametersGuidedLearning: conversation.linkParameters?.guidedLearning,
+      courseMetadataGuidedLearning: courseMetadata?.guidedLearning,
+      shouldAppendResult: shouldAppendGuidedLearningPrompt(conversation, courseMetadata)
+    });
 
     console.log('Building final system prompt:', {
       baseSystemPrompt: systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? '',
@@ -137,7 +120,9 @@ export const buildPrompt = async ({
       systemPromptOnlyEnabled: isSystemPromptOnlyEnabled(conversation, courseMetadata),
       guidedLearningPromptAdded: shouldAppendGuidedLearningPrompt(conversation, courseMetadata),
       documentsOnlyPromptAdded: shouldAppendDocumentsOnlyPrompt(conversation, courseMetadata),
-      finalSystemPrompt
+      finalSystemPrompt,
+      conversationLinkParams: conversation.linkParameters,
+      courseMetadataFull: courseMetadata
     });
 
     // Adjust remaining token budget based on the system prompt length
@@ -447,25 +432,9 @@ const _getSystemPrompt = async ({
   conversation,
 }: {
   courseMetadata: CourseMetadata | undefined
-  conversation: ConversationWithLinkParams
+  conversation: Conversation
 }): Promise<string> => {
-  // If systemPromptOnly is true, only use the default system prompt
-  if (isSystemPromptOnlyEnabled(conversation, courseMetadata)) {
-    let basePrompt = DEFAULT_SYSTEM_PROMPT
-
-    // Even with systemPromptOnly, we should still add guided learning if enabled locally but not course-wide
-    if (shouldAppendGuidedLearningPrompt(conversation, courseMetadata)) {
-      basePrompt += GUIDED_LEARNING_PROMPT
-    }
-
-    // Add documents only prompt if enabled via link parameters but not course-wide
-    if (shouldAppendDocumentsOnlyPrompt(conversation, courseMetadata)) {
-      basePrompt += DOCUMENT_FOCUS_PROMPT
-    }
-
-    return basePrompt
-  }
-
+  // First get the user defined system prompt
   let userDefinedSystemPrompt: string | undefined | null
   if (courseMetadata?.system_prompt) {
     userDefinedSystemPrompt = courseMetadata.system_prompt
@@ -480,6 +449,21 @@ const _getSystemPrompt = async ({
 
   // Start with either user defined prompt or default
   let systemPrompt = userDefinedSystemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
+
+  // If systemPromptOnly is true, don't add additional prompts except for guided learning and documents only
+  if (isSystemPromptOnlyEnabled(conversation, courseMetadata)) {
+    // Even with systemPromptOnly, we should still add guided learning if enabled locally but not course-wide
+    if (shouldAppendGuidedLearningPrompt(conversation, courseMetadata)) {
+      systemPrompt += GUIDED_LEARNING_PROMPT
+    }
+
+    // Add documents only prompt if enabled via link parameters but not course-wide
+    if (shouldAppendDocumentsOnlyPrompt(conversation, courseMetadata)) {
+      systemPrompt += DOCUMENT_FOCUS_PROMPT
+    }
+
+    return systemPrompt
+  }
 
   // Add guided learning prompt if enabled via conversation but not course-wide
   if (shouldAppendGuidedLearningPrompt(conversation, courseMetadata)) {
@@ -511,7 +495,7 @@ const _getSystemPrompt = async ({
   } else {
     // Documents are present, combine system prompt with system post prompt
     const systemPostPrompt = getSystemPostPrompt({
-      conversation: conversation as ConversationWithLinkParams,
+      conversation: conversation as Conversation,
       courseMetadata: courseMetadata ?? ({} as CourseMetadata),
     })
     return [systemPrompt, systemPostPrompt]
@@ -524,7 +508,7 @@ export const getSystemPostPrompt = ({
   conversation,
   courseMetadata,
 }: {
-  conversation: ConversationWithLinkParams
+  conversation: Conversation
   courseMetadata: CourseMetadata
 }): string => {
   // If systemPromptOnly is true, return an empty string
@@ -608,15 +592,19 @@ export const getDefaultPostPrompt = (): string => {
   // Call getSystemPostPrompt with default values
   return getSystemPostPrompt({
     conversation: {
-      id: '',
+      id: uuidv4(),
       name: '',
       messages: [],
       model: {} as AnySupportedModel,
-      prompt: '',
+      prompt: DEFAULT_SYSTEM_PROMPT,
       temperature: 0.7,
       folderId: null,
-      linkParameters: {}
-    } as ConversationWithLinkParams,
+      linkParameters: {
+        guidedLearning: false,
+        documentsOnly: false,
+        systemPromptOnly: false
+      }
+    } as Conversation,
     courseMetadata: defaultCourseMetadata,
   })
 }
