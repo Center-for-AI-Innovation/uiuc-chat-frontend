@@ -39,6 +39,8 @@ export const getNCSAHostedModels = async (
       OllamaModels[OllamaModelIDs.LLAMA31_8b_instruct_fp16],
       OllamaModels[OllamaModelIDs.DEEPSEEK_R1_14b_qwen_fp16],
       OllamaModels[OllamaModelIDs.QWEN25_14b_fp16],
+      OllamaModels[OllamaModelIDs.QWEN25_7b_fp16],
+      // OllamaModels[OllamaModelIDs.LLAMA32_3b_fp16],
     ]
 
     // ❌ DYNAMICALLY show all HOT AND LOADED models
