@@ -1,4 +1,4 @@
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs'
+// import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
 // import { magicBellTheme } from '~/components/UIUC-Components/navbars/GlobalHeader'
 import { useDisclosure } from '@mantine/hooks'
@@ -13,6 +13,8 @@ import {
   Paper,
   rem,
   Transition,
+  Avatar, 
+  Menu,
 } from '@mantine/core'
 import { spotlight } from '@mantine/spotlight'
 import {
@@ -25,8 +27,9 @@ import {
 import { IconFileText, IconHome, IconSettings } from '@tabler/icons-react'
 import { useRouter } from 'next/router'
 import { montserrat_heading } from 'fonts'
-import { useUser } from '@clerk/nextjs'
-import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
+// import { useUser } from '@clerk/nextjs'
+// import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
+import { useAuth } from 'react-oidc-context'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import HomeContext from '~/pages/api/home/home.context'
 import { UserSettings } from '../../Chat/UserSettings'
@@ -131,6 +134,8 @@ const useStyles = createStyles((theme) => ({
     [theme.fn.largerThan(1118)]: {
       display: 'none',
     },
+    backgroundColor: '#15162c',
+    color: "white"
   },
   modelSettings: {
     position: 'absolute',
@@ -144,12 +149,39 @@ const useStyles = createStyles((theme) => ({
     position: 'relative',
     top: '100%',
   },
+  userAvatar: {
+    cursor: 'pointer',
+    backgroundColor: 'hsl(280,100%,70%)',
+    color: 'white',
+    '&:hover': {
+      backgroundColor: 'hsl(280,100%,60%)',
+    },
+  },
+  userMenu: {
+    backgroundColor: '#15162c',
+    border: '1px solid hsl(280,100%,70%)',
+    
+    '.mantine-Menu-item': {
+      color: 'white',
+      '&:hover': {
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      },
+    },
+  },
 }))
 
 interface ChatNavbarProps {
   bannerUrl?: string
   isgpt4?: boolean
 }
+
+const getInitials = (name: string) => {
+  const names = name.split(' ');
+  if (names.length >= 2) {
+    return `${names[0]?.[0] || ''}${names[names.length - 1]?.[0] || ''}`.toUpperCase();
+  }
+  return (names[0]?.[0] || '').toUpperCase();
+};
 
 const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
   const { classes, theme } = useStyles()
@@ -158,7 +190,8 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
   const [opened, { toggle }] = useDisclosure(false)
   const [show, setShow] = useState(true)
   const [isAdminOrOwner, setIsAdminOrOwner] = useState(false)
-  const clerk_user = useUser()
+  const auth = useAuth()
+  // const clerk_user = useUser()
   const posthog = usePostHog()
   const {
     state: { showModelSettings, selectedConversation },
@@ -179,10 +212,16 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
 
   useEffect(() => {
     const fetchCourses = async () => {
-      if (clerk_user.isLoaded && clerk_user.isSignedIn) {
-        const currUserEmails = extractEmailsFromClerk(clerk_user.user)
+      // if (clerk_user.isLoaded && clerk_user.isSignedIn) {
+        if (auth.isAuthenticated) {
+        // const currUserEmails = extractEmailsFromClerk(clerk_user.user)
+        const userEmail = auth.user?.profile.email
+        const currUserEmails = userEmail ? [userEmail] : []
         // Posthog identify
-        posthog?.identify(clerk_user.user.id, {
+        // posthog?.identify(clerk_user.user.id, {
+        //   email: currUserEmails[0] || 'no_email',
+        // })
+        posthog?.identify(auth.user?.profile.sub, {
           email: currUserEmails[0] || 'no_email',
         })
         setUserEmail(currUserEmails[0] || 'no_email')
@@ -207,8 +246,9 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
       }
     }
     fetchCourses()
-  }, [clerk_user.isLoaded, clerk_user.isSignedIn])
-
+  // }, [clerk_user.isLoaded, clerk_user.isSignedIn])
+  }, [auth.isAuthenticated])
+  
   const items = [
     ...(spotlight
       ? [
@@ -591,6 +631,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                   onClick={toggle}
                   className={classes.burger}
                   size="sm"
+                  color="white"
                 />
               )}
             </Container>
@@ -605,13 +646,13 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                 justifyContent: 'flex-center',
               }}
             >
-              <SignedIn>
+              {/* <SignedIn>
                 <Group grow spacing={'xs'}>
-                  {/* <div /> */}
-                  {/* <div style={{ paddingLeft: '10px', paddingRight: '8px' }} /> */}
+                  <div />
+                  <div style={{ paddingLeft: '10px', paddingRight: '8px' }} /> 
 
-                  {/* render the MagicBell until userEmail is valid otherwise there is a warning message of userEmail */}
-                  {/* {userEmail !== 'no_email' && (
+                  render the MagicBell until userEmail is valid otherwise there is a warning message of userEmail
+                  {userEmail !== 'no_email' && (
                     <MagicBell
                       apiKey={process.env.NEXT_PUBLIC_MAGIC_BELL_API as string}
                       userEmail={userEmail}
@@ -630,7 +671,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                         />
                       )}
                     </MagicBell>
-                  )} */}
+                  )}
                   <UserButton afterSignOutUrl="/" />
                 </Group>
               </SignedIn>
@@ -643,12 +684,53 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                     >
                       <span style={{ whiteSpace: 'nowrap' }}>Sign in / </span>
                       <span> </span>
-                      {/* ^^ THIS SPAN IS REQUIRED !!! TO have nice multiline behavior */}
+                      ^^ THIS SPAN IS REQUIRED !!! TO have nice multiline behavior
                       <span style={{ whiteSpace: 'nowrap' }}>Sign up</span>
                     </div>
                   </button>
                 </SignInButton>
-              </SignedOut>
+              </SignedOut> */}
+              {auth.isAuthenticated ? (
+                <Menu
+                  position="bottom-end"
+                  offset={5}
+                  classNames={{
+                    dropdown: classes.userMenu
+                  }}
+                >
+                  <Menu.Target>
+                    <Avatar 
+                      size="sm"
+                      radius="xl"
+                      variant='filled'
+                      color="violet"
+                      className={classes.userAvatar}
+                    >
+                      {getInitials(auth.user?.profile.name || '')}
+                    </Avatar>
+                  </Menu.Target>
+
+                  <Menu.Dropdown>
+                    <Menu.Item onClick={() => auth.signoutRedirect()}>
+                      Sign Out
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
+              ) : (
+                <button 
+                  className={classes.link}
+                  onClick={() => auth.signinRedirect()}
+                >
+                  <div
+                    className={`${montserrat_heading.variable} font-montserratHeading`}
+                    style={{ fontSize: '12px' }}
+                  >
+                    <span style={{ whiteSpace: 'nowrap' }}>Sign in / </span>
+                    <span> </span>
+                    <span style={{ whiteSpace: 'nowrap' }}>Sign up</span>
+                  </div>
+                </button>
+              )}
             </div>
             {/* </div> */}
             {/* </Flex> */}

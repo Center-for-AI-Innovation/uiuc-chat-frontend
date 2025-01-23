@@ -80,11 +80,13 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
   } else {
     return (
       <KeycloakProvider>
+        <QueryClientProvider client={queryClient}>
         <PostHogProvider client={posthog}>
           <SpeedInsights />
           <Analytics />
           <Component {...pageProps} />
         </PostHogProvider>
+        </QueryClientProvider>
       </KeycloakProvider>
     )
   }
