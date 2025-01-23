@@ -303,7 +303,12 @@ export function LandingPageHeader({
           </div>
         ) : (
           <button
-            onClick={() => void auth.signinRedirect()}
+            onClick={() => {
+              const currentUrl = window.location.href;
+              void auth.signinRedirect({
+                state: JSON.stringify({ redirect: currentUrl })
+              });
+            }}
             className={classes.link}
           >
             <span className={`${montserrat_heading.variable} font-montserratHeading`}>
