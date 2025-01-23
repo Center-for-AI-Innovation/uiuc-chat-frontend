@@ -105,7 +105,7 @@ export const buildPrompt = async ({
       ]
 
     // Build the final system prompt with all components
-    let finalSystemPrompt = systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
+    const finalSystemPrompt = systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
 
     console.log('Debug guided learning state:', {
       linkParametersGuidedLearning: conversation.linkParameters?.guidedLearning,
