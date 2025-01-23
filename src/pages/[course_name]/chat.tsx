@@ -50,12 +50,6 @@ const ChatPage: NextPage = () => {
       setUrlDocumentsOnly(documentsOnly);
       setUrlSystemPromptOnly(systemPromptOnly);
 
-      console.log('URL parameters:', {
-        guidedLearning,
-        documentsOnly,
-        systemPromptOnly
-      });
-
       setIsLoading(true);
       setIsCourseMetadataLoading(true);
 
