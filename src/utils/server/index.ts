@@ -111,16 +111,6 @@ export const OpenAIStream = async (
     stream: stream,
   })
 
-  console.log('Final request being sent to OpenAI:', {
-    model: model.id,
-    systemPrompt,
-    messages,
-    temperature,
-    stream,
-    apiType,
-    url
-  });
-
   if (!url) {
     throw new Error('URL is undefined')
   }

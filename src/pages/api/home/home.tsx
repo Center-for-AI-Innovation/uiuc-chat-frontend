@@ -346,8 +346,6 @@ const Home = ({
       systemPromptOnly: link_parameters.systemPromptOnly || false
     }
 
-    console.log('Creating new conversation with link parameters:', newLinkParameters);
-
     const newConversation: Conversation = {
       id: uuidv4(),
       name: '',

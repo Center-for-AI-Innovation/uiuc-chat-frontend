@@ -107,24 +107,6 @@ export const buildPrompt = async ({
     // Build the final system prompt with all components
     const finalSystemPrompt = systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
 
-    console.log('Debug guided learning state:', {
-      linkParametersGuidedLearning: conversation.linkParameters?.guidedLearning,
-      courseMetadataGuidedLearning: courseMetadata?.guidedLearning,
-      shouldAppendResult: shouldAppendGuidedLearningPrompt(conversation, courseMetadata)
-    });
-
-    console.log('Building final system prompt:', {
-      baseSystemPrompt: systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? '',
-      guidedLearningEnabled: isGuidedLearningEnabled(conversation, courseMetadata),
-      documentsOnlyEnabled: isDocumentsOnlyEnabled(conversation, courseMetadata),
-      systemPromptOnlyEnabled: isSystemPromptOnlyEnabled(conversation, courseMetadata),
-      guidedLearningPromptAdded: shouldAppendGuidedLearningPrompt(conversation, courseMetadata),
-      documentsOnlyPromptAdded: shouldAppendDocumentsOnlyPrompt(conversation, courseMetadata),
-      finalSystemPrompt,
-      conversationLinkParams: conversation.linkParameters,
-      courseMetadataFull: courseMetadata
-    });
-
     // Adjust remaining token budget based on the system prompt length
     if (encoding) {
       const tokenCount = encoding.encode(finalSystemPrompt).length
@@ -222,11 +204,6 @@ export const buildPrompt = async ({
     conversation.messages[
       conversation.messages.length - 1
     ]!.latestSystemMessage = finalSystemPrompt
-
-    console.log('Final prompts set in conversation:', {
-      finalSystemPrompt: conversation.messages[conversation.messages.length - 1]!.latestSystemMessage,
-      finalUserPrompt: conversation.messages[conversation.messages.length - 1]!.finalPromtEngineeredMessage
-    });
 
     return conversation
   } catch (error) {
