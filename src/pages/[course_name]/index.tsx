@@ -17,28 +17,15 @@ const IfCourseExists: NextPage = () => {
   // const user = useUser()
   const auth = useAuth()
   const { course_name } = router.query
-  console.log("!!", course_name)
-  if (typeof course_name === 'string' && AUTH_ROUTES.includes(course_name)) {
-    if (auth.isAuthenticated) {
-      void router.replace('/')
-    } else {
-      void auth.signinRedirect(
-        course_name === 'sign-up' 
-          ? { extraQueryParams: { kc_action: 'register' }}
-          : undefined
-      )
-    }
-    return null
-  }
   const [courseName, setCourseName] = useState<string | null>(null)
   const [courseMetadataIsLoaded, setCourseMetadataIsLoaded] = useState(false)
-  const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
-    null,
-  )
+  const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(null)
+
   const getCurrentPageName = () => {
     return router.query.course_name as string
   }
 
+  // Move all useEffect hooks before any conditional logic
   useEffect(() => {
     if (!router.isReady) return
 
@@ -60,8 +47,11 @@ const IfCourseExists: NextPage = () => {
       setCourseMetadata(metadata)
       setCourseMetadataIsLoaded(true)
     }
-    fetchMetadata()
-  }, [router.isReady])
+    
+    if (typeof course_name === 'string' && !AUTH_ROUTES.includes(course_name)) {
+      fetchMetadata()
+    }
+  }, [router.isReady, router, course_name])
 
   useEffect(() => {
     const checkAuth = async () => {
