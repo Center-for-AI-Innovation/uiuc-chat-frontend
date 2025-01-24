@@ -1,7 +1,7 @@
 // src/pages/api/materialsTable/docsInProgress.ts
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '@/utils/supabaseClient'
-import { getAuth } from '@clerk/nextjs/server'
+// import { getAuth } from '@clerk/nextjs/server'
 
 type DocsInProgressResponse = {
   documents?: { readable_filename: string }[]
@@ -19,11 +19,17 @@ export default async function docsInProgress(
 
   const course_name = req.query.course_name as string
 
-  const auth = getAuth(req)
-  const currUserId = auth.userId
-  if (!currUserId) {
-    return res.status(401).json({ error: 'User ID is required' })
+  const authHeader = req.headers.authorization
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Valid Bearer token is required' })
   }
+  
+  // Deprecated: Remove Clerk auth
+  // const auth = getAuth(req)
+  // const currUserId = auth.userId
+  // if (!currUserId) {
+  //   return res.status(401).json({ error: 'User ID is required' })
+  // }
 
   try {
     const { data, error } = await supabase

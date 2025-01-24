@@ -21,7 +21,8 @@ import { CourseMetadata } from '~/types/courseMetadata'
 import React, { useState, useEffect } from 'react'
 import { LoadingSpinner } from './LoadingSpinner'
 import { useRouter } from 'next/router'
-import { useUser } from '@clerk/nextjs'
+// import { useUser } from '@clerk/nextjs'
+import { useAuth } from 'react-oidc-context'
 import { CannotEditCourse } from './CannotEditCourse'
 import GlobalFooter from './GlobalFooter'
 import { montserrat_heading } from 'fonts'
@@ -43,8 +44,11 @@ export const CannotViewCourse = ({
   // console.log('course_name in CannotViewCourse: ', course_name)
   const currentPageName = GetCurrentPageName()
 
-  const { isSignedIn, user } = useUser()
-  const curr_user_email = user?.primaryEmailAddress?.emailAddress as string
+  // const { isSignedIn, user } = useUser()
+  // const curr_user_email = user?.primaryEmailAddress?.emailAddress as string
+  const auth = useAuth()
+  const isSignedIn = auth.isAuthenticated
+  const curr_user_email = auth.user?.profile.email
 
   const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
     null,
@@ -86,8 +90,8 @@ export const CannotViewCourse = ({
   }
 
   if (
-    courseMetadata.course_owner === curr_user_email ||
-    courseMetadata.course_admins.includes(curr_user_email)
+    curr_user_email && (courseMetadata.course_owner === curr_user_email ||
+    courseMetadata.course_admins.includes(curr_user_email))
   ) {
     // CAN view course
     // Cannot edit course

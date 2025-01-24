@@ -27,6 +27,7 @@ import { IconShare } from '@tabler/icons-react'
 import ShareSettingsModal from './ShareSettingsModal'
 import UploadNotification, { type FileUpload } from './UploadNotification'
 import { useQueryClient } from '@tanstack/react-query'
+import { useAuth } from "react-oidc-context"
 
 const montserrat_light = Montserrat({
   weight: '400',
@@ -87,6 +88,7 @@ export const UploadCard = memo(function UploadCard({
   current_user_email: string
   metadata: CourseMetadata
 }) {
+  const auth = useAuth()
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const [projectDescription, setProjectDescription] = useState(
     initialMetadata?.project_description || '',
@@ -202,6 +204,7 @@ export const UploadCard = memo(function UploadCard({
               courseMetadata={metadata as CourseMetadata}
               is_new_course={false}
               setUploadFiles={handleSetUploadFiles}
+              auth={auth}
             />
           </div>
 

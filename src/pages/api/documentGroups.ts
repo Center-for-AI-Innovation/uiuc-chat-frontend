@@ -2,7 +2,8 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import posthog from 'posthog-js'
 import { CourseDocument } from 'src/types/courseMaterials'
-import { getAuth } from '@clerk/nextjs/server'
+// import { getAuth } from '@clerk/nextjs/server'
+import { useAuth } from 'react-oidc-context'
 import {
   addDocumentsToDocGroup,
   fetchDocumentGroups,
@@ -36,13 +37,15 @@ export default async function handler(
       req.body as RequestBody
 
     try {
+      const auth = useAuth()
       if (action === 'addDocumentsToDocGroup' && doc) {
         console.log('Adding documents to doc group:', doc)
 
         posthog.capture('add_doc_group', {
           distinct_id:
             req.headers['x-forwarded-for'] || req.socket.remoteAddress,
-          curr_user_id: await getAuth(req).userId,
+          // curr_user_id: await getAuth(req).userId,
+          curr_user_id: auth.user?.profile.sub, 
           course_name: courseName,
           doc_readable_filename: doc.readable_filename,
           doc_unique_identifier:
@@ -73,7 +76,8 @@ export default async function handler(
         posthog.capture('append_doc_group', {
           distinct_id:
             req.headers['x-forwarded-for'] || req.socket.remoteAddress,
-          curr_user_id: await getAuth(req).userId,
+          // curr_user_id: await getAuth(req).userId,
+          curr_user_id: auth.user?.profile.sub, 
           course_name: courseName,
           doc_readable_filename: doc.readable_filename,
           doc_unique_identifier:
@@ -112,7 +116,8 @@ export default async function handler(
         posthog.capture('remove_doc_group', {
           distinct_id:
             req.headers['x-forwarded-for'] || req.socket.remoteAddress,
-          curr_user_id: await getAuth(req).userId,
+          // curr_user_id: await getAuth(req).userId,
+          curr_user_id: auth.user?.profile.sub, 
           course_name: courseName,
           doc_readable_filename: doc.readable_filename,
           doc_unique_identifier:
