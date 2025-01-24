@@ -28,6 +28,7 @@ import { useMediaQuery } from '@mantine/hooks'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { v4 as uuidv4 } from 'uuid'
 import { FileUpload } from './UploadNotification'
+import { AuthContextProps } from 'react-oidc-context'
 
 const useStyles = createStyles((theme) => ({
   wrapper: {
@@ -65,6 +66,7 @@ export function LargeDropzone({
   courseMetadata,
   is_new_course,
   setUploadFiles,
+  auth,
 }: {
   courseName: string
   current_user_email: string
@@ -73,6 +75,7 @@ export function LargeDropzone({
   courseMetadata: CourseMetadata
   is_new_course: boolean
   setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
+  auth: AuthContextProps
 }) {
   // upload-in-progress spinner control
   const [uploadInProgress, setUploadInProgress] = useState(false)
@@ -240,14 +243,20 @@ export function LargeDropzone({
       await refreshOrRedirect(redirect_to_gpt_4)
     }
   }
-
   // Add useEffect to check ingest status
   useEffect(() => {
     const checkIngestStatus = async () => {
+      if (!auth) {
+        console.debug('Auth user not available, skipping ingest status check')
+        return
+      }
       console.debug('Checking for ingest in progress...')
-      const response = await fetch(
-        `/api/materialsTable/docsInProgress?course_name=${courseName}`,
-      )
+      const response = await fetch(`/api/materialsTable/docsInProgress?course_name=${courseName}`, {
+        headers: {
+          'Authorization': `Bearer ${auth.user?.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      })
       const data = await response.json()
       if (data.documents.length > 0) {
         console.debug('ingest is currently active: ', data.documents)
