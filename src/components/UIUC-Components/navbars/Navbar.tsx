@@ -52,6 +52,7 @@ const HEADER_HEIGHT = rem(90)
 
 const useStyles = createStyles((theme) => ({
   burger: {
+    color: '#f1f5f9',
     [theme.fn.largerThan('md')]: {
       display: 'none',
     },
@@ -86,6 +87,7 @@ const useStyles = createStyles((theme) => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    color: '#f1f5f9',
 
     '&:hover': {
       color: 'hsl(280,100%,70%)',
@@ -119,6 +121,7 @@ const useStyles = createStyles((theme) => ({
     borderRadius: '10px',
     overflow: 'hidden',
     width: '200px',
+    backgroundColor: 'rgb(26, 27, 30)',
     [theme.fn.largerThan('lg')]: {
       display: 'none',
     },
@@ -219,7 +222,7 @@ function NavigationContent({
     <>
       <Transition transition="pop-top-right" duration={200} mounted={opened}>
         {(styles) => (
-          <Paper className={classes.dropdown} withBorder style={styles}>
+          <Paper className={classes.dropdown} style={styles}>
             {items.map((item, index) => (
               <Link
                 key={index}
@@ -281,6 +284,7 @@ function NavigationContent({
         onClick={onToggle}
         className={classes.burger}
         size="sm"
+        color="#f1f5f9"
       />
     </>
   )
