@@ -90,10 +90,12 @@ const ToolsPage: NextPage = () => {
   // if their account is somehow broken (with no email address)
 
   // Don't edit certain special pages (no context allowed)
-  if (
-    course_name.toLowerCase() == 'gpt4' ||
+  console.log("course name", course_name)
+  if  (
+    course_name && (course_name.toLowerCase() == 'gpt4' ||
     course_name.toLowerCase() == 'global' ||
-    course_name.toLowerCase() == 'extreme'
+    course_name.toLowerCase() == 'extreme')
+    
   ) {
     return <CannotEditGPT4Page course_name={course_name as string} />
   }
