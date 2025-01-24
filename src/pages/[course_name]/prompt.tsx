@@ -5,7 +5,8 @@ import MakeNewCoursePage from '~/components/UIUC-Components/MakeNewCoursePage'
 import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { Montserrat } from 'next/font/google'
 import { useRouter } from 'next/router'
-import { useUser } from '@clerk/nextjs'
+// import { useUser } from '@clerk/nextjs'
+import { useAuth } from 'react-oidc-context'
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import {
@@ -31,7 +32,7 @@ import {
   useMantineTheme,
   Divider,
 } from '@mantine/core'
-import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
+// import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
 import { DEFAULT_SYSTEM_PROMPT, GUIDED_LEARNING_PROMPT } from '~/utils/app/const'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
@@ -90,7 +91,11 @@ const CourseMain: NextPage = () => {
   }
   const isSmallScreen = useMediaQuery('(max-width: 1280px)')
   const course_name = GetCurrentPageName() as string
-  const { user, isLoaded, isSignedIn } = useUser()
+  // const { user, isLoaded, isSignedIn } = useUser()
+  const auth = useAuth()
+  const isLoaded = !auth.isLoading
+  const isSignedIn = auth.isAuthenticated
+  const user = auth.user
   const [courseExists, setCourseExists] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
@@ -416,7 +421,8 @@ const CourseMain: NextPage = () => {
     return <AuthComponent course_name={course_name} />
   }
 
-  const user_emails = extractEmailsFromClerk(user)
+  // const user_emails = extractEmailsFromClerk(user)
+  const user_emails = user?.profile?.email ? [user.profile.email] : []
 
   // if their account is somehow broken (with no email address)
   if (user_emails.length == 0) {

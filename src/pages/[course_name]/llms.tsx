@@ -2,7 +2,8 @@ import { type NextPage } from 'next'
 import MakeNomicVisualizationPage from '~/components/UIUC-Components/MakeQueryAnalysisPage'
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-import { useUser } from '@clerk/nextjs'
+// import { useUser } from '@clerk/nextjs'
+import { useAuth } from 'react-oidc-context'
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import {
@@ -17,7 +18,8 @@ import APIKeyInputForm from '~/components/UIUC-Components/api-inputs/LLMsApiKeyI
 const CourseMain: NextPage = () => {
   const router = useRouter()
   const [courseName, setCourseName] = useState<string | null>(null)
-  const { user, isLoaded, isSignedIn } = useUser()
+  // const { user, isLoaded, isSignedIn } = useUser()
+  const auth = useAuth()
   const [isFetchingCourseMetadata, setIsFetchingCourseMetadata] = useState(true)
 
   const getCurrentPageName = () => {
@@ -43,12 +45,15 @@ const CourseMain: NextPage = () => {
   }, [router.isReady])
 
   // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
-  if (!isLoaded || isFetchingCourseMetadata || courseName == null) {
+  // if (!isLoaded || isFetchingCourseMetadata || courseName == null) {
+  if (auth.isLoading || isFetchingCourseMetadata || courseName == null) {
     return <LoadingPlaceholderForAdminPages />
   }
 
-  if (!isSignedIn) {
-    console.log('User not logged in', isSignedIn, isLoaded, courseName)
+  // if (!isSignedIn) {
+  if (!auth.isAuthenticated) {
+    // console.log('User not logged in', isSignedIn, isLoaded, courseName)
+    console.log('User not logged in', auth.isAuthenticated, auth.isLoading, courseName)
     return <AuthComponent course_name={courseName as string} />
   }
 

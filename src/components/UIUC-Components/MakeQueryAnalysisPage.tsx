@@ -84,7 +84,8 @@ const useStyles = createStyles((theme: MantineTheme) => ({
   },
 }))
 
-import { useAuth, useUser } from '@clerk/nextjs'
+// import { useAuth, useUser } from '@clerk/nextjs'
+import { useAuth } from 'react-oidc-context'
 
 export const GetCurrentPageName = () => {
   // /CS-125/dashboard --> CS-125
@@ -129,9 +130,10 @@ const formatPercentageChange = (value: number | null | undefined) => {
 const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
   const { classes, theme } = useStyles()
-  const { isLoaded, userId, sessionId, getToken } = useAuth() // Clerk Auth
+  // const { isLoaded, userId, sessionId, getToken } = useAuth() // Clerk Auth
+  const auth = useAuth()
   // const { isSignedIn, user } = useUser()
-  const clerk_user = useUser()
+  // const clerk_user = useUser()
   const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
     null,
   )
@@ -164,8 +166,9 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   // TODO: remove this hook... we should already have this from the /materials props???
   useEffect(() => {
     const fetchData = async () => {
-      const userEmail = extractEmailsFromClerk(clerk_user.user)
-      setCurrentEmail(userEmail[0] as string)
+      // const userEmail = extractEmailsFromClerk(clerk_user.user)
+      // setCurrentEmail(userEmail[0] as string)
+      setCurrentEmail(auth.user?.profile.email as string)
 
       try {
         const metadata: CourseMetadata = (await fetchCourseMetadata(
@@ -185,7 +188,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     }
 
     fetchData()
-  }, [currentPageName, clerk_user.isLoaded, clerk_user.user])
+  // }, [currentPageName, clerk_user.isLoaded, clerk_user.user])
+  }, [currentPageName, !auth.isLoading, auth.user])
 
   const [hasConversationData, setHasConversationData] = useState<boolean>(true)
 
@@ -287,7 +291,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
   const [view, setView] = useState('hour')
 
-  if (!isLoaded || !courseMetadata) {
+  // if (!isLoaded || !courseMetadata) {
+  if (auth.isLoading || !courseMetadata) {
     return (
       <MainPageBackground>
         <LoadingSpinner />
