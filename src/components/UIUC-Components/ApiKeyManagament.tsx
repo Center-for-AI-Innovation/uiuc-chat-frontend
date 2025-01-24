@@ -20,7 +20,7 @@ import { montserrat_heading } from 'fonts'
 import style from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark'
 import { AuthContextProps } from 'react-oidc-context'
 
-
+// NOTE: will need to map userID from clerk to id from KeyCloak
 const ApiKeyManagement = ({
   course_name,
   // clerk_user,
@@ -178,6 +178,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
       const response = await fetch(`/api/chat-api/keys/fetch`, {
         method: 'GET',
         headers: {
+          'Authorization': `Bearer ${auth.user?.access_token}`,
           'Content-Type': 'application/json',
         },
       })
@@ -203,6 +204,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
     const response = await fetch(`/api/chat-api/keys/generate`, {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${auth.user?.access_token}`,
         'Content-Type': 'application/json',
       },
     })
@@ -227,6 +229,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
     const response = await fetch(`/api/chat-api/keys/rotate`, {
       method: 'PUT',
       headers: {
+        'Authorization': `Bearer ${auth.user?.access_token}`,
         'Content-Type': 'application/json',
       },
     })
@@ -251,6 +254,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
     const response = await fetch(`/api/chat-api/keys/delete`, {
       method: 'DELETE',
       headers: {
+        'Authorization': `Bearer ${auth.user?.access_token}`,
         'Content-Type': 'application/json',
       },
     })

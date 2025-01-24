@@ -13,17 +13,19 @@ export default async function fetchKey(
   req: NextApiRequest,
   res: NextApiResponse<ApiResponse>
 ) {
+  console.log('Fetching API key...')
+  console.log('Request method:', req.method)
+
   if (req.method !== 'GET') {
+    console.log('Invalid method:', req.method)
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  // const auth = getAuth(req)
-  // const currUserId = auth.userId
-  // if (!currUserId) {
-  //   return res.status(401).json({ error: 'User ID is required' })
-  // }
   const authHeader = req.headers.authorization
+  console.log('Auth header present:', !!authHeader)
+
   if (!authHeader?.startsWith('Bearer ')) {
+    console.log('Missing or invalid auth header')
     return res.status(401).json({ error: 'Missing or invalid authorization header' })
   }
 
@@ -31,17 +33,35 @@ export default async function fetchKey(
     const token = authHeader.replace('Bearer ', '')
     const [, payload = ''] = token.split('.')
     const decodedPayload = JSON.parse(Buffer.from(payload, 'base64').toString())
-    const userId = decodedPayload.sub
 
+    console.log('Token payload:', {
+      sub: decodedPayload.sub,
+      userId: decodedPayload.user_id,
+      preferred_username: decodedPayload.preferred_username,
+      email: decodedPayload.email,
+      // Log all claims to see what's available
+      allClaims: decodedPayload
+  })
+
+    const subId = decodedPayload.sub
+    const userId = decodedPayload.user_id
+    console.log('Decoded user ID:', subId)
+
+    console.log('Querying Supabase for API key...')
     const { data, error } = await supabase
       .from('api_keys')
       .select('key')
-      .eq('user_id', userId)
+      .eq('user_id', subId)
       .eq('is_active', true)
 
-    // console.log('data', data)
+    console.log('Supabase query result:', {
+      hasData: !!data,
+      recordCount: data?.length,
+      hasError: !!error
+    })
 
     if (error) {
+      console.error('Supabase error:', error)
       throw error
     }
 

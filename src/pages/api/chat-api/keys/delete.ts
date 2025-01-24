@@ -1,7 +1,8 @@
-import { supabase } from '@/utils/supabaseClient'
-import { getAuth } from '@clerk/nextjs/server'
+// import { supabase } from '@/utils/supabaseClient'
+// import { getAuth } from '@clerk/nextjs/server'
 import posthog from 'posthog-js'
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { supabase } from '~/utils/supabaseClient'
 
 type ApiResponse = {
   message?: string
@@ -20,52 +21,50 @@ export default async function deleteKey(
   req: NextApiRequest,
   res: NextApiResponse<ApiResponse>
 ) {
-  // Check for the DELETE request method.
   if (req.method !== 'DELETE') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  // Get the current user's email
-  const currUserId = getAuth(req).userId
-  console.log('Deleting api key for: ', currUserId)
-
-  // Ensure the user email is present
-  if (!currUserId) {
-    return res.status(401).json({ error: 'User email is required' })
+  const authHeader = req.headers.authorization
+  if (!authHeader?.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Missing or invalid authorization header' })
   }
 
   try {
-    // Attempt to delete the API key from the 'api_keys' table where the user_email matches.
+    // Get user ID from Keycloak token
+    const token = authHeader.replace('Bearer ', '')
+    const [, payload = ''] = token.split('.')
+    const decodedPayload = JSON.parse(Buffer.from(payload, 'base64').toString())
+    const subId = decodedPayload.sub
+    const userId = decodedPayload.user_id || subId // Fallback to sub if user_id not present
+
+    console.log('Deleting api key for:', userId)
+
     const { data, error } = await supabase
       .from('api_keys')
       .update({ is_active: false })
-      .match({ user_id: currUserId })
+      .match({ user_id: subId })
 
-    // If an error occurs during deletion, return a 500 status with the error message.
     if (error) {
       console.error('Error deleting API key:', error)
       throw error
     }
 
     posthog.capture('api_key_deleted', {
-      currUserId,
+      subId,
     })
 
-    // Respond with a success message and the data of the deleted key.
     return res.status(200).json({
       message: 'API key deleted successfully',
       data,
     })
   } catch (error) {
-    // Log the error for server-side debugging.
     console.error('Failed to delete API key:', error)
 
     posthog.capture('api_key_deletion_failed', {
-      userId: currUserId,
       error: (error as Error).message,
     })
 
-    // Respond with a server error status and the error message.
     return res.status(500).json({
       error: (error as Error).message,
     })
