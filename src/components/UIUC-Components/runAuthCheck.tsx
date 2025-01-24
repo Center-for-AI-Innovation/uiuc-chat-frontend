@@ -1,5 +1,4 @@
 import { CourseMetadata } from '~/types/courseMetadata'
-import { extractEmailsFromClerk } from './clerkHelpers'
 // import { extractEmailsFromClerk } from './clerkHelpers'
 import type { AuthContextProps } from 'react-oidc-context'
 

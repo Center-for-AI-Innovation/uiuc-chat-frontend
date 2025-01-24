@@ -12,6 +12,7 @@ import { IconClipboardText, IconFile } from '@tabler/icons-react'
 import { useAuth } from 'react-oidc-context'
 
 export default function Header({ isNavbar = false }: { isNavbar?: boolean }) {
+  const { classes } = useStyles();
   const headerStyle = isNavbar
     ? {
       backgroundColor: '#15162c',
@@ -101,27 +102,49 @@ export default function Header({ isNavbar = false }: { isNavbar?: boolean }) {
       {/* <SignInButton />
       </SignedOut> */}
       {auth.isAuthenticated ? (
-        <>
-          <div style={{ paddingLeft: '0px', paddingRight: '10px' }}></div>
-          <button onClick={() => auth.signoutRedirect()}>Logout</button>
-        </>
-      ) : (
-        <div>
-          <Link href="/sign-in">Sign in</Link>
-          <Link href="/sign-up" style={{ marginLeft: '10px' }}>Sign up</Link>
-        </div>
-      )}
+      <Group spacing={'xs'} style={{ paddingLeft: '.65em', paddingRight: '1em' }}>
+        <Menu
+          position="bottom-end"
+          offset={5}
+        >
+          <Menu.Target>
+          <div className={classes.avatarButton}>
+            <Avatar 
+              size="sm"
+              radius="xl"
+              variant='filled'
+              color="violet"
+            >
+              {getInitials(auth.user?.profile.name || '')}
+            </Avatar>
+            </div>
+          </Menu.Target>
+
+          <Menu.Dropdown>
+            <Menu.Item onClick={() => auth.signoutRedirect()}>
+              Sign Out
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
+      </Group>
+    ) : (
+      <div>
+        <Link href="/sign-in" >Sign in</Link>
+        <Link href="/sign-up" style={{ marginLeft: '10px' }}>Sign up</Link>
+      </div>
+    )}
     </header>
   )
 }
 
 import Link from 'next/link'
 import { montserrat_heading } from 'fonts'
-import { createStyles, Group, rem } from '@mantine/core'
+import { Avatar, createStyles, Group, Menu, rem } from '@mantine/core'
 import { extractEmailsFromClerk } from '../clerkHelpers'
 import { useEffect, useState } from 'react'
 import { usePostHog } from 'posthog-js/react'
 import { IconFilePlus } from '@tabler/icons-react'
+import { getInitials } from './ChatNavbar'
 
 export function LandingPageHeader({
   forGeneralPurposeNotLandingpage = false,
@@ -360,7 +383,7 @@ const useStyles = createStyles((theme) => ({
   link: {
     // textTransform: 'uppercase',
     fontSize: rem(13),
-    color: '#f1f5f9',
+    color: '#c1c2c5',
     padding: `${theme.spacing.sm} ${theme.spacing.xs}`,
     // margin: '0.35rem',
     fontWeight: 700,
@@ -381,6 +404,37 @@ const useStyles = createStyles((theme) => ({
       borderRadius: '10px', // added to make the square edges round when hovered
       backgroundColor: 'rgba(255, 255, 255, 0.1)', // add a background color when the link is active
       textAlign: 'right', // align the text to the right
+    },
+  },
+  userAvatar: {
+    cursor: 'pointer',
+    backgroundColor: 'hsl(280,100%,70%)',
+    color: 'white',
+    '&:hover': {
+      backgroundColor: 'hsl(280,100%,60%)',
+    },
+  },
+  avatarButton: {
+    cursor: 'pointer',
+    borderRadius: theme.radius.xl,
+    transition: 'background-color 100ms ease',
+    padding: rem(2),
+
+    '&:hover': {
+      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    }
+  },
+  userMenu: {
+    backgroundColor: '#15162c',
+    border: '1px solid hsl(280,100%,70%)',
+    color: '#f1f5f9',
+    padding: rem(4),
+    
+    '.mantine-Menu-item': {
+      padding: `${rem(8)} ${rem(12)}`,
+      '&:hover': {
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      },
     },
   },
 }))

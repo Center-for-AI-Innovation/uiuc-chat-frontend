@@ -61,13 +61,7 @@ const IfCourseExists: NextPage = () => {
         // const permission_str = get_user_permission(courseMetadata, user, router)
         const permission_str = get_user_permission(
           courseMetadata,
-          {
-            isAuthenticated: auth.isAuthenticated,
-            user: {
-              email: auth.user?.profile.email,
-            },
-          },
-          router
+          auth
         )
 
         if (permission_str === 'edit' || permission_str === 'view') {
