@@ -46,11 +46,17 @@ const Home = ({
   course_metadata,
   course_name,
   document_count,
+  link_parameters,
 }: {
   current_email: string
   course_metadata: CourseMetadata | null
   course_name: string
   document_count: number | null
+  link_parameters: {
+    guidedLearning: boolean
+    documentsOnly: boolean
+    systemPromptOnly: boolean
+  }
 }) => {
   // States
   const [isInitialSetupDone, setIsInitialSetupDone] = useState(false)
@@ -333,6 +339,13 @@ const Home = ({
     // Determine the model to use for the new conversation
     const model = selectBestModel(llmProviders)
 
+    // Ensure link parameters are properly set
+    const newLinkParameters = {
+      guidedLearning: link_parameters.guidedLearning || false,
+      documentsOnly: link_parameters.documentsOnly || false,
+      systemPromptOnly: link_parameters.systemPromptOnly || false
+    }
+
     const newConversation: Conversation = {
       id: uuidv4(),
       name: '',
@@ -345,6 +358,7 @@ const Home = ({
       projectName: course_name,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      linkParameters: newLinkParameters
     }
 
     // Only update selectedConversation, don't add to conversations list yet

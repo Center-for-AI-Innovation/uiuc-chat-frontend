@@ -11,15 +11,54 @@ import {
 } from '@/types/chat'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { AnySupportedModel } from '~/utils/modelProviders/LLMProvider'
-import { DEFAULT_SYSTEM_PROMPT, GUIDED_LEARNING_PROMPT } from '@/utils/app/const'
+import { DEFAULT_SYSTEM_PROMPT, GUIDED_LEARNING_PROMPT, DOCUMENT_FOCUS_PROMPT } from '@/utils/app/const'
 import { routeModelRequest } from '~/utils/streamProcessing'
 import { NextRequest, NextResponse } from 'next/server'
 
 import { encodingForModel } from 'js-tiktoken'
+import { v4 as uuidv4 } from 'uuid'
 
-// Extend the Conversation type to include guidedLearning
-interface ConversationWithGuidedLearning extends Conversation {
+// Define interface for URL link parameters
+interface LinkParameters {
   guidedLearning?: boolean
+  documentsOnly?: boolean
+  systemPromptOnly?: boolean
+}
+
+// Helper functions for feature flags
+const isGuidedLearningEnabled = (
+  conversation: Conversation,
+  courseMetadata?: CourseMetadata
+): boolean => {
+  return !!(conversation.linkParameters?.guidedLearning || courseMetadata?.guidedLearning)
+}
+
+const isDocumentsOnlyEnabled = (
+  conversation: Conversation,
+  courseMetadata?: CourseMetadata
+): boolean => {
+  return !!(conversation.linkParameters?.documentsOnly || courseMetadata?.documentsOnly)
+}
+
+const isSystemPromptOnlyEnabled = (
+  conversation: Conversation,
+  courseMetadata?: CourseMetadata
+): boolean => {
+  return !!(conversation.linkParameters?.systemPromptOnly || courseMetadata?.systemPromptOnly)
+}
+
+const shouldAppendGuidedLearningPrompt = (
+  conversation: Conversation,
+  courseMetadata?: CourseMetadata
+): boolean => {
+  return !!(conversation.linkParameters?.guidedLearning && !courseMetadata?.guidedLearning)
+}
+
+const shouldAppendDocumentsOnlyPrompt = (
+  conversation: Conversation,
+  courseMetadata?: CourseMetadata
+): boolean => {
+  return !!(conversation.linkParameters?.documentsOnly && !courseMetadata?.documentsOnly)
 }
 
 const encoding = encodingForModel('gpt-4o')
@@ -29,10 +68,10 @@ export const buildPrompt = async ({
   projectName,
   courseMetadata,
 }: {
-  conversation: ConversationWithGuidedLearning | undefined
+  conversation: Conversation | undefined
   projectName: string
   courseMetadata: CourseMetadata | undefined
-}): Promise<ConversationWithGuidedLearning> => {
+}): Promise<Conversation> => {
   /*
     System prompt -- defined by user. If documents are provided, add the citations instructions to it.
   
@@ -50,9 +89,6 @@ export const buildPrompt = async ({
     throw new Error('Conversation is undefined when building prompt.')
   }
 
-  // Check for guided learning in both course metadata and conversation parameters
-  const isGuidedLearningFromConversation = conversation.guidedLearning && !courseMetadata?.guidedLearning
-
   let remainingTokenBudget = conversation.model.tokenLimit - 1500 // Save space for images, OpenAI's handling, etc.
 
   try {
@@ -68,9 +104,8 @@ export const buildPrompt = async ({
         string | undefined,
       ]
 
-    // Only add GUIDED_LEARNING_PROMPT if guided learning is enabled via conversation but not course-wide
-    const finalSystemPrompt = (systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? '') +
-      (isGuidedLearningFromConversation ? GUIDED_LEARNING_PROMPT : '')
+    // Build the final system prompt with all components
+    const finalSystemPrompt = systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
 
     // Adjust remaining token budget based on the system prompt length
     if (encoding) {
@@ -376,6 +411,7 @@ const _getSystemPrompt = async ({
   courseMetadata: CourseMetadata | undefined
   conversation: Conversation
 }): Promise<string> => {
+  // First get the user defined system prompt
   let userDefinedSystemPrompt: string | undefined | null
   if (courseMetadata?.system_prompt) {
     userDefinedSystemPrompt = courseMetadata.system_prompt
@@ -388,10 +424,35 @@ const _getSystemPrompt = async ({
       })
   }
 
-  // If userDefinedSystemPrompt is null or undefined, use DEFAULT_SYSTEM_PROMPT
+  // Start with either user defined prompt or default
   let systemPrompt = userDefinedSystemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
 
-  // Necessary for math notation. See https://docs.mathjax.org/en/latest/input/tex/index.html
+  // If systemPromptOnly is true, don't add additional prompts except for guided learning and documents only
+  if (isSystemPromptOnlyEnabled(conversation, courseMetadata)) {
+    // Even with systemPromptOnly, we should still add guided learning if enabled locally but not course-wide
+    if (shouldAppendGuidedLearningPrompt(conversation, courseMetadata)) {
+      systemPrompt += GUIDED_LEARNING_PROMPT
+    }
+
+    // Add documents only prompt if enabled via link parameters but not course-wide
+    if (shouldAppendDocumentsOnlyPrompt(conversation, courseMetadata)) {
+      systemPrompt += DOCUMENT_FOCUS_PROMPT
+    }
+
+    return systemPrompt
+  }
+
+  // Add guided learning prompt if enabled via conversation but not course-wide
+  if (shouldAppendGuidedLearningPrompt(conversation, courseMetadata)) {
+    systemPrompt += GUIDED_LEARNING_PROMPT
+  }
+
+  // Add documents only prompt if enabled via link parameters but not course-wide
+  if (shouldAppendDocumentsOnlyPrompt(conversation, courseMetadata)) {
+    systemPrompt += DOCUMENT_FOCUS_PROMPT
+  }
+
+  // Add math notation instructions
   systemPrompt += `\nWhen responding with equations, use MathJax/KaTeX notation. Equations should be wrapped in either:
 
   * Single dollar signs $...$ for inline math
@@ -411,7 +472,7 @@ const _getSystemPrompt = async ({
   } else {
     // Documents are present, combine system prompt with system post prompt
     const systemPostPrompt = getSystemPostPrompt({
-      conversation,
+      conversation: conversation as Conversation,
       courseMetadata: courseMetadata ?? ({} as CourseMetadata),
     })
     return [systemPrompt, systemPostPrompt]
@@ -424,17 +485,16 @@ export const getSystemPostPrompt = ({
   conversation,
   courseMetadata,
 }: {
-  conversation: ConversationWithGuidedLearning
+  conversation: Conversation
   courseMetadata: CourseMetadata
 }): string => {
-  // Check for guided learning in both course metadata and conversation parameters
-  const isGuidedLearning = courseMetadata.guidedLearning || conversation.guidedLearning
-  const { systemPromptOnly, documentsOnly } = courseMetadata
-
-  // If systemPromptOnly is true, return an empty PostPrompt
-  if (systemPromptOnly) {
+  // If systemPromptOnly is true, return an empty string
+  if (isSystemPromptOnlyEnabled(conversation, courseMetadata)) {
     return ''
   }
+
+  const isGuidedLearning = isGuidedLearningEnabled(conversation, courseMetadata)
+  const isDocumentsOnly = isDocumentsOnlyEnabled(conversation, courseMetadata)
 
   // Initialize PostPrompt as an array of strings for easy manipulation
   const PostPromptLines: string[] = []
@@ -449,9 +509,10 @@ Integrate relevant information from these documents, ensuring each reference is 
 
 When quoting directly from a source document, cite with footnotes linked to the document number and page number, if provided. 
 Summarize or paraphrase other relevant information with inline citations, again referencing the document number and page number, if provided.
-If the answer is not in the provided documents, state so.${isGuidedLearning || documentsOnly
-      ? ''
-      : ' Yet always provide as helpful a response as possible to directly answer the question.'
+If the answer is not in the provided documents, state so.${
+      isGuidedLearning || isDocumentsOnly
+        ? ''
+        : ' Yet always provide as helpful a response as possible to directly answer the question.'
     }
 Conclude your response with a LIST of the document titles as clickable placeholders, each linked to its respective document number and page number, if provided.
 Always share page numbers if they were shared with you.
@@ -508,15 +569,19 @@ export const getDefaultPostPrompt = (): string => {
   // Call getSystemPostPrompt with default values
   return getSystemPostPrompt({
     conversation: {
-      id: '',
+      id: uuidv4(),
       name: '',
       messages: [],
       model: {} as AnySupportedModel,
-      prompt: '',
+      prompt: DEFAULT_SYSTEM_PROMPT,
       temperature: 0.7,
       folderId: null,
-      guidedLearning: false
-    } as ConversationWithGuidedLearning,
+      linkParameters: {
+        guidedLearning: false,
+        documentsOnly: false,
+        systemPromptOnly: false
+      }
+    } as Conversation,
     courseMetadata: defaultCourseMetadata,
   })
 }

@@ -311,10 +311,6 @@ export const Chat = memo(
         documentGroups: string[],
         llmProviders: AllLLMProviders,
       ) => {
-        console.log(
-          'handleSend called with model:',
-          selectedConversation?.model,
-        )
         const startOfHandleSend = performance.now()
         setCurrentMessage(message)
         resetMessageStates()
@@ -804,7 +800,7 @@ export const Chat = memo(
             courseMetadata: courseMetadata,
             llmProviders: llmProviders,
             model: selectedConversation.model,
-            skipQueryRewrite: documentCount === 0 || documentCount === null,
+            skipQueryRewrite: documentCount === 0,
           }
           updatedConversation = finalChatBody.conversation!
 

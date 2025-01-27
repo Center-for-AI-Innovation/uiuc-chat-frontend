@@ -5,7 +5,10 @@ import { NextApiRequest, NextApiResponse } from 'next'
 
 export const maxDuration = 60
 
-export const openAIAzureChat = async (chatBody: ChatBody, stream: boolean) => {
+export const openAIAzureChat = async (
+  chatBody: ChatBody,
+  stream: boolean,
+): Promise<any> => {
   // OpenAI's main chat endpoint
   try {
     const { conversation, llmProviders } = chatBody
