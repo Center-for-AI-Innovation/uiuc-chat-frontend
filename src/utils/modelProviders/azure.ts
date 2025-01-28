@@ -19,6 +19,8 @@ export interface AzureModel {
   enabled: boolean
   azureDeploymentModelName: string
   azureDeploymentID?: string // Each deployment has a `model` and  `id`. The deployment ID is needed for making chat requests.
+  default?: boolean
+  temperature?: number
 }
 
 export enum AzureModelID {
@@ -123,6 +125,10 @@ export const getAzureModels = async (
             enabled:
               azureProvider.models?.find((m) => m.id === predefinedModel.id)
                 ?.enabled ?? predefinedModel.enabled,
+            default: azureProvider.models?.find((m) => m.id === predefinedModel.id)
+              ?.default ?? predefinedModel.default,
+            temperature: azureProvider.models?.find((m) => m.id === predefinedModel.id)
+              ?.temperature ?? predefinedModel.temperature, 
           })
         }
         return acc

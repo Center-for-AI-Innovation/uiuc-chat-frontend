@@ -1013,7 +1013,7 @@ const CourseFilesList = ({ files }: CourseFilesListProps) => {
               {/* Download button */}
               <button
                 onClick={() =>
-                  fetchPresignedUrl(file.s3_path).then((url) => {
+                  fetchPresignedUrl(file.s3_path, GetCurrentPageName()).then((url) => {
                     window.open(url as string, '_blank')
                   })
                 }

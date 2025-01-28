@@ -193,7 +193,6 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
           }),
         })
         const data = await response.json()
-        // console.log('data!!!', data)
         setN8nApiKeyTextbox(data.api_key[0].n8n_api_key)
         setN8nApiKey(data.api_key[0].n8n_api_key)
         // return data.success

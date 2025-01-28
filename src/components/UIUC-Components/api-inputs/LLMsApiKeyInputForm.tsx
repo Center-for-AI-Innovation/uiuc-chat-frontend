@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, forwardRef } from 'react'
 import {
   Button,
   Text,
+  Slider,
   Card,
   Flex,
   Title,
@@ -10,23 +11,27 @@ import {
   ActionIcon,
   TextInput,
   Select,
+  Group,
 } from '@mantine/core'
 import Image from 'next/image'
 import { useQueryClient } from '@tanstack/react-query'
-import { useForm, FieldApi } from '@tanstack/react-form'
+import { useForm, type FieldApi } from '@tanstack/react-form'
 import {
   useGetProjectLLMProviders,
   useSetProjectLLMProviders,
 } from '~/hooks/useProjectAPIKeys'
 import {
-  AllLLMProviders,
-  AnthropicProvider,
-  AzureProvider,
-  NCSAHostedProvider,
-  OllamaProvider,
-  OpenAIProvider,
-  ProviderNames,
-  WebLLMProvider,
+  type AllLLMProviders,
+  type AnthropicProvider,
+  type AnySupportedModel,
+  type AzureProvider,
+  type LLMProvider,
+  type NCSAHostedProvider,
+  type OllamaProvider,
+  type OpenAIProvider,
+  type ProviderNames,
+  type WebLLMProvider,
+  type NCSAHostedVLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
 import { notifications } from '@mantine/notifications'
 import {
@@ -46,7 +51,11 @@ import AzureProviderInput from './providers/AzureProviderInput'
 import OllamaProviderInput from './providers/OllamaProviderInput'
 import WebLLMProviderInput from './providers/WebLLMProviderInput'
 import NCSAHostedLLmsProviderInput from './providers/NCSAHostedProviderInput'
-import { getModelLogo, ModelItem } from '~/components/Chat/ModelSelect'
+import { getModelLogo } from '~/components/Chat/ModelSelect'
+import NCSAHostedVLMProviderInput from './providers/NCSAHostedVLMProviderInput'
+import { t } from 'i18next'
+
+const isSmallScreen = false
 
 function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
   return (
@@ -75,10 +84,6 @@ export const APIKeyInput = ({
   useEffect(() => {
     setError(null)
   }, [field.state.value])
-
-  // const handleSubmit = () => {
-  //   field.form.handleSubmit()
-  // }
 
   return (
     <div style={{ position: 'relative', width: '100%' }}>
@@ -114,7 +119,6 @@ export const APIKeyInput = ({
               e.preventDefault()
               field.handleChange('')
               field.form.handleSubmit()
-              console.log('field.state in onclick for delete', field.state)
             }}
             type="submit"
             style={{ marginLeft: '8px' }}
@@ -153,182 +157,236 @@ export const APIKeyInput = ({
   )
 }
 
-interface NewModelDropdownProps {
-  value: string | undefined
-  onChange: (value: string) => void
-  models: {
-    OpenAI?: { id: string; name: string; downloadSize?: string }[]
-    Ollama?: { id: string; name: string; downloadSize?: string }[]
-    Azure?: { id: string; name: string; downloadSize?: string }[]
-    WebLLM?: { id: string; name: string; downloadSize?: string }[]
-    Anthropic?: { id: string; name: string; downloadSize?: string }[]
-  }
+const NewModelDropdown: React.FC<{
+  value: AnySupportedModel
+  onChange: (model: AnySupportedModel) => Promise<void>
+  llmProviders: AllLLMProviders
   isSmallScreen: boolean
-  loadingModelId: string | null
-  state: {
-    webLLMModelIdLoading: {
-      id: string | null
-      isLoading: boolean
-    }
-    // Add other state properties as needed
-  }
-  showWebLLmModels: boolean
-}
+}> = ({ value, onChange, llmProviders, isSmallScreen }) => {
+  // Filter out providers that are not enabled and their models which are disabled
+  const { enabledProvidersAndModels, allModels } = Object.keys(
+    llmProviders,
+  ).reduce(
+    (
+      acc: {
+        enabledProvidersAndModels: Record<string, LLMProvider>
+        allModels: AnySupportedModel[]
+      },
+      key,
+    ) => {
+      const provider = llmProviders[key as keyof typeof llmProviders]
+      if (provider && provider.enabled) {
+        const enabledModels =
+          provider.models?.filter((model: { enabled: any }) => model.enabled) ||
+          []
+        if (enabledModels.length > 0) {
+          // @ts-ignore -- Can't figure out why the types aren't perfect.
+          acc.enabledProvidersAndModels[key as keyof typeof llmProviders] = {
+            ...provider,
+            models: enabledModels,
+          }
+          acc.allModels.push(
+            ...enabledModels.map((model: any) => ({
+              ...model,
+              provider: provider.provider,
+            })),
+          )
+        }
+      }
+      return acc
+    },
+    {
+      enabledProvidersAndModels: {} as Record<string, LLMProvider>,
+      allModels: [] as AnySupportedModel[],
+    },
+  )
+  const selectedModel =
+    allModels.find((model) => model.id === value?.id) || undefined
 
-const NewModelDropdown: React.FC<
-  NewModelDropdownProps & {
-    setLoadingModelId: (id: string | null) => void
-    onChange: (modelId: string) => Promise<void>
-  }
-> = ({
-  value,
-  onChange,
-  models,
-  isSmallScreen,
-  loadingModelId,
-  setLoadingModelId,
-  state,
-  showWebLLmModels,
-}) => {
-    const allModels = [
-      ...(models.Ollama || []).map((model: any) => ({
-        ...model,
-        provider: ProviderNames.Ollama,
-        group: 'NCSA Hosted Models, 100% free',
-      })),
-      ...(models.OpenAI || []).map((model: any) => ({
-        ...model,
-        provider: ProviderNames.OpenAI,
-        group: 'OpenAI',
-      })),
-      ...(models.Anthropic || []).map((model: any) => ({
-        ...model,
-        provider: ProviderNames.Anthropic,
-        group: 'Anthropic',
-      })),
-      ...(models.WebLLM && models.WebLLM.length > 0
-        ? models.WebLLM.map((model: any) => ({
-          ...model,
-          provider: ProviderNames.WebLLM,
-          group: 'Local in Browser LLMs, runs on your device',
-        }))
-        : []),
-    ]
-    const selectedModel = allModels.find((model) => model.id === value)
-
-    return (
-      <>
-        <div
-          tabIndex={0}
-          className="relative flex w-full flex-col items-start px-2"
-        >
-          <Select
-            className="menu z-[50] w-full"
-            size="md"
-            placeholder="Select a model"
-            searchable
-            value={value}
-            onChange={async (modelId: any) => {
-              if (state.webLLMModelIdLoading.isLoading) {
-                setLoadingModelId(modelId)
-                console.log('model id', modelId)
-                console.log('loading model id', loadingModelId)
-                console.log('model is loading', state.webLLMModelIdLoading.id)
-              } else if (!state.webLLMModelIdLoading.isLoading) {
-                setLoadingModelId(null)
-              }
-              await onChange(modelId!)
-            }}
-            data={allModels.map((model: any) => ({
+  return (
+    <>
+      <Select
+        className="menu z-[50] w-full"
+        size="md"
+        placeholder="Select a model"
+        searchable
+        value={value?.id || ''}
+        onChange={async (modelId) => {
+          const selectedModel = allModels.find((model) => model.id === modelId)
+          if (selectedModel) {
+            await onChange(selectedModel)
+          }
+        }}
+        data={Object.values(enabledProvidersAndModels).flatMap(
+          (provider: LLMProvider) =>
+            provider.models?.map((model) => ({
               value: model.id,
               label: model.name,
-              downloadSize: model.downloadSize,
+              // @ts-ignore -- this being missing is fine
+              downloadSize: model?.downloadSize,
               modelId: model.id,
               selectedModelId: value,
-              modelType: model.provider,
-              group: model.group,
+              modelType: provider.provider,
+              group: provider.provider,
+              // @ts-ignore -- this being missing is fine
               vram_required_MB: model.vram_required_MB,
-            }))}
-            itemComponent={(props: any) => (
-              <ModelItem
-                {...props}
-                loadingModelId={loadingModelId}
-                setLoadingModelId={setLoadingModelId}
-                showWebLLmModels={showWebLLmModels}
-              />
-            )}
-            maxDropdownHeight={480}
-            rightSectionWidth="auto"
-            icon={
-              selectedModel ? (
+            })) || [],
+        )}
+        itemComponent={(props) => (
+          <ModelItem {...props} setLoadingModelId={() => {}} />
+        )}
+        maxDropdownHeight={480}
+        rightSectionWidth="auto"
+        icon={
+          selectedModel ? (
+            <Image
+              // @ts-ignore -- this being missing is fine
+              src={getModelLogo(selectedModel.provider)}
+              // @ts-ignore -- this being missing is fine
+              alt={`${selectedModel.provider} logo`}
+              width={20}
+              height={20}
+              style={{ marginLeft: '4px', borderRadius: '4px' }}
+            />
+          ) : null
+        }
+        rightSection={<IconChevronDown size="1rem" className="mr-2" />}
+        classNames={{
+          root: 'w-full',
+          wrapper: 'w-full',
+          input: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'} w-full`,
+          rightSection: 'pointer-events-none',
+          item: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`,
+        }}
+        styles={(theme) => ({
+          input: {
+            backgroundColor: 'rgb(107, 33, 168)',
+            border: 'none',
+            // color: theme.white,
+            // borderRadius: theme.radius.md,
+            // width: '24rem',
+            // [`@media (max-width: 960px)`]: {
+            //   width: '17rem', // Smaller width for small screens
+            // },
+          },
+          dropdown: {
+            backgroundColor: '#1d1f33',
+            border: '1px solid rgba(42,42,120,1)',
+            borderRadius: theme.radius.md,
+            marginTop: '2px',
+            boxShadow: theme.shadows.xs,
+            width: '100%',
+            maxWidth: '100%',
+            position: 'absolute',
+          },
+          item: {
+            backgroundColor: '#1d1f33',
+            borderRadius: theme.radius.md,
+            margin: '2px',
+            '&[data-selected]': {
+              '&': {
+                backgroundColor: 'transparent',
+              },
+              '&:hover': {
+                backgroundColor: 'rgb(107, 33, 168)',
+                color: theme.white,
+              },
+            },
+            '&[data-hovered]': {
+              backgroundColor: 'rgb(107, 33, 168)',
+              color: theme.white,
+            },
+          },
+        })}
+        dropdownPosition="bottom"
+        withinPortal
+      />
+    </>
+  )
+}
+
+interface ModelItemProps extends React.ComponentPropsWithoutRef<'div'> {
+  label: string
+  downloadSize?: string
+  isDownloaded?: boolean
+  modelId: string
+  selectedModelId: string | undefined
+  modelType: string
+  vram_required_MB: number
+}
+
+export const ModelItem = forwardRef<
+  HTMLDivElement,
+  ModelItemProps & {
+    loadingModelId: string | null
+  }
+>(
+  (
+    {
+      label,
+      downloadSize,
+      isDownloaded,
+      modelId,
+      selectedModelId,
+      modelType,
+      vram_required_MB,
+      loadingModelId,
+      ...others
+    }: ModelItemProps & {
+      loadingModelId: string | null
+    },
+    ref,
+  ) => {
+    return (
+      <>
+        <div ref={ref} {...others}>
+          <Group noWrap>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
                 <Image
-                  src={getModelLogo(selectedModel.provider)}
-                  alt={`${selectedModel.provider} logo`}
+                  src={getModelLogo(modelType) || ''}
+                  alt={`${modelType} logo`}
                   width={20}
                   height={20}
-                  style={{ marginLeft: '4px', borderRadius: '4px' }}
+                  style={{ marginRight: '8px', borderRadius: '4px' }}
                 />
-              ) : null
-            }
-            rightSection={<IconChevronDown size="1rem" />}
-            classNames={{
-              root: 'w-full',
-              wrapper: 'w-full',
-              input: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'} w-full`,
-              rightSection: 'pointer-events-none',
-              item: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`,
-            }}
-            styles={(theme: {
-              radius: { md: any }
-              shadows: { xs: any }
-              white: any
-            }) => ({
-              input: {
-                backgroundColor: 'rgb(107, 33, 168)',
-                border: 'none',
-                // color: theme.white,
-                // borderRadius: theme.radius.md,
-                // width: '24rem',
-                // [`@media (max-width: 960px)`]: {
-                //   width: '17rem', // Smaller width for small screens
-                // },
-              },
-              dropdown: {
-                backgroundColor: '#1d1f33',
-                border: '1px solid rgba(42,42,120,1)',
-                borderRadius: theme.radius.md,
-                marginTop: '2px',
-                boxShadow: theme.shadows.xs,
-                width: '100%',
-                maxWidth: '100%',
-                position: 'absolute',
-              },
-              item: {
-                backgroundColor: '#1d1f33',
-                borderRadius: theme.radius.md,
-                margin: '2px',
-                '&[data-selected]': {
-                  '&': {
-                    backgroundColor: 'transparent',
-                  },
-                  '&:hover': {
-                    backgroundColor: 'rgb(107, 33, 168)',
-                    color: theme.white,
-                  },
-                },
-                '&[data-hovered]': {
-                  backgroundColor: 'rgb(107, 33, 168)',
-                  color: theme.white,
-                },
-              },
-            })}
-            dropdownPosition="bottom"
-            withinPortal
-          />
+                {/* {selectedModelId === modelId ? (
+                <IconCircleCheck stroke={2} />
+              ) : (
+                <IconCircleDashed stroke={2} />
+              )} */}
+                <Text size="sm" style={{ marginLeft: '8px' }}>
+                  {label}
+                </Text>
+              </div>
+            </div>
+          </Group>
         </div>
       </>
     )
+  },
+)
+
+export function findDefaultModel(
+  providers: AllLLMProviders,
+): (AnySupportedModel & { provider: ProviderNames }) | undefined {
+  // console.log('providers inside', providers)
+  for (const providerKey in providers) {
+    const provider = providers[providerKey as keyof typeof providers]
+    if (provider && provider.models) {
+      const currentDefaultModel = provider.models.find(
+        (model) => model.default === true,
+      )
+      if (currentDefaultModel) {
+        return {
+          ...currentDefaultModel,
+          provider: providerKey as ProviderNames,
+        }
+      }
+    }
   }
+  return undefined
+}
 
 export default function APIKeyInputForm() {
   const projectName = GetCurrentPageName()
@@ -349,10 +407,6 @@ export default function APIKeyInputForm() {
     }
   }, [llmProviders])
 
-  // TODO: TEMP HACK
-  const defaultModel = 'tmp' // don't default... stay undefined
-  const defaultTemp = 1.0 // default to 0.1
-
   useEffect(() => {
     // handle errors
     if (isErrorLLMProviders) {
@@ -366,13 +420,93 @@ export default function APIKeyInputForm() {
   }, [isErrorLLMProviders])
 
   const mutation = useSetProjectLLMProviders(queryClient)
+
+  const setDefaultModelAndUpdateProviders = (
+    newDefaultModel: AnySupportedModel & { provider: ProviderNames },
+  ) => {
+    // Update the llmProviders state
+    form.setFieldValue(
+      'providers',
+      (prevProviders: AllLLMProviders | undefined) => {
+        if (!prevProviders) return prevProviders
+        const updatedProviders = { ...prevProviders }
+
+        // Reset default for all models
+        Object.keys(updatedProviders).forEach((providerKey) => {
+          const provider =
+            updatedProviders[providerKey as keyof AllLLMProviders]
+          if (provider && provider.models) {
+            provider.models = provider.models.map((model) => ({
+              ...model,
+              default: false,
+            }))
+          }
+        })
+
+        // Set the new default model
+        const provider = updatedProviders[newDefaultModel.provider]
+        if (provider && provider.models) {
+          const modelIndex = provider.models.findIndex(
+            (model) => model.id === newDefaultModel.id,
+          )
+          if (modelIndex !== -1) {
+            ;(provider.models as any[])[modelIndex] = {
+              ...(provider.models as any[])[modelIndex],
+              default: true,
+            }
+          }
+        }
+
+        newDefaultModel.default = true
+        return updatedProviders
+      },
+    )
+  }
+
+  const updateDefaultModelTemperature = (newTemperature: number) => {
+    // Update the llmProviders state
+    form.setFieldValue(
+      'providers',
+      (prevProviders: AllLLMProviders | undefined) => {
+        let currdefaultModel
+        if (prevProviders) {
+          currdefaultModel = findDefaultModel(prevProviders)
+        }
+
+        if (!prevProviders || !currdefaultModel) {
+          return prevProviders
+        }
+
+        const updatedProviders = { ...prevProviders }
+
+        // Update the temperature for the default model
+        const provider = updatedProviders[currdefaultModel.provider]
+        if (provider?.models) {
+          const modelIndex = provider.models.findIndex(
+            (model) => model.default === true,
+          )
+          if (modelIndex !== -1) {
+            const currentModel = provider.models[modelIndex]
+            if (currentModel) {
+              provider.models[modelIndex] = {
+                ...currentModel,
+                temperature: newTemperature,
+              }
+            }
+          }
+        }
+
+        // Update the defaultModel state
+        return updatedProviders
+      },
+    )
+  }
+
   // ------------ </TANSTACK QUERIES> ------------
 
   const form = useForm({
     defaultValues: {
       providers: llmProviders,
-      defaultModel: defaultModel,
-      defaultTemperature: defaultTemp,
     },
     onSubmit: async ({ value }) => {
       const llmProviders = value.providers as AllLLMProviders
@@ -381,15 +515,12 @@ export default function APIKeyInputForm() {
           projectName,
           // queryClient,
           llmProviders,
-          defaultModelID: (value.defaultModel || '').toString(),
-          defaultTemperature: (value.defaultTemperature || '').toString(),
         },
         {
           onSuccess: (data, variables, context) => {
-            // queryClient.invalidateQueries(['projectLLMProviders', projectName])
-            // queryClient.invalidateQueries({
-            //   queryKey: ['projectLLMProviders', projectName],
-            // })
+            queryClient.invalidateQueries({
+              queryKey: ['projectLLMProviders', projectName],
+            })
             showConfirmationToast({
               title: 'Updated LLM providers',
               message: `Now your project's users can use the supplied LLMs!`,
@@ -504,18 +635,6 @@ export default function APIKeyInputForm() {
                             gap: 16,
                           }}
                         >
-                          {/* {isLoadingLLMProviders && (
-                            <Flex
-                              justify="center"
-                              align="center"
-                              className={`${montserrat_heading.variable} font-montserratHeading`}
-                            >
-                              Synchronizing LLM providers… smart settings
-                              inbound! <LoadingSpinner size="sm" />
-                            </Flex>
-                          )} */}
-
-                          {/* {llmProviders && ( */}
                           <>
                             <Title
                               className={`${montserrat_heading.variable} mt-4 font-montserratHeading`}
@@ -537,7 +656,6 @@ export default function APIKeyInputForm() {
                               prices and follow their rules.
                             </Text>
                             <Flex
-                              // direction={{ base: 'column', '130rem': 'row' }} // good for split screen card.
                               direction={{ base: 'column', '75rem': 'row' }}
                               wrap="wrap"
                               justify="space-between"
@@ -545,6 +663,7 @@ export default function APIKeyInputForm() {
                               className="gap-4"
                               w={'100%'}
                             >
+                              {' '}
                               <AnthropicProviderInput
                                 provider={
                                   llmProviders?.Anthropic as AnthropicProvider
@@ -584,7 +703,6 @@ export default function APIKeyInputForm() {
                               Your weights, your rules.
                             </Text>
                             <Flex
-                              // direction={{ base: 'column', '130rem': 'row' }} // good for split screen card.
                               direction={{ base: 'column', '75rem': 'row' }}
                               wrap="wrap"
                               justify="space-between"
@@ -596,6 +714,13 @@ export default function APIKeyInputForm() {
                               <NCSAHostedLLmsProviderInput
                                 provider={
                                   llmProviders?.NCSAHosted as NCSAHostedProvider
+                                }
+                                form={form}
+                                isLoading={isLoadingLLMProviders}
+                              />
+                              <NCSAHostedVLMProviderInput
+                                provider={
+                                  llmProviders?.NCSAHostedVLM as NCSAHostedVLMProvider
                                 }
                                 form={form}
                                 isLoading={isLoadingLLMProviders}
@@ -616,8 +741,6 @@ export default function APIKeyInputForm() {
                               />
                             </Flex>
                           </>
-
-                          {/* } */}
                         </div>
                       </form>
                     </Stack>
@@ -645,19 +768,113 @@ export default function APIKeyInputForm() {
                         </Title>
                         <br />
                         <Text
-                          className={`label ${montserrat_paragraph.className}`}
+                          className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                          size="md"
                         >
-                          You can choose the default model for your chatbot.
+                          Choose the default model for your chatbot. Users can
+                          still override this default to use any of the models
+                          enabled on the left.
                         </Text>
                         <br />
                         <div className="flex justify-center">
-                          <Text
-                            className={`label ${montserrat_paragraph.className}`}
-                            variant="gradient"
-                            gradient={{ from: 'gold', to: 'white', deg: 170 }}
-                          >
-                            Coming Soon...
-                          </Text>
+                          {llmProviders && (
+                            // @ts-ignore - we don't really need this named functionality... gonna skip fixing this.
+                            <form.Field name="defaultModel">
+                              {(field) => (
+                                <NewModelDropdown
+                                  value={
+                                    findDefaultModel(
+                                      llmProviders,
+                                    ) as AnySupportedModel
+                                  }
+                                  onChange={(newDefaultModel) => {
+                                    const modelWithProvider = {
+                                      ...newDefaultModel,
+                                      provider:
+                                        (newDefaultModel as any).provider ||
+                                        findDefaultModel(llmProviders)
+                                          ?.provider,
+                                    }
+                                    field.setValue(modelWithProvider)
+                                    setDefaultModelAndUpdateProviders(
+                                      modelWithProvider as AnySupportedModel & {
+                                        provider: ProviderNames
+                                      },
+                                    )
+                                    field.setValue(modelWithProvider)
+                                    return form.handleSubmit()
+                                  }}
+                                  llmProviders={llmProviders}
+                                  isSmallScreen={isSmallScreen}
+                                />
+                              )}
+                            </form.Field>
+                          )}
+                        </div>
+                        <div className="pt-6"></div>
+                        <div>
+                          {llmProviders && (
+                            // @ts-ignore - we don't really need this named functionality... gonna skip fixing this.
+                            <form.Field name="defaultTemperature">
+                              {(field) => (
+                                <>
+                                  <Text
+                                    size="sm"
+                                    weight={500}
+                                    mb={4}
+                                    className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                  >
+                                    Default Temperature:{' '}
+                                    {
+                                      findDefaultModel(llmProviders)
+                                        ?.temperature
+                                    }
+                                  </Text>
+                                  <Text
+                                    size="xs"
+                                    color="dimmed"
+                                    mt={4}
+                                    className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                  >
+                                    We recommended using 0.1. Higher values
+                                    increase randomness or
+                                    &apos;creativity&apos;, lower force the
+                                    model to stick to its normal behavior.
+                                  </Text>
+                                  <Slider
+                                    value={
+                                      findDefaultModel(llmProviders)
+                                        ?.temperature
+                                    }
+                                    onChange={(newTemperature) => {
+                                      updateDefaultModelTemperature(
+                                        newTemperature,
+                                      )
+                                      field.handleChange(newTemperature)
+                                      form.handleSubmit()
+                                    }}
+                                    min={0}
+                                    max={1}
+                                    step={0.1}
+                                    precision={1}
+                                    marks={[
+                                      { value: 0, label: t('Precise') },
+                                      { value: 0.5, label: t('Neutral') },
+                                      { value: 1, label: t('Creative') },
+                                    ]}
+                                    showLabelOnHover
+                                    color="grape"
+                                    className="m-2"
+                                    size={isSmallScreen ? 'xs' : 'md'}
+                                    classNames={{
+                                      markLabel: `mx-2 text-neutral-300 ${montserrat_paragraph.variable} font-montserratParagraph mt-2 ${isSmallScreen ? 'text-xs' : ''}`,
+                                    }}
+                                  />
+                                  <FieldInfo field={field} />
+                                </>
+                              )}
+                            </form.Field>
+                          )}
                         </div>
                         <div className="pt-2" />
                       </div>
@@ -742,3 +959,4 @@ export const showConfirmationToast = ({
     loading: false,
   })
 }
+ModelItem.displayName = 'ModelItem'

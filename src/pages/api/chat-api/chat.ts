@@ -37,6 +37,7 @@ import {
 import { fetchEnabledDocGroups } from '~/utils/dbUtils'
 import { buildPrompt } from '~/app/utils/buildPromptUtils'
 import { AuthContextProps } from 'react-oidc-context'
+import { selectBestTemperature } from '~/components/Chat/Temperature'
 
 export const maxDuration = 60
 /**
@@ -234,7 +235,7 @@ export default async function chat(
           (messages.filter((message) => message.role === 'system')[0]
             ?.content as string))
         : DEFAULT_SYSTEM_PROMPT,
-    temperature: temperature || DEFAULT_TEMPERATURE,
+    temperature: selectBestTemperature(undefined, selectedModel, llmProviders),
     folderId: null,
     userEmail: email,
   }

@@ -1,4 +1,3 @@
-
 // src/pages/home/home.tsx
 import { useCallback, useEffect, useRef, useState } from 'react'
 
@@ -40,15 +39,18 @@ import { useUpdateConversation } from '~/hooks/conversationQueries'
 import { FolderType, FolderWithConversation } from '~/types/folder'
 import { useQueryClient } from '@tanstack/react-query'
 import { useCreateFolder } from '~/hooks/folderQueries'
+import { selectBestTemperature } from '~/components/Chat/Temperature'
 
 const Home = ({
   current_email,
   course_metadata,
   course_name,
+  document_count,
 }: {
   current_email: string
   course_metadata: CourseMetadata | null
   course_name: string
+  document_count: number | null
 }) => {
   // States
   const [isInitialSetupDone, setIsInitialSetupDone] = useState(false)
@@ -156,7 +158,7 @@ const Home = ({
   // Use effects for setting up the course metadata and models depending on the course/project
   useEffect(() => {
     // Set model after we fetch available models
-    if (!llmProviders || Object.keys(llmProviders).length === 0) return
+    if (Object.keys(llmProviders).length == 0) return
     const model = selectBestModel(llmProviders)
 
     dispatch({
@@ -337,7 +339,7 @@ const Home = ({
       messages: [],
       model: model,
       prompt: DEFAULT_SYSTEM_PROMPT,
-      temperature: lastConversation?.temperature ?? DEFAULT_TEMPERATURE,
+      temperature: selectBestTemperature(lastConversation, model, llmProviders),
       folderId: null,
       userEmail: current_email || undefined,
       projectName: course_name,
@@ -694,6 +696,7 @@ const Home = ({
                     courseMetadata={course_metadata}
                     courseName={course_name}
                     currentEmail={current_email}
+                    documentCount={document_count}
                   />
                 )}
               </div>

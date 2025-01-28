@@ -23,6 +23,8 @@ export interface WebllmModel {
   tokenLimit: number
   downloadSize: string
   enabled: boolean
+  default?: boolean
+  temperature?: number
 }
 
 export interface WebLLMLoadingState {
@@ -279,6 +281,8 @@ function convertToLocalModels(record: ModelRecord): WebllmModel {
       ? `${(record.vram_required_MB / 1024).toFixed(1)}GB`
       : 'unknown',
     enabled: true, // hard-code all models to be enabled
+    default: record.default,
+    temperature: record.temperature,
   }
 }
 

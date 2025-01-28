@@ -1,4 +1,4 @@
-import { Message, type OpenAIChatMessage } from '@/types/chat'
+import { type OpenAIChatMessage } from '@/types/chat'
 import {
   OpenAIModels,
   type OpenAIModel,
@@ -18,12 +18,14 @@ import {
 } from 'eventsource-parser'
 import { decryptKeyIfNeeded } from '../crypto'
 import {
-  AllLLMProviders,
-  AzureProvider,
-  OpenAIProvider,
+  type AllLLMProviders,
+  type AzureProvider,
+  type NCSAHostedVLMProvider,
+  type OpenAIProvider,
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { AzureModels } from '../modelProviders/azure'
+import { NCSAHostedVLMModels } from '../modelProviders/types/NCSAHostedVLM'
 
 export class OpenAIError extends Error {
   constructor(
@@ -75,6 +77,19 @@ export const OpenAIStream = async (
           url = `${provider!.AzureEndpoint}/openai/deployments/${m.azureDeploymentID}/chat/completions?api-version=${OPENAI_API_VERSION}`
         }
       })
+    } else if (
+      Object.values(NCSAHostedVLMModels).some(
+        (oaiModel) => oaiModel.id === model.id,
+      )
+    ) {
+      // NCSA Hosted VLM
+      provider = llmProviders[
+        ProviderNames.NCSAHostedVLM
+      ] as NCSAHostedVLMProvider
+      // provider.apiKey = await decryptKeyIfNeeded(provider.apiKey!)
+      provider.apiKey = 'non-empty'
+      apiType = ProviderNames.NCSAHostedVLM
+      url = `${process.env.NCSA_HOSTED_VLM_BASE_URL}/chat/completions`
     } else {
       throw new Error(
         'Unsupported OpenAI or Azure configuration. Try a different model, or re-configure your OpenAI/Azure API keys.',
@@ -111,8 +126,8 @@ export const OpenAIStream = async (
       }),
       ...(apiType === ProviderNames.OpenAI &&
         OPENAI_ORGANIZATION && {
-        'OpenAI-Organization': OPENAI_ORGANIZATION,
-      }),
+          'OpenAI-Organization': OPENAI_ORGANIZATION,
+        }),
     },
     method: 'POST',
     body: body,
@@ -132,7 +147,8 @@ export const OpenAIStream = async (
       )
     } else {
       throw new Error(
-        `OpenAI API returned an error: ${decoder.decode(result?.value) || result.statusText
+        `OpenAI API returned an error: ${
+          decoder.decode(result?.value) || result.statusText
         }`,
       )
     }

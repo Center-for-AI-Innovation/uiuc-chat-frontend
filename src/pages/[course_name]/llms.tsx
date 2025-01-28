@@ -1,18 +1,13 @@
 import { type NextPage } from 'next'
-import MakeNomicVisualizationPage from '~/components/UIUC-Components/MakeQueryAnalysisPage'
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 // import { useUser } from '@clerk/nextjs'
 import { useAuth } from 'react-oidc-context'
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
-import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
-import {
-  LoadingPlaceholderForAdminPages,
-  MainPageBackground,
-} from '~/components/UIUC-Components/MainPageBackground'
+import { LoadingPlaceholderForAdminPages } from '~/components/UIUC-Components/MainPageBackground'
 import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
-import { CourseMetadata } from '~/types/courseMetadata'
+import { type CourseMetadata } from '~/types/courseMetadata'
 import APIKeyInputForm from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
 
 const CourseMain: NextPage = () => {
