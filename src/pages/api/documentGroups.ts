@@ -3,7 +3,6 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import posthog from 'posthog-js'
 import { CourseDocument } from 'src/types/courseMaterials'
 // import { getAuth } from '@clerk/nextjs/server'
-import { useAuth } from 'react-oidc-context'
 import {
   addDocumentsToDocGroup,
   fetchDocumentGroups,
@@ -26,6 +25,7 @@ interface RequestBody {
   doc?: CourseDocument
   docGroup?: string
   enabled?: boolean
+  userId?: string 
 }
 
 export default async function handler(
@@ -33,11 +33,10 @@ export default async function handler(
   res: NextApiResponse,
 ) {
   if (req.method === 'POST') {
-    const { action, courseName, doc, docGroup, enabled } =
+    const { action, userId, courseName, doc, docGroup, enabled } =
       req.body as RequestBody
 
     try {
-      const auth = useAuth()
       if (action === 'addDocumentsToDocGroup' && doc) {
         console.log('Adding documents to doc group:', doc)
 
@@ -45,7 +44,7 @@ export default async function handler(
           distinct_id:
             req.headers['x-forwarded-for'] || req.socket.remoteAddress,
           // curr_user_id: await getAuth(req).userId,
-          curr_user_id: auth.user?.profile.sub, 
+          curr_user_id: userId, 
           course_name: courseName,
           doc_readable_filename: doc.readable_filename,
           doc_unique_identifier:
@@ -77,7 +76,7 @@ export default async function handler(
           distinct_id:
             req.headers['x-forwarded-for'] || req.socket.remoteAddress,
           // curr_user_id: await getAuth(req).userId,
-          curr_user_id: auth.user?.profile.sub, 
+          curr_user_id: userId, 
           course_name: courseName,
           doc_readable_filename: doc.readable_filename,
           doc_unique_identifier:
@@ -117,7 +116,7 @@ export default async function handler(
           distinct_id:
             req.headers['x-forwarded-for'] || req.socket.remoteAddress,
           // curr_user_id: await getAuth(req).userId,
-          curr_user_id: auth.user?.profile.sub, 
+          curr_user_id: userId, 
           course_name: courseName,
           doc_readable_filename: doc.readable_filename,
           doc_unique_identifier:

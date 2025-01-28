@@ -1,5 +1,6 @@
 import { QueryClient, useMutation, useQuery } from '@tanstack/react-query'
 import { CourseDocument, DocumentGroup } from '~/types/courseMaterials'
+import { useAuth } from 'react-oidc-context'
 
 export function useGetDocumentGroups(course_name: string) {
   // USAGE:
@@ -9,6 +10,8 @@ export function useGetDocumentGroups(course_name: string) {
   //   isError: isErrorDocumentGroups,
   //   refetch: refetchDocumentGroups,
   // } = getDocumentGroups(course_name)
+  const auth = useAuth()
+  const userId = auth.user?.profile.sub
 
   return useQuery({
     queryKey: ['documentGroups', course_name],
@@ -22,6 +25,7 @@ export function useGetDocumentGroups(course_name: string) {
         body: JSON.stringify({
           action: 'getDocumentGroups',
           courseName: course_name,
+          userId,
         }),
       })
       // console.log('response: ', response)
@@ -38,7 +42,9 @@ export function useGetDocumentGroups(course_name: string) {
 
 async function fetchEnabledDocGroups(
   course_name: string,
+  userId?: string,
 ): Promise<DocumentGroup[]> {
+
   const response = await fetch('/api/documentGroups', {
     method: 'POST',
     headers: {
@@ -47,6 +53,7 @@ async function fetchEnabledDocGroups(
     body: JSON.stringify({
       action: 'fetchEnabledDocGroups',
       courseName: course_name,
+      userId,
     }),
   })
   if (!response.ok) {
@@ -66,10 +73,12 @@ export function useFetchEnabledDocGroups(course_name: string) {
   //   isError: isErrorDocumentGroups,
   //   refetch: refetchDocumentGroups,
   // } = useFetchEnabledDocGroups(course_name)
+  const auth = useAuth()
+  const userId = auth.user?.profile.sub
 
   return useQuery({
     queryKey: ['documentGroups', course_name],
-    queryFn: () => fetchEnabledDocGroups(course_name),
+    queryFn: () => fetchEnabledDocGroups(course_name, userId),
   })
 }
 
@@ -80,6 +89,9 @@ export function useCreateDocumentGroup(
   queryClient: QueryClient,
   page: number,
 ) {
+  const auth = useAuth()
+  const userId = auth.user?.profile.sub
+
   return useMutation({
     mutationFn: async ({ doc_group_name }: { doc_group_name: string }) => {
       const response = await fetch('/api/documentGroups', {
@@ -91,6 +103,7 @@ export function useCreateDocumentGroup(
           action: 'createDocGroup',
           courseName: course_name,
           docGroup: doc_group_name,
+          userId,
         }),
       })
       if (!response.ok) {
@@ -184,6 +197,9 @@ export function useAppendToDocGroup(
   //
   // record, removedGroup,
   // })
+  const auth = useAuth()
+  const userId = auth.user?.profile.sub
+
   return useMutation({
     mutationFn: async ({
       record,
@@ -202,6 +218,7 @@ export function useAppendToDocGroup(
           courseName: course_name,
           doc: record,
           docGroup: appendedGroup,
+          userId,
         }),
       })
       if (!response.ok) {
@@ -298,7 +315,8 @@ export function useRemoveFromDocGroup(
   //   record,
   //   removedGroup,
   // })
-
+  const auth = useAuth()
+  const userId = auth.user?.profile.sub
   return useMutation({
     mutationFn: async ({
       record,
@@ -317,6 +335,7 @@ export function useRemoveFromDocGroup(
           courseName: course_name,
           doc: record,
           docGroup: removedGroup,
+          userId,
         }),
       })
       if (!response.ok) {
@@ -405,6 +424,8 @@ export function useUpdateDocGroup(
   course_name: string,
   queryClient: QueryClient,
 ) {
+  const auth = useAuth()
+  const userId = auth.user?.profile.sub
   return useMutation({
     mutationFn: async ({
       doc_group_obj,
@@ -423,6 +444,7 @@ export function useUpdateDocGroup(
           courseName: course_name,
           docGroup: doc_group_obj.name,
           enabled: enabled,
+          userId,
         }),
       })
       if (!response.ok) {
