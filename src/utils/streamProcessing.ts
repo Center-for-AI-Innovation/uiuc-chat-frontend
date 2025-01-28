@@ -20,6 +20,7 @@ import {
   AnthropicProvider,
   GenericSupportedModel,
   NCSAHostedProvider,
+  NCSAHostedVLMProvider,
   OllamaProvider,
   VisionCapableModels,
 } from '~/utils/modelProviders/LLMProvider'
@@ -31,7 +32,6 @@ import { OpenAIModelID } from './modelProviders/types/openai'
 import { v4 as uuidv4 } from 'uuid'
 import { AzureModelID } from './modelProviders/azure'
 import { AnthropicModelID } from './modelProviders/types/anthropic'
-import { NCSAHostedModelID } from './modelProviders/NCSAHosted'
 import { NextApiRequest, NextApiResponse } from 'next'
 
 export const maxDuration = 60
@@ -64,6 +64,7 @@ export async function processChunkWithStateMachine(
   lastMessage: Message,
   stateMachineContext: { state: State; buffer: string },
   citationLinkCache: Map<number, string>,
+  courseName: string
 ): Promise<string> {
   let { state, buffer } = stateMachineContext
   let processedChunk = ''
@@ -163,6 +164,7 @@ export async function processChunkWithStateMachine(
             buffer + char,
             lastMessage,
             citationLinkCache,
+            courseName,
           )
           buffer = ''
           // console.log('Clearing buffer after citation replacement')
@@ -186,6 +188,7 @@ export async function processChunkWithStateMachine(
             buffer + char,
             lastMessage,
             citationLinkCache,
+            courseName,
           )
           buffer = ''
           // console.log('Clearing buffer after citation page replacement')
@@ -210,6 +213,7 @@ export async function processChunkWithStateMachine(
             buffer,
             lastMessage,
             citationLinkCache,
+            courseName,
           )
           buffer = char
           // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
@@ -226,6 +230,7 @@ export async function processChunkWithStateMachine(
             buffer + char,
             lastMessage,
             citationLinkCache,
+            courseName,
           )
           buffer = ''
           // console.log('Clearing buffer after filename replacement')
@@ -298,6 +303,7 @@ export async function processChunkWithStateMachine(
       buffer,
       lastMessage,
       citationLinkCache,
+      courseName,
     )
     buffer = ''
   }
@@ -572,6 +578,7 @@ export async function handleStreamingResponse(
         lastMessage,
         stateMachineContext,
         citationLinkCache,
+        course_name,
       )
       fullAssistantResponse += decodedChunk
       res.write(decodedChunk)
@@ -584,6 +591,7 @@ export async function handleStreamingResponse(
         lastMessage,
         stateMachineContext,
         citationLinkCache,
+        course_name,
       )
       fullAssistantResponse += finalChunk
       res.write(finalChunk)
@@ -632,6 +640,7 @@ async function processResponseData(
       lastMessage,
       stateMachineContext,
       citationLinkCache,
+      course_name,
     )
     await updateConversationInDatabase(conversation, course_name, req)
     return processedData
@@ -797,21 +806,23 @@ export const getOpenAIKey = (
   return key
 }
 
-import { POST as ollamaPost } from '@/app/api/chat/ollama/route'
 import { runOllamaChat } from '~/app/utils/ollama'
 import { openAIAzureChat } from './modelProviders/OpenAIAzureChat'
 import { runAnthropicChat } from '~/app/utils/anthropic'
+import { NCSAHostedVLMModelID } from './modelProviders/types/NCSAHostedVLM'
+import { runVLLM } from '~/app/utils/vllm'
 
 export const routeModelRequest = async (
   chatBody: ChatBody,
   controller?: AbortController,
   baseUrl?: string,
 ): Promise<any> => {
+  console.log('In routeModelRequest: ', chatBody, baseUrl)
   /*  Use this to call the LLM. It will call the appropriate endpoint based on the conversation.model.
       🧠 ADD NEW LLM PROVIDERS HERE 🧠
   */
   const selectedConversation = chatBody.conversation!
-
+  let response: Response
   // Add this check at the beginning of the function
   if (!selectedConversation.model || !selectedConversation.model.id) {
     throw new Error('Conversation model is undefined or missing "id" property.')
@@ -829,17 +840,28 @@ export const routeModelRequest = async (
   })
 
   if (
-    Object.values(NCSAHostedModelID).includes(
+    Object.values(NCSAHostedVLMModelID).includes(
       selectedConversation.model.id as any,
     )
   ) {
     // NCSA Hosted LLMs
-    const newChatBody = chatBody!.llmProviders!.NCSAHosted as NCSAHostedProvider
-    newChatBody.baseUrl = process.env.OLLAMA_SERVER_URL // inject proper baseURL
+    // const url = baseUrl ? `${baseUrl}/api/chat/vlm` : '/api/chat/vlm'
+    // response = await fetch(url, {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
 
-    return await runOllamaChat(
-      chatBody.conversation!,
-      chatBody!.llmProviders!.Ollama as OllamaProvider,
+    //   body: JSON.stringify({
+    //     conversation: selectedConversation,
+    //     // ollamaProvider: newChatBody,
+    //     stream: chatBody.stream,
+    //   }),
+    // })
+    // return response
+    return await runVLLM(
+      selectedConversation,
+      chatBody?.llmProviders?.NCSAHostedVLM as NCSAHostedVLMProvider,
       chatBody.stream,
     )
   } else if (

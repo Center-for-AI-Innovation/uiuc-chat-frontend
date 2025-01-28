@@ -51,7 +51,7 @@ const MakeOldCoursePage = ({
         if (metadata?.banner_image_s3 && metadata.banner_image_s3 !== '') {
           console.log('Getting banner image: ', metadata.banner_image_s3)
           try {
-            const url = await fetchPresignedUrl(metadata.banner_image_s3)
+            const url = await fetchPresignedUrl(metadata.banner_image_s3, course_name)
             setBannerUrl(url as string)
             console.log('Got banner image: ', url)
           } catch (error) {

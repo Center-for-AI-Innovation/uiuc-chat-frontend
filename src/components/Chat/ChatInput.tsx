@@ -46,10 +46,11 @@ import ChatUI, {
   WebllmModel,
   webLLMModels,
 } from '~/utils/modelProviders/WebLLM'
-import { VisionCapableModels } from '~/utils/modelProviders/LLMProvider'
+import { selectBestModel, VisionCapableModels } from '~/utils/modelProviders/LLMProvider'
 import { OpenAIModelID } from '~/utils/modelProviders/types/openai'
 import { UserSettings } from '~/components/Chat/UserSettings'
 import { IconChevronRight } from '@tabler/icons-react'
+import { findDefaultModel } from '../UIUC-Components/api-inputs/LLMsApiKeyInputForm'
 import { showConfirmationToast } from '../UIUC-Components/api-inputs/LLMsApiKeyInputForm'
 
 const montserrat_med = Montserrat({
@@ -95,6 +96,7 @@ export const ChatInput = ({
       messageIsStreaming,
       prompts,
       showModelSettings,
+      llmProviders
     },
 
     dispatch: homeDispatch,
@@ -745,7 +747,7 @@ export const ChatInput = ({
   ): Promise<string> {
     try {
       const uploadedImageUrl = await uploadToS3(file, courseName)
-      const presignedUrl = await fetchPresignedUrl(uploadedImageUrl as string)
+      const presignedUrl = await fetchPresignedUrl(uploadedImageUrl as string, courseName)
       return presignedUrl as string
     } catch (error) {
       console.error('Upload failed for file', file.name, error)
@@ -926,8 +928,8 @@ export const ChatInput = ({
                   bottom: `${textareaRef?.current?.scrollHeight}px`,
                   maxHeight: '400px',
                   overflow: `${textareaRef.current && textareaRef.current.scrollHeight > 400
-                      ? 'auto'
-                      : 'hidden'
+                    ? 'auto'
+                    : 'hidden'
                     }`,
                 }}
                 placeholder={
@@ -995,7 +997,7 @@ export const ChatInput = ({
             onClick={handleTextClick}
             style={{ cursor: 'pointer' }}
           >
-            {selectedConversation?.model?.name}
+            {selectBestModel(llmProviders)?.name}
             {selectedConversation?.model &&
               webLLMModels.some(
                 (m) => m.name === selectedConversation?.model?.name,
