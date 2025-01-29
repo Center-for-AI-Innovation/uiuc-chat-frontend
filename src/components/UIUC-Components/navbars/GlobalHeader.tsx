@@ -10,6 +10,8 @@ import { IconClipboardText, IconFile } from '@tabler/icons-react'
 //   FloatingNotificationInbox,
 // } from '@magicbell/magicbell-react'
 import { useAuth } from 'react-oidc-context'
+import { AuthMenu } from './AuthMenu'
+
 
 export default function Header({ isNavbar = false }: { isNavbar?: boolean }) {
   const { classes } = useStyles();
@@ -101,38 +103,7 @@ export default function Header({ isNavbar = false }: { isNavbar?: boolean }) {
       {/* Signed out users get sign in button */}
       {/* <SignInButton />
       </SignedOut> */}
-      {auth.isAuthenticated ? (
-      <Group spacing={'xs'} style={{ paddingLeft: '.65em', paddingRight: '1em' }}>
-        <Menu
-          position="bottom-end"
-          offset={5}
-        >
-          <Menu.Target>
-          <div className={classes.avatarButton}>
-            <Avatar 
-              size="sm"
-              radius="xl"
-              variant='filled'
-              color="violet"
-            >
-              {getInitials(auth.user?.profile.name || '')}
-            </Avatar>
-            </div>
-          </Menu.Target>
-
-          <Menu.Dropdown>
-            <Menu.Item onClick={() => auth.signoutRedirect()}>
-              Sign Out
-            </Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
-      </Group>
-    ) : (
-      <div>
-        <Link href="/sign-in" >Sign in</Link>
-        <Link href="/sign-up" style={{ marginLeft: '10px' }}>Sign up</Link>
-      </div>
-    )}
+      <AuthMenu />
     </header>
   )
 }
@@ -144,7 +115,6 @@ import { extractEmailsFromClerk } from '../clerkHelpers'
 import { useEffect, useState } from 'react'
 import { usePostHog } from 'posthog-js/react'
 import { IconFilePlus } from '@tabler/icons-react'
-import { getInitials } from './ChatNavbar'
 
 export function LandingPageHeader({
   forGeneralPurposeNotLandingpage = false,
@@ -309,36 +279,7 @@ export function LandingPageHeader({
           </Link>
         </>
 
-        {auth.isAuthenticated ? (
-          <div style={{ all: 'unset' }}>
-            <div className={classes.link} style={{ display: 'flex', alignItems: 'center' }}>
-              <span className={`${montserrat_heading.variable} font-montserratHeading`}>
-                {auth.user?.profile.email}
-              </span>
-              <button
-                onClick={() => void auth.signoutRedirect()}
-                className={classes.link}
-                style={{ marginLeft: '10px' }}
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button
-            onClick={() => {
-              const currentUrl = window.location.href;
-              void auth.signinRedirect({
-                state: JSON.stringify({ redirect: currentUrl })
-              });
-            }}
-            className={classes.link}
-          >
-            <span className={`${montserrat_heading.variable} font-montserratHeading`}>
-              Sign in / Sign up
-            </span>
-          </button>
-        )}
+        <AuthMenu />
       </Group>
     </header >
   )
