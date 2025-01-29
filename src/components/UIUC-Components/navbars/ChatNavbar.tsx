@@ -37,6 +37,7 @@ import { UserSettings } from '../../Chat/UserSettings'
 //   FloatingNotificationInbox,
 // } from '@magicbell/magicbell-react'
 import { usePostHog } from 'posthog-js/react'
+import { AuthMenu } from './AuthMenu'
 
 const styles: Record<string, React.CSSProperties> = {
   logoContainerBox: {
@@ -174,14 +175,6 @@ interface ChatNavbarProps {
   bannerUrl?: string
   isgpt4?: boolean
 }
-
-export const getInitials = (name: string) => {
-  const names = name.split(' ');
-  if (names.length >= 2) {
-    return `${names[0]?.[0] || ''}${names[names.length - 1]?.[0] || ''}`.toUpperCase();
-  }
-  return (names[0]?.[0] || '').toUpperCase();
-};
 
 const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
   const { classes, theme } = useStyles()
@@ -690,47 +683,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                   </button>
                 </SignInButton>
               </SignedOut> */}
-              {auth.isAuthenticated ? (
-                <Menu
-                  position="bottom-end"
-                  offset={5}
-                  classNames={{
-                    dropdown: classes.userMenu
-                  }}
-                >
-                  <Menu.Target>
-                    <Avatar 
-                      size="sm"
-                      radius="xl"
-                      variant='filled'
-                      color="violet"
-                      className={classes.userAvatar}
-                    >
-                      {getInitials(auth.user?.profile.name || '')}
-                    </Avatar>
-                  </Menu.Target>
-
-                  <Menu.Dropdown>
-                    <Menu.Item onClick={() => auth.signoutRedirect()}>
-                      Sign Out
-                    </Menu.Item>
-                  </Menu.Dropdown>
-                </Menu>
-              ) : (
-                <button 
-                  className={classes.link}
-                  onClick={() => auth.signinRedirect()}
-                >
-                  <div
-                    className={`${montserrat_heading.variable} font-montserratHeading`}
-                    style={{ fontSize: '12px' }}
-                  >
-                    <span style={{ whiteSpace: 'nowrap' }}>Sign in / </span>
-                    <span> </span>
-                    <span style={{ whiteSpace: 'nowrap' }}>Sign up</span>
-                  </div>
-                </button>
-              )}
+              <AuthMenu />
             </div>
             {/* </div> */}
             {/* </Flex> */}
