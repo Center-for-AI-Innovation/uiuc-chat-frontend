@@ -32,12 +32,13 @@ import {
   Divider,
 } from '@mantine/core'
 import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
-import { DEFAULT_SYSTEM_PROMPT, GUIDED_LEARNING_PROMPT } from '~/utils/app/const'
+import { DEFAULT_SYSTEM_PROMPT, GUIDED_LEARNING_PROMPT, DOCUMENT_FOCUS_PROMPT } from '~/utils/app/const'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 import { useDisclosure, useMediaQuery } from '@mantine/hooks'
+import { LinkGeneratorModal } from '~/components/Modals/LinkGeneratorModal'
 import {
   IconAlertTriangle,
   IconCheck,
@@ -50,33 +51,21 @@ import {
   IconChevronDown,
   IconChevronUp,
   IconBook,
+  IconLink,
 } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import { useChat } from 'ai/react'
 import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
 import { debounce } from 'lodash'
-import CustomSwitch from '~/components/Switches/CustomSwitch' // Import the CustomSwitch component
-import CustomCopyButton from '~/components/Buttons/CustomCopyButton' // Import the CustomCopyButton component
-import { useDebouncedCallback } from 'use-debounce';
+import CustomSwitch from '~/components/Switches/CustomSwitch'
+import CustomCopyButton from '~/components/Buttons/CustomCopyButton'
+import { useDebouncedCallback } from 'use-debounce'
 
 const montserrat = Montserrat({
   weight: '700',
   subsets: ['latin'],
 })
 
-const DOCUMENT_FOCUS_PROMPT = `
-
-You must strictly adhere to the following rules:
-
-1. Use ONLY information from the provided documents.
-2. If the answer isn't in the documents, state: "The provided documents don't contain this information."
-3. Do not use external knowledge, make assumptions, or infer beyond the documents' content.
-4. Do not answer questions outside the documents' scope.
-
-Your responses must be based solely on the content of the provided documents.
-`
-
-// Add this type to handle partial updates
 type PartialCourseMetadata = {
   [K in keyof CourseMetadata]?: CourseMetadata[K];
 };
@@ -100,6 +89,7 @@ const CourseMain: NextPage = () => {
   const [opened, { close, open }] = useDisclosure(false)
   const [resetModalOpened, { close: closeResetModal, open: openResetModal }] = useDisclosure(false)
   const [llmProviders, setLLMProviders] = useState<any>(null)
+  const [linkGeneratorOpened, { open: openLinkGenerator, close: closeLinkGenerator }] = useDisclosure(false)
 
   useEffect(() => {
     const fetchProviders = async () => {
@@ -907,11 +897,31 @@ Do not include any commentary or explanations. Output only the optimized system 
                               />
                               <Group mt="md" spacing="sm">
                                 <Button
-                                  className={`relative bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                  variant="filled"
+                                  radius="md"
+                                  className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                                   type="button"
                                   onClick={() => {
                                     handleSystemPromptSubmit(baseSystemPrompt)
                                   }}
+                                  sx={(theme) => ({
+                                    backgroundColor: `${theme.colors?.purple?.[8] || '#6d28d9'} !important`,
+                                    border: 'none',
+                                    color: '#fff',
+                                    padding: '10px 20px',
+                                    fontWeight: 600,
+                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    transition: 'all 0.2s ease',
+                                    '&:hover': {
+                                      backgroundColor: `${theme.colors?.purple?.[9] || '#5b21b6'} !important`,
+                                      transform: 'translateY(-1px)',
+                                      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
+                                    },
+                                    '&:active': {
+                                      transform: 'translateY(0)',
+                                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    },
+                                  })}
                                   style={{ minWidth: 'fit-content' }}
                                 >
                                   Update System Prompt
@@ -951,36 +961,30 @@ Do not include any commentary or explanations. Output only the optimized system 
                                     handleSubmitPromptOptimization(e, reload, setMessages)
                                     open()
                                   }}
-                                  className={`relative text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                  style={{
-                                    minWidth: 'fit-content',
-                                    background:
-                                      'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%)',
-                                    transition: 'background 0.3s ease-in-out',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    padding: '0 8px',
-                                    backgroundSize: '100% 100%',
-                                    backgroundRepeat: 'no-repeat',
-                                    boxSizing: 'border-box',
+                                  variant="filled"
+                                  radius="md"
+                                  leftIcon={<IconSparkles stroke={1} />}
+                                  className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                  sx={(theme) => ({
+                                    background: 'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%) !important',
                                     border: 'none',
-                                    outline: 'none',
-                                    backgroundOrigin: 'border-box',
-                                    backgroundClip: 'border-box',
-                                  }}
-                                  onMouseEnter={(e) =>
-                                  (e.currentTarget.style.background =
-                                    'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%)')
-                                  }
-                                  onMouseLeave={(e) =>
-                                  (e.currentTarget.style.background =
-                                    'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%)')
-                                  }
+                                    color: '#fff',
+                                    padding: '10px 20px',
+                                    fontWeight: 600,
+                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    transition: 'all 0.2s ease',
+                                    '&:hover': {
+                                      background: 'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%) !important',
+                                      transform: 'translateY(-1px)',
+                                      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
+                                    },
+                                    '&:active': {
+                                      transform: 'translateY(0)',
+                                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    },
+                                  })}
+                                  style={{ minWidth: 'fit-content' }}
                                 >
-                                  <IconSparkles
-                                    stroke={1}
-                                    style={{ marginRight: '4px' }}
-                                  />
                                   Optimize System Prompt
                                 </Button>
                               </Group>
@@ -1025,7 +1029,7 @@ Do not include any commentary or explanations. Output only the optimized system 
                                   {/* TODO: add the return value if there is no message found
                                     double confirm the handleSystemPromptSubmit */}
                                   <Button
-                                    className="relative m-1 self-end bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600"
+                                    className="relative m-1 self-end bg-purple-800 text-white hover:border-indigo-600"
                                     type="button"
                                     onClick={() => {
                                       const lastMessage =
@@ -1175,250 +1179,262 @@ Do not include any commentary or explanations. Output only the optimized system 
                                 }
                               />
 
-                              {/* Add Guided Learning URL Copy Button - only show when guided learning is off */}
-                              {!guidedLearning && (
-                                <div className="ml-[82px] mt-2">
+                              <CustomSwitch
+                                label="Document-Based References Only"
+                                tooltip="Restricts the AI to use only information from the provided documents. Useful for maintaining accuracy in fields like legal research where external knowledge could be problematic."
+                                checked={documentsOnly}
+                                onChange={(value: boolean) =>
+                                  handleCheckboxChange({ documentsOnly: value })
+                                }
+                              />
+
+                              <CustomSwitch
+                                label="Bypass UIUC.chat&apos;s internal prompting"
+                                tooltip="Internally, we prompt the model to (1) add citations and (2) always be as helpful as possible. You can bypass this for full un-modified control over your bot."
+                                checked={systemPromptOnly}
+                                onChange={(value: boolean) =>
+                                  handleCheckboxChange({ systemPromptOnly: value })
+                                }
+                              />
+
+                              {/* Conditional Button */}
+                              {systemPromptOnly && (
+                                <Flex
+                                  mt="sm"
+                                  direction="column"
+                                  gap="xs"
+                                  className="mt-[-4px] pl-[82px]"
+                                >
                                   <CustomCopyButton
-                                    label="Share Guided Learning Link"
-                                    tooltip="Share this URL with students who would benefit from a guided learning experience. When students use this link, the AI will encourage problem-solving through questions and hints while providing relevant course materials and citations. Students can return to standard mode by using the regular course URL."
-                                    onClick={() => {
-                                      const currentUrl = window.location.origin;
-                                      const chatUrl = `${currentUrl}/${course_name}/chat?guided_learning=true`;
-                                      navigator.clipboard.writeText(chatUrl).then(() => {
-                                        showToastNotification(
-                                          theme,
-                                          'Copied',
-                                          'Guided Learning URL copied to clipboard',
-                                        );
-                                      }).catch((err) => {
-                                        console.error('Could not copy URL: ', err);
-                                        showToastNotification(
-                                          theme,
-                                          'Error Copying',
-                                          'Could not copy URL to clipboard',
-                                          true,
-                                        );
-                                      });
-                                    }}
+                                    label="Copy UIUC.chat&apos;s internal prompt"
+                                    tooltip="You can use and customize our default internal prompting to suit your needs. Note, only the specific citation formatting described will work with our citation &apos;find and replace&apos; system. This provides a solid starting point for defining AI behavior in raw prompt mode."
+                                    onClick={handleCopyDefaultPrompt}
                                   />
-                                </div>
+                                </Flex>
                               )}
-                            </div>
 
-                            <CustomSwitch
-                              label="Document-Based References Only"
-                              tooltip="Restricts the AI to use only information from the provided documents. Useful for maintaining accuracy in fields like legal research where external knowledge could be problematic."
-                              checked={documentsOnly}
-                              onChange={(value: boolean) =>
-                                handleCheckboxChange({ documentsOnly: value })
-                              }
-                            />
-
-                            <CustomSwitch
-                              label="Bypass UIUC.chat&apos;s internal prompting"
-                              tooltip="Internally, we prompt the model to (1) add citations and (2) always be as helpful as possible. You can bypass this for full un-modified control over your bot."
-                              checked={systemPromptOnly}
-                              onChange={(value: boolean) =>
-                                handleCheckboxChange({ systemPromptOnly: value })
-                              }
-                            />
-
-                            {/* Conditional Button */}
-                            {systemPromptOnly && (
-                              <Flex
-                                mt="sm"
-                                direction="column"
-                                gap="xs"
-                                className="mt-[-4px] pl-[82px]"
+                              {/* Reset Button and Modal */}
+                              <Modal
+                                opened={resetModalOpened}
+                                onClose={closeResetModal}
+                                title={
+                                  <Text
+                                    className={`${montserrat_heading.variable} font-montserratHeading`}
+                                    size="lg"
+                                    weight={700}
+                                    gradient={{ from: 'red', to: 'white', deg: 45 }}
+                                    variant="gradient"
+                                  >
+                                    Reset Prompting Settings
+                                  </Text>
+                                }
+                                centered
+                                radius="md"
+                                size="md"
+                                styles={{
+                                  header: {
+                                    backgroundColor: '#15162c',
+                                    borderBottom: '1px solid #2D2F48',
+                                    padding: '20px 24px',
+                                    marginBottom: '16px'
+                                  },
+                                  content: {
+                                    backgroundColor: '#15162c',
+                                    border: '1px solid #2D2F48',
+                                  },
+                                  body: {
+                                    padding: '0 24px 24px 24px',
+                                  },
+                                  title: {
+                                    marginBottom: '0',
+                                  },
+                                  close: {
+                                    marginTop: '4px'
+                                  }
+                                }}
                               >
-                                <CustomCopyButton
-                                  label="Copy UIUC.chat&apos;s internal prompt"
-                                  tooltip="You can use and customize our default internal prompting to suit your needs. Note, only the specific citation formatting described will work with our citation &apos;find and replace&apos; system. This provides a solid starting point for defining AI behavior in raw prompt mode."
-                                  onClick={handleCopyDefaultPrompt}
-                                />
-                              </Flex>
-                            )}
+                                <Flex direction="column" gap="xl" style={{ marginTop: '8px' }}>
+                                  <Flex align="flex-start" gap="md">
+                                    <IconAlertTriangle
+                                      size={24}
+                                      color={theme.colors.red[5]}
+                                      style={{ marginTop: '2px' }}
+                                    />
+                                    <Text
+                                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                      size="sm"
+                                      weight={500}
+                                      style={{ color: 'white', lineHeight: 1.5 }}
+                                    >
+                                      Are you sure you want to reset your system prompt and all behavior settings to their default values?
+                                    </Text>
+                                  </Flex>
 
-                            {/* Reset Button and Modal */}
-                            <Modal
-                              opened={resetModalOpened}
-                              onClose={closeResetModal}
-                              title={
-                                <Text
-                                  className={`${montserrat_heading.variable} font-montserratHeading`}
-                                  size="lg"
-                                  weight={700}
-                                  gradient={{ from: 'red', to: 'white', deg: 45 }}
-                                  variant="gradient"
+                                  <Divider style={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+
+                                  <div>
+                                    <Text
+                                      size="sm"
+                                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                      weight={600}
+                                      style={{ color: '#D1D1D1', marginBottom: '12px' }}
+                                    >
+                                      This action will:
+                                    </Text>
+                                    <List
+                                      size="sm"
+                                      spacing="sm"
+                                      style={{ color: '#D1D1D1' }}
+                                      icon={
+                                        <div
+                                          style={{
+                                            width: '6px',
+                                            height: '6px',
+                                            borderRadius: '50%',
+                                            backgroundColor: 'hsl(0,100%,70%)',
+                                            marginTop: '8px'
+                                          }}
+                                        />
+                                      }
+                                    >
+                                      <List.Item>Restore the system prompt to the default template</List.Item>
+                                      <List.Item>Disable Guided Learning, Document-Only mode, and other custom settings</List.Item>
+                                    </List>
+                                  </div>
+
+                                  <Text
+                                    size="sm"
+                                    style={{ color: '#D1D1D1' }}
+                                    className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                  >
+                                    This cannot be undone. Please confirm you wish to proceed.
+                                  </Text>
+
+                                  <Group position="right" mt="md">
+                                    <Button
+                                      variant="outline"
+                                      color="gray"
+                                      radius="md"
+                                      onClick={closeResetModal}
+                                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                      styles={(theme) => ({
+                                        root: {
+                                          borderColor: theme.colors.gray[6],
+                                          color: '#fff',
+                                          '&:hover': {
+                                            backgroundColor: theme.colors.gray[8],
+                                          },
+                                        },
+                                      })}
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      variant="filled"
+                                      color="red"
+                                      radius="md"
+                                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                      sx={(theme) => ({
+                                        backgroundColor: `${theme.colors.red[8]} !important`,
+                                        border: 'none',
+                                        color: '#fff',
+                                        padding: '10px 20px',
+                                        fontWeight: 600,
+                                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                        transition: 'all 0.2s ease',
+                                        '&:hover': {
+                                          backgroundColor: `${theme.colors.red[9]} !important`,
+                                          transform: 'translateY(-1px)',
+                                          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
+                                        },
+                                        '&:active': {
+                                          transform: 'translateY(0)',
+                                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                        },
+                                      })}
+                                      onClick={() => {
+                                        resetSystemPrompt();
+                                        closeResetModal();
+                                      }}
+                                    >
+                                      Confirm
+                                    </Button>
+                                  </Group>
+                                </Flex>
+                              </Modal>
+
+                              {/* Reset and Share Link buttons */}
+                              <Flex mt="md" justify="flex-start" align="center" gap="md">
+                                <Button
+                                  variant="filled"
+                                  color="red"
+                                  radius="md"
+                                  leftIcon={<IconAlertTriangle size={16} />}
+                                  className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                  sx={(theme) => ({
+                                    backgroundColor: `${theme.colors.red[8]} !important`,
+                                    border: 'none',
+                                    color: '#fff',
+                                    padding: '10px 20px',
+                                    fontWeight: 600,
+                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    transition: 'all 0.2s ease',
+                                    '&:hover': {
+                                      backgroundColor: `${theme.colors.red[9]} !important`,
+                                      transform: 'translateY(-1px)',
+                                      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
+                                    },
+                                    '&:active': {
+                                      transform: 'translateY(0)',
+                                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    },
+                                  })}
+                                  onClick={openResetModal}
                                 >
                                   Reset Prompting Settings
-                                </Text>
-                              }
-                              centered
-                              radius="md"
-                              size="md"
-                              styles={{
-                                header: {
-                                  backgroundColor: '#15162c',
-                                  borderBottom: '1px solid #2D2F48',
-                                  padding: '20px 24px',
-                                  marginBottom: '16px'
-                                },
-                                content: {
-                                  backgroundColor: '#15162c',
-                                  border: '1px solid #2D2F48',
-                                },
-                                body: {
-                                  padding: '0 24px 24px 24px',
-                                },
-                                title: {
-                                  marginBottom: '0',
-                                },
-                                close: {
-                                  marginTop: '4px'
-                                }
-                              }}
-                            >
-                              <Flex direction="column" gap="xl" style={{ marginTop: '8px' }}>
-                                <Flex align="flex-start" gap="md">
-                                  <IconAlertTriangle
-                                    size={24}
-                                    color={theme.colors.red[5]}
-                                    style={{ marginTop: '2px' }}
-                                  />
-                                  <Text
-                                    className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                                    size="sm"
-                                    weight={500}
-                                    style={{ color: 'white', lineHeight: 1.5 }}
-                                  >
-                                    Are you sure you want to reset your system prompt and all behavior settings to their default values?
-                                  </Text>
-                                </Flex>
+                                </Button>
 
-                                <Divider style={{ borderColor: 'rgba(255,255,255,0.1)' }} />
-
-                                <div>
-                                  <Text
-                                    size="sm"
-                                    className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                                    weight={600}
-                                    style={{ color: '#D1D1D1', marginBottom: '12px' }}
-                                  >
-                                    This action will:
-                                  </Text>
-                                  <List
-                                    size="sm"
-                                    spacing="sm"
-                                    style={{ color: '#D1D1D1' }}
-                                    icon={
-                                      <div
-                                        style={{
-                                          width: '6px',
-                                          height: '6px',
-                                          borderRadius: '50%',
-                                          backgroundColor: 'hsl(0,100%,70%)',
-                                          marginTop: '8px'
-                                        }}
-                                      />
-                                    }
-                                  >
-                                    <List.Item>Restore the system prompt to the default template</List.Item>
-                                    <List.Item>Disable Guided Learning, Document-Only mode, and other custom settings</List.Item>
-                                  </List>
-                                </div>
-
-                                <Text
-                                  size="sm"
-                                  style={{ color: '#D1D1D1' }}
+                                <Button
+                                  variant="filled"
+                                  radius="md"
+                                  leftIcon={<IconLink size={16} />}
+                                  onClick={openLinkGenerator}
                                   className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                                >
-                                  This cannot be undone. Please confirm you wish to proceed.
-                                </Text>
-
-                                <Group position="right" mt="md">
-                                  <Button
-                                    variant="outline"
-                                    color="gray"
-                                    radius="md"
-                                    onClick={closeResetModal}
-                                    className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                                    styles={(theme) => ({
-                                      root: {
-                                        borderColor: theme.colors.gray[6],
-                                        color: '#fff',
-                                        '&:hover': {
-                                          backgroundColor: theme.colors.gray[8],
-                                        },
-                                      },
-                                    })}
-                                  >
-                                    Cancel
-                                  </Button>
-                                  <Button
-                                    variant="filled"
-                                    color="red"
-                                    radius="md"
-                                    className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                                    sx={(theme) => ({
-                                      backgroundColor: `${theme.colors.red[8]} !important`,
-                                      border: 'none',
-                                      color: '#fff',
-                                      padding: '10px 20px',
-                                      fontWeight: 600,
-                                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-                                      transition: 'all 0.2s ease',
-                                      '&:hover': {
-                                        backgroundColor: `${theme.colors.red[9]} !important`,
-                                        transform: 'translateY(-1px)',
-                                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
-                                      },
-                                      '&:active': {
-                                        transform: 'translateY(0)',
-                                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-                                      },
-                                    })}
-                                    onClick={() => {
-                                      resetSystemPrompt();
-                                      closeResetModal();
-                                    }}
-                                  >
-                                    Confirm
-                                  </Button>
-                                </Group>
-                              </Flex>
-                            </Modal>
-
-                            <Flex mt="md" justify="flex-start">
-                              <Button
-                                variant="filled"
-                                color="red"
-                                radius="md"
-                                leftIcon={<IconAlertTriangle size={16} />}
-                                className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                                sx={(theme) => ({
-                                  backgroundColor: `${theme.colors.red[8]} !important`,
-                                  border: 'none',
-                                  color: '#fff',
-                                  padding: '10px 20px',
-                                  fontWeight: 600,
-                                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-                                  transition: 'all 0.2s ease',
-                                  '&:hover': {
-                                    backgroundColor: `${theme.colors.red[9]} !important`,
-                                    transform: 'translateY(-1px)',
-                                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
-                                  },
-                                  '&:active': {
-                                    transform: 'translateY(0)',
+                                  sx={(theme) => ({
+                                    background: 'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%) !important',
+                                    border: 'none',
+                                    color: '#fff',
+                                    padding: '10px 20px',
+                                    fontWeight: 600,
                                     boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-                                  },
-                                })}
-                                onClick={openResetModal}
-                              >
-                                Reset Prompting Settings
-                              </Button>
-                            </Flex>
+                                    transition: 'all 0.2s ease',
+                                    '&:hover': {
+                                      background: 'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%) !important',
+                                      transform: 'translateY(-1px)',
+                                      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
+                                    },
+                                    '&:active': {
+                                      transform: 'translateY(0)',
+                                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    },
+                                  })}
+                                >
+                                  Generate Share Link
+                                </Button>
+                              </Flex>
+
+                              {/* Add the Link Generator Modal */}
+                              <LinkGeneratorModal
+                                opened={linkGeneratorOpened}
+                                onClose={closeLinkGenerator}
+                                course_name={course_name}
+                                currentSettings={{
+                                  guidedLearning,
+                                  documentsOnly,
+                                  systemPromptOnly,
+                                }}
+                              />
+                            </div>
                           </Flex>
                         </Flex>
                       </div>
