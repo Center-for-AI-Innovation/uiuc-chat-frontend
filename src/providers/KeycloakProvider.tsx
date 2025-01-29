@@ -10,7 +10,7 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
   const [isMounted, setIsMounted] = useState(false)
   
   const [oidcConfig, setOidcConfig] = useState({
-    authority: process.env.NEXT_PUBLIC_KEYCLOAK_URL + '/realms/myrealm',
+    authority: process.env.NEXT_PUBLIC_KEYCLOAK_URL + "realms/" + process.env.NEXT_PUBLIC_KEYCLOAK_REALM ,
     client_id: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'uiucchat',
     redirect_uri: '',  // Initialize empty, will set in useEffect
     silent_redirect_uri: '',
