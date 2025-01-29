@@ -47,7 +47,7 @@ export default async function handler(
       providerName: ProviderNames,
     ): LLMProvider => ({
       provider: providerName,
-      enabled: false,
+      enabled: true,
       models: [],
     })
 

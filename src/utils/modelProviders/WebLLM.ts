@@ -295,10 +295,10 @@ export const getWebLLMModels = async (
 ): Promise<WebLLMProvider> => {
   webLLMProvider.provider = ProviderNames.WebLLM
   if (!webLLMProvider.models || webLLMProvider.models.length === 0) {
-    // If no models, add all possible models and enable them
+    // If no models, add all models but only enable Llama 3 8b, Phi 3 mini, and Gemma 2b by default
     webLLMProvider.models = webLLMModels.map((model) => ({
       ...model,
-      enabled: true,
+      enabled: ['Llama 3.1 8b Instruct', 'Phi 3 Mini Instruct', 'Gemma 2b'].includes(model.id)
     }))
   } else {
     // Ensure existing models are in the master list and remove any that aren't
