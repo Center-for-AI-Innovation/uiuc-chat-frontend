@@ -40,10 +40,14 @@ export default async function deleteKey(
 
     console.log('Deleting api key for:', userId)
 
+    // const { data, error } = await supabase
+    //   .from('api_keys')
+    //   .update({ is_active: false })
+    //   .match({ user_id: subId })
     const { data, error } = await supabase
       .from('api_keys')
       .update({ is_active: false })
-      .match({ user_id: subId })
+      .match({ [userId.startsWith('user_') ? 'user_id' : 'keycloak_id']: userId })
 
     if (error) {
       console.error('Error deleting API key:', error)

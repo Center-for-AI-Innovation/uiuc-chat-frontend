@@ -389,12 +389,12 @@ export default function Navbar({
     {
       name: <NavText>Dashboard</NavText>,
       icon: <DashboardIcon />,
-      link: `/${course_name}/dashboard`,
+      link: course_name ? `/${course_name}/dashboard` : '/dashboard',  // Add conditional
     },
     {
       name: <NavText>LLMs</NavText>,
       icon: <LLMIcon />,
-      link: `/${course_name}/llms`,
+      link: course_name ? `/${course_name}/llms` : '/llms',  // Add conditional
     },
     {
       name: (
@@ -408,22 +408,22 @@ export default function Navbar({
         </Indicator>
       ),
       icon: <ReportIcon />,
-      link: `/${course_name}/analysis`,
+      link: course_name ? `/${course_name}/analysis` : '/analysis',  // Add conditional
     },
     {
       name: <NavText>Prompting</NavText>,
       icon: <MessageCodeIcon />,
-      link: `/${course_name}/prompt`,
+      link: course_name ? `/${course_name}/prompt` : '/prompt',  // Add conditional
     },
     {
       name: <NavText>Tools</NavText>,
       icon: <ChartDots3Icon />,
-      link: `/${course_name}/tools`,
+      link: course_name ? `/${course_name}/tools` : '/tools',  // Add conditional
     },
     {
       name: <NavText>API</NavText>,
       icon: <ApiIcon />,
-      link: `/${course_name}/api`,
+      link: course_name ? `/${course_name}/api` : '/api',  // Add conditional
     },
   ]
 
