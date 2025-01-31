@@ -5,12 +5,32 @@ interface AuthProviderProps {
   children: ReactNode
 }
 
+const isValidRedirectUrl = (url: string): boolean => {
+  try {
+    // Check if it's a relative URL starting with /
+    if (url.startsWith('/')) {
+      return true;
+    }
+
+    // For absolute URLs, verify they belong to our domain
+    const urlObj = new URL(url);
+    const allowedDomains = [
+      window.location.hostname,
+      process.env.NEXT_PUBLIC_ALLOWED_REDIRECT_DOMAINS?.split(',') || []
+    ].flat();
+
+    return allowedDomains.some(domain => urlObj.hostname === domain);
+  } catch {
+    return false;
+  }
+}
+
 export const KeycloakProvider = ({ children }: AuthProviderProps) => {
   // Add state to track if we're on client side
   const [isMounted, setIsMounted] = useState(false)
-  
+
   const [oidcConfig, setOidcConfig] = useState({
-    authority: process.env.NEXT_PUBLIC_KEYCLOAK_URL + "realms/" + process.env.NEXT_PUBLIC_KEYCLOAK_REALM ,
+    authority: process.env.NEXT_PUBLIC_KEYCLOAK_URL + "realms/" + process.env.NEXT_PUBLIC_KEYCLOAK_REALM,
     client_id: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'uiucchat',
     redirect_uri: '',  // Initialize empty, will set in useEffect
     silent_redirect_uri: '',
@@ -38,7 +58,7 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
         }
 
         console.log('[KeycloakProvider][onSigninCallback] Processing signin callback')
-        
+
         try {
           // Clear the URL parameters first to prevent loops
           console.log('[KeycloakProvider][onSigninCallback] Clearing URL parameters')
@@ -47,15 +67,21 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
             document.title,
             window.location.pathname
           )
-          
+
           // Parse state if it exists
           if (state) {
             try {
               const stateObj = JSON.parse(decodeURIComponent(state))
               const redirectPath = stateObj.redirect || '/'
-              console.log('[KeycloakProvider][onSigninCallback] State parsed:', stateObj)
-              console.log('[KeycloakProvider][onSigninCallback] Redirecting to:', redirectPath)
-              window.location.replace(redirectPath)
+
+              // Validate the redirect URL before using it
+              if (isValidRedirectUrl(redirectPath)) {
+                console.log('[KeycloakProvider][onSigninCallback] Redirecting to validated path:', redirectPath)
+                window.location.replace(redirectPath)
+              } else {
+                console.warn('[KeycloakProvider][onSigninCallback] Invalid redirect path, redirecting to homepage')
+                window.location.replace('/')
+              }
               return
             } catch (parseError) {
               console.error('[KeycloakProvider][onSigninCallback] Error parsing state:', parseError)
@@ -93,7 +119,7 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
     if (typeof window !== 'undefined' && isMounted) {
       const params = new URLSearchParams(window.location.search)
       const isCallback = params.has('code') && params.has('state')
-      
+
       console.log('[KeycloakProvider][useEffect] Current state:', {
         isCallback,
         search: window.location.search,
