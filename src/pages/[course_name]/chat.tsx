@@ -101,23 +101,68 @@ const ChatPage: NextPage = () => {
 
   // UseEffect to check user permissions and fetch user email
   useEffect(() => {
+    // const checkAuthorization = async () => {
+    //   if (!auth.isLoading && router.isReady) {
+    //     const courseName = router.query.course_name as string
+        
+    //     // Redirect to login if not authenticated
+    //     if (!auth.isAuthenticated) {
+    //       const currentPath = encodeURIComponent(router.asPath)
+    //       router.push(`/sign-in?redirect=${currentPath}`)
+    //       return
+    //     }
+
+    //     try {
+    //       // Fetch course metadata
+    //       const metadata = await fetchCourseMetadata(courseName)
+          
+    //       if (!metadata) {
+    //         router.replace(`/new?course_name=${courseName}`)
+    //         return
+    //       }
+
+    //       const permission = get_user_permission(metadata, auth)
+          
+    //       if (permission === 'no_permission') {
+    //         router.replace(`/${courseName}/not_authorized`)
+    //         return
+    //       }
+
+    //       setIsAuthorized(true)
+          
+    //     } catch (error) {
+    //       console.error('Authorization check failed:', error)
+    //       setIsAuthorized(false)
+    //     }
+    //   }
+    // }
+
+    // checkAuthorization()
     const checkAuthorization = async () => {
       if (!auth.isLoading && router.isReady) {
         const courseName = router.query.course_name as string
         
-        // Redirect to login if not authenticated
-        if (!auth.isAuthenticated) {
-          const currentPath = encodeURIComponent(router.asPath)
-          router.push(`/sign-in?redirect=${currentPath}`)
-          return
-        }
-
         try {
           // Fetch course metadata
           const metadata = await fetchCourseMetadata(courseName)
-          
+          console.log(metadata)
           if (!metadata) {
             router.replace(`/new?course_name=${courseName}`)
+            return
+          }
+
+          // Check if course is public
+          if (!metadata.is_private) {
+            setIsAuthorized(true)
+            // Set a default email for public access
+            setCurrentEmail('')
+            return
+          }
+
+          // If course is not public, proceed with normal auth flow
+          if (!auth.isAuthenticated) {
+            const currentPath = encodeURIComponent(router.asPath)
+            router.push(`/sign-in?redirect=${currentPath}`)
             return
           }
 
@@ -129,6 +174,9 @@ const ChatPage: NextPage = () => {
           }
 
           setIsAuthorized(true)
+          if (auth.user?.profile.email) {
+            setCurrentEmail(auth.user.profile.email)
+          }
           
         } catch (error) {
           console.error('Authorization check failed:', error)
@@ -201,9 +249,10 @@ const ChatPage: NextPage = () => {
 
   return (
     <>
-      {!isLoading && currentEmail && courseMetadata && (
+      {/* {!isLoading && currentEmail && courseMetadata && ( */}
+      {!isLoading && (currentEmail || !courseMetadata?.is_private) && courseMetadata && (
         <Home
-          current_email={currentEmail}
+          current_email={currentEmail || ''}
           course_metadata={courseMetadata}
           course_name={courseName}
           document_count={documentCount}
