@@ -39,25 +39,44 @@ export default async function fetchKey(
       userId: decodedPayload.user_id,
       preferred_username: decodedPayload.preferred_username,
       email: decodedPayload.email,
+      clerk_id: decodedPayload.clerk_id,
       // Log all claims to see what's available
       allClaims: decodedPayload
-  })
+    })
 
-    const subId = decodedPayload.sub
-    const userId = decodedPayload.user_id
-    console.log('Decoded user ID:', subId)
+    const keycloak_id = decodedPayload.sub
+    const clerk_id = decodedPayload.clerk_id // Fallback to sub if user_id not present
+    console.log("Keycloak ID:", keycloak_id, "Clerk ID:", clerk_id)
 
-    console.log('Querying Supabase for API key...')
+    // const { data, error } = await supabase
+    //   .from('api_keys')
+    //   .select('key')
+    //   .eq('user_id', subId)
+    //   .eq('is_active', true)
+
+    // First delete any inactive keys for this user
+    const { error: deleteError } = await supabase
+      .from('api_keys')
+      .delete()
+      .or(`user_id.eq."${clerk_id}",keycloak_id.eq."${keycloak_id}"`)
+      .eq('is_active', false)
+
+    if (deleteError) {
+      console.error("Error deleting inactive keys:", deleteError)
+    }
+
+    // Then fetch the remaining (active) key
     const { data, error } = await supabase
       .from('api_keys')
       .select('key')
-      .eq('user_id', subId)
-      .eq('is_active', true)
+      .or(`user_id.eq."${clerk_id}",keycloak_id.eq."${keycloak_id}"`)
 
     console.log('Supabase query result:', {
-      hasData: !!data,
-      recordCount: data?.length,
-      hasError: !!error
+      // hasData: Array.isArray(data) && data.length > 0,
+      data: data,
+      recordCount: Array.isArray(data) ? data.length : 0,
+      hasError: !!error,
+      error
     })
 
     if (error) {

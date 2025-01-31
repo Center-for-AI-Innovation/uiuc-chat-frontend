@@ -28,14 +28,18 @@ export async function validateApiKeyAndRetrieveData(
   } as AuthContextProps;
   // console.log('Validating apiKey', apiKey, ' for course_name', course_name)
   // Attempt to retrieve the user ID associated with the API key from the database.
+  const idColumn = apiKey.startsWith('user_') ? 'user_id' : 'keycloak_id';
+
   const { data, error } = (await supabase
     .from('api_keys')
-    .select('user_id')
+    // .select('user_id')
+    .select(`${idColumn}`)
     .eq('key', apiKey)
     .eq('is_active', true)
-    .single()) as { data: { user_id: string } | null; error: Error | null }
+    // .single()) as { data: { user_id: string } | null; error: Error | null }
+    .single()) as { data: { user_id?: string, keycloak_id?: string } | null; error: Error | null }
 
-  // console.log('data', data)
+  console.log('data', data)
 
   // Determine if the API key is valid based on the absence of errors and presence of data.
   const isValidApiKey = !error && data !== null;
@@ -43,24 +47,30 @@ export async function validateApiKeyAndRetrieveData(
     return { isValidApiKey, authContext };
   }
 
-  // console.log('isValidApiKey', isValidApiKey)
+  console.log('isValidApiKey', isValidApiKey)
   try {
     // Retrieve the full Clerk user object using the user ID.
     // userObject = await clerkClient.users.getUser(data.user_id)
+    const userId = idColumn === 'user_id' ? data.user_id : data.keycloak_id;
+
     const { data: userData, error: userError } = await supabase
-      .from('users')
+      .from('user_entity')
       .select('*')
-      .eq('id', data.user_id)
-      .single()
+      .eq('id', userId)
+
     if (userError) throw userError
+
+    let userRecord = Array.isArray(userData) 
+      ? userData.find(user => !user.id.startsWith('user-')) || userData[0]
+      : userData;
 
     // Construct auth context
     authContext = {
       isAuthenticated: true,
       user: {
         profile: {
-          sub: userData.id,
-          email: userData.email,
+          sub: userRecord.id,
+          email: userRecord.email,
         }
       }
     } as AuthContextProps;
@@ -92,7 +102,7 @@ export async function validateApiKeyAndRetrieveData(
     //   apiKey: apiKey,
     // })
     posthog.capture('api_key_validated', {
-      userId: userData.id,
+      userId: userId,
       apiKey: apiKey,
     })
 

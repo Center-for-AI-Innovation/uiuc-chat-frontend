@@ -45,7 +45,7 @@ export default async function rotateKey(
     const { data: existingKey, error: existingKeyError } = await supabase
       .from('api_keys')
       .select('key')
-      .eq('user_id', subId)
+      .eq(userId.startsWith('user_') ? 'user_id' : 'keycloak_id', userId)
       .eq('is_active', true)
 
     if (existingKeyError) {
@@ -67,7 +67,7 @@ export default async function rotateKey(
     const { error } = await supabase
       .from('api_keys')
       .update({ key: newApiKey, is_active: true, modified_at: new Date() })
-      .match({ user_id: subId })
+      .match({ [userId.startsWith('user_') ? 'user_id' : 'keycloak_id']: userId })
 
     if (error) {
       console.error('Error updating API key:', error)
