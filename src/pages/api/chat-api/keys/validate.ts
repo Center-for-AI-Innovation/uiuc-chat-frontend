@@ -60,7 +60,7 @@ export async function validateApiKeyAndRetrieveData(
 
     if (userError) throw userError
 
-    let userRecord = Array.isArray(userData) 
+    const userRecord = Array.isArray(userData) 
       ? userData.find(user => !user.id.startsWith('user-')) || userData[0]
       : userData;
 
