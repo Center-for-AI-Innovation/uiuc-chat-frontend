@@ -82,7 +82,7 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
       setIsMounted(true)
       setOidcConfig(prev => ({
         ...prev,
-        redirect_uri: window.location.origin + '/sign-in',
+        redirect_uri: window.location.origin, // Update to use root
         silent_redirect_uri: window.location.origin + '/silent-renew',
         post_logout_redirect_uri: window.location.origin
       }))

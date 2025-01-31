@@ -62,16 +62,22 @@ const NotAuthorizedPage: NextPage = () => {
       }
 
       // if (courseMetadata.is_private && !clerk_user.isSignedIn) {
+      // if (courseMetadata.is_private && !auth.isAuthenticated) {
+      //   console.log(
+      //     'User not logged in',
+      //     // clerk_user.isSignedIn,
+      //     // clerk_user.isLoaded,
+      //     auth.isAuthenticated,
+      //     !auth.isLoading,
+      //     course_name,
+      //   )
+      //   router.replace(`/sign-in?${course_name}`)
+      //   return
+      // }
       if (courseMetadata.is_private && !auth.isAuthenticated) {
-        console.log(
-          'User not logged in',
-          // clerk_user.isSignedIn,
-          // clerk_user.isLoaded,
-          auth.isAuthenticated,
-          !auth.isLoading,
-          course_name,
-        )
-        router.replace(`/sign-in?${course_name}`)
+        void auth.signinRedirect({
+          state: JSON.stringify({ redirect: `/${course_name}` })
+        })
         return
       }
 

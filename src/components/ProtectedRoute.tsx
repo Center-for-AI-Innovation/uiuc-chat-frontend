@@ -9,7 +9,10 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (!auth.isLoading && !auth.isAuthenticated) {
       const currentPath = router.asPath
-      void router.push(`/sign-in?redirect=${encodeURIComponent(currentPath)}`)
+      // void router.push(`/sign-in?redirect=${encodeURIComponent(currentPath)}`)
+      void auth.signinRedirect({
+        state: JSON.stringify({ redirect: currentPath })
+      })
     }
   }, [auth.isLoading, auth.isAuthenticated])
 
