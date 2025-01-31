@@ -23,8 +23,10 @@ export const AuthComponent = ({ course_name }: { course_name: string }) => {
   const auth = useAuth()
 
   const handleSignIn = () => {
-    auth.signinRedirect({
-      redirect_uri: window.location.origin + (course_name === 'new' ? '/new' : `/${course_name}/dashboard`)
+    void auth.signinRedirect({
+      state: JSON.stringify({
+        redirect: course_name === 'new' ? '/new' : `/${course_name}/dashboard`
+      })
     })
   }
   return (

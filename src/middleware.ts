@@ -15,18 +15,13 @@ import type { NextRequest } from 'next/server'
 
 const PUBLIC_ROUTES = [
   '/',
-  '/sign-in',
-  '/sign-up',
+  // '/sign-in',
+  // '/sign-up',
   '/silent-renew',
   '/api/(.*)',
   '/:singleLevel([^/]+)',
   '/:singleLevel([^/]+)',
-]
-
-const AUTH_CALLBACK_ROUTES = [
-  '/sign-in',
-  '/sign-up',
-  '/silent-renew'
+  '/:singleLevel([^/]+)/chat',
 ]
 
 // Create a middleware handler that runs before Clerk
@@ -62,27 +57,24 @@ export default async function middleware(request: NextRequest) {
 
   // // Pass both request and event arguments
   // return authMiddleware(request, {} as NextFetchEvent)
+
   const { pathname } = request.nextUrl
 
-  // Add specific handling for maintenance mode API endpoint
-  if (pathname === '/api/UIUC-api/getMaintenanceModeFast') {
-    return NextResponse.redirect(new URL('/', request.url))
-  }
-
-  // Check if this is an auth callback URL
-  const hasAuthCallbackParams = request.nextUrl.searchParams.has('state') &&
-    request.nextUrl.searchParams.has('session_state') &&
-    request.nextUrl.searchParams.has('code')
-
-  // IMPORTANT: Allow ALL auth callback requests to proceed without interference
-  if (hasAuthCallbackParams) {
-    console.log('[Middleware] Allowing auth callback to proceed:', pathname)
+  // Allow auth callbacks to proceed without interference
+  if (request.nextUrl.searchParams.has('state') && 
+      request.nextUrl.searchParams.has('session_state') && 
+      request.nextUrl.searchParams.has('code')) {
     return NextResponse.next()
   }
 
   // Materials Redirect
   const redirectResponse = materialsRedirectMiddleware(request)
   if (redirectResponse) return redirectResponse
+
+  // Add specific handling for maintenance mode API endpoint
+  if (pathname === '/api/UIUC-api/getMaintenanceModeFast') {
+    return NextResponse.redirect(new URL('/', request.url))
+  }
 
   // Allow public routes
   if (PUBLIC_ROUTES.some(route => {
@@ -95,12 +87,20 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // For all other routes, treat as protected course routes
-  const course_name = pathname.split('/')[1]
-  if (course_name === 'sign-in' || course_name === 'sign-up') {
-    // Redirect auth routes to proper auth pages
-    return NextResponse.redirect(new URL(`/${course_name}`, request.url))
+  const courseRoutePattern = /^\/[^\/]+\/.*$/
+  if (courseRoutePattern.test(pathname)) {
+    // Add auth check header for client-side handling
+    const response = NextResponse.next()
+    response.headers.set('x-auth-required', 'true')
+    return response
   }
+
+  // For all other routes, treat as protected course routes
+  // const course_name = pathname.split('/')[1]
+  // if (course_name === 'sign-in' || course_name === 'sign-up') {
+  //   // Redirect auth routes to proper auth pages
+  //   return NextResponse.redirect(new URL(`/${course_name}`, request.url))
+  // }
 
   return NextResponse.next()
 }

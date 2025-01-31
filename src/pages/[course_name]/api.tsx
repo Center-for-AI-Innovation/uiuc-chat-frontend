@@ -80,11 +80,17 @@ const ApiPage: NextPage = () => {
     return <LoadingPlaceholderForAdminPages />
   }
 
+  // if (!auth.user || !auth.isAuthenticated) {
+  //   router.replace('/sign-in')
+  //   return <></>
+  // }
   if (!auth.user || !auth.isAuthenticated) {
-    router.replace('/sign-in')
-    return <></>
+    void auth.signinRedirect({
+      state: JSON.stringify({ redirect: router.asPath })
+    })
+    return null
   }
-
+  
   return (
     <>
       <Navbar course_name={router.query.course_name as string} />
