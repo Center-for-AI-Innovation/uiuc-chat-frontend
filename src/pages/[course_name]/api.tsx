@@ -11,6 +11,7 @@ import { CourseMetadata } from '~/types/courseMetadata'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { Flex } from '@mantine/core'
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
+import { initiateSignIn } from '~/utils/authHelpers'
 
 const ApiPage: NextPage = () => {
   const router = useRouter()
@@ -85,9 +86,7 @@ const ApiPage: NextPage = () => {
   //   return <></>
   // }
   if (!auth.user || !auth.isAuthenticated) {
-    void auth.signinRedirect({
-      state: JSON.stringify({ redirect: router.asPath })
-    })
+    void initiateSignIn(auth, router.asPath)  
     return null
   }
   

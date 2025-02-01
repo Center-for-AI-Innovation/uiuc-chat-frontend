@@ -9,6 +9,7 @@ import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import { CourseMetadata } from '~/types/courseMetadata'
+import { initiateSignIn } from '~/utils/authHelpers'
 
 const NotAuthorizedPage: NextPage = () => {
   const router = useRouter()
@@ -75,9 +76,7 @@ const NotAuthorizedPage: NextPage = () => {
       //   return
       // }
       if (courseMetadata.is_private && !auth.isAuthenticated) {
-        void auth.signinRedirect({
-          state: JSON.stringify({ redirect: `/${course_name}` })
-        })
+        void initiateSignIn(auth, `/${course_name}`)
         return
       }
 

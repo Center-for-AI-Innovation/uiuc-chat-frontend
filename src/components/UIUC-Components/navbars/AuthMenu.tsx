@@ -2,6 +2,7 @@ import { Menu, Avatar, type MantineNumberSize, rem } from '@mantine/core'
 import { useAuth } from 'react-oidc-context'
 import { montserrat_heading } from 'fonts'
 import { createStyles } from '@mantine/core'
+import { initiateSignIn } from '~/utils/authHelpers'
 
 const useStyles = createStyles((theme) => ({
     link: {
@@ -134,7 +135,7 @@ export const AuthMenu = ({ size = 34 }: AuthMenuProps) => {
     return (
         <button
             className={classes.link}
-            onClick={() => auth.signinRedirect()}
+            onClick={() => void initiateSignIn(auth, window.location.pathname)}
         >
             <div
                 className={`${montserrat_heading.variable} font-montserratHeading`}
