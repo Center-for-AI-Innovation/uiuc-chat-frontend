@@ -15,6 +15,7 @@ import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 import { CourseMetadata } from '~/types/courseMetadata'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
+import { initiateSignIn } from '~/utils/authHelpers'
 
 const CourseMain: NextPage = () => {
   const router = useRouter()
@@ -82,7 +83,7 @@ const CourseMain: NextPage = () => {
     if (!auth.isAuthenticated && courseName) {
     // console.debug('User not logged in', isSignedIn, isLoaded, courseName)
     // return <AuthComponent course_name={courseName} />
-    return <button onClick={() => void auth.signinRedirect()}>Log in</button>
+    return <button onClick={() => void initiateSignIn(auth, router.asPath)}>Log in</button>
   }
 
   if (

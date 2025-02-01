@@ -18,16 +18,13 @@ import {
 import { SignInButton } from '@clerk/nextjs'
 import { useAuth } from 'react-oidc-context'
 import { montserrat_heading } from 'fonts'
+import { initiateSignIn } from '~/utils/authHelpers'
 
 export const AuthComponent = ({ course_name }: { course_name: string }) => {
   const auth = useAuth()
 
   const handleSignIn = () => {
-    void auth.signinRedirect({
-      state: JSON.stringify({
-        redirect: course_name === 'new' ? '/new' : `/${course_name}/dashboard`
-      })
-    })
+    void initiateSignIn(auth, course_name === 'new' ? '/new' : `/${course_name}/dashboard`)
   }
   return (
     <>
