@@ -15,8 +15,8 @@ import { useEffect, useRef, useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
-import { SpeedInsights } from "@vercel/speed-insights/next"
-import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next'
+// import { Analytics } from '@vercel/analytics/next';
 
 // Check that PostHog is client-side (used to handle Next.js SSR)
 if (typeof window !== 'undefined') {
@@ -54,7 +54,7 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
       try {
         const response = await fetch('/api/UIUC-api/getMaintenanceModeFast')
         const data = await response.json()
-        console.log("Maintenance mode", data)
+        console.log('Maintenance mode', data)
         setIsMaintenanceMode(data.isMaintenanceMode)
       } catch (error) {
         console.error('Failed to check maintenance mode:', error)
@@ -72,7 +72,7 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
     return (
       <PostHogProvider client={posthog}>
         <SpeedInsights />
-        <Analytics />
+        {/* <Analytics /> */}
         <ClerkProvider
           allowedRedirectOrigins={[
             'https://chat.illinois.edu',

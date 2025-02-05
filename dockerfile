@@ -2,6 +2,9 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
+# Install required build dependencies
+RUN apk add --no-cache python3 py3-pip make g++
+
 # Copy package manifests and install all dependencies (including dev)
 COPY package*.json ./
 RUN npm install
@@ -23,6 +26,8 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/next.config.mjs ./
+COPY --from=builder /app/.env ./
+COPY --from=builder /app/.env.production ./
 
 ENV NODE_ENV=production
 
@@ -31,6 +36,3 @@ EXPOSE 3001
 
 # Start Next.js in production mode
 CMD ["npm", "run", "start"]
-    
-
-# docker-compose up --build
