@@ -6,6 +6,13 @@ import {
 import { v4 as uuidv4 } from 'uuid'
 import { Conversation, Message } from '~/types/chat'
 import { CoreMessage } from 'ai'
+import {
+  type MetadataGenerationResponse,
+  type DocumentStatus,
+  type MetadataDocument,
+  type MetadataField,
+  type MetadataRun,
+} from '~/types/metadata'
 
 // Configuration for runtime environment
 
@@ -281,19 +288,6 @@ interface PresignedPostResponse {
   }
 }
 
-// Types for metadata generation
-export interface MetadataGenerationResponse {
-  run_id: number
-  status: 'started' | 'completed' | 'failed'
-  error?: string
-}
-
-export interface DocumentStatus {
-  document_id: number
-  run_status: 'in_progress' | 'completed' | 'failed'
-  last_error?: string
-}
-
 // Function to generate metadata
 export async function generateMetadata(
   prompt: string,
@@ -325,22 +319,52 @@ export async function getDocumentStatuses(
   documentIds: number[],
   runId: number,
 ): Promise<DocumentStatus[]> {
-  const response = await fetch(`/api/UIUC-api/getDocumentStatuses`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      document_ids: documentIds,
-      run_id: runId,
-    }),
+  // If no document IDs, return empty array
+  if (!documentIds?.length) return []
+
+  const queryParams = new URLSearchParams({
+    run_id: runId.toString(),
+    document_ids: documentIds.join(','),
   })
+
+  const response = await fetch(
+    `/api/UIUC-api/getDocumentStatuses?${queryParams.toString()}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  )
 
   if (!response.ok) {
     throw new Error('Failed to get document statuses')
   }
 
-  return response.json()
+  const data = await response.json()
+  return data.statuses || []
+}
+
+// Function to get metadata history from cedar_runs table
+export async function getMetadataHistory(
+  courseName: string,
+): Promise<MetadataRun[]> {
+  const response = await fetch(
+    `/api/UIUC-api/getMetadataHistory?course_name=${encodeURIComponent(courseName)}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  )
+
+  if (!response.ok) {
+    throw new Error('Failed to get metadata history')
+  }
+
+  const data = await response.json()
+  return data.history || []
 }
 
 // Function to download metadata CSV
@@ -365,12 +389,6 @@ export async function downloadMetadataCSV(runIds: number[]): Promise<Blob> {
   return response.blob()
 }
 
-export interface MetadataDocument {
-  id: number
-  readable_filename: string
-  metadata_status: 'completed' | 'failed' | 'running' | null
-}
-
 // Function to get metadata documents from cedar_documents table
 export async function getMetadataDocuments(
   courseName: string,
@@ -390,16 +408,6 @@ export async function getMetadataDocuments(
   }
 
   return response.json()
-}
-
-export interface MetadataField {
-  document_id: number
-  field_name: string
-  field_value: any
-  confidence_score: number | null
-  extraction_method: string | null
-  run_status: 'in_progress' | 'completed' | 'failed'
-  last_error?: string
 }
 
 export async function getMetadataFields(

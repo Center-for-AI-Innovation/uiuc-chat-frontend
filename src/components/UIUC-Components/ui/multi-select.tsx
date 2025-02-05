@@ -63,7 +63,8 @@ export function MultiSelect({
             role="combobox"
             aria-expanded={open}
             className={cn(
-              'w-full justify-between border-white/10 bg-[#1A1B1E] font-normal text-white hover:bg-[#1A1B1E]/90',
+              'w-full justify-between border-white/10 bg-[#15162c] font-normal text-white hover:bg-[#15162c]/90',
+              open && 'rounded-b-none',
               className,
             )}
             disabled={disabled}
@@ -82,19 +83,19 @@ export function MultiSelect({
         </DropdownMenuTrigger>
         <DropdownMenuContent
           className={cn(
-            'w-full min-w-[var(--radix-dropdown-menu-trigger-width)] border-white/10 bg-[#1A1B1E] p-0',
+            'w-full min-w-[var(--radix-dropdown-menu-trigger-width)] overflow-hidden rounded-t-none border-white/10 bg-[#15162c] p-0',
             'animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
-            'data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2',
+            'data-[side=bottom]:slide-in-from-top-0 data-[side=left]:slide-in-from-right-2',
             'data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
-            'data-[state=closed]:slide-out-to-top-2',
+            'data-[state=closed]:slide-out-to-top-0',
           )}
           align="start"
-          sideOffset={4}
+          sideOffset={0}
           onCloseAutoFocus={(e) => e.preventDefault()}
         >
-          <div className="flex items-center border-b border-white/10 px-3 py-2">
+          <div className="flex items-center border-t border-white/10 px-3 py-2">
             <input
-              className="flex h-8 w-full rounded-md bg-[#1A1B1E] px-3 py-1 text-sm text-white placeholder:text-white/50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-8 w-full rounded-md bg-[#15162c] px-3 py-1 text-sm text-white placeholder:text-white/50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -113,7 +114,7 @@ export function MultiSelect({
                   onCheckedChange={(checked) =>
                     handleSelect(option.value, checked)
                   }
-                  className="hover:bg-grape-600 data-[state=checked]:bg-grape-800 text-white hover:text-white"
+                  className="text-white hover:bg-indigo-600 hover:text-white data-[state=checked]:bg-indigo-800"
                   onSelect={(e) => e.preventDefault()}
                 >
                   {option.label}
