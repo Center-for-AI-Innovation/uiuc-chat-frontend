@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Check, ChevronDown, ChevronUp, X } from 'lucide-react'
+import { ChevronDown, ChevronUp, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from './button'
 import {
@@ -115,7 +115,6 @@ export function MultiSelect({
   }
 
   const handleDropdownClick = (e: React.MouseEvent) => {
-    // Prevent click from bubbling up and closing the dropdown
     e.stopPropagation()
   }
 
