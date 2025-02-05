@@ -580,7 +580,7 @@ export default function MetadataGenerationPage({
                           setPrompt(newValue)
                         }
                       }}
-                      className="min-h-[120px] border-white/10 bg-[#1A1B1E] font-mono text-white placeholder:text-white/50 focus-visible:ring-indigo-500"
+                      className="min-h-[120px] border-white/10 bg-[#15162c] font-mono text-white placeholder:text-white/50 focus-visible:ring-indigo-500"
                     />
                     {prompt && (
                       <CopyButton value={prompt} timeout={2000}>

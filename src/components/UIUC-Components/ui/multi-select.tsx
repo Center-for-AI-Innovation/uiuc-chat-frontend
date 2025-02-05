@@ -35,6 +35,17 @@ export function MultiSelect({
 }: MultiSelectProps) {
   const [open, setOpen] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState('')
+  const searchInputRef = React.useRef<HTMLInputElement>(null)
+
+  React.useEffect(() => {
+    if (open) {
+      // Small delay to ensure the dropdown is fully rendered
+      const timeoutId = setTimeout(() => {
+        searchInputRef.current?.focus()
+      }, 50)
+      return () => clearTimeout(timeoutId)
+    }
+  }, [open])
 
   const filteredOptions = options.filter((option) =>
     option.label.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -95,6 +106,7 @@ export function MultiSelect({
         >
           <div className="flex items-center border-t border-white/10 px-3 py-2">
             <input
+              ref={searchInputRef}
               className="flex h-8 w-full rounded-md bg-[#15162c] px-3 py-1 text-sm text-white placeholder:text-white/50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               placeholder="Search..."
               value={searchQuery}
@@ -111,10 +123,14 @@ export function MultiSelect({
                 <DropdownMenuCheckboxItem
                   key={option.value}
                   checked={selected.includes(option.value)}
-                  onCheckedChange={(checked) =>
+                  onCheckedChange={(checked) => {
                     handleSelect(option.value, checked)
-                  }
-                  className="text-white hover:bg-indigo-600 hover:text-white data-[state=checked]:bg-indigo-800"
+                    // Refocus the search input after selection
+                    setTimeout(() => {
+                      searchInputRef.current?.focus()
+                    }, 0)
+                  }}
+                  className="text-white hover:text-white focus:bg-indigo-600 data-[state=checked]:bg-purple-800"
                   onSelect={(e) => e.preventDefault()}
                 >
                   {option.label}
