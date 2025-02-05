@@ -7,14 +7,7 @@ import { cn } from '~/lib/utils'
 import { Input } from './input'
 import { DataTable } from './data-table'
 import { TableCell } from './table'
-
-export type MetadataRow = {
-  document_id: number
-  document_name: string
-  run_status: 'in_progress' | 'completed' | 'failed'
-  last_error?: string
-  [key: string]: any // For dynamic field columns
-}
+import { type MetadataRow } from '~/types/metadata'
 
 interface DataTableProps {
   data: MetadataRow[]
