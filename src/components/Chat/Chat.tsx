@@ -87,6 +87,40 @@ const DEFAULT_DOCUMENT_GROUP = {
   checked: true,
 }
 export const modelCached: WebllmModel[] = []
+
+// Add this custom hook before the Chat component
+function useVisualViewportHeight() {
+  const [height, setHeight] = useState<number>(window.innerHeight)
+
+  useEffect(() => {
+    const handleResize = () => {
+      // Use visual viewport height if available, otherwise fallback to window inner height
+      const visualViewport = window?.visualViewport
+      const newHeight = visualViewport?.height || window.innerHeight
+      setHeight(newHeight)
+    }
+
+    // Initial setup
+    handleResize()
+
+    // Add event listeners
+    window?.visualViewport?.addEventListener('resize', handleResize)
+    window?.visualViewport?.addEventListener('scroll', handleResize)
+
+    // Fallback for browsers that don't support visualViewport
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      // Cleanup
+      window?.visualViewport?.removeEventListener('resize', handleResize)
+      window?.visualViewport?.removeEventListener('scroll', handleResize)
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [])
+
+  return height
+}
+
 export const Chat = memo(
   ({
     stopConversationRef,
@@ -135,6 +169,8 @@ export const Chat = memo(
       error: toolLoadingError,
       // refetch: refetchTools,
     } = useFetchAllWorkflows(getCurrentPageName())
+
+    const visualViewportHeight = useVisualViewportHeight()
 
     useEffect(() => {
       if (
@@ -1100,7 +1136,6 @@ export const Chat = memo(
 
             try {
               // This is after the response is done streaming
-              // saveConversation(updatedConversation)
               console.debug(
                 'updatedConversation after streaming:',
                 updatedConversation,
@@ -1195,12 +1230,10 @@ export const Chat = memo(
               // Do we need this?
               // saveConversation(updatedConversation)
               const updatedConversations: Conversation[] = conversations.map(
-                (conversation) => {
-                  if (conversation.id === selectedConversation.id) {
-                    return updatedConversation
-                  }
-                  return conversation
-                },
+                (conversation) =>
+                  conversation.id === selectedConversation.id
+                    ? updatedConversation
+                    : conversation,
               )
               if (updatedConversations.length === 0) {
                 updatedConversations.push(updatedConversation)
@@ -1604,11 +1637,20 @@ export const Chat = memo(
           />
           <link rel="icon" href="/favicon.ico" />
         </Head>
-        <div className="overflow-wrap relative flex h-screen w-full flex-col overflow-hidden bg-white dark:bg-[#15162c]">
+        <div
+          className="overflow-wrap relative flex w-full flex-col overflow-hidden bg-white dark:bg-[#15162c]"
+          style={{ height: `${visualViewportHeight}px` }}
+        >
           <div className="justify-center" style={{ height: '40px' }}>
             <ChatNavbar bannerUrl={bannerUrl as string} isgpt4={true} />
           </div>
-          <div className="mt-10 max-w-full flex-grow overflow-y-auto overflow-x-hidden">
+          <div
+            className="mt-10 flex-grow overflow-y-auto overflow-x-hidden"
+            style={{
+              height: `calc(${visualViewportHeight}px - 40px - 162px)`, // Subtract navbar height and chat input height
+              maxHeight: `calc(${visualViewportHeight}px - 40px - 162px)`,
+            }}
+          >
             {modelError ? (
               <ErrorMessageDiv error={modelError} />
             ) : (
@@ -1662,12 +1704,10 @@ export const Chat = memo(
                     </>
                   )}
                 </motion.div>
-                {/* <div className="w-full max-w-[calc(100% - var(--sidebar-width))] mx-auto flex justify-center"> */}
                 <ChatInput
                   stopConversationRef={stopConversationRef}
                   textareaRef={textareaRef}
                   onSend={(message, plugin) => {
-                    // setCurrentMessage(message)
                     handleSend(
                       message,
                       0,

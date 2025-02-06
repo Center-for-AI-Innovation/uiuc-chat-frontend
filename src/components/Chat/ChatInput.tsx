@@ -79,6 +79,42 @@ interface ProcessedImage {
   dataUrl: string
 }
 
+function useVisualViewport() {
+  const [viewport, setViewport] = useState({
+    height: window?.visualViewport?.height || window.innerHeight,
+    offsetTop: window?.visualViewport?.offsetTop || 0,
+  })
+
+  useEffect(() => {
+    const handleResize = () => {
+      const visualViewport = window?.visualViewport
+      setViewport({
+        height: visualViewport?.height || window.innerHeight,
+        offsetTop: visualViewport?.offsetTop || 0,
+      })
+    }
+
+    // Initial setup
+    handleResize()
+
+    // Add event listeners
+    window?.visualViewport?.addEventListener('resize', handleResize)
+    window?.visualViewport?.addEventListener('scroll', handleResize)
+
+    // Fallback for browsers that don't support visualViewport
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      // Cleanup
+      window?.visualViewport?.removeEventListener('resize', handleResize)
+      window?.visualViewport?.removeEventListener('scroll', handleResize)
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [])
+
+  return viewport
+}
+
 export const ChatInput = ({
   onSend,
   onRegenerate,
@@ -130,6 +166,7 @@ export const ChatInput = ({
   const [imageUrls, setImageUrls] = useState<string[]>([])
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const modelSelectContainerRef = useRef<HTMLDivElement | null>(null)
+  const viewport = useVisualViewport()
 
   const handleFocus = () => {
     setIsFocused(true)
@@ -807,7 +844,13 @@ export const ChatInput = ({
 
   return (
     <div
-      className={`absolute bottom-0 left-0 w-full border-transparent bg-transparent pt-6 dark:border-white/20 md:pt-2`}
+      className="absolute bottom-0 left-0 w-full border-transparent bg-transparent pt-6 dark:border-white/20 md:pt-2"
+      style={{
+        // Adjust position when keyboard is shown on mobile
+        bottom: window.innerHeight - viewport.height - viewport.offsetTop,
+        position: 'fixed',
+        zIndex: 100,
+      }}
     >
       <div className="stretch mx-2 mt-4 flex flex-col gap-3 last:mb-2 md:mx-4 md:mt-[52px] md:last:mb-6 lg:mx-auto lg:max-w-3xl">
         {messageIsStreaming && (
