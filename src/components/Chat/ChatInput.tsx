@@ -770,6 +770,41 @@ export const ChatInput = ({
   //   localStorage.setItem('UseMQRetrieval', useMQRetrieval ? 'true' : 'false');
   // }, [useMQRetrieval]);
 
+  // Debounce the resize handler to avoid too frequent updates
+  const handleResize = useCallback(() => {
+    if (textareaRef.current) {
+      // Reset height to auto to recalculate
+      textareaRef.current.style.height = 'auto'
+      // Set new height based on scrollHeight
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+      // Update overflow if needed
+      textareaRef.current.style.overflow =
+        textareaRef.current.scrollHeight > 400 ? 'auto' : 'hidden'
+    }
+  }, [])
+
+  // Add resize observer effect
+  useEffect(() => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+
+    // Create resize observer
+    const resizeObserver = new ResizeObserver(handleResize)
+
+    // Observe both the textarea and window resize events
+    resizeObserver.observe(textarea)
+    window.addEventListener('resize', handleResize)
+
+    // Initial size adjustment
+    handleResize()
+
+    // Cleanup
+    return () => {
+      resizeObserver.disconnect()
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [handleResize])
+
   return (
     <div
       className={`absolute bottom-0 left-0 w-full border-transparent bg-transparent pt-6 dark:border-white/20 md:pt-2`}
@@ -934,18 +969,12 @@ export const ChatInput = ({
                 }`}
                 style={{
                   resize: 'none',
-                  bottom: `${textareaRef?.current?.scrollHeight}px`,
+                  minHeight: '24px',
+                  height: 'auto',
                   maxHeight: '400px',
-                  overflow: `${
-                    textareaRef.current &&
-                    textareaRef.current.scrollHeight > 400
-                      ? 'auto'
-                      : 'hidden'
-                  }`,
+                  overflow: 'hidden',
                 }}
-                placeholder={
-                  t('Type a message or type "/" to select a prompt...') || ''
-                }
+                placeholder={'Message UIUC.chat'}
                 value={content}
                 rows={1}
                 onCompositionStart={() => setIsTyping(true)}
@@ -955,6 +984,39 @@ export const ChatInput = ({
                 onFocus={handleFocus}
                 onBlur={handleBlur}
               />
+              {/* <textarea
+                ref={textareaRef}
+                className={`chat-input m-0 h-[24px] max-h-[400px] w-full resize-none bg-transparent py-2 pl-2 pr-8 text-white outline-none ${isFocused ? 'border-blue-500' : ''
+                  }`}
+                style={{
+                  resize: 'none',
+                  bottom: `${textareaRef?.current?.scrollHeight}px`,
+                  maxHeight: '400px',
+                  overflow: `${textareaRef.current &&
+                    textareaRef.current.scrollHeight > 400
+                    ? 'auto'
+                    : 'hidden'
+                    }`,
+                }}
+                placeholder={'Message UIUC.chat'}
+                value={content}
+                rows={1}
+                onInput={(e) => {
+                  const target = e.target as HTMLTextAreaElement;
+                  // Reset height to auto to get the correct scrollHeight
+                  target.style.height = 'auto';
+                  // Set actual height based on content
+                  target.style.height = `${target.scrollHeight}px`;
+                  // Add scrollbar if content exceeds max height
+                  target.style.overflow = target.scrollHeight > 400 ? 'auto' : 'hidden';
+                }}
+                onCompositionStart={() => setIsTyping(true)}
+                onCompositionEnd={() => setIsTyping(false)}
+                onChange={handleChange}
+                onKeyDown={handleKeyDown}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+              /> */}
             </div>
 
             <button
