@@ -11,7 +11,11 @@ import {
 } from '@/types/chat'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { AnySupportedModel } from '~/utils/modelProviders/LLMProvider'
-import { DEFAULT_SYSTEM_PROMPT, GUIDED_LEARNING_PROMPT, DOCUMENT_FOCUS_PROMPT } from '@/utils/app/const'
+import {
+  DEFAULT_SYSTEM_PROMPT,
+  GUIDED_LEARNING_PROMPT,
+  DOCUMENT_FOCUS_PROMPT,
+} from '@/utils/app/const'
 import { routeModelRequest } from '~/utils/streamProcessing'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -28,37 +32,50 @@ interface LinkParameters {
 // Helper functions for feature flags
 const isGuidedLearningEnabled = (
   conversation: Conversation,
-  courseMetadata?: CourseMetadata
+  courseMetadata?: CourseMetadata,
 ): boolean => {
-  return !!(conversation.linkParameters?.guidedLearning || courseMetadata?.guidedLearning)
+  return !!(
+    conversation.linkParameters?.guidedLearning ||
+    courseMetadata?.guidedLearning
+  )
 }
 
 const isDocumentsOnlyEnabled = (
   conversation: Conversation,
-  courseMetadata?: CourseMetadata
+  courseMetadata?: CourseMetadata,
 ): boolean => {
-  return !!(conversation.linkParameters?.documentsOnly || courseMetadata?.documentsOnly)
+  return !!(
+    conversation.linkParameters?.documentsOnly || courseMetadata?.documentsOnly
+  )
 }
 
 const isSystemPromptOnlyEnabled = (
   conversation: Conversation,
-  courseMetadata?: CourseMetadata
+  courseMetadata?: CourseMetadata,
 ): boolean => {
-  return !!(conversation.linkParameters?.systemPromptOnly || courseMetadata?.systemPromptOnly)
+  return !!(
+    conversation.linkParameters?.systemPromptOnly ||
+    courseMetadata?.systemPromptOnly
+  )
 }
 
 const shouldAppendGuidedLearningPrompt = (
   conversation: Conversation,
-  courseMetadata?: CourseMetadata
+  courseMetadata?: CourseMetadata,
 ): boolean => {
-  return !!(conversation.linkParameters?.guidedLearning && !courseMetadata?.guidedLearning)
+  return !!(
+    conversation.linkParameters?.guidedLearning &&
+    !courseMetadata?.guidedLearning
+  )
 }
 
 const shouldAppendDocumentsOnlyPrompt = (
   conversation: Conversation,
-  courseMetadata?: CourseMetadata
+  courseMetadata?: CourseMetadata,
 ): boolean => {
-  return !!(conversation.linkParameters?.documentsOnly && !courseMetadata?.documentsOnly)
+  return !!(
+    conversation.linkParameters?.documentsOnly && !courseMetadata?.documentsOnly
+  )
 }
 
 const encoding = encodingForModel('gpt-4o')
@@ -176,7 +193,7 @@ export const buildPrompt = async ({
 
       // Add Tool Instructions and outputs
       const toolInstructions =
-        "<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool \`tool name\`...' or 'According to tool \`tool name\`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>"
+        "<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool `tool name`...' or 'According to tool `tool name`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>"
 
       // Add to user prompt sections
       userPromptSections.push(toolInstructions)
@@ -256,13 +273,13 @@ const _buildToolsOutputResults = ({
         toolOutput += `Tool: ${tool.readableName}\nOutput: ${tool.output.text}\n`
       } else if (tool.output && tool.output.imageUrls) {
         toolOutput += `Tool: ${tool.readableName}\nOutput: Images were generated by this tool call and the generated image(s) is/are provided below`
-          // Add image urls to message content
-          ; (latestUserMessage.content as Content[]).push(
-            ...tool.output.imageUrls.map((imageUrl) => ({
-              type: 'tool_image_url' as MessageType,
-              image_url: { url: imageUrl },
-            })),
-          )
+        // Add image urls to message content
+        ;(latestUserMessage.content as Content[]).push(
+          ...tool.output.imageUrls.map((imageUrl) => ({
+            type: 'tool_image_url' as MessageType,
+            image_url: { url: imageUrl },
+          })),
+        )
       } else if (tool.output && tool.output.data) {
         toolOutput += `Tool: ${tool.readableName}\nOutput: ${JSON.stringify(tool.output.data)}\n`
       } else if (tool.error) {
@@ -355,8 +372,9 @@ function _buildQueryTopContext({
     let tokenCounter = 0 // encoding.encode(system_prompt + searchQuery).length
     const validDocs = []
     for (const [index, d] of contexts.entries()) {
-      const docString = `---\n${index + 1}: ${d.readable_filename}${d.pagenumber ? ', page: ' + d.pagenumber : ''
-        }\n${d.text}\n`
+      const docString = `---\n${index + 1}: ${d.readable_filename}${
+        d.pagenumber ? ', page: ' + d.pagenumber : ''
+      }\n${d.text}\n`
       const numTokens = encoding.encode(docString).length
       // console.log(
       //   `token_counter: ${tokenCounter}, num_tokens: ${numTokens}, token_limit: ${tokenLimit}`,
@@ -373,7 +391,8 @@ function _buildQueryTopContext({
     const contextText = validDocs
       .map(
         ({ index, d }) =>
-          `${index + 1}: ${d.readable_filename}${d.pagenumber ? ', page: ' + d.pagenumber : ''
+          `${index + 1}: ${d.readable_filename}${
+            d.pagenumber ? ', page: ' + d.pagenumber : ''
           }\n${d.text}\n`,
       )
       .join(separator)
@@ -502,9 +521,10 @@ export const getSystemPostPrompt = ({
   // The main system prompt
   PostPromptLines.push(
     `Please analyze and respond to the following question using the excerpts from the provided documents. These documents can be pdf files or web pages. Additionally, you may see the output from API calls (called 'tools') to the user's services which, when relevant, you should use to construct your answer. You may also see image descriptions from images uploaded by the user. Prioritize image descriptions, when helpful, to construct your answer.
-Integrate relevant information from these documents, ensuring each reference is linked to the document's number.${isGuidedLearning
-      ? '\n\nIMPORTANT: While in guided learning mode, you must still cite and link to ALL relevant course materials in the exact format described below, even if they contain direct answers. Never filter out or omit relevant materials - your role is to guide students to explore these materials through questions and hints while ensuring they have access to all relevant sources.'
-      : ''
+Integrate relevant information from these documents, ensuring each reference is linked to the document's number.${
+      isGuidedLearning
+        ? '\n\nIMPORTANT: While in guided learning mode, you must still cite and link to ALL relevant course materials in the exact format described below, even if they contain direct answers. Never filter out or omit relevant materials - your role is to guide students to explore these materials through questions and hints while ensuring they have access to all relevant sources.'
+        : ''
     }
 
 When quoting directly from a source document, cite with footnotes linked to the document number and page number, if provided. 
@@ -563,7 +583,7 @@ export const getDefaultPostPrompt = (): string => {
     documentsOnly: false,
     guidedLearning: false,
     systemPromptOnly: false,
-    vector_search_rewrite_disabled: false
+    vector_search_rewrite_disabled: false,
   }
 
   // Call getSystemPostPrompt with default values
@@ -579,8 +599,8 @@ export const getDefaultPostPrompt = (): string => {
       linkParameters: {
         guidedLearning: false,
         documentsOnly: false,
-        systemPromptOnly: false
-      }
+        systemPromptOnly: false,
+      },
     } as Conversation,
     courseMetadata: defaultCourseMetadata,
   })
