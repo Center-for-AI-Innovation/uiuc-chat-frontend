@@ -79,52 +79,6 @@ interface ProcessedImage {
   dataUrl: string
 }
 
-function useVisualViewport() {
-  const [viewport, setViewport] = useState({
-    height: window?.visualViewport?.height || window.innerHeight,
-    offsetTop: window?.visualViewport?.offsetTop || 0,
-  })
-
-  useEffect(() => {
-    const handleResize = () => {
-      const visualViewport = window?.visualViewport
-      setViewport({
-        height: visualViewport?.height || window.innerHeight,
-        offsetTop: visualViewport?.offsetTop || 0,
-      })
-
-      // When keyboard opens (height decreases significantly), scroll the input into view
-      if (visualViewport && visualViewport.height < window.innerHeight * 0.75) {
-        setTimeout(() => {
-          window.scrollTo({
-            top: visualViewport.offsetTop,
-            behavior: 'smooth',
-          })
-        }, 100) // Small delay to ensure DOM updates
-      }
-    }
-
-    // Initial setup
-    handleResize()
-
-    // Add event listeners
-    window?.visualViewport?.addEventListener('resize', handleResize)
-    window?.visualViewport?.addEventListener('scroll', handleResize)
-
-    // Fallback for browsers that don't support visualViewport
-    window.addEventListener('resize', handleResize)
-
-    return () => {
-      // Cleanup
-      window?.visualViewport?.removeEventListener('resize', handleResize)
-      window?.visualViewport?.removeEventListener('scroll', handleResize)
-      window.removeEventListener('resize', handleResize)
-    }
-  }, [])
-
-  return viewport
-}
-
 export const ChatInput = ({
   onSend,
   onRegenerate,
@@ -176,7 +130,6 @@ export const ChatInput = ({
   const [imageUrls, setImageUrls] = useState<string[]>([])
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const modelSelectContainerRef = useRef<HTMLDivElement | null>(null)
-  const viewport = useVisualViewport()
 
   const handleFocus = () => {
     setIsFocused(true)
@@ -863,17 +816,7 @@ export const ChatInput = ({
   }, [handleResize])
 
   return (
-    <div
-      className="absolute bottom-0 left-0 w-full border-transparent bg-transparent pt-6 dark:border-white/20 md:pt-2"
-      style={{
-        // Adjust position when keyboard is shown on mobile
-        bottom: window.innerHeight - viewport.height - viewport.offsetTop,
-        position: 'fixed',
-        zIndex: 100,
-        transform: 'translateZ(0)', // Force GPU acceleration for smoother transitions
-        willChange: 'transform', // Hint to browser about upcoming transforms
-      }}
-    >
+    <div className="fixed inset-x-0 bottom-0 bg-transparent">
       <div className="stretch mx-2 mt-4 flex flex-col gap-3 last:mb-2 md:mx-4 md:mt-[52px] md:last:mb-6 lg:mx-auto lg:max-w-3xl">
         {messageIsStreaming && (
           <button
@@ -898,7 +841,7 @@ export const ChatInput = ({
 
         <div
           ref={chatInputParentContainerRef}
-          className="absolute bottom-0 mx-4 flex w-[80%] flex-col self-center rounded-t-3xl border border-black/10 bg-[#070712] px-4 pb-8 pt-4 shadow-[0_0_10px_rgba(0,0,0,0.10)] dark:border-gray-900/50 dark:text-white dark:shadow-[0_0_15px_rgba(0,0,0,0.10)] md:mx-20 md:w-[70%]"
+          className="mx-4 flex w-[80%] flex-col self-center rounded-t-3xl border border-black/10 bg-[#070712] px-4 pb-8 pt-4 shadow-[0_0_10px_rgba(0,0,0,0.10)] dark:border-gray-900/50 dark:text-white dark:shadow-[0_0_15px_rgba(0,0,0,0.10)] md:mx-20 md:w-[70%]"
         >
           {/* BUTTON 2: Image Icon and Input */}
           {selectedConversation?.model?.id &&

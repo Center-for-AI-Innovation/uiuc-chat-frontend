@@ -88,54 +88,6 @@ const DEFAULT_DOCUMENT_GROUP = {
 }
 export const modelCached: WebllmModel[] = []
 
-function useVisualViewportHeight() {
-  const [height, setHeight] = useState<number>(window.innerHeight)
-  const [keyboardOpen, setKeyboardOpen] = useState(false)
-
-  useEffect(() => {
-    const handleResize = () => {
-      const visualViewport = window?.visualViewport
-      const newHeight = visualViewport?.height || window.innerHeight
-      setHeight(newHeight)
-
-      // Detect if keyboard is open (height is significantly less than window height)
-      const isKeyboardOpen = Boolean(
-        visualViewport && visualViewport.height < window.innerHeight * 0.75,
-      )
-      setKeyboardOpen(isKeyboardOpen)
-
-      // When keyboard opens, ensure content is visible
-      if (isKeyboardOpen) {
-        setTimeout(() => {
-          window.scrollTo({
-            top: visualViewport?.offsetTop || 0,
-            behavior: 'smooth',
-          })
-        }, 100)
-      }
-    }
-
-    // Initial setup
-    handleResize()
-
-    // Add event listeners
-    window?.visualViewport?.addEventListener('resize', handleResize)
-    window?.visualViewport?.addEventListener('scroll', handleResize)
-
-    // Fallback for browsers that don't support visualViewport
-    window.addEventListener('resize', handleResize)
-
-    return () => {
-      // Cleanup
-      window?.visualViewport?.removeEventListener('resize', handleResize)
-      window?.visualViewport?.removeEventListener('scroll', handleResize)
-      window.removeEventListener('resize', handleResize)
-    }
-  }, [])
-
-  return { height, keyboardOpen }
-}
-
 export const Chat = memo(
   ({
     stopConversationRef,
@@ -184,9 +136,6 @@ export const Chat = memo(
       error: toolLoadingError,
       // refetch: refetchTools,
     } = useFetchAllWorkflows(getCurrentPageName())
-
-    const { height: visualViewportHeight, keyboardOpen } =
-      useVisualViewportHeight()
 
     useEffect(() => {
       if (
@@ -1653,40 +1602,11 @@ export const Chat = memo(
           />
           <link rel="icon" href="/favicon.ico" />
         </Head>
-        <div
-          className="overflow-wrap relative flex w-full flex-col overflow-hidden bg-white dark:bg-[#15162c]"
-          style={{
-            height: `${visualViewportHeight}px`,
-            transition: 'height 0.3s ease-out', // Smooth height transitions
-          }}
-        >
-          <div
-            className="justify-center"
-            style={{
-              height: '40px',
-              position: keyboardOpen ? 'absolute' : 'relative', // Hide navbar when keyboard is open
-              top: 0,
-              width: '100%',
-              zIndex: 50,
-              opacity: keyboardOpen ? 0 : 1,
-              transition: 'opacity 0.3s ease-out',
-            }}
-          >
+        <div className="overflow-wrap relative flex h-[100dvh] w-full flex-col overflow-hidden bg-white dark:bg-[#15162c]">
+          <div className="h-[40px] justify-center">
             <ChatNavbar bannerUrl={bannerUrl as string} isgpt4={true} />
           </div>
-          <div
-            className="mt-10 flex-grow overflow-y-auto overflow-x-hidden"
-            style={{
-              height: keyboardOpen
-                ? `${visualViewportHeight - 162}px` // Only subtract chat input height when keyboard is open
-                : `calc(${visualViewportHeight}px - 40px - 162px)`, // Subtract both navbar and chat input height normally
-              maxHeight: keyboardOpen
-                ? `${visualViewportHeight - 162}px`
-                : `calc(${visualViewportHeight}px - 40px - 162px)`,
-              transition: 'height 0.3s ease-out',
-              paddingTop: keyboardOpen ? 0 : undefined, // Remove top padding when keyboard is open
-            }}
-          >
+          <div className="flex-1 overflow-y-auto overflow-x-hidden">
             {modelError ? (
               <ErrorMessageDiv error={modelError} />
             ) : (
@@ -1767,7 +1687,6 @@ export const Chat = memo(
         </div>
       </>
     )
-    Chat.displayName = 'Chat'
   },
 )
 
