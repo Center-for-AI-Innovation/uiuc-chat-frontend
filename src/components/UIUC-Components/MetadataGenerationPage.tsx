@@ -840,67 +840,71 @@ export default function MetadataGenerationPage({
                     <Accordion type="single" collapsible className="w-full">
                       <AccordionItem
                         value="prompt-details"
-                        className="border-none"
+                        className="overflow-hidden rounded-lg bg-[#15162c]"
                       >
-                        <div className="flex items-center justify-between rounded-lg bg-[#15162c] px-4 py-2">
-                          <div className="flex items-center gap-2">
-                            <AccordionTrigger className="p-0 hover:no-underline">
-                              <div className="flex items-center gap-4">
-                                <Text className="text-sm font-medium text-white/90">
-                                  Prompt
+                        <AccordionTrigger className="w-full px-4 py-3 hover:no-underline [&>svg]:hidden [&[data-state=open]>div>div:last-child>svg]:rotate-180">
+                          <div className="flex w-full items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Text
+                                className={`${montserrat_heading.variable} font-montserratHeading text-base text-white/90`}
+                              >
+                                Prompt
+                              </Text>
+                              <CopyButton
+                                value={
+                                  currentRunId
+                                    ? prompt
+                                    : selectedHistoryRun?.prompt || ''
+                                }
+                                timeout={2000}
+                              >
+                                {({ copied, copy }) => (
+                                  <Button
+                                    variant="subtle"
+                                    size="xs"
+                                    className="h-6 p-0 text-white/60 hover:bg-white/10 hover:text-white"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      copy()
+                                    }}
+                                  >
+                                    {copied ? (
+                                      <IconCheck className="h-4 w-4" />
+                                    ) : (
+                                      <IconCopy className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                )}
+                              </CopyButton>
+                            </div>
+                            <div className="flex items-center">
+                              <IconChevronDown className="h-4 w-4 shrink-0 text-white/60 transition-transform duration-200" />
+                            </div>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="border-t border-white/10">
+                            <div className="p-4">
+                              <div className="max-h-[200px] overflow-auto rounded-lg bg-[#1e1f3a] p-4">
+                                <Text
+                                  className={`${montserrat_paragraph.variable} whitespace-pre font-mono font-montserratParagraph text-sm leading-relaxed text-white/90`}
+                                >
+                                  {(() => {
+                                    const promptText = currentRunId
+                                      ? prompt
+                                      : selectedHistoryRun?.prompt
+                                    try {
+                                      const parsed = JSON.parse(
+                                        promptText || '',
+                                      )
+                                      return JSON.stringify(parsed, null, 2)
+                                    } catch {
+                                      return promptText
+                                    }
+                                  })()}
                                 </Text>
                               </div>
-                            </AccordionTrigger>
-                          </div>
-                          <CopyButton
-                            value={
-                              currentRunId
-                                ? prompt
-                                : selectedHistoryRun?.prompt || ''
-                            }
-                            timeout={2000}
-                          >
-                            {({ copied, copy }) => (
-                              <Button
-                                variant="subtle"
-                                size="xs"
-                                className="text-white/60 hover:bg-white/10 hover:text-white"
-                                onClick={(e) => {
-                                  e.stopPropagation() // Prevent accordion from toggling
-                                  copy()
-                                }}
-                                leftIcon={
-                                  copied ? (
-                                    <IconCheck size={14} />
-                                  ) : (
-                                    <IconCopy size={14} />
-                                  )
-                                }
-                              >
-                                {copied ? 'Copied' : 'Copy'}
-                              </Button>
-                            )}
-                          </CopyButton>
-                        </div>
-                        <AccordionContent>
-                          <div className="rounded-lg bg-[#1e1f3a] p-4">
-                            <Text
-                              className={`${montserrat_paragraph.variable} whitespace-pre font-mono font-montserratParagraph text-sm leading-relaxed text-white/90`}
-                            >
-                              {(() => {
-                                const promptText = currentRunId
-                                  ? prompt
-                                  : selectedHistoryRun?.prompt
-                                try {
-                                  // Try to parse and format if it's valid JSON
-                                  const parsed = JSON.parse(promptText || '')
-                                  return JSON.stringify(parsed, null, 2)
-                                } catch {
-                                  // If not JSON, return as is
-                                  return promptText
-                                }
-                              })()}
-                            </Text>
+                            </div>
                           </div>
                         </AccordionContent>
                       </AccordionItem>

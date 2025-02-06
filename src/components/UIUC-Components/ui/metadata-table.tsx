@@ -8,6 +8,7 @@ import { Input } from './input'
 import { DataTable } from './data-table'
 import { TableCell } from './table'
 import { type MetadataRow } from '~/types/metadata'
+import { montserrat_heading, montserrat_paragraph } from 'fonts'
 
 interface DataTableProps {
   data: MetadataRow[]
@@ -58,7 +59,11 @@ function DocumentTable({
         accessorKey: 'field',
         header: 'Field',
         cell: ({ row }) => (
-          <div className="font-medium text-white/80">{row.original.field}</div>
+          <div
+            className={`${montserrat_heading.variable} font-montserratHeading text-sm font-medium text-white/90`}
+          >
+            {row.original.field}
+          </div>
         ),
       },
     ]
@@ -83,7 +88,12 @@ function DocumentTable({
                   onClick={() => value && onViewJson?.(value)}
                 >
                   <div
-                    className="truncate p-4"
+                    className={cn(
+                      `${montserrat_paragraph.variable} truncate p-4 font-montserratParagraph text-sm text-white/80`,
+                      typeof value === 'object' &&
+                        value !== null &&
+                        'text-indigo-400 hover:text-indigo-300',
+                    )}
                     title={formatJsonPreview(value)}
                   >
                     {formatJsonPreview(value)}
@@ -124,7 +134,15 @@ function DocumentTable({
                 onViewJson?.(value)
               }
             >
-              <div className="truncate p-4" title={formatJsonPreview(value)}>
+              <div
+                className={cn(
+                  `${montserrat_paragraph.variable} truncate p-4 font-montserratParagraph text-sm text-white/80`,
+                  typeof value === 'object' &&
+                    value !== null &&
+                    'text-indigo-400 hover:text-indigo-300',
+                )}
+                title={formatJsonPreview(value)}
+              >
                 {formatJsonPreview(value)}
               </div>
             </TableCell>
@@ -145,12 +163,14 @@ function DocumentTable({
   )
 
   return (
-    <div className="mb-8 rounded-lg bg-black/20">
+    <div className="mb-8 overflow-hidden rounded-lg bg-black/20">
       {/* Document header */}
       <div className="sticky top-0 z-20 border-b border-white/10 bg-black/40 p-4">
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white/90">
+            <h3
+              className={`${montserrat_heading.variable} font-montserratHeading text-lg font-semibold text-white/90`}
+            >
               {document.document_name}
             </h3>
             <div
@@ -169,7 +189,7 @@ function DocumentTable({
               />
               <span
                 className={cn(
-                  'whitespace-nowrap capitalize',
+                  `${montserrat_paragraph.variable} whitespace-nowrap font-montserratParagraph capitalize`,
                   document.run_status === 'completed' && 'text-green-500',
                   document.run_status === 'failed' && 'text-red-500',
                   document.run_status === 'in_progress' && 'text-yellow-500',
@@ -179,7 +199,7 @@ function DocumentTable({
               </span>
               {document.last_error && document.run_status === 'failed' && (
                 <span
-                  className="max-w-[200px] truncate text-xs text-red-400"
+                  className={`${montserrat_paragraph.variable} max-w-[200px] truncate font-montserratParagraph text-xs text-red-400`}
                   title={document.last_error}
                 >
                   ({document.last_error})
@@ -188,12 +208,11 @@ function DocumentTable({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <IconCopy className="h-4 w-4 text-white/60" />
             <Input
               placeholder="Search fields..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-8 w-64 bg-black/20 text-sm text-white/90 placeholder:text-white/60"
+              className={`${montserrat_paragraph.variable} h-8 w-64 bg-black/20 font-montserratParagraph text-sm text-white/90 placeholder:text-white/60 focus-visible:ring-indigo-500`}
             />
           </div>
         </div>
