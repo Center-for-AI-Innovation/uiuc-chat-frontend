@@ -312,24 +312,6 @@ export async function processChunkWithStateMachine(
 }
 
 /**
- * Fetches the OpenAI key to use for the request.
- * @param {string | undefined} openai_key - The OpenAI key provided in the request.
- * @param {CourseMetadata} courseMetadata - The course metadata containing the fallback OpenAI key.
- * @returns {Promise<string>} The OpenAI key to use.
- */
-export async function fetchKeyToUse(
-  openai_key: string | undefined,
-  courseMetadata: CourseMetadata,
-): Promise<string> {
-  return (
-    openai_key ||
-    ((await decryptKeyIfNeeded(
-      courseMetadata.openai_api_key as string,
-    )) as string)
-  )
-}
-
-/**
  * Determines the OpenAI key to use and validates it by checking available models.
  * @param {string | undefined} openai_key - The OpenAI key provided in the request.
  * @param {CourseMetadata} courseMetadata - The course metadata containing the fallback OpenAI key.
@@ -337,7 +319,6 @@ export async function fetchKeyToUse(
  * @returns {Promise<{ activeModel: GenericSupportedModel, modelsWithProviders: AllLLMProviders }>} The validated OpenAI key and available models.
  */
 export async function determineAndValidateModel(
-  keyToUse: string,
   modelId: string,
   projectName: string,
 ): Promise<{
@@ -351,7 +332,7 @@ export async function determineAndValidateModel(
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ openAIApiKey: keyToUse, projectName }),
+    body: JSON.stringify({ projectName }),
   })
 
   if (!response.ok) {
