@@ -46,7 +46,10 @@ import ChatUI, {
   WebllmModel,
   webLLMModels,
 } from '~/utils/modelProviders/WebLLM'
-import { selectBestModel, VisionCapableModels } from '~/utils/modelProviders/LLMProvider'
+import {
+  selectBestModel,
+  VisionCapableModels,
+} from '~/utils/modelProviders/LLMProvider'
 import { OpenAIModelID } from '~/utils/modelProviders/types/openai'
 import { UserSettings } from '~/components/Chat/UserSettings'
 import { IconChevronRight } from '@tabler/icons-react'
@@ -96,7 +99,7 @@ export const ChatInput = ({
       messageIsStreaming,
       prompts,
       showModelSettings,
-      llmProviders
+      llmProviders,
     },
 
     dispatch: homeDispatch,
@@ -221,10 +224,10 @@ export const ChatInput = ({
           imageUrls.length > 0
             ? imageUrls
             : await Promise.all(
-              imageFiles.map((file) =>
-                uploadImageAndGetUrl(file, courseName),
-              ),
-            )
+                imageFiles.map((file) =>
+                  uploadImageAndGetUrl(file, courseName),
+                ),
+              )
 
         // Construct image content for the message
         imageContent = imageUrlsToUse
@@ -681,8 +684,9 @@ export const ChatInput = ({
     if (textareaRef && textareaRef.current) {
       textareaRef.current.style.height = 'inherit'
       textareaRef.current.style.height = `${textareaRef.current?.scrollHeight}px`
-      textareaRef.current.style.overflow = `${textareaRef?.current?.scrollHeight > 400 ? 'auto' : 'hidden'
-        }`
+      textareaRef.current.style.overflow = `${
+        textareaRef?.current?.scrollHeight > 400 ? 'auto' : 'hidden'
+      }`
     }
   }, [content])
 
@@ -747,7 +751,10 @@ export const ChatInput = ({
   ): Promise<string> {
     try {
       const uploadedImageUrl = await uploadToS3(file, courseName)
-      const presignedUrl = await fetchPresignedUrl(uploadedImageUrl as string, courseName)
+      const presignedUrl = await fetchPresignedUrl(
+        uploadedImageUrl as string,
+        courseName,
+      )
       return presignedUrl as string
     } catch (error) {
       console.error('Upload failed for file', file.name, error)
@@ -911,26 +918,30 @@ export const ChatInput = ({
             {/* Button 3: main input text area  */}
             <div
               className={`
-                ${VisionCapableModels.has(
-                selectedConversation?.model?.id as OpenAIModelID,
-              )
-                  ? 'pl-8'
-                  : 'pl-1'
+                ${
+                  VisionCapableModels.has(
+                    selectedConversation?.model?.id as OpenAIModelID,
+                  )
+                    ? 'pl-8'
+                    : 'pl-1'
                 }
                   `}
             >
               <textarea
                 ref={textareaRef}
-                className={`chat-input m-0 h-[24px] max-h-[400px] w-full resize-none bg-transparent py-2 pr-8 pl-2 text-white outline-none ${isFocused ? 'border-blue-500' : ''
-                  }`}
+                className={`chat-input m-0 h-[24px] max-h-[400px] w-full resize-none bg-transparent py-2 pl-2 pr-8 text-white outline-none ${
+                  isFocused ? 'border-blue-500' : ''
+                }`}
                 style={{
                   resize: 'none',
                   bottom: `${textareaRef?.current?.scrollHeight}px`,
                   maxHeight: '400px',
-                  overflow: `${textareaRef.current && textareaRef.current.scrollHeight > 400
-                    ? 'auto'
-                    : 'hidden'
-                    }`,
+                  overflow: `${
+                    textareaRef.current &&
+                    textareaRef.current.scrollHeight > 400
+                      ? 'auto'
+                      : 'hidden'
+                  }`,
                 }}
                 placeholder={
                   t('Type a message or type "/" to select a prompt...') || ''
@@ -993,7 +1004,6 @@ export const ChatInput = ({
           <Text
             size={isSmallScreen ? '10px' : 'xs'}
             className={`font-montserratHeading ${montserrat_heading.variable} absolute bottom-2 left-5 break-words rounded-full p-1 text-neutral-400 text-neutral-800 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200`}
-            tt={'capitalize'}
             onClick={handleTextClick}
             style={{ cursor: 'pointer' }}
           >
