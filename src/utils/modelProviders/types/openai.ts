@@ -19,10 +19,9 @@ export interface OpenAIModel {
 }
 
 export enum OpenAIModelID {
-  // O1 = 'o1', // rolling model - currently points to gpt-3.5-turbo-0125
-  // O1_mini = 'o1-mini', // rolling model - currently points to gpt-3.5-turbo-0125
-  // O3 = 'o3', // rolling model - currently points to gpt-3.5-turbo-0125
-  O3_mini = 'o3-mini', // rolling model - currently points to gpt-3.5-turbo-0125
+  // We're not going to support o1 series - they are not worth including because replaced by o3.
+  // O3 = 'o3',
+  O3_mini = 'o3-mini', // rolling model
   GPT_4o_mini = 'gpt-4o-mini', // rolling model - currently points to gpt-4o-2024-05-13
   GPT_4o = 'gpt-4o', // rolling model - currently points to gpt-4o-2024-05-13
   GPT_4 = 'gpt-4', // rolling model - currently points to gpt-4-0613
@@ -37,30 +36,12 @@ export const ModelIDsThatUseDeveloperMessage: readonly OpenAIModelID[] = [
 export const OpenAIModels: Record<OpenAIModelID, OpenAIModel> = {
   // NOTE: We use these as default values for enabled: true/false.
 
-  // [OpenAIModelID.GPT_o1]: {
-  //   id: OpenAIModelID.GPT_4o_mini,
-  //   name: 'o1-preview',
-  //   tokenLimit: 128000,
-  //   enabled: true,
-  // },
   [OpenAIModelID.O3_mini]: {
     id: OpenAIModelID.O3_mini,
-    name: 'OpenAI O3-mini (smartest model today)',
+    name: 'OpenAI o3-mini (smartest model today)',
     tokenLimit: 200000,
     enabled: true,
   },
-  // [OpenAIModelID.O1_mini]: {
-  //   id: OpenAIModelID.O1_mini,
-  //   name: 'OpenAI O1-mini',
-  //   tokenLimit: 200000,
-  //   enabled: true,
-  // },
-  // [OpenAIModelID.O1]: {
-  //   id: OpenAIModelID.O1,
-  //   name: 'OpenAI O1',
-  //   tokenLimit: 200000,
-  //   enabled: true,
-  // },
   [OpenAIModelID.GPT_4o_mini]: {
     id: OpenAIModelID.GPT_4o_mini,
     name: 'GPT-4o mini (best price / performance)',
