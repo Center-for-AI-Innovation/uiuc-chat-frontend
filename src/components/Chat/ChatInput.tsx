@@ -92,6 +92,16 @@ function useVisualViewport() {
         height: visualViewport?.height || window.innerHeight,
         offsetTop: visualViewport?.offsetTop || 0,
       })
+
+      // When keyboard opens (height decreases significantly), scroll the input into view
+      if (visualViewport && visualViewport.height < window.innerHeight * 0.75) {
+        setTimeout(() => {
+          window.scrollTo({
+            top: visualViewport.offsetTop,
+            behavior: 'smooth',
+          })
+        }, 100) // Small delay to ensure DOM updates
+      }
     }
 
     // Initial setup
@@ -172,6 +182,16 @@ export const ChatInput = ({
     setIsFocused(true)
     if (chatInputParentContainerRef.current) {
       chatInputParentContainerRef.current.style.boxShadow = `0 0 2px rgba(42,42,120, 1)`
+
+      // On mobile, scroll the input into view when focused
+      if (window.innerWidth <= 768) {
+        setTimeout(() => {
+          chatInputParentContainerRef.current?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+          })
+        }, 100)
+      }
     }
   }
 
@@ -850,6 +870,8 @@ export const ChatInput = ({
         bottom: window.innerHeight - viewport.height - viewport.offsetTop,
         position: 'fixed',
         zIndex: 100,
+        transform: 'translateZ(0)', // Force GPU acceleration for smoother transitions
+        willChange: 'transform', // Hint to browser about upcoming transforms
       }}
     >
       <div className="stretch mx-2 mt-4 flex flex-col gap-3 last:mb-2 md:mx-4 md:mt-[52px] md:last:mb-6 lg:mx-auto lg:max-w-3xl">
