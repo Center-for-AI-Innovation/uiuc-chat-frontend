@@ -27,7 +27,7 @@ import {
 import fetchMQRContexts from '~/pages/api/getContextsMQR'
 import fetchContexts from '~/pages/api/getContexts'
 import { OllamaModelIDs } from './modelProviders/ollama'
-import { webLLMModels } from './modelProviders/WebLLM'
+import { getWebLLMModels, webLLMModels } from './modelProviders/WebLLM'
 import { OpenAIModelID } from './modelProviders/types/openai'
 import { v4 as uuidv4 } from 'uuid'
 import { AzureModelID } from './modelProviders/azure'
@@ -64,7 +64,7 @@ export async function processChunkWithStateMachine(
   lastMessage: Message,
   stateMachineContext: { state: State; buffer: string },
   citationLinkCache: Map<number, string>,
-  courseName: string
+  courseName: string,
 ): Promise<string> {
   let { state, buffer } = stateMachineContext
   let processedChunk = ''
@@ -777,12 +777,12 @@ export async function handleImageContent(
     )
 
     if (imgDescIndex !== -1) {
-      ; (message.content as Content[])[imgDescIndex] = {
+      ;(message.content as Content[])[imgDescIndex] = {
         type: 'text',
         text: `Image description: ${imgDesc}`,
       }
     } else {
-      ; (message.content as Content[]).push({
+      ;(message.content as Content[]).push({
         type: 'text',
         text: `Image description: ${imgDesc}`,
       })
@@ -817,13 +817,14 @@ export const routeModelRequest = async (
   controller?: AbortController,
   baseUrl?: string,
 ): Promise<any> => {
-  console.log('In routeModelRequest: ', chatBody, baseUrl)
   /*  Use this to call the LLM. It will call the appropriate endpoint based on the conversation.model.
-      🧠 ADD NEW LLM PROVIDERS HERE 🧠
+  🧠 ADD NEW LLM PROVIDERS HERE 🧠
+  NOTE: WebLLM is handled separately, because it MUST be called from the Client browser itself. 
   */
+
+  console.log('In routeModelRequest: ', chatBody, baseUrl)
+
   const selectedConversation = chatBody.conversation!
-  let response: Response
-  // Add this check at the beginning of the function
   if (!selectedConversation.model || !selectedConversation.model.id) {
     throw new Error('Conversation model is undefined or missing "id" property.')
   }
@@ -844,21 +845,7 @@ export const routeModelRequest = async (
       selectedConversation.model.id as any,
     )
   ) {
-    // NCSA Hosted LLMs
-    // const url = baseUrl ? `${baseUrl}/api/chat/vlm` : '/api/chat/vlm'
-    // response = await fetch(url, {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-
-    //   body: JSON.stringify({
-    //     conversation: selectedConversation,
-    //     // ollamaProvider: newChatBody,
-    //     stream: chatBody.stream,
-    //   }),
-    // })
-    // return response
+    // NCSA Hosted VLM
     return await runVLLM(
       selectedConversation,
       chatBody?.llmProviders?.NCSAHostedVLM as NCSAHostedVLMProvider,
