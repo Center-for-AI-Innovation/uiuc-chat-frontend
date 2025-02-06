@@ -1687,6 +1687,7 @@ export const Chat = memo(
         </div>
       </>
     )
+    Chat.displayName = 'Chat'
   },
 )
 
