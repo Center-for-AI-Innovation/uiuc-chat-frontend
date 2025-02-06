@@ -97,23 +97,25 @@ export const OpenAIStream = async (
     }
   }
 
+  const isOModel = ['o3', 'o3-mini', 'o1', 'o1-mini'].includes(model.id)
   const body = JSON.stringify({
     ...(OPENAI_API_TYPE === 'openai' && { model: model.id }),
     messages: [
       {
-        role: 'system',
+        role: isOModel ? 'developer' : 'system',
         content: systemPrompt,
       },
       ...messages,
     ],
-    max_tokens: 4000,
-    temperature: temperature,
+    ...(isOModel ? {} : { temperature: temperature }),
     stream: stream,
   })
 
   if (!url) {
     throw new Error('URL is undefined')
   }
+
+  console.log("Body that's being sent to the endpoint: ", body)
 
   const res = await fetch(url, {
     headers: {
