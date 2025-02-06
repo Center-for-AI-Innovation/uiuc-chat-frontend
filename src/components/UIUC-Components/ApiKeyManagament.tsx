@@ -18,6 +18,8 @@ import { type UserResource } from '@clerk/types'
 import { IconCheck, IconCopy, IconExternalLink } from '@tabler/icons-react'
 import { montserrat_heading } from 'fonts'
 import style from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark'
+import APIRequestMaker from './APIRequestMaker'
+import { fetchCourseMetadata } from '~/utils/apiUtils'
 
 const ApiKeyManagement = ({
   course_name,
@@ -36,6 +38,19 @@ const ApiKeyManagement = ({
   const [apiKey, setApiKey] = useState<string | null>(null)
   const baseUrl = process.env.VERCEL_URL || window.location.origin
   const [loading, setLoading] = useState(true)
+  const [metadata, setMetadata] = useState<{system_prompt?: string}>()
+  useEffect(() => {
+    const getMetadata = async () => {
+      try {
+        const courseMetadata = await fetchCourseMetadata(course_name)
+        setMetadata(courseMetadata)
+      } catch (error) {
+        console.error('Error fetching course metadata:', error)
+      }
+    }
+    
+    getMetadata()
+  }, [course_name])
   // Define a type for the keys of codeSnippets
   type Language = 'curl' | 'python' | 'node'
 
@@ -387,30 +402,33 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                   flexDirection: 'column',
                   alignItems: 'center',
                   background: '#15162c',
-                  paddingTop: '1rem',
+                  paddingTop: '2rem',
+                  paddingBottom: '1rem',
                   borderRadius: '1rem',
+                  marginTop: '2rem',
                 }}
               >
+                <Title
+                    order={3}
+                    variant="gradient"
+                    gradient={{ from: 'gold', to: 'white', deg: 50 }}
+                    style={{ marginBottom: '1.5rem' }}
+                  >
+                    Request Maker
+                  </Title>
                 <div
                   style={{
-                    width: '95%',
+                    width: '100%',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     background: '#15162c',
                     paddingBottom: '1rem',
+                    paddingLeft: '1rem',
+                    paddingRight: '1rem',
                   }}
                 >
-                  <Title
-                    order={3}
-                    align="left"
-                    variant="gradient"
-                    gradient={{ from: 'gold', to: 'white', deg: 50 }}
-                    style={{ flexGrow: 2, marginLeft: '1rem' }}
-                  >
-                    Example Request
-                  </Title>
-                  <Select
+                  {/* <Select
                     placeholder="Select an option"
                     data={languageOptions}
                     value={selectedLanguage}
@@ -435,16 +453,23 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                     className="ms-2 min-h-[2.5rem] transform rounded-bl-xl rounded-br-md rounded-tl-md rounded-tr-xl bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none"
                   >
                     {copiedCodeSnippet ? <IconCheck /> : <IconCopy />}
-                  </Button>
+                  </Button> */}
+                  <div style={{ width: '100%', padding: '0 1rem'}}>
+                  <APIRequestMaker 
+                    course_name={course_name}
+                    apiKey={apiKey}
+                    courseMetadata={metadata}
+                  />
                 </div>
-                <Textarea
+                </div>
+                {/* <Textarea
                   value={codeSnippets[selectedLanguage] as string}
                   autosize
                   variant="unstyled"
                   wrapperProps={{ overflow: 'hidden' }}
                   className="relative w-[100%] min-w-[20rem] overflow-hidden rounded-b-xl border-t-2 border-gray-400 bg-[#0c0c27] pl-8 text-white"
                   readOnly
-                />
+                /> */}
               </div>
             </Group>
           </div>
