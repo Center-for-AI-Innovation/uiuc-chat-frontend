@@ -162,7 +162,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full px-10">
       <Title
         order={3}
         variant="gradient"
@@ -172,7 +172,11 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
         Request Builder
       </Title>
 
-      <Divider my="lg" size="md" className="-mx-4 border-t-2 border-gray-600" />
+      <Divider
+        my="lg"
+        size="md"
+        className="-mx-10 border-t-2 border-gray-600"
+      />
 
       <div className="space-y-6">
         <div className="flex items-center gap-2">
@@ -180,6 +184,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
             placeholder="Select language"
             data={languageOptions}
             value={selectedLanguage}
+            radius={'md'}
             onChange={(value: 'curl' | 'python' | 'node') =>
               setSelectedLanguage(value)
             }
@@ -219,6 +224,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
             value={selectedModel}
             onChange={(value) => setSelectedModel(value || '')}
             searchable
+            radius={'md'}
             maxDropdownHeight={400}
             styles={(theme) => ({
               input: {
@@ -278,6 +284,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
             value={systemPrompt}
             onChange={(e) => setSystemPrompt(e.currentTarget.value)}
             minRows={2}
+            radius={'md'}
             className={`border-gray-600 bg-[#1a1b3e] ${montserrat_paragraph.variable} font-montserratParagraph`}
             styles={(theme) => ({
               input: {
@@ -304,6 +311,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
             value={userQuery}
             onChange={(e) => setUserQuery(e.currentTarget.value)}
             minRows={2}
+            radius={'md'}
             className={`border-gray-600 bg-[#1a1b3e] ${montserrat_paragraph.variable} font-montserratParagraph`}
             styles={(theme) => ({
               input: {
