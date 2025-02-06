@@ -218,7 +218,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
             className={`w-full flex-shrink-0 sm:w-[150px] ${montserrat_paragraph.variable} font-montserratParagraph`}
             rightSection={<IconChevronDown size={14} />}
           />
-          <div className="flex w-full items-center gap-2 sm:w-auto">
+          <div className="flex w-full items-center gap-2">
             <Select
               placeholder="Select model"
               data={modelOptions}
