@@ -59,12 +59,13 @@ export default function APIRequestBuilder({
 
   const modelOptions = llmProviders
     ? Object.entries(llmProviders).flatMap(([provider, config]) =>
-        config.enabled && config.models && provider !== 'WebLLM' // Add webllm filter
+        config.enabled && config.models && provider !== 'WebLLM'
           ? config.models
               .filter((model) => model.enabled)
               .map((model) => ({
+                group: provider,
                 value: model.id,
-                label: `${provider} - ${model.name}`,
+                label: model.name,
               }))
           : [],
       )
@@ -218,6 +219,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
             value={selectedModel}
             onChange={(value) => setSelectedModel(value || '')}
             searchable
+            maxDropdownHeight={400}
             styles={(theme) => ({
               input: {
                 '&:focus': {
@@ -226,6 +228,8 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                 backgroundColor: '#1a1b3e',
                 fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
                 cursor: 'pointer',
+                minWidth: 0,
+                flex: '1 1 auto',
               },
               dropdown: {
                 backgroundColor: '#1a1b3e',
@@ -239,13 +243,15 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                 },
                 fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
                 cursor: 'pointer',
+                whiteSpace: 'normal',
+                lineHeight: 1.2,
               },
               rightSection: {
                 pointerEvents: 'none',
                 color: theme.colors.gray[5],
               },
             })}
-            className={`flex-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
+            className={`min-w-0 flex-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
             rightSection={<IconChevronDown size={14} />}
           />
           <Button
