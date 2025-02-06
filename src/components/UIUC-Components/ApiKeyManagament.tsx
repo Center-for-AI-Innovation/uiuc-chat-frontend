@@ -18,7 +18,7 @@ import { type UserResource } from '@clerk/types'
 import { IconCheck, IconCopy, IconExternalLink } from '@tabler/icons-react'
 import { montserrat_heading } from 'fonts'
 import style from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark'
-import APIRequestMaker from './APIRequestMaker'
+import APIRequestBuilder from './APIRequestBuilder'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 
 const ApiKeyManagement = ({
@@ -408,68 +408,14 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                   marginTop: '2rem',
                 }}
               >
-                <Title
-                    order={3}
-                    variant="gradient"
-                    gradient={{ from: 'gold', to: 'white', deg: 50 }}
-                    style={{ marginBottom: '1.5rem' }}
-                  >
-                    Request Maker
-                  </Title>
-                <div
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    background: '#15162c',
-                    paddingBottom: '1rem',
-                    paddingLeft: '1rem',
-                    paddingRight: '1rem',
-                  }}
-                >
-                  {/* <Select
-                    placeholder="Select an option"
-                    data={languageOptions}
-                    value={selectedLanguage}
-                    style={{ width: '7rem' }} // Ensures the button is wide enough to show all text and does not shrink
-                    onChange={(value: string | null) => {
-                      if (
-                        value === 'curl' ||
-                        value === 'python' ||
-                        value === 'node'
-                      ) {
-                        setSelectedLanguage(value)
-                      }
-                    }}
-                    // style={{ width: '30%', minWidth: '20px' }}
-                  />
-                  <Button
-                    onClick={() =>
-                      handleCopyCodeSnippet(codeSnippets[selectedLanguage])
-                    }
-                    variant="subtle"
-                    size="xs"
-                    className="ms-2 min-h-[2.5rem] transform rounded-bl-xl rounded-br-md rounded-tl-md rounded-tr-xl bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none"
-                  >
-                    {copiedCodeSnippet ? <IconCheck /> : <IconCopy />}
-                  </Button> */}
                   <div style={{ width: '100%', padding: '0 1rem'}}>
-                  <APIRequestMaker 
+                  <APIRequestBuilder 
                     course_name={course_name}
                     apiKey={apiKey}
                     courseMetadata={metadata}
                   />
                 </div>
-                </div>
-                {/* <Textarea
-                  value={codeSnippets[selectedLanguage] as string}
-                  autosize
-                  variant="unstyled"
-                  wrapperProps={{ overflow: 'hidden' }}
-                  className="relative w-[100%] min-w-[20rem] overflow-hidden rounded-b-xl border-t-2 border-gray-400 bg-[#0c0c27] pl-8 text-white"
-                  readOnly
-                /> */}
+
               </div>
             </Group>
           </div>

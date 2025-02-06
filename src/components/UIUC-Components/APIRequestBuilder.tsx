@@ -7,13 +7,16 @@ import {
   Group,
   ActionIcon,
   Title,
+  Switch,
 } from '@mantine/core'
 import { IconCheck, IconCopy } from '@tabler/icons-react'
 import { useGetProjectLLMProviders } from '~/hooks/useProjectAPIKeys'
 import { findDefaultModel } from './api-inputs/LLMsApiKeyInputForm'
 import { CourseMetadata } from '~/types/courseMetadata'
+import { montserrat_heading } from 'fonts'
 
-interface APIRequestMakerProps {
+
+interface APIRequestBuilderProps {
   course_name: string
   apiKey: string | null
   courseMetadata?: {
@@ -21,7 +24,7 @@ interface APIRequestMakerProps {
   }
 }
 
-export default function APIRequestMaker({ course_name, apiKey, courseMetadata }: APIRequestMakerProps) {
+export default function APIRequestBuilder({ course_name, apiKey, courseMetadata }: APIRequestBuilderProps) {
   const [selectedLanguage, setSelectedLanguage] = useState<'curl' | 'python' | 'node'>('curl')
   const [copiedCodeSnippet, setCopiedCodeSnippet] = useState(false)
   const [userQuery, setUserQuery] = useState('What is in these documents?')
@@ -30,6 +33,8 @@ export default function APIRequestMaker({ course_name, apiKey, courseMetadata }:
   )
   console.log(courseMetadata?.system_prompt)
   const [selectedModel, setSelectedModel] = useState<string>('')
+  const [retrievalOnly, setRetrievalOnly] = useState(false)  // Add this state
+
 
   const { data: llmProviders } = useGetProjectLLMProviders({
     projectName: course_name,
@@ -57,15 +62,9 @@ export default function APIRequestMaker({ course_name, apiKey, courseMetadata }:
     { value: 'node', label: 'Node.js' },
   ]
 
-  const handleCopyCodeSnippet = (text: string) => {
-    navigator.clipboard.writeText(text)
-    setCopiedCodeSnippet(true)
-    setTimeout(() => setCopiedCodeSnippet(false), 2000)
-  }
-
   const modelOptions = llmProviders
     ? Object.entries(llmProviders).flatMap(([provider, config]) =>
-      config.enabled && config.models
+      config.enabled && config.models && provider !== 'WebLLM'  // Add webllm filter
         ? config.models
           .filter((model) => model.enabled)
           .map((model) => ({
@@ -75,6 +74,12 @@ export default function APIRequestMaker({ course_name, apiKey, courseMetadata }:
         : []
     )
     : []
+
+  const handleCopyCodeSnippet = (text: string) => {
+    navigator.clipboard.writeText(text)
+    setCopiedCodeSnippet(true)
+    setTimeout(() => setCopiedCodeSnippet(false), 2000)
+  }
 
   const baseUrl = process.env.VERCEL_URL || window.location.origin
 
@@ -96,7 +101,8 @@ export default function APIRequestMaker({ course_name, apiKey, courseMetadata }:
     "api_key": "${apiKey || 'YOUR-API-KEY'}",
     "course_name": "${course_name}",
     "stream": true,
-    "temperature": 0.1
+    "temperature": 0.1,
+    "retrieval_only": ${retrievalOnly}
   }'`,
     python: `import requests
 
@@ -119,7 +125,8 @@ data = {
   "api_key": "${apiKey || 'YOUR-API-KEY'}",
   "course_name": "${course_name}",
   "stream": True,
-  "temperature": 0.1
+  "temperature": 0.1,
+  "retrieval_only": ${retrievalOnly}
 }
 
 response = requests.post(url, headers=headers, json=data)
@@ -141,7 +148,8 @@ const data = {
   "api_key": "${apiKey || 'YOUR-API-KEY'}",
   "course_name": "${course_name}",
   "stream": true,
-  "temperature": 0.1
+  "temperature": 0.1,
+  "retrieval_only": ${retrievalOnly}
 };
 
 axios.post('${baseUrl}/api/chat-api/chat', data, {
@@ -159,9 +167,17 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
 
   return (
     <>
-      <div className="flex justify-center w-full">
+      <div className="flex justify-start w-full">
         <div className="w-full max-w-3xl">
-        <div className="flex gap-2 mb-4 w-full">
+        <Title
+          order={3}
+          variant="gradient"
+          gradient={{ from: 'gold', to: 'white', deg: 50 }}
+          className={`mb-6 text-left ${montserrat_heading.variable} font-montserratHeading`}
+        >
+          Request Builder
+        </Title>
+          <div className="flex gap-2 mb-4 w-full">
             <Select
               placeholder="Select language"
               data={languageOptions}
@@ -203,7 +219,14 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
             minRows={2}
             mb="md"
           />
-
+          <Switch
+            checked={retrievalOnly}
+            onChange={(event) => setRetrievalOnly(event.currentTarget.checked)}
+            label="Retrieval Only"
+            color="purple"
+            size="md"
+            className="mb-4"
+          />
           <Textarea
             value={codeSnippets[selectedLanguage]}
             autosize
