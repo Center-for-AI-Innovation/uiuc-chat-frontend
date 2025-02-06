@@ -1195,12 +1195,10 @@ export const Chat = memo(
               // Do we need this?
               // saveConversation(updatedConversation)
               const updatedConversations: Conversation[] = conversations.map(
-                (conversation) => {
-                  if (conversation.id === selectedConversation.id) {
-                    return updatedConversation
-                  }
-                  return conversation
-                },
+                (conversation) =>
+                  conversation.id === selectedConversation.id
+                    ? updatedConversation
+                    : conversation,
               )
               if (updatedConversations.length === 0) {
                 updatedConversations.push(updatedConversation)
@@ -1604,7 +1602,7 @@ export const Chat = memo(
           />
           <link rel="icon" href="/favicon.ico" />
         </Head>
-        <div className="overflow-wrap relative flex h-screen w-full flex-col overflow-hidden bg-white dark:bg-[#15162c]">
+        <div className="overflow-wrap relative flex h-[100dvh] w-full flex-col overflow-hidden bg-white dark:bg-[#15162c]">
           <div className="justify-center" style={{ height: '40px' }}>
             <ChatNavbar bannerUrl={bannerUrl as string} isgpt4={true} />
           </div>
