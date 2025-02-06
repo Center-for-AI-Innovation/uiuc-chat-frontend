@@ -162,7 +162,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
   }
 
   return (
-    <div className="w-full px-10">
+    <div className="w-full px-4 sm:px-10">
       <Title
         order={3}
         variant="gradient"
@@ -175,11 +175,11 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
       <Divider
         my="lg"
         size="md"
-        className="-mx-10 border-t-2 border-gray-600"
+        className="-mx-4 border-t-2 border-gray-600 sm:-mx-10"
       />
 
       <div className="space-y-6">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
           <Select
             placeholder="Select language"
             data={languageOptions}
@@ -215,61 +215,63 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                 color: theme.colors.gray[5],
               },
             })}
-            className={`w-[150px] flex-shrink-0 ${montserrat_paragraph.variable} font-montserratParagraph`}
+            className={`w-full flex-shrink-0 sm:w-[150px] ${montserrat_paragraph.variable} font-montserratParagraph`}
             rightSection={<IconChevronDown size={14} />}
           />
-          <Select
-            placeholder="Select model"
-            data={modelOptions}
-            value={selectedModel}
-            onChange={(value) => setSelectedModel(value || '')}
-            searchable
-            radius={'md'}
-            maxDropdownHeight={400}
-            styles={(theme) => ({
-              input: {
-                '&:focus': {
-                  borderColor: '#6e56cf',
-                },
-                backgroundColor: '#1a1b3e',
-                fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
-                cursor: 'pointer',
-                minWidth: 0,
-                flex: '1 1 auto',
-              },
-              dropdown: {
-                backgroundColor: '#1a1b3e',
-              },
-              item: {
-                '&[data-selected]': {
-                  backgroundColor: theme.colors.grape[9],
-                  '&:hover': {
-                    backgroundColor: theme.colors.grape[8],
+          <div className="flex w-full items-center gap-2 sm:w-auto">
+            <Select
+              placeholder="Select model"
+              data={modelOptions}
+              value={selectedModel}
+              onChange={(value) => setSelectedModel(value || '')}
+              searchable
+              radius={'md'}
+              maxDropdownHeight={400}
+              styles={(theme) => ({
+                input: {
+                  '&:focus': {
+                    borderColor: '#6e56cf',
                   },
+                  backgroundColor: '#1a1b3e',
+                  fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+                  cursor: 'pointer',
+                  minWidth: 0,
+                  flex: '1 1 auto',
                 },
-                fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
-                cursor: 'pointer',
-                whiteSpace: 'normal',
-                lineHeight: 1.2,
-              },
-              rightSection: {
-                pointerEvents: 'none',
-                color: theme.colors.gray[5],
-              },
-            })}
-            className={`min-w-0 flex-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
-            rightSection={<IconChevronDown size={14} />}
-          />
-          <Button
-            onClick={() =>
-              handleCopyCodeSnippet(codeSnippets[selectedLanguage])
-            }
-            variant="subtle"
-            size="xs"
-            className="h-[36px] w-[50px] flex-shrink-0 transform rounded-md bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none"
-          >
-            {copiedCodeSnippet ? <IconCheck /> : <IconCopy />}
-          </Button>
+                dropdown: {
+                  backgroundColor: '#1a1b3e',
+                },
+                item: {
+                  '&[data-selected]': {
+                    backgroundColor: theme.colors.grape[9],
+                    '&:hover': {
+                      backgroundColor: theme.colors.grape[8],
+                    },
+                  },
+                  fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+                  cursor: 'pointer',
+                  whiteSpace: 'normal',
+                  lineHeight: 1.2,
+                },
+                rightSection: {
+                  pointerEvents: 'none',
+                  color: theme.colors.gray[5],
+                },
+              })}
+              className={`min-w-0 flex-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
+              rightSection={<IconChevronDown size={14} />}
+            />
+            <Button
+              onClick={() =>
+                handleCopyCodeSnippet(codeSnippets[selectedLanguage])
+              }
+              variant="subtle"
+              size="xs"
+              className="h-[36px] w-[50px] flex-shrink-0 transform rounded-md bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none"
+            >
+              {copiedCodeSnippet ? <IconCheck /> : <IconCopy />}
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-2">
@@ -348,7 +350,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
           autosize
           variant="unstyled"
           readOnly
-          className="relative mt-4 w-full min-w-[20rem] overflow-hidden rounded-xl bg-[#0c0c27] pl-8 text-white"
+          className="relative mt-4 w-full min-w-0 overflow-x-auto rounded-xl bg-[#0c0c27] pl-4 text-sm text-white sm:min-w-[20rem] sm:pl-8 sm:text-base"
           styles={{
             input: {
               fontFamily: 'monospace',
