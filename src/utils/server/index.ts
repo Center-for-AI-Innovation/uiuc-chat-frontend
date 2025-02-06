@@ -1,5 +1,7 @@
 import { type OpenAIChatMessage } from '@/types/chat'
 import {
+  ModelIDsThatUseDeveloperMessage,
+  OpenAIModelID,
   OpenAIModels,
   type OpenAIModel,
 } from '~/utils/modelProviders/types/openai'
@@ -97,7 +99,9 @@ export const OpenAIStream = async (
     }
   }
 
-  const isOModel = ['o3', 'o3-mini', 'o1', 'o1-mini'].includes(model.id)
+  const isOModel = ModelIDsThatUseDeveloperMessage.includes(
+    model.id as OpenAIModelID,
+  )
   const body = JSON.stringify({
     ...(OPENAI_API_TYPE === 'openai' && { model: model.id }),
     messages: [

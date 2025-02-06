@@ -30,6 +30,10 @@ export enum OpenAIModelID {
   GPT_3_5 = 'gpt-3.5-turbo', // rolling model - currently points to gpt-3.5-turbo-0125
 }
 
+export const ModelIDsThatUseDeveloperMessage: readonly OpenAIModelID[] = [
+  OpenAIModelID.O3_mini,
+] as const
+
 export const OpenAIModels: Record<OpenAIModelID, OpenAIModel> = {
   // NOTE: We use these as default values for enabled: true/false.
 
