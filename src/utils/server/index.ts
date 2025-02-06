@@ -1,5 +1,7 @@
 import { type OpenAIChatMessage } from '@/types/chat'
 import {
+  ModelIDsThatUseDeveloperMessage,
+  OpenAIModelID,
   OpenAIModels,
   type OpenAIModel,
 } from '~/utils/modelProviders/types/openai'
@@ -97,23 +99,27 @@ export const OpenAIStream = async (
     }
   }
 
+  const isOModel = ModelIDsThatUseDeveloperMessage.includes(
+    model.id as OpenAIModelID,
+  )
   const body = JSON.stringify({
     ...(OPENAI_API_TYPE === 'openai' && { model: model.id }),
     messages: [
       {
-        role: 'system',
+        role: isOModel ? 'developer' : 'system',
         content: systemPrompt,
       },
       ...messages,
     ],
-    max_tokens: 4000,
-    temperature: temperature,
+    ...(isOModel ? {} : { temperature: temperature }),
     stream: stream,
   })
 
   if (!url) {
     throw new Error('URL is undefined')
   }
+
+  console.log("Body that's being sent to the endpoint: ", body)
 
   const res = await fetch(url, {
     headers: {
