@@ -1,20 +1,9 @@
 import { useState, useEffect } from 'react'
-import {
-  Textarea,
-  Select,
-  Button,
-  Text,
-  Group,
-  ActionIcon,
-  Title,
-  Switch,
-} from '@mantine/core'
-import { IconCheck, IconCopy } from '@tabler/icons-react'
+import { Textarea, Select, Button, Title, Switch, Divider } from '@mantine/core'
+import { IconCheck, IconCopy, IconChevronDown } from '@tabler/icons-react'
 import { useGetProjectLLMProviders } from '~/hooks/useProjectAPIKeys'
 import { findDefaultModel } from './api-inputs/LLMsApiKeyInputForm'
-import { CourseMetadata } from '~/types/courseMetadata'
-import { montserrat_heading } from 'fonts'
-
+import { montserrat_heading, montserrat_paragraph } from 'fonts'
 
 interface APIRequestBuilderProps {
   course_name: string
@@ -24,17 +13,23 @@ interface APIRequestBuilderProps {
   }
 }
 
-export default function APIRequestBuilder({ course_name, apiKey, courseMetadata }: APIRequestBuilderProps) {
-  const [selectedLanguage, setSelectedLanguage] = useState<'curl' | 'python' | 'node'>('curl')
+export default function APIRequestBuilder({
+  course_name,
+  apiKey,
+  courseMetadata,
+}: APIRequestBuilderProps) {
+  const [selectedLanguage, setSelectedLanguage] = useState<
+    'curl' | 'python' | 'node'
+  >('curl')
   const [copiedCodeSnippet, setCopiedCodeSnippet] = useState(false)
   const [userQuery, setUserQuery] = useState('What is in these documents?')
   const [systemPrompt, setSystemPrompt] = useState(
-    courseMetadata?.system_prompt || 'You are a helpful AI assistant. Follow instructions carefully. Respond using markdown.'
+    courseMetadata?.system_prompt ||
+      'You are a helpful AI assistant. Follow instructions carefully. Respond using markdown.',
   )
   console.log(courseMetadata?.system_prompt)
   const [selectedModel, setSelectedModel] = useState<string>('')
-  const [retrievalOnly, setRetrievalOnly] = useState(false)  // Add this state
-
+  const [retrievalOnly, setRetrievalOnly] = useState(false) // Add this state
 
   const { data: llmProviders } = useGetProjectLLMProviders({
     projectName: course_name,
@@ -51,7 +46,7 @@ export default function APIRequestBuilder({ course_name, apiKey, courseMetadata 
 
   useEffect(() => {
     if (courseMetadata?.system_prompt) {
-      console.log("changing system prompt")
+      console.log('changing system prompt')
       setSystemPrompt(courseMetadata.system_prompt)
     }
   }, [courseMetadata?.system_prompt])
@@ -64,15 +59,15 @@ export default function APIRequestBuilder({ course_name, apiKey, courseMetadata 
 
   const modelOptions = llmProviders
     ? Object.entries(llmProviders).flatMap(([provider, config]) =>
-      config.enabled && config.models && provider !== 'WebLLM'  // Add webllm filter
-        ? config.models
-          .filter((model) => model.enabled)
-          .map((model) => ({
-            value: model.id,
-            label: `${provider} - ${model.name}`,
-          }))
-        : []
-    )
+        config.enabled && config.models && provider !== 'WebLLM' // Add webllm filter
+          ? config.models
+              .filter((model) => model.enabled)
+              .map((model) => ({
+                value: model.id,
+                label: `${provider} - ${model.name}`,
+              }))
+          : [],
+      )
     : []
 
   const handleCopyCodeSnippet = (text: string) => {
@@ -162,80 +157,191 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
 })
 .catch(error => {
   console.error(error);
-});`
+});`,
   }
 
   return (
-    <>
-      <div className="flex justify-start w-full">
-        <div className="w-full max-w-3xl">
-        <Title
-          order={3}
-          variant="gradient"
-          gradient={{ from: 'gold', to: 'white', deg: 50 }}
-          className={`mb-6 text-left ${montserrat_heading.variable} font-montserratHeading`}
-        >
-          Request Builder
-        </Title>
-          <div className="flex gap-2 mb-4 w-full">
-            <Select
-              placeholder="Select language"
-              data={languageOptions}
-              value={selectedLanguage}
-              onChange={(value: 'curl' | 'python' | 'node') => setSelectedLanguage(value)}
-              style={{ width: '150px', flexShrink: 0 }}
-            />
-            <Select
-              placeholder="Select model"
-              data={modelOptions}
-              value={selectedModel}
-              onChange={(value) => setSelectedModel(value || '')}
-              searchable
-              style={{ flex: '1' }}
-            />
-            <Button
-              onClick={() => handleCopyCodeSnippet(codeSnippets[selectedLanguage])}
-              variant="subtle"
-              size="xs"
-              style={{ width: '50px', flexShrink: 0, height: '36px' }}
-              className="transform rounded-md bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none"
-            >
-              {copiedCodeSnippet ? <IconCheck /> : <IconCopy />}
-            </Button>
-          </div>
-          <Title order={4} mb="xs" className="text-white">System Prompt</Title>
+    <div className="w-full">
+      <Title
+        order={3}
+        variant="gradient"
+        gradient={{ from: 'gold', to: 'white', deg: 50 }}
+        className={`text-left ${montserrat_heading.variable} font-montserratHeading`}
+      >
+        Request Builder
+      </Title>
+
+      <Divider my="lg" size="md" className="-mx-4 border-t-2 border-gray-600" />
+
+      <div className="space-y-6">
+        <div className="flex items-center gap-2">
+          <Select
+            placeholder="Select language"
+            data={languageOptions}
+            value={selectedLanguage}
+            onChange={(value: 'curl' | 'python' | 'node') =>
+              setSelectedLanguage(value)
+            }
+            styles={(theme) => ({
+              input: {
+                '&:focus': {
+                  borderColor: '#6e56cf',
+                },
+                backgroundColor: '#1a1b3e',
+                fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+                cursor: 'pointer',
+              },
+              dropdown: {
+                backgroundColor: '#1a1b3e',
+              },
+              item: {
+                '&[data-selected]': {
+                  backgroundColor: theme.colors.grape[9],
+                  '&:hover': {
+                    backgroundColor: theme.colors.grape[8],
+                  },
+                },
+                fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+                cursor: 'pointer',
+              },
+              rightSection: {
+                pointerEvents: 'none',
+                color: theme.colors.gray[5],
+              },
+            })}
+            className={`w-[150px] flex-shrink-0 ${montserrat_paragraph.variable} font-montserratParagraph`}
+            rightSection={<IconChevronDown size={14} />}
+          />
+          <Select
+            placeholder="Select model"
+            data={modelOptions}
+            value={selectedModel}
+            onChange={(value) => setSelectedModel(value || '')}
+            searchable
+            styles={(theme) => ({
+              input: {
+                '&:focus': {
+                  borderColor: '#6e56cf',
+                },
+                backgroundColor: '#1a1b3e',
+                fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+                cursor: 'pointer',
+              },
+              dropdown: {
+                backgroundColor: '#1a1b3e',
+              },
+              item: {
+                '&[data-selected]': {
+                  backgroundColor: theme.colors.grape[9],
+                  '&:hover': {
+                    backgroundColor: theme.colors.grape[8],
+                  },
+                },
+                fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+                cursor: 'pointer',
+              },
+              rightSection: {
+                pointerEvents: 'none',
+                color: theme.colors.gray[5],
+              },
+            })}
+            className={`flex-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
+            rightSection={<IconChevronDown size={14} />}
+          />
+          <Button
+            onClick={() =>
+              handleCopyCodeSnippet(codeSnippets[selectedLanguage])
+            }
+            variant="subtle"
+            size="xs"
+            className="h-[36px] w-[50px] flex-shrink-0 transform rounded-md bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none"
+          >
+            {copiedCodeSnippet ? <IconCheck /> : <IconCopy />}
+          </Button>
+        </div>
+
+        <div className="space-y-2">
+          <Title
+            order={4}
+            className={`font-medium text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
+          >
+            System Prompt
+          </Title>
           <Textarea
             placeholder="System Prompt"
             value={systemPrompt}
             onChange={(e) => setSystemPrompt(e.currentTarget.value)}
             minRows={2}
-            mb="md"
+            className={`border-gray-600 bg-[#1a1b3e] ${montserrat_paragraph.variable} font-montserratParagraph`}
+            styles={(theme) => ({
+              input: {
+                backgroundColor: '#1a1b3e',
+                borderColor: '#4a4b6a',
+                '&:focus': {
+                  borderColor: '#6e56cf',
+                },
+                fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+              },
+            })}
           />
-          <Title order={4} mb="xs" className="text-white">User Query</Title>
+        </div>
+
+        <div className="space-y-2">
+          <Title
+            order={4}
+            className={`font-medium text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
+          >
+            User Query
+          </Title>
           <Textarea
             placeholder="User Query"
             value={userQuery}
             onChange={(e) => setUserQuery(e.currentTarget.value)}
             minRows={2}
-            mb="md"
-          />
-          <Switch
-            checked={retrievalOnly}
-            onChange={(event) => setRetrievalOnly(event.currentTarget.checked)}
-            label="Retrieval Only"
-            color="purple"
-            size="md"
-            className="mb-4"
-          />
-          <Textarea
-            value={codeSnippets[selectedLanguage]}
-            autosize
-            variant="unstyled"
-            readOnly
-            className="relative w-[100%] min-w-[20rem] overflow-hidden rounded-b-xl border-t-2 border-gray-400 bg-[#0c0c27] pl-8 text-white"
+            className={`border-gray-600 bg-[#1a1b3e] ${montserrat_paragraph.variable} font-montserratParagraph`}
+            styles={(theme) => ({
+              input: {
+                backgroundColor: '#1a1b3e',
+                borderColor: '#4a4b6a',
+                '&:focus': {
+                  borderColor: '#6e56cf',
+                },
+                fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+              },
+            })}
           />
         </div>
+
+        <Switch
+          checked={retrievalOnly}
+          onChange={(event) => setRetrievalOnly(event.currentTarget.checked)}
+          label="Retrieval Only"
+          size="md"
+          color="grape"
+          className={`mt-4 ${montserrat_paragraph.variable} font-montserratParagraph`}
+          styles={(theme) => ({
+            track: {
+              backgroundColor: '#4a4b6a',
+            },
+            label: {
+              fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+            },
+          })}
+        />
+
+        <Textarea
+          value={codeSnippets[selectedLanguage]}
+          autosize
+          variant="unstyled"
+          readOnly
+          className="relative mt-4 w-full min-w-[20rem] overflow-hidden rounded-xl bg-[#0c0c27] pl-8 text-white"
+          styles={{
+            input: {
+              fontFamily: 'monospace',
+            },
+          }}
+        />
       </div>
-    </>
+    </div>
   )
 }
