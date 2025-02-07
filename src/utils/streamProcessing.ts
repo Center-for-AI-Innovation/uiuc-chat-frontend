@@ -23,6 +23,8 @@ import {
   NCSAHostedVLMProvider,
   OllamaProvider,
   VisionCapableModels,
+  BedrockProvider,
+  GeminiProvider,
 } from '~/utils/modelProviders/LLMProvider'
 import fetchMQRContexts from '~/pages/api/getContextsMQR'
 import fetchContexts from '~/pages/api/getContexts'
@@ -33,6 +35,16 @@ import { v4 as uuidv4 } from 'uuid'
 import { AzureModelID } from './modelProviders/azure'
 import { AnthropicModelID } from './modelProviders/types/anthropic'
 import { NextApiRequest, NextApiResponse } from 'next'
+import { BedrockModelID } from './modelProviders/types/bedrock'
+import { GeminiModelID } from './modelProviders/types/gemini'
+import { runOllamaChat } from '~/app/utils/ollama'
+import { openAIAzureChat } from './modelProviders/OpenAIAzureChat'
+import { runAnthropicChat } from '~/app/utils/anthropic'
+import { NCSAHostedVLMModelID } from './modelProviders/types/NCSAHostedVLM'
+import { runVLLM } from '~/app/utils/vllm'
+import { type CoreMessage, streamText } from 'ai'
+import { bedrock } from '@ai-sdk/amazon-bedrock'
+import { google } from '@ai-sdk/google'
 
 export const maxDuration = 60
 
@@ -777,12 +789,12 @@ export async function handleImageContent(
     )
 
     if (imgDescIndex !== -1) {
-      ;(message.content as Content[])[imgDescIndex] = {
+      ; (message.content as Content[])[imgDescIndex] = {
         type: 'text',
         text: `Image description: ${imgDesc}`,
       }
     } else {
-      ;(message.content as Content[]).push({
+      ; (message.content as Content[]).push({
         type: 'text',
         text: `Image description: ${imgDesc}`,
       })
@@ -806,26 +818,56 @@ export const getOpenAIKey = (
   return key
 }
 
-import { runOllamaChat } from '~/app/utils/ollama'
-import { openAIAzureChat } from './modelProviders/OpenAIAzureChat'
-import { runAnthropicChat } from '~/app/utils/anthropic'
-import { NCSAHostedVLMModelID } from './modelProviders/types/NCSAHostedVLM'
-import { runVLLM } from '~/app/utils/vllm'
+// Helper function to convert conversation to Vercel AI SDK v3 format
+function convertMessagesToVercelAISDKv3(
+  conversation: Conversation,
+): CoreMessage[] {
+  const coreMessages: CoreMessage[] = []
+
+  const systemMessage = conversation.messages.findLast(
+    (msg) => msg.latestSystemMessage !== undefined,
+  )
+  if (systemMessage) {
+    coreMessages.push({
+      role: 'system',
+      content: systemMessage.latestSystemMessage || '',
+    })
+  }
+
+  conversation.messages.forEach((message, index) => {
+    if (message.role === 'system') return
+
+    let content: string
+    if (index === conversation.messages.length - 1 && message.role === 'user') {
+      content = message.finalPromtEngineeredMessage || ''
+      content +=
+        '\n\nIf you use the <Potentially Relevant Documents> in your response, please remember cite your sources using the required formatting, e.g. "The grass is green. [29, page: 11]'
+    } else if (Array.isArray(message.content)) {
+      content = message.content
+        .filter((c) => c.type === 'text')
+        .map((c) => c.text)
+        .join('\n')
+    } else {
+      content = message.content as string
+    }
+
+    coreMessages.push({
+      role: message.role as 'user' | 'assistant',
+      content: content,
+    })
+  })
+
+  return coreMessages
+}
 
 export const routeModelRequest = async (
   chatBody: ChatBody,
   controller?: AbortController,
   baseUrl?: string,
 ): Promise<any> => {
-  // console.log('In routeModelRequest: ', chatBody, baseUrl)
-  /*  Use this to call the LLM. It will call the appropriate endpoint based on the conversation.model.
-      🧠 ADD NEW LLM PROVIDERS HERE 🧠
-  */
-  const selectedConversation = chatBody.conversation!
-  let response: Response
-  // Add this check at the beginning of the function
-  if (!selectedConversation.model || !selectedConversation.model.id) {
-    throw new Error('Conversation model is undefined or missing "id" property.')
+  const selectedConversation = chatBody.conversation
+  if (!selectedConversation || !selectedConversation.model || !selectedConversation.model.id) {
+    throw new Error('Conversation or model is missing from the chat body')
   }
 
   posthog.capture('LLM Invoked', {
@@ -844,21 +886,6 @@ export const routeModelRequest = async (
       selectedConversation.model.id as any,
     )
   ) {
-    // NCSA Hosted LLMs
-    // const url = baseUrl ? `${baseUrl}/api/chat/vlm` : '/api/chat/vlm'
-    // response = await fetch(url, {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-
-    //   body: JSON.stringify({
-    //     conversation: selectedConversation,
-    //     // ollamaProvider: newChatBody,
-    //     stream: chatBody.stream,
-    //   }),
-    // })
-    // return response
     return await runVLLM(
       selectedConversation,
       chatBody?.llmProviders?.NCSAHostedVLM as NCSAHostedVLMProvider,
@@ -867,8 +894,6 @@ export const routeModelRequest = async (
   } else if (
     Object.values(OllamaModelIDs).includes(selectedConversation.model.id as any)
   ) {
-    // User-supplied Ollama instance
-
     return await runOllamaChat(
       selectedConversation,
       chatBody!.llmProviders!.Ollama as OllamaProvider,
@@ -879,11 +904,10 @@ export const routeModelRequest = async (
       selectedConversation.model.id as any,
     )
   ) {
-    // ANTHROPIC
     try {
       return await runAnthropicChat(
         selectedConversation,
-        chatBody!.llmProviders!.Anthropic as AnthropicProvider,
+        chatBody.llmProviders?.Anthropic as AnthropicProvider,
         chatBody.stream,
       )
     } catch (error) {
@@ -906,8 +930,110 @@ export const routeModelRequest = async (
     ) ||
     Object.values(AzureModelID).includes(selectedConversation.model.id as any)
   ) {
-    // Call the OpenAI or Azure API
     return await openAIAzureChat(chatBody, chatBody.stream)
+  } else if (
+    Object.values(BedrockModelID).includes(
+      selectedConversation.model.id as any,
+    )
+  ) {
+    try {
+      const bedrockProvider = chatBody.llmProviders?.Bedrock as BedrockProvider
+      if (!bedrockProvider) {
+        throw new Error('Bedrock provider configuration is missing')
+      }
+
+      const accessKeyId = await decryptKeyIfNeeded(bedrockProvider.accessKeyId || '')
+      const secretAccessKey = await decryptKeyIfNeeded(bedrockProvider.secretAccessKey || '')
+      const region = bedrockProvider.region
+
+      if (!accessKeyId || !secretAccessKey || !region) {
+        throw new Error('AWS credentials are missing')
+      }
+
+      const messages = convertMessagesToVercelAISDKv3(selectedConversation)
+
+      const response = await fetch('/api/chat/bedrock', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages,
+          model: selectedConversation.model.id,
+          temperature: selectedConversation.temperature,
+          stream: chatBody.stream,
+          credentials: {
+            accessKeyId,
+            secretAccessKey,
+            region,
+          },
+        }),
+        signal: controller?.signal,
+      })
+
+      return response
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Unknown error occurred when streaming Bedrock LLMs.',
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      )
+    }
+  } else if (
+    Object.values(GeminiModelID).includes(
+      selectedConversation.model.id as any,
+    )
+  ) {
+    try {
+      const geminiProvider = chatBody.llmProviders?.Gemini as GeminiProvider
+      if (!geminiProvider) {
+        throw new Error('Gemini provider configuration is missing')
+      }
+
+      const apiKey = await decryptKeyIfNeeded(geminiProvider.apiKey || '')
+      if (!apiKey) {
+        throw new Error('Gemini API key is missing')
+      }
+
+      const messages = convertMessagesToVercelAISDKv3(selectedConversation)
+
+      const response = await fetch('/api/chat/gemini', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages,
+          model: selectedConversation.model.id,
+          temperature: selectedConversation.temperature,
+          stream: chatBody.stream,
+          apiKey,
+        }),
+        signal: controller?.signal,
+      })
+
+      return response
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Unknown error occurred when streaming Gemini LLMs.',
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      )
+    }
   } else {
     throw new Error(
       `Model '${selectedConversation.model.name}' is not supported.`,

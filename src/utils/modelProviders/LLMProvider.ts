@@ -20,6 +20,16 @@ import {
   NCSAHostedVLMModelID,
   NCSAHostedVLMModels,
 } from '~/utils/modelProviders/types/NCSAHostedVLM'
+import {
+  type BedrockModel,
+  BedrockModelID,
+  BedrockModels,
+} from '~/utils/modelProviders/types/bedrock'
+import {
+  type GeminiModel,
+  GeminiModelID,
+  GeminiModels,
+} from '~/utils/modelProviders/types/gemini'
 
 
 export enum ProviderNames {
@@ -30,6 +40,8 @@ export enum ProviderNames {
   WebLLM = 'WebLLM',
   NCSAHosted = 'NCSAHosted',
   NCSAHostedVLM = 'NCSAHostedVLM',
+  Bedrock = 'Bedrock',
+  Gemini = 'Gemini',
 }
 
 export type AnySupportedModel =
@@ -39,9 +51,11 @@ export type AnySupportedModel =
   | AnthropicModel
   | AzureModel
   | NCSAHostedVLMModel
+  | BedrockModel
+  | GeminiModel
 // Add other vision capable models as needed
 export const VisionCapableModels: Set<
-  OpenAIModelID | AzureModelID | AnthropicModelID | NCSAHostedVLMModelID
+  OpenAIModelID | AzureModelID | AnthropicModelID | NCSAHostedVLMModelID | GeminiModelID | BedrockModelID
 > = new Set([
   OpenAIModelID.GPT_4_Turbo,
   OpenAIModelID.GPT_4o,
@@ -57,6 +71,8 @@ export const VisionCapableModels: Set<
   NCSAHostedVLMModelID.Llama_3_2_11B_Vision_Instruct,
   NCSAHostedVLMModelID.MOLMO_7B_D_0924,
   NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT,
+  GeminiModelID.Gemini_Pro_Vision,
+  BedrockModelID.Claude_3_Sonnet,
 ])
 
 export const AllSupportedModels: Set<GenericSupportedModel> = new Set([
@@ -65,6 +81,8 @@ export const AllSupportedModels: Set<GenericSupportedModel> = new Set([
   ...Object.values(AzureModels),
   ...Object.values(OllamaModels),
   ...Object.values(NCSAHostedVLMModels),
+  ...Object.values(BedrockModels),
+  ...Object.values(GeminiModels),
   // ...webLLMModels,
 ])
 // e.g. Easily validate ALL POSSIBLE models that we support. They may be offline or disabled, but they are supported.
@@ -141,6 +159,19 @@ export interface WebLLMProvider extends BaseLLMProvider {
   vram_required_MB?: string
 }
 
+export interface BedrockProvider extends BaseLLMProvider {
+  provider: ProviderNames.Bedrock
+  models?: BedrockModel[]
+  region?: string
+  accessKeyId?: string
+  secretAccessKey?: string
+}
+
+export interface GeminiProvider extends BaseLLMProvider {
+  provider: ProviderNames.Gemini
+  models?: GeminiModel[]
+}
+
 export type LLMProvider =
   | OllamaProvider
   | OpenAIProvider
@@ -149,6 +180,8 @@ export type LLMProvider =
   | WebLLMProvider
   | NCSAHostedProvider
   | NCSAHostedVLMProvider
+  | BedrockProvider
+  | GeminiProvider
 
 // export type AllLLMProviders = {
 //   [P in ProviderNames]?: LLMProvider & { provider: P }
@@ -165,23 +198,19 @@ export type AllLLMProviders = {
 // Ordered list of preferred model IDs -- the first available model will be used as default
 export const preferredModelIds = [
   AnthropicModelID.Claude_3_5_Sonnet,
-
+  GeminiModelID.Gemini_Pro,
+  BedrockModelID.Claude_3_Sonnet,
   OpenAIModelID.GPT_4o_mini,
   AzureModelID.GPT_4o_mini,
-
   AnthropicModelID.Claude_3_5_Haiku,
-
+  BedrockModelID.Claude_3_Haiku,
   OpenAIModelID.GPT_4o,
   AzureModelID.GPT_4o,
-
   OpenAIModelID.GPT_4_Turbo,
   AzureModelID.GPT_4_Turbo,
-
   AnthropicModelID.Claude_3_Opus,
-
   OpenAIModelID.GPT_4,
   AzureModelID.GPT_4,
-
   OpenAIModelID.GPT_3_5,
   NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT,
 ]

@@ -32,6 +32,8 @@ import {
   type ProviderNames,
   type WebLLMProvider,
   type NCSAHostedVLMProvider,
+  type BedrockProvider,
+  type GeminiProvider,
 } from '~/utils/modelProviders/LLMProvider'
 import { notifications } from '@mantine/notifications'
 import {
@@ -54,6 +56,8 @@ import NCSAHostedLLmsProviderInput from './providers/NCSAHostedProviderInput'
 import { getModelLogo } from '~/components/Chat/ModelSelect'
 import NCSAHostedVLMProviderInput from './providers/NCSAHostedVLMProviderInput'
 import { t } from 'i18next'
+import BedrockProviderInput from './providers/BedrockProviderInput'
+import GeminiProviderInput from './providers/GeminiProviderInput'
 
 const isSmallScreen = false
 
@@ -233,7 +237,7 @@ const NewModelDropdown: React.FC<{
             })) || [],
         )}
         itemComponent={(props) => (
-          <ModelItem {...props} setLoadingModelId={() => {}} />
+          <ModelItem {...props} setLoadingModelId={() => { }} />
         )}
         maxDropdownHeight={480}
         rightSectionWidth="auto"
@@ -450,7 +454,7 @@ export default function APIKeyInputForm() {
             (model) => model.id === newDefaultModel.id,
           )
           if (modelIndex !== -1) {
-            ;(provider.models as any[])[modelIndex] = {
+            ; (provider.models as any[])[modelIndex] = {
               ...(provider.models as any[])[modelIndex],
               default: true,
             }
@@ -680,6 +684,20 @@ export default function APIKeyInputForm() {
                               />
                               <AzureProviderInput
                                 provider={llmProviders?.Azure as AzureProvider}
+                                form={form}
+                                isLoading={isLoadingLLMProviders}
+                              />
+                              <BedrockProviderInput
+                                provider={
+                                  llmProviders?.Bedrock as BedrockProvider
+                                }
+                                form={form}
+                                isLoading={isLoadingLLMProviders}
+                              />
+                              <GeminiProviderInput
+                                provider={
+                                  llmProviders?.Gemini as GeminiProvider
+                                }
                                 form={form}
                                 isLoading={isLoadingLLMProviders}
                               />
