@@ -27,7 +27,7 @@ import {
 import fetchMQRContexts from '~/pages/api/getContextsMQR'
 import fetchContexts from '~/pages/api/getContexts'
 import { OllamaModelIDs } from './modelProviders/ollama'
-import { webLLMModels } from './modelProviders/WebLLM'
+import { getWebLLMModels, webLLMModels } from './modelProviders/WebLLM'
 import { OpenAIModelID } from './modelProviders/types/openai'
 import { v4 as uuidv4 } from 'uuid'
 import { AzureModelID } from './modelProviders/azure'
@@ -64,7 +64,7 @@ export async function processChunkWithStateMachine(
   lastMessage: Message,
   stateMachineContext: { state: State; buffer: string },
   citationLinkCache: Map<number, string>,
-  courseName: string
+  courseName: string,
 ): Promise<string> {
   let { state, buffer } = stateMachineContext
   let processedChunk = ''
@@ -312,24 +312,6 @@ export async function processChunkWithStateMachine(
 }
 
 /**
- * Fetches the OpenAI key to use for the request.
- * @param {string | undefined} openai_key - The OpenAI key provided in the request.
- * @param {CourseMetadata} courseMetadata - The course metadata containing the fallback OpenAI key.
- * @returns {Promise<string>} The OpenAI key to use.
- */
-export async function fetchKeyToUse(
-  openai_key: string | undefined,
-  courseMetadata: CourseMetadata,
-): Promise<string> {
-  return (
-    openai_key ||
-    ((await decryptKeyIfNeeded(
-      courseMetadata.openai_api_key as string,
-    )) as string)
-  )
-}
-
-/**
  * Determines the OpenAI key to use and validates it by checking available models.
  * @param {string | undefined} openai_key - The OpenAI key provided in the request.
  * @param {CourseMetadata} courseMetadata - The course metadata containing the fallback OpenAI key.
@@ -337,7 +319,6 @@ export async function fetchKeyToUse(
  * @returns {Promise<{ activeModel: GenericSupportedModel, modelsWithProviders: AllLLMProviders }>} The validated OpenAI key and available models.
  */
 export async function determineAndValidateModel(
-  keyToUse: string,
   modelId: string,
   projectName: string,
 ): Promise<{
@@ -351,7 +332,7 @@ export async function determineAndValidateModel(
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ openAIApiKey: keyToUse, projectName }),
+    body: JSON.stringify({ projectName }),
   })
 
   if (!response.ok) {
@@ -817,13 +798,14 @@ export const routeModelRequest = async (
   controller?: AbortController,
   baseUrl?: string,
 ): Promise<any> => {
-  console.log('In routeModelRequest: ', chatBody, baseUrl)
   /*  Use this to call the LLM. It will call the appropriate endpoint based on the conversation.model.
-      🧠 ADD NEW LLM PROVIDERS HERE 🧠
+  🧠 ADD NEW LLM PROVIDERS HERE 🧠
+  NOTE: WebLLM is handled separately, because it MUST be called from the Client browser itself. 
   */
+
+  console.log('In routeModelRequest: ', chatBody, baseUrl)
+
   const selectedConversation = chatBody.conversation!
-  let response: Response
-  // Add this check at the beginning of the function
   if (!selectedConversation.model || !selectedConversation.model.id) {
     throw new Error('Conversation model is undefined or missing "id" property.')
   }
@@ -844,21 +826,7 @@ export const routeModelRequest = async (
       selectedConversation.model.id as any,
     )
   ) {
-    // NCSA Hosted LLMs
-    // const url = baseUrl ? `${baseUrl}/api/chat/vlm` : '/api/chat/vlm'
-    // response = await fetch(url, {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-
-    //   body: JSON.stringify({
-    //     conversation: selectedConversation,
-    //     // ollamaProvider: newChatBody,
-    //     stream: chatBody.stream,
-    //   }),
-    // })
-    // return response
+    // NCSA Hosted VLM
     return await runVLLM(
       selectedConversation,
       chatBody?.llmProviders?.NCSAHostedVLM as NCSAHostedVLMProvider,

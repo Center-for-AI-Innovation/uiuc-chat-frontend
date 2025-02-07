@@ -23,6 +23,18 @@ export const GUIDED_LEARNING_PROMPT =
   '- **Encourage Independent Thinking**: Use probing questions to spark analysis and creative thinking, helping students feel empowered by their own problem-solving skills.\n' +
   '- **Support, Motivate, and Inspire**: Keep a warm, encouraging tone, showing genuine excitement about the learning journey. Celebrate their persistence and successes, no matter how small, to make learning enjoyable and fulfilling.'
 
+export const DOCUMENT_FOCUS_PROMPT = `
+
+You must strictly adhere to the following rules:
+
+1. Use ONLY information from the provided documents.
+2. If the answer isn't in the documents, state: "The provided documents don't contain this information."
+3. Do not use external knowledge, make assumptions, or infer beyond the documents' content.
+4. Do not answer questions outside the documents' scope.
+
+Your responses must be based solely on the content of the provided documents.
+`
+
 export const OPENAI_API_HOST =
   process.env.OPENAI_API_HOST || 'https://api.openai.com'
 

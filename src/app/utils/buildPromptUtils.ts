@@ -12,12 +12,68 @@ import { AnySupportedModel } from '~/utils/modelProviders/LLMProvider'
 import {
   DEFAULT_SYSTEM_PROMPT,
   GUIDED_LEARNING_PROMPT,
+  DOCUMENT_FOCUS_PROMPT,
 } from '@/utils/app/const'
-import { encodingForModel } from 'js-tiktoken'
+import { routeModelRequest } from '~/utils/streamProcessing'
+import { NextRequest, NextResponse } from 'next/server'
 
-// Extend the Conversation type to include guidedLearning
-interface ConversationWithGuidedLearning extends Conversation {
+import { encodingForModel } from 'js-tiktoken'
+import { v4 as uuidv4 } from 'uuid'
+
+// Define interface for URL link parameters
+interface LinkParameters {
   guidedLearning?: boolean
+  documentsOnly?: boolean
+  systemPromptOnly?: boolean
+}
+
+// Helper functions for feature flags
+const isGuidedLearningEnabled = (
+  conversation: Conversation,
+  courseMetadata?: CourseMetadata,
+): boolean => {
+  return !!(
+    conversation.linkParameters?.guidedLearning ||
+    courseMetadata?.guidedLearning
+  )
+}
+
+const isDocumentsOnlyEnabled = (
+  conversation: Conversation,
+  courseMetadata?: CourseMetadata,
+): boolean => {
+  return !!(
+    conversation.linkParameters?.documentsOnly || courseMetadata?.documentsOnly
+  )
+}
+
+const isSystemPromptOnlyEnabled = (
+  conversation: Conversation,
+  courseMetadata?: CourseMetadata,
+): boolean => {
+  return !!(
+    conversation.linkParameters?.systemPromptOnly ||
+    courseMetadata?.systemPromptOnly
+  )
+}
+
+const shouldAppendGuidedLearningPrompt = (
+  conversation: Conversation,
+  courseMetadata?: CourseMetadata,
+): boolean => {
+  return !!(
+    conversation.linkParameters?.guidedLearning &&
+    !courseMetadata?.guidedLearning
+  )
+}
+
+const shouldAppendDocumentsOnlyPrompt = (
+  conversation: Conversation,
+  courseMetadata?: CourseMetadata,
+): boolean => {
+  return !!(
+    conversation.linkParameters?.documentsOnly && !courseMetadata?.documentsOnly
+  )
 }
 
 const encoding = encodingForModel('gpt-4o')
@@ -28,11 +84,11 @@ export const buildPrompt = async ({
   courseMetadata,
   summary,
 }: {
-  conversation: ConversationWithGuidedLearning | undefined
+  conversation: Conversation | undefined
   projectName: string
   courseMetadata: CourseMetadata | undefined
   summary: boolean | undefined
-}): Promise<ConversationWithGuidedLearning> => {
+}): Promise<Conversation> => {
   /*
     System prompt -- defined by user. If documents are provided, add the citations instructions to it.
   
@@ -52,12 +108,6 @@ export const buildPrompt = async ({
     throw new Error('Conversation is undefined when building prompt.')
   }
 
-  // Check if encoding is initialized
-  if (!encoding) {
-    console.error('Encoding is not initialized.')
-    throw new Error('Encoding initialization failed.')
-  }
-
   let remainingTokenBudget = conversation.model.tokenLimit - 1500 // Save space for images, OpenAI's handling, etc.
 
   try {
@@ -72,6 +122,15 @@ export const buildPrompt = async ({
         UIUCTool[],
         string | undefined,
       ]
+
+    // Build the final system prompt with all components
+    const finalSystemPrompt = systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
+
+    // Adjust remaining token budget based on the system prompt length
+    if (encoding) {
+      const tokenCount = encoding.encode(finalSystemPrompt).length
+      remainingTokenBudget -= tokenCount
+    }
 
     // --------- <USER PROMPT> ----------
     // Initialize an array to collect sections of the user prompt
@@ -195,9 +254,9 @@ export const buildPrompt = async ({
       if (latestUserMessage?.tools) {
         const toolsOutputResults = _buildToolsOutputResults({ conversation })
 
-        // Add Tool Instructions and outputs
-        const toolInstructions =
-          "<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool `tool name`...' or 'According to tool `tool name`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>"
+      // Add Tool Instructions and outputs
+      const toolInstructions =
+        "<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool `tool name`...' or 'According to tool `tool name`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>"
 
         // Add to user prompt sections
         userPromptSections.push(toolInstructions)
@@ -422,6 +481,7 @@ const _getSystemPrompt = async ({
   courseMetadata: CourseMetadata | undefined
   conversation: Conversation
 }): Promise<string> => {
+  // First get the user defined system prompt
   let userDefinedSystemPrompt: string | undefined | null
   if (courseMetadata?.system_prompt) {
     userDefinedSystemPrompt = courseMetadata.system_prompt
@@ -434,8 +494,42 @@ const _getSystemPrompt = async ({
       })
   }
 
-  // If userDefinedSystemPrompt is null or undefined, use DEFAULT_SYSTEM_PROMPT
-  const systemPrompt = userDefinedSystemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
+  // Start with either user defined prompt or default
+  let systemPrompt = userDefinedSystemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
+
+  // If systemPromptOnly is true, don't add additional prompts except for guided learning and documents only
+  if (isSystemPromptOnlyEnabled(conversation, courseMetadata)) {
+    // Even with systemPromptOnly, we should still add guided learning if enabled locally but not course-wide
+    if (shouldAppendGuidedLearningPrompt(conversation, courseMetadata)) {
+      systemPrompt += GUIDED_LEARNING_PROMPT
+    }
+
+    // Add documents only prompt if enabled via link parameters but not course-wide
+    if (shouldAppendDocumentsOnlyPrompt(conversation, courseMetadata)) {
+      systemPrompt += DOCUMENT_FOCUS_PROMPT
+    }
+
+    return systemPrompt
+  }
+
+  // Add guided learning prompt if enabled via conversation but not course-wide
+  if (shouldAppendGuidedLearningPrompt(conversation, courseMetadata)) {
+    systemPrompt += GUIDED_LEARNING_PROMPT
+  }
+
+  // Add documents only prompt if enabled via link parameters but not course-wide
+  if (shouldAppendDocumentsOnlyPrompt(conversation, courseMetadata)) {
+    systemPrompt += DOCUMENT_FOCUS_PROMPT
+  }
+
+  // Add math notation instructions
+  systemPrompt += `\nWhen responding with equations, use MathJax/KaTeX notation. Equations should be wrapped in either:
+
+  * Single dollar signs $...$ for inline math
+  * Double dollar signs $$...$$ for display/block math
+  * Or \\[...\\] for display math
+  
+  Here's how the equations should be formatted in the markdown: Schrödinger Equation: $i\\hbar \\frac{\\partial}{\\partial t} \\Psi(\\mathbf{r}, t) = \\hat{H} \\Psi(\\mathbf{r}, t)$`
 
   // Check if contexts are present
   const contexts =
@@ -448,7 +542,7 @@ const _getSystemPrompt = async ({
   } else {
     // Documents are present, combine system prompt with system post prompt
     const systemPostPrompt = getSystemPostPrompt({
-      conversation,
+      conversation: conversation as Conversation,
       courseMetadata: courseMetadata ?? ({} as CourseMetadata),
     })
     return [systemPrompt, systemPostPrompt]
@@ -461,18 +555,16 @@ export const getSystemPostPrompt = ({
   conversation,
   courseMetadata,
 }: {
-  conversation: ConversationWithGuidedLearning
+  conversation: Conversation
   courseMetadata: CourseMetadata
 }): string => {
-  // Check for guided learning in both course metadata and conversation parameters
-  const isGuidedLearning =
-    courseMetadata.guidedLearning || conversation.guidedLearning
-  const { systemPromptOnly, documentsOnly } = courseMetadata
-
-  // If systemPromptOnly is true, return an empty PostPrompt
-  if (systemPromptOnly) {
+  // If systemPromptOnly is true, return an empty string
+  if (isSystemPromptOnlyEnabled(conversation, courseMetadata)) {
     return ''
   }
+
+  const isGuidedLearning = isGuidedLearningEnabled(conversation, courseMetadata)
+  const isDocumentsOnly = isDocumentsOnlyEnabled(conversation, courseMetadata)
 
   // Initialize PostPrompt as an array of strings for easy manipulation
   const PostPromptLines: string[] = []
@@ -489,7 +581,7 @@ Integrate relevant information from these documents, ensuring each reference is 
 When quoting directly from a source document, cite with footnotes linked to the document number and page number, if provided. 
 Summarize or paraphrase other relevant information with inline citations, again referencing the document number and page number, if provided.
 If the answer is not in the provided documents, state so.${
-      isGuidedLearning || documentsOnly
+      isGuidedLearning || isDocumentsOnly
         ? ''
         : ' Yet always provide as helpful a response as possible to directly answer the question.'
     }
@@ -548,15 +640,19 @@ export const getDefaultPostPrompt = (): string => {
   // Call getSystemPostPrompt with default values
   return getSystemPostPrompt({
     conversation: {
-      id: '',
+      id: uuidv4(),
       name: '',
       messages: [],
       model: {} as AnySupportedModel,
-      prompt: '',
+      prompt: DEFAULT_SYSTEM_PROMPT,
       temperature: 0.7,
       folderId: null,
-      guidedLearning: false,
-    } as ConversationWithGuidedLearning,
+      linkParameters: {
+        guidedLearning: false,
+        documentsOnly: false,
+        systemPromptOnly: false,
+      },
+    } as Conversation,
     courseMetadata: defaultCourseMetadata,
   })
 }

@@ -388,11 +388,6 @@ export const Chat = memo(
         documentGroups: string[],
         llmProviders: AllLLMProviders,
       ) => {
-        console.log(
-          'handleSend called with model:',
-          selectedConversation?.model,
-        )
-
         const startOfHandleSend = performance.now()
         setCurrentMessage(message)
         resetMessageStates()
@@ -718,8 +713,9 @@ export const Chat = memo(
                   }
                   try {
                     rewriteResponse = await chat_ui.runChatCompletion(
-                      queryRewriteConversation,
+                      queryRewriteBody,
                       getCurrentPageName(),
+                      courseMetadata,
                     )
                   } catch (error) {
                     errorToast({
@@ -895,7 +891,7 @@ export const Chat = memo(
             courseMetadata: courseMetadata,
             llmProviders: llmProviders,
             model: selectedConversation.model,
-            skipQueryRewrite: documentCount === 0 || documentCount === null,
+            skipQueryRewrite: documentCount === 0,
           }
           updatedConversation = finalChatBody.conversation!
 
@@ -925,15 +921,16 @@ export const Chat = memo(
             }
             try {
               response = await chat_ui.runChatCompletion(
-                selectedConversation,
+                finalChatBody,
                 getCurrentPageName(),
+                courseMetadata,
               )
             } catch (error) {
               errorToast({
-                title: 'Error running chat completion',
+                title: 'Error running Web LLM models.',
                 message:
                   (error as Error).message ||
-                  'In Chat.tsx An unexpected error occurred',
+                  'In Chat.tsx, we errored when running WebLLM model.',
               })
             }
           } else {
