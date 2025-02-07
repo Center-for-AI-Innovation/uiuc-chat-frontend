@@ -193,7 +193,7 @@ export const buildPrompt = async ({
     } else {
       // normal flow without summary
       // Build the final system prompt with all components
-      let finalSystemPrompt = systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
+      finalSystemPrompt = systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
       // Check for guided learning in both course metadata and conversation parameters
       const isGuidedLearningFromConversation =
         conversation.guidedLearning && !courseMetadata?.guidedLearning
