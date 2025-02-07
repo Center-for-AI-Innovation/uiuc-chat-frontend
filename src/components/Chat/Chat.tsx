@@ -340,16 +340,6 @@ export const Chat = memo(
     }
 
     const onMessageReceived = async (conversation: Conversation) => {
-      // // Call LLM for conversation summary
-      // const summary = await callLLMForMessageSummary(conversation)
-      // console.debug('summary: ', summary)
-      // conversation = updateConversationWithSummary(conversation, summary)
-      // // Update the selected conversation
-      // homeDispatch({
-      //   field: 'selectedConversation',
-      //   value: conversation,
-      // })
-
       // Log conversation to Supabase
       try {
         const response = await fetch(
@@ -1028,7 +1018,6 @@ export const Chat = memo(
           }
 
           if (!plugin) {
-            console.log('PLUGIN')
             homeDispatch({ field: 'loading', value: false })
 
             if (startOfCallToLLM) {
@@ -1107,18 +1096,6 @@ export const Chat = memo(
                     ...updatedConversation,
                     messages: updatedMessages,
                   }
-
-                  // // Call LLM for conversation summary
-                  // const summary =
-                  //   await callLLMForMessageSummary(updatedConversation)
-                  // updatedConversation = updateConversationWithSummary(
-                  //   updatedConversation,
-                  //   summary,
-                  // )
-                  // homeDispatch({
-                  //   field: 'selectedConversation',
-                  //   value: updatedConversation,
-                  // })
                 } else {
                   if (updatedConversation.messages?.length > 0) {
                     const lastMessageIndex =
@@ -1160,18 +1137,6 @@ export const Chat = memo(
                         ...updatedConversation,
                         messages: updatedMessages as Message[],
                       }
-                      // // Call LLM for conversation summary
-                      // const summary =
-                      //   await callLLMForMessageSummary(updatedConversation)
-                      // updatedConversation = updateConversationWithSummary(
-                      //   updatedConversation,
-                      //   summary,
-                      // )
-                      // // Dispatch the updated conversation
-                      // homeDispatch({
-                      //   field: 'selectedConversation',
-                      //   value: updatedConversation,
-                      // })
                     }
                   }
                 }
@@ -1209,10 +1174,6 @@ export const Chat = memo(
                 value: updatedConversation.messages,
               })
               updateConversationMutation.mutate(updatedConversation)
-              console.debug(
-                'updatedConversation after mutation:',
-                updatedConversation,
-              )
               console.log(
                 'updatedConversation after mutation: ',
                 updatedConversation,
@@ -1224,7 +1185,6 @@ export const Chat = memo(
               controller.abort()
             }
           } else {
-            console.log('NOT PLUGIN')
             if (response instanceof Response) {
               const { answer } = await response.json()
               const updatedMessages: Message[] = [

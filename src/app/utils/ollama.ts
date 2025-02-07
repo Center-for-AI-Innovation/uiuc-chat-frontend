@@ -1,9 +1,5 @@
 import { createOllama } from 'ollama-ai-provider'
-import {
-  CoreMessage,
-  generateText,
-  streamText,
-} from 'ai'
+import { CoreMessage, generateText, streamText } from 'ai'
 import { Conversation } from '~/types/chat'
 import {
   NCSAHostedProvider,
@@ -25,13 +21,14 @@ export async function runOllamaChat(
     baseURL: `${(await decryptKeyIfNeeded(ollamaProvider.baseUrl!)) as string}/api`,
   })
 
-
   if (conversation.messages.length === 0) {
     throw new Error('Conversation messages array is empty')
   }
 
   const commonParams = {
-    model: ollama(conversation.model.id, { numCtx: conversation.model.tokenLimit }),
+    model: ollama(conversation.model.id, {
+      numCtx: conversation.model.tokenLimit,
+    }),
     messages: convertConversatonToVercelAISDKv3(conversation),
     temperature: conversation.temperature,
     maxTokens: 4096, // output tokens
@@ -61,10 +58,10 @@ function convertConversatonToVercelAISDKv3(
     (msg) => msg.latestSystemMessage !== undefined,
   )
   if (systemMessage) {
-    // console.log(
-    //     'Found system message, latestSystemMessage: ',
-    //     systemMessage.latestSystemMessage,
-    // )
+    console.log(
+      'Found system message, latestSystemMessage: ',
+      systemMessage.latestSystemMessage,
+    )
     coreMessages.push({
       role: 'system',
       content: systemMessage.latestSystemMessage || '',

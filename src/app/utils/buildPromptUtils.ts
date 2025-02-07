@@ -133,7 +133,6 @@ export const buildPrompt = async ({
 
     // Build the final system prompt with all components
     let finalSystemPrompt = ''
-
     // Adjust remaining token budget based on the system prompt length
     if (encoding) {
       const tokenCount = encoding.encode(finalSystemPrompt).length
@@ -143,13 +142,12 @@ export const buildPrompt = async ({
     // --------- <USER PROMPT> ----------
     // Initialize an array to collect sections of the user prompt
     const userPromptSections: string[] = []
-    let finalSystemPrompt = ''
 
     if (summary) {
       console.log('Call for summarization')
       // build prompt for summarization
       finalSystemPrompt =
-        'You are a helpful assistant that summarizes content. Summarize the below content in 3 sentences'
+        'You are a helpful assistant that summarizes content. Summarize the content in 3 sentences'
 
       // Adjust remaining token budget based on the system prompt length
       const tokenCount = encoding.encode(finalSystemPrompt).length
@@ -206,14 +204,6 @@ export const buildPrompt = async ({
       // normal flow without summary
       // Build the final system prompt with all components
       finalSystemPrompt = systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
-      // Check for guided learning in both course metadata and conversation parameters
-      const isGuidedLearningFromConversation =
-        conversation.guidedLearning && !courseMetadata?.guidedLearning
-      // Only add GUIDED_LEARNING_PROMPT if guided learning is enabled via conversation but not course-wide
-      finalSystemPrompt =
-        (systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? '') +
-        (isGuidedLearningFromConversation ? GUIDED_LEARNING_PROMPT : '')
-
       // Adjust remaining token budget based on the system prompt length
       const tokenCount = encoding.encode(finalSystemPrompt).length
       remainingTokenBudget -= tokenCount
@@ -223,7 +213,16 @@ export const buildPrompt = async ({
       remainingTokenBudget -= encoding.encode(userQuery).length
       userPromptSections.push(userQuery)
 
-      // P2: Latest 2 conversation messages (Reserved tokens)
+      // P2.1 : get the previous conversation summary, if it exists
+      if (conversation.summary) {
+        const previousConversationSummary = `\n<Previous Conversation Summary>\n${conversation.summary}\n</Previous Conversation Summary>`
+        userPromptSections.push(previousConversationSummary)
+        remainingTokenBudget -= encoding.encode(
+          previousConversationSummary,
+        ).length
+      }
+
+      // P2.2: Latest 2 conversation messages (Reserved tokens)
       const tokensInLastTwoMessages = _getRecentConvoTokens({
         conversation,
       })
@@ -268,9 +267,9 @@ export const buildPrompt = async ({
       if (latestUserMessage?.tools) {
         const toolsOutputResults = _buildToolsOutputResults({ conversation })
 
-      // Add Tool Instructions and outputs
-      const toolInstructions =
-        "<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool `tool name`...' or 'According to tool `tool name`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>"
+        // Add Tool Instructions and outputs
+        const toolInstructions =
+          "<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool `tool name`...' or 'According to tool `tool name`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>"
 
         // Add to user prompt sections
         userPromptSections.push(toolInstructions)
