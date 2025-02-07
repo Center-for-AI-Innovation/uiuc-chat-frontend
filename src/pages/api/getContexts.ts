@@ -40,7 +40,8 @@ export const fetchContexts = async (
   // ]
   // return dummyContexts
 
-  const url = `https://flask-pr-316.up.railway.app/getTopContexts`
+  // const url = `https://flask-pr-316.up.railway.app/getTopContexts`  // mHealth backend app
+  const url = `https://flask-production-751b.up.railway.app/getTopContexts` // production backend app
 
   try {
     const response = await fetch(url, {

@@ -47,7 +47,7 @@ const ToolsPage: NextPage = () => {
       setCourseExists(data)
       if (data) {
         const response = await fetch(
-          `https://flask-pr-316.up.railway.app/getAll?course_name=${course_name}`,
+          `https://flask-production-751b.up.railway.app/getAll?course_name=${course_name}`,
         )
         const data = await response.json()
         const courseData = data.distinct_files

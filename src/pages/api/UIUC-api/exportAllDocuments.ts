@@ -8,7 +8,8 @@ export const handleExport = async (
   course_name: string,
 ): Promise<ExportResult> => {
   try {
-    const API_URL = 'https://flask-pr-316.up.railway.app/exportDocuments'
+    const API_URL =
+      'https://flask-production-751b.up.railway.app/exportDocuments'
     const response = await axios.get(`${API_URL}?course_name=${course_name}`, {
       responseType: 'blob',
     })
