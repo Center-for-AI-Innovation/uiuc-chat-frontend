@@ -64,7 +64,7 @@ export async function processChunkWithStateMachine(
   lastMessage: Message,
   stateMachineContext: { state: State; buffer: string },
   citationLinkCache: Map<number, string>,
-  courseName: string
+  courseName: string,
 ): Promise<string> {
   let { state, buffer } = stateMachineContext
   let processedChunk = ''
@@ -777,12 +777,12 @@ export async function handleImageContent(
     )
 
     if (imgDescIndex !== -1) {
-      ; (message.content as Content[])[imgDescIndex] = {
+      ;(message.content as Content[])[imgDescIndex] = {
         type: 'text',
         text: `Image description: ${imgDesc}`,
       }
     } else {
-      ; (message.content as Content[]).push({
+      ;(message.content as Content[]).push({
         type: 'text',
         text: `Image description: ${imgDesc}`,
       })
@@ -817,7 +817,10 @@ export const routeModelRequest = async (
   controller?: AbortController,
   baseUrl?: string,
 ): Promise<any> => {
-  console.log('In routeModelRequest: ', chatBody, baseUrl)
+  console.log(
+    'In routeModelRequest: ',
+    `Conversation name: ${chatBody.conversation?.name}, Conversation prompt: ${chatBody.conversation?.prompt}, System prompt: ${chatBody.courseMetadata?.system_prompt}`,
+  )
   /*  Use this to call the LLM. It will call the appropriate endpoint based on the conversation.model.
       🧠 ADD NEW LLM PROVIDERS HERE 🧠
   */

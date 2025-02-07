@@ -287,7 +287,9 @@ export const Chat = memo(
       }
 
       try {
-        const response = await fetch('/api/allNewRoutingChat?summary=true', {
+        const url = new URL('/api/allNewRoutingChat', location.href)
+        url.searchParams.set('summary', 'true')
+        const response = await fetch(url.toString(), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -309,29 +311,29 @@ export const Chat = memo(
       conversation: Conversation,
       summary: string,
     ): Conversation => {
-      const lastMessageIndex = conversation.messages?.length - 1
-      const lastMessage =
-        conversation.messages[conversation.messages.length - 1]
-      if (Array.isArray(lastMessage!.content)) {
-        lastMessage!.content.push({ type: 'summary', text: summary })
-      } else if (typeof lastMessage!.content === 'string') {
-        lastMessage!.content = [
-          { type: 'text', text: lastMessage!.content },
-          { type: 'summary', text: summary },
-        ]
-      }
-      // Update the last message with the new content
-      const updatedMessages = conversation.messages?.map((msg, index) =>
-        index === lastMessageIndex
-          ? { ...msg, content: lastMessage!.content }
-          : msg,
-      )
+      // const lastMessageIndex = conversation.messages?.length - 1
+      // const lastMessage =
+      //   conversation.messages[conversation.messages.length - 1]
+      // if (Array.isArray(lastMessage!.content)) {
+      //   lastMessage!.content.push({ type: 'summary', text: summary })
+      // } else if (typeof lastMessage!.content === 'string') {
+      //   lastMessage!.content = [
+      //     { type: 'text', text: lastMessage!.content },
+      //     { type: 'summary', text: summary },
+      //   ]
+      // }
+      // // Update the last message with the new content
+      // const updatedMessages = conversation.messages?.map((msg, index) =>
+      //   index === lastMessageIndex
+      //     ? { ...msg, content: lastMessage!.content }
+      //     : msg,
+      // )
 
-      // Update the conversation with the new messages
-      conversation = {
-        ...conversation,
-        messages: updatedMessages as Message[],
-      }
+      // // Update the conversation with the new messages
+      // conversation = {
+      //   ...conversation,
+      //   messages: updatedMessages as Message[],
+      // }
 
       conversation.summary = summary
       return conversation
@@ -400,6 +402,8 @@ export const Chat = memo(
         let searchQuery = Array.isArray(message.content)
           ? message.content.map((content) => content.text).join(' ')
           : message.content
+
+        console.log('searchQuery: ', searchQuery)
 
         if (selectedConversation) {
           // Add this type guard function
@@ -748,7 +752,7 @@ export const Chat = memo(
                   }
                 }
 
-                // console.log('query rewriteResponse:', rewriteResponse)
+                console.log('query rewriteResponse:', rewriteResponse)
 
                 // After processing the query rewrite response
                 if (rewriteResponse instanceof Response) {
@@ -817,7 +821,7 @@ export const Chat = memo(
                   } else {
                     // Use the extracted query
                     rewrittenQuery = extractedQuery
-                    // console.log('Using rewritten query:', rewrittenQuery)
+                    console.log('Using rewritten query:', rewrittenQuery)
                     homeDispatch({ field: 'wasQueryRewritten', value: true })
                     homeDispatch({
                       field: 'queryRewriteText',
@@ -1027,6 +1031,7 @@ export const Chat = memo(
           }
 
           if (!plugin) {
+            console.log('PLUGIN')
             homeDispatch({ field: 'loading', value: false })
 
             if (startOfCallToLLM) {
@@ -1106,17 +1111,17 @@ export const Chat = memo(
                     messages: updatedMessages,
                   }
 
-                  // Call LLM for conversation summary
-                  const summary =
-                    await callLLMForMessageSummary(updatedConversation)
-                  updatedConversation = updateConversationWithSummary(
-                    updatedConversation,
-                    summary,
-                  )
-                  homeDispatch({
-                    field: 'selectedConversation',
-                    value: updatedConversation,
-                  })
+                  // // Call LLM for conversation summary
+                  // const summary =
+                  //   await callLLMForMessageSummary(updatedConversation)
+                  // updatedConversation = updateConversationWithSummary(
+                  //   updatedConversation,
+                  //   summary,
+                  // )
+                  // homeDispatch({
+                  //   field: 'selectedConversation',
+                  //   value: updatedConversation,
+                  // })
                 } else {
                   if (updatedConversation.messages?.length > 0) {
                     const lastMessageIndex =
@@ -1158,18 +1163,18 @@ export const Chat = memo(
                         ...updatedConversation,
                         messages: updatedMessages as Message[],
                       }
-                      // Call LLM for conversation summary
-                      const summary =
-                        await callLLMForMessageSummary(updatedConversation)
-                      updatedConversation = updateConversationWithSummary(
-                        updatedConversation,
-                        summary,
-                      )
-                      // Dispatch the updated conversation
-                      homeDispatch({
-                        field: 'selectedConversation',
-                        value: updatedConversation,
-                      })
+                      // // Call LLM for conversation summary
+                      // const summary =
+                      //   await callLLMForMessageSummary(updatedConversation)
+                      // updatedConversation = updateConversationWithSummary(
+                      //   updatedConversation,
+                      //   summary,
+                      // )
+                      // // Dispatch the updated conversation
+                      // homeDispatch({
+                      //   field: 'selectedConversation',
+                      //   value: updatedConversation,
+                      // })
                     }
                   }
                 }
@@ -1188,11 +1193,18 @@ export const Chat = memo(
             try {
               // This is after the response is done streaming
               // saveConversation(updatedConversation)
-              console.debug(
+              console.log(
                 'updatedConversation after streaming:',
                 updatedConversation,
               )
-              // generate summary and save updated conversation
+              // Call LLM for conversation summary
+              const summary =
+                await callLLMForMessageSummary(updatedConversation)
+              console.log('summary: ', summary)
+              updatedConversation = updateConversationWithSummary(
+                updatedConversation,
+                summary,
+              )
               onMessageReceived(updatedConversation) // kastan here, trying to save message AFTER done streaming. This only saves the user message...
 
               handleUpdateConversation(updatedConversation, {
@@ -1204,6 +1216,10 @@ export const Chat = memo(
                 'updatedConversation after mutation:',
                 updatedConversation,
               )
+              console.log(
+                'updatedConversation after mutation: ',
+                updatedConversation,
+              )
 
               homeDispatch({ field: 'messageIsStreaming', value: false })
             } catch (error) {
@@ -1211,6 +1227,7 @@ export const Chat = memo(
               controller.abort()
             }
           } else {
+            console.log('NOT PLUGIN')
             if (response instanceof Response) {
               const { answer } = await response.json()
               const updatedMessages: Message[] = [
@@ -1232,14 +1249,15 @@ export const Chat = memo(
               // Call LLM for conversation summary
               const summary =
                 await callLLMForMessageSummary(updatedConversation)
+              console.log('summary: ', summary)
               updatedConversation = updateConversationWithSummary(
                 updatedConversation,
                 summary,
               )
-              homeDispatch({
-                field: 'selectedConversation',
-                value: updatedConversation,
-              })
+              // homeDispatch({
+              //   field: 'selectedConversation',
+              //   value: updatedConversation,
+              // })
               // This is after the response is done streaming for plugins
 
               // handleUpdateConversation(updatedConversation, {

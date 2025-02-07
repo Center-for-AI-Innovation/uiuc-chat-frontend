@@ -39,7 +39,7 @@ export const buildPrompt = async ({
     Priorities for building prompt w/ limited window:
     1. ✅ Most recent user text input & images/img-description (depending on model support for images)
     1.5. LLM memory - Key for follow-up questions: 
-      1.5.1. ✅ Conversation summary - running summary of the last user query and assistant answer. 
+      1.5.1. ✅ Conversation summary - running summary of the last user query and assistant answer + previous conversation summary. 
       1.5.2. ❌ Last 1 or 2 conversation history. At least the user message and the AI response.
     2. ✅ Image description
     3. ✅ Tool result
@@ -57,6 +57,8 @@ export const buildPrompt = async ({
     console.error('Encoding is not initialized.')
     throw new Error('Encoding initialization failed.')
   }
+
+  console.log('conversation in BuildPromptUtils: ', conversation)
 
   let remainingTokenBudget = conversation.model.tokenLimit - 1500 // Save space for images, OpenAI's handling, etc.
 
@@ -79,6 +81,7 @@ export const buildPrompt = async ({
     let finalSystemPrompt = ''
 
     if (summary) {
+      console.log('Call for summarization')
       // build prompt for summarization
       finalSystemPrompt =
         'You are a helpful assistant that summarizes content. Summarize the below content in 3 sentences'
@@ -105,7 +108,6 @@ export const buildPrompt = async ({
         conversation?.messages
           .filter((msg) => msg.role === 'assistant')
           .slice(-1)[0]?.content || ''
-
       // P3.2 : get the last assistant message text
       let cleanedAssistantMessage = ''
       if (
@@ -115,7 +117,11 @@ export const buildPrompt = async ({
             typeof item === 'object' && 'type' in item && 'text' in item,
         )
       ) {
-        cleanedAssistantMessage = lastAssistantMessage[-1]?.text || ''
+        // Get the last element of the array
+        const lastElement = lastAssistantMessage.slice(-1)[0]
+        if (lastElement?.type === 'text') {
+          cleanedAssistantMessage = lastElement.text || ''
+        }
       } else if (typeof lastAssistantMessage === 'string') {
         cleanedAssistantMessage = lastAssistantMessage
       }
@@ -208,13 +214,18 @@ export const buildPrompt = async ({
         // Add tool outputs to user prompt sections
         userPromptSections.push(toolsOutputResults)
       }
-
-      // Add the user's query to the prompt sections
-      userPromptSections.push(userQuery)
-    } // end if-else here
+    } // end summary if-else here
 
     // Assemble the user prompt by joining sections with double line breaks
     const userPrompt = userPromptSections.join('\n\n')
+
+    if (summary) {
+      console.log('Summary userPrompt: ', userPrompt)
+      console.log('Summary finalSystemPrompt: ', finalSystemPrompt)
+    } else {
+      console.log('Normal userPrompt: ', userPrompt)
+      console.log('Normal finalSystemPrompt: ', finalSystemPrompt)
+    }
 
     // Set final system and user prompts in the conversation
     conversation.messages[
@@ -344,9 +355,12 @@ const _getLastUserTextInput = async ({
   /* 
       Gets ONLY the text that the user input. Does not return images or anything else. Just what the user typed.
     */
-  const lastMessageContent =
-    conversation.messages?.[conversation.messages.length - 1]?.content
+  // const lastMessageContent =
+  //   conversation.messages?.[conversation.messages.length - 1]?.content
 
+  const lastMessageContent: string | Content[] =
+    conversation?.messages.filter((msg) => msg.role === 'user').slice(-1)[0]
+      ?.content || ''
   if (typeof lastMessageContent === 'string') {
     return lastMessageContent
   } else if (Array.isArray(lastMessageContent)) {

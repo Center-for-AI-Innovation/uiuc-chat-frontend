@@ -49,7 +49,9 @@ export async function POST(req: NextRequest, res: NextResponse) {
 
   try {
     const result = await routeModelRequest(body as ChatBody)
-
+    console.log('Result from routeModelRequest: ', result)
+    const result_json = await result.json()
+    console.log('Result JSON: ', result_json)
     const endTime = Date.now()
     const duration = endTime - startTime
     console.log(`Total duration: ${duration}ms`)
