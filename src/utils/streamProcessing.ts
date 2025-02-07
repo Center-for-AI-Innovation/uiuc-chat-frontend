@@ -45,6 +45,7 @@ import { runVLLM } from '~/app/utils/vllm'
 import { type CoreMessage, streamText } from 'ai'
 import { bedrock } from '@ai-sdk/amazon-bedrock'
 import { google } from '@ai-sdk/google'
+import { runGeminiChat } from '~/app/utils/gemini'
 
 export const maxDuration = 60
 
@@ -992,34 +993,11 @@ export const routeModelRequest = async (
     )
   ) {
     try {
-      const geminiProvider = chatBody.llmProviders?.Gemini as GeminiProvider
-      if (!geminiProvider) {
-        throw new Error('Gemini provider configuration is missing')
-      }
-
-      const apiKey = await decryptKeyIfNeeded(geminiProvider.apiKey || '')
-      if (!apiKey) {
-        throw new Error('Gemini API key is missing')
-      }
-
-      const messages = convertMessagesToVercelAISDKv3(selectedConversation)
-
-      const response = await fetch('/api/chat/gemini', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages,
-          model: selectedConversation.model.id,
-          temperature: selectedConversation.temperature,
-          stream: chatBody.stream,
-          apiKey,
-        }),
-        signal: controller?.signal,
-      })
-
-      return response
+      return await runGeminiChat(
+        selectedConversation,
+        chatBody.llmProviders?.Gemini as GeminiProvider,
+        chatBody.stream,
+      )
     } catch (error) {
       return new Response(
         JSON.stringify({

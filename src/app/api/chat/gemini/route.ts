@@ -1,23 +1,17 @@
 import { type CoreMessage, streamText } from 'ai'
 import { type ChatBody, type Conversation } from '~/types/chat'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
-import { ProviderNames } from '~/utils/modelProviders/LLMProvider'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
+import { ProviderNames } from '~/utils/modelProviders/LLMProvider'
+import { GeminiModel, GeminiModels } from '~/utils/modelProviders/types/gemini'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
 import { NextResponse } from 'next/server'
-import { GeminiModel, GeminiModels } from '~/utils/modelProviders/types/gemini'
 
 export async function POST(req: Request) {
   try {
-    const {
-      chatBody,
-    }: {
-      chatBody: ChatBody
-    } = await req.json()
-
-    console.log('chatBody: ', chatBody)
+    const { chatBody }: { chatBody: ChatBody } = await req.json()
 
     const conversation = chatBody.conversation
     if (!conversation) {
@@ -33,18 +27,13 @@ export async function POST(req: Request) {
       apiKey: await decryptKeyIfNeeded(apiKey),
     })
 
-    if (conversation.messages.length === 0) {
-      throw new Error('Conversation messages array is empty')
-    }
-
     const model = gemini(conversation.model.id)
-
     const result = await streamText({
       model: model as any,
       messages: convertConversationToVercelAISDKv3(conversation),
       temperature: conversation.temperature,
-      maxTokens: 4096,
     })
+
     return result.toTextStreamResponse()
   } catch (error) {
     if (
