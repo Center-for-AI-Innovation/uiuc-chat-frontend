@@ -56,6 +56,7 @@
     "@tiptap/extension-link": "^2.0.3",
     "@tiptap/react": "^2.0.3",
     "@tiptap/starter-kit": "^2.0.3",
+    "@vercel/analytics": "^1.4.1",
     "@vercel/edge-config": "^0.2.0",
     "@vercel/kv": "^0.2.1",
     "@vercel/speed-insights": "^1.1.0",
