@@ -25,7 +25,7 @@ export const IntermediateStateAccordion = ({
 }) => {
   // console.log('IntermediateStateAccordion, key:', accordionKey, 'isLoading:', isLoading, 'error:', error, 'default value:', defaultValue)
   return (
-    <div className="xl:w-8/10 mx-auto w-full lg:mx-0 lg:w-3/4">
+    <div className="w-full">
       <Accordion
         variant="separated"
         radius={'lg'}
@@ -47,7 +47,6 @@ export const IntermediateStateAccordion = ({
         <Accordion.Item
           key={accordionKey}
           value={accordionKey}
-          // value={title}
           style={{
             border: 0,
             backgroundColor: '#101122',
@@ -57,7 +56,6 @@ export const IntermediateStateAccordion = ({
           <Accordion.Control
             className={`rounded-lg hover:bg-transparent ${montserrat_paragraph.variable} font-montserratParagraph text-sm font-bold`}
             style={{
-              // marginRight: '10px',
               textShadow: '0 0 10px',
               color: '#9d4edd',
               display: 'flex',

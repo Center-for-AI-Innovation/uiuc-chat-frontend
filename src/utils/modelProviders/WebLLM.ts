@@ -3,12 +3,14 @@ import {
   ChatCompletionMessageParam,
   CompletionUsage,
 } from '@mlc-ai/web-llm'
-import { Conversation } from '~/types/chat'
+import { ChatBody, Conversation, Message } from '~/types/chat'
 import { ModelRecord, prebuiltAppConfig } from './ConfigWebLLM'
 import {
   ProviderNames,
   WebLLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
+import { CourseMetadata } from '~/types/courseMetadata'
+import buildPrompt from '~/pages/api/buildPrompt'
 
 // TODO: finish this message interface. Write a converter between `Message` and `WebLLMMessage`
 export interface WebLLMMessage {
@@ -137,22 +139,27 @@ export default class ChatUI {
     return this.modelLoading
   }
 
-  async runChatCompletion(conversation: Conversation, projectName: string) {
-    // TODO: need the input to be the Conversation, not messages.
-    // let curMessage = ''
-    // let usage: CompletionUsage | undefined = undefined
+  async runChatCompletion(
+    chatBody: ChatBody,
+    projectName: string,
+    courseMetadata: CourseMetadata,
+  ) {
+    console.log('chatBody (webllm)', chatBody)
+
+    const buildPromptResponse = await fetch('/api/buildPrompt', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        conversation: chatBody.conversation,
+        course_name: projectName,
+        courseMetadata,
+      }),
+    })
+    const conversation = await buildPromptResponse.json()
+
     const messagesToSend: ChatCompletionMessageParam[] = []
-
-    console.log('Messages with tons of metadata', conversation.messages)
-
-    // TODO... we need to handle the messages better.
-    // System message
-    // User
-    // Assistant
-    // User
-    // Assistant...
-
-    // Call build prompt here.
 
     // Then build the messagesToSend array.... update system message every time.
     const latestSystemMessage =
@@ -295,10 +302,14 @@ export const getWebLLMModels = async (
 ): Promise<WebLLMProvider> => {
   webLLMProvider.provider = ProviderNames.WebLLM
   if (!webLLMProvider.models || webLLMProvider.models.length === 0) {
-    // If no models, add all possible models and enable them
+    // If no models, add all models but only enable Llama 3 8b, Phi 3 mini, and Gemma 2b by default
     webLLMProvider.models = webLLMModels.map((model) => ({
       ...model,
-      enabled: true,
+      enabled: [
+        'Llama 3.1 8b Instruct',
+        'Phi 3 Mini Instruct',
+        'Gemma 2b',
+      ].includes(model.id),
     }))
   } else {
     // Ensure existing models are in the master list and remove any that aren't

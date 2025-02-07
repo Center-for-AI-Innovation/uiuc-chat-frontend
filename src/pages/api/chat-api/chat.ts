@@ -1,18 +1,22 @@
 // src/pages/api/chat-api/chat.ts
 
-import { ChatBody, Content, Conversation, Message } from '~/types/chat'
+import {
+  type ChatBody,
+  type Content,
+  type Conversation,
+  type Message,
+} from '~/types/chat'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { validateApiKeyAndRetrieveData } from './keys/validate'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import posthog from 'posthog-js'
-import { User } from '@clerk/nextjs/server'
-import { NextApiRequest, NextApiResponse } from 'next'
-import { CourseMetadata } from '~/types/courseMetadata'
+import { type User } from '@clerk/nextjs/server'
+import { type NextApiRequest, type NextApiResponse } from 'next'
+import { type CourseMetadata } from '~/types/courseMetadata'
 import {
   attachContextsToLastMessage,
   constructSearchQuery,
   determineAndValidateModel,
-  fetchKeyToUse,
   handleContextSearch,
   handleImageContent,
   handleNonStreamingResponse,
@@ -20,7 +24,7 @@ import {
   routeModelRequest,
   validateRequestBody,
 } from '~/utils/streamProcessing'
-import { DEFAULT_SYSTEM_PROMPT, DEFAULT_TEMPERATURE } from '~/utils/app/const'
+import { DEFAULT_SYSTEM_PROMPT } from '~/utils/app/const'
 import { v4 as uuidv4 } from 'uuid'
 import { getBaseUrl } from '~/utils/apiUtils'
 import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
@@ -29,12 +33,10 @@ import {
   handleToolsServer,
 } from '~/utils/functionCalling/handleFunctionCalling'
 import {
-  AllLLMProviders,
-  GenericSupportedModel,
-  OpenAIProvider,
+  type AllLLMProviders,
+  type GenericSupportedModel,
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
-import { fetchEnabledDocGroups } from '~/utils/dbUtils'
 import { buildPrompt } from '~/app/utils/buildPromptUtils'
 import { selectBestTemperature } from '~/components/Chat/Temperature'
 
@@ -86,7 +88,6 @@ export default async function chat(
   const {
     model,
     messages,
-    openai_key,
     temperature,
     course_name,
     stream,
@@ -131,15 +132,12 @@ export default async function chat(
     return
   }
 
-  // Fetch the final key to use
-  const key = await fetchKeyToUse(openai_key, courseMetadata)
-
   // Determine and validate the model to use
   let selectedModel: GenericSupportedModel
   let llmProviders: AllLLMProviders
   try {
     const { activeModel, modelsWithProviders } =
-      await determineAndValidateModel(key, model, course_name)
+      await determineAndValidateModel(model, course_name)
     selectedModel = activeModel
     llmProviders = modelsWithProviders
   } catch (error) {
@@ -243,12 +241,7 @@ export default async function chat(
 
   if (imageContent.length > 0 && !retrieval_only) {
     // convert the provided key into an OpenAI provider.
-    const llmProviders = {
-      [ProviderNames.OpenAI]: {
-        provider: ProviderNames.OpenAI,
-        apiKey: key,
-      } as OpenAIProvider,
-    } as AllLLMProviders
+    const llmProviders = {} as AllLLMProviders
     const { searchQuery: newSearchQuery, imgDesc: newImgDesc } =
       await handleImageContent(
         lastMessage,
@@ -305,7 +298,7 @@ export default async function chat(
       imageUrls,
       imgDesc,
       conversation,
-      key,
+      llmProviders[ProviderNames.OpenAI]?.apiKey as string,
       course_name,
       getBaseUrl(),
     )
@@ -313,7 +306,7 @@ export default async function chat(
 
   const chatBody: ChatBody = {
     conversation,
-    key,
+    key: llmProviders[ProviderNames.OpenAI]?.apiKey as string,
     course_name,
     stream,
     courseMetadata,

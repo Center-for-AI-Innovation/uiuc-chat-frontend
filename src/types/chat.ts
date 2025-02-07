@@ -25,6 +25,11 @@ export interface Conversation {
   projectName?: string
   createdAt?: string
   updatedAt?: string
+  linkParameters?: {
+    guidedLearning: boolean
+    documentsOnly: boolean
+    systemPromptOnly: boolean
+  }
 }
 
 export interface Message {
