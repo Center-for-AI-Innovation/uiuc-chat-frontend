@@ -124,7 +124,7 @@ export const buildPrompt = async ({
       ]
 
     // Build the final system prompt with all components
-    const finalSystemPrompt = systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
+    let finalSystemPrompt = ''
 
     // Adjust remaining token budget based on the system prompt length
     if (encoding) {
@@ -192,6 +192,8 @@ export const buildPrompt = async ({
       userPromptSections.push(answer)
     } else {
       // normal flow without summary
+      // Build the final system prompt with all components
+      let finalSystemPrompt = systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
       // Check for guided learning in both course metadata and conversation parameters
       const isGuidedLearningFromConversation =
         conversation.guidedLearning && !courseMetadata?.guidedLearning
