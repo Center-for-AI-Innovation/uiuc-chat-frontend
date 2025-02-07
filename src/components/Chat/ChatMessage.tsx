@@ -705,7 +705,7 @@ export const ChatMessage: FC<Props> = memo(
         })
 
         let readable_filename = context.readable_filename
-        let page_number = context.pagenumber
+        const page_number = context.pagenumber
 
         console.log(`Transformed context ${index}:`, {
           final_readable_filename: readable_filename,
