@@ -198,7 +198,7 @@ export type AllLLMProviders = {
 // Ordered list of preferred model IDs -- the first available model will be used as default
 export const preferredModelIds = [
   AnthropicModelID.Claude_3_5_Sonnet,
-  GeminiModelID.Gemini_Pro,
+  GeminiModelID.Gemini_1_5_Pro,  // what's the best preffered model for gemini
   BedrockModelID.Claude_3_Sonnet,
   OpenAIModelID.GPT_4o_mini,
   AzureModelID.GPT_4o_mini,
