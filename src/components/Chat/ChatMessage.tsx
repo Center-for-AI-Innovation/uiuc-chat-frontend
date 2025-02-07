@@ -1,5 +1,5 @@
 // ChatMessage.tsx
-import { Text, createStyles, Badge } from '@mantine/core'
+import { Text, createStyles, Badge, Tooltip } from '@mantine/core'
 import {
   IconCheck,
   IconCopy,
@@ -12,6 +12,7 @@ import {
   IconThumbUpFilled,
   IconThumbDownFilled,
   IconX,
+  IconBook2,
 } from '@tabler/icons-react'
 import {
   FC,
@@ -42,6 +43,9 @@ import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { IntermediateStateAccordion } from '../UIUC-Components/IntermediateStateAccordion'
 import { FeedbackModal } from './FeedbackModal'
 import { saveConversationToServer } from '@/utils/app/conversation'
+import { ContextCards } from '../UIUC-Components/ContextCards'
+import SourcesSidebar from '../UIUC-Components/SourcesSidebar'
+import { useRouter } from 'next/router'
 
 const useStyles = createStyles((theme) => ({
   imageContainerStyle: {
@@ -105,6 +109,41 @@ export interface Props {
   courseName: string
 }
 
+// Add this helper function before the ChatMessage component
+function extractUsedCitationIndexes(content: string | Content[]): number[] {
+  const text = Array.isArray(content)
+    ? content
+        .filter(item => item.type === 'text')
+        .map(item => item.text)
+        .join(' ')
+    : content;
+
+  const citationRegex = /\((\d+)(?:,\s*p\.\d+)?\)/g;
+  const found: number[] = [];
+  
+  let match;
+  while ((match = citationRegex.exec(text)) !== null) {
+    const idx = parseInt(match[1] as string, 10);
+    if (!Number.isNaN(idx)) {
+      found.push(idx);
+    }
+  }
+  
+  return Array.from(new Set(found)); // Remove duplicates while preserving order
+}
+
+// Add these helper functions before the ChatMessage component
+function getFileType(s3Path?: string, url?: string) {
+  if (s3Path) {
+    const lowerPath = s3Path.toLowerCase()
+    if (lowerPath.endsWith('.pdf')) return 'pdf'
+    if (lowerPath.endsWith('.md')) return 'md'
+    if (lowerPath.endsWith('.rtf')) return 'rtf'
+  }
+  if (url) return 'web'
+  return 'other'
+}
+
 export const ChatMessage: FC<Props> = memo(
   ({ message, messageIndex, onEdit, onFeedback, onImageUrlsUpdate, courseName }) => {
     const { t } = useTranslation('chat')
@@ -143,6 +182,47 @@ export const ChatMessage: FC<Props> = memo(
     const [isPositiveFeedback, setIsPositiveFeedback] = useState<boolean>(false)
     const [isFeedbackModalOpen, setIsFeedbackModalOpen] =
       useState<boolean>(false)
+
+    const [isSourcesSidebarOpen, setIsSourcesSidebarOpen] = useState(false)
+
+    // Get the right sidebar state from the URL query parameters
+    const router = useRouter()
+    const [isRightSideVisible, setIsRightSideVisible] = useState(false)
+
+    const [sourceThumbnails, setSourceThumbnails] = useState<string[]>([])
+
+    useEffect(() => {
+      const query = new URLSearchParams(window.location.search)
+      const rightSidebarOpen = query.get('rightSidebar') === 'true'
+      setIsRightSideVisible(rightSidebarOpen)
+      
+      // Close Sources sidebar if right sidebar is opened
+      if (rightSidebarOpen) {
+        setIsSourcesSidebarOpen(false)
+      }
+    }, [router.asPath])
+
+    // Function to handle opening/closing the Sources sidebar
+    const handleSourcesSidebarToggle = (open: boolean) => {
+      setIsSourcesSidebarOpen(open)
+      // If opening the Sources sidebar, close the right sidebar
+      if (open) {
+        const currentPath = router.asPath.split('?')[0] // Get the current path without query params
+        const newUrl = new URL(window.location.origin + currentPath)
+        newUrl.searchParams.set('rightSidebar', 'false')
+        router.replace(newUrl.pathname + newUrl.search)
+      }
+    }
+
+    // Function to handle closing the Sources sidebar
+    const handleSourcesSidebarClose = () => {
+      setIsSourcesSidebarOpen(false)
+    }
+
+    // Function to check if any Sources sidebar is open in any message
+    const isAnySidebarOpen = () => {
+      return isSourcesSidebarOpen
+    }
 
     // Cleanup effect for modal
     useEffect(() => {
@@ -595,751 +675,993 @@ export const ChatMessage: FC<Props> = memo(
       processTools()
     }, [message.tools])
 
+    // Add logging for contexts when message prop changes
+    useEffect(() => {
+      if (message.contexts && message.contexts.length > 0) {
+        console.log('ChatMessage received message with contexts:', {
+          messageIndex,
+          contextCount: message.contexts.length,
+          readableFilenames: message.contexts.map(ctx => ({
+            readable_filename: ctx.readable_filename,
+            exists: 'readable_filename' in ctx,
+            type: typeof ctx.readable_filename
+          })),
+          contexts: JSON.stringify(message.contexts, null, 2)
+        })
+      }
+    }, [message, messageIndex])
+
+    // Add this function before the return statement
+    const transformContexts = (contexts: ContextWithMetadata[]) => {
+      console.log('ChatMessage transforming contexts:', JSON.stringify(contexts, null, 2))
+      
+      return contexts.map((context, index) => {
+        console.log(`Processing context ${index}:`, {
+          original_readable_filename: context.readable_filename,
+          original_pagenumber: context.pagenumber,
+          original_metadata: context,
+          s3_path: context.s3_path,
+          url: context.url
+        })
+
+        let readable_filename = context.readable_filename
+        let page_number = context.pagenumber
+
+        console.log(`Transformed context ${index}:`, {
+          final_readable_filename: readable_filename,
+          final_page_number: page_number,
+          final_metadata: context
+        })
+
+        return {
+          ...context,
+          readable_filename,
+          page_number
+        }
+      })
+    }
+
+    console.log('ChatMessage rendering message:', {
+      messageId: message.id,
+      numContexts: message.contexts?.length || 0
+    });
+
+    const firstContext = message.contexts?.[0];
+    if (firstContext) {
+      console.log('First context in message:', {
+        readable_filename: firstContext.readable_filename || 'No filename',
+        pagenumber: firstContext.pagenumber || 'No page number',
+        hasS3Path: !!firstContext.s3_path,
+        hasUrl: !!firstContext.url
+      });
+    }
+
+    // Add this useEffect for loading thumbnails
+    useEffect(() => {
+      let isMounted = true;
+      
+      const loadThumbnails = async () => {
+        if (!message.contexts || message.contexts.length === 0) return;
+        
+        // Track unique sources to avoid duplicates
+        const seenSources = new Set<string>();
+        const uniqueContexts = message.contexts.filter(context => {
+          const sourceKey = context.s3_path || context.url;
+          if (!sourceKey || seenSources.has(sourceKey)) return false;
+          seenSources.add(sourceKey);
+          return true;
+        });
+        
+        const thumbnails = await Promise.all(
+          uniqueContexts.slice(0, 5).map(async (context) => {  // Changed from 3 to 5
+            const fileType = getFileType(context.s3_path, context.url)
+            
+            if (fileType === 'pdf' && courseName) {
+              const thumbnailPath = context.s3_path!.replace('.pdf', '-pg1-thumb.png')
+              try {
+                const presignedUrl = await fetchPresignedUrl(thumbnailPath, courseName)
+                return presignedUrl as string
+              } catch (e) {
+                console.error('Failed to fetch thumbnail:', e)
+                return null
+              }
+            } else if (fileType === 'web' && context.url) {
+              try {
+                const urlObj = new URL(context.url)
+                return `${urlObj.protocol}//${urlObj.hostname}/favicon.ico`
+              } catch (e) {
+                console.error('Failed to get favicon:', e)
+                return null
+              }
+            }
+            return null
+          })
+        )
+        
+        if (isMounted) {
+          setSourceThumbnails(thumbnails.filter((url): url is string => url !== null))
+        }
+      }
+
+      loadThumbnails()
+      
+      return () => {
+        isMounted = false
+      }
+    }, [message.contexts, courseName])
+
     return (
-      <div
-        className={`group md:px-6 ${message.role === 'assistant'
-          ? 'border-b border-black/10 bg-gray-50/50 text-gray-800 dark:border-[rgba(42,42,120,0.50)] dark:bg-[#202134] dark:text-gray-100'
-          : 'border-b border-black/10 bg-white/50 text-gray-800 dark:border-[rgba(42,42,120,0.50)] dark:bg-[#15162B] dark:text-gray-100'
-          } max-w-[100%]`}
-        style={{ overflowWrap: 'anywhere' }}
-      >
-        <div className="relative flex w-full px-2 py-4 text-base md:mx-[5%] md:max-w-[90%] md:gap-6 md:p-6 lg:mx-[10%]">
-          <div className="min-w-[40px] text-left">
-            {message.role === 'assistant' ? (
-              <>
-                <IconRobot size={30} />
-                <Timer timerVisible={timerVisible} />
-              </>
-            ) : (
-              <IconUser size={30} />
-            )}
-          </div>
+      <>
+        <div
+          className={`group md:px-6 ${message.role === 'assistant'
+            ? 'border-b border-black/10 bg-gray-50/50 text-gray-800 dark:border-[rgba(42,42,120,0.50)] dark:bg-[#202134] dark:text-gray-100'
+            : 'border-b border-black/10 bg-white/50 text-gray-800 dark:border-[rgba(42,42,120,0.50)] dark:bg-[#15162B] dark:text-gray-100'
+            } max-w-[100%]`}
+          style={{ overflowWrap: 'anywhere' }}
+        >
+          <div className="relative flex w-full px-2 py-4 text-base md:mx-[5%] md:max-w-[90%] md:gap-6 md:p-6 lg:mx-[10%]">
+            <div className="min-w-[40px] text-left">
+              {message.role === 'assistant' ? (
+                <>
+                  <IconRobot size={30} />
+                  <Timer timerVisible={timerVisible} />
+                </>
+              ) : (
+                <IconUser size={30} />
+              )}
+            </div>
 
-          <div className="dark:prose-invert prose mt-[-2px] flex w-full max-w-full flex-wrap lg:w-[90%]">
-            {message.role === 'user' ? (
-              <div className="flex w-[90%] flex-col">
-                {isEditing ? (
-                  <div className="flex w-full flex-col">
-                    <textarea
-                      ref={textareaRef}
-                      className="w-full resize-none whitespace-pre-wrap rounded-md border border-gray-300 bg-transparent p-3 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:border-gray-600 dark:bg-[#1E1E3F] dark:focus:border-purple-400"
-                      value={messageContent}
-                      onChange={handleInputChange}
-                      onKeyDown={handlePressEnter}
-                      onCompositionStart={() => setIsTyping(true)}
-                      onCompositionEnd={() => setIsTyping(false)}
-                      style={{
-                        fontFamily: 'inherit',
-                        fontSize: 'inherit',
-                        lineHeight: 'inherit',
-                        minHeight: '100px',
-                      }}
-                    />
-                    <div className="mt-4 flex justify-end space-x-3">
-                      <button
-                        className="flex items-center gap-2 rounded-md border border-gray-300 bg-transparent px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
-                        onClick={() => {
-                          setMessageContent(messageContent)
-                          setIsEditing(false)
+            <div className="dark:prose-invert prose mt-[-2px] flex w-full max-w-full flex-wrap lg:w-[90%]">
+              {message.role === 'user' ? (
+                <div className="flex w-[90%] flex-col">
+                  {isEditing ? (
+                    <div className="flex w-full flex-col">
+                      <textarea
+                        ref={textareaRef}
+                        className="w-full resize-none whitespace-pre-wrap rounded-md border border-gray-300 bg-transparent p-3 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:border-gray-600 dark:bg-[#1E1E3F] dark:focus:border-purple-400"
+                        value={messageContent}
+                        onChange={handleInputChange}
+                        onKeyDown={handlePressEnter}
+                        onCompositionStart={() => setIsTyping(true)}
+                        onCompositionEnd={() => setIsTyping(false)}
+                        style={{
+                          fontFamily: 'inherit',
+                          fontSize: 'inherit',
+                          lineHeight: 'inherit',
+                          minHeight: '100px',
                         }}
-                      >
-                        <IconX size={16} />
-                        {t('Cancel')}
-                      </button>
-                      <button
-                        className="flex items-center gap-2 rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-purple-500 dark:hover:bg-purple-600"
-                        onClick={handleEditMessage}
-                        disabled={messageContent.trim().length <= 0}
-                      >
-                        <IconCheck size={16} />
-                        {t('Save & Submit')}
-                      </button>
+                      />
+                      <div className="mt-4 flex justify-end space-x-3">
+                        <button
+                          className="flex items-center gap-2 rounded-md border border-gray-300 bg-transparent px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                          onClick={() => {
+                            setMessageContent(messageContent)
+                            setIsEditing(false)
+                          }}
+                        >
+                          <IconX size={16} />
+                          {t('Cancel')}
+                        </button>
+                        <button
+                          className="flex items-center gap-2 rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-purple-500 dark:hover:bg-purple-600"
+                          onClick={handleEditMessage}
+                          disabled={messageContent.trim().length <= 0}
+                        >
+                          <IconCheck size={16} />
+                          {t('Save & Submit')}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="dark:prose-invert prose w-full flex-1 whitespace-pre-wrap">
-                      {Array.isArray(message.content) ? (
-                        <>
-                          <div className="mb-2 flex w-full flex-col items-start space-y-2">
-                            {/* User message text for all messages */}
-                            {message.content.map((content, index) => {
-                              if (content.type === 'text') {
-                                if (
-                                  !(content.text as string)
-                                    .trim()
-                                    .startsWith('Image description:')
-                                ) {
-                                  return (
-                                    <p
-                                      key={index}
-                                      className={`self-start text-base font-normal ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                    >
-                                      {content.text}
-                                    </p>
-                                  )
+                  ) : (
+                    <>
+                      <div className="dark:prose-invert prose w-full flex-1 whitespace-pre-wrap">
+                        {Array.isArray(message.content) ? (
+                          <>
+                            <div className="mb-2 flex w-full flex-col items-start space-y-2">
+                              {/* User message text for all messages */}
+                              {message.content.map((content, index) => {
+                                if (content.type === 'text') {
+                                  if (
+                                    !(content.text as string)
+                                      .trim()
+                                      .startsWith('Image description:')
+                                  ) {
+                                    return (
+                                      <p
+                                        key={index}
+                                        className={`self-start text-base font-normal ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                      >
+                                        {content.text}
+                                      </p>
+                                    )
+                                  }
                                 }
-                              }
-                            })}
-                            {/* Image previews for all messages */}
-                            <div className="-m-1 flex w-full flex-wrap justify-start">
-                              {message.content
-                                .filter((item) => item.type === 'image_url')
-                                .map((content, index) => (
-                                  <div
-                                    key={index}
-                                    className={classes.imageContainerStyle}
-                                  >
-                                    <div className="overflow-hidden rounded-lg shadow-lg">
-                                      <ImagePreview
-                                        src={
-                                          Array.from(imageUrls)[index] as string
-                                        }
-                                        alt="Chat message"
-                                        className={classes.imageStyle}
-                                      />
+                              })}
+                              {/* Image previews for all messages */}
+                              <div className="-m-1 flex w-full flex-wrap justify-start">
+                                {message.content
+                                  .filter((item) => item.type === 'image_url')
+                                  .map((content, index) => (
+                                    <div
+                                      key={index}
+                                      className={classes.imageContainerStyle}
+                                    >
+                                      <div className="overflow-hidden rounded-lg shadow-lg">
+                                        <ImagePreview
+                                          src={
+                                            Array.from(imageUrls)[index] as string
+                                          }
+                                          alt="Chat message"
+                                          className={classes.imageStyle}
+                                        />
+                                      </div>
                                     </div>
-                                  </div>
-                                ))}
+                                  ))}
+                              </div>
+
+                              {/* Image description loading state for last message */}
+                              {isImg2TextLoading &&
+                                (messageIndex ===
+                                  (selectedConversation?.messages.length ?? 0) -
+                                  1 ||
+                                  messageIndex ===
+                                  (selectedConversation?.messages.length ?? 0) -
+                                  2) && (
+                                  <IntermediateStateAccordion
+                                    accordionKey="imageDescription"
+                                    title="Image Description"
+                                    isLoading={isImg2TextLoading}
+                                    error={false}
+                                    content={
+                                      message.content.find(
+                                        (content) =>
+                                          content.type === 'text' &&
+                                          content.text
+                                            ?.trim()
+                                            .startsWith('Image description:'),
+                                      )?.text ?? 'No image description found'
+                                    }
+                                  />
+                                )}
+
+                              {/* Image description for all messages */}
+                              {message.content.some(
+                                (content) =>
+                                  content.type === 'text' &&
+                                  content.text
+                                    ?.trim()
+                                    .startsWith('Image description:'),
+                              ) && (
+                                  <IntermediateStateAccordion
+                                    accordionKey="imageDescription"
+                                    title="Image Description"
+                                    isLoading={false}
+                                    error={false}
+                                    content={
+                                      message.content.find(
+                                        (content) =>
+                                          content.type === 'text' &&
+                                          content.text
+                                            ?.trim()
+                                            .startsWith('Image description:'),
+                                      )?.text ?? 'No image description found'
+                                    }
+                                  />
+                                )}
                             </div>
-
-                            {/* Image description loading state for last message */}
-                            {isImg2TextLoading &&
-                              (messageIndex ===
-                                (selectedConversation?.messages.length ?? 0) -
-                                1 ||
-                                messageIndex ===
-                                (selectedConversation?.messages.length ?? 0) -
-                                2) && (
-                                <IntermediateStateAccordion
-                                  accordionKey="imageDescription"
-                                  title="Image Description"
-                                  isLoading={isImg2TextLoading}
-                                  error={false}
-                                  content={
-                                    message.content.find(
-                                      (content) =>
-                                        content.type === 'text' &&
-                                        content.text
-                                          ?.trim()
-                                          .startsWith('Image description:'),
-                                    )?.text ?? 'No image description found'
-                                  }
-                                />
-                              )}
-
-                            {/* Image description for all messages */}
-                            {message.content.some(
-                              (content) =>
-                                content.type === 'text' &&
-                                content.text
-                                  ?.trim()
-                                  .startsWith('Image description:'),
-                            ) && (
-                                <IntermediateStateAccordion
-                                  accordionKey="imageDescription"
-                                  title="Image Description"
-                                  isLoading={false}
-                                  error={false}
-                                  content={
-                                    message.content.find(
-                                      (content) =>
-                                        content.type === 'text' &&
-                                        content.text
-                                          ?.trim()
-                                          .startsWith('Image description:'),
-                                    )?.text ?? 'No image description found'
-                                  }
-                                />
-                              )}
-                          </div>
-                        </>
-                      ) : (
-                        <>{message.content}</>
-                      )}
-                      <div className="flex w-full flex-col items-start space-y-2">
-                        {/* Query rewrite loading state - only show for current message */}
-                        {isQueryRewriting && 
-                          (messageIndex === (selectedConversation?.messages.length ?? 0) - 1 ||
-                           messageIndex === (selectedConversation?.messages.length ?? 0) - 2) && (
-                          <IntermediateStateAccordion
-                            accordionKey="query-rewrite"
-                            title="Optimizing search query"
-                            isLoading={isQueryRewriting}
-                            error={false}
-                            content={<></>}
-                          />
+                          </>
+                        ) : (
+                          <>{message.content}</>
                         )}
-
-                        {/* Query rewrite result - show for any message that was optimized */}
-                        {!isQueryRewriting &&
-                          message.wasQueryRewritten !== undefined &&
-                          message.wasQueryRewritten !== null && (
-                          <IntermediateStateAccordion
-                            accordionKey="query-rewrite-result"
-                            title={
-                              message.wasQueryRewritten
-                                ? 'Optimized search query'
-                                : 'No query optimization necessary'
-                            }
-                            isLoading={false}
-                            error={false}
-                            content={
-                              message.wasQueryRewritten
-                                ? message.queryRewriteText
-                                : "The LLM determined no optimization was necessary. We only optimize when it's necessary to turn a single message into a stand-alone search to retrieve the best documents."
-                            }
-                          />
-                        )}
-
-                        {/* Retrieval results for all messages */}
-                        {message.contexts && message.contexts.length > 0 && (
-                          <IntermediateStateAccordion
-                            accordionKey="retrieval loading"
-                            title="Retrieved documents"
-                            isLoading={false}
-                            error={false}
-                            content={`Found ${message.contexts?.length} document chunks.`}
-                          />
-                        )}
-
-                        {/* Retrieval loading state for last message */}
-                        {isRetrievalLoading &&
-                          (messageIndex ===
-                            (selectedConversation?.messages.length ?? 0) - 1 ||
-                            messageIndex ===
-                            (selectedConversation?.messages.length ?? 0) -
-                            2) && (
+                        <div className="flex w-full flex-col items-start space-y-2">
+                          {/* Query rewrite loading state - only show for current message */}
+                          {isQueryRewriting && 
+                            (messageIndex === (selectedConversation?.messages.length ?? 0) - 1 ||
+                             messageIndex === (selectedConversation?.messages.length ?? 0) - 2) && (
                             <IntermediateStateAccordion
-                              accordionKey="retrieval loading"
-                              title="Retrieving documents"
-                              isLoading={isRetrievalLoading}
-                              error={false}
-                              content={`Found ${message.contexts?.length} document chunks.`}
-                            />
-                          )}
-
-                        {/* Tool Routing loading state for last message */}
-                        {isRouting &&
-                          (messageIndex ===
-                            (selectedConversation?.messages.length ?? 0) - 1 ||
-                            messageIndex ===
-                            (selectedConversation?.messages.length ?? 0) -
-                            2) && (
-                            <IntermediateStateAccordion
-                              accordionKey={`routing tools`}
-                              title={'Routing the request to relevant tools'}
-                              isLoading={isRouting}
+                              accordionKey="query-rewrite"
+                              title="Optimizing search query"
+                              isLoading={isQueryRewriting}
                               error={false}
                               content={<></>}
                             />
                           )}
 
-                        {/* Tool input arguments state for last message */}
-                        {isRouting === false &&
-                          message.tools &&
-                          (messageIndex ===
+                          {/* Query rewrite result - show for any message that was optimized */}
+                          {!isQueryRewriting &&
+                            message.wasQueryRewritten !== undefined &&
+                            message.wasQueryRewritten !== null && (
+                            <IntermediateStateAccordion
+                              accordionKey="query-rewrite-result"
+                              title={
+                                message.wasQueryRewritten
+                                  ? 'Optimized search query'
+                                  : 'No query optimization necessary'
+                              }
+                              isLoading={false}
+                              error={false}
+                              content={
+                                message.wasQueryRewritten
+                                  ? message.queryRewriteText
+                                  : "The LLM determined no optimization was necessary. We only optimize when it's necessary to turn a single message into a stand-alone search to retrieve the best documents."
+                              }
+                            />
+                          )}
+
+                          {/* Retrieval results for all messages */}
+                          {message.contexts && message.contexts.length > 0 && (
+                            <IntermediateStateAccordion
+                              accordionKey="retrieval loading"
+                              title="Retrieved documents"
+                              isLoading={false}
+                              error={false}
+                              content={`Found ${message.contexts?.length} document chunks.`}
+                            />
+                          )}
+
+                          {/* Retrieval loading state for last message */}
+                          {isRetrievalLoading &&
+                            (messageIndex ===
+                              (selectedConversation?.messages.length ?? 0) - 1 ||
+                              messageIndex ===
+                              (selectedConversation?.messages.length ?? 0) -
+                              2) && (
+                              <IntermediateStateAccordion
+                                accordionKey="retrieval loading"
+                                title="Retrieving documents"
+                                isLoading={isRetrievalLoading}
+                                error={false}
+                                content={`Found ${message.contexts?.length} document chunks.`}
+                              />
+                            )}
+
+                          {/* Tool Routing loading state for last message */}
+                          {isRouting &&
+                            (messageIndex ===
+                              (selectedConversation?.messages.length ?? 0) - 1 ||
+                              messageIndex ===
+                              (selectedConversation?.messages.length ?? 0) -
+                              2) && (
+                              <IntermediateStateAccordion
+                                accordionKey={`routing tools`}
+                                title={'Routing the request to relevant tools'}
+                                isLoading={isRouting}
+                                error={false}
+                                content={<></>}
+                              />
+                            )}
+
+                          {/* Tool input arguments state for last message */}
+                          {isRouting === false &&
+                            message.tools &&
+                            (messageIndex ===
+                              (selectedConversation?.messages.length ?? 0) - 1 ||
+                              messageIndex ===
+                              (selectedConversation?.messages.length ?? 0) -
+                              2) && (
+                              <>
+                                {message.tools.map((response, index) => (
+                                  <IntermediateStateAccordion
+                                    key={`routing-${index}`}
+                                    accordionKey={`routing-${index}`}
+                                    title={
+                                      <>
+                                        Routing the request to{' '}
+                                        <Badge
+                                          color="grape"
+                                          radius="md"
+                                          size="sm"
+                                        >
+                                          {response.readableName}
+                                        </Badge>
+                                      </>
+                                    }
+                                    isLoading={isRouting}
+                                    error={false}
+                                    content={
+                                      <>
+                                        Arguments :{' '}
+                                        {response.aiGeneratedArgumentValues
+                                          ?.image_urls ? (
+                                          <div>
+                                            <div className="flex overflow-x-auto">
+                                              {JSON.parse(
+                                                response.aiGeneratedArgumentValues
+                                                  .image_urls,
+                                              ).length > 0 ? (
+                                                JSON.parse(
+                                                  response
+                                                    .aiGeneratedArgumentValues
+                                                    .image_urls,
+                                                ).map(
+                                                  (
+                                                    imageUrl: string,
+                                                    index: number,
+                                                  ) => (
+                                                    <div
+                                                      key={index}
+                                                      className={
+                                                        classes.imageContainerStyle
+                                                      }
+                                                    >
+                                                      <div className="overflow-hidden rounded-lg shadow-lg">
+                                                        <ImagePreview
+                                                          src={imageUrl}
+                                                          alt={`Tool image argument ${index}`}
+                                                          className={
+                                                            classes.imageStyle
+                                                          }
+                                                        />
+                                                      </div>
+                                                    </div>
+                                                  ),
+                                                )
+                                              ) : (
+                                                <p>No arguments provided</p>
+                                              )}
+                                            </div>
+                                          </div>
+                                        ) : (
+                                          <pre>
+                                            {JSON.stringify(
+                                              response.aiGeneratedArgumentValues,
+                                              null,
+                                              2,
+                                            )}
+                                          </pre>
+                                        )}
+                                      </>
+                                    }
+                                  />
+                                ))}
+                              </>
+                            )}
+
+                          {/* Tool output states for last message */}
+                          {(messageIndex ===
                             (selectedConversation?.messages.length ?? 0) - 1 ||
                             messageIndex ===
                             (selectedConversation?.messages.length ?? 0) -
                             2) && (
-                            <>
-                              {message.tools.map((response, index) => (
-                                <IntermediateStateAccordion
-                                  key={`routing-${index}`}
-                                  accordionKey={`routing-${index}`}
-                                  title={
-                                    <>
-                                      Routing the request to{' '}
-                                      <Badge
-                                        color="grape"
-                                        radius="md"
-                                        size="sm"
-                                      >
-                                        {response.readableName}
-                                      </Badge>
-                                    </>
-                                  }
-                                  isLoading={isRouting}
-                                  error={false}
-                                  content={
-                                    <>
-                                      Arguments :{' '}
-                                      {response.aiGeneratedArgumentValues
-                                        ?.image_urls ? (
-                                        <div>
-                                          <div className="flex overflow-x-auto">
-                                            {JSON.parse(
-                                              response.aiGeneratedArgumentValues
-                                                .image_urls,
-                                            ).length > 0 ? (
-                                              JSON.parse(
-                                                response
-                                                  .aiGeneratedArgumentValues
-                                                  .image_urls,
-                                              ).map(
-                                                (
-                                                  imageUrl: string,
-                                                  index: number,
-                                                ) => (
-                                                  <div
-                                                    key={index}
-                                                    className={
-                                                      classes.imageContainerStyle
-                                                    }
-                                                  >
-                                                    <div className="overflow-hidden rounded-lg shadow-lg">
-                                                      <ImagePreview
-                                                        src={imageUrl}
-                                                        alt={`Tool image argument ${index}`}
-                                                        className={
-                                                          classes.imageStyle
-                                                        }
-                                                      />
+                              <>
+                                {message.tools?.map((response, index) => (
+                                  <IntermediateStateAccordion
+                                    key={`tool-${index}`}
+                                    accordionKey={`tool-${index}`}
+                                    title={
+                                      <>
+                                        Tool output from{' '}
+                                        <Badge
+                                          color={response.error ? 'red' : 'grape'}
+                                          radius="md"
+                                          size="sm"
+                                        >
+                                          {response.readableName}
+                                        </Badge>
+                                      </>
+                                    }
+                                    isLoading={
+                                      response.output === undefined &&
+                                      response.error === undefined
+                                    }
+                                    error={response.error ? true : false}
+                                    content={
+                                      <>
+                                        {response.error ? (
+                                          <span>{response.error}</span>
+                                        ) : (
+                                          <>
+                                            <div
+                                              style={{
+                                                display: 'flex',
+                                                overflowX: 'auto',
+                                                gap: '10px',
+                                              }}
+                                            >
+                                              {response.output?.imageUrls &&
+                                                response.output?.imageUrls.map(
+                                                  (imageUrl, index) => (
+                                                    <div
+                                                      key={index}
+                                                      className={
+                                                        classes.imageContainerStyle
+                                                      }
+                                                    >
+                                                      <div className="overflow-hidden rounded-lg shadow-lg">
+                                                        <ImagePreview
+                                                          src={imageUrl}
+                                                          alt={`Tool output image ${index}`}
+                                                          className={
+                                                            classes.imageStyle
+                                                          }
+                                                        />
+                                                      </div>
                                                     </div>
-                                                  </div>
-                                                ),
-                                              )
-                                            ) : (
-                                              <p>No arguments provided</p>
-                                            )}
-                                          </div>
-                                        </div>
-                                      ) : (
-                                        <pre>
-                                          {JSON.stringify(
-                                            response.aiGeneratedArgumentValues,
-                                            null,
-                                            2,
-                                          )}
-                                        </pre>
-                                      )}
-                                    </>
-                                  }
-                                />
-                              ))}
-                            </>
-                          )}
-
-                        {/* Tool output states for last message */}
-                        {(messageIndex ===
-                          (selectedConversation?.messages.length ?? 0) - 1 ||
-                          messageIndex ===
-                          (selectedConversation?.messages.length ?? 0) -
-                          2) && (
-                            <>
-                              {message.tools?.map((response, index) => (
-                                <IntermediateStateAccordion
-                                  key={`tool-${index}`}
-                                  accordionKey={`tool-${index}`}
-                                  title={
-                                    <>
-                                      Tool output from{' '}
-                                      <Badge
-                                        color={response.error ? 'red' : 'grape'}
-                                        radius="md"
-                                        size="sm"
-                                      >
-                                        {response.readableName}
-                                      </Badge>
-                                    </>
-                                  }
-                                  isLoading={
-                                    response.output === undefined &&
-                                    response.error === undefined
-                                  }
-                                  error={response.error ? true : false}
-                                  content={
-                                    <>
-                                      {response.error ? (
-                                        <span>{response.error}</span>
-                                      ) : (
-                                        <>
-                                          <div
-                                            style={{
-                                              display: 'flex',
-                                              overflowX: 'auto',
-                                              gap: '10px',
-                                            }}
-                                          >
-                                            {response.output?.imageUrls &&
-                                              response.output?.imageUrls.map(
-                                                (imageUrl, index) => (
-                                                  <div
-                                                    key={index}
-                                                    className={
-                                                      classes.imageContainerStyle
-                                                    }
-                                                  >
-                                                    <div className="overflow-hidden rounded-lg shadow-lg">
-                                                      <ImagePreview
-                                                        src={imageUrl}
-                                                        alt={`Tool output image ${index}`}
-                                                        className={
-                                                          classes.imageStyle
-                                                        }
-                                                      />
-                                                    </div>
-                                                  </div>
-                                                ),
-                                              )}
-                                          </div>
-                                          <div>
-                                            {response.output?.text
-                                              ? response.output.text
-                                              : JSON.stringify(
-                                                response.output?.data,
-                                                null,
-                                                2,
-                                              )}
-                                          </div>
-                                        </>
-                                      )}
-                                    </>
-                                  }
-                                />
-                              ))}
-                            </>
-                          )}
-                        {(() => {
-                          if (
-                            messageIsStreaming === undefined ||
-                            !messageIsStreaming
-                          ) {
-                            // console.log(
-                            //   'isRouting: ',
-                            //   isRouting,
-                            //   'isRetrievalLoading: ',
-                            //   isRetrievalLoading,
-                            //   'isImg2TextLoading: ',
-                            //   isImg2TextLoading,
-                            //   'messageIsStreaming: ',
-                            //   messageIsStreaming,
-                            //   'loading: ',
-                            //   loading,
-                            // )
-                          }
-                          return null
-                        })()}
-                        {!isRouting &&
-                          !isRetrievalLoading &&
-                          !isImg2TextLoading &&
-                          !isQueryRewriting &&
-                          loading &&
-                          (messageIndex ===
-                            (selectedConversation?.messages.length ?? 0) - 1 ||
-                            messageIndex ===
-                            (selectedConversation?.messages.length ?? 0) -
-                            2) &&
-                          (!message.tools ||
-                            message.tools.every(
-                              (tool) =>
-                                tool.output !== undefined ||
-                                tool.error !== undefined,
-                            )) && (
-                            <>
-                              <div
-                                style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  marginLeft: '10px',
-                                  marginTop: '10px',
-                                }}
-                              >
-                                <p
+                                                  ),
+                                                )}
+                                            </div>
+                                            <div>
+                                              {response.output?.text
+                                                ? response.output.text
+                                                : JSON.stringify(
+                                                  response.output?.data,
+                                                  null,
+                                                  2,
+                                                )}
+                                            </div>
+                                          </>
+                                        )}
+                                      </>
+                                    }
+                                  />
+                                ))}
+                              </>
+                            )}
+                          {(() => {
+                            if (
+                              messageIsStreaming === undefined ||
+                              !messageIsStreaming
+                            ) {
+                              // console.log(
+                              //   'isRouting: ',
+                              //   isRouting,
+                              //   'isRetrievalLoading: ',
+                              //   isRetrievalLoading,
+                              //   'isImg2TextLoading: ',
+                              //   isImg2TextLoading,
+                              //   'messageIsStreaming: ',
+                              //   messageIsStreaming,
+                              //   'loading: ',
+                              //   loading,
+                              // )
+                            }
+                            return null
+                          })()}
+                          {!isRouting &&
+                            !isRetrievalLoading &&
+                            !isImg2TextLoading &&
+                            !isQueryRewriting &&
+                            loading &&
+                            (messageIndex ===
+                              (selectedConversation?.messages.length ?? 0) - 1 ||
+                              messageIndex ===
+                              (selectedConversation?.messages.length ?? 0) -
+                              2) &&
+                            (!message.tools ||
+                              message.tools.every(
+                                (tool) =>
+                                  tool.output !== undefined ||
+                                  tool.error !== undefined,
+                              )) && (
+                              <>
+                                <div
                                   style={{
-                                    marginRight: '10px',
-                                    fontWeight: 'bold',
-                                    textShadow: '0 0 10px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    marginLeft: '10px',
+                                    marginTop: '10px',
                                   }}
-                                  className={`pulsate text-base ${montserrat_paragraph.variable} font-montserratParagraph`}
                                 >
-                                  Generating final response:
-                                </p>
-                                <LoadingSpinner size="xs" />
-                              </div>
-                            </>
-                          )}
+                                  <p
+                                    style={{
+                                      marginRight: '10px',
+                                      fontWeight: 'bold',
+                                      textShadow: '0 0 10px',
+                                    }}
+                                    className={`pulsate text-base ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                  >
+                                    Generating final response:
+                                  </p>
+                                  <LoadingSpinner size="xs" />
+                                </div>
+                              </>
+                            )}
+                        </div>
                       </div>
-                    </div>
-                    {!isEditing && (
-                      <div className="mt-2 flex items-center justify-start gap-4">
-                        <button
-                          className={`invisible text-gray-500 hover:text-gray-700 focus:visible group-hover:visible dark:text-gray-400 dark:hover:text-gray-300 
-                            ${Array.isArray(message.content) && message.content.some((content) => content.type === 'image_url') ? 'hidden' : ''}`}
-                          onClick={toggleEditing}
-                        >
-                          <IconEdit size={20} />
-                        </button>
-                        <button
-                          className="invisible text-gray-500 hover:text-gray-700 focus:visible group-hover:visible dark:text-gray-400 dark:hover:text-gray-300"
-                          onClick={handleDeleteMessage}
-                        >
-                          <IconTrash size={20} />
-                        </button>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            ) : (
-              <div className="flex w-[90%] flex-col">
-                <div className="w-full max-w-full flex-1 overflow-hidden">
-                  <MemoizedReactMarkdown
-                    className={`dark:prose-invert linkMarkDown supMarkdown codeBlock prose mb-2 flex-1 flex-col items-start space-y-2`}
-                    remarkPlugins={[remarkGfm, remarkMath]}
-                    rehypePlugins={[rehypeMathjax]}
-                    components={{
-                      code({ node, inline, className, children, ...props }) {
-                        if (children.length) {
-                          if (children[0] == '▍') {
-                            return (
-                              <span className="mt-1 animate-pulse cursor-default">
-                                ▍
-                              </span>
+                      {!isEditing && (
+                        <div className="mt-2 flex items-center justify-start gap-4">
+                          <button
+                            className={`invisible text-gray-500 hover:text-gray-700 focus:visible group-hover:visible dark:text-gray-400 dark:hover:text-gray-300 
+                              ${Array.isArray(message.content) && message.content.some((content) => content.type === 'image_url') ? 'hidden' : ''}`}
+                            onClick={toggleEditing}
+                          >
+                            <IconEdit size={20} />
+                          </button>
+                          <button
+                            className="invisible text-gray-500 hover:text-gray-700 focus:visible group-hover:visible dark:text-gray-400 dark:hover:text-gray-300"
+                            onClick={handleDeleteMessage}
+                          >
+                            <IconTrash size={20} />
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="flex w-[90%] flex-col">
+                  <div className="w-full max-w-full flex-1 overflow-hidden">
+                    <MemoizedReactMarkdown
+                      className={`dark:prose-invert linkMarkDown supMarkdown codeBlock prose mb-2 flex-1 flex-col items-start space-y-2`}
+                      remarkPlugins={[remarkGfm, remarkMath]}
+                      rehypePlugins={[rehypeMathjax]}
+                      components={{
+                        code({ node, inline, className, children, ...props }) {
+                          if (children.length) {
+                            if (children[0] == '▍') {
+                              return (
+                                <span className="mt-1 animate-pulse cursor-default">
+                                  ▍
+                                </span>
+                              )
+                            }
+
+                            children[0] = (children[0] as string).replace(
+                              '`▍`',
+                              '▍',
                             )
                           }
 
-                          children[0] = (children[0] as string).replace(
-                            '`▍`',
-                            '▍',
-                          )
-                        }
+                          const match = /language-(\w+)/.exec(className || '')
 
-                        const match = /language-(\w+)/.exec(className || '')
-
-                        return !inline ? (
-                          <CodeBlock
-                            key={Math.random()}
-                            language={(match && match[1]) || ''}
-                            value={String(children).replace(/\n$/, '')}
-                            style={{
-                              maxWidth: '100%',
-                              overflowX: 'auto',
-                              whiteSpace: 'pre-wrap',
-                              wordBreak: 'break-all',
-                              overflowWrap: 'anywhere',
-                            }}
-                            {...props}
-                          />
-                        ) : (
-                          <code
-                            className={'codeBlock'}
-                            {...props}
-                            style={{
-                              whiteSpace: 'pre-wrap',
-                              wordBreak: 'break-all',
-                              overflowWrap: 'anywhere',
-                            }}
-                          >
-                            {children}
-                          </code>
-                        )
-                      },
-                      p({ node, children }) {
-                        return (
-                          <p
-                            className={`self-start text-base font-normal ${montserrat_paragraph.variable} pb-2 font-montserratParagraph`}
-                          >
-                            {children}
-                          </p>
-                        )
-                      },
-                      ul({ children }) {
-                        return (
-                          <ul
-                            className={`text-base font-normal ${montserrat_paragraph.variable} font-montserratParagraph`}
-                          >
-                            {children}
-                          </ul>
-                        )
-                      },
-                      ol({ children }) {
-                        return (
-                          <ol
-                            className={`text-base font-normal ${montserrat_paragraph.variable} ml-4 font-montserratParagraph lg:ml-6`}
-                          >
-                            {children}
-                          </ol>
-                        )
-                      },
-                      li({ children }) {
-                        return (
-                          <li
-                            className={`text-base font-normal ${montserrat_paragraph.variable} break-words font-montserratParagraph`}
-                          >
-                            {children}
-                          </li>
-                        )
-                      },
-                      table({ children }) {
-                        return (
-                          <table className="border-collapse border border-black px-3 py-1 dark:border-white">
-                            {children}
-                          </table>
-                        )
-                      },
-                      th({ children }) {
-                        return (
-                          <th className="break-words border border-black bg-gray-500 px-3 py-1 text-white dark:border-white">
-                            {children}
-                          </th>
-                        )
-                      },
-                      td({ children }) {
-                        return (
-                          <td className="break-words border border-black px-3 py-1 dark:border-white">
-                            {children}
-                          </td>
-                        )
-                      },
-                      h1({ node, children }) {
-                        return (
-                          <h1
-                            className={`text-4xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                          >
-                            {children}
-                          </h1>
-                        )
-                      },
-                      h2({ node, children }) {
-                        return (
-                          <h2
-                            className={`text-3xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                          >
-                            {children}
-                          </h2>
-                        )
-                      },
-                      h3({ node, children }) {
-                        return (
-                          <h3
-                            className={`text-2xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                          >
-                            {children}
-                          </h3>
-                        )
-                      },
-                      h4({ node, children }) {
-                        return (
-                          <h4
-                            className={`text-lg font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                          >
-                            {children}
-                          </h4>
-                        )
-                      },
-                      h5({ node, children }) {
-                        return (
-                          <h5
-                            className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                          >
-                            {children}
-                          </h5>
-                        )
-                      },
-                      h6({ node, children }) {
-                        return (
-                          <h6
-                            className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                          >
-                            {children}
-                          </h6>
-                        )
-                      },
-                      a({ node, className, children, ...props }) {
-                        const { href, title } = props
-                        const isCitationLink = /^\d+$/.test(
-                          children[0] as string,
-                        )
-                        if (isCitationLink) {
-                          return (
-                            <a
-                              id="styledLink"
-                              href={href}
-                              target="_blank"
-                              title={title}
-                              rel="noopener noreferrer"
-                              className={'supMarkdown'}
+                          return !inline ? (
+                            <CodeBlock
+                              key={Math.random()}
+                              language={(match && match[1]) || ''}
+                              value={String(children).replace(/\n$/, '')}
+                              style={{
+                                maxWidth: '100%',
+                                overflowX: 'auto',
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-all',
+                                overflowWrap: 'anywhere',
+                              }}
+                              {...props}
+                            />
+                          ) : (
+                            <code
+                              className={'codeBlock'}
+                              {...props}
+                              style={{
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-all',
+                                overflowWrap: 'anywhere',
+                              }}
                             >
                               {children}
-                            </a>
+                            </code>
                           )
-                        } else {
+                        },
+                        p({ node, children }) {
                           return (
-                            <button
-                              id="styledLink"
-                              onClick={() => window.open(href, '_blank')}
-                              title={title}
-                              className={'linkMarkDown'}
+                            <p
+                              className={`self-start text-base font-normal ${montserrat_paragraph.variable} pb-2 font-montserratParagraph`}
                             >
                               {children}
-                            </button>
+                            </p>
                           )
+                        },
+                        ul({ children }) {
+                          return (
+                            <ul
+                              className={`text-base font-normal ${montserrat_paragraph.variable} font-montserratParagraph`}
+                            >
+                              {children}
+                            </ul>
+                          )
+                        },
+                        ol({ children }) {
+                          return (
+                            <ol
+                              className={`text-base font-normal ${montserrat_paragraph.variable} ml-4 font-montserratParagraph lg:ml-6`}
+                            >
+                              {children}
+                            </ol>
+                          )
+                        },
+                        li({ children }) {
+                          return (
+                            <li
+                              className={`text-base font-normal ${montserrat_paragraph.variable} break-words font-montserratParagraph`}
+                            >
+                              {children}
+                            </li>
+                          )
+                        },
+                        table({ children }) {
+                          return (
+                            <table className="border-collapse border border-black px-3 py-1 dark:border-white">
+                              {children}
+                            </table>
+                          )
+                        },
+                        th({ children }) {
+                          return (
+                            <th className="break-words border border-black bg-gray-500 px-3 py-1 text-white dark:border-white">
+                              {children}
+                            </th>
+                          )
+                        },
+                        td({ children }) {
+                          return (
+                            <td className="break-words border border-black px-3 py-1 dark:border-white">
+                              {children}
+                            </td>
+                          )
+                        },
+                        h1({ node, children }) {
+                          return (
+                            <h1
+                              className={`text-4xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                            >
+                              {children}
+                            </h1>
+                          )
+                        },
+                        h2({ node, children }) {
+                          return (
+                            <h2
+                              className={`text-3xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                            >
+                              {children}
+                            </h2>
+                          )
+                        },
+                        h3({ node, children }) {
+                          return (
+                            <h3
+                              className={`text-2xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                            >
+                              {children}
+                            </h3>
+                          )
+                        },
+                        h4({ node, children }) {
+                          return (
+                            <h4
+                              className={`text-lg font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                            >
+                              {children}
+                            </h4>
+                          )
+                        },
+                        h5({ node, children }) {
+                          return (
+                            <h5
+                              className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                            >
+                              {children}
+                            </h5>
+                          )
+                        },
+                        h6({ node, children }) {
+                          return (
+                            <h6
+                              className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                            >
+                              {children}
+                            </h6>
+                          )
+                        },
+                        a({ node, className, children, ...props }) {
+                          const { href, title } = props
+                          // Update citation link detection to check for readable filename
+                          const firstChild = children[0]
+                          const isValidCitation = 
+                            typeof firstChild === 'string' && 
+                            (firstChild.includes('Source') || 
+                             (message.contexts?.some(ctx => 
+                               ctx.readable_filename && firstChild.includes(ctx.readable_filename)
+                             ) ?? false))
+                          
+                          if (isValidCitation) {
+                            return (
+                              <a
+                                id="styledLink"
+                                href={href}
+                                target="_blank"
+                                title={title}
+                                rel="noopener noreferrer"
+                                className={'supMarkdown'}
+                              >
+                                {children}
+                              </a>
+                            )
+                          } else {
+                            return (
+                              <button
+                                id="styledLink"
+                                onClick={() => window.open(href, '_blank')}
+                                title={title}
+                                className={'linkMarkDown'}
+                              >
+                                {children}
+                              </button>
+                            )
+                          }
+                        },
+                      }}
+                    >
+                      {(() => {
+                        if (
+                          messageIsStreaming &&
+                          messageIndex ===
+                          (selectedConversation?.messages.length ?? 0) - 1
+                        ) {
+                          return `${message.content} ▍`
                         }
-                      },
-                    }}
-                  >
-                    {(() => {
-                      if (
-                        messageIsStreaming &&
-                        messageIndex ===
-                        (selectedConversation?.messages.length ?? 0) - 1
-                      ) {
-                        return `${message.content} ▍`
-                      }
-                      if (Array.isArray(message.content)) {
-                        return (message.content as Content[])
-                          .filter((content) => content.type === 'text')
-                          .map((content) => content.text)
-                          .join(' ')
-                      }
-                      return message.content as string
-                    })()}
-                  </MemoizedReactMarkdown>
-                </div>
-                {/* FEEDBACK BUTTONS */}
-                <div className="-mt-1 flex items-center justify-start gap-2">
-                  <button
-                    className="text-gray-500 opacity-0 transition-opacity duration-200 hover:text-gray-700 focus:opacity-100 group-hover:opacity-100 dark:text-gray-400 dark:hover:text-gray-300"
-                    onClick={copyOnClick}
-                  >
-                    {messagedCopied ? (
-                      <IconCheck
-                        size={20}
-                        className="text-green-500 dark:text-green-400"
-                      />
-                    ) : (
-                      <IconCopy size={20} />
+                        if (Array.isArray(message.content)) {
+                          return (message.content as Content[])
+                            .filter((content) => content.type === 'text')
+                            .map((content) => content.text)
+                            .join(' ')
+                        }
+                        return message.content as string
+                      })()}
+                    </MemoizedReactMarkdown>
+                  </div>
+                  {/* Action Buttons Container */}
+                  <div className="flex flex-col gap-2">
+                    {/* Sources button */}
+                    {message.contexts && 
+                     message.contexts.length > 0 && 
+                     !(messageIsStreaming && messageIndex === (selectedConversation?.messages.length ?? 0) - 1) &&
+                     !(loading && messageIndex === (selectedConversation?.messages.length ?? 0) - 1) && (
+                      <div className="flex justify-start mb-1 relative z-0">
+                        <button
+                          className="group/button flex items-center gap-0 rounded-xl border border-gray-200 bg-gray-50/50 px-3 py-1.5 text-sm font-medium text-gray-600 shadow-sm transition-all duration-200 hover:border-purple-300 hover:bg-purple-50/50 hover:text-gray-900 dark:border-gray-700 dark:bg-gray-800/30 dark:text-gray-300 dark:hover:border-purple-500/40 dark:hover:bg-purple-900/20 dark:hover:text-gray-100 relative"
+                          onClick={() => handleSourcesSidebarToggle(true)}
+                        >
+                          <span className="whitespace-nowrap">
+                            Sources<span className="ml-0.5 rounded-md bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600 dark:bg-gray-700/50 dark:text-gray-400 group-hover/button:bg-purple-100 group-hover/button:text-purple-600 dark:group-hover/button:bg-purple-900/30 dark:group-hover/button:text-purple-300">
+                              {message.contexts.length}
+                            </span>
+                          </span>
+                          
+                          {sourceThumbnails.length > 0 && (
+                            <div className="flex items-center">
+                              <div className="h-4 border-l border-gray-300 dark:border-gray-600 ml-0.5 mr-1"></div>
+                              <div className="flex relative">
+                                {sourceThumbnails.map((thumbnail, index) => (
+                                  <div
+                                    key={index}
+                                    className="relative h-7 w-7 rounded-lg border-2 border-gray-200 overflow-hidden bg-white shadow-sm transition-transform duration-200 group-hover/button:shadow dark:border-gray-700 dark:bg-gray-800"
+                                    style={{
+                                      marginLeft: index > 0 ? '-0.75rem' : '0',
+                                      zIndex: index,
+                                      transform: `rotate(${index % 2 === 0 ? '-1deg' : '1deg'})`,
+                                    }}
+                                  >
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity duration-200 group-hover/button:opacity-100"></div>
+                                    <img
+                                      src={thumbnail}
+                                      alt={`Source ${index + 1}`}
+                                      className="h-full w-full object-cover"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = 'none'
+                                      }}
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </button>
+                      </div>
                     )}
-                  </button>
-                  <button
-                    className="text-gray-500 opacity-0 transition-opacity duration-200 hover:text-gray-700 focus:opacity-100 group-hover:opacity-100 dark:text-gray-400 dark:hover:text-gray-300"
-                    onClick={handleThumbsUp}
-                  >
-                    <div className="opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                      {isThumbsUp ? (
-                        <IconThumbUpFilled size={20} />
-                      ) : (
-                        <IconThumbUp size={20} />
-                      )}
-                    </div>
-                  </button>
-                  <button
-                    className="text-gray-500 opacity-0 transition-opacity duration-200 hover:text-gray-700 focus:opacity-100 group-hover:opacity-100 dark:text-gray-400 dark:hover:text-gray-300"
-                    onClick={handleThumbsDown}
-                  >
-                    {isThumbsDown ? (
-                      <IconThumbDownFilled size={20} />
-                    ) : (
-                      <IconThumbDown size={20} />
+
+                    {/* Other buttons in their container */}
+                    {!(messageIsStreaming && messageIndex === (selectedConversation?.messages.length ?? 0) - 1) &&
+                     !(loading && messageIndex === (selectedConversation?.messages.length ?? 0) - 1) && (
+                      <div className="flex items-center justify-start gap-2">
+                        <Tooltip 
+                          label={messagedCopied ? "Copied!" : "Copy"} 
+                          position="bottom"
+                          withArrow
+                          arrowSize={6}
+                          transitionProps={{ transition: 'fade', duration: 200 }}
+                          classNames={{
+                            tooltip: 'bg-gray-700 text-white text-sm py-1 px-2',
+                            arrow: 'border-gray-700'
+                          }}
+                        >
+                          <button
+                            className={`text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 ${
+                              messageIndex === (selectedConversation?.messages.length ?? 0) - 1
+                                ? 'opacity-100'
+                                : 'opacity-0 transition-opacity duration-200 focus:opacity-100 group-hover:opacity-100'
+                            }`}
+                            onClick={copyOnClick}
+                          >
+                            {messagedCopied ? (
+                              <IconCheck
+                                size={20}
+                                className="text-green-500 dark:text-green-400"
+                              />
+                            ) : (
+                              <IconCopy size={20} />
+                            )}
+                          </button>
+                        </Tooltip>
+                        <Tooltip 
+                          label={isThumbsUp ? "Remove Good Response" : "Good Response"} 
+                          position="bottom"
+                          withArrow
+                          arrowSize={6}
+                          transitionProps={{ transition: 'fade', duration: 200 }}
+                          classNames={{
+                            tooltip: 'bg-gray-700 text-white text-sm py-1 px-2',
+                            arrow: 'border-gray-700'
+                          }}
+                        >
+                          <button
+                            className={`text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 ${
+                              messageIndex === (selectedConversation?.messages.length ?? 0) - 1
+                                ? 'opacity-100'
+                                : 'opacity-0 transition-opacity duration-200 focus:opacity-100 group-hover:opacity-100'
+                            }`}
+                            onClick={handleThumbsUp}
+                          >
+                            <div className={messageIndex === (selectedConversation?.messages.length ?? 0) - 1 ? '' : 'opacity-0 transition-opacity duration-200 group-hover:opacity-100'}>
+                              {isThumbsUp ? (
+                                <IconThumbUpFilled size={20} />
+                              ) : (
+                                <IconThumbUp size={20} />
+                              )}
+                            </div>
+                          </button>
+                        </Tooltip>
+                        <Tooltip 
+                          label={isThumbsDown ? "Remove Bad Response" : "Bad Response"} 
+                          position="bottom"
+                          withArrow
+                          arrowSize={6}
+                          transitionProps={{ transition: 'fade', duration: 200 }}
+                          classNames={{
+                            tooltip: 'bg-gray-700 text-white text-sm py-1 px-2',
+                            arrow: 'border-gray-700'
+                          }}
+                        >
+                          <button
+                            className={`text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 ${
+                              messageIndex === (selectedConversation?.messages.length ?? 0) - 1
+                                ? 'opacity-100'
+                                : 'opacity-0 transition-opacity duration-200 focus:opacity-100 group-hover:opacity-100'
+                            }`}
+                            onClick={handleThumbsDown}
+                          >
+                            {isThumbsDown ? (
+                              <IconThumbDownFilled size={20} />
+                            ) : (
+                              <IconThumbDown size={20} />
+                            )}
+                          </button>
+                        </Tooltip>
+                      </div>
                     )}
-                  </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
+
+        {/* Move SourcesSidebar outside the message div but keep it in the fragment */}
+        {isSourcesSidebarOpen && (
+          <SourcesSidebar
+            isOpen={isSourcesSidebarOpen}
+            contexts={transformContexts(message.contexts || [])}
+            onClose={handleSourcesSidebarClose}
+            hideRightSidebarIcon={isAnySidebarOpen}
+            courseName={courseName}
+            citedSourceIndices={
+              message.role === 'assistant' && message.content 
+                ? extractUsedCitationIndexes(message.content) 
+                : undefined
+            }
+          />
+        )}
+
         {isFeedbackModalOpen && (
           <FeedbackModal
             isOpen={isFeedbackModalOpen}
@@ -1347,7 +1669,7 @@ export const ChatMessage: FC<Props> = memo(
             onSubmit={handleFeedbackSubmit}
           />
         )}
-      </div>
+      </>
     )
   },
 )

@@ -29,9 +29,11 @@ export async function replaceCitationLinks(
           citationIndex,
           courseName,
         )
-        const replacementText = pageNumber
-          ? `[${citationIndex}](${link}#page=${pageNumber})`
-          : `[${citationIndex}](${link})`
+        const displayTitle = context.readable_filename || `Document ${citationIndex}`
+        const sourceRef = pageNumber
+          ? `${citationIndex}, p.${pageNumber}`
+          : `${citationIndex}`
+        const replacementText = `[${displayTitle} (${sourceRef})](${link}${pageNumber ? `#page=${pageNumber}` : ''})`
         content = content.replace(match[0], replacementText)
       }
     }
@@ -60,8 +62,11 @@ export async function replaceCitationLinks(
             const pageNumber = pageNumberMatch
               ? `#page=${pageNumberMatch[1]}`
               : ''
-            // console.log('pageNumber: ', pageNumber)
-            return `${index} [${index} ${filename}](${link}${pageNumber})`
+            const displayTitle = context.readable_filename || `Document ${filenameIndex}`
+            const sourceRef = pageNumberMatch
+              ? `${filenameIndex}, p.${pageNumberMatch[1]}`
+              : `${filenameIndex}`
+            return `${index} [${displayTitle} (${sourceRef})](${link}${pageNumber})`
           },
         )
       }

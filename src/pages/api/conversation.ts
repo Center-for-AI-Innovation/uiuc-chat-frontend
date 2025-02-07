@@ -47,9 +47,6 @@ export function convertDBToChatConversation(
   dbConversation: DBConversation,
   dbMessages: DBMessage[],
 ): ChatConversation {
-  // console.log('dbConversation: ', dbConversation)
-  // console.log('AllSupportedModels: ', AllSupportedModels)
-  // console.log('AllSupportedModels: type of ', typeof AllSupportedModels)
   return {
     id: dbConversation.id,
     name: dbConversation.name,
@@ -62,6 +59,11 @@ export function convertDBToChatConversation(
     projectName: dbConversation.project_name,
     folderId: dbConversation.folder_id,
     messages: (dbMessages || []).map((msg: any) => {
+      console.log('\nProcessing message:', msg.id)
+      console.log('Raw message from DB:', JSON.stringify(msg, null, 2))
+      console.log('Raw contexts array type:', Object.prototype.toString.call(msg.contexts))
+      console.log('Raw contexts from DB (complete):', JSON.stringify(msg.contexts, null, 2))
+      
       const content: Content[] = []
       if (msg.content_text) {
         content.push({
@@ -94,11 +96,24 @@ export function convertDBToChatConversation(
         }
         : undefined
 
+      // Process contexts to ensure both page number fields are preserved
+      const processedContexts = (msg.contexts as any as ContextWithMetadata[])?.map(context => {
+        console.log('Processing context in convertDBToChatConversation - Raw context object:', context);
+        console.log('Context type:', Object.prototype.toString.call(context));
+        console.log('Context keys:', Object.keys(context));
+        
+        return {
+          ...context,
+          pagenumber: context.pagenumber || '',
+          pagenumber_or_timestamp: context.pagenumber_or_timestamp || undefined
+        };
+      }) || [];
+
       const messageObj = {
         id: msg.id,
         role: msg.role as Role,
         content: content,
-        contexts: (msg.contexts as any as ContextWithMetadata[]) || [],
+        contexts: processedContexts,
         tools: (msg.tools as any as UIUCTool[]) || [],
         latestSystemMessage: msg.latest_system_message || undefined,
         finalPromtEngineeredMessage:
@@ -122,6 +137,7 @@ export function convertChatToDBMessage(
   chatMessage: ChatMessage,
   conversationId: string,
 ): DBMessage {
+  console.log('Converting chat message to DB message. Message ID:', chatMessage.id);
   let content_text = ''
   let content_image_urls: string[] = []
   let image_description = ''
@@ -144,6 +160,18 @@ export function convertChatToDBMessage(
       .map((content) => content.image_url?.url || '')
   }
 
+  console.log('Processing contexts for message:', {
+    messageId: chatMessage.id,
+    numContexts: chatMessage.contexts?.length || 0
+  });
+
+  const firstContext = chatMessage.contexts?.[0];
+  if (firstContext) {
+    console.log('First context from message (complete raw object):', JSON.stringify(firstContext, null, 2));
+    console.log('Context array type:', Object.prototype.toString.call(chatMessage.contexts));
+    console.log('All contexts (complete raw array):', JSON.stringify(chatMessage.contexts, null, 2));
+  }
+
   return {
     id: chatMessage.id || uuidv4(),
     role: chatMessage.role,
@@ -152,14 +180,35 @@ export function convertChatToDBMessage(
     image_description: image_description,
     contexts:
       chatMessage.contexts?.map((context, index) => {
-        // TODO:
-        // This is where we will put context_id in the future
-        // console.log('context: ', context)
+        console.log('\nProcessing context in convertChatToDBMessage:', {
+          fullContext: context,
+          index: index,
+          hasS3Path: !!context.s3_path,
+          hasUrl: !!context.url,
+          pagenumber: context.pagenumber,
+          pagenumber_or_timestamp: context.pagenumber_or_timestamp
+        })
+        
+        const baseContext = {
+          readable_filename: context.readable_filename,
+          pagenumber: context.pagenumber,
+          pagenumber_or_timestamp: context.pagenumber_or_timestamp,
+          s3_path: context.s3_path,
+          url: context.url
+        }
+        
         if (context.s3_path) {
-          return { chunk_index: context.s3_path + '_' + index }
+          return { 
+            ...baseContext,
+            chunk_index: context.s3_path + '_' + index 
+          }
         } else if (context.url) {
-          return { url_chunk_index: context.url + '_' + index }
-        } else return JSON.parse(JSON.stringify(context)) // Ensure context is JSON-compatible
+          return { 
+            ...baseContext,
+            url_chunk_index: context.url + '_' + index 
+          }
+        } 
+        return JSON.parse(JSON.stringify(context)) // Ensure context is JSON-compatible
       }) || [],
     tools: chatMessage.tools || (null as any),
     latest_system_message: chatMessage.latestSystemMessage || null,

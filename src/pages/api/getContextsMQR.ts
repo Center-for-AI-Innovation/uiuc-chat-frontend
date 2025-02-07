@@ -19,6 +19,7 @@ export const fetchMQRContexts = async (
         },
       },
     )
+    console.log('Fetched contexts from MQR API:', JSON.stringify(response.data, null, 2))
     return response.data
   } catch (error) {
     console.error(error)

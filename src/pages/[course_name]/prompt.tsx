@@ -842,27 +842,31 @@ Do not include any commentary or explanations. Output only the optimized system 
                               </Title>
                               {isRightSideVisible ? (
                                 <Tooltip label="Close Prompt Builder" key="close">
-                                  <div className="cursor-pointer p-4 hover:opacity-75 md:p-0">
+                                  <div className="cursor-pointer p-4 hover:opacity-75 md:p-0" data-right-sidebar-icon>
                                     <IconLayoutSidebarRight
                                       stroke={2}
-                                      onClick={() =>
-                                        setIsRightSideVisible(!isRightSideVisible)
-                                      }
+                                      onClick={() => {
+                                        const newUrl = new URL(window.location.href)
+                                        newUrl.searchParams.set('rightSidebar', 'false')
+                                        router.replace(newUrl.pathname + newUrl.search)
+                                      }}
                                     />
                                   </div>
                                 </Tooltip>
                               ) : (
                                 <Tooltip label="Open Prompt Builder" key="open">
-                                  <div className="cursor-pointer p-4 hover:opacity-75 md:p-0">
+                                  <div className="cursor-pointer p-4 hover:opacity-75 md:p-0" data-right-sidebar-icon>
                                     <IconLayoutSidebarRightExpand
                                       stroke={2}
-                                      onClick={() =>
-                                        setIsRightSideVisible(!isRightSideVisible)
-                                      }
+                                      onClick={() => {
+                                        const newUrl = new URL(window.location.href)
+                                        newUrl.searchParams.set('rightSidebar', 'true')
+                                        router.replace(newUrl.pathname + newUrl.search)
+                                      }}
                                     />
                                   </div>
                                 </Tooltip>
-                              )}{' '}
+                              )}
                             </Flex>
                             <form
                               className={`${montserrat_paragraph.variable} font-montserratParagraph`}
