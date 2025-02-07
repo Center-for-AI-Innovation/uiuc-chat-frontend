@@ -277,13 +277,13 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
 
   return (
     <div
-      className={`${isgpt4 ? 'bg-[#15162c]' : 'bg-[#2e026d]'} -mr-5 pb-16 pl-5`}
+      className={`${isgpt4 ? 'bg-[#15162c]' : 'bg-[#2e026d]'} -mr-0 pb-16 pl-5`}
       style={{ display: show ? 'block' : 'none' }}
       // style={{ display: show ? 'flex' : 'none', flexDirection: 'row', height: '40%', alignItems: 'center' }}
     >
       <div
         // className="mt-4"
-        style={{ paddingTop: 'Opx', maxWidth: '95vw', marginRight: '45px' }}
+        style={{ paddingTop: 'Opx', maxWidth: '100vw', marginRight: '0px' }}
       >
         {/* <div > */}
         {/* <Flex style={{ flexDirection: 'row' }} className="navbar rounded-badge h-24 bg-[#15162c] shadow-lg shadow-purple-800"> */}
@@ -332,6 +332,9 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
             ></div>
           )}
           {/* </Flex> */}
+          {/* </div> */}
+          {/* </div> */}
+          {/* </div> */}
           {/* </div> */}
           {/* </div> */}
 

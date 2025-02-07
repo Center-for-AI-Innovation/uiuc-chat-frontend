@@ -141,9 +141,11 @@ export const Chat = memo(
         courseMetadata?.banner_image_s3 &&
         courseMetadata.banner_image_s3 !== ''
       ) {
-        fetchPresignedUrl(courseMetadata.banner_image_s3, courseName).then((url) => {
-          setBannerUrl(url)
-        })
+        fetchPresignedUrl(courseMetadata.banner_image_s3, courseName).then(
+          (url) => {
+            setBannerUrl(url)
+          },
+        )
       }
     }, [courseMetadata])
 
@@ -448,12 +450,16 @@ export const Chat = memo(
           } else {
             // Action 2: Context Retrieval: Vector Search
             let rewrittenQuery = searchQuery // Default to original query
-            
+
             // Skip query rewrite if disabled in course metadata, if it's the first message, or if there are no documents
-            if (courseMetadata?.vector_search_rewrite_disabled || 
-                updatedConversation.messages.length <= 1 || 
-                documentCount === 0) {
-              console.log('Query rewrite skipped: disabled for course, first message, or no documents')
+            if (
+              courseMetadata?.vector_search_rewrite_disabled ||
+              updatedConversation.messages.length <= 1 ||
+              documentCount === 0
+            ) {
+              console.log(
+                'Query rewrite skipped: disabled for course, first message, or no documents',
+              )
               rewrittenQuery = searchQuery
               homeDispatch({ field: 'wasQueryRewritten', value: false })
               homeDispatch({ field: 'queryRewriteText', value: null })
@@ -540,12 +546,12 @@ export const Chat = memo(
                         .map((msg) => {
                           const contentText = Array.isArray(msg.content)
                             ? msg.content
-                              .filter(
-                                (content) =>
-                                  content.type === 'text' && content.text,
-                              )
-                              .map((content) => content.text!)
-                              .join(' ')
+                                .filter(
+                                  (content) =>
+                                    content.type === 'text' && content.text,
+                                )
+                                .map((content) => content.text!)
+                                .join(' ')
                             : typeof msg.content === 'string'
                               ? msg.content
                               : ''
@@ -560,12 +566,12 @@ export const Chat = memo(
                         .map((msg) => {
                           const contentText = Array.isArray(msg.content)
                             ? msg.content
-                              .filter(
-                                (content) =>
-                                  content.type === 'text' && content.text,
-                              )
-                              .map((content) => content.text!)
-                              .join(' ')
+                                .filter(
+                                  (content) =>
+                                    content.type === 'text' && content.text,
+                                )
+                                .map((content) => content.text!)
+                                .join(' ')
                             : typeof msg.content === 'string'
                               ? msg.content
                               : ''
@@ -597,9 +603,9 @@ export const Chat = memo(
                           ? msg.content.trim()
                           : Array.isArray(msg.content)
                             ? msg.content
-                              .map((c) => c.text)
-                              .join(' ')
-                              .trim()
+                                .map((c) => c.text)
+                                .join(' ')
+                                .trim()
                             : '',
                     })),
                   },
@@ -632,8 +638,9 @@ export const Chat = memo(
                   }
                   try {
                     rewriteResponse = await chat_ui.runChatCompletion(
-                      queryRewriteConversation,
+                      queryRewriteBody,
                       getCurrentPageName(),
+                      courseMetadata,
                     )
                   } catch (error) {
                     errorToast({
@@ -654,7 +661,10 @@ export const Chat = memo(
                       body: JSON.stringify(queryRewriteBody),
                     })
                   } catch (error) {
-                    console.error('Error calling query rewrite endpoint:', error)
+                    console.error(
+                      'Error calling query rewrite endpoint:',
+                      error,
+                    )
                     throw error
                   }
                 }
@@ -669,7 +679,10 @@ export const Chat = memo(
 
                     if (Array.isArray(choices)) {
                       // 'choices' is already an array, do nothing
-                    } else if (typeof choices === 'object' && choices !== null) {
+                    } else if (
+                      typeof choices === 'object' &&
+                      choices !== null
+                    ) {
                       // Convert 'choices' object to array
                       choices = Object.values(choices)
                     } else {
@@ -684,7 +697,10 @@ export const Chat = memo(
                       choices?.[0]?.message?.content ||
                       searchQuery
                   } catch (error) {
-                    console.error('Error parsing non-streaming response:', error)
+                    console.error(
+                      'Error parsing non-streaming response:',
+                      error,
+                    )
                     message.wasQueryRewritten = false
                   }
                 }
@@ -708,7 +724,7 @@ export const Chat = memo(
                   // Check if the response is NO_REWRITE_REQUIRED or if we couldn't extract a valid query
                   if (
                     rewrittenQuery.trim().toUpperCase() ===
-                    'NO_REWRITE_REQUIRED' ||
+                      'NO_REWRITE_REQUIRED' ||
                     !extractedQuery
                   ) {
                     console.log(
@@ -840,15 +856,16 @@ export const Chat = memo(
             }
             try {
               response = await chat_ui.runChatCompletion(
-                selectedConversation,
+                finalChatBody,
                 getCurrentPageName(),
+                courseMetadata,
               )
             } catch (error) {
               errorToast({
-                title: 'Error running chat completion',
+                title: 'Error running Web LLM models.',
                 message:
                   (error as Error).message ||
-                  'In Chat.tsx An unexpected error occurred',
+                  'In Chat.tsx, we errored when running WebLLM model.',
               })
             }
           } else {
@@ -947,13 +964,14 @@ export const Chat = memo(
             if (startOfCallToLLM) {
               // Calculate TTFT (Time To First Token)
               const ttft = performance.now() - startOfCallToLLM
-              const fromSendToLLMResponse = performance.now() - startOfHandleSend
-              // LLM Starts responding 
+              const fromSendToLLMResponse =
+                performance.now() - startOfHandleSend
+              // LLM Starts responding
               posthog.capture('ttft', {
                 course_name: finalChatBody.course_name,
                 model: finalChatBody.model,
                 llmRequestToFirstToken: Math.round(ttft), // Round to whole number of milliseconds
-                fromSendToLLMResponse: Math.round(fromSendToLLMResponse)
+                fromSendToLLMResponse: Math.round(fromSendToLLMResponse),
               })
             }
 
@@ -1045,7 +1063,7 @@ export const Chat = memo(
                           lastUserMessage,
                           stateMachineContext,
                           citationLinkCache,
-                          getCurrentPageName()
+                          getCurrentPageName(),
                         )
 
                       // Update the last message with the new content
@@ -1221,7 +1239,7 @@ export const Chat = memo(
 
         if (imgDescIndex !== -1) {
           // Remove the existing image description
-          ; (currentMessage.content as Content[]).splice(imgDescIndex, 1)
+          ;(currentMessage.content as Content[]).splice(imgDescIndex, 1)
         }
         if (
           selectedConversation?.messages[
@@ -1350,13 +1368,13 @@ export const Chat = memo(
 
     const statements =
       courseMetadata?.example_questions &&
-        courseMetadata.example_questions.length > 0
+      courseMetadata.example_questions.length > 0
         ? courseMetadata.example_questions
         : [
-          'Make a bullet point list of key takeaways from this project.',
-          'What are the best practices for [Activity or Process] in [Context or Field]?',
-          'Can you explain the concept of [Specific Concept] in simple terms?',
-        ]
+            'Make a bullet point list of key takeaways from this project.',
+            'What are the best practices for [Activity or Process] in [Context or Field]?',
+            'Can you explain the concept of [Specific Concept] in simple terms?',
+          ]
 
     // Add this function to create dividers with statements
     const renderIntroductoryStatements = () => {
@@ -1384,8 +1402,9 @@ export const Chat = memo(
                   key={index}
                   className="w-full rounded-lg border-b-2 border-[rgba(42,42,64,0.4)] hover:cursor-pointer hover:bg-[rgba(42,42,64,0.9)]"
                   onClick={() => {
-                    setInputContent('')  // First clear the input
-                    setTimeout(() => {   // Then set it with a small delay
+                    setInputContent('') // First clear the input
+                    setTimeout(() => {
+                      // Then set it with a small delay
                       setInputContent(statement)
                       textareaRef.current?.focus()
                     }, 0)
@@ -1607,8 +1626,8 @@ export const Chat = memo(
                   transition={{ duration: 0.25, ease: 'easeInOut' }}
                 >
                   {selectedConversation &&
-                    selectedConversation.messages &&
-                    selectedConversation.messages?.length === 0 ? (
+                  selectedConversation.messages &&
+                  selectedConversation.messages?.length === 0 ? (
                     <>
                       <div className="mt-16">
                         {renderIntroductoryStatements()}
