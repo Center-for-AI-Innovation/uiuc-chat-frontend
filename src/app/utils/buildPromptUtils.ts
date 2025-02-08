@@ -498,15 +498,20 @@ export const getSystemPostPrompt = ({
 
   const postPrompt = `Please analyze and respond to the following question using the excerpts from the provided documents. These documents can be PDF files or web pages. You may also see output from API calls (labeled as "tools") and image descriptions. Use this information to craft a detailed and accurate answer.
 
-When referencing information from the documents, use inline citations in the following format:
-- Use "[1]" when referencing the first document
-- Use "[1, page: 2]" when referencing page 2 of the first document
-- For multiple citations, separate them with commas: "[1], [2]" or "[1, page: 2], [2, page: 3]"
+When referencing information from the documents, you MUST include citations inline within your response. For each distinct piece of information, cite the single most relevant source using XML-style citation tags in the following format:
+- Use "<cite>1</cite>" when referencing document 1
 
-Do not append a final list of sources at the end of your response. Your inline citations are sufficient, as users can view detailed source information in the Sources Sidebar.
+Here are examples of how to properly integrate citations in your response:
+- "The loop invariant must be true before the first iteration of the loop <cite>1</cite>. Additionally, the time complexity of bubble sort is O(n²) <cite>2</cite>."
+- "Python lists are implemented as dynamic arrays <cite>3</cite>. This means that when the allocated space is filled, Python will automatically resize the array to accommodate more elements."
+- "According to the course syllabus, assignments are due every Friday by 11:59 PM <cite>4</cite>."
+
+Citations should be placed immediately after each piece of information they support. Use frequent, focused citations throughout your response to help users easily locate the most relevant source for each specific point. Break down information and cite individual sources to maintain clarity and precision. 
+
+Note: You may see citations in the conversation history that appear differently due to post-processing formatting. Regardless of how they appear in previous messages, always use the XML-style citation format specified above in your responses.
 
 ${isGuidedLearning 
-  ? 'IMPORTANT: While in guided learning mode, you must still cite all relevant course materials using the exact inline citation format—even if they contain direct answers. Never filter out or omit relevant materials.'
+  ? 'IMPORTANT: While in guided learning mode, you must still cite all relevant course materials using the exact citation format—even if they contain direct answers. Never filter out or omit relevant materials.'
   : ''}
 
 ${!isGuidedLearning && !isDocumentsOnly 

@@ -308,37 +308,37 @@ a[data-footnote-backref] {
   min-height: 1.5em;
   font-size: 85%;
   line-height: 1.3;
-  color: #ffffff;
-  background-color: rgba(157, 78, 221, 0.4);
+  color: rgba(255, 255, 255, 0.9);
+  background-color: rgba(157, 78, 221, 0.15);
   margin: 0 4px;
   padding: 4px 12px;
   border-radius: 4px;
-  border: 1px solid rgba(157, 78, 221, 0.6);
+  border: 1px solid rgba(157, 78, 221, 0.3);
   text-decoration: none;
   transition: all 0.2s ease;
   white-space: normal;
   max-width: 100%;
   gap: 4px;
-  box-shadow: 0 2px 4px rgba(157, 78, 221, 0.2);
-  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(157, 78, 221, 0.1);
+  font-weight: 400;
 }
 
 /* Styling for visited citation links */
 .supMarkdown a:visited {
-  color: rgba(255, 255, 255, 0.95);
-  background-color: rgba(157, 78, 221, 0.35);
-  border-color: rgba(157, 78, 221, 0.5);
+  color: rgba(255, 255, 255, 0.8);
+  background-color: rgba(157, 78, 221, 0.12);
+  border-color: rgba(157, 78, 221, 0.25);
 }
 
 .supMarkdown a:hover,
 .supMarkdown a:focus {
-  background-color: #9D4EDD;
-  color: #ffffff;
+  background-color: rgba(157, 78, 221, 0.3);
+  color: rgba(255, 255, 255, 0.95);
   cursor: pointer;
   transform: translateY(-1px);
-  box-shadow: 0 3px 10px rgba(157, 78, 221, 0.3);
-  border-color: #9D4EDD;
-  font-weight: 500;
+  box-shadow: 0 2px 6px rgba(157, 78, 221, 0.2);
+  border-color: rgba(157, 78, 221, 0.4);
+  font-weight: 400;
 }
 
 @media (max-width: 768px) {
@@ -484,4 +484,101 @@ button.css-s37qmw {
   to {
     --r: 360deg;
   }
+}
+
+/* Think Tag Dropdown Styles */
+.think-tag-dropdown {
+  @apply mb-4 w-full rounded-lg border border-gray-200 bg-gray-50/30 shadow-sm transition-all duration-200 hover:border-purple-200 dark:border-gray-700/50 dark:bg-gray-800/20 dark:hover:border-purple-500/30;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.think-tag-header {
+  @apply flex cursor-pointer items-center justify-between p-4 text-gray-700 transition-colors duration-200 hover:bg-purple-50/50 dark:text-gray-200 dark:hover:bg-purple-900/20;
+  border-radius: 0.5rem;
+}
+
+.think-tag-header .loading-container {
+  @apply flex items-center gap-2;
+  opacity: 0.8;
+}
+
+.think-tag-brain-icon {
+  @apply text-purple-500 dark:text-purple-400;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1));
+  transition: transform 0.2s ease;
+}
+
+.think-tag-header:hover .think-tag-brain-icon {
+  transform: scale(1.1);
+}
+
+.think-tag-content {
+  @apply overflow-hidden bg-white/80 dark:bg-black/20;
+  position: relative;
+  visibility: hidden;
+  max-height: 0;
+  opacity: 0;
+  transform-origin: top;
+  transform: translateY(-4px);
+  will-change: transform, opacity, max-height;
+  transition: 
+    max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0s linear 0.5s;
+}
+
+.think-tag-content > div {
+  @apply px-5 py-4 text-gray-700 dark:text-gray-200;
+  position: absolute;
+  width: 100%;
+  top: 0;
+  left: 0;
+  border-top: 1px solid;
+  @apply border-gray-100 dark:border-gray-700/50;
+  line-height: 1.6;
+}
+
+.think-tag-content.expanded {
+  position: relative;
+  visibility: visible;
+  max-height: 1000px;
+  opacity: 1;
+  transform: translateY(0);
+  cursor: pointer;
+  transition:
+    max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0s linear;
+}
+
+.think-tag-content.expanded:hover {
+  @apply bg-purple-50/30 dark:bg-purple-900/10;
+}
+
+.think-tag-content.expanded:focus {
+  @apply outline-none ring-2 ring-purple-500/30 dark:ring-purple-500/20;
+}
+
+.think-tag-content.expanded > div {
+  position: relative;
+}
+
+.think-tag-header:focus {
+  @apply outline-none ring-2 ring-purple-500/30 dark:ring-purple-500/20;
+}
+
+.think-tag-icon {
+  @apply text-gray-400 transform transition-all duration-300 dark:text-gray-500;
+}
+
+.think-tag-header:hover .think-tag-icon {
+  @apply text-purple-500 dark:text-purple-400;
+}
+
+.think-tag-icon.expanded {
+  transform: rotate(180deg);
+  @apply text-purple-500 dark:text-purple-400;
 }
