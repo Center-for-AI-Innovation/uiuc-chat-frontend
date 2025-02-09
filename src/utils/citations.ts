@@ -76,7 +76,8 @@ export async function replaceCitationLinks(
   }
 
   // Process citations first - this is the most common case
-  const citationPattern = /[ \t]*(?:&lt;cite|<cite)[ \t]*>[ \t]*(\d+)(?:[ \t]*,[ \t]*p\.[ \t]*(\d+))?[ \t]*(?:&lt;\/cite|<\/cite)[ \t]*>/g;
+  // Using bounded whitespace to prevent catastrophic backtracking
+  const citationPattern = /[ \t]{0,100}(?:&lt;cite|<cite)[ \t]{0,100}>(\d+)(?:[ \t]{0,100},[ \t]{0,100}p\.[ \t]{0,100}(\d+))?[ \t]{0,100}(?:&lt;\/cite|<\/cite)[ \t]{0,100}/g;
   
   // Fast path - if no citations, skip the replacement
   if (!citationPattern.test(content)) {
