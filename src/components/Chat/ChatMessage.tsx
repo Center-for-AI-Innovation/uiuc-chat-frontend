@@ -993,19 +993,16 @@ export const ChatMessage: FC<Props> = memo(
     // Add effect for refreshing S3 links
     useEffect(() => {
       async function refreshS3LinksInContent() {
-        // Don't process while streaming
-        if (messageIsStreaming && 
-            messageIndex === (selectedConversation?.messages.length ?? 0) - 1) {
-          return;
-        }
-
         const contentToProcess = message.content;
         
         if (Array.isArray(contentToProcess)) {
           const updatedContent = await Promise.all(
             contentToProcess.map(async (contentObj) => {
               if (contentObj.type === 'text') {
-                const newText = await replaceExpiredLinksInText(contentObj.text);
+                // During streaming, don't process S3 links to avoid delays
+                const newText = messageIsStreaming ? 
+                  contentObj.text : 
+                  await replaceExpiredLinksInText(contentObj.text);
                 return { ...contentObj, text: newText };
               }
               return contentObj;
@@ -1015,54 +1012,43 @@ export const ChatMessage: FC<Props> = memo(
         } else if (typeof contentToProcess === 'string') {
           const { thoughts, remainingContent } = extractThinkTagContent(contentToProcess);
           if (thoughts) {
-            const processedThoughts = await replaceExpiredLinksInText(thoughts);
-            const processedContent = await replaceExpiredLinksInText(remainingContent);
+            // During streaming, don't process S3 links to avoid delays
+            const processedThoughts = messageIsStreaming ? 
+              thoughts : 
+              await replaceExpiredLinksInText(thoughts);
+            const processedContent = messageIsStreaming ? 
+              remainingContent : 
+              await replaceExpiredLinksInText(remainingContent);
             setLocalContent(`<think>${processedThoughts}</think>${processedContent}`);
           } else {
-            const newText = await replaceExpiredLinksInText(contentToProcess);
+            const newText = messageIsStreaming ? 
+              contentToProcess : 
+              await replaceExpiredLinksInText(contentToProcess);
             setLocalContent(newText);
           }
         }
       }
       refreshS3LinksInContent();
-    }, [message.id, messageIsStreaming]);
+    }, [message.content, messageIsStreaming]);
 
     // Modify the content rendering logic
     const renderContent = () => {
       let contentToRender = '';
       let thoughtsContent = null;
 
-      // If streaming, use message.content directly
-      if (messageIsStreaming && 
-          messageIndex === (selectedConversation?.messages.length ?? 0) - 1) {
-        if (typeof message.content === 'string') {
-          const { thoughts, remainingContent } = extractThinkTagContent(message.content);
-          thoughtsContent = thoughts;
-          contentToRender = remainingContent;
-        } else if (Array.isArray(message.content)) {
-          contentToRender = message.content
-            .filter((content) => content.type === 'text')
-            .map((content) => content.text)
-            .join(' ');
-          const { thoughts, remainingContent } = extractThinkTagContent(contentToRender);
-          thoughtsContent = thoughts;
-          contentToRender = remainingContent;
-        }
-      } else {
-        // Use processed localContent for non-streaming
-        if (typeof localContent === 'string') {
-          const { thoughts, remainingContent } = extractThinkTagContent(localContent);
-          thoughtsContent = thoughts;
-          contentToRender = remainingContent;
-        } else if (Array.isArray(localContent)) {
-          contentToRender = localContent
-            .filter((content) => content.type === 'text')
-            .map((content) => content.text)
-            .join(' ');
-          const { thoughts, remainingContent } = extractThinkTagContent(contentToRender);
-          thoughtsContent = thoughts;
-          contentToRender = remainingContent;
-        }
+      // Always use localContent for rendering
+      if (typeof localContent === 'string') {
+        const { thoughts, remainingContent } = extractThinkTagContent(localContent);
+        thoughtsContent = thoughts;
+        contentToRender = remainingContent;
+      } else if (Array.isArray(localContent)) {
+        contentToRender = localContent
+          .filter((content) => content.type === 'text')
+          .map((content) => content.text)
+          .join(' ');
+        const { thoughts, remainingContent } = extractThinkTagContent(contentToRender);
+        thoughtsContent = thoughts;
+        contentToRender = remainingContent;
       }
 
       return (
