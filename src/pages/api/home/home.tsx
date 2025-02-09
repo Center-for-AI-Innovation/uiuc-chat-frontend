@@ -17,7 +17,6 @@ import { type KeyValuePair } from '@/types/data'
 
 import { Chat } from '@/components/Chat/Chat'
 import { Chatbar } from '@/components/Chatbar/Chatbar'
-import { Navbar } from '@/components/Mobile/Navbar'
 import Promptbar from '@/components/Promptbar'
 
 import HomeContext from './home.context'
@@ -682,14 +681,7 @@ const Home = ({
           <main
             className={`flex h-screen w-screen flex-col text-sm text-white dark:text-white ${lightMode}`}
           >
-            <div className="fixed top-0 w-full sm:hidden">
-              <Navbar
-                selectedConversation={selectedConversation}
-                onNewConversation={handleDuplicateRequest}
-              />
-            </div>
-
-            <div className="flex h-full w-full pt-[48px] sm:pt-0">
+            <div className="flex h-full w-full sm:pt-0">
               {isDragging &&
                 VisionCapableModels.has(
                   selectedConversation?.model.id as OpenAIModelID,
@@ -703,17 +695,15 @@ const Home = ({
                 )}
               <Chatbar current_email={current_email} courseName={course_name} />
 
-              <div className="flex max-w-full flex-1 overflow-x-hidden">
-                {course_metadata && (
-                  <Chat
-                    stopConversationRef={stopConversationRef}
-                    courseMetadata={course_metadata}
-                    courseName={course_name}
-                    currentEmail={current_email}
-                    documentCount={document_count}
-                  />
-                )}
-              </div>
+              {course_metadata && (
+                <Chat
+                  stopConversationRef={stopConversationRef}
+                  courseMetadata={course_metadata}
+                  courseName={course_name}
+                  currentEmail={current_email}
+                  documentCount={document_count}
+                />
+              )}
 
               <Promptbar />
             </div>

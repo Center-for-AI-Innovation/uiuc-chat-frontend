@@ -13,6 +13,7 @@ export enum NCSAHostedVLMModelID {
   Llama_3_2_11B_Vision_Instruct = 'meta-llama/Llama-3.2-11B-Vision-Instruct',
   MOLMO_7B_D_0924 = 'allenai/Molmo-7B-D-0924',
   QWEN2_VL_72B_INSTRUCT = 'Qwen/Qwen2-VL-72B-Instruct',
+  QWEN2_5VL_72B_INSTRUCT = 'Qwen/Qwen2.5-VL-72B-Instruct',
 }
 
 export const NCSAHostedVLMModels: Record<
@@ -37,6 +38,12 @@ export const NCSAHostedVLMModels: Record<
     tokenLimit: 8192,
     enabled: true,
   },
+  [NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT]: {
+    id: NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT,
+    name: 'Qwen 2.5 VL 72B Instruct',
+    tokenLimit: 23000,
+    enabled: true,
+  },
 }
 
 export const getNCSAHostedVLMModels = async (
@@ -46,7 +53,7 @@ export const getNCSAHostedVLMModels = async (
   vlmProvider.provider = ProviderNames.NCSAHostedVLM
   const existingDefaults = new Map<string, boolean>()
   if (vlmProvider.models) {
-    vlmProvider.models.forEach(model => {
+    vlmProvider.models.forEach((model) => {
       existingDefaults.set(model.id, !!model.default)
     })
   }

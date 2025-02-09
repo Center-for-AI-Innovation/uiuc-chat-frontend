@@ -1,4 +1,8 @@
-import { type OllamaModel, OllamaModelIDs, OllamaModels } from '~/utils/modelProviders/ollama'
+import {
+  type OllamaModel,
+  OllamaModelIDs,
+  OllamaModels,
+} from '~/utils/modelProviders/ollama'
 import { type WebllmModel } from '~/utils/modelProviders/WebLLM'
 import {
   type OpenAIModel,
@@ -20,7 +24,6 @@ import {
   NCSAHostedVLMModelID,
   NCSAHostedVLMModels,
 } from '~/utils/modelProviders/types/NCSAHostedVLM'
-
 
 export enum ProviderNames {
   Ollama = 'Ollama',
@@ -57,6 +60,7 @@ export const VisionCapableModels: Set<
   NCSAHostedVLMModelID.Llama_3_2_11B_Vision_Instruct,
   NCSAHostedVLMModelID.MOLMO_7B_D_0924,
   NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT,
+  NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT,
 ])
 
 export const AllSupportedModels: Set<GenericSupportedModel> = new Set([
@@ -190,8 +194,8 @@ export const selectBestModel = (
   allLLMProviders: AllLLMProviders,
 ): GenericSupportedModel => {
   // Find default model from the local Storage
-  // Currently, if the user ever specified a default model in local storage, this will ALWAYS override the default model specified by the admin, 
-  // especially for the creation of new chats. 
+  // Currently, if the user ever specified a default model in local storage, this will ALWAYS override the default model specified by the admin,
+  // especially for the creation of new chats.
   const allModels = Object.values(allLLMProviders)
     .filter((provider) => provider!.enabled)
     .flatMap((provider) => provider!.models || [])
@@ -207,7 +211,7 @@ export const selectBestModel = (
       return defaultModel
     }
   }
-  // If the default model that a user specifies is not available, fall back to the admin selected default model. 
+  // If the default model that a user specifies is not available, fall back to the admin selected default model.
   const globalDefaultModel = Object.values(allLLMProviders)
     .filter((provider) => provider!.enabled)
     .flatMap((provider) => provider!.models || [])

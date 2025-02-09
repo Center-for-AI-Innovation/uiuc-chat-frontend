@@ -246,7 +246,14 @@ function extractThinkTagContent(content: string): { thoughts: string | null; rem
 }
 
 export const ChatMessage: FC<Props> = memo(
-  ({ message, messageIndex, onEdit, onFeedback, onImageUrlsUpdate, courseName }) => {
+  ({
+    message,
+    messageIndex,
+    onEdit,
+    onFeedback,
+    onImageUrlsUpdate,
+    courseName,
+  }) => {
     const { t } = useTranslation('chat')
 
     const {
@@ -260,6 +267,7 @@ export const ChatMessage: FC<Props> = memo(
         isRetrievalLoading,
         isQueryRewriting,
         loading,
+        showChatbar,
       },
       dispatch: homeDispatch,
     } = useContext(HomeContext)
@@ -497,22 +505,24 @@ export const ChatMessage: FC<Props> = memo(
     const handleEditMessage = () => {
       const trimmedContent = messageContent.trim()
       if (trimmedContent.length === 0) return
-      
+
       if (message.content !== trimmedContent) {
         if (selectedConversation && onEdit) {
           const editedMessage = { ...message, content: trimmedContent }
           onEdit(editedMessage)
-          
+
           // Save to server
           const updatedConversation = {
             ...selectedConversation,
-            messages: selectedConversation.messages.map(msg => 
-              msg.id === message.id ? editedMessage : msg
-            )
+            messages: selectedConversation.messages.map((msg) =>
+              msg.id === message.id ? editedMessage : msg,
+            ),
           }
-          saveConversationToServer(updatedConversation).catch((error: Error) => {
-            console.error('Error saving edited message to server:', error)
-          })
+          saveConversationToServer(updatedConversation).catch(
+            (error: Error) => {
+              console.error('Error saving edited message to server:', error)
+            },
+          )
         }
       }
       setIsEditing(false)
@@ -649,9 +659,15 @@ export const ChatMessage: FC<Props> = memo(
       }
     }, [isEditing])
 
-    async function getPresignedUrl(uploadedImageUrl: string, courseName: string): Promise<string> {
+    async function getPresignedUrl(
+      uploadedImageUrl: string,
+      courseName: string,
+    ): Promise<string> {
       try {
-        const presignedUrl = await fetchPresignedUrl(uploadedImageUrl, courseName)
+        const presignedUrl = await fetchPresignedUrl(
+          uploadedImageUrl,
+          courseName,
+        )
         return presignedUrl as string
       } catch (error) {
         console.error(

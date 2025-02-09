@@ -22,6 +22,11 @@ export const getNCSAHostedModels = async (
   //     existingDefaults.set(model.id, !!model.default)
   //   })
   // }
+
+  // If not enabled, enable it 
+
+
+
   try {
     // /api/tags - all downloaded models - might not have room on the GPUs.
     // /api/ps - all HOT AND LOADED models
