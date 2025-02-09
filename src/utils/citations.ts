@@ -76,7 +76,7 @@ export async function replaceCitationLinks(
   }
 
   // Process citations first - this is the most common case
-  const citationPattern = /\s*(?:&lt;cite|<cite)\s*>\s*(\d+)(?:\s*,\s*p\.\s*(\d+))?\s*(?:&lt;\/cite|<\/cite)\s*>/g;
+  const citationPattern = /[ \t]*(?:&lt;cite|<cite)[ \t]*>[ \t]*(\d+)(?:[ \t]*,[ \t]*p\.[ \t]*(\d+))?[ \t]*(?:&lt;\/cite|<\/cite)[ \t]*>/g;
   
   // Fast path - if no citations, skip the replacement
   if (!citationPattern.test(content)) {
@@ -203,7 +203,7 @@ export async function processChunkWithStateMachine(
   let output = '';
 
   // Find complete <cite>...</cite> patterns, including multiple angle brackets and whitespace
-  const fullCitationRegex = /\s*(?:&lt;cite|<cite)\s*>\s*\d+(?:\s*,\s*p\.\s*\d+)?\s*(?:&lt;\/cite|<\/cite)\s*>/g;
+  const fullCitationRegex = /[ \t]*(?:&lt;cite|<cite)[ \t]*>[ \t]*\d+(?:[ \t]*,[ \t]*p\.[ \t]*\d+)?[ \t]*(?:&lt;\/cite|<\/cite)[ \t]*>/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
