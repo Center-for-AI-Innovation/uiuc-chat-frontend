@@ -193,7 +193,7 @@ const ThinkTagDropdown: FC<{
             className="think-tag-brain-icon"
           />
           <span className={`text-base font-medium ${montserrat_paragraph.variable} font-montserratParagraph`}>
-            AI's Thought Process
+            AI&apos;s Thought Process
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -983,7 +983,7 @@ export const ChatMessage: FC<Props> = memo(
           return;
         }
 
-        let contentToProcess = message.content;
+        const contentToProcess = message.content;
         
         if (Array.isArray(contentToProcess)) {
           const updatedContent = await Promise.all(

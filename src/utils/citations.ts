@@ -63,7 +63,7 @@ export async function replaceCitationLinks(
       );
       
       const displayTitle = context.readable_filename || `Document ${citationIndex}`;
-      let pageNumber = context.pagenumber ? context.pagenumber.toString() : match[2];
+      const pageNumber = context.pagenumber ? context.pagenumber.toString() : match[2];
       
       const sourceRef = pageNumber
         ? `${citationIndex}, p.${pageNumber}`
