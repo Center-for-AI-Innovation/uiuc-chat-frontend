@@ -32,14 +32,13 @@ import { Content, ContextWithMetadata, Message } from '@/types/chat'
 import HomeContext from '~/pages/api/home/home.context'
 import { CodeBlock } from '../Markdown/CodeBlock'
 import { MemoizedReactMarkdown } from '../Markdown/MemoizedReactMarkdown'
+import { ImagePreview } from './ImagePreview'
+import { LoadingSpinner } from '../UIUC-Components/LoadingSpinner'
+import { fetchPresignedUrl } from '~/utils/apiUtils'
 
 import rehypeMathjax from 'rehype-mathjax'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
-
-import { ImagePreview } from './ImagePreview'
-import { LoadingSpinner } from '../UIUC-Components/LoadingSpinner'
-import { fetchPresignedUrl } from '~/utils/apiUtils'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
@@ -268,7 +267,7 @@ export const ChatMessage: FC<Props> = memo(
     const [isEditing, setIsEditing] = useState<boolean>(false)
     const [isTyping, setIsTyping] = useState<boolean>(false)
     const [messageContent, setMessageContent] = useState<string>('')
-
+    const [localContent, setLocalContent] = useState<string | Content[]>(message.content)
     const [imageUrls, setImageUrls] = useState<Set<string>>(new Set())
 
     const [messagedCopied, setMessageCopied] = useState(false)
@@ -892,6 +891,407 @@ export const ChatMessage: FC<Props> = memo(
       }
     }, [message.contexts, courseName])
 
+    // Add new function to replace expired links in text
+    async function replaceExpiredLinksInText(text: string | undefined): Promise<string> {
+      if (!text) return '';
+      
+      // Updated regex to capture page numbers in the URL
+      const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\)]+(?:#page=\d+)?)\)/g;
+      let match;
+      let finalText = text;
+      const tasks = [];
+
+      while ((match = linkRegex.exec(text)) !== null) {
+        const [fullMatch, linkText, linkUrl] = match;
+        if (linkUrl) {
+          tasks.push(
+            (async () => {
+              // Extract page number if present
+              const url = new URL(linkUrl);
+              const pageNumber = url.hash ? url.hash : '';  // Includes #page=X if present
+              url.hash = ''; // Remove hash before processing the main URL
+              
+              const refreshed = await refreshS3LinkIfExpired(url.toString(), courseName);
+              if (refreshed !== url.toString()) {
+                // Reconstruct the link with the page number if it existed
+                const newUrl = pageNumber ? `${refreshed}${pageNumber}` : refreshed;
+                finalText = finalText.replace(fullMatch, `[${linkText}](${newUrl})`);
+              }
+            })()
+          );
+        }
+      }
+      await Promise.all(tasks);
+      return finalText;
+    }
+
+    // Helper function to refresh S3 links if expired
+    async function refreshS3LinkIfExpired(originalLink: string, courseName: string): Promise<string> {
+      try {
+        const urlObject = new URL(originalLink);
+
+        // Is it actually an S3 presigned link?
+        const isS3Presigned = urlObject.searchParams.has('X-Amz-Signature');
+        if (!isS3Presigned) {
+          // If it's not a presigned S3 link, just return it unchanged
+          return originalLink;
+        }
+
+        // Use dayjs-based logic for reading X-Amz-Date and X-Amz-Expires
+        dayjs.extend(utc);
+        let creationDateString = urlObject.searchParams.get('X-Amz-Date') as string;
+
+        // If missing or malformed, treat it as expired, so we can attempt to fetch new
+        if (!creationDateString) {
+          return await getNewPresignedUrl(originalLink, courseName);
+        }
+
+        // Convert 20250101T010101Z => 2025-01-01T01:01:01Z, etc.
+        creationDateString = creationDateString.replace(
+          /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/,
+          '$1-$2-$3T$4:$5:$6Z'
+        );
+
+        const creationDate = dayjs.utc(creationDateString, 'YYYY-MM-DDTHH:mm:ss[Z]');
+        const expiresInSecs = Number(urlObject.searchParams.get('X-Amz-Expires') || '0');
+        const expiryDate = creationDate.add(expiresInSecs, 'second');
+
+        // If link is expired, fetch a new one
+        if (expiryDate.toDate() < new Date()) {
+          return await getNewPresignedUrl(originalLink, courseName);
+        }
+
+        // Otherwise, original is still valid
+        return originalLink;
+      } catch (error) {
+        console.error('Failed to refresh S3 link:', error);
+        return originalLink; // fallback to original if something goes wrong
+      }
+    }
+
+    async function getNewPresignedUrl(originalLink: string, courseName: string): Promise<string> {
+      const s3path = extractPathFromUrl(originalLink);
+      return await fetchPresignedUrl(s3path, courseName) as string;
+    }
+
+    // Add effect for refreshing S3 links
+    useEffect(() => {
+      async function refreshS3LinksInContent() {
+        // Don't process while streaming
+        if (messageIsStreaming && 
+            messageIndex === (selectedConversation?.messages.length ?? 0) - 1) {
+          return;
+        }
+
+        let contentToProcess = message.content;
+        
+        if (Array.isArray(contentToProcess)) {
+          const updatedContent = await Promise.all(
+            contentToProcess.map(async (contentObj) => {
+              if (contentObj.type === 'text') {
+                const newText = await replaceExpiredLinksInText(contentObj.text);
+                return { ...contentObj, text: newText };
+              }
+              return contentObj;
+            })
+          );
+          setLocalContent(updatedContent);
+        } else if (typeof contentToProcess === 'string') {
+          const { thoughts, remainingContent } = extractThinkTagContent(contentToProcess);
+          if (thoughts) {
+            const processedThoughts = await replaceExpiredLinksInText(thoughts);
+            const processedContent = await replaceExpiredLinksInText(remainingContent);
+            setLocalContent(`<think>${processedThoughts}</think>${processedContent}`);
+          } else {
+            const newText = await replaceExpiredLinksInText(contentToProcess);
+            setLocalContent(newText);
+          }
+        }
+      }
+      refreshS3LinksInContent();
+    }, [message.id, messageIsStreaming]);
+
+    // Modify the content rendering logic
+    const renderContent = () => {
+      let contentToRender = '';
+      let thoughtsContent = null;
+
+      // If streaming, use message.content directly
+      if (messageIsStreaming && 
+          messageIndex === (selectedConversation?.messages.length ?? 0) - 1) {
+        if (typeof message.content === 'string') {
+          const { thoughts, remainingContent } = extractThinkTagContent(message.content);
+          thoughtsContent = thoughts;
+          contentToRender = remainingContent;
+        } else if (Array.isArray(message.content)) {
+          contentToRender = message.content
+            .filter((content) => content.type === 'text')
+            .map((content) => content.text)
+            .join(' ');
+          const { thoughts, remainingContent } = extractThinkTagContent(contentToRender);
+          thoughtsContent = thoughts;
+          contentToRender = remainingContent;
+        }
+      } else {
+        // Use processed localContent for non-streaming
+        if (typeof localContent === 'string') {
+          const { thoughts, remainingContent } = extractThinkTagContent(localContent);
+          thoughtsContent = thoughts;
+          contentToRender = remainingContent;
+        } else if (Array.isArray(localContent)) {
+          contentToRender = localContent
+            .filter((content) => content.type === 'text')
+            .map((content) => content.text)
+            .join(' ');
+          const { thoughts, remainingContent } = extractThinkTagContent(contentToRender);
+          thoughtsContent = thoughts;
+          contentToRender = remainingContent;
+        }
+      }
+
+      return (
+        <>
+          {thoughtsContent && (
+            <ThinkTagDropdown 
+              content={messageIsStreaming && 
+                     messageIndex === (selectedConversation?.messages.length ?? 0) - 1 
+                     ? `${thoughtsContent} ▍` 
+                     : thoughtsContent}
+              isStreaming={messageIsStreaming && 
+                         messageIndex === (selectedConversation?.messages.length ?? 0) - 1 &&
+                         !contentToRender} 
+            />
+          )}
+          {contentToRender && (
+            <MemoizedReactMarkdown
+              className={`dark:prose-invert linkMarkDown supMarkdown codeBlock prose mb-2 flex-1 flex-col items-start space-y-2`}
+              remarkPlugins={[remarkGfm, remarkMath]}
+              rehypePlugins={[rehypeMathjax]}
+              components={{
+                code({ node, inline, className, children, ...props }) {
+                  const text = String(children);
+
+                  // Simple regex to see if there's a [title](url) pattern
+                  const linkRegex = /\[[^\]]+\]\([^)]+\)/;
+
+                  // If it looks like a link, parse it again as normal Markdown
+                  if (linkRegex.test(text)) {
+                    return (
+                      <MemoizedReactMarkdown
+                        remarkPlugins={[remarkGfm, remarkMath]}
+                        rehypePlugins={[rehypeMathjax]}
+                      >
+                        {text}
+                      </MemoizedReactMarkdown>
+                    );
+                  }
+
+                  // Handle cursor placeholder
+                  if (children.length) {
+                    if (children[0] == '▍') {
+                      return (
+                        <span className="mt-1 animate-pulse cursor-default">
+                          ▍
+                        </span>
+                      )
+                    }
+
+                    children[0] = (children[0] as string).replace(
+                      '`▍`',
+                      '▍',
+                    )
+                  }
+
+                  const match = /language-(\w+)/.exec(className || '')
+
+                  return !inline ? (
+                    <CodeBlock
+                      key={Math.random()}
+                      language={(match && match[1]) || ''}
+                      value={String(children).replace(/\n$/, '')}
+                      style={{
+                        maxWidth: '100%',
+                        overflowX: 'auto',
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-all',
+                        overflowWrap: 'anywhere',
+                      }}
+                      {...props}
+                    />
+                  ) : (
+                    <code
+                      className={'codeBlock'}
+                      {...props}
+                      style={{
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-all',
+                        overflowWrap: 'anywhere',
+                      }}
+                    >
+                      {children}
+                    </code>
+                  )
+                },
+                p({ node, children }) {
+                  return (
+                    <p
+                      className={`self-start text-base font-normal ${montserrat_paragraph.variable} pb-2 font-montserratParagraph`}
+                    >
+                      {children}
+                    </p>
+                  )
+                },
+                ul({ children }) {
+                  return (
+                    <ul
+                      className={`text-base font-normal ${montserrat_paragraph.variable} font-montserratParagraph`}
+                    >
+                      {children}
+                    </ul>
+                  )
+                },
+                ol({ children }) {
+                  return (
+                    <ol
+                      className={`text-base font-normal ${montserrat_paragraph.variable} ml-4 font-montserratParagraph lg:ml-6`}
+                    >
+                      {children}
+                    </ol>
+                  )
+                },
+                li({ children }) {
+                  return (
+                    <li
+                      className={`text-base font-normal ${montserrat_paragraph.variable} break-words font-montserratParagraph`}
+                    >
+                      {children}
+                    </li>
+                  )
+                },
+                table({ children }) {
+                  return (
+                    <table className="border-collapse border border-black px-3 py-1 dark:border-white">
+                      {children}
+                    </table>
+                  )
+                },
+                th({ children }) {
+                  return (
+                    <th className="break-words border border-black bg-gray-500 px-3 py-1 text-white dark:border-white">
+                      {children}
+                    </th>
+                  )
+                },
+                td({ children }) {
+                  return (
+                    <td className="break-words border border-black px-3 py-1 dark:border-white">
+                      {children}
+                    </td>
+                  )
+                },
+                h1({ node, children }) {
+                  return (
+                    <h1
+                      className={`text-4xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                    >
+                      {children}
+                    </h1>
+                  )
+                },
+                h2({ node, children }) {
+                  return (
+                    <h2
+                      className={`text-3xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                    >
+                      {children}
+                    </h2>
+                  )
+                },
+                h3({ node, children }) {
+                  return (
+                    <h3
+                      className={`text-2xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                    >
+                      {children}
+                    </h3>
+                  )
+                },
+                h4({ node, children }) {
+                  return (
+                    <h4
+                      className={`text-lg font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                    >
+                      {children}
+                    </h4>
+                  )
+                },
+                h5({ node, children }) {
+                  return (
+                    <h5
+                      className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                    >
+                      {children}
+                    </h5>
+                  )
+                },
+                h6({ node, children }) {
+                  return (
+                    <h6
+                      className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                    >
+                      {children}
+                    </h6>
+                  )
+                },
+                a({ node, className, children, ...props }) {
+                  const { href, title } = props
+                  // Update citation link detection to check for readable filename
+                  const firstChild = children[0]
+                  const isValidCitation = 
+                    typeof firstChild === 'string' && 
+                    (firstChild.includes('Source') || 
+                     (message.contexts?.some(ctx => 
+                       ctx.readable_filename && firstChild.includes(ctx.readable_filename)
+                     ) ?? false))
+                  
+                  if (isValidCitation) {
+                    return (
+                      <a
+                        id="styledLink"
+                        href={href}
+                        target="_blank"
+                        title={title}
+                        rel="noopener noreferrer"
+                        className={'supMarkdown'}
+                      >
+                        {children}
+                      </a>
+                    )
+                  } else {
+                    return (
+                      <button
+                        id="styledLink"
+                        onClick={() => window.open(href, '_blank')}
+                        title={title}
+                        className={'linkMarkDown'}
+                      >
+                        {children}
+                      </button>
+                    )
+                  }
+                },
+              }}
+            >
+              {messageIsStreaming && 
+               messageIndex === (selectedConversation?.messages.length ?? 0) - 1
+                ? `${contentToRender} ▍`
+                : contentToRender}
+            </MemoizedReactMarkdown>
+          )}
+        </>
+      );
+    };
+
     return (
       <>
         <div
@@ -1383,269 +1783,7 @@ export const ChatMessage: FC<Props> = memo(
               ) : (
                 <div className="flex w-[90%] flex-col">
                   <div className="w-full max-w-full flex-1 overflow-hidden">
-                    {(() => {
-                      let contentToRender = '';
-                      let thoughtsContent = null;
-
-                      if (typeof message.content === 'string') {
-                        const { thoughts, remainingContent } = extractThinkTagContent(message.content);
-                        thoughtsContent = thoughts;
-                        contentToRender = remainingContent;
-                      } else if (Array.isArray(message.content)) {
-                        contentToRender = message.content
-                          .filter((content) => content.type === 'text')
-                          .map((content) => content.text)
-                          .join(' ');
-                        const { thoughts, remainingContent } = extractThinkTagContent(contentToRender);
-                        thoughtsContent = thoughts;
-                        contentToRender = remainingContent;
-                      }
-
-                      return (
-                        <>
-                          {thoughtsContent && (
-                            <ThinkTagDropdown 
-                              content={messageIsStreaming && 
-                                     messageIndex === (selectedConversation?.messages.length ?? 0) - 1 
-                                     ? `${thoughtsContent} ▍` 
-                                     : thoughtsContent}
-                              isStreaming={messageIsStreaming && 
-                                         messageIndex === (selectedConversation?.messages.length ?? 0) - 1 &&
-                                         !contentToRender} 
-                            />
-                          )}
-                          {contentToRender && (
-                            <MemoizedReactMarkdown
-                              className={`dark:prose-invert linkMarkDown supMarkdown codeBlock prose mb-2 flex-1 flex-col items-start space-y-2`}
-                              remarkPlugins={[remarkGfm, remarkMath]}
-                              rehypePlugins={[rehypeMathjax]}
-                              components={{
-                                code({ node, inline, className, children, ...props }) {
-                                  const text = String(children);
-
-                                  // Simple regex to see if there's a [title](url) pattern
-                                  const linkRegex = /\[[^\]]+\]\([^)]+\)/;
-
-                                  // If it looks like a link, parse it again as normal Markdown
-                                  if (linkRegex.test(text)) {
-                                    return (
-                                      <MemoizedReactMarkdown
-                                        remarkPlugins={[remarkGfm, remarkMath]}
-                                        rehypePlugins={[rehypeMathjax]}
-                                      >
-                                        {text}
-                                      </MemoizedReactMarkdown>
-                                    );
-                                  }
-
-                                  // Handle cursor placeholder
-                                  if (children.length) {
-                                    if (children[0] == '▍') {
-                                      return (
-                                        <span className="mt-1 animate-pulse cursor-default">
-                                          ▍
-                                        </span>
-                                      )
-                                    }
-
-                                    children[0] = (children[0] as string).replace(
-                                      '`▍`',
-                                      '▍',
-                                    )
-                                  }
-
-                                  const match = /language-(\w+)/.exec(className || '')
-
-                                  return !inline ? (
-                                    <CodeBlock
-                                      key={Math.random()}
-                                      language={(match && match[1]) || ''}
-                                      value={String(children).replace(/\n$/, '')}
-                                      style={{
-                                        maxWidth: '100%',
-                                        overflowX: 'auto',
-                                        whiteSpace: 'pre-wrap',
-                                        wordBreak: 'break-all',
-                                        overflowWrap: 'anywhere',
-                                      }}
-                                      {...props}
-                                    />
-                                  ) : (
-                                    <code
-                                      className={'codeBlock'}
-                                      {...props}
-                                      style={{
-                                        whiteSpace: 'pre-wrap',
-                                        wordBreak: 'break-all',
-                                        overflowWrap: 'anywhere',
-                                      }}
-                                    >
-                                      {children}
-                                    </code>
-                                  )
-                                },
-                                p({ node, children }) {
-                                  return (
-                                    <p
-                                      className={`self-start text-base font-normal ${montserrat_paragraph.variable} pb-2 font-montserratParagraph`}
-                                    >
-                                      {children}
-                                    </p>
-                                  )
-                                },
-                                ul({ children }) {
-                                  return (
-                                    <ul
-                                      className={`text-base font-normal ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                    >
-                                      {children}
-                                    </ul>
-                                  )
-                                },
-                                ol({ children }) {
-                                  return (
-                                    <ol
-                                      className={`text-base font-normal ${montserrat_paragraph.variable} ml-4 font-montserratParagraph lg:ml-6`}
-                                    >
-                                      {children}
-                                    </ol>
-                                  )
-                                },
-                                li({ children }) {
-                                  return (
-                                    <li
-                                      className={`text-base font-normal ${montserrat_paragraph.variable} break-words font-montserratParagraph`}
-                                    >
-                                      {children}
-                                    </li>
-                                  )
-                                },
-                                table({ children }) {
-                                  return (
-                                    <table className="border-collapse border border-black px-3 py-1 dark:border-white">
-                                      {children}
-                                    </table>
-                                  )
-                                },
-                                th({ children }) {
-                                  return (
-                                    <th className="break-words border border-black bg-gray-500 px-3 py-1 text-white dark:border-white">
-                                      {children}
-                                    </th>
-                                  )
-                                },
-                                td({ children }) {
-                                  return (
-                                    <td className="break-words border border-black px-3 py-1 dark:border-white">
-                                      {children}
-                                    </td>
-                                  )
-                                },
-                                h1({ node, children }) {
-                                  return (
-                                    <h1
-                                      className={`text-4xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                                    >
-                                      {children}
-                                    </h1>
-                                  )
-                                },
-                                h2({ node, children }) {
-                                  return (
-                                    <h2
-                                      className={`text-3xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                                    >
-                                      {children}
-                                    </h2>
-                                  )
-                                },
-                                h3({ node, children }) {
-                                  return (
-                                    <h3
-                                      className={`text-2xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                                    >
-                                      {children}
-                                    </h3>
-                                  )
-                                },
-                                h4({ node, children }) {
-                                  return (
-                                    <h4
-                                      className={`text-lg font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                                    >
-                                      {children}
-                                    </h4>
-                                  )
-                                },
-                                h5({ node, children }) {
-                                  return (
-                                    <h5
-                                      className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                                    >
-                                      {children}
-                                    </h5>
-                                  )
-                                },
-                                h6({ node, children }) {
-                                  return (
-                                    <h6
-                                      className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                                    >
-                                      {children}
-                                    </h6>
-                                  )
-                                },
-                                a({ node, className, children, ...props }) {
-                                  const { href, title } = props
-                                  // Update citation link detection to check for readable filename
-                                  const firstChild = children[0]
-                                  const isValidCitation = 
-                                    typeof firstChild === 'string' && 
-                                    (firstChild.includes('Source') || 
-                                     (message.contexts?.some(ctx => 
-                                       ctx.readable_filename && firstChild.includes(ctx.readable_filename)
-                                     ) ?? false))
-                                  
-                                  if (isValidCitation) {
-                                    return (
-                                      <a
-                                        id="styledLink"
-                                        href={href}
-                                        target="_blank"
-                                        title={title}
-                                        rel="noopener noreferrer"
-                                        className={'supMarkdown'}
-                                      >
-                                        {children}
-                                      </a>
-                                    )
-                                  } else {
-                                    return (
-                                      <button
-                                        id="styledLink"
-                                        onClick={() => window.open(href, '_blank')}
-                                        title={title}
-                                        className={'linkMarkDown'}
-                                      >
-                                        {children}
-                                      </button>
-                                    )
-                                  }
-                                },
-                              }}
-                            >
-                              {(() => {
-                                if (messageIsStreaming && 
-                                    messageIndex === (selectedConversation?.messages.length ?? 0) - 1) {
-                                  return `${contentToRender} ▍`;
-                                }
-                                return contentToRender;
-                              })()}
-                            </MemoizedReactMarkdown>
-                          )}
-                        </>
-                      );
-                    })()}
+                    {renderContent()}
                   </div>
                   {/* Action Buttons Container */}
                   <div className="flex flex-col gap-2">
