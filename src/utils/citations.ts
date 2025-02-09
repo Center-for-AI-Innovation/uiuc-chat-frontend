@@ -1,5 +1,48 @@
 import { ContextWithMetadata, Message } from '~/types/chat'
 import { fetchPresignedUrl } from './apiUtils'
+import sanitizeHtml, { IOptions } from 'sanitize-html'
+
+// Strict sanitization options for text content
+const SANITIZE_OPTIONS: IOptions = {
+  allowedTags: [], // No HTML tags allowed
+  allowedAttributes: {}, // No attributes allowed
+  disallowedTagsMode: 'recursiveEscape' as const
+}
+
+// URL validation regex for http/https only
+const SAFE_URL_PATTERN = /^https?:\/\/[^\s/$.?#].[^\s]*$/i
+
+/**
+ * Validates and sanitizes a URL to prevent XSS via malicious URLs
+ * @param {string} url - The URL to validate
+ * @returns {string} The sanitized URL or empty string if invalid
+ */
+function safeUrl(url: string): string {
+  try {
+    if (!url) return ''
+    const parsed = new URL(url)
+    // Only allow http and https protocols
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return ''
+    }
+    // Validate against safe URL pattern
+    if (!SAFE_URL_PATTERN.test(url)) {
+      return ''
+    }
+    return url
+  } catch {
+    return ''
+  }
+}
+
+/**
+ * Sanitizes text content to prevent XSS
+ * @param {string} text - The text to sanitize
+ * @returns {string} The sanitized text
+ */
+function safeText(text: string | undefined | null): string {
+  return sanitizeHtml(text || '', SANITIZE_OPTIONS)
+}
 
 /**
  * Enum representing the possible states of the state machine used in processing text chunks.
@@ -29,7 +72,7 @@ export async function replaceCitationLinks(
   courseName: string,
 ): Promise<string> {
   if (!lastMessage.contexts) {
-    return content;
+    return safeText(content);
   }
 
   // Process citations first - this is the most common case
@@ -37,7 +80,7 @@ export async function replaceCitationLinks(
   
   // Fast path - if no citations, skip the replacement
   if (!citationPattern.test(content)) {
-    return content;
+    return safeText(content);
   }
   
   // Reset lastIndex after test()
@@ -62,14 +105,19 @@ export async function replaceCitationLinks(
         courseName,
       );
       
-      const displayTitle = context.readable_filename || `Document ${citationIndex}`;
-      const pageNumber = context.pagenumber ? context.pagenumber.toString() : match[2];
+      // Sanitize all text content and validate URL
+      const safeLink = safeUrl(link);
+      const displayTitle = safeText(context.readable_filename || `Document ${citationIndex}`);
+      const pageNumber = context.pagenumber ? safeText(context.pagenumber.toString()) : safeText(match[2] || '');
       
       const sourceRef = pageNumber
         ? `${citationIndex}, p.${pageNumber}`
         : `${citationIndex}`;
       
-      const replacementText = `[${displayTitle} (${sourceRef})](${link}${pageNumber ? `#page=${pageNumber}` : ''})`;
+      // Only create link if we have a valid safe URL
+      const replacementText = safeLink 
+        ? `[${displayTitle} (${sourceRef})](${safeLink}${pageNumber ? `#page=${pageNumber}` : ''})`
+        : `${displayTitle} (${sourceRef})`; // Fallback to plain text if URL is invalid
       
       // Replace at exact position accounting for previous replacements
       result = 
@@ -85,7 +133,7 @@ export async function replaceCitationLinks(
   // Fast path - if no filename patterns, return early
   const hasFilenamePattern = /\b\d+\s*\.\s*\[.*?\]\(#\)/.test(result);
   if (!hasFilenamePattern) {
-    return result;
+    return safeText(result);
   }
 
   // Process filename patterns if present
@@ -105,20 +153,25 @@ export async function replaceCitationLinks(
         courseName,
       );
       
-      const filename = match[2] || '';
-      let pageNumber = context.pagenumber ? context.pagenumber.toString() : undefined;
+      // Sanitize all text content and validate URL
+      const safeLink = safeUrl(link);
+      const filename = safeText(match[2] || '');
+      let pageNumber = context.pagenumber ? safeText(context.pagenumber.toString()) : undefined;
       
       if (!pageNumber) {
         const pageNumberMatch = filename.match(/page:\s*(\d+)/);
-        pageNumber = pageNumberMatch ? pageNumberMatch[1] : undefined;
+        pageNumber = pageNumberMatch ? safeText(pageNumberMatch[1]) : undefined;
       }
       
-      const displayTitle = context.readable_filename || `Document ${filenameIndex}`;
+      const displayTitle = safeText(context.readable_filename || `Document ${filenameIndex}`);
       const sourceRef = pageNumber
         ? `${filenameIndex}, p.${pageNumber}`
         : `${filenameIndex}`;
       
-      const replacementText = `${match[1]} [${displayTitle} (${sourceRef})](${link}${pageNumber ? `#page=${pageNumber}` : ''})`;
+      // Only create link if we have a valid safe URL
+      const replacementText = safeLink
+        ? `${match[1]} [${displayTitle} (${sourceRef})](${safeLink}${pageNumber ? `#page=${pageNumber}` : ''})`
+        : `${match[1]} ${displayTitle} (${sourceRef})`; // Fallback to plain text if URL is invalid
       
       // Replace at exact position accounting for previous replacements
       result = 
@@ -131,7 +184,7 @@ export async function replaceCitationLinks(
     }
   }
 
-  return result;
+  return safeText(result);
 }
 
 /**
@@ -227,11 +280,14 @@ const getCitationLink = async (
 ): Promise<string> => {
   const cachedLink = citationLinkCache.get(citationIndex)
   if (cachedLink) {
-    return cachedLink
+    return safeUrl(cachedLink) // Validate cached URLs too
   } else {
     const link = (await generateCitationLink(context, courseName)) as string
-    citationLinkCache.set(citationIndex, link)
-    return link
+    const safeLink = safeUrl(link)
+    if (safeLink) {
+      citationLinkCache.set(citationIndex, safeLink)
+    }
+    return safeLink
   }
 }
 
@@ -243,11 +299,12 @@ const getCitationLink = async (
 const generateCitationLink = async (
   context: ContextWithMetadata,
   courseName: string
-): Promise<string | null> => {
+): Promise<string> => {
   if (context.url) {
-    return context.url
+    return safeUrl(context.url)
   } else if (context.s3_path) {
-    return fetchPresignedUrl(context.s3_path, courseName)
+    const presignedUrl = await fetchPresignedUrl(context.s3_path, courseName)
+    return safeUrl(presignedUrl || '') // Handle null case by providing empty string fallback
   }
   return ''
 }
