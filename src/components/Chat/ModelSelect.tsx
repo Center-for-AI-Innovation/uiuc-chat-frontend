@@ -71,9 +71,9 @@ export const getModelLogo = (modelType: string) => {
     case ProviderNames.Azure:
       return 'https://assets.kastan.ai/uiuc-chat-emails/msft-logo.png'
     case ProviderNames.Bedrock:
-      return 'https://d2908q01vomqb2.cloudfront.net/f1f836cb4ea6efb2a0b1b99f41ad8b103eff4b59/2023/09/21/ML-8785-1.jpg'
+      return 'https://icon2.cleanpng.com/20190418/vhc/kisspng-amazon-web-services-logo-cloud-computing-amazon-co-logoaws-1-itnext-summit-1713897597915.webp'
     case ProviderNames.Gemini:
-      return 'https://lh3.googleusercontent.com/8KkVJUCkrmHUk6Rr2HNvhXfRX7UQvkNqPtL_PzbaXoF6KCuTU6UMQQhqRVPVs3I1kHZGHxhDyZHJ_4F-UQx_4QBL7Uo=w128-rw'
+      return 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png'
     default:
       throw new Error(`Unknown model type: ${modelType}`)
   }
