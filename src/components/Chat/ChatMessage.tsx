@@ -12,6 +12,7 @@ import {
   IconThumbUpFilled,
   IconThumbDownFilled,
   IconX,
+  IconBrain,
 } from '@tabler/icons-react'
 import {
   FC,
@@ -105,6 +106,41 @@ export interface Props {
   courseName: string
   isSidebarOpen?: boolean
 }
+
+const extractThinkContent = (content: string | Content[]) => {
+  if (Array.isArray(content)) {
+    const textContent = content
+      .filter(item => item.type === 'text')
+      .map(item => item.text)
+      .join(' ');
+    return {
+      hasThinkContent: false,
+      thinkContent: '',
+      remainingContent: textContent,
+    };
+  }
+
+  if (typeof content === 'string') {
+    const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/);
+    if (thinkMatch && thinkMatch[1]) {
+      const thinkContent = thinkMatch[1].trim();
+      const remainingContent = content
+        .replace(/<think>[\s\S]*?<\/think>/, '')
+        .trim();
+      return {
+        hasThinkContent: true,
+        thinkContent,
+        remainingContent,
+      };
+    }
+  }
+
+  return {
+    hasThinkContent: false,
+    thinkContent: '',
+    remainingContent: content as string,
+  };
+};
 
 export const ChatMessage: FC<Props> = memo(
   ({
@@ -615,11 +651,10 @@ export const ChatMessage: FC<Props> = memo(
 
     return (
       <div
-        className={`group ${
-          message.role === 'assistant'
-            ? 'border-b border-black/10 bg-gray-50/50 text-gray-800 dark:border-[rgba(42,42,120,0.50)] dark:bg-[#202134] dark:text-gray-100'
-            : 'border-b border-black/10 bg-white/50 text-gray-800 dark:border-[rgba(42,42,120,0.50)] dark:bg-[#15162B] dark:text-gray-100'
-        } w-full`}
+        className={`group ${message.role === 'assistant'
+          ? 'border-b border-black/10 bg-gray-50/50 text-gray-800 dark:border-[rgba(42,42,120,0.50)] dark:bg-[#202134] dark:text-gray-100'
+          : 'border-b border-black/10 bg-white/50 text-gray-800 dark:border-[rgba(42,42,120,0.50)] dark:bg-[#15162B] dark:text-gray-100'
+          } w-full`}
         style={{ overflowWrap: 'anywhere' }}
       >
         <div className="relative mx-auto flex w-full justify-center px-4 py-4 text-base md:gap-6 md:py-6 lg:px-6">
@@ -681,111 +716,242 @@ export const ChatMessage: FC<Props> = memo(
                   ) : (
                     <>
                       <div className="dark:prose-invert prose w-full  flex-1 overflow-x-hidden whitespace-pre-wrap">
-                        {Array.isArray(message.content) ? (
-                          <>
-                            <div className="mb-2 flex w-full flex-col items-start space-y-2">
-                              {message.content.map((content, index) => {
-                                if (content.type === 'text') {
-                                  if (
-                                    !(content.text as string)
-                                      .trim()
-                                      .startsWith('Image description:')
-                                  ) {
-                                    return (
-                                      <p
-                                        key={index}
-                                        className={`self-start text-base font-normal ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                      >
-                                        {content.text}
-                                      </p>
-                                    )
-                                  }
-                                }
-                              })}
-                              <div className="-m-1 flex w-full flex-wrap justify-start">
-                                {message.content
-                                  .filter((item) => item.type === 'image_url')
-                                  .map((content, index) => (
-                                    <div
-                                      key={index}
-                                      className={classes.imageContainerStyle}
-                                    >
-                                      <div className="overflow-hidden rounded-lg shadow-lg">
-                                        <ImagePreview
-                                          src={
-                                            Array.from(imageUrls)[
-                                              index
-                                            ] as string
-                                          }
-                                          alt="Chat message"
-                                          className={classes.imageStyle}
-                                        />
-                                      </div>
-                                    </div>
-                                  ))}
-                              </div>
+                        {(() => {
+                          const { hasThinkContent, thinkContent, remainingContent } = extractThinkContent(message.content);
+                          const isStreaming = messageIsStreaming && messageIndex === (selectedConversation?.messages.length ?? 0) - 1;
 
-                              {isImg2TextLoading &&
-                                (messageIndex ===
-                                  (selectedConversation?.messages.length ?? 0) -
-                                    1 ||
-                                  messageIndex ===
-                                    (selectedConversation?.messages.length ??
-                                      0) -
-                                      2) && (
-                                  <IntermediateStateAccordion
-                                    accordionKey="imageDescription"
-                                    title="Image Description"
-                                    isLoading={isImg2TextLoading}
-                                    error={false}
-                                    content={
-                                      message.content.find(
-                                        (content) =>
-                                          content.type === 'text' &&
-                                          content.text
-                                            ?.trim()
-                                            .startsWith('Image description:'),
-                                      )?.text ?? 'No image description found'
-                                    }
-                                  />
-                                )}
-
-                              {message.content.some(
-                                (content) =>
-                                  content.type === 'text' &&
-                                  content.text
-                                    ?.trim()
-                                    .startsWith('Image description:'),
-                              ) && (
+                          return (
+                            <>
+                              {hasThinkContent && (
                                 <IntermediateStateAccordion
-                                  accordionKey="imageDescription"
-                                  title="Image Description"
+                                  accordionKey="think-process"
+                                  title={
+                                    <div className="flex items-center gap-2">
+                                      <IconBrain size={18} className="text-purple-400" />
+                                      <span className="text-purple-400">View thinking process</span>
+                                    </div>
+                                  }
                                   isLoading={false}
                                   error={false}
-                                  content={
-                                    message.content.find(
-                                      (content) =>
-                                        content.type === 'text' &&
-                                        content.text
-                                          ?.trim()
-                                          .startsWith('Image description:'),
-                                    )?.text ?? 'No image description found'
-                                  }
+                                  content={thinkContent}
+                                  defaultValue={undefined}
                                 />
                               )}
-                            </div>
-                          </>
-                        ) : (
-                          <>{message.content}</>
-                        )}
+                              <div className="dark:prose-invert prose mt-[-2px] w-full overflow-x-hidden">
+                                <MemoizedReactMarkdown
+                                  className="dark:prose-invert linkMarkDown supMarkdown codeBlock prose mb-2 flex-1 flex-col items-start space-y-2 overflow-x-hidden"
+                                  remarkPlugins={[remarkGfm, remarkMath]}
+                                  rehypePlugins={[rehypeMathjax]}
+                                  components={{
+                                    code({ node, inline, className, children, ...props }) {
+                                      if (children.length) {
+                                        if (children[0] == '▍') {
+                                          return (
+                                            <span className="mt-1 animate-pulse cursor-default">
+                                              ▍
+                                            </span>
+                                          )
+                                        }
+
+                                        children[0] = (children[0] as string).replace(
+                                          '`▍`',
+                                          '▍',
+                                        )
+                                      }
+
+                                      const match = /language-(\w+)/.exec(className || '')
+
+                                      return !inline ? (
+                                        <CodeBlock
+                                          key={Math.random()}
+                                          language={(match && match[1]) || ''}
+                                          value={String(children).replace(/\n$/, '')}
+                                          style={{
+                                            maxWidth: '100%',
+                                            overflowX: 'auto',
+                                            whiteSpace: 'pre-wrap',
+                                            wordBreak: 'break-all',
+                                            overflowWrap: 'anywhere',
+                                          }}
+                                          {...props}
+                                        />
+                                      ) : (
+                                        <code
+                                          className={'codeBlock'}
+                                          {...props}
+                                          style={{
+                                            whiteSpace: 'pre-wrap',
+                                            wordBreak: 'break-all',
+                                            overflowWrap: 'anywhere',
+                                          }}
+                                        >
+                                          {children}
+                                        </code>
+                                      )
+                                    },
+                                    p({ node, children }) {
+                                      return (
+                                        <p
+                                          className={`self-start text-base font-normal ${montserrat_paragraph.variable} pb-2 font-montserratParagraph`}
+                                        >
+                                          {children}
+                                        </p>
+                                      )
+                                    },
+                                    ul({ children }) {
+                                      return (
+                                        <ul
+                                          className={`text-base font-normal ${montserrat_paragraph.variable} max-w-full overflow-x-auto break-words font-montserratParagraph`}
+                                        >
+                                          {children}
+                                        </ul>
+                                      )
+                                    },
+                                    ol({ children }) {
+                                      return (
+                                        <ol
+                                          className={`text-base font-normal ${montserrat_paragraph.variable} ml-4 max-w-full overflow-x-auto break-words font-montserratParagraph lg:ml-6`}
+                                        >
+                                          {children}
+                                        </ol>
+                                      )
+                                    },
+                                    li({ children }) {
+                                      return (
+                                        <li
+                                          className={`text-base font-normal ${montserrat_paragraph.variable} break-words pr-4 font-montserratParagraph`}
+                                          style={{
+                                            overflowWrap: 'break-word',
+                                            wordWrap: 'break-word',
+                                            hyphens: 'auto',
+                                          }}
+                                        >
+                                          {children}
+                                        </li>
+                                      )
+                                    },
+                                    table({ children }) {
+                                      return (
+                                        <table className="border-collapse border border-black px-3 py-1 dark:border-white">
+                                          {children}
+                                        </table>
+                                      )
+                                    },
+                                    th({ children }) {
+                                      return (
+                                        <th className="break-words border border-black bg-gray-500 px-3 py-1 text-white dark:border-white">
+                                          {children}
+                                        </th>
+                                      )
+                                    },
+                                    td({ children }) {
+                                      return (
+                                        <td className="break-words border border-black px-3 py-1 dark:border-white">
+                                          {children}
+                                        </td>
+                                      )
+                                    },
+                                    h1({ node, children }) {
+                                      return (
+                                        <h1
+                                          className={`text-4xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                                        >
+                                          {children}
+                                        </h1>
+                                      )
+                                    },
+                                    h2({ node, children }) {
+                                      return (
+                                        <h2
+                                          className={`text-3xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                                        >
+                                          {children}
+                                        </h2>
+                                      )
+                                    },
+                                    h3({ node, children }) {
+                                      return (
+                                        <h3
+                                          className={`text-2xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                                        >
+                                          {children}
+                                        </h3>
+                                      )
+                                    },
+                                    h4({ node, children }) {
+                                      return (
+                                        <h4
+                                          className={`text-lg font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                                        >
+                                          {children}
+                                        </h4>
+                                      )
+                                    },
+                                    h5({ node, children }) {
+                                      return (
+                                        <h5
+                                          className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                                        >
+                                          {children}
+                                        </h5>
+                                      )
+                                    },
+                                    h6({ node, children }) {
+                                      return (
+                                        <h6
+                                          className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                                        >
+                                          {children}
+                                        </h6>
+                                      )
+                                    },
+                                    a({ node, className, children, ...props }) {
+                                      const { href, title } = props
+                                      const isCitationLink = /^\d+$/.test(
+                                        children[0] as string,
+                                      )
+                                      if (isCitationLink) {
+                                        return (
+                                          <a
+                                            id="styledLink"
+                                            href={href}
+                                            target="_blank"
+                                            title={title}
+                                            rel="noopener noreferrer"
+                                            className={'supMarkdown'}
+                                          >
+                                            {children}
+                                          </a>
+                                        )
+                                      } else {
+                                        return (
+                                          <button
+                                            id="styledLink"
+                                            onClick={() => window.open(href, '_blank')}
+                                            title={title}
+                                            className={'linkMarkDown'}
+                                          >
+                                            {children}
+                                          </button>
+                                        )
+                                      }
+                                    },
+                                  }}
+                                >
+                                  {isStreaming ? `${remainingContent} ▍` : remainingContent}
+                                </MemoizedReactMarkdown>
+                              </div>
+                            </>
+                          );
+                        })()}
                         <div className="flex w-full flex-col items-start space-y-2">
                           {isQueryRewriting &&
                             (messageIndex ===
                               (selectedConversation?.messages.length ?? 0) -
-                                1 ||
+                              1 ||
                               messageIndex ===
-                                (selectedConversation?.messages.length ?? 0) -
-                                  2) && (
+                              (selectedConversation?.messages.length ?? 0) -
+                              2) && (
                               <IntermediateStateAccordion
                                 accordionKey="query-rewrite"
                                 title="Optimizing search query"
@@ -828,10 +994,10 @@ export const ChatMessage: FC<Props> = memo(
                           {isRetrievalLoading &&
                             (messageIndex ===
                               (selectedConversation?.messages.length ?? 0) -
-                                1 ||
+                              1 ||
                               messageIndex ===
-                                (selectedConversation?.messages.length ?? 0) -
-                                  2) && (
+                              (selectedConversation?.messages.length ?? 0) -
+                              2) && (
                               <IntermediateStateAccordion
                                 accordionKey="retrieval loading"
                                 title="Retrieving documents"
@@ -844,10 +1010,10 @@ export const ChatMessage: FC<Props> = memo(
                           {isRouting &&
                             (messageIndex ===
                               (selectedConversation?.messages.length ?? 0) -
-                                1 ||
+                              1 ||
                               messageIndex ===
-                                (selectedConversation?.messages.length ?? 0) -
-                                  2) && (
+                              (selectedConversation?.messages.length ?? 0) -
+                              2) && (
                               <IntermediateStateAccordion
                                 accordionKey={`routing tools`}
                                 title={'Routing the request to relevant tools'}
@@ -861,10 +1027,10 @@ export const ChatMessage: FC<Props> = memo(
                             message.tools &&
                             (messageIndex ===
                               (selectedConversation?.messages.length ?? 0) -
-                                1 ||
+                              1 ||
                               messageIndex ===
-                                (selectedConversation?.messages.length ?? 0) -
-                                  2) && (
+                              (selectedConversation?.messages.length ?? 0) -
+                              2) && (
                               <>
                                 {message.tools.map((response, index) => (
                                   <IntermediateStateAccordion
@@ -947,82 +1113,82 @@ export const ChatMessage: FC<Props> = memo(
                           {(messageIndex ===
                             (selectedConversation?.messages.length ?? 0) - 1 ||
                             messageIndex ===
-                              (selectedConversation?.messages.length ?? 0) -
-                                2) && (
-                            <>
-                              {message.tools?.map((response, index) => (
-                                <IntermediateStateAccordion
-                                  key={`tool-${index}`}
-                                  accordionKey={`tool-${index}`}
-                                  title={
-                                    <>
-                                      Tool output from{' '}
-                                      <Badge
-                                        color={response.error ? 'red' : 'grape'}
-                                        radius="md"
-                                        size="sm"
-                                      >
-                                        {response.readableName}
-                                      </Badge>
-                                    </>
-                                  }
-                                  isLoading={
-                                    response.output === undefined &&
-                                    response.error === undefined
-                                  }
-                                  error={response.error ? true : false}
-                                  content={
-                                    <>
-                                      {response.error ? (
-                                        <span>{response.error}</span>
-                                      ) : (
-                                        <>
-                                          <div
-                                            style={{
-                                              display: 'flex',
-                                              overflowX: 'auto',
-                                              gap: '10px',
-                                            }}
-                                          >
-                                            {response.output?.imageUrls &&
-                                              response.output?.imageUrls.map(
-                                                (imageUrl, index) => (
-                                                  <div
-                                                    key={index}
-                                                    className={
-                                                      classes.imageContainerStyle
-                                                    }
-                                                  >
-                                                    <div className="overflow-hidden rounded-lg shadow-lg">
-                                                      <ImagePreview
-                                                        src={imageUrl}
-                                                        alt={`Tool output image ${index}`}
-                                                        className={
-                                                          classes.imageStyle
-                                                        }
-                                                      />
+                            (selectedConversation?.messages.length ?? 0) -
+                            2) && (
+                              <>
+                                {message.tools?.map((response, index) => (
+                                  <IntermediateStateAccordion
+                                    key={`tool-${index}`}
+                                    accordionKey={`tool-${index}`}
+                                    title={
+                                      <>
+                                        Tool output from{' '}
+                                        <Badge
+                                          color={response.error ? 'red' : 'grape'}
+                                          radius="md"
+                                          size="sm"
+                                        >
+                                          {response.readableName}
+                                        </Badge>
+                                      </>
+                                    }
+                                    isLoading={
+                                      response.output === undefined &&
+                                      response.error === undefined
+                                    }
+                                    error={response.error ? true : false}
+                                    content={
+                                      <>
+                                        {response.error ? (
+                                          <span>{response.error}</span>
+                                        ) : (
+                                          <>
+                                            <div
+                                              style={{
+                                                display: 'flex',
+                                                overflowX: 'auto',
+                                                gap: '10px',
+                                              }}
+                                            >
+                                              {response.output?.imageUrls &&
+                                                response.output?.imageUrls.map(
+                                                  (imageUrl, index) => (
+                                                    <div
+                                                      key={index}
+                                                      className={
+                                                        classes.imageContainerStyle
+                                                      }
+                                                    >
+                                                      <div className="overflow-hidden rounded-lg shadow-lg">
+                                                        <ImagePreview
+                                                          src={imageUrl}
+                                                          alt={`Tool output image ${index}`}
+                                                          className={
+                                                            classes.imageStyle
+                                                          }
+                                                        />
+                                                      </div>
                                                     </div>
-                                                  </div>
-                                                ),
-                                              )}
-                                          </div>
-                                          <div>
-                                            {response.output?.text
-                                              ? response.output.text
-                                              : JSON.stringify(
+                                                  ),
+                                                )}
+                                            </div>
+                                            <div>
+                                              {response.output?.text
+                                                ? response.output.text
+                                                : JSON.stringify(
                                                   response.output?.data,
                                                   null,
                                                   2,
                                                 )}
-                                          </div>
-                                        </>
-                                      )}
-                                    </>
-                                  }
-                                />
-                              ))}
-                            </>
-                          )}
+                                            </div>
+                                          </>
+                                        )}
+                                      </>
+                                    }
+                                  />
+                                ))}
+                              </>
+                            )}
                           {(() => {
                             if (
                               messageIsStreaming === undefined ||
@@ -1050,10 +1216,10 @@ export const ChatMessage: FC<Props> = memo(
                             loading &&
                             (messageIndex ===
                               (selectedConversation?.messages.length ?? 0) -
-                                1 ||
+                              1 ||
                               messageIndex ===
-                                (selectedConversation?.messages.length ?? 0) -
-                                  2) &&
+                              (selectedConversation?.messages.length ?? 0) -
+                              2) &&
                             (!message.tools ||
                               message.tools.every(
                                 (tool) =>
@@ -1108,223 +1274,234 @@ export const ChatMessage: FC<Props> = memo(
               ) : (
                 <div className="flex flex-col">
                   <div className="w-full max-w-full flex-1 overflow-hidden">
-                    <MemoizedReactMarkdown
-                      className="dark:prose-invert linkMarkDown supMarkdown codeBlock prose mb-2 flex-1 flex-col items-start space-y-2 overflow-x-hidden"
-                      remarkPlugins={[remarkGfm, remarkMath]}
-                      rehypePlugins={[rehypeMathjax]}
-                      components={{
-                        code({ node, inline, className, children, ...props }) {
-                          if (children.length) {
-                            if (children[0] == '▍') {
-                              return (
-                                <span className="mt-1 animate-pulse cursor-default">
-                                  ▍
-                                </span>
-                              )
-                            }
+                    {(() => {
+                      const { hasThinkContent, thinkContent, remainingContent } = extractThinkContent(message.content);
+                      const isStreaming = messageIsStreaming && messageIndex === (selectedConversation?.messages.length ?? 0) - 1;
 
-                            children[0] = (children[0] as string).replace(
-                              '`▍`',
-                              '▍',
-                            )
-                          }
-
-                          const match = /language-(\w+)/.exec(className || '')
-
-                          return !inline ? (
-                            <CodeBlock
-                              key={Math.random()}
-                              language={(match && match[1]) || ''}
-                              value={String(children).replace(/\n$/, '')}
-                              style={{
-                                maxWidth: '100%',
-                                overflowX: 'auto',
-                                whiteSpace: 'pre-wrap',
-                                wordBreak: 'break-all',
-                                overflowWrap: 'anywhere',
-                              }}
-                              {...props}
+                      return (
+                        <>
+                          {hasThinkContent && (
+                            <IntermediateStateAccordion
+                              accordionKey="think-process"
+                              title={
+                                <div className="flex items-center gap-2">
+                                  <IconBrain size={18} className="text-purple-400" />
+                                  <span className="text-purple-400">View thinking process</span>
+                                </div>
+                              }
+                              isLoading={false}
+                              error={false}
+                              content={thinkContent}
+                              defaultValue={undefined}
                             />
-                          ) : (
-                            <code
-                              className={'codeBlock'}
-                              {...props}
-                              style={{
-                                whiteSpace: 'pre-wrap',
-                                wordBreak: 'break-all',
-                                overflowWrap: 'anywhere',
+                          )}
+                          <div className="dark:prose-invert prose mt-[-2px] w-full overflow-x-hidden">
+                            <MemoizedReactMarkdown
+                              className="dark:prose-invert linkMarkDown supMarkdown codeBlock prose mb-2 flex-1 flex-col items-start space-y-2 overflow-x-hidden"
+                              remarkPlugins={[remarkGfm, remarkMath]}
+                              rehypePlugins={[rehypeMathjax]}
+                              components={{
+                                code({ node, inline, className, children, ...props }) {
+                                  if (children.length) {
+                                    if (children[0] == '▍') {
+                                      return (
+                                        <span className="mt-1 animate-pulse cursor-default">
+                                          ▍
+                                        </span>
+                                      )
+                                    }
+
+                                    children[0] = (children[0] as string).replace(
+                                      '`▍`',
+                                      '▍',
+                                    )
+                                  }
+
+                                  const match = /language-(\w+)/.exec(className || '')
+
+                                  return !inline ? (
+                                    <CodeBlock
+                                      key={Math.random()}
+                                      language={(match && match[1]) || ''}
+                                      value={String(children).replace(/\n$/, '')}
+                                      style={{
+                                        maxWidth: '100%',
+                                        overflowX: 'auto',
+                                        whiteSpace: 'pre-wrap',
+                                        wordBreak: 'break-all',
+                                        overflowWrap: 'anywhere',
+                                      }}
+                                      {...props}
+                                    />
+                                  ) : (
+                                    <code
+                                      className={'codeBlock'}
+                                      {...props}
+                                      style={{
+                                        whiteSpace: 'pre-wrap',
+                                        wordBreak: 'break-all',
+                                        overflowWrap: 'anywhere',
+                                      }}
+                                    >
+                                      {children}
+                                    </code>
+                                  )
+                                },
+                                p({ node, children }) {
+                                  return (
+                                    <p
+                                      className={`self-start text-base font-normal ${montserrat_paragraph.variable} pb-2 font-montserratParagraph`}
+                                    >
+                                      {children}
+                                    </p>
+                                  )
+                                },
+                                ul({ children }) {
+                                  return (
+                                    <ul
+                                      className={`text-base font-normal ${montserrat_paragraph.variable} max-w-full overflow-x-auto break-words font-montserratParagraph`}
+                                    >
+                                      {children}
+                                    </ul>
+                                  )
+                                },
+                                ol({ children }) {
+                                  return (
+                                    <ol
+                                      className={`text-base font-normal ${montserrat_paragraph.variable} ml-4 max-w-full overflow-x-auto break-words font-montserratParagraph lg:ml-6`}
+                                    >
+                                      {children}
+                                    </ol>
+                                  )
+                                },
+                                li({ children }) {
+                                  return (
+                                    <li
+                                      className={`text-base font-normal ${montserrat_paragraph.variable} break-words pr-4 font-montserratParagraph`}
+                                      style={{
+                                        overflowWrap: 'break-word',
+                                        wordWrap: 'break-word',
+                                        hyphens: 'auto',
+                                      }}
+                                    >
+                                      {children}
+                                    </li>
+                                  )
+                                },
+                                table({ children }) {
+                                  return (
+                                    <table className="border-collapse border border-black px-3 py-1 dark:border-white">
+                                      {children}
+                                    </table>
+                                  )
+                                },
+                                th({ children }) {
+                                  return (
+                                    <th className="break-words border border-black bg-gray-500 px-3 py-1 text-white dark:border-white">
+                                      {children}
+                                    </th>
+                                  )
+                                },
+                                td({ children }) {
+                                  return (
+                                    <td className="break-words border border-black px-3 py-1 dark:border-white">
+                                      {children}
+                                    </td>
+                                  )
+                                },
+                                h1({ node, children }) {
+                                  return (
+                                    <h1
+                                      className={`text-4xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                                    >
+                                      {children}
+                                    </h1>
+                                  )
+                                },
+                                h2({ node, children }) {
+                                  return (
+                                    <h2
+                                      className={`text-3xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                                    >
+                                      {children}
+                                    </h2>
+                                  )
+                                },
+                                h3({ node, children }) {
+                                  return (
+                                    <h3
+                                      className={`text-2xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                                    >
+                                      {children}
+                                    </h3>
+                                  )
+                                },
+                                h4({ node, children }) {
+                                  return (
+                                    <h4
+                                      className={`text-lg font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                                    >
+                                      {children}
+                                    </h4>
+                                  )
+                                },
+                                h5({ node, children }) {
+                                  return (
+                                    <h5
+                                      className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                                    >
+                                      {children}
+                                    </h5>
+                                  )
+                                },
+                                h6({ node, children }) {
+                                  return (
+                                    <h6
+                                      className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                                    >
+                                      {children}
+                                    </h6>
+                                  )
+                                },
+                                a({ node, className, children, ...props }) {
+                                  const { href, title } = props
+                                  const isCitationLink = /^\d+$/.test(
+                                    children[0] as string,
+                                  )
+                                  if (isCitationLink) {
+                                    return (
+                                      <a
+                                        id="styledLink"
+                                        href={href}
+                                        target="_blank"
+                                        title={title}
+                                        rel="noopener noreferrer"
+                                        className={'supMarkdown'}
+                                      >
+                                        {children}
+                                      </a>
+                                    )
+                                  } else {
+                                    return (
+                                      <button
+                                        id="styledLink"
+                                        onClick={() => window.open(href, '_blank')}
+                                        title={title}
+                                        className={'linkMarkDown'}
+                                      >
+                                        {children}
+                                      </button>
+                                    )
+                                  }
+                                },
                               }}
                             >
-                              {children}
-                            </code>
-                          )
-                        },
-                        p({ node, children }) {
-                          return (
-                            <p
-                              className={`self-start text-base font-normal ${montserrat_paragraph.variable} pb-2 font-montserratParagraph`}
-                            >
-                              {children}
-                            </p>
-                          )
-                        },
-                        ul({ children }) {
-                          return (
-                            <ul
-                              className={`text-base font-normal ${montserrat_paragraph.variable} max-w-full overflow-x-auto break-words font-montserratParagraph`}
-                            >
-                              {children}
-                            </ul>
-                          )
-                        },
-                        ol({ children }) {
-                          return (
-                            <ol
-                              className={`text-base font-normal ${montserrat_paragraph.variable} ml-4 max-w-full overflow-x-auto break-words font-montserratParagraph lg:ml-6`}
-                            >
-                              {children}
-                            </ol>
-                          )
-                        },
-                        li({ children }) {
-                          return (
-                            <li
-                              className={`text-base font-normal ${montserrat_paragraph.variable} break-words pr-4 font-montserratParagraph`}
-                              style={{
-                                overflowWrap: 'break-word',
-                                wordWrap: 'break-word',
-                                hyphens: 'auto',
-                              }}
-                            >
-                              {children}
-                            </li>
-                          )
-                        },
-                        table({ children }) {
-                          return (
-                            <table className="border-collapse border border-black px-3 py-1 dark:border-white">
-                              {children}
-                            </table>
-                          )
-                        },
-                        th({ children }) {
-                          return (
-                            <th className="break-words border border-black bg-gray-500 px-3 py-1 text-white dark:border-white">
-                              {children}
-                            </th>
-                          )
-                        },
-                        td({ children }) {
-                          return (
-                            <td className="break-words border border-black px-3 py-1 dark:border-white">
-                              {children}
-                            </td>
-                          )
-                        },
-                        h1({ node, children }) {
-                          return (
-                            <h1
-                              className={`text-4xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                            >
-                              {children}
-                            </h1>
-                          )
-                        },
-                        h2({ node, children }) {
-                          return (
-                            <h2
-                              className={`text-3xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                            >
-                              {children}
-                            </h2>
-                          )
-                        },
-                        h3({ node, children }) {
-                          return (
-                            <h3
-                              className={`text-2xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                            >
-                              {children}
-                            </h3>
-                          )
-                        },
-                        h4({ node, children }) {
-                          return (
-                            <h4
-                              className={`text-lg font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                            >
-                              {children}
-                            </h4>
-                          )
-                        },
-                        h5({ node, children }) {
-                          return (
-                            <h5
-                              className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                            >
-                              {children}
-                            </h5>
-                          )
-                        },
-                        h6({ node, children }) {
-                          return (
-                            <h6
-                              className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                            >
-                              {children}
-                            </h6>
-                          )
-                        },
-                        a({ node, className, children, ...props }) {
-                          const { href, title } = props
-                          const isCitationLink = /^\d+$/.test(
-                            children[0] as string,
-                          )
-                          if (isCitationLink) {
-                            return (
-                              <a
-                                id="styledLink"
-                                href={href}
-                                target="_blank"
-                                title={title}
-                                rel="noopener noreferrer"
-                                className={'supMarkdown'}
-                              >
-                                {children}
-                              </a>
-                            )
-                          } else {
-                            return (
-                              <button
-                                id="styledLink"
-                                onClick={() => window.open(href, '_blank')}
-                                title={title}
-                                className={'linkMarkDown'}
-                              >
-                                {children}
-                              </button>
-                            )
-                          }
-                        },
-                      }}
-                    >
-                      {(() => {
-                        if (
-                          messageIsStreaming &&
-                          messageIndex ===
-                            (selectedConversation?.messages.length ?? 0) - 1
-                        ) {
-                          return `${message.content} ▍`
-                        }
-                        if (Array.isArray(message.content)) {
-                          return (message.content as Content[])
-                            .filter((content) => content.type === 'text')
-                            .map((content) => content.text)
-                            .join(' ')
-                        }
-                        return message.content as string
-                      })()}
-                    </MemoizedReactMarkdown>
+                              {isStreaming ? `${remainingContent} ▍` : remainingContent}
+                            </MemoizedReactMarkdown>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                   <div className="-mt-1 flex items-center justify-start gap-2">
                     <button
