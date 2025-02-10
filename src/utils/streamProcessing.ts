@@ -46,6 +46,7 @@ import { type CoreMessage, streamText } from 'ai'
 import { bedrock } from '@ai-sdk/amazon-bedrock'
 import { google } from '@ai-sdk/google'
 import { runGeminiChat } from '~/app/utils/gemini'
+import { runBedrockChat } from '~/utils/modelProviders/bedrock'
 
 export const maxDuration = 60
 
@@ -928,41 +929,11 @@ export const routeModelRequest = async (
     )
   ) {
     try {
-      const bedrockProvider = chatBody.llmProviders?.Bedrock as BedrockProvider
-      if (!bedrockProvider) {
-        throw new Error('Bedrock provider configuration is missing')
-      }
-
-      const accessKeyId = await decryptKeyIfNeeded(bedrockProvider.accessKeyId || '')
-      const secretAccessKey = await decryptKeyIfNeeded(bedrockProvider.secretAccessKey || '')
-      const region = bedrockProvider.region
-
-      if (!accessKeyId || !secretAccessKey || !region) {
-        throw new Error('AWS credentials are missing')
-      }
-
-      const messages = convertMessagesToVercelAISDKv3(selectedConversation)
-
-      const response = await fetch('/api/chat/bedrock', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages,
-          model: selectedConversation.model.id,
-          temperature: selectedConversation.temperature,
-          stream: chatBody.stream,
-          credentials: {
-            accessKeyId,
-            secretAccessKey,
-            region,
-          },
-        }),
-        signal: controller?.signal,
-      })
-
-      return response
+      return await runBedrockChat(
+        selectedConversation,
+        chatBody.llmProviders?.Bedrock as BedrockProvider,
+        chatBody.stream,
+      )
     } catch (error) {
       return new Response(
         JSON.stringify({

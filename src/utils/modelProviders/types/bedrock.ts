@@ -8,8 +8,12 @@ export interface BedrockModel {
 }
 
 export enum BedrockModelID {
+  Claude_3_Opus = 'anthropic.claude-3-opus-20240229-v1:0',
   Claude_3_Sonnet = 'anthropic.claude-3-sonnet-20240229-v1:0',
   Claude_3_Haiku = 'anthropic.claude-3-haiku-20240307-v1:0',
+  Claude_3_5_Sonnet_Latest = 'anthropic.claude-3-5-sonnet-20241022-v2:0',
+  Claude_3_5_Sonnet = 'anthropic.claude-3-5-sonnet-20240620-v1:0',
+  Claude_3_5_Haiku = 'anthropic.claude-3-5-haiku-20241022-v1:0',
   Claude_2_1 = 'anthropic.claude-v2:1',
   Claude_Instant = 'anthropic.claude-instant-v1',
   Titan_Express = 'amazon.titan-text-express-v1',
@@ -19,6 +23,12 @@ export enum BedrockModelID {
 }
 
 export const BedrockModels: Record<BedrockModelID, BedrockModel> = {
+  [BedrockModelID.Claude_3_Opus]: {
+    id: BedrockModelID.Claude_3_Opus,
+    name: 'Claude 3 Opus (Bedrock)',
+    tokenLimit: 200000,
+    enabled: true
+  },
   [BedrockModelID.Claude_3_Sonnet]: {
     id: BedrockModelID.Claude_3_Sonnet,
     name: 'Claude 3 Sonnet (Bedrock)',
@@ -28,6 +38,24 @@ export const BedrockModels: Record<BedrockModelID, BedrockModel> = {
   [BedrockModelID.Claude_3_Haiku]: {
     id: BedrockModelID.Claude_3_Haiku,
     name: 'Claude 3 Haiku (Bedrock)',
+    tokenLimit: 200000,
+    enabled: true
+  },
+  [BedrockModelID.Claude_3_5_Sonnet_Latest]: {
+    id: BedrockModelID.Claude_3_5_Sonnet_Latest,
+    name: 'Claude 3.5 Sonnet Latest (Bedrock)',
+    tokenLimit: 200000,
+    enabled: true
+  },
+  [BedrockModelID.Claude_3_5_Sonnet]: {
+    id: BedrockModelID.Claude_3_5_Sonnet,
+    name: 'Claude 3.5 Sonnet (Bedrock)',
+    tokenLimit: 200000,
+    enabled: true
+  },
+  [BedrockModelID.Claude_3_5_Haiku]: {
+    id: BedrockModelID.Claude_3_5_Haiku,
+    name: 'Claude 3.5 Haiku (Bedrock)',
     tokenLimit: 200000,
     enabled: true
   },
