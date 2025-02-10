@@ -58,30 +58,30 @@ export const fetchContexts = async (
       throw new Error('Failed to fetch contexts. Err status:' + response.status)
     }
     const data: ContextWithMetadata[] = await response.json()
-    console.log('\n=== COMPLETE CONTEXT FETCH DETAILS ===')
-    console.log('Raw response from backend (full objects):', JSON.stringify(data, null, 2))
-    console.log('\nNumber of contexts:', data.length)
+    // console.log('\n=== COMPLETE CONTEXT FETCH DETAILS ===')
+    // console.log('Raw response from backend (full objects):', JSON.stringify(data, null, 2))
+    // console.log('\nNumber of contexts:', data.length)
     
-    // Detailed analysis of each context
-    data.forEach((context, index) => {
-      console.log(`\nContext ${index + 1} Complete Analysis:`)
-      console.log('Full raw object:', context)
-      console.log('All available fields:', {
-        ...context,
-        _allKeys: Object.keys(context),
-        _hasPageNumber: 'pagenumber' in context,
-        _hasPageNumberOrTimestamp: 'pagenumber_or_timestamp' in context,
-        _textPreview: context.text?.substring(0, 100) + '...',
-        _metadataAnalysis: {
-          totalFields: Object.keys(context).length,
-          allFieldTypes: Object.entries(context).reduce((acc, [key, value]) => {
-            acc[key] = typeof value
-            return acc
-          }, {} as Record<string, string>)
-        }
-      })
-    })
-    console.log('\n=== END COMPLETE CONTEXT FETCH DETAILS ===\n')
+    // // Detailed analysis of each context
+    // data.forEach((context, index) => {
+    //   console.log(`\nContext ${index + 1} Complete Analysis:`)
+    //   console.log('Full raw object:', context)
+    //   console.log('All available fields:', {
+    //     ...context,
+    //     _allKeys: Object.keys(context),
+    //     _hasPageNumber: 'pagenumber' in context,
+    //     _hasPageNumberOrTimestamp: 'pagenumber_or_timestamp' in context,
+    //     _textPreview: context.text?.substring(0, 100) + '...',
+    //     _metadataAnalysis: {
+    //       totalFields: Object.keys(context).length,
+    //       allFieldTypes: Object.entries(context).reduce((acc, [key, value]) => {
+    //         acc[key] = typeof value
+    //         return acc
+    //       }, {} as Record<string, string>)
+    //     }
+    //   })
+    // })
+    // console.log('\n=== END COMPLETE CONTEXT FETCH DETAILS ===\n')
     
     return data
   } catch (error) {

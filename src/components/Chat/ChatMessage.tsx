@@ -792,21 +792,21 @@ export const ChatMessage: FC<Props> = memo(
       processTools()
     }, [message.tools])
 
-    // Add logging for contexts when message prop changes
-    useEffect(() => {
-      if (message.contexts && message.contexts.length > 0) {
-        console.log('ChatMessage received message with contexts:', {
-          messageIndex,
-          contextCount: message.contexts.length,
-          readableFilenames: message.contexts.map(ctx => ({
-            readable_filename: ctx.readable_filename,
-            exists: 'readable_filename' in ctx,
-            type: typeof ctx.readable_filename
-          })),
-          contexts: JSON.stringify(message.contexts, null, 2)
-        })
-      }
-    }, [message, messageIndex])
+    // // Add logging for contexts when message prop changes
+    // useEffect(() => {
+    //   if (message.contexts && message.contexts.length > 0) {
+    //     console.log('ChatMessage received message with contexts:', {
+    //       messageIndex,
+    //       contextCount: message.contexts.length,
+    //       readableFilenames: message.contexts.map(ctx => ({
+    //         readable_filename: ctx.readable_filename,
+    //         exists: 'readable_filename' in ctx,
+    //         type: typeof ctx.readable_filename
+    //       })),
+    //       contexts: JSON.stringify(message.contexts, null, 2)
+    //     })
+    //   }
+    // }, [message, messageIndex])
 
     // Add this function before the return statement
     const transformContexts = (contexts: ContextWithMetadata[]) => {
@@ -838,27 +838,28 @@ export const ChatMessage: FC<Props> = memo(
       })
     }
 
-    console.log('ChatMessage rendering message:', {
-      messageId: message.id,
-      numContexts: message.contexts?.length || 0
-    });
+    // console.log('ChatMessage rendering message:', {
+    //   messageId: message.id,
+    //   numContexts: message.contexts?.length || 0
+    // });
 
-    const firstContext = message.contexts?.[0];
-    if (firstContext) {
-      console.log('First context in message:', {
-        readable_filename: firstContext.readable_filename || 'No filename',
-        pagenumber: firstContext.pagenumber || 'No page number',
-        hasS3Path: !!firstContext.s3_path,
-        hasUrl: !!firstContext.url
-      });
-    }
+    // const firstContext = message.contexts?.[0];
+    // if (firstContext) {
+    //   console.log('First context in message:', {
+    //     readable_filename: firstContext.readable_filename || 'No filename',
+    //     pagenumber: firstContext.pagenumber || 'No page number',
+    //     hasS3Path: !!firstContext.s3_path,
+    //     hasUrl: !!firstContext.url
+    //   });
+    // }
 
     // Add this useEffect for loading thumbnails
     useEffect(() => {
       let isMounted = true;
       
       const loadThumbnails = async () => {
-        if (!message.contexts || message.contexts.length === 0) return;
+        // Early return if contexts is undefined, null, or not an array
+        if (!Array.isArray(message.contexts) || message.contexts.length === 0) return;
         
         // Track unique sources to avoid duplicates
         const seenSources = new Set<string>();

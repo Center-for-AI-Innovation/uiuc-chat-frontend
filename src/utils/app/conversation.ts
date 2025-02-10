@@ -9,8 +9,8 @@ export async function fetchConversationHistory(
   courseName: string,
   pageParam: number,
 ): Promise<ConversationPage> {
-  console.log('\n=== LOADING CONVERSATION HISTORY ===')
-  console.log('Parameters:', { user_email, searchTerm, courseName, pageParam })
+  // console.log('\n=== LOADING CONVERSATION HISTORY ===')
+  // console.log('Parameters:', { user_email, searchTerm, courseName, pageParam })
   
   let finalResponse: ConversationPage = {
     conversations: [],
@@ -32,39 +32,39 @@ export async function fetchConversationHistory(
     }
 
     const { conversations, nextCursor } = await response.json()
-    console.log('\nRaw conversation data received:', {
-      number_of_conversations: conversations.length,
-      has_next_page: nextCursor !== null
-    })
+    // console.log('\nRaw conversation data received:', {
+    //   number_of_conversations: conversations.length,
+    //   has_next_page: nextCursor !== null
+    // })
 
-    // Clean the conversations and ensure they're properly structured
+    // // Clean the conversations and ensure they're properly structured
     const cleanedConversations = conversations.map((conversation: any) => {
-      console.log(`\nAnalyzing conversation ${conversation.id}:`)
-      console.log('- Number of messages:', conversation.messages?.length || 0)
+    //   console.log(`\nAnalyzing conversation ${conversation.id}:`)
+    //   console.log('- Number of messages:', conversation.messages?.length || 0)
       
-      // Log details about contexts in each message
-      conversation.messages?.forEach((msg: any, idx: number) => {
-        console.log(`\n  Message ${idx + 1}:`)
-        console.log('  - Role:', msg.role)
-        console.log('  - Has content:', !!msg.content)
-        console.log('  - Number of contexts:', msg.contexts?.length || 0)
-        if (msg.contexts?.length > 0) {
-          console.log('  - Context details:')
-          msg.contexts.forEach((ctx: any, ctxIdx: number) => {
-            console.log(`    Context ${ctxIdx + 1}:`, {
-              id: ctx.id,
-              has_text: !!ctx.text,
-              text_length: ctx.text?.length || 0,
-              readable_filename: ctx.readable_filename,
-              course_name: ctx.course_name,
-              s3_path: ctx.s3_path,
-              url: ctx.url,
-              base_url: ctx.base_url,
-              pagenumber: ctx.pagenumber
-            })
-          })
-        }
-      })
+    //   // Log details about contexts in each message
+    //   conversation.messages?.forEach((msg: any, idx: number) => {
+    //     console.log(`\n  Message ${idx + 1}:`)
+    //     console.log('  - Role:', msg.role)
+    //     console.log('  - Has content:', !!msg.content)
+    //     console.log('  - Number of contexts:', msg.contexts?.length || 0)
+    //     if (msg.contexts?.length > 0) {
+    //       console.log('  - Context details:')
+    //       msg.contexts.forEach((ctx: any, ctxIdx: number) => {
+    //         console.log(`    Context ${ctxIdx + 1}:`, {
+    //           id: ctx.id,
+    //           has_text: !!ctx.text,
+    //           text_length: ctx.text?.length || 0,
+    //           readable_filename: ctx.readable_filename,
+    //           course_name: ctx.course_name,
+    //           s3_path: ctx.s3_path,
+    //           url: ctx.url,
+    //           base_url: ctx.base_url,
+    //           pagenumber: ctx.pagenumber
+    //         })
+    //       })
+    //     }
+      // })
 
       // Ensure messages are properly ordered by creation time
       if (conversation.messages) {
@@ -86,11 +86,11 @@ export async function fetchConversationHistory(
         (c) => c.id === parsed.id
       )
       if (serverConversation) {
-        console.log('\nSyncing with localStorage:', {
-          conversation_id: serverConversation.id,
-          num_messages: serverConversation.messages?.length || 0,
-          has_contexts: serverConversation.messages?.some(m => (m.contexts && m.contexts.length > 0) || false)
-        })
+        // console.log('\nSyncing with localStorage:', {
+        //   conversation_id: serverConversation.id,
+        //   num_messages: serverConversation.messages?.length || 0,
+        //   has_contexts: serverConversation.messages?.some(m => (m.contexts && m.contexts.length > 0) || false)
+        // })
         localStorage.setItem(
           'selectedConversation',
           JSON.stringify(serverConversation)
@@ -98,7 +98,7 @@ export async function fetchConversationHistory(
       }
     }
     
-    console.log('\n=== FINISHED LOADING CONVERSATION HISTORY ===\n')
+    // console.log('\n=== FINISHED LOADING CONVERSATION HISTORY ===\n')
   } catch (error) {
     console.error('utils/app/conversation.ts - Error fetching conversation history:', error)
   }
