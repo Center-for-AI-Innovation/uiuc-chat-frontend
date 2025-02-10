@@ -36,10 +36,10 @@ export async function runVLLM(
   console.log('commonParams', commonParams)
 
   if (stream) {
-    const result = await streamText(commonParams)
+    const result = await streamText(commonParams as any)
     return result.toTextStreamResponse()
   } else {
-    const result = await generateText(commonParams)
+    const result = await generateText(commonParams as any)
     const choices = [{ message: { content: result.text } }]
     return { choices }
   }

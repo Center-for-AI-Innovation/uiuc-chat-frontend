@@ -30,11 +30,12 @@ export async function runOllamaChat(
     throw new Error('Conversation messages array is empty')
   }
 
+  const ollamaModel = ollama(conversation.model.id, { numCtx: conversation.model.tokenLimit })
   const commonParams = {
-    model: ollama(conversation.model.id, { numCtx: conversation.model.tokenLimit }),
+    model: ollamaModel as any, // Force type compatibility
     messages: convertConversatonToVercelAISDKv3(conversation),
     temperature: conversation.temperature,
-    maxTokens: 4096, // output tokens
+    maxTokens: 4096 // output tokens
   }
 
   if (stream) {
