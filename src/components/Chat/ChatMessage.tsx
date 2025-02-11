@@ -1,5 +1,5 @@
 // ChatMessage.tsx
-import React, { FC, memo, useContext, useEffect, useRef, useState, useCallback } from 'react'
+import React, { FC, memo, useContext, useEffect, useRef, useState, useCallback, createContext, useContext as useReactContext } from 'react'
 import { Text, createStyles, Badge, Tooltip } from '@mantine/core'
 import {
   IconCheck,
@@ -88,6 +88,25 @@ const Timer: React.FC<{ timerVisible: boolean }> = ({ timerVisible }) => {
     <></>
   )
 }
+
+// Add context for managing the active sources sidebar
+const SourcesSidebarContext = createContext<{
+  activeSidebarMessageId: string | null;
+  setActiveSidebarMessageId: (id: string | null) => void;
+}>({
+  activeSidebarMessageId: null,
+  setActiveSidebarMessageId: () => {},
+});
+
+export const SourcesSidebarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [activeSidebarMessageId, setActiveSidebarMessageId] = useState<string | null>(null);
+  
+  return (
+    <SourcesSidebarContext.Provider value={{ activeSidebarMessageId, setActiveSidebarMessageId }}>
+      {children}
+    </SourcesSidebarContext.Provider>
+  );
+};
 
 export interface Props {
   message: Message
@@ -249,6 +268,7 @@ export const ChatMessage: React.FC<Props> = memo(
     courseName,
   }) => {
     const { t } = useTranslation('chat')
+    const { activeSidebarMessageId, setActiveSidebarMessageId } = useReactContext(SourcesSidebarContext);
 
     const {
       state: {
@@ -273,6 +293,12 @@ export const ChatMessage: React.FC<Props> = memo(
     const [imageUrls, setImageUrls] = useState<Set<string>>(new Set())
 
     const [messagedCopied, setMessageCopied] = useState(false)
+    const [isRightSideVisible, setIsRightSideVisible] = useState(false)
+    const [sourceThumbnails, setSourceThumbnails] = useState<string[]>([])
+    const [isThumbsUp, setIsThumbsUp] = useState<boolean>(false)
+    const [isThumbsDown, setIsThumbsDown] = useState<boolean>(false)
+    const [isPositiveFeedback, setIsPositiveFeedback] = useState<boolean>(false)
+    const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState<boolean>(false)
 
     const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -280,41 +306,38 @@ export const ChatMessage: React.FC<Props> = memo(
     const [timerVisible, setTimerVisible] = useState(false)
     const { classes } = useStyles() // for Accordion
 
-    const [isThumbsUp, setIsThumbsUp] = useState<boolean>(false)
-    const [isThumbsDown, setIsThumbsDown] = useState<boolean>(false)
-    const [isPositiveFeedback, setIsPositiveFeedback] = useState<boolean>(false)
-    const [isFeedbackModalOpen, setIsFeedbackModalOpen] =
-      useState<boolean>(false)
-
-    const [isRightSideVisible, setIsRightSideVisible] = useState(false)
-    const [isSourcesSidebarOpen, setIsSourcesSidebarOpen] = useState(false)
-
-    const [sourceThumbnails, setSourceThumbnails] = useState<string[]>([])
+    // Remove the local state for sources sidebar and use only context
+    const isSourcesSidebarOpen = activeSidebarMessageId === message.id;
 
     useEffect(() => {
       // Close Sources sidebar if right sidebar is opened
       if (isRightSideVisible) {
-        setIsSourcesSidebarOpen(false)
+        setActiveSidebarMessageId(null);
       }
-    }, [isRightSideVisible])
+    }, [isRightSideVisible, setActiveSidebarMessageId])
 
     // Function to handle opening/closing the Sources sidebar
     const handleSourcesSidebarToggle = (open: boolean) => {
-      setIsSourcesSidebarOpen(open)
-      // If opening the Sources sidebar, close the right sidebar
       if (open) {
-        setIsRightSideVisible(false)
+        // If opening this sidebar, set this message's ID as active
+        setActiveSidebarMessageId(message.id);
+      } else if (isSourcesSidebarOpen) {
+        // Only close if this message's sidebar is currently open
+        setActiveSidebarMessageId(null);
       }
+      setIsRightSideVisible(false);
     }
 
     // Function to handle closing the Sources sidebar
     const handleSourcesSidebarClose = () => {
-      setIsSourcesSidebarOpen(false)
+      if (isSourcesSidebarOpen) {
+        setActiveSidebarMessageId(null);
+      }
     }
 
-    // Function to check if any Sources sidebar is open in any message
+    // Function to check if any Sources sidebar is open
     const isAnySidebarOpen = () => {
-      return isSourcesSidebarOpen
+      return activeSidebarMessageId !== null;
     }
 
     // Cleanup effect for modal

@@ -34,6 +34,8 @@ import { fetchPresignedUrl } from '~/utils/apiUtils'
 
 import { type CourseMetadata } from '~/types/courseMetadata'
 
+import { SourcesSidebarProvider } from './ChatMessage'
+
 interface Props {
   stopConversationRef: MutableRefObject<boolean>
   courseMetadata: CourseMetadata
@@ -1102,7 +1104,6 @@ export const Chat = memo(
 
             try {
               // This is after the response is done streaming
-              // saveConversation(updatedConversation)
               console.debug(
                 'updatedConversation after streaming:',
                 updatedConversation,
@@ -1197,12 +1198,10 @@ export const Chat = memo(
               // Do we need this?
               // saveConversation(updatedConversation)
               const updatedConversations: Conversation[] = conversations.map(
-                (conversation) => {
-                  if (conversation.id === selectedConversation.id) {
-                    return updatedConversation
-                  }
-                  return conversation
-                },
+                (conversation) =>
+                  conversation.id === selectedConversation.id
+                    ? updatedConversation
+                    : conversation,
               )
               if (updatedConversations.length === 0) {
                 updatedConversations.push(updatedConversation)
@@ -1606,91 +1605,93 @@ export const Chat = memo(
           />
           <link rel="icon" href="/favicon.ico" />
         </Head>
-        <div className="overflow-wrap relative flex h-screen w-full flex-col overflow-hidden bg-white dark:bg-[#15162c]">
-          <div className="justify-center" style={{ height: '40px' }}>
-            <ChatNavbar bannerUrl={bannerUrl as string} isgpt4={true} />
-          </div>
-          <div className="mt-10 max-w-full flex-grow overflow-y-auto overflow-x-hidden">
-            {modelError ? (
-              <ErrorMessageDiv error={modelError} />
-            ) : (
-              <>
-                <motion.div
-                  key={selectedConversation?.id}
-                  className="mt-4 max-h-full"
-                  ref={chatContainerRef}
-                  onScroll={handleScroll}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.25, ease: 'easeInOut' }}
-                >
-                  {selectedConversation &&
-                  selectedConversation.messages &&
-                  selectedConversation.messages?.length === 0 ? (
-                    <>
-                      <div className="mt-16">
-                        {renderIntroductoryStatements()}
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      {selectedConversation?.messages?.map((message, index) => (
-                        <MemoizedChatMessage
-                          key={index}
-                          message={message}
-                          contentRenderer={renderMessageContent}
-                          messageIndex={index}
-                          onEdit={(editedMessage) => {
-                            handleSend(
-                              editedMessage,
-                              selectedConversation?.messages?.length - index,
-                              null,
-                              tools,
-                              enabledDocumentGroups,
-                              llmProviders,
-                            )
-                          }}
-                          onFeedback={handleFeedback}
-                          onImageUrlsUpdate={onImageUrlsUpdate}
-                          courseName={courseName}
+        <SourcesSidebarProvider>
+          <div className="overflow-wrap relative flex h-screen w-full flex-col overflow-hidden bg-white dark:bg-[#15162c]">
+            <div className="justify-center" style={{ height: '40px' }}>
+              <ChatNavbar bannerUrl={bannerUrl as string} isgpt4={true} />
+            </div>
+            <div className="mt-10 max-w-full flex-grow overflow-y-auto overflow-x-hidden">
+              {modelError ? (
+                <ErrorMessageDiv error={modelError} />
+              ) : (
+                <>
+                  <motion.div
+                    key={selectedConversation?.id}
+                    className="mt-4 max-h-full"
+                    ref={chatContainerRef}
+                    onScroll={handleScroll}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.25, ease: 'easeInOut' }}
+                  >
+                    {selectedConversation &&
+                    selectedConversation.messages &&
+                    selectedConversation.messages?.length === 0 ? (
+                      <>
+                        <div className="mt-16">
+                          {renderIntroductoryStatements()}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {selectedConversation?.messages?.map((message, index) => (
+                          <MemoizedChatMessage
+                            key={index}
+                            message={message}
+                            contentRenderer={renderMessageContent}
+                            messageIndex={index}
+                            onEdit={(editedMessage) => {
+                              handleSend(
+                                editedMessage,
+                                selectedConversation?.messages?.length - index,
+                                null,
+                                tools,
+                                enabledDocumentGroups,
+                                llmProviders,
+                              )
+                            }}
+                            onFeedback={handleFeedback}
+                            onImageUrlsUpdate={onImageUrlsUpdate}
+                            courseName={courseName}
+                          />
+                        ))}
+                        {loading && <ChatLoader />}
+                        <div
+                          className="h-[162px] bg-gradient-to-t from-transparent to-[rgba(14,14,21,0.4)]"
+                          ref={messagesEndRef}
                         />
-                      ))}
-                      {loading && <ChatLoader />}
-                      <div
-                        className="h-[162px] bg-gradient-to-t from-transparent to-[rgba(14,14,21,0.4)]"
-                        ref={messagesEndRef}
-                      />
-                    </>
-                  )}
-                </motion.div>
-                {/* <div className="w-full max-w-[calc(100% - var(--sidebar-width))] mx-auto flex justify-center"> */}
-                <ChatInput
-                  stopConversationRef={stopConversationRef}
-                  textareaRef={textareaRef}
-                  onSend={(message, plugin) => {
-                    // setCurrentMessage(message)
-                    handleSend(
-                      message,
-                      0,
-                      plugin,
-                      tools,
-                      enabledDocumentGroups,
-                      llmProviders,
-                    )
-                  }}
-                  onScrollDownClick={handleScrollDown}
-                  onRegenerate={handleRegenerate}
-                  showScrollDownButton={showScrollDownButton}
-                  inputContent={inputContent}
-                  setInputContent={setInputContent}
-                  courseName={getCurrentPageName()}
-                  chat_ui={chat_ui}
-                />
-              </>
-            )}
+                      </>
+                    )}
+                  </motion.div>
+                  {/* <div className="w-full max-w-[calc(100% - var(--sidebar-width))] mx-auto flex justify-center"> */}
+                  <ChatInput
+                    stopConversationRef={stopConversationRef}
+                    textareaRef={textareaRef}
+                    onSend={(message, plugin) => {
+                      // setCurrentMessage(message)
+                      handleSend(
+                        message,
+                        0,
+                        plugin,
+                        tools,
+                        enabledDocumentGroups,
+                        llmProviders,
+                      )
+                    }}
+                    onScrollDownClick={handleScrollDown}
+                    onRegenerate={handleRegenerate}
+                    showScrollDownButton={showScrollDownButton}
+                    inputContent={inputContent}
+                    setInputContent={setInputContent}
+                    courseName={getCurrentPageName()}
+                    chat_ui={chat_ui}
+                  />
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        </SourcesSidebarProvider>
       </>
     )
     Chat.displayName = 'Chat'
