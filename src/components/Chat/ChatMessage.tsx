@@ -535,35 +535,6 @@ export const ChatMessage: React.FC<Props> = memo(
       setIsEditing(false)
     }
 
-    const handleDeleteMessage = () => {
-      if (!selectedConversation) return
-
-      const { messages } = selectedConversation
-      const findIndex = messages.findIndex((elm) => elm === message)
-
-      if (findIndex < 0) return
-
-      if (
-        findIndex < messages.length - 1 &&
-        messages[findIndex + 1]?.role === 'assistant'
-      ) {
-        messages.splice(findIndex, 2)
-      } else {
-        messages.splice(findIndex, 1)
-      }
-      const updatedConversation = {
-        ...selectedConversation,
-        messages,
-      }
-
-      // const { single, all } = updateConversation(
-      //   updatedConversation,
-      //   conversations,
-      // )
-      // homeDispatch({ field: 'selectedConversation', value: single })
-      // homeDispatch({ field: 'conversations', value: all })
-    }
-
     const handlePressEnter = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === 'Enter' && !isTyping && !e.shiftKey) {
         e.preventDefault()
@@ -1792,19 +1763,25 @@ export const ChatMessage: React.FC<Props> = memo(
                       </div>
                       {!isEditing && (
                         <div className="mt-2 flex items-center justify-start gap-4">
-                          <button
-                            className={`invisible text-gray-500 hover:text-gray-700 focus:visible group-hover:visible dark:text-gray-400 dark:hover:text-gray-300 
-                              ${Array.isArray(message.content) && message.content.some((content) => content.type === 'image_url') ? 'hidden' : ''}`}
-                            onClick={toggleEditing}
+                          <Tooltip 
+                            label="Edit Message" 
+                            position="bottom"
+                            withArrow
+                            arrowSize={6}
+                            transitionProps={{ transition: 'fade', duration: 200 }}
+                            classNames={{
+                              tooltip: 'bg-gray-700 text-white text-sm py-1 px-2',
+                              arrow: 'border-gray-700'
+                            }}
                           >
-                            <IconEdit size={20} />
-                          </button>
-                          <button
-                            className="invisible text-gray-500 hover:text-gray-700 focus:visible group-hover:visible dark:text-gray-400 dark:hover:text-gray-300"
-                            onClick={handleDeleteMessage}
-                          >
-                            <IconTrash size={20} />
-                          </button>
+                            <button
+                              className={`invisible text-gray-500 hover:text-gray-700 focus:visible group-hover:visible dark:text-gray-400 dark:hover:text-gray-300 
+                                ${Array.isArray(message.content) && message.content.some((content) => content.type === 'image_url') ? 'hidden' : ''}`}
+                              onClick={toggleEditing}
+                            >
+                              <IconEdit size={20} />
+                            </button>
+                          </Tooltip>
                         </div>
                       )}
                     </>
