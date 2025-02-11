@@ -557,3 +557,27 @@ button.css-s37qmw {
   transform: rotate(180deg);
   @apply text-purple-500 dark:text-purple-400;
 }
+
+/* Update the link styles to show proper cursor and interaction states */
+.linkMarkDown a,
+.supMarkDown a {
+  cursor: pointer !important;
+  position: relative;
+  z-index: 100;  /* Ensure links are always on top */
+  pointer-events: all !important;
+  user-select: all !important;
+  -webkit-user-drag: element;  /* Enable drag behavior explicitly */
+}
+
+.linkMarkDown a:active,
+.supMarkDown a:active {
+  transform: translateY(1px);
+}
+
+/* Ensure parent containers don't interfere with link events */
+.prose a,
+.markdown a {
+  pointer-events: all !important;
+  position: relative;
+  z-index: 100;
+}

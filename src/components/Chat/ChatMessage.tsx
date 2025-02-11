@@ -1,4 +1,5 @@
 // ChatMessage.tsx
+import React, { FC, memo, useContext, useEffect, useRef, useState, useCallback } from 'react'
 import { Text, createStyles, Badge, Tooltip } from '@mantine/core'
 import {
   IconCheck,
@@ -17,13 +18,6 @@ import {
   IconBrain,
 } from '@tabler/icons-react'
 import {
-  FC,
-  memo,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
   Fragment,
 } from 'react'
 
@@ -147,7 +141,7 @@ function getFileType(s3Path?: string, url?: string) {
 }
 
 // Add ThinkTagDropdown component
-const ThinkTagDropdown: FC<{ 
+const ThinkTagDropdown: React.FC<{ 
   content: string;
   isStreaming?: boolean;
 }> = ({ content, isStreaming }) => {
@@ -245,7 +239,7 @@ function extractThinkTagContent(content: string): { thoughts: string | null; rem
   return { thoughts: null, remainingContent: content };
 }
 
-export const ChatMessage: FC<Props> = memo(
+export const ChatMessage: React.FC<Props> = memo(
   ({
     message,
     messageIndex,
@@ -1238,7 +1232,6 @@ export const ChatMessage: FC<Props> = memo(
                 },
                 a({ node, className, children, ...props }) {
                   const { href, title } = props
-                  // Update citation link detection to check for readable filename
                   const firstChild = children[0]
                   const isValidCitation = 
                     typeof firstChild === 'string' && 
@@ -1247,14 +1240,31 @@ export const ChatMessage: FC<Props> = memo(
                        ctx.readable_filename && firstChild.includes(ctx.readable_filename)
                      ) ?? false))
                   
+                  const handleClick = React.useCallback((e: React.MouseEvent) => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                    if (href) {
+                      const win = window.open(href, '_blank')
+                      if (win) win.focus()
+                    }
+                  }, [href])
+
+                  const commonProps = {
+                    id: "styledLink",
+                    href,
+                    target: "_blank",
+                    rel: "noopener noreferrer",
+                    title,
+                    onMouseUp: handleClick,  // Handle both click and drag release
+                    onPointerUp: handleClick,  // Additional pointer event handling
+                    onClick: handleClick,
+                    style: { pointerEvents: 'all' as const },  // Ensure events are always captured
+                  }
+                  
                   if (isValidCitation) {
                     return (
                       <a
-                        id="styledLink"
-                        href={href}
-                        target="_blank"
-                        title={title}
-                        rel="noopener noreferrer"
+                        {...commonProps}
                         className={'supMarkdown'}
                       >
                         {children}
@@ -1262,14 +1272,12 @@ export const ChatMessage: FC<Props> = memo(
                     )
                   } else {
                     return (
-                      <button
-                        id="styledLink"
-                        onClick={() => window.open(href, '_blank')}
-                        title={title}
+                      <a
+                        {...commonProps}
                         className={'linkMarkDown'}
                       >
                         {children}
-                      </button>
+                      </a>
                     )
                   }
                 },
