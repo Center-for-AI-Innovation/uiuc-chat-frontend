@@ -83,7 +83,10 @@ export async function processChunkWithStateMachine(
     switch (state) {
       case State.Normal:
         if (char === '<') {
-          // Check for <cite tag
+          // Always buffer '<' initially since it might be start of <cite>
+          buffer = char
+          
+          // If we have enough chars to check for <cite
           if (remainingChars >= 5) {
             const nextChars = combinedChunk.slice(i, i + 5)
             if (nextChars === '<cite') {
@@ -91,14 +94,17 @@ export async function processChunkWithStateMachine(
               buffer = '<cite'
               i += 4 // Skip the rest of 'cite'
               continue
+            } else {
+              // Definitely not a <cite> tag, output the buffered '<'
+              processedChunk += buffer
+              buffer = ''
             }
           } else {
-            // Potential partial tag at end of chunk
+            // Not enough chars to check - keep in buffer and wait for next chunk
             buffer = combinedChunk.slice(i)
             i = combinedChunk.length // Exit the loop
             continue
           }
-          processedChunk += char
         } else if (char.match(/\d/)) {
           let j = i + 1
           while (j < combinedChunk.length && /\d/.test(combinedChunk[j] as string)) {
@@ -147,14 +153,16 @@ export async function processChunkWithStateMachine(
               processedChunk += processedCitation
               buffer = ''
               continue
+            } else {
+              // Not a closing cite tag, just add the '<' to buffer
+              buffer += char
             }
           } else {
-            // Potential partial closing tag at end of chunk
+            // Not enough chars to check - keep everything in buffer
             buffer += combinedChunk.slice(i)
             i = combinedChunk.length // Exit the loop
             continue
           }
-          buffer += char
         } else {
           buffer += char
         }
@@ -224,8 +232,8 @@ export async function processChunkWithStateMachine(
   stateMachineContext.state = state
   stateMachineContext.buffer = buffer
 
-  // Handle any complete citations in the remaining buffer
-  if (buffer.length > 0 && state === State.Normal) {
+  // Only output buffer content if we're in Normal state and not potentially mid-tag
+  if (buffer.length > 0 && state === State.Normal && !buffer.startsWith('<')) {
     processedChunk += buffer
     buffer = ''
   }
