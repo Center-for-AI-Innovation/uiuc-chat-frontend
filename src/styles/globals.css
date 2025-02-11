@@ -301,7 +301,7 @@ a[data-footnote-backref] {
 }
 
 /* Styling for citation links */
-.supMarkdown a {
+.supMarkDown a {
   display: inline-flex;
   justify-content: flex-start;
   align-items: center;
@@ -315,7 +315,6 @@ a[data-footnote-backref] {
   border-radius: 4px;
   border: 1px solid rgba(157, 78, 221, 0.3);
   text-decoration: none;
-  transition: all 0.2s ease;
   white-space: normal;
   max-width: 100%;
   gap: 4px;
@@ -324,76 +323,52 @@ a[data-footnote-backref] {
 }
 
 /* Styling for visited citation links */
-.supMarkdown a:visited {
+.supMarkDown a:visited {
   color: rgba(255, 255, 255, 0.8);
   background-color: rgba(157, 78, 221, 0.12);
   border-color: rgba(157, 78, 221, 0.25);
 }
 
-.supMarkdown a:hover,
-.supMarkdown a:focus {
+/* Simple, consistent hover state for all citation links */
+.supMarkDown a:hover,
+.supMarkDown a:focus {
   background-color: rgba(157, 78, 221, 0.3);
   color: rgba(255, 255, 255, 0.95);
   cursor: pointer;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(157, 78, 221, 0.2);
   border-color: rgba(157, 78, 221, 0.4);
-  font-weight: 400;
-}
-
-@media (max-width: 768px) {
-  .linkMarkDown button {
-    font-size: 0.8rem;
-    /* Smaller font size on smaller screens */
-    padding: 5px 10px;
-    /* Adjust padding to ensure text doesn't overlap */
-  }
+  box-shadow: 0 1px 3px rgba(157, 78, 221, 0.2);
 }
 
 /* Styling for document buttons */
 .linkMarkDown button:not(.codeblock-button) {
   height: 100px;
   width: 150px;
-  /* width: 100%; */
-  /* height: 100%; */
-  /* Button occupies full width of its container (li) */
   text-align: center;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
   font-size: 1rem;
-  /* Adjust font size to fit the buttons */
   padding: 10px 10px;
   color: #4a4ae8;
   background-color: #15162c;
   border-radius: 5px;
   border: none;
   text-decoration: none;
-  transition:
-    background-color 0.15s ease-in-out,
-    color 0.15s ease-in-out;
   white-space: break-spaces;
-  /* Allow text wrapping inside buttons */
   overflow: hidden;
-  /* Hide overflowed text */
   text-overflow: ellipsis;
-  /* Add ellipsis to overflowed text */
   position: relative;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-/* Hover and focus states for document buttons */
+/* Simple, consistent hover state for all document buttons */
 .linkMarkDown button:not(.codeblock-button):hover,
 .linkMarkDown button:not(.codeblock-button):focus {
   background-color: blueviolet;
   color: #ffffff;
   cursor: pointer;
-}
-
-/* Active state for document buttons */
-.linkMarkDown button:not(.codeblock-button):active {
-  transform: scale(0.98);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 /* Visited state for document buttons */

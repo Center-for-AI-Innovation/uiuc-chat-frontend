@@ -1057,7 +1057,7 @@ export const ChatMessage: FC<Props> = memo(
           )}
           {contentToRender && (
             <MemoizedReactMarkdown
-              className={`dark:prose-invert linkMarkDown supMarkdown codeBlock prose mb-2 flex-1 flex-col items-start space-y-2`}
+              className="dark:prose-invert linkMarkDown supMarkDown codeBlock prose mb-2 flex-1 flex-col items-start space-y-2"
               remarkPlugins={[remarkGfm, remarkMath]}
               rehypePlugins={[rehypeMathjax]}
               components={{
