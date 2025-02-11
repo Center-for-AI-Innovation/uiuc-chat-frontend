@@ -563,10 +563,10 @@ button.css-s37qmw {
 .supMarkDown a {
   cursor: pointer !important;
   position: relative;
-  z-index: 100;  /* Ensure links are always on top */
+  z-index: 0;  /* Changed from 1 to 0 to match surrounding text */
   pointer-events: all !important;
   user-select: all !important;
-  -webkit-user-drag: element;  /* Enable drag behavior explicitly */
+  -webkit-user-drag: element;
 }
 
 .linkMarkDown a:active,
@@ -579,5 +579,5 @@ button.css-s37qmw {
 .markdown a {
   pointer-events: all !important;
   position: relative;
-  z-index: 100;
+  z-index: 0;  /* Changed from 1 to 0 to match surrounding text */
 }
