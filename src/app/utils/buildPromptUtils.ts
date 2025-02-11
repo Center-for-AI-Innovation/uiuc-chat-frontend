@@ -167,7 +167,7 @@ export const buildPrompt = async ({
       if (query_topContext) {
         const queryContextMsg = `
         <RetrievedDocumentsInstructions>
-        The following are passages retrieved via RAG from a large dataset. They may be relevant but aren't guaranteed to be. Evaluate critically, use what's pertinent, disregard irrelevant info. Cite used passages carefully in the format previously described.
+        The following are passages retrieved via RAG from a large dataset. They may be relevant but aren't guaranteed to be. Evaluate critically, use what's pertinent, and disregard irrelevant info. When using information from these passages, place citations at the end of complete thoughts, after the period with a space, using the exact same XML citation format shown in the examples above (e.g., " <cite>1</cite>").
         </RetrievedDocumentsInstructions>
         
         <PotentiallyRelevantDocuments>
@@ -189,7 +189,7 @@ export const buildPrompt = async ({
 
       // Add Tool Instructions and outputs
       const toolInstructions =
-        "<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool `tool name`...' or 'According to tool `tool name`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>"
+        "<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool \`tool name`...' or 'According to tool \`tool name`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>"
 
       // Add to user prompt sections
       userPromptSections.push(toolInstructions)
@@ -513,15 +513,15 @@ export const getSystemPostPrompt = ({
 
   const postPrompt = `Please analyze and respond to the following question using the excerpts from the provided documents. These documents can be PDF files or web pages. You may also see output from API calls (labeled as "tools") and image descriptions. Use this information to craft a detailed and accurate answer.
 
-When referencing information from the documents, you MUST include citations inline within your response. For each distinct piece of information, cite the single most relevant source using XML-style citation tags in the following format:
-- Use "<cite>1</cite>" when referencing document 1
+When referencing information from the documents, you MUST include citations in your response. Citations should be placed at the end of complete thoughts, after the period. For each distinct piece of information or section, cite the single most relevant source using XML-style citation tags in the following format:
+- Use "<cite>1</cite>" when referencing document 1, placing it after the period with a space
 
 Here are examples of how to properly integrate citations in your response:
-- "The loop invariant must be true before the first iteration of the loop <cite>1</cite>. Additionally, the time complexity of bubble sort is O(n²) <cite>2</cite>."
-- "Python lists are implemented as dynamic arrays <cite>3</cite>. This means that when the allocated space is filled, Python will automatically resize the array to accommodate more elements."
-- "According to the course syllabus, assignments are due every Friday by 11:59 PM <cite>4</cite>."
+- "The loop invariant is a condition that must be true before and after each iteration of the loop. This fundamental concept helps prove the correctness of loop-based algorithms." <cite>1</cite>
+- "Python lists are implemented as dynamic arrays. When the allocated space is filled, Python will automatically resize the array to accommodate more elements." <cite>2</cite>
+- "The course has a strict late submission policy. All assignments are due every Friday by 11:59 PM, and late submissions will incur a 10% penalty per day." <cite>3</cite>
 
-Citations should be placed immediately after each piece of information they support. Use frequent, focused citations throughout your response to help users easily locate the most relevant source for each specific point. Break down information and cite individual sources to maintain clarity and precision. 
+Citations should be placed at the end of complete thoughts or sections, always after the period if applicable, with a space between the period and citation tag. This makes the text more readable while still maintaining clear attribution of information. Break down information into logical sections and cite the sources at the end of each complete thought.
 
 Note: You may see citations in the conversation history that appear differently due to post-processing formatting. Regardless of how they appear in previous messages, always use the XML-style citation format specified above in your responses.
 
@@ -533,7 +533,7 @@ ${!isGuidedLearning && !isDocumentsOnly
   ? 'If the answer is not in the provided documents, state so but still provide as helpful a response as possible to directly answer the question.'
   : ''}
 
-When using tool outputs in your response, refer to them by name using code notation (e.g., "as per tool \`exampleTool\`"). Always be honest and transparent about tool results.
+When using tool outputs in your response, place the tool reference at the end of the relevant statement, after the period with a space, using code notation. For example: "The repository contains three JavaScript files." \`as per tool ls\` Always be honest and transparent about tool results.
 
 The user message includes XML-style tags (e.g., <Potentially Relevant Documents>, <Tool Outputs>). Make sure to integrate this information appropriately in your answer.`.trim()
 
