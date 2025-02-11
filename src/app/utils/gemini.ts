@@ -1,5 +1,5 @@
 import { type CoreMessage, generateText, streamText } from 'ai'
-import { type ChatBody, type Conversation } from '~/types/chat'
+import { type Conversation } from '~/types/chat'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import {
   GeminiModels,
@@ -7,7 +7,7 @@ import {
   GeminiModelID,
 } from '~/utils/modelProviders/types/gemini'
 import {
-  GeminiProvider,
+  type GeminiProvider,
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
@@ -39,7 +39,11 @@ export async function runGeminiChat(
     }
 
     // Validate model ID
-    if (!Object.values(GeminiModels).some(model => model.id === conversation.model.id)) {
+    if (
+      !Object.values(GeminiModels).some(
+        (model) => model.id === conversation.model.id,
+      )
+    ) {
       throw new Error(`Invalid Gemini model ID: ${conversation.model.id}`)
     }
 
@@ -50,13 +54,17 @@ export async function runGeminiChat(
     console.log('Converted messages:', JSON.stringify(messages, null, 2))
 
     // Check if we're using vision model with image content
-    const hasImageContent = messages.some(msg =>
-      typeof msg.content === 'object' &&
-      Array.isArray(msg.content) &&
-      msg.content.some(c => c.type === 'image')
+    const hasImageContent = messages.some(
+      (msg) =>
+        typeof msg.content === 'object' &&
+        Array.isArray(msg.content) &&
+        msg.content.some((c) => c.type === 'image'),
     )
 
-    if (hasImageContent && conversation.model.id !== GeminiModelID.Gemini_Pro_Vision) {
+    if (
+      hasImageContent &&
+      conversation.model.id !== GeminiModelID.Gemini_Pro_Vision
+    ) {
       throw new Error('Image content requires Gemini Pro Vision model')
     }
 
@@ -66,12 +74,19 @@ export async function runGeminiChat(
       temperature: conversation.temperature || 0.7,
       maxTokens: conversation.model.tokenLimit || 4096,
     }
-    console.log('Request params:', JSON.stringify({
-      modelId: conversation.model.id,
-      temperature: commonParams.temperature,
-      maxTokens: commonParams.maxTokens,
-      messageCount: messages.length
-    }, null, 2))
+    console.log(
+      'Request params:',
+      JSON.stringify(
+        {
+          modelId: conversation.model.id,
+          temperature: commonParams.temperature,
+          maxTokens: commonParams.maxTokens,
+          messageCount: messages.length,
+        },
+        null,
+        2,
+      ),
+    )
 
     if (stream) {
       try {
@@ -79,8 +94,13 @@ export async function runGeminiChat(
         return result.toTextStreamResponse()
       } catch (error) {
         console.error('Gemini streaming error:', error)
-        if (error instanceof Error && error.message.includes('Developer instruction is not enabled')) {
-          throw new Error('This Gemini API key does not have access to the requested model. Please verify your API key permissions in the Google AI Studio.')
+        if (
+          error instanceof Error &&
+          error.message.includes('Developer instruction is not enabled')
+        ) {
+          throw new Error(
+            'This Gemini API key does not have access to the requested model. Please verify your API key permissions in the Google AI Studio.',
+          )
         }
         throw error
       }
@@ -91,8 +111,13 @@ export async function runGeminiChat(
         return { choices }
       } catch (error) {
         console.error('Gemini generation error:', error)
-        if (error instanceof Error && error.message.includes('Developer instruction is not enabled')) {
-          throw new Error('This Gemini API key does not have access to the requested model. Please verify your API key permissions in the Google AI Studio.')
+        if (
+          error instanceof Error &&
+          error.message.includes('Developer instruction is not enabled')
+        ) {
+          throw new Error(
+            'This Gemini API key does not have access to the requested model. Please verify your API key permissions in the Google AI Studio.',
+          )
         }
         throw error
       }
@@ -144,7 +169,7 @@ function convertConversationToVercelAISDKv3(
   return coreMessages
 }
 
-export async function GET(req: Request) {
+export async function GET() {
   const apiKey = process.env.GEMINI_API_KEY
 
   if (!apiKey) {
@@ -160,4 +185,4 @@ export async function GET(req: Request) {
     provider: ProviderNames.Gemini,
     models: models,
   })
-} 
+}

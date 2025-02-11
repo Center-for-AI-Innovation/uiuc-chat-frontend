@@ -24,7 +24,11 @@ export async function runBedrockChat(
     throw new Error('Conversation is missing')
   }
 
-  if (!bedrockProvider.accessKeyId || !bedrockProvider.secretAccessKey || !bedrockProvider.region) {
+  if (
+    !bedrockProvider.accessKeyId ||
+    !bedrockProvider.secretAccessKey ||
+    !bedrockProvider.region
+  ) {
     throw new Error('AWS credentials are missing')
   }
 
@@ -45,17 +49,24 @@ export async function runBedrockChat(
     messages: convertConversationToBedrockFormat(conversation),
     temperature: conversation.temperature,
     maxTokens: 4096,
+    type: 'text-delta' as const,
+    tools: {},
+    toolChoice: undefined,
   }
 
   if (stream) {
-    const result = await streamText(commonParams)
-    //   {
-    //   ...commonParams,
-    //   messages: commonParams.messages.map(msg => ({
-    //     role: msg.role,
-    //     content: msg.content,
-    //   }))
-    // })
+    const result = await streamText({
+      ...commonParams,
+      messages: commonParams.messages.map((msg) => ({
+        role:
+          msg.role === 'tool'
+            ? 'tool'
+            : msg.role === 'system'
+              ? 'assistant'
+              : msg.role,
+        content: msg.content,
+      })) as CoreMessage[],
+    })
     return result.toTextStreamResponse()
   } else {
     const result = await generateText(commonParams)
