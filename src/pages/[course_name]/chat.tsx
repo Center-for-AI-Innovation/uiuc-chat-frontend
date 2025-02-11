@@ -65,7 +65,7 @@ const ChatPage: NextPage = () => {
           courseName.toLowerCase(),
         )
       ) {
-        await router.push(`/cropwizard-1.5/chat`)
+        await router.replace(`/cropwizard-1.5/chat`)
       }
 
       // Fetch course metadata
