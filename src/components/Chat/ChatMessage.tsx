@@ -1263,8 +1263,7 @@ export const ChatMessage: React.FC<Props> = memo(
         e.stopPropagation();
         e.preventDefault();
         if (href) {
-          const win = window.open(href, '_blank');
-          if (win) win.focus();
+          window.open(href, '_blank')?.focus();
         }
       }, [href]);
 
@@ -1275,8 +1274,7 @@ export const ChatMessage: React.FC<Props> = memo(
         rel: "noopener noreferrer",
         title,
         onMouseUp: handleClick,
-        onPointerUp: handleClick,
-        onClick: handleClick,
+        onClick: (e: React.MouseEvent) => e.preventDefault(), // Prevent default click behavior
         style: { pointerEvents: 'all' as const },
       };
       
