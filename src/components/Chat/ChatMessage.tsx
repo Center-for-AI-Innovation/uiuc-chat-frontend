@@ -1231,55 +1231,7 @@ export const ChatMessage: React.FC<Props> = memo(
                   )
                 },
                 a({ node, className, children, ...props }) {
-                  const { href, title } = props
-                  const firstChild = children[0]
-                  const isValidCitation = 
-                    typeof firstChild === 'string' && 
-                    (firstChild.includes('Source') || 
-                     (message.contexts?.some(ctx => 
-                       ctx.readable_filename && firstChild.includes(ctx.readable_filename)
-                     ) ?? false))
-                  
-                  const handleClick = React.useCallback((e: React.MouseEvent) => {
-                    e.stopPropagation()
-                    e.preventDefault()
-                    if (href) {
-                      const win = window.open(href, '_blank')
-                      if (win) win.focus()
-                    }
-                  }, [href])
-
-                  const commonProps = {
-                    id: "styledLink",
-                    href,
-                    target: "_blank",
-                    rel: "noopener noreferrer",
-                    title,
-                    onMouseUp: handleClick,  // Handle both click and drag release
-                    onPointerUp: handleClick,  // Additional pointer event handling
-                    onClick: handleClick,
-                    style: { pointerEvents: 'all' as const },  // Ensure events are always captured
-                  }
-                  
-                  if (isValidCitation) {
-                    return (
-                      <a
-                        {...commonProps}
-                        className={'supMarkdown'}
-                      >
-                        {children}
-                      </a>
-                    )
-                  } else {
-                    return (
-                      <a
-                        {...commonProps}
-                        className={'linkMarkDown'}
-                      >
-                        {children}
-                      </a>
-                    )
-                  }
+                  return <MarkdownLink {...props}>{children}</MarkdownLink>
                 },
               }}
             >
@@ -1291,6 +1243,62 @@ export const ChatMessage: React.FC<Props> = memo(
           )}
         </>
       );
+    };
+
+    // Add MarkdownLink component definition
+    const MarkdownLink: React.FC<{
+      href?: string;
+      title?: string;
+      children: React.ReactNode;
+    }> = ({ href, title, children }) => {
+      const firstChild = children && Array.isArray(children) ? children[0] : null;
+      const isValidCitation = 
+        typeof firstChild === 'string' && 
+        (firstChild.includes('Source') || 
+         (message.contexts?.some(ctx => 
+           ctx.readable_filename && firstChild.includes(ctx.readable_filename)
+         ) ?? false));
+      
+      const handleClick = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (href) {
+          const win = window.open(href, '_blank');
+          if (win) win.focus();
+        }
+      }, [href]);
+
+      const commonProps = {
+        id: "styledLink",
+        href,
+        target: "_blank",
+        rel: "noopener noreferrer",
+        title,
+        onMouseUp: handleClick,
+        onPointerUp: handleClick,
+        onClick: handleClick,
+        style: { pointerEvents: 'all' as const },
+      };
+      
+      if (isValidCitation) {
+        return (
+          <a
+            {...commonProps}
+            className={'supMarkdown'}
+          >
+            {children}
+          </a>
+        );
+      } else {
+        return (
+          <a
+            {...commonProps}
+            className={'linkMarkDown'}
+          >
+            {children}
+          </a>
+        );
+      }
     };
 
     return (
