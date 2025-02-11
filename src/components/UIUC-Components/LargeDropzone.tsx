@@ -241,21 +241,38 @@ export function LargeDropzone({
     }
   }
 
-  // Add useEffect to check ingest status
   useEffect(() => {
+    let pollInterval = 3000 // Start with a slower interval
+    const MIN_INTERVAL = 1000 // Fast polling when active
+    const MAX_INTERVAL = 5000 // Slow polling when inactive
+    let consecutiveEmptyPolls = 0
+
     const checkIngestStatus = async () => {
-      console.debug('Checking for ingest in progress...')
       const response = await fetch(
         `/api/materialsTable/docsInProgress?course_name=${courseName}`,
       )
       const data = await response.json()
+
+      const docsResponse = await fetch(
+        `/api/materialsTable/docs?course_name=${courseName}`,
+      )
+      const docsData = await docsResponse.json()
+      // Adjust polling interval based on activity
       if (data.documents.length > 0) {
-        console.debug('ingest is currently active: ', data.documents)
+        pollInterval = MIN_INTERVAL
+        consecutiveEmptyPolls = 0
+      } else {
+        consecutiveEmptyPolls++
+        if (consecutiveEmptyPolls >= 3) {
+          // After 3 empty polls, slow down
+          pollInterval = Math.min(pollInterval * 1.5, MAX_INTERVAL)
+        }
       }
 
       setUploadFiles((prev) => {
         return prev.map((file) => {
-          // If file is uploading, check if it's started ingesting
+          if (file.type !== 'document') return file
+
           if (file.status === 'uploading') {
             const isIngesting = data?.documents?.some(
               (doc: { readable_filename: string }) =>
@@ -264,15 +281,23 @@ export function LargeDropzone({
             if (isIngesting) {
               return { ...file, status: 'ingesting' as const }
             }
-          }
-          // If file is ingesting, check if it's completed
-          else if (file.status === 'ingesting') {
+          } else if (file.status === 'ingesting') {
             const isStillIngesting = data?.documents?.some(
               (doc: { readable_filename: string }) =>
                 doc.readable_filename === file.name,
             )
+
             if (!isStillIngesting) {
-              return { ...file, status: 'complete' as const }
+              const isInCompletedDocs = docsData?.documents?.some(
+                (doc: { readable_filename: string }) =>
+                  doc.readable_filename === file.name,
+              )
+              return {
+                ...file,
+                status: isInCompletedDocs
+                  ? ('complete' as const)
+                  : ('error' as const),
+              }
             }
           }
           return file
@@ -280,13 +305,12 @@ export function LargeDropzone({
       })
     }
 
-    console.log('Setting up ingest status check interval')
-    const interval = setInterval(checkIngestStatus, 3000)
+    const intervalId = setInterval(checkIngestStatus, pollInterval)
+
     return () => {
-      console.log('Cleaning up ingest status check interval')
-      clearInterval(interval)
+      clearInterval(intervalId)
     }
-  }, [courseName]) // Only depend on courseName
+  }, [courseName])
 
   return (
     <>
