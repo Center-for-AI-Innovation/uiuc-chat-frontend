@@ -164,6 +164,7 @@ const SourcesSidebar = ({
                     pagenumber={context.pagenumber}
                     pagenumber_or_timestamp={context.pagenumber_or_timestamp}
                     index={displayIndex - 1}
+                    text={context.text}
                   />
                 </div>
               ))}
@@ -192,6 +193,7 @@ const SourcesSidebar = ({
                     pagenumber={context.pagenumber}
                     pagenumber_or_timestamp={context.pagenumber_or_timestamp}
                     index={displayIndex - 1}
+                    text={context.text}
                   />
                 </div>
               ))}

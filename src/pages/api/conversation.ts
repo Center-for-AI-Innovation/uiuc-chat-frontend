@@ -194,7 +194,8 @@ export function convertChatToDBMessage(
           pagenumber: context.pagenumber,
           pagenumber_or_timestamp: context.pagenumber_or_timestamp,
           s3_path: context.s3_path,
-          url: context.url
+          url: context.url,
+          text: context.text
         }
         
         if (context.s3_path) {

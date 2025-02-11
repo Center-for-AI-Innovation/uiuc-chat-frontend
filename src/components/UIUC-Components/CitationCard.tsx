@@ -13,6 +13,7 @@ interface CitationCardProps {
   pagenumber?: string
   pagenumber_or_timestamp?: string
   index?: number
+  text?: string
 }
 
 // Helper function to get the effective page number
@@ -24,7 +25,7 @@ const getEffectivePageNumber = (props: CitationCardProps): string => {
   return '';
 };
 
-export const CitationCard = ({ readable_filename, course_name, s3_path, url, page_number, pagenumber, pagenumber_or_timestamp, index }: CitationCardProps) => {
+export const CitationCard = ({ readable_filename, course_name, s3_path, url, page_number, pagenumber, pagenumber_or_timestamp, index, text }: CitationCardProps) => {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null)
   const [faviconError, setFaviconError] = useState(false)
   const [retryCount, setRetryCount] = useState(0)
@@ -278,6 +279,13 @@ export const CitationCard = ({ readable_filename, course_name, s3_path, url, pag
                       className={`text-xs text-[#9D4EDD]/80 ${montserrat_paragraph.variable} font-montserratParagraph`}
                     >
                       Page {effectivePageNumber}
+                    </Text>
+                  )}
+                  {text && (
+                    <Text 
+                      className={`text-xs text-gray-400 ${montserrat_paragraph.variable} font-montserratParagraph line-clamp-2`}
+                    >
+                      {text}
                     </Text>
                   )}
                 </div>
