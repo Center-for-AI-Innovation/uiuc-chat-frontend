@@ -172,15 +172,20 @@ export const CitationCard = ({ readable_filename, course_name, s3_path, url, pag
     >
       <Paper 
         className="flex flex-col bg-[#1E1F3A] text-white overflow-hidden shadow-md transition-all duration-300 ease-in-out
-        border border-[#2e026d]
-        hover:shadow-xl hover:shadow-purple-500/20 hover:translate-y-[-2px] hover:scale-[1.01]
+        border-[1px] border-gray-600
+        hover:shadow-[0_0_30px_rgba(157,78,221,0.4)] hover:translate-y-[-2px] hover:scale-[1.01]
         hover:border-[#9D4EDD]"
         radius="md"
-        withBorder
+        sx={{
+          boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
+          '&:hover': {
+            boxShadow: '0 0 30px rgba(157, 78, 221, 0.4)',
+          }
+        }}
       >
         <div className="flex flex-col h-full">
           {thumbnailUrl ? (
-            <div className={`w-full flex ${isWebIcon ? 'justify-center bg-[#1a1b36] p-2' : 'h-24 overflow-hidden'}`}>
+            <div className={`w-full flex relative ${isWebIcon ? 'justify-center bg-[#1a1b36] p-2' : 'h-32 overflow-hidden'}`}>
               <Image
                 src={thumbnailUrl}
                 alt={`Thumbnail for ${readable_filename}`}
@@ -195,9 +200,33 @@ export const CitationCard = ({ readable_filename, course_name, s3_path, url, pag
                   setThumbnailUrl(null)
                 }}
               />
+              {index !== undefined && (
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent h-12">
+                  <div className="absolute bottom-2 left-2">
+                    <Badge 
+                      color="gray" 
+                      variant="filled" 
+                      radius="sm" 
+                      size="xs"
+                      className="ring-1 ring-white"
+                    >
+                      {index + 1}
+                    </Badge>
+                  </div>
+                  <div className="absolute bottom-2 right-2">
+                    <div className="bg-gray-900/80 p-1.5 rounded-md">
+                      {isWebIcon || isPDF ? (
+                        <IconExternalLink size={14} className="text-[#9D4EDD]" />
+                      ) : (
+                        <IconDownload size={14} className="text-[#9D4EDD]" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
-            <div className="w-full flex justify-center bg-[#1a1b36] p-2">
+            <div className="w-full flex justify-center bg-[#1a1b36] p-2 relative">
               <div className="text-[#9D4EDD] opacity-90 h-12 w-12 flex items-center justify-center">
                 {getFileType() === 'md' ? (
                   <IconMarkdown size={32} />
@@ -207,46 +236,48 @@ export const CitationCard = ({ readable_filename, course_name, s3_path, url, pag
                   <IconFileText size={32} />
                 )}
               </div>
+              {index !== undefined && (
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent h-12">
+                  <div className="absolute bottom-2 left-2">
+                    <Badge 
+                      color="gray" 
+                      variant="filled" 
+                      radius="sm" 
+                      size="xs"
+                      className="ring-1 ring-white"
+                    >
+                      {index + 1}
+                    </Badge>
+                  </div>
+                  <div className="absolute bottom-2 right-2">
+                    <div className="bg-gray-900/80 p-1.5 rounded-md">
+                      {isWebIcon || isPDF ? (
+                        <IconExternalLink size={14} className="text-[#9D4EDD]" />
+                      ) : (
+                        <IconDownload size={14} className="text-[#9D4EDD]" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           
-          <div className="flex gap-3 p-3.5 flex-1">
+          <div className="flex gap-3 p-3 flex-1">
             <div className="flex-1 min-w-0">
               <div className="flex flex-col gap-1.5">
-                <div className="flex items-start gap-2">
-                  {index !== undefined && (
-                    <Badge color="gray" variant="outline" radius="sm" size="xs" className="self-start">
-                      {index + 1}
-                    </Badge>
-                  )}
-                  <div className="flex-1">
-                    <Text 
-                      className={`text-sm font-semibold text-white ${montserrat_heading.variable} font-montserratHeading break-words leading-tight`} 
-                      style={{ wordBreak: 'break-word' }}
-                    >
-                      {readable_filename}
-                    </Text>
-                  </div>
-                  {isWebIcon || isPDF ? (
-                    <IconExternalLink size={14} className="flex-shrink-0 text-[#9D4EDD]/70 mt-0.5" />
-                  ) : (
-                    <IconDownload size={14} className="flex-shrink-0 text-[#9D4EDD]/70 mt-0.5" />
-                  )}
-                </div>
+                <Text 
+                  className={`text-sm font-semibold text-white ${montserrat_heading.variable} font-montserratHeading break-words leading-tight`} 
+                  style={{ wordBreak: 'break-word' }}
+                >
+                  {readable_filename}
+                </Text>
                 <div className="flex flex-col gap-0.5">
                   {isPDF && hasPageNumber && (
                     <Text 
                       className={`text-xs text-[#9D4EDD]/80 ${montserrat_paragraph.variable} font-montserratParagraph`}
                     >
                       Page {effectivePageNumber}
-                    </Text>
-                  )}
-                  {course_name && (
-                    <Text 
-                      className={`text-xs text-gray-300/70 ${montserrat_paragraph.variable} font-montserratParagraph break-words`}
-                      style={{ wordBreak: 'break-word' }}
-                    >
-                      {course_name}
                     </Text>
                   )}
                 </div>
