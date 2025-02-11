@@ -292,34 +292,24 @@ export const ChatMessage: FC<Props> = memo(
     const [isFeedbackModalOpen, setIsFeedbackModalOpen] =
       useState<boolean>(false)
 
-    const [isSourcesSidebarOpen, setIsSourcesSidebarOpen] = useState(false)
-
-    // Get the right sidebar state from the URL query parameters
-    const router = useRouter()
     const [isRightSideVisible, setIsRightSideVisible] = useState(false)
+    const [isSourcesSidebarOpen, setIsSourcesSidebarOpen] = useState(false)
 
     const [sourceThumbnails, setSourceThumbnails] = useState<string[]>([])
 
     useEffect(() => {
-      const query = new URLSearchParams(window.location.search)
-      const rightSidebarOpen = query.get('rightSidebar') === 'true'
-      setIsRightSideVisible(rightSidebarOpen)
-      
       // Close Sources sidebar if right sidebar is opened
-      if (rightSidebarOpen) {
+      if (isRightSideVisible) {
         setIsSourcesSidebarOpen(false)
       }
-    }, [router.asPath])
+    }, [isRightSideVisible])
 
     // Function to handle opening/closing the Sources sidebar
     const handleSourcesSidebarToggle = (open: boolean) => {
       setIsSourcesSidebarOpen(open)
       // If opening the Sources sidebar, close the right sidebar
       if (open) {
-        const currentPath = router.asPath.split('?')[0] // Get the current path without query params
-        const newUrl = new URL(window.location.origin + currentPath)
-        newUrl.searchParams.set('rightSidebar', 'false')
-        router.replace(newUrl.pathname + newUrl.search)
+        setIsRightSideVisible(false)
       }
     }
 

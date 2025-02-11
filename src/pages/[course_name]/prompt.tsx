@@ -845,11 +845,7 @@ Do not include any commentary or explanations. Output only the optimized system 
                                   <div className="cursor-pointer p-4 hover:opacity-75 md:p-0" data-right-sidebar-icon>
                                     <IconLayoutSidebarRight
                                       stroke={2}
-                                      onClick={() => {
-                                        const newUrl = new URL(window.location.href)
-                                        newUrl.searchParams.set('rightSidebar', 'false')
-                                        router.replace(newUrl.pathname + newUrl.search)
-                                      }}
+                                      onClick={() => setIsRightSideVisible(false)}
                                     />
                                   </div>
                                 </Tooltip>
@@ -858,11 +854,7 @@ Do not include any commentary or explanations. Output only the optimized system 
                                   <div className="cursor-pointer p-4 hover:opacity-75 md:p-0" data-right-sidebar-icon>
                                     <IconLayoutSidebarRightExpand
                                       stroke={2}
-                                      onClick={() => {
-                                        const newUrl = new URL(window.location.href)
-                                        newUrl.searchParams.set('rightSidebar', 'true')
-                                        router.replace(newUrl.pathname + newUrl.search)
-                                      }}
+                                      onClick={() => setIsRightSideVisible(true)}
                                     />
                                   </div>
                                 </Tooltip>

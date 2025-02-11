@@ -97,12 +97,6 @@ const SourcesSidebar = ({
 
   const handleClose = () => {
     onClose()
-    const query = new URLSearchParams(window.location.search)
-    if (query.get('rightSidebar') === 'true') {
-      const newUrl = new URL(window.location.href)
-      newUrl.searchParams.set('rightSidebar', 'true')
-      router.replace(newUrl.pathname + newUrl.search)
-    }
   }
 
   const getReadableFilename = (context: ContextWithMetadata): string => {
