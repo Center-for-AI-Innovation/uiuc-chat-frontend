@@ -108,6 +108,27 @@ export default async function handler(
       }
     }
 
+    // Check if user has access to R1 models
+    try {
+      const authorizedProjects = await redisClient.sMembers(
+        'authorized_R1_projects',
+      )
+      const isR1Authorized = authorizedProjects.includes(projectName)
+
+      // Filter out R1 models if user is not authorized
+      if (!isR1Authorized) {
+        Object.values(allLLMProviders).forEach((provider) => {
+          if (provider?.models) {
+            provider.models = provider.models.filter(
+              (model) => !model.name.toLowerCase().includes('r1'),
+            )
+          }
+        })
+      }
+    } catch (error) {
+      console.error('Error checking R1 authorization:', error)
+    }
+
     return res.status(200).json(allLLMProviders as AllLLMProviders)
   } catch (error) {
     console.error(error)
