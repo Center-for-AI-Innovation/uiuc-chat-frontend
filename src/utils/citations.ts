@@ -112,13 +112,13 @@ export async function replaceCitationLinks(
       const pageNumber = context.pagenumber ? safeText(context.pagenumber.toString()) : safeText(match[2] || '');
       
       const sourceRef = pageNumber
-        ? `${citationIndex}, p.${pageNumber}`
-        : `${citationIndex}`;
+        ? `(${displayTitle}, p.${pageNumber} | ${citationIndex})`
+        : `(${displayTitle} | ${citationIndex})`;
       
       // Only create link if we have a valid safe URL
       const replacementText = safeLink 
-        ? `[${displayTitle} (${sourceRef})](${safeLink}${pageNumber ? `#page=${pageNumber}` : ''})`
-        : `${displayTitle} (${sourceRef})`; // Fallback to plain text if URL is invalid
+        ? `[${sourceRef}](${safeLink}${pageNumber ? `#page=${pageNumber}` : ''})`
+        : sourceRef; // Fallback to plain text if URL is invalid
       
       // Replace at exact position accounting for previous replacements
       result = 
@@ -166,13 +166,13 @@ export async function replaceCitationLinks(
       
       const displayTitle = safeText(context.readable_filename || `Document ${filenameIndex}`);
       const sourceRef = pageNumber
-        ? `${filenameIndex}, p.${pageNumber}`
-        : `${filenameIndex}`;
+        ? `(${displayTitle}, p.${pageNumber} | ${filenameIndex})`
+        : `(${displayTitle} | ${filenameIndex})`;
       
       // Only create link if we have a valid safe URL
       const replacementText = safeLink
-        ? `${match[1]} [${displayTitle} (${sourceRef})](${safeLink}${pageNumber ? `#page=${pageNumber}` : ''})`
-        : `${match[1]} ${displayTitle} (${sourceRef})`; // Fallback to plain text if URL is invalid
+        ? `${match[1]} [${sourceRef}](${safeLink}${pageNumber ? `#page=${pageNumber}` : ''})`
+        : `${match[1]} ${sourceRef}`; // Fallback to plain text if URL is invalid
       
       // Replace at exact position accounting for previous replacements
       result = 
