@@ -1,6 +1,7 @@
+import { type CoreMessage, generateText, streamText } from 'ai'
 import { type ChatBody, type Conversation } from '~/types/chat'
+import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock'
 import {
-  BedrockModelID,
   BedrockModels,
   type BedrockModel,
 } from '~/utils/modelProviders/types/bedrock'
@@ -9,7 +10,6 @@ import {
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
-import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime"
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
@@ -28,54 +28,45 @@ export async function runBedrockChat(
     throw new Error('AWS credentials are missing')
   }
 
-  const accessKeyId = await decryptKeyIfNeeded(bedrockProvider.accessKeyId)
-  const secretAccessKey = await decryptKeyIfNeeded(bedrockProvider.secretAccessKey)
-  const region = bedrockProvider.region
+  const bedrock = createAmazonBedrock({
+    accessKeyId: await decryptKeyIfNeeded(bedrockProvider.accessKeyId),
+    secretAccessKey: await decryptKeyIfNeeded(bedrockProvider.secretAccessKey),
+    region: bedrockProvider.region,
+  })
 
   if (conversation.messages.length === 0) {
     throw new Error('Conversation messages array is empty')
   }
 
-  const messages = convertConversationToBedrockFormat(conversation)
+  const model = bedrock(conversation.model.id)
 
-  const client = new BedrockRuntimeClient({
-    region,
-    credentials: {
-      accessKeyId,
-      secretAccessKey,
-    },
-  })
-
-  const modelId = conversation.model.id as BedrockModelID
-  const input = {
-    modelId,
-    body: JSON.stringify({
-      messages,
-      temperature: conversation.temperature,
-      max_tokens: 4096,
-      stream,
-    }),
+  const commonParams = {
+    model: model,
+    messages: convertConversationToBedrockFormat(conversation),
+    temperature: conversation.temperature,
+    maxTokens: 4096,
   }
 
-  try {
-    const command = new InvokeModelCommand(input)
-    const response = await client.send(command)
-
-    if (stream) {
-      return new Response(response.body, {
-        headers: { 'Content-Type': 'text/event-stream' },
-      })
-    } else {
-      const responseBody = JSON.parse(new TextDecoder().decode(response.body))
-      return { choices: [{ message: { content: responseBody.completion } }] }
-    }
-  } catch (error) {
-    console.error('Error calling Bedrock:', error)
-    throw error
+  if (stream) {
+    const result = await streamText(commonParams)
+    //   {
+    //   ...commonParams,
+    //   messages: commonParams.messages.map(msg => ({
+    //     role: msg.role,
+    //     content: msg.content,
+    //   }))
+    // })
+    return result.toTextStreamResponse()
+  } else {
+    const result = await generateText(commonParams)
+    const choices = [{ message: { content: result.text } }]
+    return { choices }
   }
 }
 
-function convertConversationToBedrockFormat(conversation: Conversation) {
+function convertConversationToBedrockFormat(
+  conversation: Conversation,
+): CoreMessage[] {
   const messages = []
 
   const systemMessage = conversation.messages.findLast(
@@ -83,7 +74,7 @@ function convertConversationToBedrockFormat(conversation: Conversation) {
   )
   if (systemMessage) {
     messages.push({
-      role: 'system',
+      role: 'assistant',
       content: systemMessage.latestSystemMessage || '',
     })
   }
@@ -106,12 +97,12 @@ function convertConversationToBedrockFormat(conversation: Conversation) {
     }
 
     messages.push({
-      role: message.role,
+      role: message.role === 'user' ? 'user' : 'assistant',
       content: content,
     })
   })
 
-  return messages
+  return messages as CoreMessage[]
 }
 
 export async function GET(req: Request) {
@@ -121,7 +112,7 @@ export async function GET(req: Request) {
 
   if (!accessKeyId || !secretAccessKey || !region) {
     return NextResponse.json(
-      { error: 'AWS credentials not set.' },
+      { error: 'Bedrock credentials not set.' },
       { status: 500 },
     )
   }
@@ -132,4 +123,4 @@ export async function GET(req: Request) {
     provider: ProviderNames.Bedrock,
     models: models,
   })
-} 
+}

@@ -169,6 +169,7 @@ export interface BedrockProvider extends BaseLLMProvider {
   region?: string
   accessKeyId?: string
   secretAccessKey?: string
+  inferenceProfileArn?: string
 }
 
 export interface GeminiProvider extends BaseLLMProvider {

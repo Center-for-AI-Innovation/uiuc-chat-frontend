@@ -11,7 +11,7 @@ export enum BedrockModelID {
   Claude_3_Opus = 'anthropic.claude-3-opus-20240229-v1:0',
   Claude_3_Sonnet = 'anthropic.claude-3-sonnet-20240229-v1:0',
   Claude_3_Haiku = 'anthropic.claude-3-haiku-20240307-v1:0',
-  Claude_3_5_Sonnet_Latest = 'anthropic.claude-3-5-sonnet-20241022-v2:0',
+  Claude_3_5_Sonnet_Latest = 'us.anthropic.claude-3-5-sonnet-20241022-v2:0',
   Claude_3_5_Sonnet = 'anthropic.claude-3-5-sonnet-20240620-v1:0',
   Claude_3_5_Haiku = 'anthropic.claude-3-5-haiku-20241022-v1:0',
   Claude_2_1 = 'anthropic.claude-v2:1',
