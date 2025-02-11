@@ -1,4 +1,3 @@
-// import { OllamaProvider } from 'ollama-ai-provider'
 import {
   type NCSAHostedProvider,
   ProviderNames,
@@ -10,22 +9,20 @@ export const getNCSAHostedModels = async (
 ): Promise<NCSAHostedProvider> => {
   delete ncsaHostedProvider.error // Remove the error property if it exists
   ncsaHostedProvider.provider = ProviderNames.NCSAHosted
-  let wasDefault = false
+
+  // Store existing model states
+  const existingModelStates = new Map<
+    string,
+    { enabled: boolean; default: boolean }
+  >()
   if (ncsaHostedProvider.models) {
-    // WARNING! This assumes that the only model you're touching is the first one. We should change this later as needed.
-    wasDefault = ncsaHostedProvider.models[0]?.default ? true : false
+    ncsaHostedProvider.models.forEach((model) => {
+      existingModelStates.set(model.id, {
+        enabled: model.enabled ?? true,
+        default: model.default ?? false,
+      })
+    })
   }
-  // FOR THE FUTURE-- if there are multiple NCSA Hosted models, we can use a map instead
-  // const existingDefaults = new Map<string, boolean>()
-  // if (ncsaHostedProvider.models) {
-  //   ncsaHostedProvider.models.forEach(model => {
-  //     existingDefaults.set(model.id, !!model.default)
-  //   })
-  // }
-
-  // If not enabled, enable it 
-
-
 
   try {
     // /api/tags - all downloaded models - might not have room on the GPUs.
@@ -38,33 +35,21 @@ export const getNCSAHostedModels = async (
       return ncsaHostedProvider as NCSAHostedProvider
     }
 
-    // ✅ HARD CODE ONLY ONE MODEL
-    // const ollamaModels = [NCSAHostedModels['llama3.1:8b-instruct-fp16']]
     const ollamaModels = [
       OllamaModels[OllamaModelIDs.LLAMA31_8b_instruct_fp16],
       OllamaModels[OllamaModelIDs.DEEPSEEK_R1_14b_qwen_fp16],
       OllamaModels[OllamaModelIDs.QWEN25_14b_fp16],
       OllamaModels[OllamaModelIDs.QWEN25_7b_fp16],
-      // OllamaModels[OllamaModelIDs.LLAMA32_3b_fp16],
-    ]
-
-    // ❌ DYNAMICALLY show all HOT AND LOADED models
-    // const ollamaModels: OllamaModel[] = data.models
-    // .filter((model: any) =>
-    //   Object.values(NCSAHostedModelID).includes(model.model),
-    // )
-    // .map((model: any): OllamaModel => {
-    //   const knownModel = NCSAHostedModels[model.model as NCSAHostedModelID]
-    //   return {
-    //     ...knownModel,
-    //     default: existingDefaults.get(knownModel.id) || false,
-    //   }
-    // })
+    ].map((model) => {
+      const existingState = existingModelStates.get(model.id)
+      return {
+        ...model,
+        enabled: existingState?.enabled ?? true,
+        default: existingState?.default ?? false,
+      }
+    })
 
     ncsaHostedProvider.models = ollamaModels
-    if (ncsaHostedProvider.models[0]) {
-      ncsaHostedProvider.models[0].default = wasDefault
-    }
     return ncsaHostedProvider as NCSAHostedProvider
   } catch (error: any) {
     ncsaHostedProvider.error = error.message
