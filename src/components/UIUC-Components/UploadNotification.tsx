@@ -47,7 +47,6 @@ interface FailedDocumentsResponse {
   recent_fail_count: number
 }
 
-
 interface UploadNotificationProps {
   files: FileUpload[]
   onClose: () => void
@@ -58,7 +57,7 @@ interface UploadNotificationProps {
 function UploadNotificationContent({
   files,
   onClose,
-  projectName
+  projectName,
 }: UploadNotificationProps) {
   const [isMinimized, setIsMinimized] = useState(false)
   const [currentFiles, setCurrentFiles] = useState<FileUpload[]>([])
@@ -87,16 +86,17 @@ function UploadNotificationContent({
         })
 
         if (failedDocuments?.final_docs) {
-          return files.map(file => {
+          return files.map((file) => {
             const failedDoc = failedDocuments.final_docs.find(
-              doc => doc.readable_filename === file.name || doc.url === file.url
+              (doc) =>
+                doc.readable_filename === file.name || doc.url === file.url,
             )
 
             if (failedDoc) {
               return {
                 ...file,
                 status: 'error' as const,
-                error: failedDoc.error
+                error: failedDoc.error,
               }
             }
             return file
@@ -172,14 +172,25 @@ function UploadNotificationContent({
     return text.slice(0, maxLength) + '...'
   }
 
-  const getStatusMessage = (status: FileUpload['status'], url?: string, type?: string, isBaseUrl?: boolean) => {
+  const getStatusMessage = (
+    status: FileUpload['status'],
+    url?: string,
+    type?: string,
+    isBaseUrl?: boolean,
+  ) => {
     // if (url) return truncateText(url, 35)
 
     switch (status) {
       case 'uploading':
-        return url && isBaseUrl ? 'Crawling this website...' : type === 'webscrape' || type === 'github' ? 'Crawling this website...' : 'Uploading to secure storage...'
+        return url && isBaseUrl
+          ? 'Crawling this website...'
+          : type === 'webscrape' || type === 'github'
+            ? 'Crawling this website...'
+            : 'Uploading to secure storage...'
       case 'ingesting':
-        return url && isBaseUrl ? 'Crawling this website...' : 'Processing for chat...'
+        return url && isBaseUrl
+          ? 'Crawling this website...'
+          : 'Processing for chat...'
       case 'complete':
         return 'Ready for chat'
       case 'error':
@@ -217,7 +228,7 @@ function UploadNotificationContent({
             component="pre"
           >
             {currentFiles.some((file) => file.status === 'error')
-              ? "If upload failed, please try again and let us know!"
+              ? 'If upload failed, please try again and let us know!'
               : currentFiles.some((file) => file.status === 'uploading')
                 ? 'Please stay on this page while files are uploading'
                 : currentFiles.some((file) => file.status === 'ingesting')
@@ -265,7 +276,13 @@ function UploadNotificationContent({
               >
                 <div className="flex items-center gap-3">
                   <div className="flex h-8 w-8 items-center justify-center">
-                    {file.type === 'webscrape' ? <IconWorld size={18} /> : file.name ? getFileIcon(file.name.split('.').pop() || '') : getFileIcon('')}
+                    {file.type === 'webscrape' ? (
+                      <IconWorld size={18} />
+                    ) : file.name ? (
+                      getFileIcon(file.name.split('.').pop() || '')
+                    ) : (
+                      getFileIcon('')
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <Text
@@ -280,25 +297,30 @@ function UploadNotificationContent({
                       className={`truncate text-[#8e8eb2] ${montserrat_paragraph.variable} font-montserratParagraph`}
                       title={getStatusMessage(file.status)}
                     >
-                      {getStatusMessage(file.status, file.url, file.type, file.isBaseUrl)}
+                      {getStatusMessage(
+                        file.status,
+                        file.url,
+                        file.type,
+                        file.isBaseUrl,
+                      )}
                     </Text>
                   </div>
                   <div className="ml-2 flex items-center">
                     {(file.status === 'uploading' ||
                       file.status === 'ingesting') && (
-                        <Tooltip
-                          label={
-                            file.status === 'uploading'
-                              ? 'Uploading to secure storage'
-                              : 'Processing for chat'
-                          }
-                          classNames={{
-                            tooltip: `${montserrat_paragraph.variable} font-montserratParagraph`,
-                          }}
-                        >
-                          <LoadingSpinner size="xs" />
-                        </Tooltip>
-                      )}
+                      <Tooltip
+                        label={
+                          file.status === 'uploading'
+                            ? 'Uploading to secure storage'
+                            : 'Processing for chat'
+                        }
+                        classNames={{
+                          tooltip: `${montserrat_paragraph.variable} font-montserratParagraph`,
+                        }}
+                      >
+                        <LoadingSpinner size="xs" />
+                      </Tooltip>
+                    )}
                     {file.status === 'complete' && (
                       <Tooltip
                         label="Ready for chat"

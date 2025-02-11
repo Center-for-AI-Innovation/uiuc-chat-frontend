@@ -242,10 +242,10 @@ export function LargeDropzone({
   }
 
   useEffect(() => {
-    let pollInterval = 3000; // Start with a slower interval
-    const MIN_INTERVAL = 1000; // Fast polling when active
-    const MAX_INTERVAL = 5000; // Slow polling when inactive
-    let consecutiveEmptyPolls = 0;
+    let pollInterval = 3000 // Start with a slower interval
+    const MIN_INTERVAL = 1000 // Fast polling when active
+    const MAX_INTERVAL = 5000 // Slow polling when inactive
+    let consecutiveEmptyPolls = 0
 
     const checkIngestStatus = async () => {
       const response = await fetch(
@@ -253,22 +253,25 @@ export function LargeDropzone({
       )
       const data = await response.json()
 
-      const docsResponse = await fetch(`/api/materialsTable/docs?course_name=${courseName}`)
+      const docsResponse = await fetch(
+        `/api/materialsTable/docs?course_name=${courseName}`,
+      )
       const docsData = await docsResponse.json()
       // Adjust polling interval based on activity
       if (data.documents.length > 0) {
-        pollInterval = MIN_INTERVAL;
-        consecutiveEmptyPolls = 0;
+        pollInterval = MIN_INTERVAL
+        consecutiveEmptyPolls = 0
       } else {
-        consecutiveEmptyPolls++;
-        if (consecutiveEmptyPolls >= 3) { // After 3 empty polls, slow down
-          pollInterval = Math.min(pollInterval * 1.5, MAX_INTERVAL);
+        consecutiveEmptyPolls++
+        if (consecutiveEmptyPolls >= 3) {
+          // After 3 empty polls, slow down
+          pollInterval = Math.min(pollInterval * 1.5, MAX_INTERVAL)
         }
       }
 
       setUploadFiles((prev) => {
         return prev.map((file) => {
-          if (file.type !== 'document') return file;
+          if (file.type !== 'document') return file
 
           if (file.status === 'uploading') {
             const isIngesting = data?.documents?.some(
@@ -278,8 +281,7 @@ export function LargeDropzone({
             if (isIngesting) {
               return { ...file, status: 'ingesting' as const }
             }
-          }
-          else if (file.status === 'ingesting') {
+          } else if (file.status === 'ingesting') {
             const isStillIngesting = data?.documents?.some(
               (doc: { readable_filename: string }) =>
                 doc.readable_filename === file.name,
@@ -287,9 +289,15 @@ export function LargeDropzone({
 
             if (!isStillIngesting) {
               const isInCompletedDocs = docsData?.documents?.some(
-                (doc: { readable_filename: string }) => doc.readable_filename === file.name
+                (doc: { readable_filename: string }) =>
+                  doc.readable_filename === file.name,
               )
-              return { ...file, status: isInCompletedDocs ? 'complete' as const : 'error' as const }
+              return {
+                ...file,
+                status: isInCompletedDocs
+                  ? ('complete' as const)
+                  : ('error' as const),
+              }
             }
           }
           return file
@@ -297,10 +305,10 @@ export function LargeDropzone({
       })
     }
 
-    const intervalId = setInterval(checkIngestStatus, pollInterval);
+    const intervalId = setInterval(checkIngestStatus, pollInterval)
 
     return () => {
-      clearInterval(intervalId);
+      clearInterval(intervalId)
     }
   }, [courseName])
 

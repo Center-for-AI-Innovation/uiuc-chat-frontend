@@ -162,10 +162,11 @@ export const UploadCard = memo(function UploadCard({
                   order={3}
                   variant="gradient"
                   gradient={{ from: 'gold', to: 'white', deg: 50 }}
-                  className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base sm:text-xl ${projectName.length > 40
-                    ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
-                    : ''
-                    }`}
+                  className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base sm:text-xl ${
+                    projectName.length > 40
+                      ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
+                      : ''
+                  }`}
                 >
                   {projectName}
                 </Title>

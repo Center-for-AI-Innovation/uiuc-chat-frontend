@@ -220,23 +220,27 @@ export default function GitHubIngestForm({
       const response = await fetch(
         `/api/materialsTable/docsInProgress?course_name=${project_name}`,
       )
-      const data = await response.json();
-      const docsResponse = await fetch(`/api/materialsTable/docs?course_name=${project_name}`)
+      const data = await response.json()
+      const docsResponse = await fetch(
+        `/api/materialsTable/docs?course_name=${project_name}`,
+      )
       const docsData = await docsResponse.json()
 
       // Helper function to organize docs by base URL
-      const organizeDocsByBaseUrl = (docs: Array<{ base_url: string; url: string }>) => {
-        const baseUrlMap = new Map<string, Set<string>>();
+      const organizeDocsByBaseUrl = (
+        docs: Array<{ base_url: string; url: string }>,
+      ) => {
+        const baseUrlMap = new Map<string, Set<string>>()
 
         docs.forEach((doc) => {
           if (!baseUrlMap.has(doc.base_url)) {
-            baseUrlMap.set(doc.base_url, new Set());
+            baseUrlMap.set(doc.base_url, new Set())
           }
-          baseUrlMap.get(doc.base_url)?.add(doc.url);
-        });
+          baseUrlMap.get(doc.base_url)?.add(doc.url)
+        })
 
-        return baseUrlMap;
-      };
+        return baseUrlMap
+      }
 
       // Helper function to update status of existing files
       const updateExistingFiles = (
@@ -244,87 +248,90 @@ export default function GitHubIngestForm({
         docsInProgress: Array<{ base_url: string }>,
       ) => {
         return currentFiles.map((file) => {
-          if (file.type !== 'github') return file;
+          if (file.type !== 'github') return file
 
           const isStillIngesting = docsInProgress.some(
-            (doc) => doc.base_url === file.name
-          );
+            (doc) => doc.base_url === file.name,
+          )
 
           if (file.status === 'uploading' && isStillIngesting) {
-            return { ...file, status: 'ingesting' as const };
+            return { ...file, status: 'ingesting' as const }
           } else if (file.status === 'ingesting') {
             if (!isStillIngesting) {
               const isInCompletedDocs = docsData?.documents?.some(
-                (doc: { url: string }) => doc.url === file.url
-              );
+                (doc: { url: string }) => doc.url === file.url,
+              )
 
               if (isInCompletedDocs) {
-                return { ...file, status: 'complete' as const };
+                return { ...file, status: 'complete' as const }
               }
 
-              return file;
+              return file
             }
           }
-          return file;
-        });
-      };
+          return file
+        })
+      }
 
       // Helper function to create new file entries for additional URLs
       const createAdditionalFileEntries = (
         baseUrlMap: Map<string, Set<string>>,
         currentFiles: FileUpload[],
-        docsInProgress: Array<{ base_url: string, readable_filename: string }>,
+        docsInProgress: Array<{ base_url: string; readable_filename: string }>,
       ) => {
-        const newFiles: FileUpload[] = [];
+        const newFiles: FileUpload[] = []
 
         baseUrlMap.forEach((urls, baseUrl) => {
           // Only process if we have this base URL in our current files
-          if (currentFiles.some(file => file.name === baseUrl)) {
+          if (currentFiles.some((file) => file.name === baseUrl)) {
             const matchingDoc = docsInProgress.find(
-              doc => doc.base_url === baseUrl
-            );
+              (doc) => doc.base_url === baseUrl,
+            )
 
-            const isStillIngesting = matchingDoc !== undefined;
+            const isStillIngesting = matchingDoc !== undefined
 
-            urls.forEach(url => {
-              if (!currentFiles.some(file => file.url === url) && matchingDoc) {
+            urls.forEach((url) => {
+              if (
+                !currentFiles.some((file) => file.url === url) &&
+                matchingDoc
+              ) {
                 newFiles.push({
                   name: url,
                   status: isStillIngesting ? 'ingesting' : 'complete',
                   type: 'github',
-                  url: url
-                });
+                  url: url,
+                })
               }
-            });
+            })
           }
-        });
+        })
 
-        return newFiles;
-      };
+        return newFiles
+      }
 
       setUploadFiles((prev) => {
-        const matchingDocsInProgress = data?.documents?.filter(
-          (doc: { base_url: string }) =>
-            prev.some(file => file.name === doc.base_url)
-        ) || [];
+        const matchingDocsInProgress =
+          data?.documents?.filter((doc: { base_url: string }) =>
+            prev.some((file) => file.name === doc.base_url),
+          ) || []
 
-        const baseUrlMap = organizeDocsByBaseUrl(matchingDocsInProgress);
+        const baseUrlMap = organizeDocsByBaseUrl(matchingDocsInProgress)
 
         const additionalFiles = createAdditionalFileEntries(
           baseUrlMap,
           prev,
-          matchingDocsInProgress
-        );
+          matchingDocsInProgress,
+        )
 
-        const updatedFiles = updateExistingFiles(prev, matchingDocsInProgress);
+        const updatedFiles = updateExistingFiles(prev, matchingDocsInProgress)
 
-        return [...updatedFiles, ...additionalFiles];
-      });
+        return [...updatedFiles, ...additionalFiles]
+      })
 
       await queryClient.invalidateQueries({
         queryKey: ['documents', project_name],
-      });
-    };
+      })
+    }
 
     const interval = setInterval(checkIngestStatus, 3000)
     return () => {
