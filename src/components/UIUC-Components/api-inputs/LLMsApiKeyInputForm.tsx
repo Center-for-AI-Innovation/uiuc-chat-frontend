@@ -662,7 +662,7 @@ export default function APIKeyInputForm() {
                             <Flex
                               direction={{ base: 'column', '75rem': 'row' }}
                               wrap="wrap"
-                              justify="space-between"
+                              justify="flex-start"
                               align="flex-start"
                               className="gap-4"
                               w={'100%'}
@@ -723,7 +723,7 @@ export default function APIKeyInputForm() {
                             <Flex
                               direction={{ base: 'column', '75rem': 'row' }}
                               wrap="wrap"
-                              justify="space-between"
+                              justify="flex-start"
                               align="flex-start"
                               className="gap-4"
                               w={'100%'}
