@@ -47,6 +47,30 @@ export function convertDBToChatConversation(
   dbConversation: DBConversation,
   dbMessages: DBMessage[],
 ): ChatConversation {
+  // First sort the messages by creation time
+  const sortedMessages = (dbMessages || []).sort((a, b) => {
+    const aTime = new Date(a.created_at || 0).getTime();
+    const bTime = new Date(b.created_at || 0).getTime();
+    return aTime - bTime;
+  });
+
+  // Validate that we have the first message (usually system or user)
+  if (sortedMessages.length > 0) {
+    const firstMessage: DBMessage | undefined = sortedMessages[0];
+    if (firstMessage?.role && firstMessage?.created_at) {
+      console.debug('First message in conversation:', {
+        id: firstMessage?.id,
+        role: firstMessage?.role,
+        created_at: firstMessage?.created_at,
+        isSystem: firstMessage?.role === 'system',
+        isUser: firstMessage?.role === 'user'
+      });
+    } else {
+      console.warn('No valid first message found in conversation:', dbConversation.id);
+    }
+  }
+
+  // Now convert the sorted messages
   return {
     id: dbConversation.id,
     name: dbConversation.name,
@@ -58,12 +82,7 @@ export function convertDBToChatConversation(
     userEmail: dbConversation.user_email || undefined,
     projectName: dbConversation.project_name,
     folderId: dbConversation.folder_id,
-    messages: (dbMessages || []).map((msg: any) => {
-      // console.log('\nProcessing message:', msg.id)
-      // console.log('Raw message from DB:', JSON.stringify(msg, null, 2))
-      // console.log('Raw contexts array type:', Object.prototype.toString.call(msg.contexts))
-      // console.log('Raw contexts from DB (complete):', JSON.stringify(msg.contexts, null, 2))
-      
+    messages: sortedMessages.map((msg: any) => {
       const content: Content[] = []
       if (msg.content_text) {
         content.push({
@@ -98,10 +117,6 @@ export function convertDBToChatConversation(
 
       // Process contexts to ensure both page number fields are preserved
       const processedContexts = (msg.contexts as any as ContextWithMetadata[])?.map(context => {
-        // console.log('Processing context in convertDBToChatConversation - Raw context object:', context);
-        // console.log('Context type:', Object.prototype.toString.call(context));
-        // console.log('Context keys:', Object.keys(context));
-        
         return {
           ...context,
           pagenumber: context.pagenumber || '',
@@ -125,6 +140,14 @@ export function convertDBToChatConversation(
         wasQueryRewritten: msg.was_query_rewritten ?? null,
         queryRewriteText: msg.query_rewrite_text ?? null,
       }
+
+      // Add debug logging for message ordering
+      console.debug('Processing message in convertDBToChatConversation:', {
+        messageId: msg.id,
+        role: msg.role,
+        created_at: msg.created_at,
+        content_length: content.length
+      });
 
       return messageObj
     }),
