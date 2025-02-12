@@ -490,7 +490,7 @@ export default function APIKeyInputForm() {
             if (currentModel) {
               provider.models[modelIndex] = {
                 ...currentModel,
-                temperature: newTemperature,
+                temperature: 0.1, // Fixed temperature
               }
             }
           }
@@ -813,7 +813,7 @@ export default function APIKeyInputForm() {
                         </div>
                         <div className="pt-6"></div>
                         <div>
-                          {llmProviders && (
+                          {/* {llmProviders && (
                             // @ts-ignore - we don't really need this named functionality... gonna skip fixing this.
                             <form.Field name="defaultTemperature">
                               {(field) => (
@@ -824,11 +824,7 @@ export default function APIKeyInputForm() {
                                     mb={4}
                                     className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
                                   >
-                                    Default Temperature:{' '}
-                                    {
-                                      findDefaultModel(llmProviders)
-                                        ?.temperature
-                                    }
+                                    Model Temperature: 0.1 (Fixed)
                                   </Text>
                                   <Text
                                     size="xs"
@@ -836,45 +832,13 @@ export default function APIKeyInputForm() {
                                     mt={4}
                                     className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
                                   >
-                                    We recommended using 0.1. Higher values
-                                    increase randomness or
-                                    &apos;creativity&apos;, lower force the
-                                    model to stick to its normal behavior.
+                                    The model temperature is fixed at 0.1 for consistent, precise responses.
                                   </Text>
-                                  <Slider
-                                    value={
-                                      findDefaultModel(llmProviders)
-                                        ?.temperature
-                                    }
-                                    onChange={(newTemperature) => {
-                                      updateDefaultModelTemperature(
-                                        newTemperature,
-                                      )
-                                      field.handleChange(newTemperature)
-                                      form.handleSubmit()
-                                    }}
-                                    min={0}
-                                    max={1}
-                                    step={0.1}
-                                    precision={1}
-                                    marks={[
-                                      { value: 0, label: t('Precise') },
-                                      { value: 0.5, label: t('Neutral') },
-                                      { value: 1, label: t('Creative') },
-                                    ]}
-                                    showLabelOnHover
-                                    color="grape"
-                                    className="m-2"
-                                    size={isSmallScreen ? 'xs' : 'md'}
-                                    classNames={{
-                                      markLabel: `mx-2 text-neutral-300 ${montserrat_paragraph.variable} font-montserratParagraph mt-2 ${isSmallScreen ? 'text-xs' : ''}`,
-                                    }}
-                                  />
                                   <FieldInfo field={field} />
                                 </>
                               )}
                             </form.Field>
-                          )}
+                          )} */}
                         </div>
                         <div className="pt-2" />
                       </div>
