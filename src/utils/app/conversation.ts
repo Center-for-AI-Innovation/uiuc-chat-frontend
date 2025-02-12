@@ -240,25 +240,35 @@ export const saveConversations = (conversations: Conversation[]) => {
 // }
 
 export async function saveConversationToServer(conversation: Conversation) {
-  try {
-    console.debug('Saving conversation to server:', conversation)
-    const response = await fetch('/api/conversation', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ conversation }),
-    })
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      const errorMessage = errorData?.error || response.statusText;
-      throw new Error(`Error saving conversation: ${errorMessage}`);
+  const MAX_RETRIES = 3;
+  let retryCount = 0;
+
+  while (retryCount < MAX_RETRIES) {
+    try {
+      console.debug('Saving conversation to server:', conversation)
+      const response = await fetch('/api/conversation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ conversation }),
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        const errorMessage = errorData?.error || response.statusText;
+        throw new Error(`Error saving conversation: ${errorMessage}`);
+      }
+      
+      return response.json()
+    } catch (error: any) {
+      console.error(`Error saving conversation (attempt ${retryCount + 1}/${MAX_RETRIES}):`, error)
+      if (error.code === 'ECONNRESET' && retryCount < MAX_RETRIES - 1) {
+        retryCount++;
+        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount)); // Exponential backoff
+        continue;
+      }
+      throw error;
     }
-    
-    return response.json()
-  } catch (error) {
-    console.error('Error saving conversation:', error)
-    throw error; // Re-throw to allow handling by the caller
   }
 }
