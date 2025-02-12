@@ -1503,7 +1503,7 @@ export const Chat = memo(
     const handleFeedback = useCallback(
       async (
         message: Message,
-        isPositive: boolean,
+        isPositive: boolean | null,
         category?: string,
         details?: string,
       ) => {

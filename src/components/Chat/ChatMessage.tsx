@@ -114,7 +114,7 @@ export interface Props {
   onEdit?: (editedMessage: Message) => void
   onFeedback?: (
     message: Message,
-    isPositive: boolean,
+    isPositive: boolean | null,
     category?: string,
     details?: string,
   ) => void
@@ -572,8 +572,18 @@ export const ChatMessage: React.FC<Props> = memo(
     }, [message])
 
     const handleThumbsUp = useCallback(() => {
-      if (isThumbsUp) return
+      if (isThumbsUp) {
+        // Unlike action
+        setIsThumbsUp(false)
+        setIsThumbsDown(false)
+        
+        if (onFeedback) {
+          onFeedback(message, null) // Pass null to indicate removal of feedback
+        }
+        return
+      }
 
+      // Regular like action
       setIsThumbsUp(true)
       setIsThumbsDown(false)
       setIsPositiveFeedback(true)
@@ -584,13 +594,23 @@ export const ChatMessage: React.FC<Props> = memo(
     }, [isThumbsUp, onFeedback, message])
 
     const handleThumbsDown = useCallback(() => {
-      if (isThumbsDown) return
+      if (isThumbsDown) {
+        // Remove negative feedback
+        setIsThumbsUp(false)
+        setIsThumbsDown(false)
+        
+        if (onFeedback) {
+          onFeedback(message, null)
+        }
+        return
+      }
 
+      // Regular thumbs down action
       setIsThumbsUp(false)
       setIsThumbsDown(false) // Don't set to true until feedback is submitted
       setIsPositiveFeedback(false)
       setIsFeedbackModalOpen(true)
-    }, [isThumbsDown])
+    }, [isThumbsDown, onFeedback, message])
 
     const handleFeedbackSubmit = useCallback(
       (feedback: string, category?: string) => {
