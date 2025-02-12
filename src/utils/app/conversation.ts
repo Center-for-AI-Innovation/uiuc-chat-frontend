@@ -249,11 +249,16 @@ export async function saveConversationToServer(conversation: Conversation) {
       },
       body: JSON.stringify({ conversation }),
     })
+    
     if (!response.ok) {
-      throw new Error('Error saving conversation')
+      const errorData = await response.json().catch(() => null);
+      const errorMessage = errorData?.error || response.statusText;
+      throw new Error(`Error saving conversation: ${errorMessage}`);
     }
+    
     return response.json()
   } catch (error) {
     console.error('Error saving conversation:', error)
+    throw error; // Re-throw to allow handling by the caller
   }
 }
