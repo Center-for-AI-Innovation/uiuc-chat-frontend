@@ -315,7 +315,7 @@ export default async function handler(
               const contextCount = contexts && Array.isArray(contexts) ? contexts.length : 0;
               const messageSize = new TextEncoder().encode(JSON.stringify(dbMessage)).length;
               
-              console.debug(`Message ${message.id} details:`, {
+              console.debug('Message %s details:', message.id, {
                 contextCount,
                 sizeKB: Math.round(messageSize / 1024 * 100) / 100,
                 role: message.role,
