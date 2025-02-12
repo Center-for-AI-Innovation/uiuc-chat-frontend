@@ -14,6 +14,7 @@ import {
   AllSupportedModels,
   GenericSupportedModel,
 } from '~/utils/modelProviders/LLMProvider'
+import { sanitizeText } from '@/utils/sanitization'
 
 export const config = {
   api: {
@@ -164,19 +165,21 @@ export function convertChatToDBMessage(
   let content_image_urls: string[] = []
   let image_description = ''
   if (typeof chatMessage.content == 'string') {
-    content_text = chatMessage.content
+    content_text = sanitizeText(chatMessage.content)
   } else if (Array.isArray(chatMessage.content)) {
-    content_text = chatMessage.content
-      .filter((content) => content.type === 'text' && content.text)
-      .map((content) => {
-        if ((content.text as string).trim().startsWith('Image description:')) {
-          image_description =
-            content.text?.split(':').slice(1).join(':').trim() || ''
-          return ''
-        }
-        return content.text
-      })
-      .join(' ')
+    content_text = sanitizeText(
+      chatMessage.content
+        .filter((content) => content.type === 'text' && content.text)
+        .map((content) => {
+          if ((content.text as string).trim().startsWith('Image description:')) {
+            image_description =
+              sanitizeText(content.text?.split(':').slice(1).join(':').trim() || '')
+            return ''
+          }
+          return content.text
+        })
+        .join(' ')
+    )
     content_image_urls = chatMessage.content
       .filter((content) => content.type === 'image_url')
       .map((content) => content.image_url?.url || '')
@@ -196,8 +199,8 @@ export function convertChatToDBMessage(
           pagenumber_or_timestamp: context.pagenumber_or_timestamp,
           s3_path: context.s3_path,
           url: context.url,
-          // Truncate text to 100 characters and add ellipsis if needed
-          text: context.text ? (context.text.length > 100 ? context.text.slice(0, 100) + '...' : context.text) : ''
+          // Sanitize and truncate text to 100 characters and add ellipsis if needed
+          text: context.text ? sanitizeText(context.text.length > 100 ? context.text.slice(0, 100) + '...' : context.text) : ''
         }
         
         if (context.s3_path) {
@@ -213,19 +216,19 @@ export function convertChatToDBMessage(
         } 
         return JSON.parse(JSON.stringify(context)) // Ensure context is JSON-compatible
       }) || [],
-    tools: chatMessage.tools || (null as any),
-    latest_system_message: chatMessage.latestSystemMessage || null,
+    tools: chatMessage.tools ? JSON.parse(JSON.stringify(chatMessage.tools)) : null,
+    latest_system_message: chatMessage.latestSystemMessage ? sanitizeText(chatMessage.latestSystemMessage) : null,
     final_prompt_engineered_message:
-      chatMessage.finalPromtEngineeredMessage || null,
+      chatMessage.finalPromtEngineeredMessage ? sanitizeText(chatMessage.finalPromtEngineeredMessage) : null,
     response_time_sec: chatMessage.responseTimeSec || null,
     conversation_id: conversationId,
     created_at: chatMessage.created_at || new Date().toISOString(),
     updated_at: chatMessage.updated_at || new Date().toISOString(),
     feedback_is_positive: chatMessage.feedback?.isPositive ?? null,
-    feedback_category: chatMessage.feedback?.category ?? null,
-    feedback_details: chatMessage.feedback?.details ?? null,
+    feedback_category: chatMessage.feedback?.category ? sanitizeText(chatMessage.feedback.category) : null,
+    feedback_details: chatMessage.feedback?.details ? sanitizeText(chatMessage.feedback.details) : null,
     was_query_rewritten: chatMessage.wasQueryRewritten ?? null,
-    query_rewrite_text: chatMessage.queryRewriteText ?? null,
+    query_rewrite_text: chatMessage.queryRewriteText ? sanitizeText(chatMessage.queryRewriteText) : null,
   }
 }
 
