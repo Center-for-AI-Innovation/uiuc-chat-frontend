@@ -133,7 +133,8 @@ function extractUsedCitationIndexes(content: string | Content[]): number[] {
         .join(' ')
     : content;
 
-  const citationRegex = /\((\d+)(?:,\s*p\.\d+)?\)/g;
+  // Updated regex to match new citation format: (Document Title | citation_number) or (Document Title, p.page_number | citation_number)
+  const citationRegex = /\([^|]+\|\s*(\d+)\)/g;
   const found: number[] = [];
   
   let match;
