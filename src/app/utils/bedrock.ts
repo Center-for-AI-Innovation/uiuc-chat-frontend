@@ -33,13 +33,23 @@ export async function runBedrockChat(
       throw new Error('AWS credentials are missing')
     }
 
+    // const bedrock = createAmazonBedrock({
+    //   accessKeyId: await decryptKeyIfNeeded(bedrockProvider.accessKeyId),
+    //   secretAccessKey: await decryptKeyIfNeeded(bedrockProvider.secretAccessKey),
+    //   region: bedrockProvider.region,
+    //   sessionToken: undefined,
+    // })
     const bedrock = createAmazonBedrock({
-      accessKeyId: await decryptKeyIfNeeded(bedrockProvider.accessKeyId),
-      secretAccessKey: await decryptKeyIfNeeded(
-        bedrockProvider.secretAccessKey,
-      ),
-      region: bedrockProvider.region,
-      sessionToken: undefined,
+      bedrockOptions: {
+        region: bedrockProvider.region,
+        credentials: {
+          accessKeyId: await decryptKeyIfNeeded(bedrockProvider.accessKeyId),
+          secretAccessKey: await decryptKeyIfNeeded(
+            bedrockProvider.secretAccessKey,
+          ),
+          sessionToken: undefined,
+        },
+      },
     })
 
     if (conversation.messages.length === 0) {
