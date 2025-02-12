@@ -20,58 +20,64 @@ export async function runBedrockChat(
   bedrockProvider: BedrockProvider,
   stream: boolean,
 ) {
-  if (!conversation) {
-    throw new Error('Conversation is missing')
-  }
+  try {
+    if (!conversation) {
+      throw new Error('Conversation is missing')
+    }
 
-  if (
-    !bedrockProvider.accessKeyId ||
-    !bedrockProvider.secretAccessKey ||
-    !bedrockProvider.region
-  ) {
-    throw new Error('AWS credentials are missing')
-  }
+    if (
+      !bedrockProvider.accessKeyId ||
+      !bedrockProvider.secretAccessKey ||
+      !bedrockProvider.region
+    ) {
+      throw new Error('AWS credentials are missing')
+    }
 
-  const bedrock = createAmazonBedrock({
-    accessKeyId: await decryptKeyIfNeeded(bedrockProvider.accessKeyId),
-    secretAccessKey: await decryptKeyIfNeeded(bedrockProvider.secretAccessKey),
-    region: bedrockProvider.region,
-  })
-
-  if (conversation.messages.length === 0) {
-    throw new Error('Conversation messages array is empty')
-  }
-
-  const model = bedrock(conversation.model.id)
-
-  const commonParams = {
-    model: model,
-    messages: convertConversationToBedrockFormat(conversation),
-    temperature: conversation.temperature,
-    maxTokens: 4096,
-    type: 'text-delta' as const,
-    tools: {},
-    toolChoice: undefined,
-  }
-
-  if (stream) {
-    const result = await streamText({
-      ...commonParams,
-      messages: commonParams.messages.map((msg) => ({
-        role:
-          msg.role === 'tool'
-            ? 'tool'
-            : msg.role === 'system'
-              ? 'assistant'
-              : msg.role,
-        content: msg.content,
-      })) as CoreMessage[],
+    const bedrock = createAmazonBedrock({
+      accessKeyId: await decryptKeyIfNeeded(bedrockProvider.accessKeyId),
+      secretAccessKey: await decryptKeyIfNeeded(bedrockProvider.secretAccessKey),
+      region: bedrockProvider.region,
     })
-    return result.toTextStreamResponse()
-  } else {
-    const result = await generateText(commonParams)
-    const choices = [{ message: { content: result.text } }]
-    return { choices }
+
+    if (conversation.messages.length === 0) {
+      throw new Error('Conversation messages array is empty')
+    }
+
+    const model = bedrock(conversation.model.id)
+
+    const commonParams = {
+      model: model,
+      messages: convertConversationToBedrockFormat(conversation),
+      temperature: conversation.temperature,
+      maxTokens: 4096,
+      type: 'text-delta' as const,
+      tools: {},
+      toolChoice: undefined,
+    }
+
+    if (stream) {
+      const result = await streamText({
+        ...commonParams,
+        messages: commonParams.messages.map((msg) => ({
+          role:
+            msg.role === 'tool'
+              ? 'tool'
+              : msg.role === 'system'
+                ? 'assistant'
+                : msg.role,
+          content: msg.content,
+        })) as CoreMessage[],
+      })
+      return result.toTextStreamResponse()
+    } else {
+      const result = await generateText(commonParams)
+      const choices = [{ message: { content: result.text } }]
+      return { choices }
+    }
+  } catch (error) {
+    console.log('Error in runBedrockChat:', error)
+    console.error('Error in runBedrockChat:', error)
+    throw error
   }
 }
 
