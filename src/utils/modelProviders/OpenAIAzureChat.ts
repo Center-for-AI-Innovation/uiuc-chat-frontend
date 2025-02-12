@@ -23,8 +23,6 @@ export const openAIAzureChat = async (
       conversation.messages,
     )
 
-    // console.log('messagesToSend', JSON.stringify(messagesToSend, null, 2))
-
     // Get the latest system message
     const latestSystemMessage =
       conversation.messages[conversation.messages.length - 1]

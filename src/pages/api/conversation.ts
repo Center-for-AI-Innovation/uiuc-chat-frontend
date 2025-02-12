@@ -137,7 +137,6 @@ export function convertChatToDBMessage(
   chatMessage: ChatMessage,
   conversationId: string,
 ): DBMessage {
-  console.log('Converting chat message to DB message. Message ID:', chatMessage.id);
   let content_text = ''
   let content_image_urls: string[] = []
   let image_description = ''
@@ -160,18 +159,6 @@ export function convertChatToDBMessage(
       .map((content) => content.image_url?.url || '')
   }
 
-  // console.log('Processing contexts for message:', {
-  //   messageId: chatMessage.id,
-  //   numContexts: chatMessage.contexts?.length || 0
-  // });
-
-  const firstContext = chatMessage.contexts?.[0];
-  // if (firstContext) {
-  //   console.log('First context from message (complete raw object):', JSON.stringify(firstContext, null, 2));
-  //   console.log('Context array type:', Object.prototype.toString.call(chatMessage.contexts));
-  //   console.log('All contexts (complete raw array):', JSON.stringify(chatMessage.contexts, null, 2));
-  // }
-
   return {
     id: chatMessage.id || uuidv4(),
     role: chatMessage.role,
@@ -179,16 +166,7 @@ export function convertChatToDBMessage(
     content_image_url: content_image_urls,
     image_description: image_description,
     contexts:
-      chatMessage.contexts?.map((context, index) => {
-        // console.log('\nProcessing context in convertChatToDBMessage:', {
-        //   fullContext: context,
-        //   index: index,
-        //   hasS3Path: !!context.s3_path,
-        //   hasUrl: !!context.url,
-        //   pagenumber: context.pagenumber,
-        //   pagenumber_or_timestamp: context.pagenumber_or_timestamp
-        // })
-        
+      chatMessage.contexts?.map((context, index) => {        
         const baseContext = {
           readable_filename: context.readable_filename,
           pagenumber: context.pagenumber,
