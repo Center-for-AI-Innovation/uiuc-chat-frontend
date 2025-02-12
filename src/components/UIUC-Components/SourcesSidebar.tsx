@@ -100,11 +100,6 @@ const SourcesSidebar = ({
   }
 
   const getReadableFilename = (context: ContextWithMetadata): string => {
-    console.log('Getting readable filename for context:', {
-      readable_filename: context.readable_filename,
-      s3_path: context.s3_path,
-      url: context.url,
-    })
     return context.readable_filename || 'Unknown'
   }
 
