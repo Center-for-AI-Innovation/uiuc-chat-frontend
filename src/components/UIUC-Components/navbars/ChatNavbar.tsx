@@ -22,7 +22,12 @@ import {
   ChartDots3,
   MessageCode,
 } from 'tabler-icons-react'
-import { IconFileText, IconHome, IconSettings } from '@tabler/icons-react'
+import {
+  IconFileText,
+  IconHome,
+  IconSettings,
+  IconPlus,
+} from '@tabler/icons-react'
 import { useRouter } from 'next/router'
 import { montserrat_heading } from 'fonts'
 import { useUser } from '@clerk/nextjs'
@@ -337,6 +342,9 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
           {/* </div> */}
           {/* </div> */}
           {/* </div> */}
+          {/* </div> */}
+          {/* </div> */}
+          {/* </div> */}
 
           {/* <div style={{ display: 'flex', justifyContent: 'flex-end' }}> */}
           {/* <Flex direction='row' justify='flex-end' styles={{ flex: 1 }}> */}
@@ -524,7 +532,53 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
               <div style={{ display: 'block' }}>
                 <button
                   className={`${classes.link}`}
-                  style={{ padding: '0px 10px', minWidth: '120px' }}
+                  style={{ padding: '3px 12px', minWidth: '120px' }}
+                  onClick={() => {
+                    homeDispatch({ field: 'selectedConversation', value: null })
+                  }}
+                  aria-label="Start a new chat"
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      width: '100%',
+                    }}
+                  >
+                    <IconPlus
+                      size={24}
+                      style={{
+                        position: 'relative',
+                        top: '-2px',
+                        paddingLeft: '-3px',
+                        // marginRight: '-8px',
+                      }}
+                    />
+                    <span
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-center',
+                        padding: '0px',
+                        height: '40px',
+                        whiteSpace: 'nowrap',
+                        marginLeft: '5px',
+                      }}
+                    >
+                      <span
+                        style={{ whiteSpace: 'nowrap' }}
+                        className={`${montserrat_heading.variable} font-montserratHeading`}
+                      >
+                        New Chat
+                      </span>
+                    </span>
+                  </div>
+                </button>
+              </div>
+              <div style={{ display: 'block' }}>
+                <button
+                  className={`${classes.link}`}
+                  style={{ padding: '3px 12px', minWidth: '120px' }}
                   onClick={() => {
                     homeDispatch({
                       field: 'showModelSettings',
@@ -547,26 +601,28 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                         position: 'relative',
                         top: '-2px',
                         paddingLeft: '-3px',
-                        marginRight: '-8px',
+                        // marginRight: '-8px',
                       }}
                     />
                     <span
                       className="home-header_text-underline"
                       style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-center',
+                        padding: '0px',
+                        height: '40px',
+                        whiteSpace: 'nowrap',
+                        marginLeft: '5px',
                         backgroundRepeat: 'no-repeat',
                         backgroundPosition: 'bottom left',
                         backgroundSize: 'contain',
-                        height: '40px',
-                        position: 'relative',
-                        top: '12px',
                       }}
                     >
                       <span
                         style={{ whiteSpace: 'nowrap' }}
                         className={`${montserrat_heading.variable} font-montserratHeading`}
                       >
-                        {/* Model: {modelName} */}
-                        {/* {selectedConversation?.model.name} */}
                         Settings
                       </span>
                     </span>
