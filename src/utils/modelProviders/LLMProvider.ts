@@ -74,19 +74,15 @@ export const VisionCapableModels: Set<
   NCSAHostedVLMModelID.Llama_3_2_11B_Vision_Instruct,
   NCSAHostedVLMModelID.MOLMO_7B_D_0924,
   NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT,
-  BedrockModelID.Claude_3_Sonnet,
   NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT,
   GeminiModelID.Gemini_1_5_Pro,
   GeminiModelID.Gemini_2_0_Flash,
   GeminiModelID.Gemini_1_5_Flash,
   GeminiModelID.Gemini_1_5_Flash_Latest,
-  BedrockModelID.Claude_3_Opus,
-  BedrockModelID.Claude_3_Sonnet,
+  // GeminiModelID.Gemini_1_5_Flash_8b,
+  // GeminiModelID.Gemini_1_5_Flash_8b_Latest,
   // BedrockModelID.Claude_3_5_Sonnet,
-  BedrockModelID.Claude_3_Haiku,
-  // BedrockModelID.Claude_3_5_Haiku,
   BedrockModelID.Claude_3_5_Sonnet_Latest,
-
 ])
 
 export const AllSupportedModels: Set<GenericSupportedModel> = new Set([

@@ -24,6 +24,10 @@ export enum BedrockModelID {
   Llama3_2_3B_Instruct = 'meta.llama3-2-3b-instruct-v1:0',
   Llama3_2_11B_Instruct = 'meta.llama3-2-11b-instruct-v1:0',
   Llama3_2_90B_Instruct = 'meta.llama3-2-90b-instruct-v1:0',
+  Mistral_Small = 'mistral.mistral-small-latest',
+  Mistral_Large = 'mistral.mistral-large-latest',
+  Mistral_Large_2 = 'mistral.mistral-large-2-latest',
+  Mistral_Instruct = 'mistral.mistral-instruct'
 }
 
 export const BedrockModels: Record<BedrockModelID, BedrockModel> = {
@@ -90,37 +94,61 @@ export const BedrockModels: Record<BedrockModelID, BedrockModel> = {
   [BedrockModelID.Llama2_70B]: {
     id: BedrockModelID.Llama2_70B,
     name: 'Llama 2 70B (Bedrock)',
-    tokenLimit: 4096,
+    tokenLimit: 4000,
     enabled: true
   },
   [BedrockModelID.Llama2_13B]: {
     id: BedrockModelID.Llama2_13B,
     name: 'Llama 2 13B (Bedrock)',
-    tokenLimit: 4096,
+    tokenLimit: 4000,
     enabled: true
   },
   [BedrockModelID.Llama3_2_1B_Instruct]: {
     id: BedrockModelID.Llama3_2_1B_Instruct,
     name: 'Llama 3.2 1B Instruct (Bedrock)',
-    tokenLimit: 4096,
+    tokenLimit: 128000,
     enabled: true
   },
   [BedrockModelID.Llama3_2_3B_Instruct]: {
     id: BedrockModelID.Llama3_2_3B_Instruct,
     name: 'Llama 3.2 3B Instruct (Bedrock)',
-    tokenLimit: 4096,
+    tokenLimit: 128000,
     enabled: true
   },
   [BedrockModelID.Llama3_2_11B_Instruct]: {
     id: BedrockModelID.Llama3_2_11B_Instruct,
     name: 'Llama 3.2 11B Instruct (Bedrock)',
-    tokenLimit: 4096,
+    tokenLimit: 128000,
     enabled: true
   },
   [BedrockModelID.Llama3_2_90B_Instruct]: {
     id: BedrockModelID.Llama3_2_90B_Instruct,
     name: 'Llama 3.2 90B Instruct (Bedrock)',
-    tokenLimit: 4096,
+    tokenLimit: 128000,
+    enabled: true
+  },
+  [BedrockModelID.Mistral_Small]: {
+    id: BedrockModelID.Mistral_Small,
+    name: 'Mistral Small (Bedrock)',
+    tokenLimit: 32000,
+    enabled: true
+  },
+  [BedrockModelID.Mistral_Large]: {
+    id: BedrockModelID.Mistral_Large,
+    name: 'Mistral Large (Bedrock)',
+    tokenLimit: 32000,
+    enabled: true
+  },
+  [BedrockModelID.Mistral_Large_2]: {
+    id: BedrockModelID.Mistral_Large_2,
+    name: 'Mistral Large 2 (Bedrock)',
+    tokenLimit: 32000,
+    enabled: true
+  },
+  [BedrockModelID.Mistral_Instruct]: {
+    id: BedrockModelID.Mistral_Instruct,
+    name: 'Mistral Instruct (Bedrock)',
+    tokenLimit: 32000,
     enabled: true
   }
 } 
