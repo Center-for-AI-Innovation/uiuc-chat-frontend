@@ -348,6 +348,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
           {/* </div> */}
           {/* </div> */}
           {/* </div> */}
+          {/* </div> */}
 
           {/* <div style={{ display: 'flex', justifyContent: 'flex-end' }}> */}
           {/* <Flex direction='row' justify='flex-end' styles={{ flex: 1 }}> */}
@@ -602,7 +603,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                       href={item.link}
                       data-active={activeLink === item.link}
                       className={classes.link}
-                      style={{ padding: '3px 8px', minWidth: '100px' }}
+                      style={{ minWidth: '100px' }}
                     >
                       <div
                         style={{
@@ -623,12 +624,14 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                             whiteSpace: 'nowrap',
                             marginLeft: '5px',
                             backgroundRepeat: 'no-repeat',
-                            backgroundPosition: 'bottom -13px left', // controls SVG underline position
+                            backgroundPosition: 'bottom left',
                             backgroundSize: 'contain',
+                            position: 'relative',
+                            top: '12px',
                           }}
                         >
                           <span
-                            style={{ whiteSpace: 'nowrap' }}
+                            style={{ whiteSpace: 'nowrap', marginTop: '-24px' }}
                             className={`${montserrat_heading.variable} font-montserratHeading`}
                           >
                             Admin Dashboard
@@ -755,7 +758,7 @@ export function MessageChatIcon() {
 export function FolderIcon() {
   return (
     <IconHome
-      size={24}
+      size={30}
       strokeWidth={2}
       style={{
         marginRight: '4px',
