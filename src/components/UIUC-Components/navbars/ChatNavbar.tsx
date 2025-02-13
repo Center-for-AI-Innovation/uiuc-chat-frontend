@@ -232,17 +232,17 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
       : []),
     ...(isAdminOrOwner
       ? [
-          {
-            name: (
-              <span
-                className={`${montserrat_heading.variable} font-montserratHeading`}
-              >
-                Chat
-              </span>
-            ),
-            icon: <MessageChatIcon />,
-            link: `/${getCurrentCourseName()}/chat`,
-          },
+          // {
+          //   name: (
+          //     <span
+          //       className={`${montserrat_heading.variable} font-montserratHeading`}
+          //     >
+          //       Chat
+          //     </span>
+          //   ),
+          //   icon: <MessageChatIcon />,
+          //   link: `/${getCurrentCourseName()}/chat`,
+          // },
           {
             name: (
               <span
@@ -337,6 +337,20 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
             ></div>
           )}
           {/* </Flex> */}
+          {/* </div> */}
+          {/* </div> */}
+          {/* </div> */}
+          {/* </div> */}
+          {/* </div> */}
+          {/* </div> */}
+          {/* </div> */}
+          {/* </div> */}
+          {/* </div> */}
+          {/* </div> */}
+          {/* </div> */}
+          {/* </div> */}
+          {/* </div> */}
+          {/* </div> */}
           {/* </div> */}
           {/* </div> */}
           {/* </div> */}
@@ -627,11 +641,11 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                             backgroundPosition: 'bottom left',
                             backgroundSize: 'contain',
                             position: 'relative',
-                            top: '12px',
+                            top: '13px',
                           }}
                         >
                           <span
-                            style={{ whiteSpace: 'nowrap', marginTop: '-24px' }}
+                            style={{ whiteSpace: 'nowrap', marginTop: '-26px' }}
                             className={`${montserrat_heading.variable} font-montserratHeading`}
                           >
                             Admin Dashboard
