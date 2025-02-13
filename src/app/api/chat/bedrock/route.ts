@@ -64,20 +64,22 @@ export async function runBedrockChat(
 
     if (stream) {
       const result = await streamText({
-        ...commonParams,
+        model: model as any,
         messages: commonParams.messages.map((msg) => ({
-          role:
-            msg.role === 'tool'
-              ? 'tool'
-              : msg.role === 'system'
-                ? 'assistant'
-                : msg.role,
+          role: msg.role === 'tool' ? 'tool' : msg.role === 'system' ? 'assistant' : msg.role,
           content: msg.content,
         })) as CoreMessage[],
+        temperature: conversation.temperature,
+        maxTokens: 4096
       })
       return result.toTextStreamResponse()
     } else {
-      const result = await generateText(commonParams)
+      const result = await generateText({
+        model: model as any,
+        messages: commonParams.messages,
+        temperature: conversation.temperature,
+        maxTokens: 4096
+      })
       const choices = [{ message: { content: result.text } }]
       return { choices }
     }
