@@ -347,6 +347,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
           {/* </div> */}
           {/* </div> */}
           {/* </div> */}
+          {/* </div> */}
 
           {/* <div style={{ display: 'flex', justifyContent: 'flex-end' }}> */}
           {/* <Flex direction='row' justify='flex-end' styles={{ flex: 1 }}> */}
@@ -457,7 +458,10 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
             >
               <div className={classes.links}>
                 {items.map((item, index) => {
-                  if (item.link) {
+                  if (
+                    item.link &&
+                    item.name.props.children !== 'Admin Dashboard'
+                  ) {
                     return (
                       <Link
                         key={index}
@@ -491,44 +495,6 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                       </Link>
                     )
                   }
-                  // else {
-                  //   return (
-                  //     <button
-                  //       key={index}
-                  //       onClick={() => {
-                  //         if (item.action) {
-                  //           item.action()
-                  //         }
-                  //       }}
-                  //       data-active={activeLink === item.link}
-                  //       className={classes.link}
-                  //       style={{ padding: '3px 12px' }}
-                  //     >
-                  //       <div
-                  //         style={{
-                  //           display: 'flex',
-                  //           alignItems: 'center',
-                  //           width: '100%',
-                  //         }}
-                  //       >
-                  //         {item.icon}
-                  //         <span
-                  //           style={{
-                  //             display: 'flex',
-                  //             alignItems: 'center',
-                  //             justifyContent: 'flex-center',
-                  //             padding: '0px',
-                  //             height: '40px',
-                  //             whiteSpace: 'nowrap',
-                  //             marginLeft: '5px',
-                  //           }}
-                  //         >
-                  //           {item.name}
-                  //         </span>
-                  //       </div>
-                  //     </button>
-                  //   )
-                  // }
                 })}
               </div>
               <div style={{ display: 'block' }}>
@@ -553,7 +519,6 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                         position: 'relative',
                         top: '-2px',
                         paddingLeft: '-3px',
-                        // marginRight: '-8px',
                       }}
                     />
                     <span
@@ -603,11 +568,9 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                         position: 'relative',
                         top: '-2px',
                         paddingLeft: '-3px',
-                        // marginRight: '-8px',
                       }}
                     />
                     <span
-                      className="home-header_text-underline"
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -616,9 +579,6 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                         height: '40px',
                         whiteSpace: 'nowrap',
                         marginLeft: '5px',
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'bottom left',
-                        backgroundSize: 'contain',
                       }}
                     >
                       <span
@@ -631,6 +591,54 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                   </div>
                 </button>
               </div>
+              {items.map((item, index) => {
+                if (
+                  item.link &&
+                  item.name.props.children === 'Admin Dashboard'
+                ) {
+                  return (
+                    <Link
+                      key={index}
+                      href={item.link}
+                      data-active={activeLink === item.link}
+                      className={classes.link}
+                      style={{ padding: '3px 8px', minWidth: '100px' }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          width: '100%',
+                        }}
+                      >
+                        {item.icon}
+                        <span
+                          className="home-header_text-underline"
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'flex-center',
+                            padding: '0px',
+                            height: '40px',
+                            whiteSpace: 'nowrap',
+                            marginLeft: '5px',
+                            backgroundRepeat: 'no-repeat',
+                            backgroundPosition: 'bottom -13px left', // controls SVG underline position
+                            backgroundSize: 'contain',
+                          }}
+                        >
+                          <span
+                            style={{ whiteSpace: 'nowrap' }}
+                            className={`${montserrat_heading.variable} font-montserratHeading`}
+                          >
+                            Admin Dashboard
+                          </span>
+                        </span>
+                      </div>
+                    </Link>
+                  )
+                }
+              })}
               <div
                 style={{
                   position: 'absolute',
@@ -712,7 +720,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
               </SignedOut>
             </div>
             {/* </div> */}
-            {/* </Flex> */}
+            {/* </div> */}
           </Group>
         </Flex>
         {/* </div> */}
@@ -747,10 +755,14 @@ export function MessageChatIcon() {
 export function FolderIcon() {
   return (
     <IconHome
-      size={20}
+      size={24}
       strokeWidth={2}
-      // color={'white'}
-      style={{ marginRight: '4px', marginLeft: '4px' }}
+      style={{
+        marginRight: '4px',
+        marginLeft: '4px',
+        position: 'relative',
+        top: '-2px',
+      }}
     />
   )
 }
