@@ -88,8 +88,8 @@ const useStyles = createStyles((theme) => ({
     // textTransform: 'uppercase',
     fontSize: rem(12),
     textAlign: 'center',
-    padding: `3px ${theme.spacing.sm}`,
-    margin: '0.2rem',
+    padding: `3px ${theme.spacing.xs}`,
+    margin: '0.2rem 0.1rem',
     fontWeight: 700,
     transition:
       'border-color 100ms ease, color 100ms ease, background-color 100ms ease',
@@ -345,6 +345,8 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
           {/* </div> */}
           {/* </div> */}
           {/* </div> */}
+          {/* </div> */}
+          {/* </div> */}
 
           {/* <div style={{ display: 'flex', justifyContent: 'flex-end' }}> */}
           {/* <Flex direction='row' justify='flex-end' styles={{ flex: 1 }}> */}
@@ -462,7 +464,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                         href={item.link}
                         data-active={activeLink === item.link}
                         className={classes.link}
-                        style={{ padding: '3px 12px' }}
+                        style={{ padding: '3px 8px' }}
                       >
                         <div
                           style={{
@@ -532,7 +534,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
               <div style={{ display: 'block' }}>
                 <button
                   className={`${classes.link}`}
-                  style={{ padding: '3px 12px', minWidth: '120px' }}
+                  style={{ padding: '3px 8px', minWidth: '100px' }}
                   onClick={() => {
                     homeDispatch({ field: 'selectedConversation', value: null })
                   }}
@@ -578,7 +580,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
               <div style={{ display: 'block' }}>
                 <button
                   className={`${classes.link}`}
-                  style={{ padding: '3px 12px', minWidth: '120px' }}
+                  style={{ padding: '3px 8px', minWidth: '100px' }}
                   onClick={() => {
                     homeDispatch({
                       field: 'showModelSettings',
