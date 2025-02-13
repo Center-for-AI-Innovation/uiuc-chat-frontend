@@ -43,8 +43,8 @@ import { runAnthropicChat } from '~/app/utils/anthropic'
 import { NCSAHostedVLMModelID } from './modelProviders/types/NCSAHostedVLM'
 import { runVLLM } from '~/app/utils/vllm'
 import { type CoreMessage, streamText } from 'ai'
-import { runGeminiChat } from '~/app/utils/gemini'
-import { runBedrockChat } from '~/app/utils/bedrock'
+import { runGeminiChat } from '~/app/api/chat/gemini/route'
+import { runBedrockChat } from '~/app/api/chat/bedrock/route'
 
 export const maxDuration = 60
 

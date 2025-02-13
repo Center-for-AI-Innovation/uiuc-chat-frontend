@@ -15,7 +15,6 @@ export enum GeminiModelID {
   Gemini_1_5_Flash_Latest = 'gemini-1.5-flash-latest',
   Gemini_1_5_Flash_8b = 'gemini-1.5-flash-8b',
   Gemini_1_5_Flash_8b_Latest = 'gemini-1.5-flash-8b-latest',
-  Gemini_Pro_Vision = 'gemini-pro-vision', // Keep this for vision capabilities
 }
 
 export const GeminiModels: Record<GeminiModelID, GeminiModel> = {
@@ -59,12 +58,6 @@ export const GeminiModels: Record<GeminiModelID, GeminiModel> = {
   [GeminiModelID.Gemini_1_5_Flash_8b_Latest]: {
     id: GeminiModelID.Gemini_1_5_Flash_8b_Latest,
     name: 'Gemini 1.5 Flash 8B (Latest)',
-    tokenLimit: 32000,
-    enabled: true
-  },
-  [GeminiModelID.Gemini_Pro_Vision]: {
-    id: GeminiModelID.Gemini_Pro_Vision,
-    name: 'Gemini Pro Vision',
     tokenLimit: 32000,
     enabled: true
   }

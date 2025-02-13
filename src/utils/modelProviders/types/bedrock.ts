@@ -19,7 +19,11 @@ export enum BedrockModelID {
   Titan_Express = 'amazon.titan-text-express-v1',
   Titan_Lite = 'amazon.titan-text-lite-v1',
   Llama2_70B = 'meta.llama2-70b-chat-v1',
-  Llama2_13B = 'meta.llama2-13b-chat-v1'
+  Llama2_13B = 'meta.llama2-13b-chat-v1',
+  Llama3_2_1B_Instruct = 'meta.llama3-2-1b-instruct-v1:0',
+  Llama3_2_3B_Instruct = 'meta.llama3-2-3b-instruct-v1:0',
+  Llama3_2_11B_Instruct = 'meta.llama3-2-11b-instruct-v1:0',
+  Llama3_2_90B_Instruct = 'meta.llama3-2-90b-instruct-v1:0',
 }
 
 export const BedrockModels: Record<BedrockModelID, BedrockModel> = {
@@ -92,6 +96,30 @@ export const BedrockModels: Record<BedrockModelID, BedrockModel> = {
   [BedrockModelID.Llama2_13B]: {
     id: BedrockModelID.Llama2_13B,
     name: 'Llama 2 13B (Bedrock)',
+    tokenLimit: 4096,
+    enabled: true
+  },
+  [BedrockModelID.Llama3_2_1B_Instruct]: {
+    id: BedrockModelID.Llama3_2_1B_Instruct,
+    name: 'Llama 3.2 1B Instruct (Bedrock)',
+    tokenLimit: 4096,
+    enabled: true
+  },
+  [BedrockModelID.Llama3_2_3B_Instruct]: {
+    id: BedrockModelID.Llama3_2_3B_Instruct,
+    name: 'Llama 3.2 3B Instruct (Bedrock)',
+    tokenLimit: 4096,
+    enabled: true
+  },
+  [BedrockModelID.Llama3_2_11B_Instruct]: {
+    id: BedrockModelID.Llama3_2_11B_Instruct,
+    name: 'Llama 3.2 11B Instruct (Bedrock)',
+    tokenLimit: 4096,
+    enabled: true
+  },
+  [BedrockModelID.Llama3_2_90B_Instruct]: {
+    id: BedrockModelID.Llama3_2_90B_Instruct,
+    name: 'Llama 3.2 90B Instruct (Bedrock)',
     tokenLimit: 4096,
     enabled: true
   }

@@ -34,9 +34,16 @@ export async function runBedrockChat(
     }
 
     const bedrock = createAmazonBedrock({
-      accessKeyId: await decryptKeyIfNeeded(bedrockProvider.accessKeyId),
-      secretAccessKey: await decryptKeyIfNeeded(bedrockProvider.secretAccessKey),
-      region: bedrockProvider.region,
+      bedrockOptions: {
+        region: bedrockProvider.region,
+        credentials: {
+          accessKeyId: await decryptKeyIfNeeded(bedrockProvider.accessKeyId),
+          secretAccessKey: await decryptKeyIfNeeded(
+            bedrockProvider.secretAccessKey,
+          ),
+          sessionToken: undefined,
+        },
+      },
     })
 
     if (conversation.messages.length === 0) {
