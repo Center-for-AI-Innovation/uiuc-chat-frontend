@@ -8,6 +8,101 @@
   grid-template: auto / repeat(3, 1fr);
 } */
 
+:root {
+  /* Primary Colors */
+  --illinois-orange: #FF5F05;
+  --illinois-blue: #13294B;
+  
+  /* Secondary Colors (Storm) */
+  --illinois-storm-dark: #707372;
+  --illinois-storm-medium: #9C9A9D;
+  --illinois-storm-light: #C8C6C7;
+  --illinois-white: #FFFFFF;
+  --illinois-black: #000000;
+
+  /* Supporting Colors */
+  --illinois-industrial: #1D58A7;
+  --illinois-arches: #009FD4;
+  --illinois-patina: #007E8E;
+  --illinois-berry: #5C0E41;
+  --illinois-harvest: #FCB316;
+  --illinois-prairie: #006230;
+  --illinois-earth: #7D3E13;
+  
+  /* Accessibility Colors */
+  --illinois-altgeld: #C84113;
+
+  /* Background Colors */
+  --illinois-storm-95: #F4F4F4;
+  --illinois-storm-10: #252525;
+
+  /* Existing variables mapped to UIUC colors */
+  --background: var(--illinois-white);
+  --foreground: var(--illinois-storm-10);
+  
+  --primary: var(--illinois-orange);
+  --primary-foreground: var(--illinois-white);
+  
+  --secondary: var(--illinois-blue);
+  --secondary-foreground: var(--illinois-white);
+
+  --muted: var(--illinois-storm-95);
+  --muted-foreground: var(--illinois-storm-dark);
+
+  --accent: var(--illinois-industrial);
+  --accent-foreground: var(--illinois-white);
+
+  --destructive: var(--illinois-berry);
+  --destructive-foreground: var(--illinois-white);
+
+  --border: var(--illinois-storm-light);
+  --input: var(--illinois-storm-light);
+  --ring: var(--illinois-blue);
+
+  --radius: 0.5rem;
+
+  /* Additional UI Colors */
+  --illinois-background-dark: #202123;
+  --illinois-background-darker: #0e1116;
+  --illinois-purple: #2e026d;
+  --illinois-purple-dark: #15162c;
+  --illinois-link: #4a4ae8;
+  --illinois-scrollbar-hover: #807f7f;
+  --illinois-gold: #ffd700;
+  --illinois-purple-light: #9d4edd;
+
+  
+  /* Gradients */
+  --illinois-blue-gradient: linear-gradient(to top, #1d58a7, #13294b);
+  --illinois-orange-gradient: linear-gradient(to top, #fcb316, #ff5f05);
+}
+.illinois-blue-gradient-bg {
+  background-image: var(--illinois-blue-gradient);
+}
+.dark {
+  --background: var(--illinois-blue);
+  --foreground: var(--illinois-white);
+
+  --primary: var(--illinois-orange);
+  --primary-foreground: var(--illinois-blue);
+
+  --secondary: var(--illinois-storm-dark);
+  --secondary-foreground: var(--illinois-white);
+
+  --muted: var(--illinois-storm-10);
+  --muted-foreground: var(--illinois-storm-light);
+
+  --accent: var(--illinois-industrial);
+  --accent-foreground: var(--illinois-white);
+
+  --destructive: var(--illinois-berry);
+  --destructive-foreground: var(--illinois-white);
+
+  --border: var(--illinois-storm-dark);
+  --input: var(--illinois-storm-dark);
+  --ring: var(--illinois-orange);
+}
+
 /* Force dark mode for all users!! */
 @media (prefers-color-scheme: dark) {
   html {
@@ -48,7 +143,7 @@
 }
 
 html {
-  background: #202123;
+  background: var(--illinois-background-dark);
 }
 
 @media (max-width: 720px) {
@@ -87,15 +182,13 @@ pre:has(div.codeblock) {
 /* Make the purple background fade out  */
 .course-page-main {
   /* height: 400px;     */
-  background: -webkit-gradient(
-    linear,
-    left top,
-    left bottom,
-    from(#2e026d),
-    to(#020307),
-    color-stop(0.75, #15162c)
-  );
-  background-color: #020307;
+  background: -webkit-gradient(linear,
+      left top,
+      left bottom,
+      from(var(--illinois-purple)),
+      to(var(--illinois-background-darker)),
+      color-stop(0.75, var(--illinois-purple-dark)));
+  background-color: var(--illinois-background-darker);
   background-size:
     100% 45%,
     0%;
@@ -128,7 +221,7 @@ pre:has(div.codeblock) {
   right: 0;
   width: 40%;
   height: 1.2em;
-  background: linear-gradient(to right, rgba(255, 255, 255, 0), #0e1116 90%);
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), var(--illinois-background-darker) 90%);
 }
 
 .fade-3-lines::after {
@@ -139,7 +232,7 @@ pre:has(div.codeblock) {
   right: 0;
   width: 40%;
   height: 1.2em;
-  background: linear-gradient(to right, rgba(255, 255, 255, 0), #0e1116 90%);
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), var(--illinois-background-darker) 90%);
 }
 
 /* Standard list properties. Didn't work before manually adding this. */
@@ -159,7 +252,7 @@ li {
 
 .kas-gradient-text {
   background-color: #f3ec78;
-  background-image: linear-gradient(45deg, #f3ec78, #af4261);
+  background-image: var(--illinois-warm-gradient);
   background-size: 100%;
   -webkit-background-clip: text;
   -moz-background-clip: text;
@@ -185,7 +278,7 @@ li {
 }
 
 .tag-item {
-  background-color: #020307;
+  background-color: var(--illinois-background-darker);
   display: inline-block;
   font-size: 16px;
   border-radius: 30px;
@@ -197,7 +290,7 @@ li {
 }
 
 .tag-item button {
-  background-color: blueviolet;
+  background-color: var(--illinois-blueviolet);
   width: 22px;
   height: 22px;
   border-radius: 50%;
@@ -218,7 +311,7 @@ li {
 
 .goldUnderline {
   text-decoration: underline;
-  text-decoration-color: gold;
+  text-decoration-color: var(--illinois-gold);
   color: inherit;
 }
 
@@ -248,7 +341,7 @@ li {
   position: relative;
   overflow: hidden;
   /* background-color: #020307; */
-  background-color: #070712;
+  background-color: var(--illinois-blue);
 }
 
 .skeleton-box::after {
@@ -258,13 +351,16 @@ li {
   bottom: 0;
   left: 0;
   transform: translateX(-100%);
-  background-image: linear-gradient(
-    90deg,
-    rgba(99, 39, 175, 0) 0,
-    rgba(75, 85, 72, 0.2) 20%,
-    rgba(30, 64, 175, 0.5) 60%,
-    rgba(66, 1, 95, 0)
-  );
+  background-image: linear-gradient(90deg,
+      rgba(19, 41, 75, 0),
+      /* illinois-blue */
+      rgba(112, 115, 114, 0.2),
+      /* illinois-storm-dark */
+      rgba(29, 88, 167, 0.5),
+      /* illinois-industrial */
+      rgba(92, 14, 65, 0)
+      /* illinois-berry */
+    );
   /* Changed the primary color to purple-900 */
   animation: shimmer 5s infinite;
   content: '';
@@ -284,31 +380,31 @@ li {
   /* For vertical scrollbars */
   height: 6px;
   /* For horizontal scrollbars */
-  background-color: #202134;
+  background-color: var(--illinois-storm-dark);
 }
 
 ::-webkit-scrollbar-corner {
-  background-color: #070711;
+  background-color: var(--illinois-blue);
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #ccc;
+  background-color: var(--illinois-storm-medium);
   border-radius: 10px;
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #807f7f;
+  background-color: var(--illinois-scrollbar-hover);
   border-radius: 4px;
 }
 
 @keyframes pulsate {
   0% {
-    color: #ffffff;
+    color: var(--illinois-white);
   }
 
   100% {
-    color: #9d4edd;
+    color: var(--illinois-purple-light);
   }
 }
 
@@ -330,8 +426,8 @@ a[data-footnote-backref] {
   border-radius: 50%;
   font-size: 75%;
   line-height: 1;
-  color: #4a4ae8;
-  background-color: #2d2d2d;
+  color: var(--illinois-industrial);
+  background-color: var(--illinois-storm-dark);
   margin-right: 4px;
   padding: 2px 4px;
   border: none;
@@ -340,13 +436,13 @@ a[data-footnote-backref] {
 
 /* Styling for visited citation links */
 .supMarkdown a:visited {
-  color: rgb(173, 92, 227);
+  color: var(--illinois-berry);
 }
 
 .supMarkdown a:hover,
 .supMarkdown a:focus {
-  background-color: blueviolet;
-  color: #ffffff;
+  background-color: var(--illinois-industrial);
+  color: var(--illinois-white);
   cursor: pointer;
 }
 
@@ -356,6 +452,8 @@ a[data-footnote-backref] {
     /* Smaller font size on smaller screens */
     padding: 5px 10px;
     /* Adjust padding to ensure text doesn't overlap */
+    color: var(--illinois-industrial);
+    background-color: var(--illinois-blue);
   }
 }
 
@@ -374,8 +472,8 @@ a[data-footnote-backref] {
   font-size: 1rem;
   /* Adjust font size to fit the buttons */
   padding: 10px 10px;
-  color: #4a4ae8;
-  background-color: #15162c;
+  color: var(--illinois-link);
+  background-color: var(--illinois-purple-dark);
   border-radius: 5px;
   border: none;
   text-decoration: none;
@@ -395,8 +493,8 @@ a[data-footnote-backref] {
 /* Hover and focus states for document buttons */
 .linkMarkDown button:not(.codeblock-button):hover,
 .linkMarkDown button:not(.codeblock-button):focus {
-  background-color: blueviolet;
-  color: #ffffff;
+  background-color: var(--illinois-blueviolet);
+  color: var(--illinois-white);
   cursor: pointer;
 }
 
@@ -407,7 +505,7 @@ a[data-footnote-backref] {
 
 /* Visited state for document buttons */
 .linkMarkDown button:not(.codeblock-button):visited {
-  color: rgb(173, 92, 227);
+  color: var(--illinois-berry);
 }
 
 .linkMarkDown ol:has(> li > button) {
@@ -420,7 +518,7 @@ a[data-footnote-backref] {
   /* Padding inside the card */
   margin: 20px 0;
   /* Margin around the card */
-  background-color: #1e1e2f;
+  background-color: var(--illinois-purple-dark);
   /* Slightly lighter than the button background for contrast */
   border-radius: 10px;
   /* Rounded corners for the card */
@@ -443,7 +541,7 @@ a[data-footnote-backref] {
 }
 
 .codeBlock pre:has(> code) {
-  background-color: #101122 !important;
+  background-color: var(--illinois-purple-dark) !important;
 }
 
 /* Style for individual list items */
@@ -464,15 +562,15 @@ a[data-footnote-backref] {
 /* For styling MagicBell. We hide the logo, but keep the CTA button.  */
 /* `EnablePushNotificationsButton` works on localhost, `css-s37qmw` works on production. */
 body button[class$='EnablePushNotificationsButton'] {
-  background-color: #f8fafc !important;
-  color: #15162c !important;
+  background-color: var(--illinois-storm-95) !important;
+  color: var(--illinois-purple-dark) !important;
 }
 
 /* padding: 10px !important; */
 /* border-radius: 4px !important; */
 button.css-s37qmw {
-  background: #f8fafc !important;
-  color: #15162c !important;
+  background: var(--illinois-storm-95) !important;
+  color: var(--illinois-purple-dark) !important;
 }
 
 /* Remove branded footer from MagicBell (only works on prod w/ compiled css) */
@@ -490,6 +588,7 @@ button.css-s37qmw {
   from {
     --r: 0deg;
   }
+
   to {
     --r: 360deg;
   }

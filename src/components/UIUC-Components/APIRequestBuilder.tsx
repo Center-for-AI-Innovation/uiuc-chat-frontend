@@ -161,6 +161,25 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
 });`,
   }
 
+  const styles = {
+    container: {
+      backgroundColor: 'var(--illinois-background-darker)',
+      border: '1px solid var(--illinois-storm-dark)',
+    },
+    input: {
+      backgroundColor: 'var(--illinois-background-dark)',
+      color: 'var(--illinois-white)',
+      border: '1px solid var(--illinois-storm-light)',
+    },
+    button: {
+      backgroundColor: 'var(--illinois-industrial)',
+      color: 'var(--illinois-white)',
+      '&:hover': {
+        backgroundColor: 'var(--illinois-blue)',
+      },
+    },
+  }
+
   return (
     <div className="w-full px-4 sm:px-10">
       <Title
