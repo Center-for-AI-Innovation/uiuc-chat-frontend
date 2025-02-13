@@ -582,7 +582,6 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                     </Button>
                   }
                   rightSectionWidth={'auto'}
-                  styles={styles.input}
                 />
               )}
             </div>
