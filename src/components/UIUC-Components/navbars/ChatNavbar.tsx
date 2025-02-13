@@ -168,6 +168,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
   const {
     state: { showModelSettings, selectedConversation },
     dispatch: homeDispatch,
+    handleNewConversation,
   } = useContext(HomeContext)
 
   const topBarRef = useRef<HTMLDivElement | null>(null)
@@ -517,7 +518,15 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                   className={`${classes.link}`}
                   style={{ padding: '3px 8px', minWidth: '100px' }}
                   onClick={() => {
-                    homeDispatch({ field: 'selectedConversation', value: null })
+                    handleNewConversation()
+                    setTimeout(() => {
+                      const chatInput = document.querySelector(
+                        'textarea.chat-input',
+                      ) as HTMLTextAreaElement
+                      if (chatInput) {
+                        chatInput.focus()
+                      }
+                    }, 100)
                   }}
                   aria-label="Start a new chat"
                 >
