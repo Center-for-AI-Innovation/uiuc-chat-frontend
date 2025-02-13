@@ -34,22 +34,25 @@ const Home: NextPage = () => {
 
       <LandingPageHeader />
 
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#0E1116]">
+      <main className="flex min-h-screen flex-col items-center justify-center illinois-blue-gradient-bg">
         <div className="container flex w-full max-w-[95vw] flex-col items-center justify-center gap-4 px-4 py-8">
           <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
-            UIUC.<span className="text-[hsl(280,100%,70%)]">chat</span>
+            UIUC.<span className="text-[var(--illinois-orange)]">chat</span>
           </h1>
           <div className="w-full max-w-4xl">
             {/* size="lg"
             py="l"
             style={{ position: 'relative', minHeight: '100%' }} */}
             <Title
-              color="#57534e"
+              color="var(--illinois-storm-dark)"
               order={2}
               variant="gradient"
               weight={800}
-              // gradient={{ from: 'indigo', to: 'cyan', deg: 45 }}
-              gradient={{ from: 'pink', to: 'blue', deg: 45 }}
+              gradient={{
+                from: 'var(--illinois-orange)',
+                to: 'var(--illinois-industrial)',
+                deg: 45
+              }}
               ta="center"
               mt="md"
             >
@@ -83,12 +86,12 @@ const Home: NextPage = () => {
           <h4 className="font-extrabold tracking-tight text-white sm:text-[3rem]">
             <div>
               Some background{' '}
-              <span className="text-[hsl(280,100%,70%)]">about us</span>
+              <span className="text-[var(--illinois-orange)]">about us</span>
             </div>
           </h4>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
             <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
+              className="flex max-w-xs flex-col gap-4 rounded-xl bg-[var(--illinois-white)]/10 p-4 text-[var(--illinois-white)] hover:bg-[var(--illinois-white)]/20"
               href="https://github.com/kastanday/ai-ta-frontend"
               target="_blank"
             >
@@ -99,7 +102,7 @@ const Home: NextPage = () => {
               </div>
             </Link>
             <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
+              className="flex max-w-xs flex-col gap-4 rounded-xl bg-[var(--illinois-white)]/10 p-4 text-[var(--illinois-white)] hover:bg-[var(--illinois-white)]/20"
               href="https://ai.ncsa.illinois.edu/"
               target="_blank"
             >
@@ -111,7 +114,7 @@ const Home: NextPage = () => {
               </div>
             </Link>
             <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
+              className="flex max-w-xs flex-col gap-4 rounded-xl bg-[var(--illinois-white)]/10 p-4 text-[var(--illinois-white)] hover:bg-[var(--illinois-white)]/20"
               href="https://kastanday.com/"
               target="_blank"
             >
@@ -123,7 +126,7 @@ const Home: NextPage = () => {
             </Link>
 
             <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
+              className="flex max-w-xs flex-col gap-4 rounded-xl bg-[var(--illinois-white)]/10 p-4 text-[var(--illinois-white)] hover:bg-[var(--illinois-white)]/20"
               href="https://status.uiuc.chat/"
               target="_blank"
             >
@@ -199,7 +202,7 @@ const useStyles = createStyles((theme) => ({
     '&::after': {
       content: '""',
       display: 'block',
-      backgroundColor: 'white', //theme.fn.primaryColor(),
+      backgroundColor: 'var(--illinois-white)',
       width: rem(45),
       height: rem(2),
       marginTop: theme.spacing.sm,
@@ -209,16 +212,14 @@ const useStyles = createStyles((theme) => ({
   },
 
   card: {
-    border: `${rem(1)} solid ${
-      theme.colorScheme === 'dark' ? theme.colors.dark[5] : theme.colors.gray[1]
-    }`,
+    border: `${rem(1)} solid var(--illinois-storm-light)`,
   },
 
   cardTitle: {
     '&::after': {
       content: '""',
       display: 'block',
-      backgroundColor: 'white', //theme.fn.primaryColor(),
+      backgroundColor: 'var(--illinois-white)',
       width: rem(45),
       height: rem(2),
       marginTop: theme.spacing.sm,
@@ -230,7 +231,7 @@ export function FeaturesCards() {
   const { classes, theme } = useStyles()
   const features = mockdata.map((feature) => (
     <Card
-      bg="#0E1116"
+      bg="var(--illinois-background-darker)"
       key={feature.title}
       shadow="md"
       radius="md"
@@ -238,9 +239,9 @@ export function FeaturesCards() {
       padding="xl"
       style={{ position: 'relative', minHeight: '100%' }}
     >
-      <feature.icon size={rem(50)} stroke={2} color="#C06BF9" />
+      <feature.icon size={rem(50)} stroke={2} color="var(--illinois-orange)" />
       <Text
-        color="white"
+        color="var(--illinois-white)"
         fz="lg"
         fw={500}
         className={classes.cardTitle}
@@ -248,7 +249,7 @@ export function FeaturesCards() {
       >
         {feature.title}
       </Text>
-      <Text style={{ color: 'white' }} fz="sm" c="dimmed" mt="sm">
+      <Text style={{ color: 'var(--illinois-white)' }} fz="sm" c="dimmed" mt="sm">
         {feature.description}
       </Text>
     </Card>
@@ -343,10 +344,10 @@ function CourseCard() {
       {cards.map((card) => (
         <div
           key={card.course_slug}
-          className="box-sizing: border-box; border: 100px solid #ccc;"
+          className="box-sizing: border-box; border: 100px solid var(--illinois-storm-light);"
         >
           <Card
-            bg="#0E1116"
+            bg="var(--illinois-background-darker)"
             style={{
               width: '80vw',
               height: 'auto',
@@ -383,7 +384,7 @@ function CourseCard() {
                 >
                   {card.title}
                 </Text>
-                <Badge size="xl" color="pink" variant="light">
+                <Badge size="xl" color="var(--illinois-orange)" variant="light">
                   {card.badge}
                 </Badge>
               </Group>
@@ -393,7 +394,7 @@ function CourseCard() {
                   dangerouslySetInnerHTML={{
                     __html: card.description.replace(
                       /<a/g,
-                      '<a style="color: lightblue; text-decoration: underline;"',
+                      '<a style="color: var(--illinois-arches); text-decoration: underline;"',
                     ),
                   }}
                 />
@@ -402,7 +403,10 @@ function CourseCard() {
               <Link href={`/${card.course_slug}/chat`}>
                 <Button
                   variant="light"
-                  color="blue"
+                  style={{
+                    backgroundColor: 'var(--illinois-industrial)',
+                    color: 'var(--illinois-white)',
+                  }}
                   fullWidth
                   mt="md"
                   radius="md"

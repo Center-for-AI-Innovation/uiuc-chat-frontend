@@ -13,18 +13,18 @@ import { IconClipboardText, IconFile } from '@tabler/icons-react'
 export default function Header({ isNavbar = false }: { isNavbar?: boolean }) {
   const headerStyle = isNavbar
     ? {
-        backgroundColor: '#15162c',
-        display: 'flex',
-        justifyContent: 'flex-end',
-        padding: '0.2em 0.2em',
-        paddingRight: '0.3em',
-      }
+      backgroundColor: 'var(--illinois-blue)',  
+      display: 'flex',
+      justifyContent: 'flex-end',
+      padding: '0.2em 0.2em',
+      paddingRight: '0.3em',
+    }
     : {
-        backgroundColor: '#2e026d',
-        display: 'flex',
-        justifyContent: 'flex-end',
-        padding: '1em',
-      }
+      backgroundImage: 'var(--illinois-blue)',  
+      display: 'flex',
+      justifyContent: 'flex-end',
+      padding: '1em',
+    }
 
   const clerk_obj = useUser()
   const posthog = usePostHog()
@@ -114,17 +114,18 @@ export function LandingPageHeader({
   const { classes, theme } = useStyles()
   const headerStyle = forGeneralPurposeNotLandingpage
     ? {
-        backgroundColor: '#2e026d',
-        display: 'flex',
-        justifyContent: 'flex-end',
-        padding: '2em 2em',
-      }
+      backgroundColor: 'var(--illinois-blue)',  
+      display: 'flex',
+      justifyContent: 'flex-end',
+      padding: '0.2em 0.2em',
+      paddingRight: '0.3em',
+    }
     : {
-        backgroundColor: '#2e026d',
-        display: 'flex',
-        justifyContent: 'flex-end',
-        padding: '1em',
-      }
+      backgroundColor: 'var(--illinois-blue)',  
+      display: 'flex',
+      justifyContent: 'flex-end',
+      padding: '1em',
+    }
 
   const clerk_obj = useUser()
   const [userEmail, setUserEmail] = useState('no_email')
@@ -305,29 +306,26 @@ const useStyles = createStyles((theme) => ({
     },
   },
   link: {
-    // textTransform: 'uppercase',
     fontSize: rem(13),
-    color: '#f1f5f9',
+    color: 'var(--illinois-white)',  
     padding: `${theme.spacing.sm} ${theme.spacing.xs}`,
-    // margin: '0.35rem',
     fontWeight: 700,
-    transition:
-      'border-color 100ms ease, color 100ms ease, background-color 100ms ease',
-    borderRadius: theme.radius.sm, // added to make the square edges round
+    transition: 'border-color 100ms ease, color 100ms ease, background-color 100ms ease',
+    borderRadius: theme.radius.sm,
 
     '&:hover': {
-      color: 'hsl(280,100%,70%)', // make the hovered color lighter
+      color: 'var(--illinois-industrial)',  
       backgroundColor: 'rgba(255, 255, 255, 0.1)',
       textDecoration: 'none',
       borderRadius: '10px',
     },
     '&[data-active="true"]': {
-      color: 'hsl(280,100%,70%)',
-      borderBottom: '2px solid hsl(280,100%,70%)', // make the bottom border of the square thicker and same color as "AI"
-      textDecoration: 'none', // remove underline
-      borderRadius: '10px', // added to make the square edges round when hovered
-      backgroundColor: 'rgba(255, 255, 255, 0.1)', // add a background color when the link is active
-      textAlign: 'right', // align the text to the right
+      color: 'var(--illinois-industrial)',  
+      borderBottom: '2px solid var(--illinois-industrial)',  
+      textDecoration: 'none',
+      borderRadius: '10px',
+      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      textAlign: 'right',
     },
   },
 }))
