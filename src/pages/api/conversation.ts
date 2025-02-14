@@ -247,7 +247,8 @@ export default async function handler(
         const dbConversation = convertChatToDBConversation(conversation)
 
         if (conversation.messages.length === 0) {
-          throw new Error('No messages in conversation, not saving!')
+          // Return success without saving - no need to throw an error
+          return res.status(200).json({ message: 'No messages to save' });
         }
         // Save conversation to Supabase
         const { data, error } = await supabase
