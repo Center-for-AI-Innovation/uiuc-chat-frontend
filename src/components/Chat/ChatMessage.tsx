@@ -791,20 +791,6 @@ export const ChatMessage: React.FC<Props> = memo(
       processTools()
     }, [message.tools])
 
-    // Add this function before the return statement
-    const transformContexts = (contexts: ContextWithMetadata[]) => {      
-      return contexts.map((context, index) => {
-        const readable_filename = context.readable_filename
-        const page_number = context.pagenumber
-
-        return {
-          ...context,
-          readable_filename,
-          page_number
-        }
-      })
-    }
-
     // Add this useEffect for loading thumbnails
     useEffect(() => {
       let isMounted = true;
@@ -1916,7 +1902,7 @@ export const ChatMessage: React.FC<Props> = memo(
         {isSourcesSidebarOpen && (
           <SourcesSidebar
             isOpen={isSourcesSidebarOpen}
-            contexts={transformContexts(message.contexts || [])}
+            contexts={message.contexts || []}
             onClose={handleSourcesSidebarClose}
             hideRightSidebarIcon={isAnySidebarOpen}
             courseName={courseName}
