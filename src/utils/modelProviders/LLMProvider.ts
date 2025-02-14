@@ -82,7 +82,12 @@ export const VisionCapableModels: Set<
   // GeminiModelID.Gemini_1_5_Flash_8b,
   // GeminiModelID.Gemini_1_5_Flash_8b_Latest,
   // BedrockModelID.Claude_3_5_Sonnet,
+  // BedrockModelID.Claude_3_Haiku,
+  // BedrockModelID.Claude_3_Sonnet,
+  // BedrockModelID.Claude_3_Opus,
   BedrockModelID.Claude_3_5_Sonnet_Latest,
+  // BedrockModelID.Llama3_2_11B_Instruct,
+  // BedrockModelID.Llama3_2_90B_Instruct
 ])
 
 export const AllSupportedModels: Set<GenericSupportedModel> = new Set([
