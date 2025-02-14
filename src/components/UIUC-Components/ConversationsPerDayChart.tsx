@@ -1,5 +1,5 @@
 // src/components/UIUC-Components/ConversationsPerDayChart.tsx
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import {
   BarChart,
   Bar,
@@ -19,6 +19,7 @@ interface ChartProps {
   data?: { [date: string]: number }
   isLoading: boolean
   error: string | null
+  dateRange: DateRange
 }
 
 const formatDate = (dateString: string) => {
@@ -49,51 +50,57 @@ const formatDate = (dateString: string) => {
   })
 }
 
+const generateDateRange = (startDate: Date, endDate: Date) => {
+  const dates: { date: string; count: number }[] = []
+  const currentDate = new Date(startDate)
+
+  // Loop through each day in the range
+  while (currentDate <= endDate) {
+    const dateStr = currentDate.toISOString().split('T')[0]
+    dates.push({
+      date: dateStr,
+      count: 0, // Default to 0 conversations
+    })
+    currentDate.setDate(currentDate.getDate() + 1)
+  }
+  return dates
+}
+
+const ensureCompleteDateRange = (
+  data: { [date: string]: number } | undefined,
+  range: DateRange,
+) => {
+  if (!data || !range.startDate || !range.endDate) return []
+
+  // Generate full range of dates within the selected period
+  const completeDates = generateDateRange(range.startDate, range.endDate)
+
+  // Fill in actual conversation counts where they exist
+  completeDates.forEach((dateObj) => {
+    if (data[dateObj.date]) {
+      dateObj.count = data[dateObj.date]
+    }
+  })
+
+  return completeDates
+}
+
 const ConversationsPerDayChart: React.FC<ChartProps> = ({
   data,
   isLoading,
   error,
+  dateRange,
 }) => {
-  const [useLogScale, setUseLogScale] = useState(false)
+  const chartData = useMemo(() => {
+    return ensureCompleteDateRange(data, dateRange)
+  }, [data, dateRange])
 
-  const getCustomTicks = useMemo(
-    () =>
-      (min: number, max: number): number[] => {
-        if (!useLogScale) return []
+  const yAxisDomain = useMemo(() => {
+    if (!chartData.length) return [0, 1]
 
-        const ticks: number[] = []
-        let tick = 1
-        while (tick <= max) {
-          if (tick >= min) ticks.push(tick)
-          if (tick === 1) tick = 2
-          else if (tick === 2) tick = 5
-          else if (tick === 5) tick = 10
-          else if (tick.toString().startsWith('1')) tick *= 2
-          else if (tick.toString().startsWith('2')) tick = tick * 2.5
-          else tick *= 2
-        }
-        return ticks
-      },
-    [useLogScale],
-  )
-
-  const chartData = useMemo(
-    () =>
-      Object.keys(data || {})
-        .sort()
-        .map((date) => ({
-          date,
-          count: data?.[date] || 0,
-        })),
-    [data],
-  )
-
-  const { maxValue, minValue } = useMemo(() => {
     const values = chartData.map((item) => item.count)
-    return {
-      maxValue: Math.max(...values),
-      minValue: Math.min(...values),
-    }
+    const maxValue = Math.max(...values)
+    return [0, Math.ceil(maxValue * 1.1)]
   }, [chartData])
 
   if (isLoading) {
@@ -112,10 +119,6 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
     return <Text>No data available</Text>
   }
 
-  const yAxisDomain = useLogScale
-    ? [Math.max(1, minValue), Math.ceil(maxValue * 1.1)]
-    : [0, Math.ceil(maxValue * 1.1)]
-
   const determineInterval = (dataLength: number): number => {
     if (dataLength <= 25) return 0
     if (dataLength <= 40) return 1
@@ -124,8 +127,6 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
     return Math.ceil(dataLength / 30)
   }
 
-  const xAxisInterval = determineInterval(chartData.length)
-
   const getYAxisLabelPadding = (data: { count: number }[]) => {
     const maxValue = Math.max(...data.map((item) => item.count))
     const digits = maxValue.toString().length
@@ -133,99 +134,69 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
   }
 
   return (
-    <div>
-      <div className="mb-4 flex items-center justify-end gap-2">
-        <Text size="sm" color="dimmed">
-          Linear
-        </Text>
-        <Switch
-          checked={useLogScale}
-          onChange={(event) => setUseLogScale(event.currentTarget.checked)}
-          size="sm"
-          color="violet"
-          aria-label="Toggle between linear and logarithmic scale"
-          title="Switch between linear and logarithmic scale visualization"
-        />
-        <Text size="sm" color="dimmed">
-          Logarithmic
-        </Text>
-      </div>
-
-      <div
-        style={{ width: '100%', height: 400 }}
-        role="region"
-        aria-label="Conversations per day visualization"
-      >
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={chartData}
-            margin={{ top: 20, right: 30, left: 20, bottom: 50 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="#3a3a4a" />
-            <XAxis
-              dataKey="date"
-              tick={{
-                fill: '#fff',
-                fontFamily: montserrat_paragraph.style.fontFamily,
-                fontSize: chartData.length > 30 ? 12 : 15,
-                dx: chartData.length > 30 ? -3 : -5,
-                dy: 8,
-              }}
-              angle={chartData.length > 15 ? -45 : 0}
-              label={{
-                value: 'Date',
-                position: 'insideBottom',
-                offset: -20,
-                fill: '#fff',
-                fontFamily: montserrat_paragraph.style.fontFamily,
-                dy: 25,
-              }}
-              tickFormatter={formatDate}
-              tickMargin={chartData.length > 30 ? 15 : 25}
-              interval={xAxisInterval}
-            />
-
-            <YAxis
-              allowDecimals={false}
-              tick={{
-                fill: '#fff',
-                fontFamily: montserrat_paragraph.style.fontFamily,
-              }}
-              label={{
-                value: useLogScale
-                  ? 'Number of Conversations (log scale)'
-                  : 'Number of Conversations',
-                angle: -90,
-                position: 'center',
-                fill: '#fff',
-                fontFamily: montserrat_paragraph.style.fontFamily,
-                dx: getYAxisLabelPadding(chartData),
-              }}
-              scale={useLogScale ? 'log' : 'linear'}
-              domain={yAxisDomain}
-              ticks={
-                useLogScale ? getCustomTicks(minValue, maxValue) : undefined
-              }
-              tickFormatter={(value) => Math.round(value).toString()}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: '#15162c',
-                borderColor: '#3a3a4a',
-                color: '#fff',
-                fontFamily: montserrat_paragraph.style.fontFamily,
-              }}
-              formatter={(value: number) => [`Conversations: ${value}`]}
-              labelFormatter={(label) => `Date: ${label}`}
-            />
-            <Bar
-              dataKey="count"
-              fill="#7e57c2"
-              name="Number of Conversations"
-            />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+    <div
+      style={{ width: '100%', height: 400 }}
+      role="region"
+      aria-label="Conversations per day visualization"
+    >
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          data={chartData}
+          margin={{ top: 20, right: 30, left: 20, bottom: 50 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="#3a3a4a" />
+          <XAxis
+            dataKey="date"
+            tick={{
+              fill: '#fff',
+              fontFamily: montserrat_paragraph.style.fontFamily,
+              fontSize: chartData.length > 5 ? 11 : 14,
+              angle: chartData.length > 5 ? -45 : 0,
+              textAnchor: chartData.length > 5 ? 'end' : 'middle',
+              dx: chartData.length > 5 ? 0 : 0,
+              dy: chartData.length > 5 ? 8 : 8,
+            }}
+            height={60}
+            tickFormatter={formatDate}
+            interval={determineInterval(chartData.length)}
+            label={{
+              value: 'Date',
+              position: 'insideBottom',
+              offset: -10,
+              fill: '#fff',
+              fontFamily: montserrat_paragraph.style.fontFamily,
+              dy: 25,
+            }}
+          />
+          <YAxis
+            allowDecimals={false}
+            domain={yAxisDomain}
+            tick={{
+              fill: '#fff',
+              fontFamily: montserrat_paragraph.style.fontFamily,
+            }}
+            label={{
+              value: 'Number of Conversations',
+              angle: -90,
+              position: 'center',
+              fill: '#fff',
+              fontFamily: montserrat_paragraph.style.fontFamily,
+              dx: getYAxisLabelPadding(chartData),
+            }}
+          />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: '#15162c',
+              borderColor: '#3a3a4a',
+              color: '#fff',
+              fontFamily: montserrat_paragraph.style.fontFamily,
+            }}
+            formatter={(value: number) => [`Conversations: ${value}`]}
+            labelFormatter={(label) => `Date: ${formatDate(label)}`}
+          />
+          <Bar dataKey="count" fill="#7e57c2" name="Number of Conversations" />
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   )
 }
