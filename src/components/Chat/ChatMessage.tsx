@@ -259,6 +259,13 @@ function extractThinkTagContent(content: string): { thoughts: string | null; rem
   return { thoughts: null, remainingContent: content };
 }
 
+// Add this helper function at the top
+function decodeHtmlEntities(str: string | undefined): string {
+  if (!str) return '';
+  const doc = new DOMParser().parseFromString(str, 'text/html');
+  return doc.body.textContent || str;
+}
+
 export const ChatMessage: React.FC<Props> = memo(
   ({
     message,
@@ -850,33 +857,56 @@ export const ChatMessage: React.FC<Props> = memo(
     async function replaceExpiredLinksInText(text: string | undefined): Promise<string> {
       if (!text) return '';
       
-      // Updated regex to capture page numbers in the URL
-      const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\)]+(?:#page=\d+)?)\)/g;
+      // Simplified regex to match markdown links first, then we'll check if they're citations
+      const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
       let match;
       let finalText = text;
-      const tasks = [];
 
       while ((match = linkRegex.exec(text)) !== null) {
-        const [fullMatch, linkText, linkUrl] = match;
-        if (linkUrl) {
-          tasks.push(
-            (async () => {
-              // Extract page number if present
-              const url = new URL(linkUrl);
-              const pageNumber = url.hash ? url.hash : '';  // Includes #page=X if present
-              url.hash = ''; // Remove hash before processing the main URL
-              
-              const refreshed = await refreshS3LinkIfExpired(url.toString(), courseName);
-              if (refreshed !== url.toString()) {
-                // Reconstruct the link with the page number if it existed
-                const newUrl = pageNumber ? `${refreshed}${pageNumber}` : refreshed;
-                finalText = finalText.replace(fullMatch, `[${linkText}](${newUrl})`);
-              }
-            })()
-          );
+        try {
+          const fullMatch = match[0];
+          const citationText = match[1] || '';
+          let linkUrl = match[2];
+
+          // Decode HTML entities in the URL
+          linkUrl = decodeHtmlEntities(linkUrl);
+
+          // Only process if it looks like a citation (contains a pipe character)
+          if (!citationText.includes('|')) {
+            continue;
+          }
+
+          if (!linkUrl) {
+            continue;
+          }
+
+          // Extract page number if present
+          const url = new URL(linkUrl);
+          
+          // Only process S3 URLs
+          if (!url.hostname.includes('s3') && !url.hostname.includes('amazonaws')) {
+            continue;
+          }
+          
+          const pageNumber = url.hash || '';  // Includes #page=X if present
+          url.hash = ''; // Remove hash before processing the main URL
+          
+          const refreshed = await refreshS3LinkIfExpired(url.toString(), courseName);
+          
+          // Only replace if the URL actually changed
+          if (refreshed !== url.toString()) {
+            // Reconstruct the link with the page number if it existed
+            const newUrl = pageNumber ? `${refreshed}${pageNumber}` : refreshed;
+            // Use regex-safe replacement to avoid special characters issues
+            const escapedFullMatch = fullMatch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            finalText = finalText.replace(new RegExp(escapedFullMatch, 'g'), `[${citationText}](${newUrl})`);
+          }
+        } catch (error) {
+          console.error('Error processing link:', error);
+          continue;
         }
       }
-      await Promise.all(tasks);
+      
       return finalText;
     }
 
@@ -884,11 +914,10 @@ export const ChatMessage: React.FC<Props> = memo(
     async function refreshS3LinkIfExpired(originalLink: string, courseName: string): Promise<string> {
       try {
         const urlObject = new URL(originalLink);
-
+        
         // Is it actually an S3 presigned link?
         const isS3Presigned = urlObject.searchParams.has('X-Amz-Signature');
         if (!isS3Presigned) {
-          // If it's not a presigned S3 link, just return it unchanged
           return originalLink;
         }
 
@@ -896,7 +925,7 @@ export const ChatMessage: React.FC<Props> = memo(
         dayjs.extend(utc);
         let creationDateString = urlObject.searchParams.get('X-Amz-Date') as string;
 
-        // If missing or malformed, treat it as expired, so we can attempt to fetch new
+        // If missing or malformed, treat it as expired
         if (!creationDateString) {
           return await getNewPresignedUrl(originalLink, courseName);
         }
@@ -910,17 +939,17 @@ export const ChatMessage: React.FC<Props> = memo(
         const creationDate = dayjs.utc(creationDateString, 'YYYY-MM-DDTHH:mm:ss[Z]');
         const expiresInSecs = Number(urlObject.searchParams.get('X-Amz-Expires') || '0');
         const expiryDate = creationDate.add(expiresInSecs, 'second');
+        const now = dayjs();
 
         // If link is expired, fetch a new one
-        if (expiryDate.toDate() < new Date()) {
+        if (expiryDate.isBefore(now)) {
           return await getNewPresignedUrl(originalLink, courseName);
         }
 
-        // Otherwise, original is still valid
         return originalLink;
       } catch (error) {
         console.error('Failed to refresh S3 link:', error);
-        return originalLink; // fallback to original if something goes wrong
+        return originalLink;
       }
     }
 
@@ -929,7 +958,7 @@ export const ChatMessage: React.FC<Props> = memo(
       return await fetchPresignedUrl(s3path, courseName) as string;
     }
 
-    // Add effect for refreshing S3 links
+    // Modify the useEffect for refreshing S3 links
     useEffect(() => {
       async function refreshS3LinksInContent() {
         const contentToProcess = message.content;
@@ -938,7 +967,6 @@ export const ChatMessage: React.FC<Props> = memo(
           const updatedContent = await Promise.all(
             contentToProcess.map(async (contentObj) => {
               if (contentObj.type === 'text') {
-                // During streaming, don't process S3 links to avoid delays
                 const newText = messageIsStreaming ? 
                   contentObj.text : 
                   await replaceExpiredLinksInText(contentObj.text);
@@ -951,7 +979,6 @@ export const ChatMessage: React.FC<Props> = memo(
         } else if (typeof contentToProcess === 'string') {
           const { thoughts, remainingContent } = extractThinkTagContent(contentToProcess);
           if (thoughts) {
-            // During streaming, don't process S3 links to avoid delays
             const processedThoughts = messageIsStreaming ? 
               thoughts : 
               await replaceExpiredLinksInText(thoughts);
