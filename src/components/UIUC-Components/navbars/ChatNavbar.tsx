@@ -211,10 +211,17 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
 
   return (
     <div
-      className={`${isgpt4 ? 'bg-[#15162c]' : 'bg-[#2e026d]'} -mr-0 pb-16 pl-5`}
+      className={`${isgpt4 ? 'bg-[#15162c]' : 'bg-[#2e026d]'} -mr-0 px-12 pb-16 pl-5`}
       style={{ display: show ? 'block' : 'none' }}
     >
-      <div style={{ paddingTop: 'Opx', maxWidth: '100vw', marginRight: '0px' }}>
+      <div
+        style={{
+          paddingTop: 'Opx',
+          maxWidth: '100vw',
+          marginRight: '0px',
+          paddingLeft: '17px',
+        }}
+      >
         <Flex
           justify="flex-start"
           direction="row"
