@@ -15,19 +15,11 @@ import {
   Transition,
 } from '@mantine/core'
 import { spotlight } from '@mantine/spotlight'
-import {
-  MessageChatbot,
-  Folder,
-  ReportAnalytics,
-  ChartDots3,
-  MessageCode,
-} from 'tabler-icons-react'
-import { IconFileText, IconHome, IconSettings } from '@tabler/icons-react'
+import { IconHome, IconSettings, IconPlus } from '@tabler/icons-react'
 import { useRouter } from 'next/router'
 import { montserrat_heading } from 'fonts'
 import { useUser } from '@clerk/nextjs'
 import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
-import { type CourseMetadata } from '~/types/courseMetadata'
 import HomeContext from '~/pages/api/home/home.context'
 import { UserSettings } from '../../Chat/UserSettings'
 // import MagicBell, {
@@ -70,21 +62,19 @@ const useStyles = createStyles((theme) => ({
     justifyContent: 'space-between',
   },
   links: {
-    // padding: 'theme.spacing.sm, 5px, 5px',
     padding: 'theme.spacing.lg, 1em, 1em',
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    [theme.fn.smallerThan(1118)]: {
+    [theme.fn.smallerThan(825)]: {
       display: 'none',
     },
   },
   link: {
-    // textTransform: 'uppercase',
     fontSize: rem(12),
     textAlign: 'center',
-    padding: `3px ${theme.spacing.sm}`,
-    margin: '0.2rem',
+    padding: `3px ${theme.spacing.xs}`,
+    margin: '0.2rem 0.1rem',
     fontWeight: 700,
     transition:
       'border-color 100ms ease, color 100ms ease, background-color 100ms ease',
@@ -103,7 +93,7 @@ const useStyles = createStyles((theme) => ({
       backgroundColor: 'rgba(255, 255, 255, 0.1)',
       textAlign: 'right',
     },
-    [theme.fn.smallerThan(1118)]: {
+    [theme.fn.smallerThan(825)]: {
       display: 'list-item',
       textAlign: 'center',
       borderRadius: 0,
@@ -112,9 +102,8 @@ const useStyles = createStyles((theme) => ({
     },
   },
   burger: {
-    [theme.fn.largerThan(1118)]: {
+    [theme.fn.largerThan(825)]: {
       display: 'none',
-      marginRight: '8px',
     },
     marginRight: '3px',
     marginLeft: '0px',
@@ -122,20 +111,35 @@ const useStyles = createStyles((theme) => ({
   dropdown: {
     position: 'absolute',
     top: HEADER_HEIGHT,
-    // left: '71%',
     right: '20px',
     zIndex: 10,
     borderRadius: '10px',
     overflow: 'hidden',
     width: '200px',
-    [theme.fn.largerThan(1118)]: {
+    [theme.fn.largerThan(825)]: {
       display: 'none',
     },
   },
+  adminDashboard: {
+    [theme.fn.smallerThan(825)]: {
+      display: 'none',
+    },
+    display: 'block',
+  },
+  settings: {
+    [theme.fn.smallerThan(675)]: {
+      display: 'none',
+    },
+    display: 'block',
+  },
+  newChat: {
+    [theme.fn.smallerThan(500)]: {
+      display: 'none',
+    },
+    display: 'block',
+  },
   modelSettings: {
     position: 'absolute',
-    // top: '600px',
-    // left: '-50px',
     zIndex: 10,
     borderRadius: '10px',
     boxShadow: '0px 8px 16px 0px rgba(0,0,0,0.2)',
@@ -158,11 +162,15 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
   const [opened, { toggle }] = useDisclosure(false)
   const [show, setShow] = useState(true)
   const [isAdminOrOwner, setIsAdminOrOwner] = useState(false)
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== 'undefined' ? window.innerWidth : 825,
+  )
   const clerk_user = useUser()
   const posthog = usePostHog()
   const {
     state: { showModelSettings, selectedConversation },
     dispatch: homeDispatch,
+    handleNewConversation,
   } = useContext(HomeContext)
 
   const topBarRef = useRef<HTMLDivElement | null>(null)
@@ -209,71 +217,14 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
     fetchCourses()
   }, [clerk_user.isLoaded, clerk_user.isSignedIn])
 
-  const items = [
-    ...(spotlight
-      ? [
-          // {
-          //   name: (
-          //     <span
-          //       className={`${montserrat_heading.variable} font-montserratHeading`}
-          //     >
-          //       Groups/Tools
-          //     </span>
-          //   ),
-          //   icon: <SpotlightIcon />,
-          //   action: () => spotlight.open(), // This opens the Spotlight
-          // },
-        ]
-      : []),
-    ...(isAdminOrOwner
-      ? [
-          {
-            name: (
-              <span
-                className={`${montserrat_heading.variable} font-montserratHeading`}
-              >
-                Chat
-              </span>
-            ),
-            icon: <MessageChatIcon />,
-            link: `/${getCurrentCourseName()}/chat`,
-          },
-          {
-            name: (
-              <span
-                className={`${montserrat_heading.variable} font-montserratHeading`}
-              >
-                Admin Dashboard
-              </span>
-            ),
-            icon: <FolderIcon />,
-            link: `/${getCurrentCourseName()}/dashboard`,
-          },
-          // {
-          //   name: (
-          //     <span
-          //       className={`${montserrat_heading.variable} font-montserratHeading`}
-          //     >
-          //       Analysis
-          //     </span>
-          //   ),
-          //   icon: <ReportIcon />,
-          //   link: `/${getCurrentCourseName()}/query-analysis`,
-          // },
-          // {
-          //   name: (
-          //     <span
-          //       className={`${montserrat_heading.variable} font-montserratHeading`}
-          //     >
-          //       Prompting
-          //     </span>
-          //   ),
-          //   icon: <SettingIcon />,
-          //   link: `/${getCurrentCourseName()}/prompt`,
-          // },
-        ]
-      : []),
-  ]
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth)
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   return (
     <div
@@ -331,15 +282,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
               }}
             ></div>
           )}
-          {/* </Flex> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
 
-          {/* <div style={{ display: 'flex', justifyContent: 'flex-end' }}> */}
-          {/* <Flex direction='row' justify='flex-end' styles={{ flex: 1 }}> */}
           <Group
             position="right"
             styles={{ marginLeft: 'auto', flexWrap: 'nowrap' }}
@@ -363,79 +306,116 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                     minWidth: '120px',
                   }}
                 >
-                  {items.map((item, index) => {
-                    if (item.link) {
-                      return (
-                        <Link
-                          key={index}
-                          href={item.link}
-                          onClick={() => {
-                            // setActiveLink(router.asPath.split('?')[0]!)
-                            toggle()
-                          }}
-                          data-active={activeLink === item.link}
-                          className={classes.link}
-                          style={{
-                            width: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
+                  {/* New Chat button in hamburger when screen is small */}
+                  <div
+                    className={classes.link}
+                    style={{
+                      display: windowWidth <= 500 && opened ? 'block' : 'none',
+                      padding: 0,
+                    }}
+                  >
+                    <div
+                      onClick={() => {
+                        handleNewConversation()
+                        toggle()
+                        setTimeout(() => {
+                          const chatInput = document.querySelector(
+                            'textarea.chat-input',
+                          ) as HTMLTextAreaElement
+                          if (chatInput) {
+                            chatInput.focus()
+                          }
+                        }, 100)
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        cursor: 'pointer',
+                        height: '100%',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <IconPlus size={24} />
+                        <span
+                          className={`${montserrat_heading.variable} font-montserratHeading`}
+                          style={{ marginLeft: '8px' }}
                         >
-                          {item.icon}
+                          New Chat
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Settings button in hamburger when screen is small */}
+                  <div
+                    className={classes.link}
+                    style={{
+                      display: windowWidth <= 675 && opened ? 'block' : 'none',
+                      padding: 0,
+                    }}
+                  >
+                    <div
+                      onClick={() => {
+                        homeDispatch({
+                          field: 'showModelSettings',
+                          value: !showModelSettings,
+                        })
+                        toggle()
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        cursor: 'pointer',
+                        height: '100%',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <IconSettings size={24} />
+                        <span
+                          className={`${montserrat_heading.variable} font-montserratHeading`}
+                          style={{ marginLeft: '8px' }}
+                        >
+                          Settings
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Admin Dashboard in hamburger when screen is small */}
+                  {isAdminOrOwner && (
+                    <div
+                      className={classes.link}
+                      style={{
+                        display:
+                          windowWidth <= 825 && opened ? 'block' : 'none',
+                        padding: 0,
+                      }}
+                    >
+                      <Link
+                        href={`/${getCurrentCourseName()}/dashboard`}
+                        onClick={() => toggle()}
+                        style={{
+                          width: '100%',
+                          padding: '8px',
+                          cursor: 'pointer',
+                          textDecoration: 'none',
+                          color: 'inherit',
+                          display: 'block',
+                          height: '100%',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <IconHome size={24} />
                           <span
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'flex-center',
-                              padding: '0px',
-                              whiteSpace: 'nowrap',
-                              width: '100%',
-                            }}
+                            className={`${montserrat_heading.variable} font-montserratHeading`}
+                            style={{ marginLeft: '8px' }}
                           >
-                            {item.name}
+                            Admin Dashboard
                           </span>
-                        </Link>
-                      )
-                    }
-                    // else {
-                    //   return (
-                    //     <button
-                    //       key={index}
-                    //       onClick={() => {
-                    //         if (item.action) {
-                    //           item.action()
-                    //         }
-                    //         toggle()
-                    //       }}
-                    //       data-active={activeLink === item.link}
-                    //       className={classes.link}
-                    //       style={{ width: '100%' }}
-                    //     >
-                    //       <div
-                    //         style={{
-                    //           display: 'flex',
-                    //           alignItems: 'center',
-                    //         }}
-                    //       >
-                    //         {item.icon}
-                    //         <span
-                    //           style={{
-                    //             display: 'flex',
-                    //             alignItems: 'center',
-                    //             justifyContent: 'flex-center',
-                    //             padding: '0px',
-                    //             whiteSpace: 'nowrap',
-                    //             width: '100%',
-                    //           }}
-                    //         >
-                    //           {item.name}
-                    //         </span>
-                    //       </div>
-                    //     </button>
-                    //   )
-                    // }
-                  })}
+                        </div>
+                      </Link>
+                    </div>
+                  )}
                 </Paper>
               )}
             </Transition>
@@ -446,85 +426,65 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
               style={{ padding: 0, margin: 0 }}
             >
               <div className={classes.links}>
-                {items.map((item, index) => {
-                  if (item.link) {
-                    return (
-                      <Link
-                        key={index}
-                        href={item.link}
-                        data-active={activeLink === item.link}
-                        className={classes.link}
-                        style={{ padding: '3px 12px' }}
-                      >
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            width: '100%',
-                          }}
-                        >
-                          {item.icon}
-                          <span
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'flex-center',
-                              padding: '0px',
-                              height: '40px',
-                              whiteSpace: 'nowrap',
-                              marginLeft: '5px',
-                            }}
-                          >
-                            {item.name}
-                          </span>
-                        </div>
-                      </Link>
-                    )
-                  }
-                  // else {
-                  //   return (
-                  //     <button
-                  //       key={index}
-                  //       onClick={() => {
-                  //         if (item.action) {
-                  //           item.action()
-                  //         }
-                  //       }}
-                  //       data-active={activeLink === item.link}
-                  //       className={classes.link}
-                  //       style={{ padding: '3px 12px' }}
-                  //     >
-                  //       <div
-                  //         style={{
-                  //           display: 'flex',
-                  //           alignItems: 'center',
-                  //           width: '100%',
-                  //         }}
-                  //       >
-                  //         {item.icon}
-                  //         <span
-                  //           style={{
-                  //             display: 'flex',
-                  //             alignItems: 'center',
-                  //             justifyContent: 'flex-center',
-                  //             padding: '0px',
-                  //             height: '40px',
-                  //             whiteSpace: 'nowrap',
-                  //             marginLeft: '5px',
-                  //           }}
-                  //         >
-                  //           {item.name}
-                  //         </span>
-                  //       </div>
-                  //     </button>
-                  //   )
-                  // }
-                })}
+                {/* Navigation links can be added here if needed */}
               </div>
-              <div style={{ display: 'block' }}>
+              <div className={classes.newChat}>
                 <button
                   className={`${classes.link}`}
-                  style={{ padding: '0px 10px', minWidth: '120px' }}
+                  style={{ padding: '3px 8px', minWidth: '100px' }}
+                  onClick={() => {
+                    handleNewConversation()
+                    setTimeout(() => {
+                      const chatInput = document.querySelector(
+                        'textarea.chat-input',
+                      ) as HTMLTextAreaElement
+                      if (chatInput) {
+                        chatInput.focus()
+                      }
+                    }, 100)
+                  }}
+                  aria-label="Start a new chat"
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      width: '100%',
+                    }}
+                  >
+                    <IconPlus
+                      size={24}
+                      style={{
+                        position: 'relative',
+                        top: '-2px',
+                        paddingLeft: '-3px',
+                      }}
+                    />
+                    <span
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-center',
+                        padding: '0px',
+                        height: '40px',
+                        whiteSpace: 'nowrap',
+                        marginLeft: '5px',
+                      }}
+                    >
+                      <span
+                        style={{ whiteSpace: 'nowrap' }}
+                        className={`${montserrat_heading.variable} font-montserratHeading`}
+                      >
+                        New Chat
+                      </span>
+                    </span>
+                  </div>
+                </button>
+              </div>
+              <div className={classes.settings}>
+                <button
+                  className={`${classes.link}`}
+                  style={{ padding: '3px 8px', minWidth: '100px' }}
                   onClick={() => {
                     homeDispatch({
                       field: 'showModelSettings',
@@ -547,27 +507,97 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                         position: 'relative',
                         top: '-2px',
                         paddingLeft: '-3px',
-                        marginRight: '-8px',
                       }}
                     />
                     <span
-                      className="home-header_text-underline"
                       style={{
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'bottom left',
-                        backgroundSize: 'contain',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-center',
+                        padding: '0px',
                         height: '40px',
-                        position: 'relative',
-                        top: '12px',
+                        whiteSpace: 'nowrap',
+                        marginLeft: '5px',
                       }}
                     >
                       <span
                         style={{ whiteSpace: 'nowrap' }}
                         className={`${montserrat_heading.variable} font-montserratHeading`}
                       >
-                        {/* Model: {modelName} */}
-                        {/* {selectedConversation?.model.name} */}
                         Settings
+                      </span>
+                    </span>
+                  </div>
+                </button>
+              </div>
+              <div className={classes.adminDashboard}>
+                <button
+                  className={`${classes.link}`}
+                  style={{ padding: '3px 8px', minWidth: '100px' }}
+                  onClick={(e) => {
+                    // Handle click with modifier keys
+                    if (e.ctrlKey || e.metaKey || e.shiftKey) {
+                      window.open(
+                        `/${getCurrentCourseName()}/dashboard`,
+                        '_blank',
+                      )
+                    } else {
+                      router.push(`/${getCurrentCourseName()}/dashboard`)
+                    }
+                  }}
+                  onAuxClick={(e) => {
+                    // Handle middle click (button 1)
+                    if (e.button === 1) {
+                      window.open(
+                        `/${getCurrentCourseName()}/dashboard`,
+                        '_blank',
+                      )
+                    }
+                  }}
+                  onContextMenu={(e) => {
+                    // Don't prevent default to allow normal right-click menu
+                    // But add the URL to the clipboard
+                    navigator.clipboard.writeText(
+                      `${window.location.origin}/${getCurrentCourseName()}/dashboard`,
+                    )
+                  }}
+                  aria-label={`Go to dashboard`}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      width: '100%',
+                      position: 'relative',
+                    }}
+                  >
+                    <IconHome
+                      size={30}
+                      strokeWidth={2}
+                      style={{
+                        marginRight: '4px',
+                        marginLeft: '4px',
+                        position: 'relative',
+                        top: '-2px',
+                      }}
+                    />
+                    <span
+                      style={{
+                        backgroundImage:
+                          "url('/media/hero-header-underline-reflow.svg')",
+                        backgroundRepeat: 'no-repeat',
+                        backgroundSize: 'contain',
+                        backgroundPosition: 'bottom',
+                        width: '100%',
+                        height: '40px',
+                        position: 'relative',
+                        top: '13px',
+                      }}
+                    >
+                      <span
+                        className={`${montserrat_heading.variable} font-montserratHeading`}
+                      >
+                        Admin Dashboard
                       </span>
                     </span>
                   </div>
@@ -581,9 +611,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                   top: '75px',
                 }}
               >
-                <UserSettings
-                // ref={modelSettingsContainer}
-                />
+                <UserSettings />
               </div>
             </Container>
 
@@ -610,30 +638,6 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
             >
               <SignedIn>
                 <Group grow spacing={'xs'}>
-                  {/* <div /> */}
-                  {/* <div style={{ paddingLeft: '10px', paddingRight: '8px' }} /> */}
-
-                  {/* render the MagicBell until userEmail is valid otherwise there is a warning message of userEmail */}
-                  {/* {userEmail !== 'no_email' && (
-                    <MagicBell
-                      apiKey={process.env.NEXT_PUBLIC_MAGIC_BELL_API as string}
-                      userEmail={userEmail}
-                      theme={magicBellTheme}
-                      locale="en"
-                      images={{
-                        emptyInboxUrl:
-                          'https://assets.kastan.ai/minified_empty_chat_art.png',
-                      }}
-                    >
-                      {(props) => (
-                        <FloatingNotificationInbox
-                          width={400}
-                          height={500}
-                          {...props}
-                        />
-                      )}
-                    </MagicBell>
-                  )} */}
                   <UserButton afterSignOutUrl="/" />
                 </Group>
               </SignedIn>
@@ -653,79 +657,10 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                 </SignInButton>
               </SignedOut>
             </div>
-            {/* </div> */}
-            {/* </Flex> */}
           </Group>
         </Flex>
-        {/* </div> */}
       </div>
     </div>
   )
 }
 export default ChatNavbar
-
-export function SpotlightIcon() {
-  return (
-    <IconFileText
-      size={20}
-      strokeWidth={2}
-      // color={'white'}
-      style={{ marginRight: '4px', marginLeft: '4px' }}
-    />
-  )
-}
-
-export function MessageChatIcon() {
-  return (
-    <MessageChatbot
-      size={20}
-      strokeWidth={2}
-      // color={'white'}
-      style={{ marginRight: '4px', marginLeft: '4px' }}
-    />
-  )
-}
-
-export function FolderIcon() {
-  return (
-    <IconHome
-      size={20}
-      strokeWidth={2}
-      // color={'white'}
-      style={{ marginRight: '4px', marginLeft: '4px' }}
-    />
-  )
-}
-
-export function ReportIcon() {
-  return (
-    <ReportAnalytics
-      size={20}
-      strokeWidth={2}
-      // color={'white'}
-      style={{ marginRight: '4px', marginLeft: '4px' }}
-    />
-  )
-}
-
-export function SettingIcon() {
-  return (
-    <MessageCode
-      size={20}
-      strokeWidth={2}
-      // color={'white'}
-      style={{ marginRight: '4px', marginLeft: '4px' }}
-    />
-  )
-}
-
-export function ChartDots3Icon() {
-  return (
-    <ChartDots3
-      size={20}
-      strokeWidth={2}
-      // color={'white'}
-      style={{ marginRight: '4px', marginLeft: '4px' }}
-    />
-  )
-}
