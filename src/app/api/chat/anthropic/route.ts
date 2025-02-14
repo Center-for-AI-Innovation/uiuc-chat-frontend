@@ -7,8 +7,16 @@ import {
 } from '~/utils/modelProviders/types/anthropic'
 import { ProviderNames } from '~/utils/modelProviders/LLMProvider'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
-export const dynamic = 'force-dynamic'
-export const maxDuration = 60
+
+// Configure for Node.js runtime with larger payload support
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb'
+    },
+    responseLimit: false
+  },
+}
 
 import { NextResponse } from 'next/server'
 

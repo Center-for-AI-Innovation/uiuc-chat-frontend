@@ -3,7 +3,15 @@ import { OpenAIStream, StreamingTextResponse } from 'ai'
 import { NextResponse } from 'next/server'
 import { decrypt } from '~/utils/crypto'
 
-export const runtime = 'edge'
+// Configure for Node.js runtime with larger payload support
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb'
+    },
+    responseLimit: false
+  },
+}
 
 export async function POST(req: Request) {
   try {

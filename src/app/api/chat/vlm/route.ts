@@ -3,6 +3,16 @@ import { NextResponse } from 'next/server'
 import { createOpenAI } from '@ai-sdk/openai'
 import { convertConversationToCoreMessagesWithoutSystem } from '~/utils/apiUtils'
 
+// Configure for Node.js runtime with larger payload support
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb'
+    },
+    responseLimit: false
+  },
+}
+
 export async function POST(req: Request) {
   try {
     const { conversation, stream } = await req.json()

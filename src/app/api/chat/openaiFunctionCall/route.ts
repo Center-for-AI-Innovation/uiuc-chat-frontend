@@ -9,7 +9,15 @@ import type {
 import { Conversation } from '~/types/chat'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 
-export const runtime = 'edge'
+// Configure for Node.js runtime with larger payload support
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb'
+    },
+    responseLimit: false
+  },
+}
 
 const conversationToMessages = (
   inputData: Conversation,
