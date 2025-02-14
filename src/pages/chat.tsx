@@ -1,4 +1,4 @@
-// export { default } from '~/pages/api/home'
+// This is uiuc.chat/chat - useful to everyone as a free alternative to ChatGPT.com and Claude.ai.
 
 import { NextPage } from 'next'
 import Home from '~/pages/api/home/home'
@@ -9,13 +9,13 @@ const ChatPage: NextPage = () => {
     course_owner: 'kvday2@illinois.edu',
     course_admins: ['kvday2@illinois.edu'],
     approved_emails_list: [],
-    example_questions: [],
+    example_questions: [''],
     banner_image_s3: '',
     course_intro_message: `Welcome to UIUC.chat. Use this page as a free alternative to ChatGPT.com and Claude.ai. 
 
-There's free and unlimited access to all the leading open source LLMs that we host here at UIUC's National Center for Supercomputing Applications (NCSA). 
+You have unlimited access to the leading open source LLMs. We host them here at the University of Illinois' National Center for Supercomputing Applications (NCSA). 
 
-Learn more at ai.ncsa.illinois.edu`,
+Supported by the Center for AI Innovation: https://ai.ncsa.illinois.edu`,
     system_prompt:
       "You are a helpful assistant. Follow the user's instructions carefully. Respond using markdown.",
     openai_api_key: '',
