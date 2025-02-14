@@ -983,8 +983,9 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     </div>
                   </div>
                 </div>
+                {/* Date Range Selection */}
                 <div className="mb-4 mt-8">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-4">
                     <div>
                       <Text
                         size="lg"
@@ -998,12 +999,12 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         periods
                       </Text>
                     </div>
-                    <Group>
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                       <Select
                         value={dateRangeType}
                         onChange={handleDateRangeChange}
                         data={dateRangeOptions}
-                        className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                        className={`${montserrat_paragraph.variable} w-full font-montserratParagraph sm:w-[200px]`}
                         styles={(theme) => ({
                           input: {
                             backgroundColor: '#232438',
@@ -1040,8 +1041,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                             })
                           }}
                           minDate={firstConversationDate || undefined}
-                          maxDate={new Date()} // Today
-                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                          maxDate={new Date()}
+                          className={`${montserrat_paragraph.variable} w-full font-montserratParagraph sm:w-auto`}
                           styles={(theme) => ({
                             input: {
                               backgroundColor: '#232438',
@@ -1055,10 +1056,17 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                               backgroundColor: '#232438',
                               borderColor: theme.colors.grape[8],
                             },
+                            day: {
+                              '&[data-selected]': {
+                                backgroundColor: theme.colors.grape[8],
+                              },
+                            },
                           })}
+                          clearable={false}
+                          placeholder="Pick date range"
                         />
                       )}
-                    </Group>
+                    </div>
                   </div>
                 </div>
 
