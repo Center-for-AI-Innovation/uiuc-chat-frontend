@@ -93,7 +93,7 @@ const useStyles = createStyles((theme, { isAdmin }: { isAdmin: boolean }) => ({
       backgroundColor: 'rgba(255, 255, 255, 0.1)',
       textAlign: 'right',
     },
-    [theme.fn.smallerThan(825)]: {
+    [theme.fn.smallerThan(isAdmin ? 825 : 500)]: {
       display: 'list-item',
       textAlign: 'center',
       borderRadius: 0,
@@ -102,7 +102,7 @@ const useStyles = createStyles((theme, { isAdmin }: { isAdmin: boolean }) => ({
     },
   },
   burger: {
-    [theme.fn.largerThan(isAdmin ? 825 : 675)]: {
+    [theme.fn.largerThan(isAdmin ? 825 : 500)]: {
       display: 'none',
     },
     marginRight: '3px',
@@ -116,7 +116,7 @@ const useStyles = createStyles((theme, { isAdmin }: { isAdmin: boolean }) => ({
     borderRadius: '10px',
     overflow: 'hidden',
     width: '200px',
-    [theme.fn.largerThan(825)]: {
+    [theme.fn.largerThan(isAdmin ? 825 : 500)]: {
       display: 'none',
     },
   },
@@ -127,13 +127,13 @@ const useStyles = createStyles((theme, { isAdmin }: { isAdmin: boolean }) => ({
     display: 'block',
   },
   settings: {
-    [theme.fn.smallerThan(675)]: {
+    [theme.fn.smallerThan(isAdmin ? 675 : 500)]: {
       display: 'none',
     },
     display: 'block',
   },
   newChat: {
-    [theme.fn.smallerThan(500)]: {
+    [theme.fn.smallerThan(isAdmin ? 675 : 350)]: {
       display: 'none',
     },
     display: 'block',
@@ -220,11 +220,16 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
   useEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth)
+      if (isAdminOrOwner && window.innerWidth > 825) {
+        opened && toggle()
+      } else if (!isAdminOrOwner && window.innerWidth > 500) {
+        opened && toggle()
+      }
     }
 
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
-  }, [])
+  }, [opened, toggle])
 
   return (
     <div
@@ -310,7 +315,10 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                   <div
                     className={classes.link}
                     style={{
-                      display: windowWidth <= 500 && opened ? 'block' : 'none',
+                      display:
+                        windowWidth <= (isAdminOrOwner ? 500 : 350) && opened
+                          ? 'block'
+                          : 'none',
                       padding: 0,
                     }}
                   >
