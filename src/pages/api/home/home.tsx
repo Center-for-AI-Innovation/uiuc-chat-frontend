@@ -404,7 +404,7 @@ const Home = ({
       // Add new conversation to the list
       updatedConversations = [updatedConversation, ...conversations]
     }
-
+    updateConversationMutation.mutate(updatedConversation)
     dispatch({ field: 'conversations', value: updatedConversations })
   }
 

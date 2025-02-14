@@ -16,10 +16,12 @@ import {
   IconVideo,
   IconPhoto,
   IconMusic,
+  IconWorld,
 } from '@tabler/icons-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { LoadingSpinner } from './LoadingSpinner'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import { useQuery } from '@tanstack/react-query'
 
 export interface FileUpload {
   name: string
@@ -27,21 +29,43 @@ export interface FileUpload {
   type: 'document' | 'webscrape' | 'canvas' | 'github' | 'mit'
   url?: string
   error?: string
+  isBaseUrl?: boolean
+}
+
+interface FailedDocumentsResponse {
+  final_docs: Array<{
+    id: string | number
+    course_name: string
+    readable_filename: string
+    s3_path: string
+    url: string
+    base_url: string
+    created_at: string
+    error: string
+  }>
+  total_count: number
+  recent_fail_count: number
 }
 
 interface UploadNotificationProps {
   files: FileUpload[]
   onClose: () => void
   // onCancel: () => void
+  projectName: string
 }
 
 function UploadNotificationContent({
   files,
   onClose,
+  projectName,
 }: UploadNotificationProps) {
   const [isMinimized, setIsMinimized] = useState(false)
   const [currentFiles, setCurrentFiles] = useState<FileUpload[]>([])
-
+  const { data: failedDocuments } = useQuery<FailedDocumentsResponse>({
+    queryKey: ['failedDocuments', projectName, 1, '', '', 'created_at', 'desc'],
+    staleTime: 10000,
+    enabled: !!projectName,
+  })
   useEffect(() => {
     if (files && Array.isArray(files)) {
       setCurrentFiles((prevFiles) => {
@@ -60,10 +84,28 @@ function UploadNotificationContent({
           }
           return newFile
         })
+
+        if (failedDocuments?.final_docs) {
+          return files.map((file) => {
+            const failedDoc = failedDocuments.final_docs.find(
+              (doc) =>
+                doc.readable_filename === file.name || doc.url === file.url,
+            )
+
+            if (failedDoc) {
+              return {
+                ...file,
+                status: 'error' as const,
+                error: failedDoc.error,
+              }
+            }
+            return file
+          })
+        }
         return updatedFiles
       })
     }
-  }, [files])
+  }, [files, failedDocuments])
 
   useEffect(() => {
     const allFilesDone =
@@ -130,14 +172,25 @@ function UploadNotificationContent({
     return text.slice(0, maxLength) + '...'
   }
 
-  const getStatusMessage = (status: FileUpload['status'], url?: string) => {
-    if (url) return truncateText(url, 35)
+  const getStatusMessage = (
+    status: FileUpload['status'],
+    url?: string,
+    type?: string,
+    isBaseUrl?: boolean,
+  ) => {
+    // if (url) return truncateText(url, 35)
 
     switch (status) {
       case 'uploading':
-        return 'Uploading to secure storage...'
+        return url && isBaseUrl
+          ? 'Crawling this website...'
+          : type === 'webscrape' || type === 'github'
+            ? 'Crawling this website...'
+            : 'Uploading to secure storage...'
       case 'ingesting':
-        return 'Processing for chat...'
+        return url && isBaseUrl
+          ? 'Crawling this website...'
+          : 'Processing for chat...'
       case 'complete':
         return 'Ready for chat'
       case 'error':
@@ -175,7 +228,7 @@ function UploadNotificationContent({
             component="pre"
           >
             {currentFiles.some((file) => file.status === 'error')
-              ? 'If it doesn&#39;t work, please try again and let us know!'
+              ? 'If upload failed, please try again and let us know!'
               : currentFiles.some((file) => file.status === 'uploading')
                 ? 'Please stay on this page while files are uploading'
                 : currentFiles.some((file) => file.status === 'ingesting')
@@ -223,7 +276,13 @@ function UploadNotificationContent({
               >
                 <div className="flex items-center gap-3">
                   <div className="flex h-8 w-8 items-center justify-center">
-                    {getFileIcon(file.name.split('.').pop() || '')}
+                    {file.type === 'webscrape' ? (
+                      <IconWorld size={18} />
+                    ) : file.name ? (
+                      getFileIcon(file.name.split('.').pop() || '')
+                    ) : (
+                      getFileIcon('')
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <Text
@@ -231,14 +290,19 @@ function UploadNotificationContent({
                       className={`truncate font-medium text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
                       title={file.name}
                     >
-                      {truncateText(file.name, 30)}
+                      {file.name ? truncateText(file.name, 30) : file.name}
                     </Text>
                     <Text
                       size="xs"
                       className={`truncate text-[#8e8eb2] ${montserrat_paragraph.variable} font-montserratParagraph`}
-                      title={file.url || getStatusMessage(file.status)}
+                      title={getStatusMessage(file.status)}
                     >
-                      {getStatusMessage(file.status, file.url)}
+                      {getStatusMessage(
+                        file.status,
+                        file.url,
+                        file.type,
+                        file.isBaseUrl,
+                      )}
                     </Text>
                   </div>
                   <div className="ml-2 flex items-center">

@@ -26,7 +26,7 @@ export default async function docsInProgress(
   }
   try {
     const { data, error } = await supabase
-      .from('documents_in_progress')
+      .from('documents')
       .select('readable_filename, base_url, url')
       .eq('course_name', course_name)
 

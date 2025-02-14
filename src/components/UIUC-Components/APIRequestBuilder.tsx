@@ -122,7 +122,7 @@ data = {
   "course_name": "${course_name}",
   "stream": True,
   "temperature": 0.1,
-  "retrieval_only": ${retrievalOnly}
+  "retrieval_only": ${retrievalOnly ? 'True' : 'False'}
 }
 
 response = requests.post(url, headers=headers, json=data)
