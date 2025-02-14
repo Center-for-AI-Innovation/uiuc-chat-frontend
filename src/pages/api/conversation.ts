@@ -50,24 +50,27 @@ export function convertDBToChatConversation(
 ): ChatConversation {
   // First sort the messages by creation time
   const sortedMessages = (dbMessages || []).sort((a, b) => {
-    const aTime = new Date(a.created_at || 0).getTime();
-    const bTime = new Date(b.created_at || 0).getTime();
-    return aTime - bTime;
-  });
+    const aTime = new Date(a.created_at || 0).getTime()
+    const bTime = new Date(b.created_at || 0).getTime()
+    return aTime - bTime
+  })
 
   // Validate that we have the first message (usually system or user)
   if (sortedMessages.length > 0) {
-    const firstMessage: DBMessage | undefined = sortedMessages[0];
+    const firstMessage: DBMessage | undefined = sortedMessages[0]
     if (firstMessage?.role && firstMessage?.created_at) {
-      console.debug('First message in conversation:', {
-        id: firstMessage?.id,
-        role: firstMessage?.role,
-        created_at: firstMessage?.created_at,
-        isSystem: firstMessage?.role === 'system',
-        isUser: firstMessage?.role === 'user'
-      });
+      // console.debug('First message in conversation:', {
+      //   id: firstMessage?.id,
+      //   role: firstMessage?.role,
+      //   created_at: firstMessage?.created_at,
+      //   isSystem: firstMessage?.role === 'system',
+      //   isUser: firstMessage?.role === 'user'
+      // });
     } else {
-      console.warn('No valid first message found in conversation:', dbConversation.id);
+      console.warn(
+        'No valid first message found in conversation:',
+        dbConversation.id,
+      )
     }
   }
 
@@ -110,20 +113,22 @@ export function convertDBToChatConversation(
 
       const feedbackObj = msg.feedback
         ? {
-          isPositive: msg.feedback.feedback_is_positive,
-          category: msg.feedback.feedback_category,
-          details: msg.feedback.feedback_details,
-        }
+            isPositive: msg.feedback.feedback_is_positive,
+            category: msg.feedback.feedback_category,
+            details: msg.feedback.feedback_details,
+          }
         : undefined
 
       // Process contexts to ensure both page number fields are preserved
-      const processedContexts = (msg.contexts as any as ContextWithMetadata[])?.map(context => {
-        return {
-          ...context,
-          pagenumber: context.pagenumber || '',
-          pagenumber_or_timestamp: context.pagenumber_or_timestamp || undefined
-        };
-      }) || [];
+      const processedContexts =
+        (msg.contexts as any as ContextWithMetadata[])?.map((context) => {
+          return {
+            ...context,
+            pagenumber: context.pagenumber || '',
+            pagenumber_or_timestamp:
+              context.pagenumber_or_timestamp || undefined,
+          }
+        }) || []
 
       const messageObj = {
         id: msg.id,
@@ -163,14 +168,17 @@ export function convertChatToDBMessage(
       chatMessage.content
         .filter((content) => content.type === 'text' && content.text)
         .map((content) => {
-          if ((content.text as string).trim().startsWith('Image description:')) {
-            image_description =
-              sanitizeText(content.text?.split(':').slice(1).join(':').trim() || '')
+          if (
+            (content.text as string).trim().startsWith('Image description:')
+          ) {
+            image_description = sanitizeText(
+              content.text?.split(':').slice(1).join(':').trim() || '',
+            )
             return ''
           }
           return content.text
         })
-        .join(' ')
+        .join(' '),
     )
     content_image_urls = chatMessage.content
       .filter((content) => content.type === 'image_url')
@@ -184,7 +192,7 @@ export function convertChatToDBMessage(
     content_image_url: content_image_urls,
     image_description: image_description,
     contexts:
-      chatMessage.contexts?.map((context, index) => {        
+      chatMessage.contexts?.map((context, index) => {
         const baseContext = {
           readable_filename: context.readable_filename,
           pagenumber: context.pagenumber,
@@ -192,35 +200,52 @@ export function convertChatToDBMessage(
           s3_path: context.s3_path,
           url: context.url,
           // Sanitize and truncate text to 100 characters and add ellipsis if needed
-          text: context.text ? sanitizeText(context.text.length > 100 ? context.text.slice(0, 100) + '...' : context.text) : ''
+          text: context.text
+            ? sanitizeText(
+                context.text.length > 100
+                  ? context.text.slice(0, 100) + '...'
+                  : context.text,
+              )
+            : '',
         }
-        
+
         if (context.s3_path) {
-          return { 
+          return {
             ...baseContext,
-            chunk_index: context.s3_path + '_' + index 
+            chunk_index: context.s3_path + '_' + index,
           }
         } else if (context.url) {
-          return { 
+          return {
             ...baseContext,
-            url_chunk_index: context.url + '_' + index 
+            url_chunk_index: context.url + '_' + index,
           }
-        } 
+        }
         return JSON.parse(JSON.stringify(context)) // Ensure context is JSON-compatible
       }) || [],
-    tools: chatMessage.tools ? JSON.parse(JSON.stringify(chatMessage.tools)) : null,
-    latest_system_message: chatMessage.latestSystemMessage ? sanitizeText(chatMessage.latestSystemMessage) : null,
-    final_prompt_engineered_message:
-      chatMessage.finalPromtEngineeredMessage ? sanitizeText(chatMessage.finalPromtEngineeredMessage) : null,
+    tools: chatMessage.tools
+      ? JSON.parse(JSON.stringify(chatMessage.tools))
+      : null,
+    latest_system_message: chatMessage.latestSystemMessage
+      ? sanitizeText(chatMessage.latestSystemMessage)
+      : null,
+    final_prompt_engineered_message: chatMessage.finalPromtEngineeredMessage
+      ? sanitizeText(chatMessage.finalPromtEngineeredMessage)
+      : null,
     response_time_sec: chatMessage.responseTimeSec || null,
     conversation_id: conversationId,
     created_at: chatMessage.created_at || new Date().toISOString(),
     updated_at: chatMessage.updated_at || new Date().toISOString(),
     feedback_is_positive: chatMessage.feedback?.isPositive ?? null,
-    feedback_category: chatMessage.feedback?.category ? sanitizeText(chatMessage.feedback.category) : null,
-    feedback_details: chatMessage.feedback?.details ? sanitizeText(chatMessage.feedback.details) : null,
+    feedback_category: chatMessage.feedback?.category
+      ? sanitizeText(chatMessage.feedback.category)
+      : null,
+    feedback_details: chatMessage.feedback?.details
+      ? sanitizeText(chatMessage.feedback.details)
+      : null,
     was_query_rewritten: chatMessage.wasQueryRewritten ?? null,
-    query_rewrite_text: chatMessage.queryRewriteText ? sanitizeText(chatMessage.queryRewriteText) : null,
+    query_rewrite_text: chatMessage.queryRewriteText
+      ? sanitizeText(chatMessage.queryRewriteText)
+      : null,
   }
 }
 
@@ -248,7 +273,7 @@ export default async function handler(
 
         if (conversation.messages.length === 0) {
           // Return success without saving - no need to throw an error
-          return res.status(200).json({ message: 'No messages to save' });
+          return res.status(200).json({ message: 'No messages to save' })
         }
         // Save conversation to Supabase
         const { data, error } = await supabase
@@ -258,37 +283,46 @@ export default async function handler(
         if (error) throw error
 
         // Check for edited messages and get their existing versions
-        const messageIds = conversation.messages.map(m => m.id)
+        const messageIds = conversation.messages.map((m) => m.id)
         const { data: existingMessages } = await supabase
           .from('messages')
           .select('*')
           .eq('conversation_id', conversation.id)
-          .in('id', messageIds);
+          .in('id', messageIds)
 
         // Find any messages that were edited by comparing content
-        const editedMessages = existingMessages?.filter(existingMsg => {
-          const newMsg = conversation.messages.find(m => m.id === existingMsg.id);
-          return newMsg && (
-            existingMsg.content_text !== convertChatToDBMessage(newMsg, conversation.id).content_text ||
-            JSON.stringify(existingMsg.contexts) !== JSON.stringify(convertChatToDBMessage(newMsg, conversation.id).contexts)
-          );
-        });
+        const editedMessages = existingMessages?.filter((existingMsg) => {
+          const newMsg = conversation.messages.find(
+            (m) => m.id === existingMsg.id,
+          )
+          return (
+            newMsg &&
+            (existingMsg.content_text !==
+              convertChatToDBMessage(newMsg, conversation.id).content_text ||
+              JSON.stringify(existingMsg.contexts) !==
+                JSON.stringify(
+                  convertChatToDBMessage(newMsg, conversation.id).contexts,
+                ))
+          )
+        })
 
         // If we found edited messages, delete all messages that came after the earliest edited message
         if (editedMessages && editedMessages.length > 0) {
           // Find the earliest edited message timestamp
-          const earliestEditTime = Math.min(...editedMessages.map(m => new Date(m.created_at).getTime()));
-          
+          const earliestEditTime = Math.min(
+            ...editedMessages.map((m) => new Date(m.created_at).getTime()),
+          )
+
           // Delete all messages after this timestamp
           const { error: deleteError } = await supabase
             .from('messages')
             .delete()
             .eq('conversation_id', conversation.id)
-            .gt('created_at', new Date(earliestEditTime).toISOString());
+            .gt('created_at', new Date(earliestEditTime).toISOString())
 
           if (deleteError) {
-            console.error('Error deleting subsequent messages:', deleteError);
-            throw deleteError;
+            console.error('Error deleting subsequent messages:', deleteError)
+            throw deleteError
           }
         }
 
@@ -296,33 +330,38 @@ export default async function handler(
         const baseTime = new Date().getTime()
         const dbMessages = conversation.messages.map((message, index) => {
           // If the message wasn't edited, preserve its original timestamp
-          const existingMessage = existingMessages?.find(m => m.id === message.id);
-          const wasEdited = editedMessages?.some(m => m.id === message.id);
-          
-          let created_at;
+          const existingMessage = existingMessages?.find(
+            (m) => m.id === message.id,
+          )
+          const wasEdited = editedMessages?.some((m) => m.id === message.id)
+
+          let created_at
           if (existingMessage && !wasEdited) {
-            created_at = existingMessage.created_at;
+            created_at = existingMessage.created_at
           } else {
-            created_at = new Date(baseTime + index * 1000).toISOString();
+            created_at = new Date(baseTime + index * 1000).toISOString()
           }
 
           return {
             ...convertChatToDBMessage(message, conversation.id),
             created_at,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           }
         })
-        
+
         // Sort messages by created_at before upserting to ensure consistent order
-        dbMessages.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-        
+        dbMessages.sort(
+          (a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+        )
+
         const { error: messagesError } = await supabase
           .from('messages')
-          .upsert(dbMessages, { 
+          .upsert(dbMessages, {
             onConflict: 'id',
-            ignoreDuplicates: false 
+            ignoreDuplicates: false,
           })
-          
+
         if (messagesError) throw messagesError
 
         res.status(200).json({ message: 'Conversation saved successfully' })
@@ -387,8 +426,8 @@ export default async function handler(
 
         const nextCursor =
           count &&
-            count > (pageParam + 1) * pageSize &&
-            count > fetchedConversations.length
+          count > (pageParam + 1) * pageSize &&
+          count > fetchedConversations.length
             ? pageParam + 1
             : null
 
@@ -404,7 +443,10 @@ export default async function handler(
         })
       } catch (error) {
         res.status(500).json({ error: 'Error fetching conversation history' })
-        console.error('pages/api/conversation.ts - Error fetching conversation history:', error)
+        console.error(
+          'pages/api/conversation.ts - Error fetching conversation history:',
+          error,
+        )
       }
       break
 
@@ -438,7 +480,7 @@ export default async function handler(
             .delete()
             .eq('user_email', userEmail)
             .eq('project_name', course_name)
-            .is('folder_id', null)  // Only delete conversations that are not in folders
+            .is('folder_id', null) // Only delete conversations that are not in folders
           if (error) throw error
         } else {
           res.status(400).json({ error: 'Invalid request parameters' })

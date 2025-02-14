@@ -1,6 +1,5 @@
 // src/app/api/allNewRoutingChat/route.ts
 
-
 import { ChatBody } from '@/types/chat'
 import { routeModelRequest } from '~/utils/streamProcessing'
 import { NextRequest, NextResponse } from 'next/server'
@@ -11,6 +10,7 @@ import { OpenAIError } from '~/utils/server'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
+export const maxDuration = 600
 
 export async function POST(req: NextRequest, res: NextResponse) {
   const startTime = Date.now()
