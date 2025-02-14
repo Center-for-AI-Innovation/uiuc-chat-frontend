@@ -85,7 +85,7 @@ export async function processChunkWithStateMachine(
         if (char === '<') {
           // Always buffer '<' initially since it might be start of <cite>
           buffer = char
-          
+
           // If we have enough chars to check for <cite
           if (remainingChars >= 5) {
             const nextChars = combinedChunk.slice(i, i + 5)
@@ -107,7 +107,10 @@ export async function processChunkWithStateMachine(
           }
         } else if (char.match(/\d/)) {
           let j = i + 1
-          while (j < combinedChunk.length && /\d/.test(combinedChunk[j] as string)) {
+          while (
+            j < combinedChunk.length &&
+            /\d/.test(combinedChunk[j] as string)
+          ) {
             j++
           }
           if (j < combinedChunk.length && combinedChunk[j] === '.') {
@@ -148,7 +151,7 @@ export async function processChunkWithStateMachine(
                 buffer,
                 lastMessage,
                 citationLinkCache,
-                courseName
+                courseName,
               )
               processedChunk += processedCitation
               buffer = ''
@@ -213,10 +216,13 @@ export async function processChunkWithStateMachine(
             buffer + char,
             lastMessage,
             citationLinkCache,
-            courseName
+            courseName,
           )
           buffer = ''
-          if (i < combinedChunk.length - 1 && combinedChunk[i + 1]?.match(/\d/)) {
+          if (
+            i < combinedChunk.length - 1 &&
+            combinedChunk[i + 1]?.match(/\d/)
+          ) {
             state = State.InCiteContent
           } else {
             state = State.Normal
@@ -615,7 +621,7 @@ export async function updateConversationInDatabase(
 ) {
   // Log conversation to Supabase
   try {
-    const baseUrl = getBaseUrl()
+    const baseUrl = await getBaseUrl()
     const response = await fetch(
       `${baseUrl}/api/UIUC-api/logConversationToSupabase`,
       {
@@ -688,12 +694,12 @@ export async function handleImageContent(
     )
 
     if (imgDescIndex !== -1) {
-      ; (message.content as Content[])[imgDescIndex] = {
+      ;(message.content as Content[])[imgDescIndex] = {
         type: 'text',
         text: `Image description: ${imgDesc}`,
       }
     } else {
-      ; (message.content as Content[]).push({
+      ;(message.content as Content[]).push({
         type: 'text',
         text: `Image description: ${imgDesc}`,
       })
