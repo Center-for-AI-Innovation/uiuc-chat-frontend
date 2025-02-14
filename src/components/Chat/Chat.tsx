@@ -1384,9 +1384,14 @@ export const Chat = memo(
             <Text
               className={`mb-2 text-lg text-white ${montserrat_heading.variable} font-montserratHeading`}
               style={{ whiteSpace: 'pre-wrap' }}
-            >
-              {courseMetadata?.course_intro_message}
-            </Text>
+              dangerouslySetInnerHTML={{
+                __html:
+                  courseMetadata?.course_intro_message?.replace(
+                    /(https?:\/\/[^\s]+)/g,
+                    '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-purple-400 hover:underline">$1</a>',
+                  ) || '',
+              }}
+            />
 
             <h4
               className={`text-md mb-2 text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
@@ -1394,31 +1399,35 @@ export const Chat = memo(
               {getCurrentPageName() === 'cropwizard-1.5' && (
                 <CropwizardLicenseDisclaimer />
               )}
-              Start a conversation below or try the following examples
+              {getCurrentPageName() !== 'chat' && (
+                <p>Start a conversation below or try these examples</p>
+              )}
             </h4>
             <div className="mt-4 flex flex-col items-start space-y-2 overflow-hidden">
-              {statements.map((statement, index) => (
-                <div
-                  key={index}
-                  className="w-full rounded-lg border-b-2 border-[rgba(42,42,64,0.4)] hover:cursor-pointer hover:bg-[rgba(42,42,64,0.9)]"
-                  onClick={() => {
-                    setInputContent('') // First clear the input
-                    setTimeout(() => {
-                      // Then set it with a small delay
-                      setInputContent(statement)
-                      textareaRef.current?.focus()
-                    }, 0)
-                  }}
-                >
-                  <Button
-                    variant="link"
-                    className={`text-md h-auto p-2 font-bold leading-relaxed text-white hover:underline ${montserrat_paragraph.variable} font-montserratParagraph `}
+              {/* if getCurrentPageName is 'chat' then don't show any example questions */}
+              {getCurrentPageName() !== 'chat' &&
+                statements.map((statement, index) => (
+                  <div
+                    key={index}
+                    className="w-full rounded-lg border-b-2 border-[rgba(42,42,64,0.4)] hover:cursor-pointer hover:bg-[rgba(42,42,64,0.9)]"
+                    onClick={() => {
+                      setInputContent('') // First clear the input
+                      setTimeout(() => {
+                        // Then set it with a small delay
+                        setInputContent(statement)
+                        textareaRef.current?.focus()
+                      }, 0)
+                    }}
                   >
-                    <IconArrowRight size={25} className="mr-2 min-w-[40px]" />
-                    <p className="whitespace-break-spaces">{statement}</p>
-                  </Button>
-                </div>
-              ))}
+                    <Button
+                      variant="link"
+                      className={`text-md h-auto p-2 font-bold leading-relaxed text-white hover:underline ${montserrat_paragraph.variable} font-montserratParagraph `}
+                    >
+                      <IconArrowRight size={25} className="mr-2 min-w-[40px]" />
+                      <p className="whitespace-break-spaces">{statement}</p>
+                    </Button>
+                  </div>
+                ))}
             </div>
           </div>
           <div
