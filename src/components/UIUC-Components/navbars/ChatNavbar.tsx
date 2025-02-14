@@ -526,19 +526,44 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                 </button>
               </div>
               <div className={classes.adminDashboard}>
-                <Link
-                  href={`/${getCurrentCourseName()}/dashboard`}
-                  data-active={
-                    activeLink === `/${getCurrentCourseName()}/dashboard`
-                  }
-                  className={classes.link}
-                  style={{ minWidth: '100px' }}
+                <button
+                  className={`${classes.link}`}
+                  style={{ padding: '3px 8px', minWidth: '100px' }}
+                  onClick={(e) => {
+                    // Handle click with modifier keys
+                    if (e.ctrlKey || e.metaKey || e.shiftKey) {
+                      window.open(
+                        `/${getCurrentCourseName()}/dashboard`,
+                        '_blank',
+                      )
+                    } else {
+                      router.push(`/${getCurrentCourseName()}/dashboard`)
+                    }
+                  }}
+                  onAuxClick={(e) => {
+                    // Handle middle click (button 1)
+                    if (e.button === 1) {
+                      window.open(
+                        `/${getCurrentCourseName()}/dashboard`,
+                        '_blank',
+                      )
+                    }
+                  }}
+                  onContextMenu={(e) => {
+                    // Don't prevent default to allow normal right-click menu
+                    // But add the URL to the clipboard
+                    navigator.clipboard.writeText(
+                      `${window.location.origin}/${getCurrentCourseName()}/dashboard`,
+                    )
+                  }}
+                  aria-label={`Go to dashboard`}
                 >
                   <div
                     style={{
                       display: 'flex',
                       alignItems: 'center',
                       width: '100%',
+                      position: 'relative',
                     }}
                   >
                     <IconHome
@@ -557,8 +582,11 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                           "url('/media/hero-header-underline-reflow.svg')",
                         backgroundRepeat: 'no-repeat',
                         backgroundSize: 'contain',
+                        backgroundPosition: 'bottom',
                         width: '100%',
-                        height: '50px',
+                        height: '40px',
+                        position: 'relative',
+                        top: '13px',
                       }}
                     >
                       <span
@@ -568,7 +596,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                       </span>
                     </span>
                   </div>
-                </Link>
+                </button>
               </div>
               <div
                 style={{
