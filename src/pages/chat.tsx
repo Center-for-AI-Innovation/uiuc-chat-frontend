@@ -15,6 +15,8 @@ const ChatPage: NextPage = () => {
 
 You have unlimited access to the leading open source LLMs. We host them here at the University of Illinois' National Center for Supercomputing Applications (NCSA). 
 
+Or, customize your own by uploading documents or using our web crawler at https://uiuc.chat/new
+
 Supported by the Center for AI Innovation: https://ai.ncsa.illinois.edu`,
     system_prompt:
       "You are a helpful assistant. Follow the user's instructions carefully. Respond using markdown.",
