@@ -15,24 +15,11 @@ import {
   Transition,
 } from '@mantine/core'
 import { spotlight } from '@mantine/spotlight'
-import {
-  MessageChatbot,
-  Folder,
-  ReportAnalytics,
-  ChartDots3,
-  MessageCode,
-} from 'tabler-icons-react'
-import {
-  IconFileText,
-  IconHome,
-  IconSettings,
-  IconPlus,
-} from '@tabler/icons-react'
+import { IconHome, IconSettings, IconPlus } from '@tabler/icons-react'
 import { useRouter } from 'next/router'
 import { montserrat_heading } from 'fonts'
 import { useUser } from '@clerk/nextjs'
 import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
-import { type CourseMetadata } from '~/types/courseMetadata'
 import HomeContext from '~/pages/api/home/home.context'
 import { UserSettings } from '../../Chat/UserSettings'
 // import MagicBell, {
@@ -241,72 +228,6 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  const items = [
-    ...(spotlight
-      ? [
-          // {
-          //   name: (
-          //     <span
-          //       className={`${montserrat_heading.variable} font-montserratHeading`}
-          //     >
-          //       Groups/Tools
-          //     </span>
-          //   ),
-          //   icon: <SpotlightIcon />,
-          //   action: () => spotlight.open(), // This opens the Spotlight
-          // },
-        ]
-      : []),
-    ...(isAdminOrOwner
-      ? [
-          // {
-          //   name: (
-          //     <span
-          //       className={`${montserrat_heading.variable} font-montserratHeading`}
-          //     >
-          //       Chat
-          //     </span>
-          //   ),
-          //   icon: <MessageChatIcon />,
-          //   link: `/${getCurrentCourseName()}/chat`,
-          // },
-          {
-            name: (
-              <span
-                className={`${montserrat_heading.variable} font-montserratHeading`}
-              >
-                Admin Dashboard
-              </span>
-            ),
-            icon: <FolderIcon />,
-            link: `/${getCurrentCourseName()}/dashboard`,
-          },
-          // {
-          //   name: (
-          //     <span
-          //       className={`${montserrat_heading.variable} font-montserratHeading`}
-          //     >
-          //       Analysis
-          //     </span>
-          //   ),
-          //   icon: <ReportIcon />,
-          //   link: `/${getCurrentCourseName()}/query-analysis`,
-          // },
-          // {
-          //   name: (
-          //     <span
-          //       className={`${montserrat_heading.variable} font-montserratHeading`}
-          //     >
-          //       Prompting
-          //     </span>
-          //   ),
-          //   icon: <SettingIcon />,
-          //   link: `/${getCurrentCourseName()}/prompt`,
-          // },
-        ]
-      : []),
-  ]
-
   return (
     <div
       className={`${isgpt4 ? 'bg-[#15162c]' : 'bg-[#2e026d]'} -mr-0 pb-16 pl-5`}
@@ -363,54 +284,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
               }}
             ></div>
           )}
-          {/* </Flex> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
-          {/* </div> */}
 
-          {/* <div style={{ display: 'flex', justifyContent: 'flex-end' }}> */}
-          {/* <Flex direction='row' justify='flex-end' styles={{ flex: 1 }}> */}
           <Group
             position="right"
             styles={{ marginLeft: 'auto', flexWrap: 'nowrap' }}
@@ -506,43 +380,37 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                   </div>
 
                   {/* Admin Dashboard in hamburger when screen is small */}
-                  {items.map((item, index) => {
-                    if (
-                      item.link &&
-                      item.name.props.children === 'Admin Dashboard'
-                    ) {
-                      return (
-                        <div
-                          key={index}
-                          style={{
-                            display:
-                              windowWidth <= 900 && opened ? 'block' : 'none',
-                          }}
-                        >
-                          <Link
-                            href={item.link}
-                            onClick={toggle}
-                            data-active={activeLink === item.link}
-                            className={classes.link}
-                            style={{ width: '100%', padding: '8px' }}
+                  {isAdminOrOwner && (
+                    <div
+                      className={classes.link}
+                      style={{
+                        display:
+                          windowWidth <= 900 && opened ? 'block' : 'none',
+                      }}
+                    >
+                      <Link
+                        href={`/${getCurrentCourseName()}/dashboard`}
+                        onClick={() => toggle()}
+                        style={{
+                          width: '100%',
+                          padding: '8px',
+                          cursor: 'pointer',
+                          textDecoration: 'none',
+                          color: 'inherit',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <IconHome size={24} />
+                          <span
+                            className={`${montserrat_heading.variable} font-montserratHeading`}
+                            style={{ marginLeft: '8px' }}
                           >
-                            <div
-                              style={{ display: 'flex', alignItems: 'center' }}
-                            >
-                              {item.icon}
-                              <span
-                                className={`${montserrat_heading.variable} font-montserratHeading`}
-                                style={{ marginLeft: '8px' }}
-                              >
-                                Admin Dashboard
-                              </span>
-                            </div>
-                          </Link>
+                            Admin Dashboard
+                          </span>
                         </div>
-                      )
-                    }
-                    return null
-                  })}
+                      </Link>
+                    </div>
+                  )}
                 </Paper>
               )}
             </Transition>
@@ -553,45 +421,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
               style={{ padding: 0, margin: 0 }}
             >
               <div className={classes.links}>
-                {items.map((item, index) => {
-                  if (
-                    item.link &&
-                    item.name.props.children !== 'Admin Dashboard'
-                  ) {
-                    return (
-                      <Link
-                        key={index}
-                        href={item.link}
-                        data-active={activeLink === item.link}
-                        className={classes.link}
-                        style={{ padding: '3px 8px' }}
-                      >
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            width: '100%',
-                          }}
-                        >
-                          {item.icon}
-                          <span
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'flex-center',
-                              padding: '0px',
-                              height: '40px',
-                              whiteSpace: 'nowrap',
-                              marginLeft: '5px',
-                            }}
-                          >
-                            {item.name}
-                          </span>
-                        </div>
-                      </Link>
-                    )
-                  }
-                })}
+                {/* Navigation links can be added here if needed */}
               </div>
               <div className={classes.newChat}>
                 <button
@@ -696,59 +526,49 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                 </button>
               </div>
               <div className={classes.adminDashboard}>
-                {items.map((item, index) => {
-                  if (
-                    item.link &&
-                    item.name.props.children === 'Admin Dashboard'
-                  ) {
-                    return (
-                      <Link
-                        key={index}
-                        href={item.link}
-                        data-active={activeLink === item.link}
-                        className={classes.link}
-                        style={{ minWidth: '100px' }}
-                      >
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            width: '100%',
-                          }}
-                        >
-                          {item.icon}
-                          <span
-                            className="home-header_text-underline"
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'flex-center',
-                              padding: '0px',
-                              height: '40px',
-                              whiteSpace: 'nowrap',
-                              marginLeft: '5px',
-                              backgroundRepeat: 'no-repeat',
-                              backgroundPosition: 'bottom left',
-                              backgroundSize: 'contain',
-                              position: 'relative',
-                              top: '13px',
-                            }}
-                          >
-                            <span
-                              style={{
-                                whiteSpace: 'nowrap',
-                                marginTop: '-26px',
-                              }}
-                              className={`${montserrat_heading.variable} font-montserratHeading`}
-                            >
-                              Admin Dashboard
-                            </span>
-                          </span>
-                        </div>
-                      </Link>
-                    )
+                <Link
+                  href={`/${getCurrentCourseName()}/dashboard`}
+                  data-active={
+                    activeLink === `/${getCurrentCourseName()}/dashboard`
                   }
-                })}
+                  className={classes.link}
+                  style={{ minWidth: '100px' }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      width: '100%',
+                    }}
+                  >
+                    <IconHome
+                      size={30}
+                      strokeWidth={2}
+                      style={{
+                        marginRight: '4px',
+                        marginLeft: '4px',
+                        position: 'relative',
+                        top: '-2px',
+                      }}
+                    />
+                    <span
+                      style={{
+                        backgroundImage:
+                          "url('/media/hero-header-underline-reflow.svg')",
+                        backgroundRepeat: 'no-repeat',
+                        backgroundSize: 'contain',
+                        width: '100%',
+                        height: '50px',
+                      }}
+                    >
+                      <span
+                        className={`${montserrat_heading.variable} font-montserratHeading`}
+                      >
+                        Admin Dashboard
+                      </span>
+                    </span>
+                  </div>
+                </Link>
               </div>
               <div
                 style={{
@@ -758,9 +578,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                   top: '75px',
                 }}
               >
-                <UserSettings
-                // ref={modelSettingsContainer}
-                />
+                <UserSettings />
               </div>
             </Container>
 
@@ -787,30 +605,6 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
             >
               <SignedIn>
                 <Group grow spacing={'xs'}>
-                  {/* <div /> */}
-                  {/* <div style={{ paddingLeft: '10px', paddingRight: '8px' }} /> */}
-
-                  {/* render the MagicBell until userEmail is valid otherwise there is a warning message of userEmail */}
-                  {/* {userEmail !== 'no_email' && (
-                    <MagicBell
-                      apiKey={process.env.NEXT_PUBLIC_MAGIC_BELL_API as string}
-                      userEmail={userEmail}
-                      theme={magicBellTheme}
-                      locale="en"
-                      images={{
-                        emptyInboxUrl:
-                          'https://assets.kastan.ai/minified_empty_chat_art.png',
-                      }}
-                    >
-                      {(props) => (
-                        <FloatingNotificationInbox
-                          width={400}
-                          height={500}
-                          {...props}
-                        />
-                      )}
-                    </MagicBell>
-                  )} */}
                   <UserButton afterSignOutUrl="/" />
                 </Group>
               </SignedIn>
@@ -830,83 +624,10 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                 </SignInButton>
               </SignedOut>
             </div>
-            {/* </div> */}
-            {/* </div> */}
           </Group>
         </Flex>
-        {/* </div> */}
       </div>
     </div>
   )
 }
 export default ChatNavbar
-
-export function SpotlightIcon() {
-  return (
-    <IconFileText
-      size={20}
-      strokeWidth={2}
-      // color={'white'}
-      style={{ marginRight: '4px', marginLeft: '4px' }}
-    />
-  )
-}
-
-export function MessageChatIcon() {
-  return (
-    <MessageChatbot
-      size={20}
-      strokeWidth={2}
-      // color={'white'}
-      style={{ marginRight: '4px', marginLeft: '4px' }}
-    />
-  )
-}
-
-export function FolderIcon() {
-  return (
-    <IconHome
-      size={30}
-      strokeWidth={2}
-      style={{
-        marginRight: '4px',
-        marginLeft: '4px',
-        position: 'relative',
-        top: '-2px',
-      }}
-    />
-  )
-}
-
-export function ReportIcon() {
-  return (
-    <ReportAnalytics
-      size={20}
-      strokeWidth={2}
-      // color={'white'}
-      style={{ marginRight: '4px', marginLeft: '4px' }}
-    />
-  )
-}
-
-export function SettingIcon() {
-  return (
-    <MessageCode
-      size={20}
-      strokeWidth={2}
-      // color={'white'}
-      style={{ marginRight: '4px', marginLeft: '4px' }}
-    />
-  )
-}
-
-export function ChartDots3Icon() {
-  return (
-    <ChartDots3
-      size={20}
-      strokeWidth={2}
-      // color={'white'}
-      style={{ marginRight: '4px', marginLeft: '4px' }}
-    />
-  )
-}
