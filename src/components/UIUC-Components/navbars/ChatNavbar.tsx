@@ -66,7 +66,7 @@ const useStyles = createStyles((theme) => ({
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    [theme.fn.smallerThan(900)]: {
+    [theme.fn.smallerThan(825)]: {
       display: 'none',
     },
   },
@@ -93,7 +93,7 @@ const useStyles = createStyles((theme) => ({
       backgroundColor: 'rgba(255, 255, 255, 0.1)',
       textAlign: 'right',
     },
-    [theme.fn.smallerThan(900)]: {
+    [theme.fn.smallerThan(825)]: {
       display: 'list-item',
       textAlign: 'center',
       borderRadius: 0,
@@ -102,7 +102,7 @@ const useStyles = createStyles((theme) => ({
     },
   },
   burger: {
-    [theme.fn.largerThan(900)]: {
+    [theme.fn.largerThan(825)]: {
       display: 'none',
     },
     marginRight: '3px',
@@ -116,32 +116,30 @@ const useStyles = createStyles((theme) => ({
     borderRadius: '10px',
     overflow: 'hidden',
     width: '200px',
-    [theme.fn.largerThan(900)]: {
+    [theme.fn.largerThan(825)]: {
       display: 'none',
     },
   },
   adminDashboard: {
-    [theme.fn.smallerThan(900)]: {
+    [theme.fn.smallerThan(825)]: {
       display: 'none',
     },
     display: 'block',
   },
   settings: {
-    [theme.fn.smallerThan(700)]: {
+    [theme.fn.smallerThan(675)]: {
       display: 'none',
     },
     display: 'block',
   },
   newChat: {
-    [theme.fn.smallerThan(650)]: {
+    [theme.fn.smallerThan(500)]: {
       display: 'none',
     },
     display: 'block',
   },
   modelSettings: {
     position: 'absolute',
-    // top: '600px',
-    // left: '-50px',
     zIndex: 10,
     borderRadius: '10px',
     boxShadow: '0px 8px 16px 0px rgba(0,0,0,0.2)',
@@ -165,7 +163,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
   const [show, setShow] = useState(true)
   const [isAdminOrOwner, setIsAdminOrOwner] = useState(false)
   const [windowWidth, setWindowWidth] = useState(
-    typeof window !== 'undefined' ? window.innerWidth : 900,
+    typeof window !== 'undefined' ? window.innerWidth : 825,
   )
   const clerk_user = useUser()
   const posthog = usePostHog()
@@ -312,7 +310,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                   <div
                     className={classes.link}
                     style={{
-                      display: windowWidth <= 650 && opened ? 'block' : 'none',
+                      display: windowWidth <= 500 && opened ? 'block' : 'none',
                       padding: 0,
                     }}
                   >
@@ -352,7 +350,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                   <div
                     className={classes.link}
                     style={{
-                      display: windowWidth <= 700 && opened ? 'block' : 'none',
+                      display: windowWidth <= 675 && opened ? 'block' : 'none',
                       padding: 0,
                     }}
                   >
@@ -389,7 +387,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                       className={classes.link}
                       style={{
                         display:
-                          windowWidth <= 900 && opened ? 'block' : 'none',
+                          windowWidth <= 825 && opened ? 'block' : 'none',
                         padding: 0,
                       }}
                     >
