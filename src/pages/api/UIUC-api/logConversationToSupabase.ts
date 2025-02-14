@@ -3,6 +3,14 @@ import { Content, Conversation } from '~/types/chat'
 import { RunTree } from 'langsmith'
 import { sanitizeForLogging } from '@/utils/sanitization'
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb',
+    },
+  },
+}
+
 const logConversationToSupabase = async (req: any, res: any) => {
   const { course_name, conversation } = req.body as {
     course_name: string

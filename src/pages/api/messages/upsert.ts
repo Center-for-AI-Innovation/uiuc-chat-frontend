@@ -20,7 +20,23 @@ export default async function handler(
       .eq('id', message.id)
       .single();
 
+    // Get the latest message's timestamp for this conversation
+    const { data: latestMessage } = await supabase
+      .from('messages')
+      .select('created_at')
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
     const dbMessage = convertChatToDBMessage(message, conversationId);
+    
+    // If this is a new message, ensure its timestamp is after the latest message
+    if (!existingMessage && latestMessage) {
+      const latestTime = new Date(latestMessage.created_at).getTime();
+      dbMessage.created_at = new Date(latestTime + 1000).toISOString();
+      dbMessage.updated_at = dbMessage.created_at;
+    }
 
     // If message exists, update it. If not, insert it.
     const { data, error } = await supabase

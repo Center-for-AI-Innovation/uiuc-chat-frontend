@@ -256,20 +256,73 @@ export default async function handler(
 
         if (error) throw error
 
-        // First delete all existing messages for this conversation
-        await supabase
+        // Check for edited messages and get their existing versions
+        const messageIds = conversation.messages.map(m => m.id)
+        const { data: existingMessages } = await supabase
           .from('messages')
-          .delete()
+          .select('*')
           .eq('conversation_id', conversation.id)
+          .in('id', messageIds);
 
-        // Then insert all messages in their current state
-        for (const message of conversation.messages) {
-          const dbMessage = convertChatToDBMessage(message, conversation.id)
-          const { error: messageError } = await supabase
+        // Find any messages that were edited by comparing content
+        const editedMessages = existingMessages?.filter(existingMsg => {
+          const newMsg = conversation.messages.find(m => m.id === existingMsg.id);
+          return newMsg && (
+            existingMsg.content_text !== convertChatToDBMessage(newMsg, conversation.id).content_text ||
+            JSON.stringify(existingMsg.contexts) !== JSON.stringify(convertChatToDBMessage(newMsg, conversation.id).contexts)
+          );
+        });
+
+        // If we found edited messages, delete all messages that came after the earliest edited message
+        if (editedMessages && editedMessages.length > 0) {
+          // Find the earliest edited message timestamp
+          const earliestEditTime = Math.min(...editedMessages.map(m => new Date(m.created_at).getTime()));
+          
+          // Delete all messages after this timestamp
+          const { error: deleteError } = await supabase
             .from('messages')
-            .insert(dbMessage)
-          if (messageError) throw messageError
+            .delete()
+            .eq('conversation_id', conversation.id)
+            .gt('created_at', new Date(earliestEditTime).toISOString());
+
+          if (deleteError) {
+            console.error('Error deleting subsequent messages:', deleteError);
+            throw deleteError;
+          }
         }
+
+        // Ensure messages have sequential timestamps based on their order
+        const baseTime = new Date().getTime()
+        const dbMessages = conversation.messages.map((message, index) => {
+          // If the message wasn't edited, preserve its original timestamp
+          const existingMessage = existingMessages?.find(m => m.id === message.id);
+          const wasEdited = editedMessages?.some(m => m.id === message.id);
+          
+          let created_at;
+          if (existingMessage && !wasEdited) {
+            created_at = existingMessage.created_at;
+          } else {
+            created_at = new Date(baseTime + index * 1000).toISOString();
+          }
+
+          return {
+            ...convertChatToDBMessage(message, conversation.id),
+            created_at,
+            updated_at: new Date().toISOString()
+          }
+        })
+        
+        // Sort messages by created_at before upserting to ensure consistent order
+        dbMessages.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+        
+        const { error: messagesError } = await supabase
+          .from('messages')
+          .upsert(dbMessages, { 
+            onConflict: 'id',
+            ignoreDuplicates: false 
+          })
+          
+        if (messagesError) throw messagesError
 
         res.status(200).json({ message: 'Conversation saved successfully' })
       } catch (error) {
