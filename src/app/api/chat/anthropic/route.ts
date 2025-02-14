@@ -8,15 +8,10 @@ import {
 import { ProviderNames } from '~/utils/modelProviders/LLMProvider'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 
-// Configure for Node.js runtime with larger payload support
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '50mb'
-    },
-    responseLimit: false
-  },
-}
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+
 
 import { NextResponse } from 'next/server'
 

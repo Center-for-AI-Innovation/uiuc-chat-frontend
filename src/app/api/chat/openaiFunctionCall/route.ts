@@ -9,15 +9,11 @@ import type {
 import { Conversation } from '~/types/chat'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 
-// Configure for Node.js runtime with larger payload support
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '50mb'
-    },
-    responseLimit: false
-  },
-}
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+export const revalidate = 0
+
 
 const conversationToMessages = (
   inputData: Conversation,

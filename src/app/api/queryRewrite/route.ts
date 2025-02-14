@@ -1,17 +1,12 @@
 // src/app/api/queryRewrite/route.ts
 
-// Configure for Node.js runtime with larger payload support
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '50mb'
-    },
-    responseLimit: false
-  },
-}
 
 import { routeModelRequest } from '~/utils/streamProcessing'
 import { type ChatBody } from '@/types/chat'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
 
 export async function POST(req: Request) {
   try {

@@ -1,14 +1,5 @@
 // src/app/api/allNewRoutingChat/route.ts
 
-// Configure for Node.js runtime with larger payload support
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '50mb'
-    },
-    responseLimit: false
-  },
-}
 
 import { ChatBody } from '@/types/chat'
 import { routeModelRequest } from '~/utils/streamProcessing'
@@ -16,6 +7,10 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { buildPrompt } from '~/app/utils/buildPromptUtils'
 import { OpenAIError } from '~/utils/server'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
 
 export async function POST(req: NextRequest, res: NextResponse) {
   const startTime = Date.now()
