@@ -1,6 +1,5 @@
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
-// import { magicBellTheme } from '~/components/UIUC-Components/navbars/GlobalHeader'
 import { useDisclosure } from '@mantine/hooks'
 import Image from 'next/image'
 import { useEffect, useState, useContext, useRef } from 'react'
@@ -14,7 +13,6 @@ import {
   rem,
   Transition,
 } from '@mantine/core'
-import { spotlight } from '@mantine/spotlight'
 import { IconHome, IconSettings, IconPlus } from '@tabler/icons-react'
 import { useRouter } from 'next/router'
 import { montserrat_heading } from 'fonts'
@@ -22,24 +20,13 @@ import { useUser } from '@clerk/nextjs'
 import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
 import HomeContext from '~/pages/api/home/home.context'
 import { UserSettings } from '../../Chat/UserSettings'
-// import MagicBell, {
-//   FloatingNotificationInbox,
-// } from '@magicbell/magicbell-react'
 import { usePostHog } from 'posthog-js/react'
 
 const styles: Record<string, React.CSSProperties> = {
   logoContainerBox: {
-    // justifyContent: 'center',
-    // alignItems: 'center',
-    // overflow: 'hidden',
-    // position: 'relative',
-    // height: '40%',
     height: '52px',
     maxWidth:
       typeof window !== 'undefined' && window.innerWidth > 600 ? '80%' : '100%',
-    // maxWidth: '100%',
-    // paddingRight:
-    //   typeof window !== 'undefined' && window.innerWidth > 600 ? '10px' : '2px',
     paddingLeft:
       typeof window !== 'undefined' && window.innerWidth > 600 ? '25px' : '5px',
   },
@@ -133,7 +120,7 @@ const useStyles = createStyles((theme, { isAdmin }: { isAdmin: boolean }) => ({
     display: 'block',
   },
   newChat: {
-    [theme.fn.smallerThan(isAdmin ? 675 : 350)]: {
+    [theme.fn.smallerThan(isAdmin ? 500 : 350)]: {
       display: 'none',
     },
     display: 'block',
@@ -157,7 +144,6 @@ interface ChatNavbarProps {
 
 const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
   const router = useRouter()
-  const [activeLink, setActiveLink] = useState<null | string>(null)
   const [opened, { toggle }] = useDisclosure(false)
   const [show, setShow] = useState(true)
   const [isAdminOrOwner, setIsAdminOrOwner] = useState(false)
@@ -178,13 +164,6 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
     return router.asPath.split('/')[1]
   }
 
-  const [userEmail, setUserEmail] = useState('no_email')
-
-  useEffect(() => {
-    if (!router.isReady) return
-    setActiveLink(router.asPath.split('?')[0]!)
-  }, [router.asPath])
-
   useEffect(() => {
     const fetchCourses = async () => {
       if (clerk_user.isLoaded && clerk_user.isSignedIn) {
@@ -193,7 +172,6 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
         posthog?.identify(clerk_user.user.id, {
           email: currUserEmails[0] || 'no_email',
         })
-        setUserEmail(currUserEmails[0] || 'no_email')
 
         const response = await fetch(
           `/api/UIUC-api/getCourseMetadata?course_name=${getCurrentCourseName()}`,
@@ -235,30 +213,14 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
     <div
       className={`${isgpt4 ? 'bg-[#15162c]' : 'bg-[#2e026d]'} -mr-0 pb-16 pl-5`}
       style={{ display: show ? 'block' : 'none' }}
-      // style={{ display: show ? 'flex' : 'none', flexDirection: 'row', height: '40%', alignItems: 'center' }}
     >
-      <div
-        // className="mt-4"
-        style={{ paddingTop: 'Opx', maxWidth: '100vw', marginRight: '0px' }}
-      >
-        {/* <div > */}
-        {/* <Flex style={{ flexDirection: 'row' }} className="navbar rounded-badge h-24 bg-[#15162c] shadow-lg shadow-purple-800"> */}
-
+      <div style={{ paddingTop: 'Opx', maxWidth: '100vw', marginRight: '0px' }}>
         <Flex
           justify="flex-start"
           direction="row"
           styles={{ height: '10px', flexWrap: 'nowrap', gap: '0rem' }}
           className="navbar rounded-badge bg-[#15162c] shadow-lg shadow-purple-800"
         >
-          {/* <div> */}
-          {/* <div
-            style={{
-              ...styles.logoContainerBox,
-              // display: 'flex',
-              // alignItems: 'center',
-              // justifyContent: 'flex-start',
-            }}
-          > */}
           <Link href="/" style={{ flex: 'none', flexWrap: 'nowrap' }}>
             <h2 className="cursor-pointer font-extrabold tracking-tight text-white sm:ms-3 sm:text-[2rem] sm:text-[2rem] md:text-3xl">
               UIUC.<span className="text-[hsl(280,100%,70%)]">chat</span>
@@ -294,7 +256,6 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
             spacing="0px"
             noWrap
           >
-            {/* TODO: .mantine-kivjf7 {gap: 0rem} */}
             {/* This is the hamburger menu / dropdown */}
             <Transition
               transition="pop-top-right"
