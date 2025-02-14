@@ -1,6 +1,5 @@
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
-// import { magicBellTheme } from '~/components/UIUC-Components/navbars/GlobalHeader'
 import { useDisclosure } from '@mantine/hooks'
 import Image from 'next/image'
 import { useEffect, useState, useContext, useRef } from 'react'
@@ -14,7 +13,6 @@ import {
   rem,
   Transition,
 } from '@mantine/core'
-import { spotlight } from '@mantine/spotlight'
 import { IconHome, IconSettings, IconPlus } from '@tabler/icons-react'
 import { useRouter } from 'next/router'
 import { montserrat_heading } from 'fonts'
@@ -22,24 +20,13 @@ import { useUser } from '@clerk/nextjs'
 import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
 import HomeContext from '~/pages/api/home/home.context'
 import { UserSettings } from '../../Chat/UserSettings'
-// import MagicBell, {
-//   FloatingNotificationInbox,
-// } from '@magicbell/magicbell-react'
 import { usePostHog } from 'posthog-js/react'
 
 const styles: Record<string, React.CSSProperties> = {
   logoContainerBox: {
-    // justifyContent: 'center',
-    // alignItems: 'center',
-    // overflow: 'hidden',
-    // position: 'relative',
-    // height: '40%',
     height: '52px',
     maxWidth:
       typeof window !== 'undefined' && window.innerWidth > 600 ? '80%' : '100%',
-    // maxWidth: '100%',
-    // paddingRight:
-    //   typeof window !== 'undefined' && window.innerWidth > 600 ? '10px' : '2px',
     paddingLeft:
       typeof window !== 'undefined' && window.innerWidth > 600 ? '25px' : '5px',
   },
@@ -54,7 +41,7 @@ const styles: Record<string, React.CSSProperties> = {
 const HEADER = rem(60)
 const HEADER_HEIGHT = parseFloat(HEADER) * 16
 
-const useStyles = createStyles((theme) => ({
+const useStyles = createStyles((theme, { isAdmin }: { isAdmin: boolean }) => ({
   inner: {
     height: HEADER_HEIGHT,
     display: 'flex',
@@ -93,7 +80,7 @@ const useStyles = createStyles((theme) => ({
       backgroundColor: 'rgba(255, 255, 255, 0.1)',
       textAlign: 'right',
     },
-    [theme.fn.smallerThan(825)]: {
+    [theme.fn.smallerThan(isAdmin ? 825 : 500)]: {
       display: 'list-item',
       textAlign: 'center',
       borderRadius: 0,
@@ -102,7 +89,7 @@ const useStyles = createStyles((theme) => ({
     },
   },
   burger: {
-    [theme.fn.largerThan(825)]: {
+    [theme.fn.largerThan(isAdmin ? 825 : 500)]: {
       display: 'none',
     },
     marginRight: '3px',
@@ -116,7 +103,7 @@ const useStyles = createStyles((theme) => ({
     borderRadius: '10px',
     overflow: 'hidden',
     width: '200px',
-    [theme.fn.largerThan(825)]: {
+    [theme.fn.largerThan(isAdmin ? 825 : 500)]: {
       display: 'none',
     },
   },
@@ -127,13 +114,13 @@ const useStyles = createStyles((theme) => ({
     display: 'block',
   },
   settings: {
-    [theme.fn.smallerThan(675)]: {
+    [theme.fn.smallerThan(isAdmin ? 675 : 500)]: {
       display: 'none',
     },
     display: 'block',
   },
   newChat: {
-    [theme.fn.smallerThan(500)]: {
+    [theme.fn.smallerThan(isAdmin ? 500 : 350)]: {
       display: 'none',
     },
     display: 'block',
@@ -156,12 +143,11 @@ interface ChatNavbarProps {
 }
 
 const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
-  const { classes, theme } = useStyles()
   const router = useRouter()
-  const [activeLink, setActiveLink] = useState<null | string>(null)
   const [opened, { toggle }] = useDisclosure(false)
   const [show, setShow] = useState(true)
   const [isAdminOrOwner, setIsAdminOrOwner] = useState(false)
+  const { classes, theme } = useStyles({ isAdmin: isAdminOrOwner })
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== 'undefined' ? window.innerWidth : 825,
   )
@@ -178,13 +164,6 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
     return router.asPath.split('/')[1]
   }
 
-  const [userEmail, setUserEmail] = useState('no_email')
-
-  useEffect(() => {
-    if (!router.isReady) return
-    setActiveLink(router.asPath.split('?')[0]!)
-  }, [router.asPath])
-
   useEffect(() => {
     const fetchCourses = async () => {
       if (clerk_user.isLoaded && clerk_user.isSignedIn) {
@@ -193,7 +172,6 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
         posthog?.identify(clerk_user.user.id, {
           email: currUserEmails[0] || 'no_email',
         })
-        setUserEmail(currUserEmails[0] || 'no_email')
 
         const response = await fetch(
           `/api/UIUC-api/getCourseMetadata?course_name=${getCurrentCourseName()}`,
@@ -220,40 +198,36 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
   useEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth)
+      if (isAdminOrOwner && window.innerWidth > 825) {
+        opened && toggle()
+      } else if (!isAdminOrOwner && window.innerWidth > 500) {
+        opened && toggle()
+      }
     }
 
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
-  }, [])
+  }, [opened, toggle])
 
   return (
     <div
-      className={`${isgpt4 ? 'bg-[#15162c]' : 'bg-[#2e026d]'} -mr-0 pb-16 pl-5`}
+      className={`${isgpt4 ? 'bg-[#15162c]' : 'bg-[#2e026d]'} -mr-0 px-12 pb-16 pl-5`}
       style={{ display: show ? 'block' : 'none' }}
-      // style={{ display: show ? 'flex' : 'none', flexDirection: 'row', height: '40%', alignItems: 'center' }}
     >
       <div
-        // className="mt-4"
-        style={{ paddingTop: 'Opx', maxWidth: '100vw', marginRight: '0px' }}
+        style={{
+          paddingTop: 'Opx',
+          maxWidth: '100vw',
+          marginRight: '0px',
+          paddingLeft: '17px',
+        }}
       >
-        {/* <div > */}
-        {/* <Flex style={{ flexDirection: 'row' }} className="navbar rounded-badge h-24 bg-[#15162c] shadow-lg shadow-purple-800"> */}
-
         <Flex
           justify="flex-start"
           direction="row"
           styles={{ height: '10px', flexWrap: 'nowrap', gap: '0rem' }}
           className="navbar rounded-badge bg-[#15162c] shadow-lg shadow-purple-800"
         >
-          {/* <div> */}
-          {/* <div
-            style={{
-              ...styles.logoContainerBox,
-              // display: 'flex',
-              // alignItems: 'center',
-              // justifyContent: 'flex-start',
-            }}
-          > */}
           <Link href="/" style={{ flex: 'none', flexWrap: 'nowrap' }}>
             <h2 className="cursor-pointer font-extrabold tracking-tight text-white sm:ms-3 sm:text-[2rem] sm:text-[2rem] md:text-3xl">
               UIUC.<span className="text-[hsl(280,100%,70%)]">chat</span>
@@ -289,7 +263,6 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
             spacing="0px"
             noWrap
           >
-            {/* TODO: .mantine-kivjf7 {gap: 0rem} */}
             {/* This is the hamburger menu / dropdown */}
             <Transition
               transition="pop-top-right"
@@ -310,7 +283,10 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                   <div
                     className={classes.link}
                     style={{
-                      display: windowWidth <= 500 && opened ? 'block' : 'none',
+                      display:
+                        windowWidth <= (isAdminOrOwner ? 500 : 350) && opened
+                          ? 'block'
+                          : 'none',
                       padding: 0,
                     }}
                   >
@@ -530,79 +506,81 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                   </div>
                 </button>
               </div>
-              <div className={classes.adminDashboard}>
-                <button
-                  className={`${classes.link}`}
-                  style={{ padding: '3px 8px', minWidth: '100px' }}
-                  onClick={(e) => {
-                    // Handle click with modifier keys
-                    if (e.ctrlKey || e.metaKey || e.shiftKey) {
-                      window.open(
-                        `/${getCurrentCourseName()}/dashboard`,
-                        '_blank',
-                      )
-                    } else {
-                      router.push(`/${getCurrentCourseName()}/dashboard`)
-                    }
-                  }}
-                  onAuxClick={(e) => {
-                    // Handle middle click (button 1)
-                    if (e.button === 1) {
-                      window.open(
-                        `/${getCurrentCourseName()}/dashboard`,
-                        '_blank',
-                      )
-                    }
-                  }}
-                  onContextMenu={(e) => {
-                    // Don't prevent default to allow normal right-click menu
-                    // But add the URL to the clipboard
-                    navigator.clipboard.writeText(
-                      `${window.location.origin}/${getCurrentCourseName()}/dashboard`,
-                    )
-                  }}
-                  aria-label={`Go to dashboard`}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      width: '100%',
-                      position: 'relative',
+              {isAdminOrOwner && (
+                <div className={classes.adminDashboard}>
+                  <button
+                    className={`${classes.link}`}
+                    style={{ padding: '3px 8px', minWidth: '100px' }}
+                    onClick={(e) => {
+                      // Handle click with modifier keys
+                      if (e.ctrlKey || e.metaKey || e.shiftKey) {
+                        window.open(
+                          `/${getCurrentCourseName()}/dashboard`,
+                          '_blank',
+                        )
+                      } else {
+                        router.push(`/${getCurrentCourseName()}/dashboard`)
+                      }
                     }}
+                    onAuxClick={(e) => {
+                      // Handle middle click (button 1)
+                      if (e.button === 1) {
+                        window.open(
+                          `/${getCurrentCourseName()}/dashboard`,
+                          '_blank',
+                        )
+                      }
+                    }}
+                    onContextMenu={(e) => {
+                      // Don't prevent default to allow normal right-click menu
+                      // But add the URL to the clipboard
+                      navigator.clipboard.writeText(
+                        `${window.location.origin}/${getCurrentCourseName()}/dashboard`,
+                      )
+                    }}
+                    aria-label={`Go to dashboard`}
                   >
-                    <IconHome
-                      size={30}
-                      strokeWidth={2}
+                    <div
                       style={{
-                        marginRight: '4px',
-                        marginLeft: '4px',
-                        position: 'relative',
-                        top: '-2px',
-                      }}
-                    />
-                    <span
-                      style={{
-                        backgroundImage:
-                          "url('/media/hero-header-underline-reflow.svg')",
-                        backgroundRepeat: 'no-repeat',
-                        backgroundSize: 'contain',
-                        backgroundPosition: 'bottom',
+                        display: 'flex',
+                        alignItems: 'center',
                         width: '100%',
-                        height: '40px',
                         position: 'relative',
-                        top: '13px',
                       }}
                     >
+                      <IconHome
+                        size={30}
+                        strokeWidth={2}
+                        style={{
+                          marginRight: '4px',
+                          marginLeft: '4px',
+                          position: 'relative',
+                          top: '-2px',
+                        }}
+                      />
                       <span
-                        className={`${montserrat_heading.variable} font-montserratHeading`}
+                        style={{
+                          backgroundImage:
+                            "url('/media/hero-header-underline-reflow.svg')",
+                          backgroundRepeat: 'no-repeat',
+                          backgroundSize: 'contain',
+                          backgroundPosition: 'bottom',
+                          width: '100%',
+                          height: '40px',
+                          position: 'relative',
+                          top: '13px',
+                        }}
                       >
-                        Admin Dashboard
+                        <span
+                          className={`${montserrat_heading.variable} font-montserratHeading`}
+                        >
+                          Admin Dashboard
+                        </span>
                       </span>
-                    </span>
-                  </div>
-                </button>
-              </div>
+                    </div>
+                  </button>
+                </div>
+              )}
               <div
                 style={{
                   position: 'absolute',
@@ -616,14 +594,12 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
             </Container>
 
             <Container style={{ padding: 0, margin: 0 }}>
-              {isAdminOrOwner && (
-                <Burger
-                  opened={opened}
-                  onClick={toggle}
-                  className={classes.burger}
-                  size="sm"
-                />
-              )}
+              <Burger
+                opened={opened}
+                onClick={toggle}
+                className={classes.burger}
+                size="sm"
+              />
             </Container>
 
             {/* Sign in buttons */}
