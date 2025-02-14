@@ -1,10 +1,77 @@
-import React from 'react'
-import { Text, Switch, Card, Skeleton } from '@mantine/core'
+import React, { useState } from 'react'
+import { Text, Switch, Card, Skeleton, Button, TextInput, Input, ActionIcon } from '@mantine/core'
 import { IconCheck, IconExternalLink, IconX } from '@tabler/icons-react'
-import { APIKeyInput } from '../LLMsApiKeyInputForm'
+import { type FieldApi } from '@tanstack/react-form'
 import { ModelToggles } from '../ModelToggles'
 import { BedrockProvider, ProviderNames } from '~/utils/modelProviders/LLMProvider'
 import { motion, AnimatePresence } from 'framer-motion'
+
+function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
+  return (
+    <>
+      {field.state.meta.isTouched && field.state.meta.errors.length ? (
+        <Text size="xs" color="red">
+          {field.state.meta.errors.join(', ')}
+        </Text>
+      ) : null}
+      {field.state.meta.isValidating ? (
+        <Text size="xs">Validating...</Text>
+      ) : null}
+    </>
+  )
+}
+
+const CredentialInput = ({
+  field,
+  placeholder,
+  onEnterPress,
+}: {
+  field: any
+  placeholder: string
+  onEnterPress: () => void
+}) => {
+  return (
+    <div style={{ position: 'relative', width: '100%', marginBottom: '1rem' }}>
+      <Input.Wrapper id="credential-input" label={placeholder}>
+        <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+          <TextInput
+            type="password"
+            placeholder={placeholder}
+            aria-label={placeholder}
+            value={field.state.value}
+            onChange={(e) => field.handleChange(e.target.value)}
+            styles={{
+              root: {
+                flex: 1,
+              },
+              input: {
+                color: 'white',
+                padding: '8px',
+                borderRadius: '4px',
+                width: '100%',
+              },
+              wrapper: {
+                width: '100%',
+              },
+            }}
+          />
+          <ActionIcon
+            size="xs"
+            color="red"
+            onClick={(e) => {
+              e.preventDefault()
+              field.handleChange('')
+            }}
+            style={{ marginLeft: '8px' }}
+          >
+            <IconX size={12} />
+          </ActionIcon>
+        </div>
+      </Input.Wrapper>
+      <FieldInfo field={field} />
+    </div>
+  )
+}
 
 export default function BedrockProviderInput({
   provider,
@@ -15,8 +82,19 @@ export default function BedrockProviderInput({
   form: any
   isLoading: boolean
 }) {
+  const [isSaving, setIsSaving] = useState(false)
+
   if (isLoading) {
     return <Skeleton height={200} width={330} radius={'lg'} />
+  }
+
+  const handleSaveCredentials = async () => {
+    setIsSaving(true)
+    try {
+      await form.handleSubmit()
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -122,9 +200,10 @@ export default function BedrockProviderInput({
                     name={`providers.${ProviderNames.Bedrock}.accessKeyId`}
                   >
                     {(field: any) => (
-                      <APIKeyInput
+                      <CredentialInput
                         field={field}
                         placeholder="AWS Access Key ID"
+                        onEnterPress={handleSaveCredentials}
                       />
                     )}
                   </form.Field>
@@ -133,20 +212,38 @@ export default function BedrockProviderInput({
                     name={`providers.${ProviderNames.Bedrock}.secretAccessKey`}
                   >
                     {(field: any) => (
-                      <APIKeyInput
+                      <CredentialInput
                         field={field}
                         placeholder="AWS Secret Access Key"
+                        onEnterPress={handleSaveCredentials}
                       />
                     )}
                   </form.Field>
 
                   <form.Field name={`providers.${ProviderNames.Bedrock}.region`}>
                     {(field: any) => (
-                      <APIKeyInput field={field} placeholder="AWS Region" />
+                      <CredentialInput
+                        field={field}
+                        placeholder="AWS Region"
+                        onEnterPress={handleSaveCredentials}
+                      />
                     )}
                   </form.Field>
 
-                  <ModelToggles form={form} provider={provider} />
+                  <div className="mt-4 flex justify-start">
+                    <Button
+                      compact
+                      className="bg-purple-800 hover:border-indigo-600 hover:bg-indigo-600"
+                      onClick={handleSaveCredentials}
+                      loading={isSaving}
+                    >
+                      Save
+                    </Button>
+                  </div>
+
+                  <div className="mt-4">
+                    <ModelToggles form={form} provider={provider} />
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>

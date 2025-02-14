@@ -50,6 +50,7 @@ export async function runBedrockChat(
       throw new Error('Conversation messages array is empty')
     }
 
+    console.log('Model ID:', conversation.model.id)
     const model = bedrock(conversation.model.id)
 
     const commonParams = {
@@ -62,11 +63,13 @@ export async function runBedrockChat(
       toolChoice: undefined,
     }
 
+    console.log('Final params being sent to Bedrock:', JSON.stringify(commonParams, null, 2))
+
     if (stream) {
       const result = await streamText({
         model: model as any,
         messages: commonParams.messages.map((msg) => ({
-          role: msg.role === 'tool' ? 'tool' : msg.role === 'system' ? 'assistant' : msg.role,
+          role: msg.role === 'tool' ? 'tool' : msg.role,
           content: msg.content,
         })) as CoreMessage[],
         temperature: conversation.temperature,
@@ -95,18 +98,24 @@ function convertConversationToBedrockFormat(
 ): CoreMessage[] {
   const messages = []
 
+  console.log('Original conversation:', JSON.stringify(conversation.messages, null, 2))
+
   const systemMessage = conversation.messages.findLast(
     (msg) => msg.latestSystemMessage !== undefined,
   )
   if (systemMessage) {
+    console.log('Found system message:', systemMessage.latestSystemMessage)
     messages.push({
-      role: 'assistant',
+      role: 'system',
       content: systemMessage.latestSystemMessage || '',
     })
   }
 
   conversation.messages.forEach((message, index) => {
-    if (message.role === 'system') return
+    if (message.role === 'system') {
+      console.log('Skipping system message in forEach')
+      return
+    }
 
     let content: string
     if (index === conversation.messages.length - 1 && message.role === 'user') {
@@ -128,6 +137,7 @@ function convertConversationToBedrockFormat(
     })
   })
 
+  console.log('Final messages array being sent to Bedrock:', JSON.stringify(messages, null, 2))
   return messages as CoreMessage[]
 }
 
