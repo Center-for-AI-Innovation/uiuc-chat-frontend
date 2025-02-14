@@ -20,13 +20,10 @@ export const getGeminiModels = async (
   // If no models, return default models sorted by our preference
   if (!geminiProvider.models || geminiProvider.models.length === 0) {
     const preferredGeminiModelIds = [
-      GeminiModelID.Gemini_1_5_Pro,
-      GeminiModelID.Gemini_1_5_Pro_Latest,
-      GeminiModelID.Gemini_1_5_Flash,
-      GeminiModelID.Gemini_1_5_Flash_Latest,
-      GeminiModelID.Gemini_1_5_Flash_8b,
-      GeminiModelID.Gemini_1_5_Flash_8b_Latest,
+      GeminiModelID.Gemini_2_0_Pro_Exp_02_05,
       GeminiModelID.Gemini_2_0_Flash,
+      GeminiModelID.Gemini_2_0_Flash_Thinking_Exp_01_21,
+      GeminiModelID.Gemini_1_5_Pro,
     ]
 
     geminiProvider.models = Object.values(GeminiModels).sort((a, b) => {

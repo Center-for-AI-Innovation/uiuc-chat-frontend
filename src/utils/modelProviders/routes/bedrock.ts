@@ -27,14 +27,14 @@ export const getBedrockModels = async (
   // If no models, return default models sorted by our preference
   if (!bedrockProvider.models || bedrockProvider.models.length === 0) {
     const preferredBedrockModelIds = [
-      BedrockModelID.Claude_3_Sonnet,
-      BedrockModelID.Claude_3_Haiku,
-      BedrockModelID.Claude_2_1,
-      BedrockModelID.Claude_Instant,
-      BedrockModelID.Titan_Express,
-      BedrockModelID.Titan_Lite,
-      BedrockModelID.Llama2_70B,
-      BedrockModelID.Llama2_13B,
+      BedrockModelID.Claude_3_Opus,
+      BedrockModelID.Claude_3_5_Sonnet_Latest,
+      BedrockModelID.Claude_3_5_Haiku,
+      BedrockModelID.Nova_Pro,
+      BedrockModelID.Nova_Lite,
+      BedrockModelID.Nova_Micro,
+      BedrockModelID.Mistral_Large_2402,
+      BedrockModelID.Mistral_Small_2402,
     ]
 
     bedrockProvider.models = Object.values(BedrockModels).sort((a, b) => {

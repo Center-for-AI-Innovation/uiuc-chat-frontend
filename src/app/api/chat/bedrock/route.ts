@@ -46,14 +46,6 @@ export async function runBedrockChat(
       },
     })
 
-    console.log('Starting Bedrock chat with:', {
-      modelId: conversation.model.id,
-      provider: bedrockProvider.provider,
-      region: bedrockProvider.region,
-      hasAccessKey: !!bedrockProvider.accessKeyId,
-      hasSecretKey: !!bedrockProvider.secretAccessKey,
-    })
-
     if (conversation.messages.length === 0) {
       throw new Error('Conversation messages array is empty')
     }
