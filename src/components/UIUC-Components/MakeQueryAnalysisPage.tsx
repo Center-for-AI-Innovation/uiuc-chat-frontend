@@ -138,6 +138,7 @@ const dateRangeOptions = [
   { value: '7d', label: 'Last Week' },
   { value: '30d', label: 'Last Month' },
   { value: '1y', label: 'Last Year' },
+  { value: 'all', label: 'All Time' },
   { value: 'custom', label: 'Custom Range' },
 ]
 
@@ -227,6 +228,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
         endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
         startDate = new Date(endDate)
         startDate.setFullYear(startDate.getFullYear() - 1)
+        break
+      case 'all':
+        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        startDate = firstConversationDate || new Date(endDate)
         break
       case 'custom':
         return customDateRange
@@ -1112,6 +1117,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           data={conversationStats?.per_day}
                           isLoading={statsLoading}
                           error={statsError}
+                          dateRange={getDateRangeFromType(dateRangeType)}
                         />
                       </div>
 
