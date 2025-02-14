@@ -1386,10 +1386,12 @@ export const Chat = memo(
               style={{ whiteSpace: 'pre-wrap' }}
               dangerouslySetInnerHTML={{
                 __html:
-                  courseMetadata?.course_intro_message?.replace(
-                    /(https?:\/\/[^\s]+)/g,
-                    '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-purple-400 hover:underline">$1</a>',
-                  ) || '',
+                  courseMetadata?.course_intro_message
+                    ?.replace(
+                      /(https?:\/\/[^\s]+)/g,
+                      '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-purple-400 hover:underline">$1</a>',
+                    )
+                    ?.replace(/(https?:\/\/)/g, '') || '',
               }}
             />
 
