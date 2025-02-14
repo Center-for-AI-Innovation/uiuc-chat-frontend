@@ -24,7 +24,14 @@ if (typeof window !== 'undefined') {
     api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com',
     opt_in_site_apps: true,
     autocapture: false,
-    // Enable debug mode in development
+    session_recording: {
+      maskAllInputs: false,
+      maskInputOptions: {
+        password: true,
+        email: true,
+        creditCard: true
+      }
+    },
     loaded: (posthog) => {
       if (process.env.NODE_ENV === 'development') posthog.debug()
     },
