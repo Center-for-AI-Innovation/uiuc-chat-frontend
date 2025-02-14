@@ -618,14 +618,12 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
             </Container>
 
             <Container style={{ padding: 0, margin: 0 }}>
-              {isAdminOrOwner && (
-                <Burger
-                  opened={opened}
-                  onClick={toggle}
-                  className={classes.burger}
-                  size="sm"
-                />
-              )}
+              <Burger
+                opened={opened}
+                onClick={toggle}
+                className={classes.burger}
+                size="sm"
+              />
             </Container>
 
             {/* Sign in buttons */}
