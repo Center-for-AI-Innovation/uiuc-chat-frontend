@@ -9,56 +9,35 @@ export interface GeminiModel {
 
 export enum GeminiModelID {
   Gemini_2_0_Flash = 'gemini-2.0-flash-001',
+  Gemini_2_0_Flash_Thinking_Exp_01_21 = 'gemini-2.0-flash-thinking-exp-01-21',
+  Gemini_2_0_Pro_Exp_02_05 = 'gemini-2.0-pro-exp-02-05',
   Gemini_1_5_Pro = 'gemini-1.5-pro',
-  Gemini_1_5_Pro_Latest = 'gemini-1.5-pro-latest',
-  Gemini_1_5_Flash = 'gemini-1.5-flash',
-  Gemini_1_5_Flash_Latest = 'gemini-1.5-flash-latest',
-  Gemini_1_5_Flash_8b = 'gemini-1.5-flash-8b',
-  Gemini_1_5_Flash_8b_Latest = 'gemini-1.5-flash-8b-latest',
 }
 
 export const GeminiModels: Record<GeminiModelID, GeminiModel> = {
-  [GeminiModelID.Gemini_1_5_Pro]: {
-    id: GeminiModelID.Gemini_1_5_Pro,
-    name: 'Gemini 1.5 Pro',
-    tokenLimit: 32000,
-    enabled: true,
-    default: true
-  },
-  [GeminiModelID.Gemini_1_5_Pro_Latest]: {
-    id: GeminiModelID.Gemini_1_5_Pro_Latest,
-    name: 'Gemini 1.5 Pro (Latest)',
-    tokenLimit: 32000,
-    enabled: true
-  },
   [GeminiModelID.Gemini_2_0_Flash]: {
     id: GeminiModelID.Gemini_2_0_Flash,
     name: 'Gemini 2.0 Flash',
     tokenLimit: 32000,
     enabled: true
   },
-  [GeminiModelID.Gemini_1_5_Flash]: {
-    id: GeminiModelID.Gemini_1_5_Flash,
-    name: 'Gemini 1.5 Flash',
+  [GeminiModelID.Gemini_2_0_Flash_Thinking_Exp_01_21]: {
+    id: GeminiModelID.Gemini_2_0_Flash_Thinking_Exp_01_21,
+    name: 'Gemini 2.0 Flash Thinking',
     tokenLimit: 32000,
     enabled: true
   },
-  [GeminiModelID.Gemini_1_5_Flash_Latest]: {
-    id: GeminiModelID.Gemini_1_5_Flash_Latest,
-    name: 'Gemini 1.5 Flash (Latest)',
+  [GeminiModelID.Gemini_2_0_Pro_Exp_02_05]: {
+    id: GeminiModelID.Gemini_2_0_Pro_Exp_02_05,
+    name: 'Gemini 2.0 Pro',
     tokenLimit: 32000,
-    enabled: true
+    enabled: true,
+    default: true
   },
-  [GeminiModelID.Gemini_1_5_Flash_8b]: {
-    id: GeminiModelID.Gemini_1_5_Flash_8b,
-    name: 'Gemini 1.5 Flash 8B',
-    tokenLimit: 32000,
-    enabled: true
-  },
-  [GeminiModelID.Gemini_1_5_Flash_8b_Latest]: {
-    id: GeminiModelID.Gemini_1_5_Flash_8b_Latest,
-    name: 'Gemini 1.5 Flash 8B (Latest)',
+  [GeminiModelID.Gemini_1_5_Pro]: {
+    id: GeminiModelID.Gemini_1_5_Pro,
+    name: 'Gemini 1.5 Pro',
     tokenLimit: 32000,
     enabled: true
   }
-} 
+}

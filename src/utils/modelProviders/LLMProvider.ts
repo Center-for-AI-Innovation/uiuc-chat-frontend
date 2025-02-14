@@ -75,19 +75,18 @@ export const VisionCapableModels: Set<
   NCSAHostedVLMModelID.MOLMO_7B_D_0924,
   NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT,
   NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT,
-  GeminiModelID.Gemini_1_5_Pro,
+
+  // Gemini
   GeminiModelID.Gemini_2_0_Flash,
-  GeminiModelID.Gemini_1_5_Flash,
-  GeminiModelID.Gemini_1_5_Flash_Latest,
-  // GeminiModelID.Gemini_1_5_Flash_8b,
-  // GeminiModelID.Gemini_1_5_Flash_8b_Latest,
-  // BedrockModelID.Claude_3_5_Sonnet,
-  // BedrockModelID.Claude_3_Haiku,
-  // BedrockModelID.Claude_3_Sonnet,
-  // BedrockModelID.Claude_3_Opus,
+  GeminiModelID.Gemini_2_0_Pro_Exp_02_05,
+  GeminiModelID.Gemini_1_5_Pro,
+  // Bedrock
+  BedrockModelID.Claude_3_Opus,
   BedrockModelID.Claude_3_5_Sonnet_Latest,
-  // BedrockModelID.Llama3_2_11B_Instruct,
-  // BedrockModelID.Llama3_2_90B_Instruct
+  BedrockModelID.Nova_Pro,
+  BedrockModelID.Nova_Lite,
+  BedrockModelID.Llama3_2_11B_Instruct,
+  BedrockModelID.Llama3_2_90B_Instruct
 ])
 
 export const AllSupportedModels: Set<GenericSupportedModel> = new Set([
@@ -214,12 +213,9 @@ export type AllLLMProviders = {
 // Ordered list of preferred model IDs -- the first available model will be used as default
 export const preferredModelIds = [
   AnthropicModelID.Claude_3_5_Sonnet,
-  GeminiModelID.Gemini_1_5_Pro,  // what's the best preffered model for gemini
-  BedrockModelID.Claude_3_Sonnet,
   OpenAIModelID.GPT_4o_mini,
   AzureModelID.GPT_4o_mini,
   AnthropicModelID.Claude_3_5_Haiku,
-  BedrockModelID.Claude_3_Haiku,
   OpenAIModelID.GPT_4o,
   AzureModelID.GPT_4o,
   OpenAIModelID.GPT_4_Turbo,
