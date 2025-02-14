@@ -313,6 +313,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                     className={classes.link}
                     style={{
                       display: windowWidth <= 650 && opened ? 'block' : 'none',
+                      padding: 0,
                     }}
                   >
                     <div
@@ -332,6 +333,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                         width: '100%',
                         padding: '8px',
                         cursor: 'pointer',
+                        height: '100%',
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -351,6 +353,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                     className={classes.link}
                     style={{
                       display: windowWidth <= 700 && opened ? 'block' : 'none',
+                      padding: 0,
                     }}
                   >
                     <div
@@ -365,6 +368,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                         width: '100%',
                         padding: '8px',
                         cursor: 'pointer',
+                        height: '100%',
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -386,6 +390,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                       style={{
                         display:
                           windowWidth <= 900 && opened ? 'block' : 'none',
+                        padding: 0,
                       }}
                     >
                       <Link
@@ -397,6 +402,8 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                           cursor: 'pointer',
                           textDecoration: 'none',
                           color: 'inherit',
+                          display: 'block',
+                          height: '100%',
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center' }}>
