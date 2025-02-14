@@ -38,6 +38,16 @@ export const Chatbar = ({
   current_email: string
   courseName: string
 }) => {
+  if (!current_email || !courseName) {
+    return <div className="flex-1 overflow-hidden">
+      <div className="h-full p-4">
+        <div className="text-center text-neutral-300">
+          Loading...
+        </div>
+      </div>
+    </div>;
+  }
+
   const { t } = useTranslation('sidebar')
   const chatBarContextValue = useCreateReducer<ChatbarInitialState>({
     initialState,

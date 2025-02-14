@@ -23,7 +23,7 @@ export function useFetchConversationHistory(
     queryFn: ({ pageParam = 0 }) =>
       fetchConversationHistory(user_email, searchTerm, courseName, pageParam),
     initialPageParam: 0,
-    enabled: !!user_email && !!courseName,
+    enabled: !!user_email && !!courseName && user_email.length > 0 && courseName.length > 0,
     getNextPageParam: (lastPage: ConversationPage) =>
       lastPage.nextCursor ?? null,
     refetchInterval: 20_000,

@@ -142,14 +142,6 @@ export function convertDBToChatConversation(
         queryRewriteText: msg.query_rewrite_text ?? null,
       }
 
-      // Add debug logging for message ordering
-      console.debug('Processing message in convertDBToChatConversation:', {
-        messageId: msg.id,
-        role: msg.role,
-        created_at: msg.created_at,
-        content_length: content.length
-      });
-
       return messageObj
     }),
     createdAt: dbConversation.created_at || undefined,
@@ -250,171 +242,41 @@ export default async function handler(
         emailAddress,
         conversation,
       }: { emailAddress: string; conversation: ChatConversation } = req.body
-
       try {
-        // Validate conversation object
-        if (!conversation || typeof conversation !== 'object') {
-          console.error('Invalid conversation object received:', conversation);
-          throw new Error('Invalid conversation object');
-        }
-
-        // Log the size of the request and conversation details
-        const requestSize = new TextEncoder().encode(JSON.stringify(req.body)).length;
-        const conversationSize = new TextEncoder().encode(JSON.stringify(conversation)).length;
-        console.debug('Request and conversation sizes:', {
-          totalRequestSize: `${Math.round(requestSize / 1024 / 1024 * 100) / 100}MB`,
-          conversationSize: `${Math.round(conversationSize / 1024 / 1024 * 100) / 100}MB`,
-          messageCount: conversation?.messages?.length,
-          totalContextCount: conversation?.messages?.reduce((sum, msg) => sum + (msg.contexts?.length || 0), 0)
-        });
-
         // Convert conversation to DB type
-        let dbConversation;
-        try {
-          dbConversation = convertChatToDBConversation(conversation);
-          console.debug('Successfully converted to DB conversation');
-        } catch (convError: any) {
-          console.error('Error converting conversation to DB format:', convError);
-          throw new Error(`Conversion error: ${convError.message}`);
-        }
+        const dbConversation = convertChatToDBConversation(conversation)
 
-        if (!conversation.messages?.length) {
-          console.error('No messages found in conversation:', conversation.id);
-          throw new Error('No messages in conversation');
+        if (conversation.messages.length === 0) {
+          throw new Error('No messages in conversation, not saving!')
         }
-
-        // Save conversation to Supabase with detailed error logging
-        console.debug('Attempting to save conversation to Supabase...');
+        // Save conversation to Supabase
         const { data, error } = await supabase
           .from('conversations')
-          .upsert([dbConversation], { onConflict: 'id' });
+          .upsert([dbConversation], { onConflict: 'id' })
 
-        if (error) {
-          console.error('Error saving conversation to Supabase:', {
-            error,
-            errorMessage: error.message,
-            details: error.details,
-            hint: error.hint,
-            code: error.code,
-            conversationId: conversation.id,
-            messageCount: conversation.messages.length
-          });
-          throw new Error(`Supabase error: ${error.message}`);
-        }
+        if (error) throw error
 
-        console.debug('Successfully saved conversation, proceeding to save messages...');
-
-        // Convert and save all messages in batches
-        const BATCH_SIZE = 3;
-        for (let i = 0; i < conversation.messages.length; i += BATCH_SIZE) {
-          const messageBatch = conversation.messages.slice(i, i + BATCH_SIZE);
-          console.debug(`Processing message batch ${Math.floor(i/BATCH_SIZE) + 1}/${Math.ceil(conversation.messages.length/BATCH_SIZE)}`);
-          
-          let dbMessageBatch;
-          try {
-            dbMessageBatch = messageBatch.map(message => {
-              const dbMessage = convertChatToDBMessage(message, conversation.id);
-              const contexts = dbMessage.contexts;
-              const contextCount = contexts && Array.isArray(contexts) ? contexts.length : 0;
-              const messageSize = new TextEncoder().encode(JSON.stringify(dbMessage)).length;
-              
-              console.debug('Message %s details:', message.id, {
-                contextCount,
-                sizeKB: Math.round(messageSize / 1024 * 100) / 100,
-                role: message.role,
-                contentLength: JSON.stringify(message.content).length
-              });
-              
-              return dbMessage;
-            });
-          } catch (convError: any) {
-            console.error('Error converting message batch to DB format:', {
-              error: convError,
-              batchIndex: Math.floor(i/BATCH_SIZE) + 1,
-              messageIds: messageBatch.map(m => m.id)
-            });
-            throw new Error(`Message conversion error: ${convError.message}`);
-          }
-          
-          const batchSize = new TextEncoder().encode(JSON.stringify(dbMessageBatch)).length;
-          console.debug(`Batch ${Math.floor(i/BATCH_SIZE) + 1} size: ${Math.round(batchSize / 1024 * 100) / 100}KB`);
-          
-          // Upsert messages with conflict resolution on id
-          const { error: messageError } = await supabase
-            .from('messages')
-            .upsert(dbMessageBatch, {
-              onConflict: 'id',
-              ignoreDuplicates: false // Update existing messages if they exist
-            });
-          
-          if (messageError) {
-            console.error('Error saving message batch:', {
-              error: messageError,
-              errorMessage: messageError.message,
-              details: messageError.details,
-              hint: messageError.hint,
-              code: messageError.code,
-              batchIndex: Math.floor(i/BATCH_SIZE) + 1,
-              batchSize: dbMessageBatch.length,
-              messageIds: dbMessageBatch.map(m => m.id),
-              batchSizeKB: Math.round(batchSize / 1024 * 100) / 100
-            });
-            
-            if (messageError.message?.includes('too large') || messageError.message?.includes('413')) {
-              throw new Error(`Message batch too large (${Math.round(batchSize / 1024 * 100) / 100}KB). Try reducing context size.`);
-            }
-            throw new Error(`Message save error: ${messageError.message}`);
-          }
-        }
-
-        // Clean up any orphaned messages that are no longer part of the conversation
-        const currentMessageIds = conversation.messages.map(m => m.id);
-        const { error: cleanupError } = await supabase
+        // First delete all existing messages for this conversation
+        await supabase
           .from('messages')
           .delete()
           .eq('conversation_id', conversation.id)
-          .not('id', 'in', `(${currentMessageIds.map(id => `'${id}'`).join(',')})`);
 
-        if (cleanupError) {
-          console.warn('Non-critical error cleaning up orphaned messages:', {
-            error: cleanupError,
-            errorMessage: cleanupError.message,
-            conversationId: conversation.id
-          });
-          // Don't throw error for cleanup failures as it's not critical
+        // Then insert all messages in their current state
+        for (const message of conversation.messages) {
+          const dbMessage = convertChatToDBMessage(message, conversation.id)
+          const { error: messageError } = await supabase
+            .from('messages')
+            .insert(dbMessage)
+          if (messageError) throw messageError
         }
 
-        console.debug('Successfully saved all message batches');
-        res.status(200).json({ message: 'Conversation saved successfully' });
+        res.status(200).json({ message: 'Conversation saved successfully' })
       } catch (error) {
-        console.error('Error in conversation save process:', {
-          error,
-          errorMessage: error instanceof Error ? error.message : 'Unknown error',
-          stack: error instanceof Error ? error.stack : undefined,
-          details: (error as any)?.details,
-          hint: (error as any)?.hint,
-          code: (error as any)?.code,
-          conversationId: conversation?.id,
-          messageCount: conversation?.messages?.length
-        });
-        
-        // Check if it's a payload size error
-        if (error instanceof Error && 
-            (error.message?.includes('too large') || 
-             error.message?.includes('413') || 
-             error.message?.includes('Message batch too large'))) {
-          res.status(413).json({ 
-            error: 'Conversation data is too large. Try reducing the number of contexts per message or starting a new conversation.',
-            details: error.message,
-            code: (error as any)?.code
-          });
-        } else {
-          res.status(500).json({ 
-            error: `Error saving conversation: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            details: error instanceof Error ? error.stack : undefined,
-            code: (error as any)?.code
-          });
-        }
+        res
+          .status(500)
+          .json({ error: `Error saving conversation` + error?.toString() })
+        console.error('Error saving conversation:', error)
       }
       break
 

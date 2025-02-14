@@ -361,13 +361,13 @@ function _buildQueryTopContext({
     const contexts = conversation.messages[conversation.messages.length - 1]
       ?.contexts as ContextWithMetadata[]
 
-    if (contexts.length === 0) {
-      return undefined
+    if (!contexts || !Array.isArray(contexts) || contexts.length === 0) {
+      return undefined;
     }
 
-    let tokenCounter = 0 // encoding.encode(system_prompt + searchQuery).length
+    let tokenCounter = 0
     const validDocs = []
-    for (const [index, d] of contexts.entries()) {
+    for (const [index, d] of Array.from(contexts).entries()) {
       const docString = `---\n${index + 1}: ${d.readable_filename}${
         d.pagenumber ? ', page: ' + d.pagenumber : ''
       }\n${d.text}\n`
