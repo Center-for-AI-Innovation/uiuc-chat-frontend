@@ -19,9 +19,9 @@ export enum BedrockModelID {
   Llama3_2_11B_Instruct = 'us.meta.llama3-2-11b-instruct-v1:0',
   Llama3_2_90B_Instruct = 'us.meta.llama3-2-90b-instruct-v1:0',
   Llama3_3_70B_Instruct = 'us.meta.llama3-3-70b-instruct-v1:0',
-  Mistral_Large_2402 = 'mistral.mistral-large-2402-v1:0',
-  Mistral_7B_Instruct = 'mistral.mistral-7b-instruct-v0:2',
-  Mistral_Small_2402 = 'mistral.mistral-small-2402-v1:0',
+  Mistral_Large_2402 = 'us.mistral.mistral-large-2402-v1:0',
+  Mistral_7B_Instruct = 'us.mistral.mistral-7b-instruct-v0:2',
+  Mistral_Small_2402 = 'us.mistral.mistral-small-2402-v1:0',
 }
 
 export const BedrockModels: Record<BedrockModelID, BedrockModel> = {
