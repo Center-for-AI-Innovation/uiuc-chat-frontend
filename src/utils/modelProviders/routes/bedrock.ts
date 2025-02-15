@@ -33,8 +33,8 @@ export const getBedrockModels = async (
       BedrockModelID.Nova_Pro,
       BedrockModelID.Nova_Lite,
       BedrockModelID.Nova_Micro,
-      BedrockModelID.Mistral_Large_2402,
-      BedrockModelID.Mistral_Small_2402,
+      // BedrockModelID.Mistral_Large_2402,
+      // BedrockModelID.Mistral_Small_2402,
     ]
 
     bedrockProvider.models = Object.values(BedrockModels).sort((a, b) => {
