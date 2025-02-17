@@ -255,9 +255,13 @@ export default function BedrockProviderInput({
                     </Button>
                   </div>
 
-                  <div className="mt-4">
-                    <ModelToggles form={form} provider={provider} />
-                  </div>
+                  {form.state.values?.providers?.Bedrock?.accessKeyId &&
+                    form.state.values?.providers?.Bedrock?.secretAccessKey &&
+                    form.state.values?.providers?.Bedrock?.region && (
+                      <div className="mt-4">
+                        <ModelToggles form={form} provider={provider} />
+                      </div>
+                    )}
                 </motion.div>
               )}
             </AnimatePresence>
