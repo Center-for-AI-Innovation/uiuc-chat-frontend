@@ -22,14 +22,14 @@ export async function POST(req: Request) {
 
     if (stream) {
       const result = await streamText({
-        model: openai(conversation.model.id),
+        model: openai(conversation.model.id) as any,
         temperature: conversation.temperature,
         messages,
       })
       return result.toTextStreamResponse()
     } else {
       const result = await generateText({
-        model: openai(conversation.model.id),
+        model: openai(conversation.model.id) as any,
         temperature: conversation.temperature,
         messages,
       })

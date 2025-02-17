@@ -1,23 +1,19 @@
-import { CourseMetadata } from '~/types/courseMetadata'
+import { type CourseMetadata } from '~/types/courseMetadata'
 import { getCourseMetadata } from '~/pages/api/UIUC-api/getCourseMetadata'
 import {
-  ChatBody,
-  Content,
-  ContextWithMetadata,
-  Conversation,
-  MessageType,
-  OpenAIChatMessage,
-  UIUCTool,
+  type Content,
+  type ContextWithMetadata,
+  type Conversation,
+  type MessageType,
+  type OpenAIChatMessage,
+  type UIUCTool,
 } from '@/types/chat'
-import { NextApiRequest, NextApiResponse } from 'next'
-import { AnySupportedModel } from '~/utils/modelProviders/LLMProvider'
+import { type AnySupportedModel } from '~/utils/modelProviders/LLMProvider'
 import {
   DEFAULT_SYSTEM_PROMPT,
   GUIDED_LEARNING_PROMPT,
   DOCUMENT_FOCUS_PROMPT,
 } from '@/utils/app/const'
-import { routeModelRequest } from '~/utils/streamProcessing'
-import { NextRequest, NextResponse } from 'next/server'
 
 import { encodingForModel } from 'js-tiktoken'
 import { v4 as uuidv4 } from 'uuid'
@@ -365,20 +361,20 @@ function _buildQueryTopContext({
     const contexts = conversation.messages[conversation.messages.length - 1]
       ?.contexts as ContextWithMetadata[]
 
-    if (contexts.length === 0) {
+    if (!contexts || contexts.length === 0) {
       return undefined
     }
 
-    let tokenCounter = 0 // encoding.encode(system_prompt + searchQuery).length
+    let tokenCounter = 0
     const validDocs = []
-    for (const [index, d] of contexts.entries()) {
+
+    // Fix: Use Array.from to ensure we have an array and then use entries()
+    for (const [index, d] of Array.from(contexts).entries()) {
       const docString = `---\n${index + 1}: ${d.readable_filename}${
         d.pagenumber ? ', page: ' + d.pagenumber : ''
       }\n${d.text}\n`
       const numTokens = encoding.encode(docString).length
-      // console.log(
-      //   `token_counter: ${tokenCounter}, num_tokens: ${numTokens}, token_limit: ${tokenLimit}`,
-      // )
+
       if (tokenCounter + numTokens <= tokenLimit) {
         tokenCounter += numTokens
         validDocs.push({ index, d })
