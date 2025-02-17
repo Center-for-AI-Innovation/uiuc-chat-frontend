@@ -807,8 +807,6 @@ export const routeModelRequest = async (
   NOTE: WebLLM is handled separately, because it MUST be called from the Client browser itself. 
   */
 
-  console.log('In routeModelRequest: ', chatBody, baseUrl)
-
   const selectedConversation = chatBody.conversation!
   if (!selectedConversation.model || !selectedConversation.model.id) {
     throw new Error('Conversation model is undefined or missing "id" property.')

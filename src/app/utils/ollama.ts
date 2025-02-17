@@ -59,7 +59,7 @@ function convertConversatonToVercelAISDKv3(
   )
   if (systemMessage) {
     console.log(
-      'Found system message, latestSystemMessage: ',
+      'Found system message in convertConversatonToVercelAISDKv3, latestSystemMessage: ',
       systemMessage.latestSystemMessage,
     )
     coreMessages.push({
@@ -76,6 +76,10 @@ function convertConversatonToVercelAISDKv3(
     if (index === conversation.messages.length - 1 && message.role === 'user') {
       // Use finalPromtEngineeredMessage for the most recent user message
       content = message.finalPromtEngineeredMessage || ''
+      console.log(
+        'Found finalPromtEngineeredMessage in convertConversatonToVercelAISDKv3, finalPromtEngineeredMessage: ',
+        content,
+      )
 
       // just for Ollama models remind it to use proper citation format.
       // content +=

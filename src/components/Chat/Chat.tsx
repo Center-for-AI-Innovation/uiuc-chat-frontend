@@ -1162,7 +1162,7 @@ export const Chat = memo(
               // Call LLM for conversation summary
               const summary =
                 await callLLMForMessageSummary(updatedConversation)
-              console.log('summary: ', summary)
+              console.log('summary with not plugin: ', summary)
               updatedConversation = updateConversationWithSummary(
                 updatedConversation,
                 summary,
@@ -1206,7 +1206,7 @@ export const Chat = memo(
               // Call LLM for conversation summary
               const summary =
                 await callLLMForMessageSummary(updatedConversation)
-              console.log('summary: ', summary)
+              console.log('summary with plugin: ', summary)
               updatedConversation = updateConversationWithSummary(
                 updatedConversation,
                 summary,

@@ -301,6 +301,12 @@ export const buildPrompt = async ({
     conversation.messages[
       conversation.messages.length - 1
     ]!.latestSystemMessage = finalSystemPrompt
+    if (summary) {
+      // change last message role to user
+      // this is for convertConversatonToVercelAISDKv3. Only the "user" role finalPromtEngineeredMessage is used.
+      // Here since the summary message is from assistant, we need to change it to user.
+      conversation.messages[conversation.messages.length - 1]!.role = 'user'
+    }
 
     return conversation
   } catch (error) {
@@ -542,15 +548,6 @@ const _getSystemPrompt = async ({
   if (shouldAppendDocumentsOnlyPrompt(conversation, courseMetadata)) {
     systemPrompt += DOCUMENT_FOCUS_PROMPT
   }
-
-  // Add math notation instructions
-  systemPrompt += `\nWhen responding with equations, use MathJax/KaTeX notation. Equations should be wrapped in either:
-
-  * Single dollar signs $...$ for inline math
-  * Double dollar signs $$...$$ for display/block math
-  * Or \\[...\\] for display math
-  
-  Here's how the equations should be formatted in the markdown: Schrödinger Equation: $i\\hbar \\frac{\\partial}{\\partial t} \\Psi(\\mathbf{r}, t) = \\hat{H} \\Psi(\\mathbf{r}, t)$`
 
   // Check if contexts are present
   const contexts =
