@@ -10,7 +10,7 @@ import { OpenAIError } from '~/utils/server'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
-export const maxDuration = 60
+export const revalidate = 0
 
 export async function POST(req: NextRequest, res: NextResponse) {
   const startTime = Date.now()
