@@ -237,7 +237,7 @@ const NewModelDropdown: React.FC<{
             })) || [],
         )}
         itemComponent={(props) => (
-          <ModelItem {...props} setLoadingModelId={() => {}} />
+          <ModelItem {...props} setLoadingModelId={() => { }} />
         )}
         maxDropdownHeight={480}
         rightSectionWidth="auto"
@@ -454,7 +454,7 @@ export default function APIKeyInputForm() {
             (model) => model.id === newDefaultModel.id,
           )
           if (modelIndex !== -1) {
-            ;(provider.models as any[])[modelIndex] = {
+            ; (provider.models as any[])[modelIndex] = {
               ...(provider.models as any[])[modelIndex],
               default: true,
             }
