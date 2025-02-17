@@ -30,6 +30,7 @@ import {
   Tooltip,
   useMantineTheme,
   Divider,
+  Select,
 } from '@mantine/core'
 import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
 import { DEFAULT_SYSTEM_PROMPT, GUIDED_LEARNING_PROMPT, DOCUMENT_FOCUS_PROMPT } from '~/utils/app/const'
@@ -60,6 +61,8 @@ import { debounce } from 'lodash'
 import CustomSwitch from '~/components/Switches/CustomSwitch'
 import CustomCopyButton from '~/components/Buttons/CustomCopyButton'
 import { useDebouncedCallback } from 'use-debounce'
+import { findDefaultModel } from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
+import { type AllLLMProviders, ProviderNames } from '~/utils/modelProviders/LLMProvider'
 
 const montserrat = Montserrat({
   weight: '700',
@@ -70,26 +73,139 @@ type PartialCourseMetadata = {
   [K in keyof CourseMetadata]?: CourseMetadata[K];
 };
 
+interface LLMModel {
+  id: string
+  name: string
+  enabled: boolean
+}
+
+interface LLMConfig {
+  enabled: boolean
+  apiKey?: string
+  models?: LLMModel[]
+}
+
+interface LLMProviders {
+  [key: string]: LLMConfig
+}
+
+interface ModelOption {
+  group: ProviderNames
+  value: string
+  label: string
+}
+
+const getProviderFromModel = (modelId: string, modelOptions: ModelOption[]): ProviderNames => {
+  if (!modelId || !modelOptions.length) return ProviderNames.OpenAI // default fallback
+
+  const selectedOption = modelOptions.find(option => option.value === modelId)
+  return selectedOption?.group || ProviderNames.OpenAI
+}
+
+const getApiEndpoint = (provider: ProviderNames): string => {
+  const endpoints: Record<ProviderNames, string> = {
+    [ProviderNames.OpenAI]: 'openAI',
+    [ProviderNames.Anthropic]: 'anthropic',
+    [ProviderNames.Ollama]: 'ollama',
+    [ProviderNames.Gemini]: 'gemini',
+    [ProviderNames.Bedrock]: 'bedrock',
+    [ProviderNames.Azure]: 'azure',
+    [ProviderNames.NCSAHosted]: 'ncsa',
+    [ProviderNames.WebLLM]: 'webllm',
+    [ProviderNames.NCSAHostedVLM]: 'vlm'
+  }
+  return endpoints[provider]
+}
+
+const isApiKeyRequired = (provider: ProviderNames): boolean => {
+  const providersRequiringApiKey = [
+    ProviderNames.OpenAI,
+    ProviderNames.Anthropic,
+    ProviderNames.Azure,
+    ProviderNames.Gemini,
+    ProviderNames.Bedrock
+  ]
+  return providersRequiringApiKey.includes(provider)
+}
+
+const getProviderApiKey = (provider: ProviderNames, llmProviders: AllLLMProviders | null): string => {
+  // First check if llmProviders is loaded
+  if (!llmProviders) {
+    return ''
+  }
+
+  // Don't require API key for open source models
+  if (!isApiKeyRequired(provider)) {
+    return ''
+  }
+
+  // Check if the provider exists and has an API key
+  if (llmProviders[provider]?.apiKey) {
+    return llmProviders[provider].apiKey
+  }
+
+  return ''
+}
+
 const CourseMain: NextPage = () => {
   const theme = useMantineTheme()
   const router = useRouter()
 
   const GetCurrentPageName = () => {
-    return router.query.course_name as string // Change this line
+    return router.query.course_name as string
   }
   const isSmallScreen = useMediaQuery('(max-width: 1280px)')
   const course_name = GetCurrentPageName() as string
   const { user, isLoaded, isSignedIn } = useUser()
   const [courseExists, setCourseExists] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
-    null,
-  )
+  const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(null)
   const [baseSystemPrompt, setBaseSystemPrompt] = useState('')
+  const [optimizedSystemPrompt, setOptimizedSystemPrompt] = useState('')
+  const [isRightSideVisible, setIsRightSideVisible] = useState(true)
+  const [selectedModel, setSelectedModel] = useState<string>('')
   const [opened, { close, open }] = useDisclosure(false)
   const [resetModalOpened, { close: closeResetModal, open: openResetModal }] = useDisclosure(false)
   const [llmProviders, setLLMProviders] = useState<any>(null)
   const [linkGeneratorOpened, { open: openLinkGenerator, close: closeLinkGenerator }] = useDisclosure(false)
+
+  const modelOptions = llmProviders
+    ? Object.entries(llmProviders as AllLLMProviders).flatMap(([provider, config]) =>
+      config.enabled && config.models && provider !== 'WebLLM'
+        ? config.models
+          .filter((model) => model.enabled)
+          .map((model) => ({
+            group: provider as ProviderNames,
+            value: model.id,
+            label: model.name,
+          }))
+        : [],
+    )
+    : []
+
+  const { messages, input, handleInputChange, reload, setMessages, setInput } =
+    useChat({
+      api: `/api/chat/${getApiEndpoint(getProviderFromModel(selectedModel, modelOptions))}`,
+      headers: {
+        Authorization: `Bearer ${getProviderApiKey(getProviderFromModel(selectedModel, modelOptions), llmProviders)}`,
+      },
+      body: {
+        model: selectedModel || 'gpt-4'
+      }
+    })
+
+  useEffect(() => {
+    setInput(baseSystemPrompt)
+  }, [baseSystemPrompt, setInput])
+
+  useEffect(() => {
+    if (llmProviders) {
+      const defaultModel = findDefaultModel(llmProviders as AllLLMProviders)
+      if (defaultModel) {
+        setSelectedModel(defaultModel.id)
+      }
+    }
+  }, [llmProviders])
 
   useEffect(() => {
     const fetchProviders = async () => {
@@ -112,20 +228,6 @@ const CourseMain: NextPage = () => {
       fetchProviders()
     }
   }, [course_name])
-
-  const { messages, input, handleInputChange, reload, setMessages, setInput } =
-    useChat({
-      api: '/api/chat/openAI',
-      headers: {
-        Authorization: `Bearer ${llmProviders?.OpenAI?.apiKey || ''}`,
-      },
-      body: {
-        model: 'gpt-4o'  // Using GPT-4o for enhanced prompt optimization with higher context window
-      }
-    })
-
-  const [optimizedSystemPrompt, setOptimizedSystemPrompt] = useState('')
-  const [isRightSideVisible, setIsRightSideVisible] = useState(true)
 
   // Updated state variables for checkboxes
   const [guidedLearning, setGuidedLearning] = useState(false)
@@ -169,10 +271,6 @@ const CourseMain: NextPage = () => {
     }
     fetchCourseData()
   }, [router.isReady, course_name])
-
-  useEffect(() => {
-    setInput(baseSystemPrompt)
-  }, [baseSystemPrompt, setInput])
 
   const handleSystemPromptSubmit = async (newSystemPrompt: string | undefined) => {
     let success = false
@@ -500,21 +598,24 @@ const CourseMain: NextPage = () => {
       return
     }
 
-    if (!llmProviders.OpenAI?.enabled) {
+    const provider = getProviderFromModel(selectedModel, modelOptions)
+
+    if (!llmProviders[provider]?.enabled) {
       showToastNotification(
         theme,
-        'OpenAI Required',
-        'The Optimize System Prompt feature requires OpenAI to be enabled. Please enable OpenAI on the LLM page in your course settings to use this feature.',
+        `${provider} Required`,
+        `The Optimize System Prompt feature requires ${provider} to be enabled. Please enable ${provider} on the LLM page in your course settings to use this feature.`,
         true
       )
       return
     }
 
-    if (!llmProviders.OpenAI?.apiKey) {
+    // Only check for API key if the provider requires one
+    if (isApiKeyRequired(provider) && !llmProviders[provider]?.apiKey) {
       showToastNotification(
         theme,
-        'OpenAI API Key Required',
-        'The Optimize System Prompt feature requires an OpenAI API key. Please add your OpenAI API key on the LLM page in your course settings to use this feature.',
+        `${provider} API Key Required`,
+        `The Optimize System Prompt feature requires a ${provider} API key. Please add your ${provider} API key on the LLM page in your course settings to use this feature.`,
         true
       )
       return
@@ -592,6 +693,45 @@ Do not include any commentary or explanations. Output only the optimized system 
       { role: 'user', content: baseSystemPrompt },
     ])
     reload()
+  }
+
+  // Add a loading state handler for the Optimize button
+  const handleOptimizeClick = (e: React.MouseEvent) => {
+    if (!llmProviders) {
+      showToastNotification(
+        theme,
+        'Loading Configuration',
+        'Please wait while we load the model configuration...',
+        true
+      )
+      return
+    }
+
+    const provider = getProviderFromModel(selectedModel, modelOptions)
+
+    if (!llmProviders[provider]?.enabled) {
+      showToastNotification(
+        theme,
+        `${provider} Required`,
+        `The Optimize System Prompt feature requires ${provider} to be enabled. Please enable ${provider} on the LLM page in your course settings to use this feature.`,
+        true
+      )
+      return
+    }
+
+    // Only check for API key if the provider requires one and llmProviders is loaded
+    if (isApiKeyRequired(provider) && !llmProviders[provider]?.apiKey) {
+      showToastNotification(
+        theme,
+        `${provider} API Key Required`,
+        `The Optimize System Prompt feature requires a ${provider} API key. Please add your ${provider} API key on the LLM page in your course settings to use this feature.`,
+        true
+      )
+      return
+    }
+
+    handleSubmitPromptOptimization(e, reload, setMessages)
+    open()
   }
 
   return (
@@ -874,6 +1014,48 @@ Do not include any commentary or explanations. Output only the optimized system 
                                 )
                               }
                             >
+                              <Select
+                                placeholder="Select model"
+                                data={modelOptions}
+                                value={selectedModel}
+                                onChange={(value) => setSelectedModel(value || '')}
+                                searchable
+                                radius={'md'}
+                                maxDropdownHeight={400}
+                                styles={(theme) => ({
+                                  input: {
+                                    '&:focus': {
+                                      borderColor: '#6e56cf',
+                                    },
+                                    backgroundColor: '#1a1b3e',
+                                    fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+                                    cursor: 'pointer',
+                                    minWidth: 0,
+                                    flex: '1 1 auto',
+                                  },
+                                  dropdown: {
+                                    backgroundColor: '#1a1b3e',
+                                  },
+                                  item: {
+                                    '&[data-selected]': {
+                                      backgroundColor: theme.colors.grape[9],
+                                      '&:hover': {
+                                        backgroundColor: theme.colors.grape[8],
+                                      },
+                                    },
+                                    fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+                                    cursor: 'pointer',
+                                    whiteSpace: 'normal',
+                                    lineHeight: 1.2,
+                                  },
+                                  rightSection: {
+                                    pointerEvents: 'none',
+                                    color: theme.colors.gray[5],
+                                  },
+                                })}
+                                className={`min-w-0 flex-1 mb-4 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                rightSection={<IconChevronDown size={14} />}
+                              />
                               <Textarea
                                 autosize
                                 minRows={3}
@@ -927,40 +1109,8 @@ Do not include any commentary or explanations. Output only the optimized system 
                                   Update System Prompt
                                 </Button>
                                 <Button
-                                  onClick={(e) => {
-                                    if (!llmProviders) {
-                                      showToastNotification(
-                                        theme,
-                                        'Configuration Error',
-                                        'The Optimize System Prompt feature requires provider configuration to be loaded. Please refresh the page and try again.',
-                                        true
-                                      )
-                                      return
-                                    }
-
-                                    if (!llmProviders.OpenAI?.enabled) {
-                                      showToastNotification(
-                                        theme,
-                                        'OpenAI Required',
-                                        'The Optimize System Prompt feature requires OpenAI to be enabled. Please enable OpenAI on the LLM page in your course settings to use this feature.',
-                                        true
-                                      )
-                                      return
-                                    }
-
-                                    if (!llmProviders.OpenAI?.apiKey) {
-                                      showToastNotification(
-                                        theme,
-                                        'OpenAI API Key Required',
-                                        'The Optimize System Prompt feature requires an OpenAI API key. Please add your OpenAI API key on the LLM page in your course settings to use this feature.',
-                                        true
-                                      )
-                                      return
-                                    }
-
-                                    handleSubmitPromptOptimization(e, reload, setMessages)
-                                    open()
-                                  }}
+                                  onClick={handleOptimizeClick}
+                                  disabled={!llmProviders} // Disable button while loading
                                   variant="filled"
                                   radius="md"
                                   leftIcon={<IconSparkles stroke={1} />}
@@ -982,10 +1132,16 @@ Do not include any commentary or explanations. Output only the optimized system 
                                       transform: 'translateY(0)',
                                       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
                                     },
+                                    '&:disabled': {
+                                      opacity: 0.7,
+                                      cursor: 'not-allowed',
+                                      transform: 'none',
+                                      boxShadow: 'none',
+                                    },
                                   })}
                                   style={{ minWidth: 'fit-content' }}
                                 >
-                                  Optimize System Prompt
+                                  {!llmProviders ? 'Loading...' : 'Optimize System Prompt'}
                                 </Button>
                               </Group>
 
