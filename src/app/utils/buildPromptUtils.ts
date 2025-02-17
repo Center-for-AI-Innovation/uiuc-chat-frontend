@@ -1,13 +1,12 @@
-import { CourseMetadata } from '~/types/courseMetadata'
+import { type CourseMetadata } from '~/types/courseMetadata'
 import { getCourseMetadata } from '~/pages/api/UIUC-api/getCourseMetadata'
 import {
-  ChatBody,
-  Content,
-  ContextWithMetadata,
-  Conversation,
-  MessageType,
-  OpenAIChatMessage,
-  UIUCTool,
+  type Content,
+  type ContextWithMetadata,
+  type Conversation,
+  type MessageType,
+  type OpenAIChatMessage,
+  type UIUCTool,
 } from '@/types/chat'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { AnySupportedModel } from '~/utils/modelProviders/LLMProvider'
@@ -372,9 +371,7 @@ function _buildQueryTopContext({
         d.pagenumber ? ', page: ' + d.pagenumber : ''
       }\n${d.text}\n`
       const numTokens = encoding.encode(docString).length
-      // console.log(
-      //   `token_counter: ${tokenCounter}, num_tokens: ${numTokens}, token_limit: ${tokenLimit}`,
-      // )
+
       if (tokenCounter + numTokens <= tokenLimit) {
         tokenCounter += numTokens
         validDocs.push({ index, d })

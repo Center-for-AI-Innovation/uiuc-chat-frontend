@@ -32,7 +32,7 @@ export async function POST(req: Request) {
 
     const apiKey = chatBody.llmProviders?.Anthropic?.apiKey
     if (!apiKey) {
-      throw new Error('Anthropic API key is missing')
+      throw new Error('Anthropic API  key is missing')
     }
 
     const anthropic = createAnthropic({

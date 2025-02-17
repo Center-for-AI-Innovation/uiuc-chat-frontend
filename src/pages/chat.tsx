@@ -11,11 +11,11 @@ const ChatPage: NextPage = () => {
     approved_emails_list: [],
     example_questions: [''],
     banner_image_s3: '',
-    course_intro_message: `Welcome to UIUC.chat, a free alternative to ChatGPT and Claude. 
+    course_intro_message: `Welcome to UIUC.chat, a free & open source alternative to ChatGPT and Claude. 
 
-You have unlimited access to the leading open source LLMs. We host them here at the University of Illinois' National Center for Supercomputing Applications (NCSA). 
+We host the leading open source LLMs here at the University of Illinois' National Center for Supercomputing Applications (NCSA). 
 
-Or, customize your own by uploading documents or using our web crawler at https://uiuc.chat/new
+At any time, you can customize your own by uploading documents or by using our web crawler at https://uiuc.chat/new
 
 Supported by the Center for AI Innovation: https://ai.ncsa.illinois.edu`,
     system_prompt:
