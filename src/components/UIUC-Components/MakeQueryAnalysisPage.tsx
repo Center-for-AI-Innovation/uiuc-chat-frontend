@@ -18,7 +18,6 @@ import {
   // Divider,
   type MantineTheme,
   Divider,
-  ActionIcon,
   // TextInput,
   // Tooltip,
   Select,
@@ -41,7 +40,6 @@ import {
   IconChartBar,
   IconMessage2,
   IconMessageCircle2,
-  IconInfoCircle,
   IconUsers,
 } from '@tabler/icons-react'
 import { getWeeklyTrends } from '../../pages/api/UIUC-api/getWeeklyTrends'
@@ -881,7 +879,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
           </Flex>
         </div>
 
-        <NomicDocumentMap course_name={course_name as string} />
+        <NomicConversationsMap course_name={course_name as string} />
         <GlobalFooter />
       </main>
     </>
@@ -920,9 +918,7 @@ import { notifications } from '@mantine/notifications'
 import GlobalFooter from './GlobalFooter'
 import Navbar from './navbars/Navbar'
 import Link from 'next/link'
-import { Separator } from 'tabler-icons-react'
-import { AnimatePresence, motion } from 'framer-motion'
-import NomicDocumentMap from './NomicDocumentsMap'
+import NomicConversationsMap from './NomicConversationsMap'
 
 const CourseFilesList = ({ files }: CourseFilesListProps) => {
   const router = useRouter()

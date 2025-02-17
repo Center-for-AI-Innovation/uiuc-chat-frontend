@@ -1,10 +1,16 @@
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { Title, Text, Flex, Divider, ActionIcon, Button, Card, Modal } from '@mantine/core'
+import { Title, Text, Flex, Divider, ActionIcon } from '@mantine/core'
 import React, { useEffect, useState } from 'react'
 import { IconInfoCircle } from '@tabler/icons-react'
 import { AnimatePresence, motion } from 'framer-motion'
+import NomicDocumentMap from './NomicDocumentsMap'
 
-export default function NomicDocumentMap({ course_name }: { course_name: string }) {
+// export enum NomicMapType {
+//   Conversation = 'conversation',
+//   Document = 'document'
+// }
+
+export default function NomicConversationsMap({ course_name }: { course_name: string }) {
   const [accordionOpened, setAccordionOpened] = useState(false)
 
   const [nomicMapData, setNomicMapData] = useState<NomicMapData | null>(null)
@@ -15,7 +21,7 @@ export default function NomicDocumentMap({ course_name }: { course_name: string 
     const fetchNomicMapData = async () => {
       try {
         const response = await fetch(
-          `/api/getNomicMapForQueries?course_name=${course_name}&map_type=document`,
+          `/api/getNomicMapForQueries?course_name=${course_name}&map_type=conversation`,
         )
 
         const responseText = await response.text()
@@ -39,44 +45,50 @@ export default function NomicDocumentMap({ course_name }: { course_name: string 
 
   return (
     <>
-      <Card
-        shadow="xs"
-        padding="none"
-        radius="xl"
-        className="mt-[2%] w-[96%] md:w-[90%] 2xl:w-[90%]"
-      // className="mt-[2%] h-[80vh] w-[80vw]"
-      >
-        <div className="min-h-full bg-gradient-to-r from-purple-900 via-indigo-800 to-blue-800">
+      {/* NOMIC MAP VISUALIZATION  */}
+      <Flex direction="column" align="center" w="100%">
+        <div className="pt-5"></div>
+        <div
+          className="w-[98%] rounded-3xl"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            background: '#15162c',
+            paddingTop: '1rem',
+          }}
+        >
+          <div className="w-full px-4 py-3 sm:px-6 sm:py-4 md:px-8">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2">
+                <Title
+                  order={3}
+                  className={`pl-12 text-[hsl(280,100%,70%)] ${montserrat_heading.variable} font-montserratHeading text-lg sm:text-2xl`}
+                >
+                  Concept Map of User Queries
+                </Title>
 
-
-          <div className="w-full border-b border-white/10 bg-black/20 px-4 py-3 sm:px-6 sm:py-4 md:px-8">
-            {/* <div className="flex items-center justify-between gap-2"> */}
-            <div className="flex items-center gap-2">
-              <Title
-                order={3}
-                className={`${montserrat_heading.variable} font-montserratHeading text-lg text-white/90 sm:text-2xl`}
-              >
-                Project Files Visualization
-              </Title>
-
-              {/* Accordion info button */}
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                onClick={() => setAccordionOpened(!accordionOpened)}
-                className="hover:bg-white/10"
-                title="More info on nomic map"
-              >
-                <IconInfoCircle className="text-white/60" />
-              </ActionIcon>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  onClick={() => setAccordionOpened(!accordionOpened)}
+                  className="hover:bg-white/10"
+                  title="More info on nomic map"
+                >
+                  <IconInfoCircle className="text-white/60" />
+                </ActionIcon>
+              </div>
             </div>
           </div>
 
+          <div className="pt-2"></div>
+          <Divider className="w-full" color="gray.4" size="sm" />
 
-          {/* Accordion scroll down area */}
+          {/* Accordion info button */}
           <AnimatePresence>
             {accordionOpened && (
               <>
+                <div className="pt-4"></div>
                 <div className="bg-[#1e1f3a]/80 px-4 py-4 sm:px-6 sm:py-6 md:px-8">
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
@@ -134,22 +146,23 @@ export default function NomicDocumentMap({ course_name }: { course_name: string 
               </>
             )}
           </AnimatePresence>
-          <div className="bg-[#1e1f3a]/80">
-            {/* NOMIC MAP  */}
-            {nomicIsLoading ? (
-              <>
-                <span className="skeleton-box w-full"></span>
-              </>
-            ) : nomicMapData && nomicMapData.map_id ? (
-              <>
-                <iframe
-                  className="w-full h-full p-6"
-                  id={nomicMapData.map_id}
-                  allow="clipboard-read; clipboard-write"
-                  src={nomicMapData.map_link}
-                  style={{ height: '80vh' }}
-                />
-                <Text className="pb-4 pl-6 text-gray-400" size="sm">
+
+          <div className="pt-6"></div>
+          {nomicIsLoading ? (
+            <>
+              <span className="nomic-iframe skeleton-box w-full"></span>
+            </>
+          ) : nomicMapData && nomicMapData.map_id ? (
+            <>
+              <iframe
+                className="nomic-iframe w-full"
+                id={nomicMapData.map_id}
+                allow="clipboard-read; clipboard-write"
+                src={nomicMapData.map_link}
+                style={{ height: '80vh' }}
+              />
+              <div className="mt-4">
+                <Text className="pb-4 text-gray-400" size="sm">
                   Note you are unable to login or edit this map. It&apos;s for
                   your visualization only. Please{' '}
                   <a
@@ -160,41 +173,38 @@ export default function NomicDocumentMap({ course_name }: { course_name: string 
                   </a>{' '}
                   with questions.
                 </Text>
-              </>
-            ) : (
-              <>
-                <div className="w-full">
-                  <Text
-                    className={`${montserrat_heading.variable} font-montserratHeading text-gray-200`}
-                    size="lg"
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="w-full">
+                <Text
+                  className={`${montserrat_heading.variable} font-montserratHeading text-gray-200`}
+                  size="lg"
+                >
+                  Visualization Not Available Yet
+                </Text>
+                <Text className="mt-2 text-gray-300">
+                  We need at least 20 questions to generate a meaningful
+                  visualization of how topics relate to each other. Please ask
+                  more questions and check back later!
+                </Text>
+                <Text className="mt-3 text-gray-400" size="sm">
+                  Learn more about{' '}
+                  <a
+                    className="text-purple-400 underline hover:text-purple-300"
+                    href="https://atlas.nomic.ai/"
+                    target="_blank"
+                    rel="noopener noreferrer"
                   >
-                    Visualization Not Available Yet
-                  </Text>
-                  <Text className="mt-2 text-gray-300">
-                    We need at least 20 documents to generate a meaningful
-                    visualization of how topics relate to each other. Please upload more documents and check back tomorrow!
-                    Maps are regenerated every night around midnight Chicago time (CT).
-                  </Text>
-                  <Text className="mt-3 text-gray-400" size="sm">
-                    Learn more about{' '}
-                    <a
-                      className="text-purple-400 underline hover:text-purple-300"
-                      href="https://atlas.nomic.ai/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      semantic similarity visualizations
-                    </a>
-                  </Text>
-                </div>
-              </>
-            )}
-
-
-
-          </div>
+                    semantic similarity visualizations
+                  </a>
+                </Text>
+              </div>
+            </>
+          )}
         </div>
-      </Card >
+      </Flex>
     </>
   )
 }

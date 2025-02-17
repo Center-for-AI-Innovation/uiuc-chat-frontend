@@ -26,6 +26,7 @@ import { type CourseMetadata } from '~/types/courseMetadata'
 import { UploadCard } from './UploadCard'
 import DocumentGroupsCard from './DocumentGroupsCard'
 import DocumentsCard from './DocumentsCard'
+import NomicDocumentMap from './NomicDocumentsMap'
 
 const MakeOldCoursePage = ({
   course_name,
@@ -107,6 +108,7 @@ const MakeOldCoursePage = ({
             <DocumentsCard course_name={course_name} metadata={metadata} />
 
             {/* <NomicDocumentsCard course_name={course_name} metadata={metadata} /> */}
+            <NomicDocumentMap course_name={course_name as string} />
           </Flex>
         </div>
         <GlobalFooter />
