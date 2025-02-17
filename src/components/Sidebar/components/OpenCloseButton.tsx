@@ -29,6 +29,7 @@ export const CloseSidebarButton = ({ onClick, side }: Props) => {
 export const OpenSidebarButton = ({ onClick, side }: Props) => {
   return (
     <button
+      data-promptbar-open-button={side === 'right' ? 'true' : 'false'}
       className={`fixed top-2.5 ${
         side === 'right' ? 'right-2' : 'left-2'
       } z-50 h-7 w-7 text-white hover:text-gray-400 dark:text-white dark:hover:text-gray-300 sm:top-0.5 sm:${

@@ -3,6 +3,11 @@ import { NextResponse } from 'next/server'
 import { createOpenAI } from '@ai-sdk/openai'
 import { convertConversationToCoreMessagesWithoutSystem } from '~/utils/apiUtils'
 
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+export const revalidate = 0
+
 export async function POST(req: Request) {
   try {
     const { conversation, stream } = await req.json()

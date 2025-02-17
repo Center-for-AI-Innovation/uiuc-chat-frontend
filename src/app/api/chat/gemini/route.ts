@@ -11,8 +11,11 @@ import {
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
+
+export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-export const maxDuration = 60
+export const fetchCache = 'force-no-store'
+export const revalidate = 0
 
 import { NextResponse } from 'next/server'
 
