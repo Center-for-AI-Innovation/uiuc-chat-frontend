@@ -29,67 +29,67 @@ export const BedrockModels: Record<BedrockModelID, BedrockModel> = {
     id: BedrockModelID.Claude_3_Opus,
     name: 'Claude 3 Opus (Bedrock)',
     tokenLimit: 200000,
-    enabled: true
+    enabled: true,
   },
   [BedrockModelID.Claude_3_5_Sonnet_Latest]: {
     id: BedrockModelID.Claude_3_5_Sonnet_Latest,
     name: 'Claude 3.5 Sonnet Latest (Bedrock)',
     tokenLimit: 200000,
-    enabled: true
+    enabled: true,
   },
   [BedrockModelID.Claude_3_5_Haiku]: {
     id: BedrockModelID.Claude_3_5_Haiku,
     name: 'Claude 3.5 Haiku (Bedrock)',
     tokenLimit: 200000,
-    enabled: true
+    enabled: true,
   },
   [BedrockModelID.Nova_Pro]: {
     id: BedrockModelID.Nova_Pro,
     name: 'Amazon Nova Pro (Bedrock)',
     tokenLimit: 300000,
-    enabled: true
+    enabled: true,
   },
   [BedrockModelID.Nova_Lite]: {
     id: BedrockModelID.Nova_Lite,
     name: 'Amazon Nova Lite (Bedrock)',
     tokenLimit: 300000,
-    enabled: true
+    enabled: true,
   },
   [BedrockModelID.Nova_Micro]: {
     id: BedrockModelID.Nova_Micro,
     name: 'Amazon Nova Micro (Bedrock)',
     tokenLimit: 128000,
-    enabled: true
+    enabled: true,
   },
   [BedrockModelID.Llama3_2_1B_Instruct]: {
     id: BedrockModelID.Llama3_2_1B_Instruct,
     name: 'Llama 3.2 1B Instruct (Bedrock)',
     tokenLimit: 128000,
-    enabled: true
+    enabled: true,
   },
   [BedrockModelID.Llama3_2_3B_Instruct]: {
     id: BedrockModelID.Llama3_2_3B_Instruct,
     name: 'Llama 3.2 3B Instruct (Bedrock)',
     tokenLimit: 128000,
-    enabled: true
+    enabled: true,
   },
   [BedrockModelID.Llama3_2_11B_Instruct]: {
     id: BedrockModelID.Llama3_2_11B_Instruct,
     name: 'Llama 3.2 11B Instruct (Bedrock)',
     tokenLimit: 128000,
-    enabled: true
+    enabled: true,
   },
   [BedrockModelID.Llama3_2_90B_Instruct]: {
     id: BedrockModelID.Llama3_2_90B_Instruct,
     name: 'Llama 3.2 90B Instruct (Bedrock)',
     tokenLimit: 128000,
-    enabled: true
+    enabled: true,
   },
   [BedrockModelID.Llama3_3_70B_Instruct]: {
     id: BedrockModelID.Llama3_3_70B_Instruct,
     name: 'Llama 3.3 70B Instruct (Bedrock)',
     tokenLimit: 128000,
-    enabled: true
+    enabled: true,
   },
   // Mistral models are not ready. Will iterate on this.
   // [BedrockModelID.Mistral_Large_2402]: {

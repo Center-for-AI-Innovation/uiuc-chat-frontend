@@ -3,7 +3,10 @@ import { Text, Switch, Card, Skeleton } from '@mantine/core'
 import { IconCheck, IconExternalLink, IconX } from '@tabler/icons-react'
 import { APIKeyInput } from '../LLMsApiKeyInputForm'
 import { ModelToggles } from '../ModelToggles'
-import { GeminiProvider, ProviderNames } from '~/utils/modelProviders/LLMProvider'
+import {
+  type GeminiProvider,
+  ProviderNames,
+} from '~/utils/modelProviders/LLMProvider'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export default function GeminiProviderInput({
@@ -120,10 +123,7 @@ export default function GeminiProviderInput({
                 >
                   <form.Field name={`providers.${ProviderNames.Gemini}.apiKey`}>
                     {(field: any) => (
-                      <APIKeyInput
-                        field={field}
-                        placeholder="Google API Key"
-                      />
+                      <APIKeyInput field={field} placeholder="Google API Key" />
                     )}
                   </form.Field>
 
@@ -136,4 +136,4 @@ export default function GeminiProviderInput({
       </Card>
     </motion.div>
   )
-} 
+}

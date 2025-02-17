@@ -1,13 +1,9 @@
 import { createOllama } from 'ollama-ai-provider'
+import { type CoreMessage, generateText, streamText } from 'ai'
+import { type Conversation } from '~/types/chat'
 import {
-  CoreMessage,
-  generateText,
-  streamText,
-} from 'ai'
-import { Conversation } from '~/types/chat'
-import {
-  NCSAHostedProvider,
-  OllamaProvider,
+  type NCSAHostedProvider,
+  type OllamaProvider,
 } from '~/utils/modelProviders/LLMProvider'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 import { NextResponse } from 'next/server'
@@ -25,17 +21,18 @@ export async function runOllamaChat(
     baseURL: `${(await decryptKeyIfNeeded(ollamaProvider.baseUrl!)) as string}/api`,
   })
 
-
   if (conversation.messages.length === 0) {
     throw new Error('Conversation messages array is empty')
   }
 
-  const ollamaModel = ollama(conversation.model.id, { numCtx: conversation.model.tokenLimit })
+  const ollamaModel = ollama(conversation.model.id, {
+    numCtx: conversation.model.tokenLimit,
+  })
   const commonParams = {
     model: ollamaModel as any, // Force type compatibility
     messages: convertConversatonToVercelAISDKv3(conversation),
     temperature: conversation.temperature,
-    maxTokens: 4096 // output tokens
+    maxTokens: 4096, // output tokens
   }
 
   if (stream) {

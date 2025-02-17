@@ -1,6 +1,6 @@
-import { BedrockProvider, ProviderNames } from '../LLMProvider'
+import { type BedrockProvider, ProviderNames } from '../LLMProvider'
 import {
-  BedrockModel,
+  type BedrockModel,
   BedrockModelID,
   BedrockModels,
 } from '../types/bedrock'
@@ -40,10 +40,13 @@ export const getBedrockModels = async (
     bedrockProvider.models = Object.values(BedrockModels).sort((a, b) => {
       const indexA = preferredBedrockModelIds.indexOf(a.id as BedrockModelID)
       const indexB = preferredBedrockModelIds.indexOf(b.id as BedrockModelID)
-      return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB)
+      return (
+        (indexA === -1 ? Infinity : indexA) -
+        (indexB === -1 ? Infinity : indexB)
+      )
     }) as BedrockModel[]
   }
 
   // Return these from API, not just all enabled...
   return bedrockProvider
-} 
+}

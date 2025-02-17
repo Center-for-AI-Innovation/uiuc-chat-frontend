@@ -1,40 +1,37 @@
 import {
-  ChatApiBody,
-  ChatBody,
-  Content,
-  ContextWithMetadata,
-  Conversation,
-  Message,
+  type ChatApiBody,
+  type ChatBody,
+  type Content,
+  type ContextWithMetadata,
+  type Conversation,
+  type Message,
 } from '~/types/chat'
-import { CourseMetadata } from '~/types/courseMetadata'
-import { decrypt, decryptKeyIfNeeded } from './crypto'
+import { type CourseMetadata } from '~/types/courseMetadata'
 import { OpenAIError } from './server'
-import { NextRequest, NextResponse } from 'next/server'
 import { replaceCitationLinks } from './citations'
 import { fetchImageDescription } from '~/pages/api/UIUC-api/fetchImageDescription'
 import { getBaseUrl } from '~/utils/apiUtils'
 import posthog from 'posthog-js'
 import {
-  AllLLMProviders,
+  type AllLLMProviders,
   AllSupportedModels,
-  AnthropicProvider,
-  GenericSupportedModel,
-  NCSAHostedProvider,
-  NCSAHostedVLMProvider,
-  OllamaProvider,
+  type AnthropicProvider,
+  type GenericSupportedModel,
+  type NCSAHostedVLMProvider,
+  type OllamaProvider,
   VisionCapableModels,
-  BedrockProvider,
-  GeminiProvider,
+  type BedrockProvider,
+  type GeminiProvider,
 } from '~/utils/modelProviders/LLMProvider'
 import fetchMQRContexts from '~/pages/api/getContextsMQR'
 import fetchContexts from '~/pages/api/getContexts'
 import { OllamaModelIDs } from './modelProviders/ollama'
-import { getWebLLMModels, webLLMModels } from './modelProviders/WebLLM'
+import { webLLMModels } from './modelProviders/WebLLM'
 import { OpenAIModelID } from './modelProviders/types/openai'
 import { v4 as uuidv4 } from 'uuid'
 import { AzureModelID } from './modelProviders/azure'
 import { AnthropicModelID } from './modelProviders/types/anthropic'
-import { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiRequest, type NextApiResponse } from 'next'
 import { BedrockModelID } from './modelProviders/types/bedrock'
 import { GeminiModelID } from './modelProviders/types/gemini'
 import { runOllamaChat } from '~/app/utils/ollama'
@@ -42,7 +39,7 @@ import { openAIAzureChat } from './modelProviders/OpenAIAzureChat'
 import { runAnthropicChat } from '~/app/utils/anthropic'
 import { NCSAHostedVLMModelID } from './modelProviders/types/NCSAHostedVLM'
 import { runVLLM } from '~/app/utils/vllm'
-import { type CoreMessage, streamText } from 'ai'
+import { type CoreMessage } from 'ai'
 import { runGeminiChat } from '~/app/api/chat/gemini/route'
 import { runBedrockChat } from '~/app/api/chat/bedrock/route'
 
@@ -770,12 +767,12 @@ export async function handleImageContent(
     )
 
     if (imgDescIndex !== -1) {
-      ; (message.content as Content[])[imgDescIndex] = {
+      ;(message.content as Content[])[imgDescIndex] = {
         type: 'text',
         text: `Image description: ${imgDesc}`,
       }
     } else {
-      ; (message.content as Content[]).push({
+      ;(message.content as Content[]).push({
         type: 'text',
         text: `Image description: ${imgDesc}`,
       })
@@ -874,7 +871,6 @@ export const routeModelRequest = async (
       selectedConversation.model.id as any,
     )
   ) {
-
     // NCSA Hosted VLM
     return await runVLLM(
       selectedConversation,
@@ -922,9 +918,7 @@ export const routeModelRequest = async (
   ) {
     return await openAIAzureChat(chatBody, chatBody.stream)
   } else if (
-    Object.values(BedrockModelID).includes(
-      selectedConversation.model.id as any,
-    )
+    Object.values(BedrockModelID).includes(selectedConversation.model.id as any)
   ) {
     try {
       return await runBedrockChat(
@@ -947,9 +941,7 @@ export const routeModelRequest = async (
       )
     }
   } else if (
-    Object.values(GeminiModelID).includes(
-      selectedConversation.model.id as any,
-    )
+    Object.values(GeminiModelID).includes(selectedConversation.model.id as any)
   ) {
     try {
       return await runGeminiChat(

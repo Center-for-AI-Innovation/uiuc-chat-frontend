@@ -58,7 +58,12 @@ export type AnySupportedModel =
   | GeminiModel
 // Add other vision capable models as needed
 export const VisionCapableModels: Set<
-  OpenAIModelID | AzureModelID | AnthropicModelID | NCSAHostedVLMModelID | GeminiModelID | BedrockModelID
+  | OpenAIModelID
+  | AzureModelID
+  | AnthropicModelID
+  | NCSAHostedVLMModelID
+  | GeminiModelID
+  | BedrockModelID
 > = new Set([
   OpenAIModelID.GPT_4_Turbo,
   OpenAIModelID.GPT_4o,
@@ -86,7 +91,7 @@ export const VisionCapableModels: Set<
   BedrockModelID.Nova_Pro,
   BedrockModelID.Nova_Lite,
   BedrockModelID.Llama3_2_11B_Instruct,
-  BedrockModelID.Llama3_2_90B_Instruct
+  BedrockModelID.Llama3_2_90B_Instruct,
 ])
 
 export const AllSupportedModels: Set<GenericSupportedModel> = new Set([

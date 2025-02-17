@@ -1,12 +1,12 @@
 import { type CoreMessage, generateText, streamText } from 'ai'
-import { type ChatBody, type Conversation } from '~/types/chat'
+import { type Conversation } from '~/types/chat'
 import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock'
 import {
   BedrockModels,
   type BedrockModel,
 } from '~/utils/modelProviders/types/bedrock'
 import {
-  BedrockProvider,
+  type BedrockProvider,
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
@@ -63,7 +63,10 @@ export async function runBedrockChat(
       toolChoice: undefined,
     }
 
-    console.log('Final params being sent to Bedrock:', JSON.stringify(commonParams, null, 2))
+    console.log(
+      'Final params being sent to Bedrock:',
+      JSON.stringify(commonParams, null, 2),
+    )
 
     if (stream) {
       const result = await streamText({
@@ -73,7 +76,7 @@ export async function runBedrockChat(
           content: msg.content,
         })) as CoreMessage[],
         temperature: conversation.temperature,
-        maxTokens: 4096
+        maxTokens: 4096,
       })
       return result.toTextStreamResponse()
     } else {
@@ -81,7 +84,7 @@ export async function runBedrockChat(
         model: model as any,
         messages: commonParams.messages,
         temperature: conversation.temperature,
-        maxTokens: 4096
+        maxTokens: 4096,
       })
       const choices = [{ message: { content: result.text } }]
       return { choices }
@@ -98,7 +101,10 @@ function convertConversationToBedrockFormat(
 ): CoreMessage[] {
   const messages = []
 
-  console.log('Original conversation:', JSON.stringify(conversation.messages, null, 2))
+  console.log(
+    'Original conversation:',
+    JSON.stringify(conversation.messages, null, 2),
+  )
 
   const systemMessage = conversation.messages.findLast(
     (msg) => msg.latestSystemMessage !== undefined,
@@ -137,7 +143,10 @@ function convertConversationToBedrockFormat(
     })
   })
 
-  console.log('Final messages array being sent to Bedrock:', JSON.stringify(messages, null, 2))
+  console.log(
+    'Final messages array being sent to Bedrock:',
+    JSON.stringify(messages, null, 2),
+  )
   return messages as CoreMessage[]
 }
 

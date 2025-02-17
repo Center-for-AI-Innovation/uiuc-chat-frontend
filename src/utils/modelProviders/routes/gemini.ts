@@ -1,9 +1,5 @@
-import { GeminiProvider, ProviderNames } from '../LLMProvider'
-import {
-  GeminiModel,
-  GeminiModelID,
-  GeminiModels,
-} from '../types/gemini'
+import { type GeminiProvider, ProviderNames } from '../LLMProvider'
+import { type GeminiModel, GeminiModelID, GeminiModels } from '../types/gemini'
 
 export const getGeminiModels = async (
   geminiProvider: GeminiProvider,
@@ -29,10 +25,13 @@ export const getGeminiModels = async (
     geminiProvider.models = Object.values(GeminiModels).sort((a, b) => {
       const indexA = preferredGeminiModelIds.indexOf(a.id as GeminiModelID)
       const indexB = preferredGeminiModelIds.indexOf(b.id as GeminiModelID)
-      return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB)
+      return (
+        (indexA === -1 ? Infinity : indexA) -
+        (indexB === -1 ? Infinity : indexB)
+      )
     }) as GeminiModel[]
   }
 
   // Return these from API, not just all enabled...
   return geminiProvider
-} 
+}

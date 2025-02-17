@@ -1,9 +1,21 @@
 import React, { useState } from 'react'
-import { Text, Switch, Card, Skeleton, Button, TextInput, Input, ActionIcon } from '@mantine/core'
+import {
+  Text,
+  Switch,
+  Card,
+  Skeleton,
+  Button,
+  TextInput,
+  Input,
+  ActionIcon,
+} from '@mantine/core'
 import { IconCheck, IconExternalLink, IconX } from '@tabler/icons-react'
 import { type FieldApi } from '@tanstack/react-form'
 import { ModelToggles } from '../ModelToggles'
-import { BedrockProvider, ProviderNames } from '~/utils/modelProviders/LLMProvider'
+import {
+  type BedrockProvider,
+  ProviderNames,
+} from '~/utils/modelProviders/LLMProvider'
 import { motion, AnimatePresence } from 'framer-motion'
 
 function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
@@ -220,7 +232,9 @@ export default function BedrockProviderInput({
                     )}
                   </form.Field>
 
-                  <form.Field name={`providers.${ProviderNames.Bedrock}.region`}>
+                  <form.Field
+                    name={`providers.${ProviderNames.Bedrock}.region`}
+                  >
                     {(field: any) => (
                       <CredentialInput
                         field={field}
@@ -252,4 +266,4 @@ export default function BedrockProviderInput({
       </Card>
     </motion.div>
   )
-} 
+}
