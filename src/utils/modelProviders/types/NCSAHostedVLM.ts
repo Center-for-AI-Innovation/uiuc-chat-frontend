@@ -41,7 +41,7 @@ export const NCSAHostedVLMModels: Record<
   [NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT]: {
     id: NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT,
     name: 'Qwen 2.5 72B (Best in open source)',
-    tokenLimit: 23000,
+    tokenLimit: 22000,
     enabled: true,
   },
 }
