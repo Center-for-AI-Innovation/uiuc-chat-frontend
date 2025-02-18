@@ -205,10 +205,6 @@ export function convertConversatonToVercelAISDKv3(
     if (index === conversation.messages.length - 1 && message.role === 'user') {
       // Use finalPromtEngineeredMessage for the most recent user message
       content = message.finalPromtEngineeredMessage || ''
-
-      // just for Llama 3.1 70b, remind it to use proper citation format.
-      content +=
-        '\n\nIf you use the <Potentially Relevant Documents> in your response, please remember cite your sources using the required formatting, e.g. "The grass is green. [29, page: 11]'
     } else if (Array.isArray(message.content)) {
       // Combine text content from array
       content = message.content
@@ -251,7 +247,7 @@ export function convertConversationToCoreMessagesWithoutSystem(
 
     if (isLastUserMessage) {
       const citationReminder =
-        '\n\nIf you use the <Potentially Relevant Documents> in your response, please remember cite your sources using the required formatting, e.g. "The grass is green. [29, page: 11]'
+        '\n\nIf you use the <Potentially Relevant Documents> in your response, please remember cite your sourcesng, e.g. "The grass is green. [29, page: 11]'
       if (content[0].type === 'text') {
         content[0].text += citationReminder
       } else {

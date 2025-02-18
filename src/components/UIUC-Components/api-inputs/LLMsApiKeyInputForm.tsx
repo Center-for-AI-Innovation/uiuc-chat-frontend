@@ -32,6 +32,8 @@ import {
   type ProviderNames,
   type WebLLMProvider,
   type NCSAHostedVLMProvider,
+  type BedrockProvider,
+  type GeminiProvider,
 } from '~/utils/modelProviders/LLMProvider'
 import { notifications } from '@mantine/notifications'
 import {
@@ -54,6 +56,8 @@ import NCSAHostedLLmsProviderInput from './providers/NCSAHostedProviderInput'
 import { getModelLogo } from '~/components/Chat/ModelSelect'
 import NCSAHostedVLMProviderInput from './providers/NCSAHostedVLMProviderInput'
 import { t } from 'i18next'
+import BedrockProviderInput from './providers/BedrockProviderInput'
+import GeminiProviderInput from './providers/GeminiProviderInput'
 
 const isSmallScreen = false
 
@@ -658,7 +662,7 @@ export default function APIKeyInputForm() {
                             <Flex
                               direction={{ base: 'column', '75rem': 'row' }}
                               wrap="wrap"
-                              justify="space-between"
+                              justify="flex-start"
                               align="flex-start"
                               className="gap-4"
                               w={'100%'}
@@ -680,6 +684,20 @@ export default function APIKeyInputForm() {
                               />
                               <AzureProviderInput
                                 provider={llmProviders?.Azure as AzureProvider}
+                                form={form}
+                                isLoading={isLoadingLLMProviders}
+                              />
+                              <BedrockProviderInput
+                                provider={
+                                  llmProviders?.Bedrock as BedrockProvider
+                                }
+                                form={form}
+                                isLoading={isLoadingLLMProviders}
+                              />
+                              <GeminiProviderInput
+                                provider={
+                                  llmProviders?.Gemini as GeminiProvider
+                                }
                                 form={form}
                                 isLoading={isLoadingLLMProviders}
                               />
@@ -705,7 +723,7 @@ export default function APIKeyInputForm() {
                             <Flex
                               direction={{ base: 'column', '75rem': 'row' }}
                               wrap="wrap"
-                              justify="space-between"
+                              justify="flex-start"
                               align="flex-start"
                               className="gap-4"
                               w={'100%'}

@@ -13,6 +13,7 @@ export enum NCSAHostedVLMModelID {
   Llama_3_2_11B_Vision_Instruct = 'meta-llama/Llama-3.2-11B-Vision-Instruct',
   MOLMO_7B_D_0924 = 'allenai/Molmo-7B-D-0924',
   QWEN2_VL_72B_INSTRUCT = 'Qwen/Qwen2-VL-72B-Instruct',
+  QWEN2_5VL_72B_INSTRUCT = 'Qwen/Qwen2.5-VL-72B-Instruct',
 }
 
 export const NCSAHostedVLMModels: Record<
@@ -33,8 +34,14 @@ export const NCSAHostedVLMModels: Record<
   },
   [NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT]: {
     id: NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT,
-    name: 'Qwen 2 VL 72B Instruct',
+    name: 'Qwen 2 72B',
     tokenLimit: 8192,
+    enabled: true,
+  },
+  [NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT]: {
+    id: NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT,
+    name: 'Qwen 2.5 72B (Best in open source)',
+    tokenLimit: 23000,
     enabled: true,
   },
 }
@@ -44,12 +51,15 @@ export const getNCSAHostedVLMModels = async (
 ): Promise<NCSAHostedVLMProvider> => {
   delete vlmProvider.error // Clear any previous errors
   vlmProvider.provider = ProviderNames.NCSAHostedVLM
-  const existingDefaults = new Map<string, boolean>()
+
+  // Store existing model states
+  const existingModelStates = new Map<string, boolean>()
   if (vlmProvider.models) {
-    vlmProvider.models.forEach(model => {
-      existingDefaults.set(model.id, !!model.default)
+    vlmProvider.models.forEach((model) => {
+      existingModelStates.set(model.id, model.enabled ?? true)
     })
   }
+
   try {
     vlmProvider.baseUrl = process.env.NCSA_HOSTED_VLM_BASE_URL
 
@@ -70,9 +80,9 @@ export const getNCSAHostedVLMModels = async (
       return {
         id: model.id,
         name: knownModel ? knownModel.name : 'Experimental: ' + model.id,
-        tokenLimit: model.max_tokens || knownModel.tokenLimit, // Default to 128000 if max_tokens is not provided
-        enabled: data.enabled ? data.enabled : knownModel.enabled,
-        default: existingDefaults.get(model.id) || false,
+        tokenLimit: model.max_tokens || knownModel.tokenLimit,
+        enabled: existingModelStates.get(model.id) ?? true,
+        default: existingModelStates.get(model.id) ?? false,
       }
     })
 

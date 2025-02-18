@@ -10,6 +10,7 @@ import { CourseMetadata } from '~/types/courseMetadata'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { Flex } from '@mantine/core'
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
+import { GetStaticPaths, GetStaticProps } from 'next'
 
 const ApiPage: NextPage = () => {
   const router = useRouter()

@@ -1,16 +1,10 @@
 import { createOllama } from 'ollama-ai-provider'
+import { type CoreMessage, generateText, streamText } from 'ai'
+import { type Conversation } from '~/types/chat'
 import {
-  CoreMessage,
-  generateText,
-  StreamingTextResponse,
-  streamText,
-} from 'ai'
-import { Conversation } from '~/types/chat'
-import {
-  NCSAHostedProvider,
-  OllamaProvider,
+  type NCSAHostedProvider,
+  type OllamaProvider,
 } from '~/utils/modelProviders/LLMProvider'
-import { OllamaModel } from '~/utils/modelProviders/ollama'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 import { NextResponse } from 'next/server'
 
@@ -31,8 +25,11 @@ export async function runOllamaChat(
     throw new Error('Conversation messages array is empty')
   }
 
+  const ollamaModel = ollama(conversation.model.id, {
+    numCtx: conversation.model.tokenLimit,
+  })
   const commonParams = {
-    model: ollama(conversation.model.id),
+    model: ollamaModel as any, // Force type compatibility
     messages: convertConversatonToVercelAISDKv3(conversation),
     temperature: conversation.temperature,
     maxTokens: 4096, // output tokens
@@ -81,9 +78,9 @@ function convertConversatonToVercelAISDKv3(
       // Use finalPromtEngineeredMessage for the most recent user message
       content = message.finalPromtEngineeredMessage || ''
 
-      // just for Llama 3.1 70b, remind it to use proper citation format.
-      content +=
-        '\nWhen writing equations, always use MathJax/KaTeX notation.\n\nIf you use the <Potentially Relevant Documents> in your response, please remember cite your sources using the required formatting, e.g. "The grass is green. [29, page: 11]'
+      // just for Ollama models remind it to use proper citation format.
+      // content +=
+      //   '\nWhen writing equations, always use MathJax/KaTeX notation (no need to repeat this to the user, just follow that formatting system when writing equations).'
     } else if (Array.isArray(message.content)) {
       // Combine text content from array
       content = message.content
