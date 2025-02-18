@@ -12,32 +12,39 @@ export enum GeminiModelID {
   Gemini_2_0_Flash_Thinking_Exp_01_21 = 'gemini-2.0-flash-thinking-exp-01-21',
   Gemini_2_0_Pro_Exp_02_05 = 'gemini-2.0-pro-exp-02-05',
   Gemini_1_5_Pro = 'gemini-1.5-pro',
+  LearnLM_1_5_Pro = 'learnlm-1.5-pro-experimental	',
 }
 
 export const GeminiModels: Record<GeminiModelID, GeminiModel> = {
   [GeminiModelID.Gemini_2_0_Flash]: {
     id: GeminiModelID.Gemini_2_0_Flash,
     name: 'Gemini 2.0 Flash',
-    tokenLimit: 32000,
+    tokenLimit: 1_000_000,
     enabled: true,
   },
   [GeminiModelID.Gemini_2_0_Flash_Thinking_Exp_01_21]: {
     id: GeminiModelID.Gemini_2_0_Flash_Thinking_Exp_01_21,
     name: 'Gemini 2.0 Flash Thinking',
-    tokenLimit: 32000,
+    tokenLimit: 1_000_000,
     enabled: true,
   },
   [GeminiModelID.Gemini_2_0_Pro_Exp_02_05]: {
     id: GeminiModelID.Gemini_2_0_Pro_Exp_02_05,
     name: 'Gemini 2.0 Pro',
-    tokenLimit: 32000,
+    tokenLimit: 2_000_000,
     enabled: true,
     default: true,
   },
   [GeminiModelID.Gemini_1_5_Pro]: {
     id: GeminiModelID.Gemini_1_5_Pro,
     name: 'Gemini 1.5 Pro',
-    tokenLimit: 32000,
+    tokenLimit: 2_000_000,
+    enabled: true,
+  },
+  [GeminiModelID.LearnLM_1_5_Pro]: {
+    id: GeminiModelID.LearnLM_1_5_Pro,
+    name: 'LearnLM 1.5 Pro',
+    tokenLimit: 100_000, // Not sure of the token limit for this model
     enabled: true,
   },
 }

@@ -13,25 +13,35 @@ export const getGeminiModels = async (
     return geminiProvider
   }
 
-  // If no models, return default models sorted by our preference
-  if (!geminiProvider.models || geminiProvider.models.length === 0) {
-    const preferredGeminiModelIds = [
-      GeminiModelID.Gemini_2_0_Pro_Exp_02_05,
-      GeminiModelID.Gemini_2_0_Flash,
-      GeminiModelID.Gemini_2_0_Flash_Thinking_Exp_01_21,
-      GeminiModelID.Gemini_1_5_Pro,
-    ]
+  // Initialize models array if it doesn't exist
+  geminiProvider.models = geminiProvider.models || []
 
-    geminiProvider.models = Object.values(GeminiModels).sort((a, b) => {
-      const indexA = preferredGeminiModelIds.indexOf(a.id as GeminiModelID)
-      const indexB = preferredGeminiModelIds.indexOf(b.id as GeminiModelID)
-      return (
-        (indexA === -1 ? Infinity : indexA) -
-        (indexB === -1 ? Infinity : indexB)
-      )
-    }) as GeminiModel[]
-  }
+  // Get all available models from GeminiModels
+  const allAvailableModels = Object.values(GeminiModels)
 
-  // Return these from API, not just all enabled...
+  // Add any missing models to the provider's models array
+  allAvailableModels.forEach((model) => {
+    if (!geminiProvider.models!.find((m) => m.id === model.id)) {
+      geminiProvider.models!.push(model)
+    }
+  })
+
+  // Sort models by preference
+  const preferredGeminiModelIds = [
+    GeminiModelID.Gemini_2_0_Pro_Exp_02_05,
+    GeminiModelID.Gemini_2_0_Flash,
+    GeminiModelID.Gemini_2_0_Flash_Thinking_Exp_01_21,
+    GeminiModelID.Gemini_1_5_Pro,
+    GeminiModelID.LearnLM_1_5_Pro,
+  ]
+
+  geminiProvider.models.sort((a, b) => {
+    const indexA = preferredGeminiModelIds.indexOf(a.id as GeminiModelID)
+    const indexB = preferredGeminiModelIds.indexOf(b.id as GeminiModelID)
+    return (
+      (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB)
+    )
+  })
+
   return geminiProvider
 }
