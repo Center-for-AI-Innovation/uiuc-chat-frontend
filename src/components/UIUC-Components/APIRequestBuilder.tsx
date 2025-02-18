@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Textarea, Select, Button, Title, Switch, Divider } from '@mantine/core'
+import { Textarea, Select, Button, Title, Switch, Divider, Slider } from '@mantine/core'
 import { IconCheck, IconCopy, IconChevronDown } from '@tabler/icons-react'
 import { useGetProjectLLMProviders } from '~/hooks/useProjectAPIKeys'
 import { findDefaultModel } from './api-inputs/LLMsApiKeyInputForm'
@@ -29,7 +29,9 @@ export default function APIRequestBuilder({
   )
   console.log(courseMetadata?.system_prompt)
   const [selectedModel, setSelectedModel] = useState<string>('')
-  const [retrievalOnly, setRetrievalOnly] = useState(false) // Add this state
+  const [retrievalOnly, setRetrievalOnly] = useState(false)
+  const [streamEnabled, setStreamEnabled] = useState(true)
+  const [temperature, setTemperature] = useState(0.1)
 
   const { data: llmProviders } = useGetProjectLLMProviders({
     projectName: course_name,
@@ -96,8 +98,8 @@ export default function APIRequestBuilder({
     ],
     "api_key": "${apiKey || 'YOUR-API-KEY'}",
     "course_name": "${course_name}",
-    "stream": true,
-    "temperature": 0.1,
+    "stream": ${streamEnabled},
+    "temperature": ${temperature.toFixed(1)},
     "retrieval_only": ${retrievalOnly}
   }'`,
     python: `import requests
@@ -120,8 +122,8 @@ data = {
   ],
   "api_key": "${apiKey || 'YOUR-API-KEY'}",
   "course_name": "${course_name}",
-  "stream": True,
-  "temperature": 0.1,
+  "stream": ${streamEnabled ? 'True' : 'False'},
+  "temperature": ${temperature.toFixed(1)},
   "retrieval_only": ${retrievalOnly ? 'True' : 'False'}
 }
 
@@ -143,8 +145,8 @@ const data = {
   ],
   "api_key": "${apiKey || 'YOUR-API-KEY'}",
   "course_name": "${course_name}",
-  "stream": true,
-  "temperature": 0.1,
+  "stream": ${streamEnabled},
+  "temperature": ${temperature},
   "retrieval_only": ${retrievalOnly}
 };
 
@@ -328,22 +330,75 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
           />
         </div>
 
-        <Switch
-          checked={retrievalOnly}
-          onChange={(event) => setRetrievalOnly(event.currentTarget.checked)}
-          label="Retrieval Only"
-          size="md"
-          color="grape"
-          className={`mt-4 ${montserrat_paragraph.variable} font-montserratParagraph`}
-          styles={(theme) => ({
-            track: {
-              backgroundColor: '#4a4b6a',
-            },
-            label: {
-              fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
-            },
-          })}
-        />
+        <div className="space-y-2">
+          <Title
+            order={4}
+            className={`font-medium text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
+          >
+            Temperature
+          </Title>
+          <Slider
+            value={temperature}
+            onChange={setTemperature}
+            min={0}
+            max={1}
+            step={0.1}
+            label={(value) => value.toFixed(1)}
+            styles={(theme) => ({
+              track: {
+                backgroundColor: '#4a4b6a',
+              },
+              bar: {
+                backgroundColor: theme.colors.grape[6],
+              },
+              thumb: {
+                borderColor: theme.colors.grape[6],
+                backgroundColor: theme.colors.grape[6],
+              },
+              label: {
+                backgroundColor: theme.colors.grape[6],
+                fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+              },
+            })}
+            className="mt-4"
+          />
+        </div>
+
+        <div className="flex gap-4">
+          <Switch
+            checked={retrievalOnly}
+            onChange={(event) => setRetrievalOnly(event.currentTarget.checked)}
+            label="Retrieval Only"
+            size="md"
+            color="grape"
+            className={`mt-4 ${montserrat_paragraph.variable} font-montserratParagraph`}
+            styles={(theme) => ({
+              track: {
+                backgroundColor: '#4a4b6a',
+              },
+              label: {
+                fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+              },
+            })}
+          />
+
+          <Switch
+            checked={streamEnabled}
+            onChange={(event) => setStreamEnabled(event.currentTarget.checked)}
+            label="Stream Response"
+            size="md"
+            color="grape"
+            className={`mt-4 ${montserrat_paragraph.variable} font-montserratParagraph`}
+            styles={(theme) => ({
+              track: {
+                backgroundColor: '#4a4b6a',
+              },
+              label: {
+                fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+              },
+            })}
+          />
+        </div>
 
         <Textarea
           value={codeSnippets[selectedLanguage]}
