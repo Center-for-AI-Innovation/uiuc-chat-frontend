@@ -393,7 +393,7 @@ const ModelDropdown: React.FC<
               />
             ) : null
           }
-          rightSection={<IconChevronDown size="1rem" className="mr-2" />}
+          // rightSection={<IconChevronDown size="1rem" className="mr-2" />}
           classNames={{
             root: 'w-full',
             wrapper: 'w-full',
@@ -502,29 +502,30 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
               chat_ui={chat_ui}
             />
             <div className="px-5">
-              <div className="flex items-center justify-between">
-                <Title
-                  className={`pb-1 pl-4 pt-2 ${montserrat_heading.variable} font-montserratHeading`}
-                  variant="gradient"
-                  gradient={{
-                    from: 'hsl(280,100%,70%)',
-                    to: 'white',
-                    deg: 185,
-                  }}
-                  order={5}
-                >
-                  More info on Available Models
-                </Title>
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  onClick={() => setIsAccordionOpen(!isAccordionOpen)}
-                  className="ml-2 hover:bg-white/10"
-                  title="More info on available models"
-                >
-                  <IconInfoCircle className="text-white/60" />
-                </ActionIcon>
-              </div>
+              <button
+                onClick={() => setIsAccordionOpen(!isAccordionOpen)}
+                className="w-full transition-colors duration-200 hover:bg-white/5"
+              >
+                <div className="flex items-center justify-between rounded-md p-2">
+                  <Title
+                    className={`pb-1 pl-4 pt-2 ${montserrat_heading.variable} font-montserratHeading`}
+                    variant="gradient"
+                    gradient={{
+                      from: 'hsl(280,100%,70%)',
+                      to: 'white',
+                      deg: 185,
+                    }}
+                    order={5}
+                  >
+                    More details about the AI models
+                  </Title>
+                  <IconChevronDown
+                    className={`text-white/60 transition-transform duration-200 ${
+                      isAccordionOpen ? 'rotate-180' : ''
+                    }`}
+                  />
+                </div>
+              </button>
               <AnimatePresence>
                 {isAccordionOpen && (
                   <motion.div
@@ -546,30 +547,13 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               size={'sm'}
                               className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
                             >
-                              NCSA Hosted VLM Models (100% free)
+                              NCSA Hosted Models (100% free)
                             </Text>
                             <Text
                               size={'sm'}
                               className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
                             >
                               The best free option is the Qwen 2 72B model,
-                              hosted by NCSA.
-                            </Text>
-                          </div>
-
-                          {/* NCSA LLM Section */}
-                          <div>
-                            <Text
-                              size={'sm'}
-                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
-                            >
-                              NCSA Hosted LLM Models (100% free)
-                            </Text>
-                            <Text
-                              size={'sm'}
-                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
-                            >
-                              The best free option is the Llama 3.1 8b model,
                               hosted by NCSA.
                             </Text>
                           </div>
@@ -740,13 +724,55 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               size={'sm'}
                               className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
                             >
-                              Coming Soon
+                              Google Gemini
                             </Text>
                             <Text
                               size={'sm'}
                               className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
                             >
-                              Google Gemini
+                              We support{' '}
+                              <Link
+                                href="https://ai.google.dev/gemini-api/docs/models/gemini"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-500 visited:text-purple-600 hover:text-blue-700 hover:underline"
+                              >
+                                Gemini's full suite{' '}
+                                <IconExternalLink
+                                  size={15}
+                                  style={{ position: 'relative', top: '2px' }}
+                                  className={'mb-2 inline'}
+                                />
+                              </Link>
+                              .
+                            </Text>
+                          </div>
+                          <div>
+                            <Text
+                              size={'sm'}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
+                            >
+                              AWS Bedrock
+                            </Text>
+                            <Text
+                              size={'sm'}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
+                            >
+                              We support{' '}
+                              <Link
+                                href="https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html"
+                                className="text-blue-500 visited:text-purple-600 hover:text-blue-700 hover:underline"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                Bedrock's full suite{' '}
+                                <IconExternalLink
+                                  size={15}
+                                  style={{ position: 'relative', top: '2px' }}
+                                  className={'mb-2 inline'}
+                                />
+                              </Link>
+                              .
                             </Text>
                           </div>
                         </div>
