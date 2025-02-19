@@ -1,22 +1,33 @@
 import { supabase } from '@/utils/supabaseClient'
 import { Content, Conversation } from '~/types/chat'
 import { RunTree } from 'langsmith'
-import { AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
-import { ChatBody } from '~/types/chat'
+import { sanitizeForLogging } from '@/utils/sanitization'
+
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb',
+    },
+  },
+}
+
 const logConversationToSupabase = async (req: any, res: any) => {
   const { course_name, conversation } = req.body as {
     course_name: string
     conversation: Conversation
   }
 
+  // Sanitize the entire conversation object
+  const sanitizedConversation = sanitizeForLogging(conversation);
+
   const { data, error } = await supabase.from('llm-convo-monitor').upsert(
     [
       {
-        convo: conversation,
-        convo_id: await conversation.id.toString(),
+        convo: sanitizedConversation,
+        convo_id: await sanitizedConversation.id.toString(),
         course_name: course_name,
-        user_email: conversation.userEmail,
-        summary: conversation.summary,
+        user_email: sanitizedConversation.userEmail,
+        summary: sanitizedConversation.summary,
       },
     ],
     {
@@ -64,28 +75,30 @@ const logConversationToSupabase = async (req: any, res: any) => {
   const rt = new RunTree({
     run_type: 'llm',
     name: 'Final Response Log',
-    // inputs: { "Messages": conversation.messages },
     inputs: {
-      'User input': (
-        conversation.messages[conversation.messages.length - 2]
-          ?.content[0] as Content
-      ).text,
-      'System message':
+      'User input': sanitizeForLogging(
+        (conversation.messages[conversation.messages.length - 2]
+          ?.content[0] as Content)?.text
+      ),
+      'System message': sanitizeForLogging(
         conversation.messages[conversation.messages.length - 2]!
-          .latestSystemMessage,
-      'Engineered prompt':
+          .latestSystemMessage
+      ),
+      'Engineered prompt': sanitizeForLogging(
         conversation.messages[conversation.messages.length - 2]!
-          .finalPromtEngineeredMessage,
+          .finalPromtEngineeredMessage
+      ),
     },
     outputs: {
-      Assistant:
-        conversation.messages[conversation.messages.length - 1]?.content,
+      Assistant: sanitizeForLogging(
+        conversation.messages[conversation.messages.length - 1]?.content
+      ),
     },
     project_name: 'uiuc-chat-production',
     metadata: {
       projectName: course_name,
       conversation_id: conversation.id,
-      tools: conversation.messages[conversation.messages.length - 2]?.tools,
+      tools: sanitizeForLogging(conversation.messages[conversation.messages.length - 2]?.tools),
     }, // "conversation_id" is a SPECIAL KEYWORD. CANNOT BE ALTERED: https://docs.smith.langchain.com/old/monitoring/faq/threads
     // id: conversation.id, // DON'T USE - breaks the threading support
   })

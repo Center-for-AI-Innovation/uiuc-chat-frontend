@@ -6,6 +6,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { buildPrompt } from '~/app/utils/buildPromptUtils'
 import { OpenAIError } from '~/utils/server'
 
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+export const revalidate = 0
+
 export async function POST(req: NextRequest, res: NextResponse) {
   const startTime = Date.now()
   const { searchParams } = new URL(req.url)

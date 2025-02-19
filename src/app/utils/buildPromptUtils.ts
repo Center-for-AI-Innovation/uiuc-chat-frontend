@@ -1,19 +1,15 @@
-import { CourseMetadata } from '~/types/courseMetadata'
+import { type CourseMetadata } from '~/types/courseMetadata'
 import { getCourseMetadata } from '~/pages/api/UIUC-api/getCourseMetadata'
 import {
-  Content,
-  ContextWithMetadata,
-  Conversation,
-  MessageType,
-  OpenAIChatMessage,
-  UIUCTool,
+  type Content,
+  type ContextWithMetadata,
+  type Conversation,
+  type MessageType,
+  type OpenAIChatMessage,
+  type UIUCTool,
 } from '@/types/chat'
 import { AnySupportedModel } from '~/utils/modelProviders/LLMProvider'
-import {
-  DEFAULT_SYSTEM_PROMPT,
-  GUIDED_LEARNING_PROMPT,
-  DOCUMENT_FOCUS_PROMPT,
-} from '@/utils/app/const'
+import { DEFAULT_SYSTEM_PROMPT, GUIDED_LEARNING_PROMPT, DOCUMENT_FOCUS_PROMPT } from '@/utils/app/const'
 import { routeModelRequest } from '~/utils/streamProcessing'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -267,9 +263,9 @@ export const buildPrompt = async ({
       if (latestUserMessage?.tools) {
         const toolsOutputResults = _buildToolsOutputResults({ conversation })
 
-        // Add Tool Instructions and outputs
-        const toolInstructions =
-          "<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool `tool name`...' or 'According to tool `tool name`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>"
+      // Add Tool Instructions and outputs
+      const toolInstructions =
+        "<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool \`tool name`...' or 'According to tool \`tool name`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>"
 
         // Add to user prompt sections
         userPromptSections.push(toolInstructions)
@@ -454,17 +450,18 @@ function _buildQueryTopContext({
     const contexts = conversation.messages[conversation.messages.length - 1]
       ?.contexts as ContextWithMetadata[]
 
-    if (contexts.length === 0) {
-      return undefined
+    if (!contexts || !Array.isArray(contexts) || contexts.length === 0) {
+      return undefined;
     }
 
-    let tokenCounter = 0 // encoding.encode(system_prompt + searchQuery).length
+    let tokenCounter = 0
     const validDocs = []
-    for (const [index, d] of contexts.entries()) {
+    for (const [index, d] of Array.from(contexts).entries()) {
       const docString = `---\n${index + 1}: ${d.readable_filename}${
         d.pagenumber ? ', page: ' + d.pagenumber : ''
       }\n${d.text}\n`
       const numTokens = encoding.encode(docString).length
+
       if (tokenCounter + numTokens <= tokenLimit) {
         tokenCounter += numTokens
         validDocs.push({ index, d })
@@ -584,55 +581,33 @@ export const getSystemPostPrompt = ({
   const isGuidedLearning = isGuidedLearningEnabled(conversation, courseMetadata)
   const isDocumentsOnly = isDocumentsOnlyEnabled(conversation, courseMetadata)
 
-  // Initialize PostPrompt as an array of strings for easy manipulation
-  const PostPromptLines: string[] = []
+  const postPrompt = `Please analyze and respond to the following question using the excerpts from the provided documents. These documents can be PDF files or web pages. You may also see output from API calls (labeled as "tools") and image descriptions. Use this information to craft a detailed and accurate answer.
 
-  // The main system prompt
-  PostPromptLines.push(
-    `Please analyze and respond to the following question using the excerpts from the provided documents. These documents can be pdf files or web pages. Additionally, you may see the output from API calls (called 'tools') to the user's services which, when relevant, you should use to construct your answer. You may also see image descriptions from images uploaded by the user. Prioritize image descriptions, when helpful, to construct your answer.
-Integrate relevant information from these documents, ensuring each reference is linked to the document's number.${
-      isGuidedLearning
-        ? '\n\nIMPORTANT: While in guided learning mode, you must still cite and link to ALL relevant course materials in the exact format described below, even if they contain direct answers. Never filter out or omit relevant materials - your role is to guide students to explore these materials through questions and hints while ensuring they have access to all relevant sources.'
-        : ''
-    }
+When referencing information from the documents, you MUST include citations in your response. Citations should be placed at the end of complete thoughts, immediately before the period. For each distinct piece of information or section, cite the single most relevant source using XML-style citation tags in the following format:
+- Use "<cite>1</cite>" when referencing document 1, placing it immediately before the period
 
-When quoting directly from a source document, cite with footnotes linked to the document number and page number, if provided. 
-Summarize or paraphrase other relevant information with inline citations, again referencing the document number and page number, if provided.
-If the answer is not in the provided documents, state so.${
-      isGuidedLearning || isDocumentsOnly
-        ? ''
-        : ' Yet always provide as helpful a response as possible to directly answer the question.'
-    }
-Conclude your response with a LIST of the document titles as clickable placeholders, each linked to its respective document number and page number, if provided.
-Always share page numbers if they were shared with you.
-ALWAYS follow the examples below:
-Insert an inline citation like this in your response: 
-"[1]" if you're referencing the first document or 
-"[1, page: 2]" if you're referencing page 2 of the first document.
-At the end of your response, list the document title with a clickable link, like this: 
-"1. [document_name](#)" if you're referencing the first document or
-"1. [document_name, page: 2](#)" if you're referencing page 2 of the first document.
-Nothing else should prefix or suffix the citation or document name. 
+Here are examples of how to properly integrate citations in your response:
+- "The loop invariant is a condition that must be true before and after each iteration of the loop. This fundamental concept helps prove the correctness of loop-based algorithms <cite>1</cite>."
+- "Python lists are implemented as dynamic arrays. When the allocated space is filled, Python will automatically resize the array to accommodate more elements <cite>2</cite>."
+- "The course has a strict late submission policy. All assignments are due every Friday by 11:59 PM, and late submissions will incur a 10% penalty per day <cite>3</cite>."
 
-Consecutive inline citations are ALWAYS discouraged. Use a maximum of 3 citations. Follow this exact formatting: separate citations with a comma like this: "[1, page: 2], [2, page: 3]" or like this "[1], [2], [3]".
+Citations should be placed at the end of complete thoughts or sections, immediately before the period if applicable. This makes the text more readable while still maintaining clear attribution of information. Break down information into logical sections and cite the sources at the end of each complete thought.
 
-Suppose a document name is shared with you along with the index and pageNumber below like "27: www.pdf, page: 2", "28: www.osd", "29: pdf.www, page 11\n15" where 27, 28, 29 are indices, www.pdf, www.osd, pdf.www are document_name, and 2, 11 are the pageNumbers and 15 is the content of the document, then inline citations and final list of cited documents should ALWAYS be in the following format:
-"""
-The sky is blue. [27, page: 2][28] The grass is green. [29, page: 11]
-Relevant Sources:
+Note: You may see citations in the conversation history that appear differently due to post-processing formatting. Regardless of how they appear in previous messages, always use the XML-style citation format specified above in your responses.
 
-27. [www.pdf, page: 2](#)
-28. [www.osd](#)
-29. [pdf.www, page: 11](#)
-"""
-ONLY return the documents with relevant information and cited in the response. If there are no relevant sources, don't include the "Relevant Sources" section in response.
-The user message will include excerpts from the high-quality documents, APIs/tools, and image descriptions to construct your answer. Each will be labeled with XML-style tags, like <Potentially Relevant Documents> and <Tool Outputs>. Make use of that information when writing your response.`,
-  )
+${isGuidedLearning 
+  ? 'IMPORTANT: While in guided learning mode, you must still cite all relevant course materials using the exact citation format—even if they contain direct answers. Never filter out or omit relevant materials.'
+  : ''}
 
-  // Combine the lines to form the PostPrompt
-  const PostPrompt = PostPromptLines.join('\n')
+${!isGuidedLearning && !isDocumentsOnly 
+  ? 'If the answer is not in the provided documents, state so but still provide as helpful a response as possible to directly answer the question.'
+  : ''}
 
-  return PostPrompt
+When using tool outputs in your response, place the tool reference at the end of the relevant statement, before the period, using code notation. For example: "The repository contains three JavaScript files \`as per tool ls\`." Always be honest and transparent about tool results.
+
+The user message includes XML-style tags (e.g., <Potentially Relevant Documents>, <Tool Outputs>). Make sure to integrate this information appropriately in your answer.`.trim()
+
+  return postPrompt
 }
 
 export const getDefaultPostPrompt = (): string => {
@@ -668,8 +643,8 @@ export const getDefaultPostPrompt = (): string => {
       linkParameters: {
         guidedLearning: false,
         documentsOnly: false,
-        systemPromptOnly: false,
-      },
+        systemPromptOnly: false
+      }
     } as Conversation,
     courseMetadata: defaultCourseMetadata,
   })

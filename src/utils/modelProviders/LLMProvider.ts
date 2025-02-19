@@ -24,6 +24,16 @@ import {
   NCSAHostedVLMModelID,
   NCSAHostedVLMModels,
 } from '~/utils/modelProviders/types/NCSAHostedVLM'
+import {
+  type BedrockModel,
+  BedrockModelID,
+  BedrockModels,
+} from '~/utils/modelProviders/types/bedrock'
+import {
+  type GeminiModel,
+  GeminiModelID,
+  GeminiModels,
+} from '~/utils/modelProviders/types/gemini'
 
 export enum ProviderNames {
   Ollama = 'Ollama',
@@ -33,7 +43,22 @@ export enum ProviderNames {
   WebLLM = 'WebLLM',
   NCSAHosted = 'NCSAHosted',
   NCSAHostedVLM = 'NCSAHostedVLM',
+  Bedrock = 'Bedrock',
+  Gemini = 'Gemini',
 }
+
+// Define the preferred order of providers, like in modelSelect dropdown
+export const LLM_PROVIDER_ORDER: ProviderNames[] = [
+  ProviderNames.NCSAHostedVLM,
+  ProviderNames.NCSAHosted,
+  ProviderNames.Anthropic,
+  ProviderNames.OpenAI,
+  ProviderNames.Azure,
+  ProviderNames.Gemini,
+  ProviderNames.Bedrock,
+  ProviderNames.Ollama,
+  ProviderNames.WebLLM,
+]
 
 export type AnySupportedModel =
   | OllamaModel
@@ -42,9 +67,16 @@ export type AnySupportedModel =
   | AnthropicModel
   | AzureModel
   | NCSAHostedVLMModel
+  | BedrockModel
+  | GeminiModel
 // Add other vision capable models as needed
 export const VisionCapableModels: Set<
-  OpenAIModelID | AzureModelID | AnthropicModelID | NCSAHostedVLMModelID
+  | OpenAIModelID
+  | AzureModelID
+  | AnthropicModelID
+  | NCSAHostedVLMModelID
+  | GeminiModelID
+  | BedrockModelID
 > = new Set([
   OpenAIModelID.GPT_4_Turbo,
   OpenAIModelID.GPT_4o,
@@ -61,6 +93,18 @@ export const VisionCapableModels: Set<
   NCSAHostedVLMModelID.MOLMO_7B_D_0924,
   NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT,
   NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT,
+
+  // Gemini
+  GeminiModelID.Gemini_2_0_Flash,
+  GeminiModelID.Gemini_2_0_Pro_Exp_02_05,
+  GeminiModelID.Gemini_1_5_Pro,
+  // Bedrock
+  BedrockModelID.Claude_3_Opus,
+  BedrockModelID.Claude_3_5_Sonnet_Latest,
+  BedrockModelID.Nova_Pro,
+  BedrockModelID.Nova_Lite,
+  BedrockModelID.Llama3_2_11B_Instruct,
+  BedrockModelID.Llama3_2_90B_Instruct,
 ])
 
 export const AllSupportedModels: Set<GenericSupportedModel> = new Set([
@@ -69,6 +113,8 @@ export const AllSupportedModels: Set<GenericSupportedModel> = new Set([
   ...Object.values(AzureModels),
   ...Object.values(OllamaModels),
   ...Object.values(NCSAHostedVLMModels),
+  ...Object.values(BedrockModels),
+  ...Object.values(GeminiModels),
   // ...webLLMModels,
 ])
 // e.g. Easily validate ALL POSSIBLE models that we support. They may be offline or disabled, but they are supported.
@@ -145,6 +191,20 @@ export interface WebLLMProvider extends BaseLLMProvider {
   vram_required_MB?: string
 }
 
+export interface BedrockProvider extends BaseLLMProvider {
+  provider: ProviderNames.Bedrock
+  models?: BedrockModel[]
+  region?: string
+  accessKeyId?: string
+  secretAccessKey?: string
+  inferenceProfileArn?: string
+}
+
+export interface GeminiProvider extends BaseLLMProvider {
+  provider: ProviderNames.Gemini
+  models?: GeminiModel[]
+}
+
 export type LLMProvider =
   | OllamaProvider
   | OpenAIProvider
@@ -153,6 +213,8 @@ export type LLMProvider =
   | WebLLMProvider
   | NCSAHostedProvider
   | NCSAHostedVLMProvider
+  | BedrockProvider
+  | GeminiProvider
 
 // export type AllLLMProviders = {
 //   [P in ProviderNames]?: LLMProvider & { provider: P }
@@ -169,23 +231,16 @@ export type AllLLMProviders = {
 // Ordered list of preferred model IDs -- the first available model will be used as default
 export const preferredModelIds = [
   AnthropicModelID.Claude_3_5_Sonnet,
-
   OpenAIModelID.GPT_4o_mini,
   AzureModelID.GPT_4o_mini,
-
   AnthropicModelID.Claude_3_5_Haiku,
-
   OpenAIModelID.GPT_4o,
   AzureModelID.GPT_4o,
-
   OpenAIModelID.GPT_4_Turbo,
   AzureModelID.GPT_4_Turbo,
-
   AnthropicModelID.Claude_3_Opus,
-
   OpenAIModelID.GPT_4,
   AzureModelID.GPT_4,
-
   OpenAIModelID.GPT_3_5,
   NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT,
 ]
@@ -226,10 +281,10 @@ export const selectBestModel = (
       .filter((model) => model.enabled)
       .find((m) => m.id === preferredId)
     if (model) {
-      localStorage.setItem('defaultModel', preferredId)
+      // localStorage.setItem('defaultModel', preferredId)
       return model
     }
   }
   // If no preferred models are available, fallback to llama3.1:8b-instruct-fp16
-  return OllamaModels[OllamaModelIDs.QWEN25_14b_fp16]
+  return NCSAHostedVLMModels[NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT]
 }

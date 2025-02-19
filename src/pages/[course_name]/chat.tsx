@@ -37,42 +37,47 @@ const ChatPage: NextPage = () => {
   // UseEffect to check URL parameters
   useEffect(() => {
     const fetchData = async () => {
-      if (!router.isReady) return;
+      if (!router.isReady) return
 
       // Get URL parameters
-      const urlParams = new URLSearchParams(window.location.search);
-      const guidedLearning = urlParams.get('guidedLearning') === 'true';
-      const documentsOnly = urlParams.get('documentsOnly') === 'true';
-      const systemPromptOnly = urlParams.get('systemPromptOnly') === 'true';
+      const urlParams = new URLSearchParams(window.location.search)
+      const guidedLearning = urlParams.get('guidedLearning') === 'true'
+      const documentsOnly = urlParams.get('documentsOnly') === 'true'
+      const systemPromptOnly = urlParams.get('systemPromptOnly') === 'true'
 
       // Update the state with URL parameters
-      setUrlGuidedLearning(guidedLearning);
-      setUrlDocumentsOnly(documentsOnly);
-      setUrlSystemPromptOnly(systemPromptOnly);
+      setUrlGuidedLearning(guidedLearning)
+      setUrlDocumentsOnly(documentsOnly)
+      setUrlSystemPromptOnly(systemPromptOnly)
 
-      setIsLoading(true);
-      setIsCourseMetadataLoading(true);
+      setIsLoading(true)
+      setIsCourseMetadataLoading(true)
 
-      // Handle /gpt4 page (special non-course page)
-      let curr_course_name = courseName
-      if (courseName == '/gpt4') {
-        curr_course_name = 'gpt4'
+      // Special case: Cropwizard redirect
+      if (
+        ['cropwizard', 'cropwizard-1.0', 'cropwizard-1'].includes(
+          courseName.toLowerCase(),
+        )
+      ) {
+        await router.push(`/cropwizard-1.5/chat`)
       }
 
       // Fetch course metadata
-      const metadataResponse = await fetch(`/api/UIUC-api/getCourseMetadata?course_name=${curr_course_name}`)
+      const metadataResponse = await fetch(
+        `/api/UIUC-api/getCourseMetadata?course_name=${courseName}`,
+      )
       const metadataData = await metadataResponse.json()
-      
+
       // Log original course metadata settings without modifying them
       if (metadataData.course_metadata) {
         console.log('Course metadata settings:', {
           guidedLearning: metadataData.course_metadata.guidedLearning,
           documentsOnly: metadataData.course_metadata.documentsOnly,
           systemPromptOnly: metadataData.course_metadata.systemPromptOnly,
-          system_prompt: metadataData.course_metadata.system_prompt
-        });
+          system_prompt: metadataData.course_metadata.system_prompt,
+        })
       }
-      
+
       setCourseMetadata(metadataData.course_metadata)
       setIsCourseMetadataLoading(false)
       setIsLoading(false)
@@ -85,8 +90,9 @@ const ChatPage: NextPage = () => {
     if (!courseName) return
     const fetchDocumentCount = async () => {
       try {
-        const curr_course_name = courseName === '/gpt4' ? 'gpt4' : courseName
-        const documentsResponse = await fetch(`/api/materialsTable/fetchProjectMaterials?from=0&to=0&course_name=${curr_course_name}`)
+        const documentsResponse = await fetch(
+          `/api/materialsTable/fetchProjectMaterials?from=0&to=0&course_name=${courseName}`,
+        )
         const documentsData = await documentsResponse.json()
         setDocumentCount(documentsData.total_count || 0)
       } catch (error) {
@@ -161,7 +167,7 @@ const ChatPage: NextPage = () => {
           link_parameters={{
             guidedLearning: urlGuidedLearning,
             documentsOnly: urlDocumentsOnly,
-            systemPromptOnly: urlSystemPromptOnly
+            systemPromptOnly: urlSystemPromptOnly,
           }}
         />
       )}

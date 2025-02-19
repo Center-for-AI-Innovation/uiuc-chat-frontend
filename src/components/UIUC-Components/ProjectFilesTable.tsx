@@ -148,7 +148,7 @@ export function ProjectFilesTable({
     error: documentsError,
     refetch: refetchDocuments,
   } = useQuery({
-    refetchInterval: 10_000,
+    refetchInterval: 3_000,
     queryKey: [
       'documents',
       course_name,
@@ -546,7 +546,7 @@ export function ProjectFilesTable({
           </div>
 
           <div className="flex flex-wrap items-center gap-2 px-2 md:gap-4">
-            {selectedRecords.length > 0 && (
+            {tabValue !== 'failed' && selectedRecords.length > 0 && (
               <Paper className="w-full bg-transparent sm:w-auto">
                 <div className="relative flex w-full flex-col items-start sm:flex-row sm:items-center">
                   <Tooltip
@@ -1062,7 +1062,8 @@ export function ProjectFilesTable({
                   },
                 ]),
           ]}
-          selectedRecords={selectedRecords}
+          isRecordSelectable={(record) => tabValue !== 'failed'}
+          selectedRecords={tabValue === 'failed' ? [] : selectedRecords}
           onSelectedRecordsChange={(newSelectedRecords) => {
             if (newSelectedRecords.length > 0) {
               setSelectedRecords(newSelectedRecords)
@@ -1073,11 +1074,12 @@ export function ProjectFilesTable({
               // Use reduce to find the common document groups among all selected records
               const commonDocGroups = newSelectedRecords.reduce(
                 (commonGroups, record) => {
+                  const recordGroups = record.doc_groups || []
                   return commonGroups.filter((group) =>
-                    record.doc_groups.includes(group),
+                    recordGroups.includes(group),
                   )
                 },
-                (newSelectedRecords[0] as CourseDocument).doc_groups,
+                newSelectedRecords[0]?.doc_groups || [],
               )
 
               setSelectedDocGroups(commonDocGroups)

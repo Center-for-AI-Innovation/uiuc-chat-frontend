@@ -7,8 +7,11 @@ import {
 } from '~/utils/modelProviders/types/anthropic'
 import { ProviderNames } from '~/utils/modelProviders/LLMProvider'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
+
+export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-export const maxDuration = 60
+export const fetchCache = 'force-no-store'
+export const revalidate = 0
 
 import { NextResponse } from 'next/server'
 
@@ -29,7 +32,7 @@ export async function POST(req: Request) {
 
     const apiKey = chatBody.llmProviders?.Anthropic?.apiKey
     if (!apiKey) {
-      throw new Error('Anthropic API key is missing')
+      throw new Error('Anthropic API  key is missing')
     }
 
     const anthropic = createAnthropic({
@@ -98,8 +101,6 @@ function convertConversationToVercelAISDKv3(
     let content: string
     if (index === conversation.messages.length - 1 && message.role === 'user') {
       content = message.finalPromtEngineeredMessage || ''
-      content +=
-        '\n\nIf you use the <Potentially Relevant Documents> in your response, please remember cite your sources using the required formatting, e.g. "The grass is green. [29, page: 11]'
     } else if (Array.isArray(message.content)) {
       content = message.content
         .filter((c) => c.type === 'text')

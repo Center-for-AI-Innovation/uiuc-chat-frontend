@@ -277,17 +277,17 @@ export default async function chat(
       distinct_id: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
       user_id: email,
     })
-    res.status(500).json({ error: 'No contexts found' })
-    return
-  }
+    // res.status(500).json({ error: 'No contexts found' })
+    // return
+  } else {
+    if (retrieval_only) {
+      res.status(200).json({ contexts: contexts })
+      return
+    }
 
-  if (retrieval_only) {
-    res.status(200).json({ contexts: contexts })
-    return
+    // Attach contexts to the last message
+    attachContextsToLastMessage(lastMessage, contexts)
   }
-
-  // Attach contexts to the last message
-  attachContextsToLastMessage(lastMessage, contexts)
 
   // Handle tools
   let updatedConversation = conversation

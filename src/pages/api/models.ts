@@ -7,6 +7,8 @@ import {
   type NCSAHostedVLMProvider,
   type OllamaProvider,
   type OpenAIProvider,
+  type BedrockProvider,
+  type GeminiProvider,
   ProviderNames,
   type WebLLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
@@ -19,6 +21,8 @@ import { getNCSAHostedModels } from '~/utils/modelProviders/NCSAHosted'
 import { getOpenAIModels } from '~/utils/modelProviders/routes/openai'
 import { redisClient } from '~/utils/redisClient'
 import { getNCSAHostedVLMModels } from '~/utils/modelProviders/types/NCSAHostedVLM'
+import { getBedrockModels } from '~/utils/modelProviders/routes/bedrock'
+import { getGeminiModels } from '~/utils/modelProviders/routes/gemini'
 
 export default async function handler(
   req: NextApiRequest,
@@ -101,6 +105,16 @@ export default async function handler(
         case ProviderNames.NCSAHostedVLM:
           allLLMProviders[providerName] = await getNCSAHostedVLMModels(
             llmProvider as NCSAHostedVLMProvider,
+          )
+          break
+        case ProviderNames.Bedrock:
+          allLLMProviders[providerName] = await getBedrockModels(
+            llmProvider as BedrockProvider,
+          )
+          break
+        case ProviderNames.Gemini:
+          allLLMProviders[providerName] = await getGeminiModels(
+            llmProvider as GeminiProvider,
           )
           break
         default:
