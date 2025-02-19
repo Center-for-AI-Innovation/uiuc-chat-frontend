@@ -9,7 +9,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       activate: string
     }
 
-    console.log('api_key', api_key)
+    // console.log('api_key', api_key)
     console.log('id', id)
     const activateCapitalized =
       activate.charAt(0).toUpperCase() + activate.slice(1)

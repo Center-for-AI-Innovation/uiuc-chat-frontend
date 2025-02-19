@@ -5,7 +5,10 @@ import { NextApiRequest, NextApiResponse } from 'next'
 
 export const maxDuration = 60
 
-export const openAIAzureChat = async (chatBody: ChatBody, stream: boolean) => {
+export const openAIAzureChat = async (
+  chatBody: ChatBody,
+  stream: boolean,
+): Promise<any> => {
   // OpenAI's main chat endpoint
   try {
     const { conversation, llmProviders } = chatBody
@@ -104,7 +107,7 @@ const convertConversationToOpenAIMessages = (
           messageIndex === messages.length - 1 &&
           !content.text?.startsWith('Image description:')
         ) {
-          console.debug('Replacing the text: ', content.text)
+          // console.debug('Replacing the text: ', content.text)
           content.text = strippedMessage.finalPromtEngineeredMessage
         }
         return content

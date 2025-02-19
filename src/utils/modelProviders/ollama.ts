@@ -9,61 +9,116 @@ export interface OllamaModel {
   parameterSize: string
   tokenLimit: number
   enabled: boolean
+  default?: boolean
+  temperature?: number
 }
 
 export enum OllamaModelIDs {
   // Use "official" IDs from the Ollama API. Human-readable names in 'OllamaModels' below.
-  LLAMA31_8b = 'llama3.1:8b',
-  LLAMA31_latest = 'llama3.1:latest', // maps to LLAMA31_8b
-  LLAMA31_70b = 'llama3.1:70b',
-  LLAMA31_405b = 'llama3.1:405b',
+  // LLAMA31_8b = 'llama3.1:8b',
+  // LLAMA31_latest = 'llama3.1:latest', // maps to LLAMA31_8b
+  // LLAMA31_70b = 'llama3.1:70b',
+  // LLAMA31_405b = 'llama3.1:405b',
   LLAMA31_8b_instruct_fp16 = 'llama3.1:8b-instruct-fp16',
-  LLAMA31_70b_instruct_fp16 = 'llama3.1:70b-instruct-fp16',
+  // LLAMA31_70b_instruct_fp16 = 'llama3.1:70b-instruct-fp16',
+
+  LLAMA32_1b_fp16 = 'llama3.2:1b-instruct-fp16',
+  LLAMA32_3b_fp16 = 'llama3.2:3b-instruct-fp16',
+
+  DEEPSEEK_R1_14b_qwen_fp16 = 'deepseek-r1:14b-qwen-distill-fp16',
+
+  QWEN25_14b_fp16 = 'qwen2.5:14b-instruct-fp16',
+  QWEN25_7b_fp16 = 'qwen2.5:7b-instruct-fp16',
 }
 
 export const OllamaModels: Record<OllamaModelIDs, OllamaModel> = {
-  [OllamaModelIDs.LLAMA31_70b_instruct_fp16]: {
-    id: OllamaModelIDs.LLAMA31_70b_instruct_fp16,
-    name: 'Llama 3.1 70b (FP16)',
-    parameterSize: '8b',
-    tokenLimit: 128000,
+  [OllamaModelIDs.LLAMA32_1b_fp16]: {
+    id: OllamaModelIDs.LLAMA32_1b_fp16,
+    name: 'llama 3.2 1B',
+    parameterSize: '1B',
+    tokenLimit: 21_760,
+    enabled: true,
+  },
+  [OllamaModelIDs.LLAMA32_3b_fp16]: {
+    id: OllamaModelIDs.LLAMA32_3b_fp16,
+    name: 'llama 3.2 3B',
+    parameterSize: '1B',
+    tokenLimit: 15_500,
     enabled: true,
   },
   [OllamaModelIDs.LLAMA31_8b_instruct_fp16]: {
     id: OllamaModelIDs.LLAMA31_8b_instruct_fp16,
-    name: 'Llama 3.1 8b (FP16)',
-    parameterSize: '8b',
-    tokenLimit: 128000,
+    name: 'Llama 3.1 8B',
+    parameterSize: '8B',
+    tokenLimit: 11_500,
     enabled: true,
   },
-  [OllamaModelIDs.LLAMA31_8b]: {
-    id: OllamaModelIDs.LLAMA31_8b,
-    name: 'Llama 3.1 8b',
-    parameterSize: '8b',
-    tokenLimit: 128000,
+  // [OllamaModelIDs.LLAMA32_1b]: {
+  //   id: OllamaModelIDs.LLAMA32_1b,
+  //   name: 'llama3.2 1B (quantized)',
+  //   parameterSize: '1B',
+  //   tokenLimit: 22_000,
+  //   usableTokenLimit: 22_010,
+  //   enabled: true,
+  // },
+  [OllamaModelIDs.QWEN25_7b_fp16]: {
+    id: OllamaModelIDs.QWEN25_7b_fp16,
+    name: 'Qwen 7B',
+    parameterSize: '7B',
+    tokenLimit: 15_500,
     enabled: true,
   },
-  [OllamaModelIDs.LLAMA31_latest]: {
-    id: OllamaModelIDs.LLAMA31_latest,
-    name: 'Llama 3.1 (Latest)',
-    parameterSize: '8b',
-    tokenLimit: 128000,
+  [OllamaModelIDs.QWEN25_14b_fp16]: {
+    id: OllamaModelIDs.QWEN25_14b_fp16,
+    name: 'Qwen 14B',
+    parameterSize: '14B',
+    tokenLimit: 6_300,
     enabled: true,
   },
-  [OllamaModelIDs.LLAMA31_70b]: {
-    id: OllamaModelIDs.LLAMA31_70b,
-    name: 'Llama 3.1 70b (Quantized, Poor Quality Model)',
-    parameterSize: '70b',
-    tokenLimit: 128000,
+  [OllamaModelIDs.DEEPSEEK_R1_14b_qwen_fp16]: {
+    id: OllamaModelIDs.DEEPSEEK_R1_14b_qwen_fp16,
+    name: 'Deepseek R1 14B (based on Qwen)',
+    parameterSize: '14B',
+    tokenLimit: 6_300,
     enabled: true,
   },
-  [OllamaModelIDs.LLAMA31_405b]: {
-    id: OllamaModelIDs.LLAMA31_405b,
-    name: 'Llama 3.1 405b',
-    parameterSize: '405b',
-    tokenLimit: 128000,
-    enabled: true,
-  },
+  // [OllamaModelIDs.LLAMA31_70b_instruct_fp16]: {
+  //   id: OllamaModelIDs.LLAMA31_70b_instruct_fp16,
+  //   name: 'Llama 3.1 7B',
+  //   parameterSize: '70B',
+  //   tokenLimit: 128000,
+  //   usableTokenLimit: 2000, // NOT SURE OF TRUE VALUE! 
+  //   enabled: true,
+  // },
+  // [OllamaModelIDs.LLAMA31_8b]: {
+  //   id: OllamaModelIDs.LLAMA31_8b,
+  //   name: 'Llama 3.1 8B (quantized)',
+  //   parameterSize: '8B',
+  //   tokenLimit: 128000,
+  //   usableTokenLimit: 12_000, // NOT SURE OF TRUE VALUE! 
+  //   enabled: true,
+  // },
+  // [OllamaModelIDs.LLAMA31_latest]: {
+  //   id: OllamaModelIDs.LLAMA31_latest,
+  //   name: 'Llama 3.1 8B (quantized)',
+  //   parameterSize: '8B',
+  //   tokenLimit: 128000,
+  //   enabled: true,
+  // },
+  // [OllamaModelIDs.LLAMA31_70b]: {
+  //   id: OllamaModelIDs.LLAMA31_70b,
+  //   name: 'Llama 3.1 70B (Quantized, Poor Quality Model!)',
+  //   parameterSize: '70B',
+  //   tokenLimit: 128000,
+  //   enabled: true,
+  // },
+  // [OllamaModelIDs.LLAMA31_405b]: {
+  //   id: OllamaModelIDs.LLAMA31_405b,
+  //   name: 'Llama 3.1 405B (Quantized)',
+  //   parameterSize: '405B',
+  //   tokenLimit: 128000,
+  //   enabled: true,
+  // },
 }
 
 export const getOllamaModels = async (

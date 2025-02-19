@@ -25,7 +25,6 @@ export interface HomeInitialState {
   prompts: Prompt[]
   temperature: number
   showChatbar: boolean
-  showPromptbar: boolean
   currentFolder: FolderInterface | undefined
   messageError: boolean
   searchTerm: string
@@ -38,6 +37,9 @@ export interface HomeInitialState {
   isRouting: boolean | undefined
   isRunningTool: boolean | undefined
   isRetrievalLoading: boolean | undefined
+  isQueryRewriting: boolean | undefined
+  wasQueryRewritten: boolean | undefined
+  queryRewriteText: string | undefined
   documentGroups: Action[]
   tools: UIUCTool[]
   webLLMModelIdLoading: {
@@ -61,7 +63,6 @@ export const initialState: HomeInitialState = {
   currentMessage: undefined,
   prompts: [], // TODO: Add default prompts here :)
   temperature: 0.3,
-  showPromptbar: false,
   showChatbar: true,
   currentFolder: undefined,
   messageError: false,
@@ -74,6 +75,9 @@ export const initialState: HomeInitialState = {
   isRouting: undefined,
   isRunningTool: undefined,
   isRetrievalLoading: undefined,
+  isQueryRewriting: undefined,
+  wasQueryRewritten: undefined,
+  queryRewriteText: undefined,
   isImg2TextLoading: false,
   documentGroups: [],
   tools: [],

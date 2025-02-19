@@ -1,32 +1,17 @@
-import { NextResponse } from 'next/server'
-import { ChatBody, Content, ImageBody, OpenAIChatMessage } from '~/types/chat'
-import { decryptKeyIfNeeded } from '~/utils/crypto'
+import { type NextApiRequest, type NextApiResponse } from 'next'
+import { type ImageBody, type OpenAIChatMessage } from '~/types/chat'
 
 import { OpenAIError, OpenAIStream } from '@/utils/server'
 
-export const config = {
-  runtime: 'edge',
-}
+const handler = async (req: NextApiRequest, res: NextApiResponse) => {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ message: 'Method not allowed' })
+  }
 
-const handler = async (req: Request): Promise<NextResponse> => {
   try {
-    const { conversation, llmProviders, course_name } =
-      (await req.json()) as ImageBody
-
-    // const openAIKey = await decryptKeyIfNeeded(key)
+    const { contentArray, llmProviders, model } = req.body as ImageBody
 
     const systemPrompt = getImageDescriptionSystemPrompt()
-
-    const lastMessageContents =
-      conversation.messages[conversation.messages.length - 1]?.content
-    const contentArray: Content[] = Array.isArray(lastMessageContents)
-      ? lastMessageContents
-      : [
-          {
-            type: 'text',
-            text: lastMessageContents as string,
-          },
-        ]
 
     const messages: OpenAIChatMessage[] = [
       {
@@ -40,37 +25,29 @@ const handler = async (req: Request): Promise<NextResponse> => {
       },
       { role: 'user', content: [...contentArray] },
     ]
-    console.log('Image Description message: ', messages)
 
     const response = await OpenAIStream(
-      conversation.model,
+      model,
       systemPrompt,
-      conversation.temperature,
+      0.1,
       llmProviders,
       messages,
       false,
     )
 
-    return new NextResponse(JSON.stringify(response))
+    return res.status(200).json(response)
   } catch (error) {
     if (error instanceof OpenAIError) {
       const { name, message } = error
       console.error('OpenAI Completion Error', message)
-      const resp = NextResponse.json(
-        {
-          statusCode: 400,
-          name: name,
-          message: message,
-        },
-        { status: 400 },
-      )
-      console.log('Final OpenAIError resp: ', resp)
-      return resp
+      return res.status(400).json({
+        statusCode: 400,
+        name: name,
+        message: message,
+      })
     } else {
       console.error('Unexpected Error', error)
-      const resp = NextResponse.json({ name: 'Error' }, { status: 500 })
-      console.log('Final Error resp: ', resp)
-      return resp
+      return res.status(500).json({ name: 'Error' })
     }
   }
 }

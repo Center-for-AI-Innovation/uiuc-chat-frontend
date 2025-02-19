@@ -3,6 +3,8 @@ export interface AnthropicModel {
   name: string
   tokenLimit: number
   enabled: boolean
+  default?: boolean
+  temperature?: number
 }
 
 export enum AnthropicModelID {

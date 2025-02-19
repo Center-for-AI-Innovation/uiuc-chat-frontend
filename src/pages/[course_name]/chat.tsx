@@ -12,6 +12,7 @@ import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { montserrat_heading } from 'fonts'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import Head from 'next/head'
+import { GUIDED_LEARNING_PROMPT } from '~/utils/app/const'
 
 const ChatPage: NextPage = () => {
   const clerk_user_outer = useUser()
@@ -28,29 +29,78 @@ const ChatPage: NextPage = () => {
     null,
   )
   const [isCourseMetadataLoading, setIsCourseMetadataLoading] = useState(true)
+  const [urlGuidedLearning, setUrlGuidedLearning] = useState(false)
+  const [urlDocumentsOnly, setUrlDocumentsOnly] = useState(false)
+  const [urlSystemPromptOnly, setUrlSystemPromptOnly] = useState(false)
+  const [documentCount, setDocumentCount] = useState<number | null>(null)
 
-  // UseEffect to fetch course metadata
+  // UseEffect to check URL parameters
   useEffect(() => {
-    if (!courseName && curr_route_path != '/gpt4') return
-    const courseMetadata = async () => {
-      setIsLoading(true) // Set loading to true before fetching data
+    const fetchData = async () => {
+      if (!router.isReady) return
 
-      // Handle /gpt4 page (special non-course page)
-      let curr_course_name = courseName
-      if (courseName == '/gpt4') {
-        curr_course_name = 'gpt4'
+      // Get URL parameters
+      const urlParams = new URLSearchParams(window.location.search)
+      const guidedLearning = urlParams.get('guidedLearning') === 'true'
+      const documentsOnly = urlParams.get('documentsOnly') === 'true'
+      const systemPromptOnly = urlParams.get('systemPromptOnly') === 'true'
+
+      // Update the state with URL parameters
+      setUrlGuidedLearning(guidedLearning)
+      setUrlDocumentsOnly(documentsOnly)
+      setUrlSystemPromptOnly(systemPromptOnly)
+
+      setIsLoading(true)
+      setIsCourseMetadataLoading(true)
+
+      // Special case: Cropwizard redirect
+      if (
+        ['cropwizard', 'cropwizard-1.0', 'cropwizard-1'].includes(
+          courseName.toLowerCase(),
+        )
+      ) {
+        await router.push(`/cropwizard-1.5/chat`)
       }
 
-      const response = await fetch(
-        `/api/UIUC-api/getCourseMetadata?course_name=${curr_course_name}`,
+      // Fetch course metadata
+      const metadataResponse = await fetch(
+        `/api/UIUC-api/getCourseMetadata?course_name=${courseName}`,
       )
-      const data = await response.json()
-      setCourseMetadata(data.course_metadata)
-      // console.log("Course Metadata in home: ", data.course_metadata)
+      const metadataData = await metadataResponse.json()
+
+      // Log original course metadata settings without modifying them
+      if (metadataData.course_metadata) {
+        console.log('Course metadata settings:', {
+          guidedLearning: metadataData.course_metadata.guidedLearning,
+          documentsOnly: metadataData.course_metadata.documentsOnly,
+          systemPromptOnly: metadataData.course_metadata.systemPromptOnly,
+          system_prompt: metadataData.course_metadata.system_prompt,
+        })
+      }
+
+      setCourseMetadata(metadataData.course_metadata)
       setIsCourseMetadataLoading(false)
-      setIsLoading(false) // Set loading to false after fetching data
+      setIsLoading(false)
     }
-    courseMetadata()
+    fetchData()
+  }, [courseName, urlGuidedLearning, urlDocumentsOnly, urlSystemPromptOnly])
+
+  // UseEffect to fetch document count in the background
+  useEffect(() => {
+    if (!courseName) return
+    const fetchDocumentCount = async () => {
+      try {
+        const documentsResponse = await fetch(
+          `/api/materialsTable/fetchProjectMaterials?from=0&to=0&course_name=${courseName}`,
+        )
+        const documentsData = await documentsResponse.json()
+        setDocumentCount(documentsData.total_count || 0)
+      } catch (error) {
+        console.error('Error fetching document count:', error)
+        setDocumentCount(0)
+      }
+    }
+    fetchDocumentCount()
   }, [courseName])
 
   // UseEffect to check user permissions and fetch user email
@@ -73,7 +123,7 @@ const ChatPage: NextPage = () => {
       } else {
         // 🆕 MAKE A NEW COURSE
         console.log('Course does not exist, redirecting to materials page')
-        router.push(`/${courseName}/materials`)
+        router.push(`/${courseName}/dashboard`)
       }
       // console.log(
       //   'Changing user email to: ',
@@ -113,6 +163,12 @@ const ChatPage: NextPage = () => {
           current_email={currentEmail}
           course_metadata={courseMetadata}
           course_name={courseName}
+          document_count={documentCount}
+          link_parameters={{
+            guidedLearning: urlGuidedLearning,
+            documentsOnly: urlDocumentsOnly,
+            systemPromptOnly: urlSystemPromptOnly,
+          }}
         />
       )}
       {isLoading && !currentEmail && (

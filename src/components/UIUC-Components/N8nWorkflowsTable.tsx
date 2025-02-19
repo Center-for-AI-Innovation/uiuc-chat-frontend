@@ -149,7 +149,6 @@ export const N8nWorkflowsTable = ({
       const dateB = new Date(b.createdAt as string)
       return dateB.getTime() - dateA.getTime()
     })
-    console.log('sorted Records', sortedRecords)
     currentRecords = (sortedRecords as UIUCTool[]).slice(startIndex, endIndex)
   }
 
@@ -248,11 +247,11 @@ export const N8nWorkflowsTable = ({
         loadingText="Loading..."
         // 👇 uncomment the next line to display a custom text when no records were found
         noRecordsText="No records found"
-        // 👇 uncomment the next line to use a custom pagination text
-        // paginationText={({ from, to, totalRecords }) => `Records ${from} - ${to} of ${totalRecords}`}
-        // 👇 uncomment the next lines to use custom pagination colors
-        // paginationActiveBackgroundColor="green"
-        // paginationActiveTextColor="#e6e348"
+      // 👇 uncomment the next line to use a custom pagination text
+      // paginationText={({ from, to, totalRecords }) => `Records ${from} - ${to} of ${totalRecords}`}
+      // 👇 uncomment the next lines to use custom pagination colors
+      // paginationActiveBackgroundColor="green"
+      // paginationActiveTextColor="#e6e348"
       />
     </>
   )

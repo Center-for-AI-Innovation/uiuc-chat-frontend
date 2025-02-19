@@ -1,7 +1,6 @@
 import { type AppType } from 'next/app'
 import { MantineProvider } from '@mantine/core'
 import { Notifications } from '@mantine/notifications'
-import { Analytics } from '@vercel/analytics/react'
 import { appWithTranslation } from 'next-i18next'
 import { ClerkLoaded, ClerkProvider, GoogleOneTap } from '@clerk/nextjs'
 import { dark } from '@clerk/themes'
@@ -9,17 +8,15 @@ import { dark } from '@clerk/themes'
 import '~/styles/globals.css'
 import Maintenance from '~/components/UIUC-Components/Maintenance'
 
-import { useReportWebVitals } from 'next-axiom'
-
-// For axiom Web Vitals logging: https://axiom.co/docs/apps/vercel#sending-logs-to-axiom
-import { NextWebVitalsMetric } from 'next/app'
-
 import posthog from 'posthog-js'
 import { PostHogProvider } from 'posthog-js/react'
 import { useRouter } from 'next/router'
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+
+import { SpeedInsights } from '@vercel/speed-insights/next'
+import { Analytics } from '@vercel/analytics/next'
 
 // Check that PostHog is client-side (used to handle Next.js SSR)
 if (typeof window !== 'undefined') {
@@ -27,7 +24,14 @@ if (typeof window !== 'undefined') {
     api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com',
     opt_in_site_apps: true,
     autocapture: false,
-    // Enable debug mode in development
+    session_recording: {
+      maskAllInputs: false,
+      maskInputOptions: {
+        password: true,
+        email: true,
+        creditCard: true
+      }
+    },
     loaded: (posthog) => {
       if (process.env.NODE_ENV === 'development') posthog.debug()
     },
@@ -35,12 +39,10 @@ if (typeof window !== 'undefined') {
 }
 
 const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
-  useReportWebVitals(((metric: NextWebVitalsMetric) => {
-    console.log(metric)
-  }) as any)
-
   const router = useRouter()
   const queryClient = new QueryClient()
+  const [isMaintenanceMode, setIsMaintenanceMode] = useState(false)
+  const effectRan = useRef(false)
 
   useEffect(() => {
     // Track page views in PostHog
@@ -52,11 +54,32 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
     }
   }, [])
 
-  if (process.env.NEXT_PUBLIC_MAINTENANCE === 'true') {
+  useEffect(() => {
+    const checkMaintenanceMode = async () => {
+      if (effectRan.current) return
+
+      try {
+        const response = await fetch('/api/UIUC-api/getMaintenanceModeFast')
+        const data = await response.json()
+        console.log('Maintenance mode', data)
+        setIsMaintenanceMode(data.isMaintenanceMode)
+      } catch (error) {
+        console.error('Failed to check maintenance mode:', error)
+        setIsMaintenanceMode(false)
+      }
+    }
+
+    checkMaintenanceMode()
+    effectRan.current = true
+  }, [])
+
+  if (isMaintenanceMode) {
     return <Maintenance />
   } else {
     return (
       <PostHogProvider client={posthog}>
+        <SpeedInsights />
+        <Analytics />
         <ClerkProvider
           // isSatellite={true}
           allowedRedirectOrigins={['https://chat.illinois.edu']}
@@ -76,7 +99,11 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
           <ClerkLoaded>
             <GoogleOneTap />
             <QueryClientProvider client={queryClient}>
-              <ReactQueryDevtools initialIsOpen={false} />
+              <ReactQueryDevtools
+                initialIsOpen={false}
+                position="left"
+                buttonPosition="bottom-left"
+              />
               <MantineProvider
                 withGlobalStyles
                 withNormalizeCSS
@@ -117,7 +144,6 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
               >
                 <Notifications position="bottom-center" zIndex={2077} />
                 <Component {...pageProps} />
-                <Analytics />
               </MantineProvider>
             </QueryClientProvider>
           </ClerkLoaded>

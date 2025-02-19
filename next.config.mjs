@@ -6,7 +6,6 @@
 await import('./src/env.mjs')
 import nextI18NextConfig from './next-i18next.config.mjs'
 import withBundleAnalyzer from '@next/bundle-analyzer'
-import { withAxiom } from 'next-axiom'
 
 const bundleAnalyzerConfig = {
   enabled: process.env.ANALYZE === 'true',
@@ -15,23 +14,29 @@ const bundleAnalyzerConfig = {
 /** @type {import("next").NextConfig} */
 const config = {
   i18n: nextI18NextConfig.i18n,
+  serverRuntimeConfig: {
+    bodyParser: {
+      sizeLimit: '100mb'
+    }
+  },
   webpack(config) {
     // Merge existing experiments with the required ones
     config.experiments = {
       ...(config.experiments || {}),
       asyncWebAssembly: true,
       layers: true, // Enable layers experiment
-    };
+    }
 
     // Adjust the module rules for WASM files
     config.module.rules.push({
       test: /\.wasm$/,
       // Exclude the Next.js middleware WASM loader from processing your WASM files
-      exclude: /node_modules\/next\/dist\/build\/webpack\/loaders\/next-middleware-wasm-loader\.js/,
+      exclude:
+        /node_modules\/next\/dist\/build\/webpack\/loaders\/next-middleware-wasm-loader\.js/,
       type: 'webassembly/async',
-    });
+    })
 
-    return config;
+    return config
   },
 
   /**
@@ -84,5 +89,4 @@ const config = {
   },
 }
 
-const withBundleAnalyzerConfig = withBundleAnalyzer(bundleAnalyzerConfig)
-export default withAxiom(withBundleAnalyzerConfig(config))
+export default withBundleAnalyzer(bundleAnalyzerConfig)(config)

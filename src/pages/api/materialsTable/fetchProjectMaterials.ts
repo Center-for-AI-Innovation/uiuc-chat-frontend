@@ -1,12 +1,14 @@
 import { supabase } from '@/utils/supabaseClient'
 import { getAuth } from '@clerk/nextjs/server'
 import posthog from 'posthog-js'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextApiRequest, NextApiResponse } from 'next'
 import { PostgrestError } from '@supabase/supabase-js'
 import { CourseDocument } from '~/types/courseMaterials'
 
-export const config = {
-  runtime: 'edge',
+type FetchDocumentsResponse = {
+  final_docs?: CourseDocument[]
+  total_count?: number
+  error?: string
 }
 
 /**
@@ -16,31 +18,26 @@ export const config = {
  * @param {NextApiResponse} res - The outgoing HTTP response.
  * @returns A JSON response indicating the result of the delete operation.
  */
-
 export default async function fetchDocuments(
-  req: NextRequest,
-  res: NextResponse,
+  req: NextApiRequest,
+  res: NextApiResponse<FetchDocumentsResponse>
 ) {
   if (req.method !== 'GET') {
-    return NextResponse.json({ error: 'Method not allowed' }, { status: 405 })
+    return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const url = new URL(req.url)
-  const fromStr = url.searchParams.get('from')
-  const toStr = url.searchParams.get('to')
-  const course_name = url.searchParams.get('course_name')
-  const search_key = url.searchParams.get('filter_key') as string
-  const search_value = url.searchParams.get('filter_value') as string
-  let sort_column = url.searchParams.get('sort_column') as string
-  let sort_direction = url.searchParams.get('sort_direction') === 'asc' // Convert 'asc' to true, 'desc' to false
+  const { from: fromStr, to: toStr, course_name, filter_key: search_key, filter_value: search_value, sort_column: rawSortColumn, sort_direction } = req.query
 
-  if (fromStr === null || toStr === null) {
-    throw new Error('Missing required query parameters: from and to')
+  let sort_column = rawSortColumn as string
+  let sort_dir = sort_direction === 'asc' // Convert 'asc' to true, 'desc' to false
+
+  if (typeof fromStr !== 'string' || typeof toStr !== 'string') {
+    return res.status(400).json({ error: 'Missing required query parameters: from and to' })
   }
 
-  if (sort_column == null || sort_direction == null) {
+  if (sort_column == null || sort_dir == null) {
     sort_column = 'created_at'
-    sort_direction = false // 'desc' equivalent
+    sort_dir = false // 'desc' equivalent
   }
 
   const from = parseInt(fromStr)
@@ -67,8 +64,8 @@ export default async function fetchDocuments(
           `,
         )
         .match({ course_name: course_name })
-        .ilike(search_key, '%' + search_value + '%') // e.g. readable_filename: 'some string'
-        .order(sort_column, { ascending: sort_direction })
+        .ilike(search_key as string, '%' + search_value + '%') // e.g. readable_filename: 'some string'
+        .order(sort_column, { ascending: sort_dir })
         .range(from, to)
       documents = someDocs
       finalError = error
@@ -91,7 +88,7 @@ export default async function fetchDocuments(
         )
         .match({ course_name: course_name })
         // NO FILTER
-        .order(sort_column, { ascending: sort_direction })
+        .order(sort_column, { ascending: sort_dir })
         .range(from, to)
       documents = someDocs
       finalError = error
@@ -113,7 +110,7 @@ export default async function fetchDocuments(
         .from('documents')
         .select('id', { count: 'exact', head: true })
         .match({ course_name: course_name })
-        .ilike(search_key, '%' + search_value + '%') // e.g. readable_filename: 'some string'
+        .ilike(search_key as string, '%' + search_value + '%') // e.g. readable_filename: 'some string'
       count = tmpCount
       countError = tmpCountError
     } else {
@@ -136,19 +133,13 @@ export default async function fetchDocuments(
       doc_groups: doc.doc_groups.map((group) => group.name),
     })) as CourseDocument[]
 
-    return NextResponse.json(
-      { final_docs, total_count: count },
-      { status: 200 },
-    )
+    return res.status(200).json({ final_docs, total_count: count ?? undefined })
   } catch (error) {
     console.error('Failed to fetch documents:', error)
     posthog.capture('fetch_materials_failed', {
       error: (error as PostgrestError).message,
       course_name: course_name,
     })
-    return NextResponse.json(
-      { error: (error as PostgrestError).message },
-      { status: 500 },
-    )
+    return res.status(500).json({ error: (error as PostgrestError).message })
   }
 }

@@ -33,3 +33,21 @@ export default async function handler(req: NextRequest, res: NextResponse) {
     )
   }
 }
+
+export async function getConversationStats(course_name: string) {
+  try {
+    const response = await fetch(
+      `/api/UIUC-api/getConversationStats?course_name=${course_name}`,
+    )
+    if (!response.ok) {
+      throw new Error(`Failed to fetch data: ${response.statusText}`)
+    }
+    return {
+      status: response.status,
+      data: await response.json(),
+    }
+  } catch (error) {
+    console.error('Error fetching conversation stats:', error)
+    throw error
+  }
+}

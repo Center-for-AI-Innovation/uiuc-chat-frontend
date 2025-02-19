@@ -35,8 +35,8 @@ export const Chatbar = ({
   current_email,
   courseName,
 }: {
-  current_email: string
-  courseName: string
+  current_email: string | undefined
+  courseName: string | undefined
 }) => {
   const { t } = useTranslation('sidebar')
   const chatBarContextValue = useCreateReducer<ChatbarInitialState>({
@@ -64,16 +64,16 @@ export const Chatbar = ({
 
   const queryClient = useQueryClient()
   const deleteConversationMutation = useDeleteConversation(
-    current_email,
+    current_email as string,
     queryClient,
-    courseName,
+    courseName as string,
     searchTerm,
   )
 
   const deleteAllConversationMutation = useDeleteAllConversations(
     queryClient,
-    current_email,
-    courseName,
+    current_email as string,
+    courseName as string,
   )
 
   const handleApiKeyChange = useCallback(
@@ -102,25 +102,45 @@ export const Chatbar = ({
   const updateConversationMutation = useUpdateConversation(
     current_email as string,
     queryClient,
-    courseName,
+    courseName as string,
   )
 
   const [convoMigrationLoading, setConvoMigrationLoading] =
     useState<boolean>(false)
 
   useEffect(() => {
+    if (!current_email || !courseName) {
+      return;
+    }
     setDebouncedSearchTerm(searchTerm)
-  }, [searchTerm])
+  }, [searchTerm, current_email, courseName])
 
   async function updateConversations(conversationHistory: Conversation[]) {
-    await Promise.all(
-      conversationHistory.map(async (conversation: Conversation) => {
-        conversation.userEmail = current_email
-        conversation.projectName = courseName
-        const response = await saveConversationToServer(conversation)
-        console.log('Response from saveConversationToServer: ', response)
-      }),
-    )
+    if (!current_email || !courseName) {
+      console.warn('Cannot update conversations: missing email or course name');
+      return;
+    }
+    
+    try {
+      await Promise.all(
+        conversationHistory.map(async (conversation: Conversation) => {
+          conversation.userEmail = current_email;
+          conversation.projectName = courseName;
+          try {
+            const response = await saveConversationToServer(conversation);
+            console.log('Response from saveConversationToServer: ', response);
+          } catch (error: any) {
+            if (error?.details?.includes('already exists')) {
+              console.log('Conversation already exists, skipping');
+              return;
+            }
+            throw error;
+          }
+        }),
+      )
+    } catch (error) {
+      console.error('Error updating conversations:', error);
+    }
   }
 
   useEffect(() => {
@@ -130,6 +150,7 @@ export const Chatbar = ({
         !isConversationHistoryLoading &&
         conversationHistory
       ) {
+        // console.log('Raw conversation history:', conversationHistory)
         const allConversations = conversationHistory.pages
           .flatMap((page) => (Array.isArray(page) ? page : []))
           .filter((conversation) => conversation !== undefined)
@@ -222,8 +243,10 @@ export const Chatbar = ({
   }
 
   const handleClearConversations = () => {
-    deleteAllConversationMutation.mutate()
+    homeDispatch({ field: 'conversations', value: [] })
+    chatDispatch({ field: 'searchTerm', value: '' })
     handleNewConversation()
+    deleteAllConversationMutation.mutate()
   }
 
   const handleDeleteConversation = (conversation: Conversation) => {
@@ -270,6 +293,19 @@ export const Chatbar = ({
       chatDispatch({ field: 'searchTerm', value: '' })
       e.target.style.background = 'none'
     }
+  }
+
+  if (!current_email || !courseName) {
+    return (
+      <div className="flex-1 overflow-hidden">
+        <div className="h-full p-4">
+          <div className="text-center text-neutral-300">
+            <LoadingSpinner />
+            <div className="mt-2">Loading...</div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

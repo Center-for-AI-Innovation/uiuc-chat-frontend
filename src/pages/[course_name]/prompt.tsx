@@ -2,7 +2,7 @@
 'use client'
 import { type NextPage } from 'next'
 import MakeNewCoursePage from '~/components/UIUC-Components/MakeNewCoursePage'
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { Montserrat } from 'next/font/google'
 import { useRouter } from 'next/router'
 import { useUser } from '@clerk/nextjs'
@@ -16,6 +16,7 @@ import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 import {
   Button,
   Card,
+  Collapse,
   Flex,
   Group,
   Indicator,
@@ -28,14 +29,16 @@ import {
   Title,
   Tooltip,
   useMantineTheme,
+  Divider,
 } from '@mantine/core'
 import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
-import { DEFAULT_SYSTEM_PROMPT } from '~/utils/app/const'
+import { DEFAULT_SYSTEM_PROMPT, GUIDED_LEARNING_PROMPT, DOCUMENT_FOCUS_PROMPT } from '~/utils/app/const'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 import { useDisclosure, useMediaQuery } from '@mantine/hooks'
+import { LinkGeneratorModal } from '~/components/Modals/LinkGeneratorModal'
 import {
   IconAlertTriangle,
   IconCheck,
@@ -45,42 +48,27 @@ import {
   IconSparkles,
   IconInfoCircle,
   IconCopy,
+  IconChevronDown,
+  IconChevronUp,
+  IconBook,
+  IconLink,
 } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import { useChat } from 'ai/react'
 import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
 import { debounce } from 'lodash'
-import CustomSwitch from '~/components/Switches/CustomSwitch' // Import the CustomSwitch component
-import CustomCopyButton from '~/components/Buttons/CustomCopyButton' // Import the CustomCopyButton component
+import CustomSwitch from '~/components/Switches/CustomSwitch'
+import CustomCopyButton from '~/components/Buttons/CustomCopyButton'
+import { useDebouncedCallback } from 'use-debounce'
 
 const montserrat = Montserrat({
   weight: '700',
   subsets: ['latin'],
 })
 
-const DOCUMENT_FOCUS_PROMPT = `
-
-You must strictly adhere to the following rules:
-
-1. Use ONLY information from the provided documents.
-2. If the answer isn't in the documents, state: "The provided documents don't contain this information."
-3. Do not use external knowledge, make assumptions, or infer beyond the documents' content.
-4. Do not answer questions outside the documents' scope.
-
-Your responses must be based solely on the content of the provided documents.
-`
-
-const GUIDED_LEARNING_PROMPT =
-  '\n\nYou are an AI tutor dedicated to helping students discover the joy of learning by guiding them to find answers on their own. Your role is not just to teach but to spark curiosity and excitement in each subject. You never provide direct answers or detailed step-by-step solutions, no matter the problem. Instead, with limitless patience and enthusiasm, you ask insightful questions and offer hints that inspire critical thinking and problem-solving. Your goal is to help learners experience the thrill of discovery and build confidence in their ability to find solutions independently—like a great teaching assistant who makes learning fun and rewarding.\n\n' +
-  'Key approaches:\n\n' +
-  '1. **Ask Open-Ended Questions**: Lead students with questions that encourage exploration, making problem-solving feel like an exciting challenge.\n' +
-  '2. **Guide Without Giving Specific Steps**: Offer general insights and hints that keep students thinking creatively without giving direct solutions.\n' +
-  '3. **Explain Concepts Without Revealing Answers**: Provide engaging explanations of concepts that deepen understanding while leaving the solution for the student to uncover.\n\n' +
-  'Strict guidelines:\n\n' +
-  '- **Never Provide Solutions**: Avoid any form of direct or partial solutions. Always redirect learners to approach the problem with fresh questions and ideas.\n' +
-  '- **Resist Workarounds**: If a student seeks the answer, gently steer them back to thoughtful reflection, keeping the excitement alive in the process of discovery.\n' +
-  '- **Encourage Independent Thinking**: Use probing questions to spark analysis and creative thinking, helping students feel empowered by their own problem-solving skills.\n' +
-  '- **Support, Motivate, and Inspire**: Keep a warm, encouraging tone, showing genuine excitement about the learning journey. Celebrate their persistence and successes, no matter how small, to make learning enjoyable and fulfilling.'
+type PartialCourseMetadata = {
+  [K in keyof CourseMetadata]?: CourseMetadata[K];
+};
 
 const CourseMain: NextPage = () => {
   const theme = useMantineTheme()
@@ -99,14 +87,43 @@ const CourseMain: NextPage = () => {
   )
   const [baseSystemPrompt, setBaseSystemPrompt] = useState('')
   const [opened, { close, open }] = useDisclosure(false)
-  const [apiKey, setApiKey] = useState<string | undefined>(undefined)
+  const [resetModalOpened, { close: closeResetModal, open: openResetModal }] = useDisclosure(false)
+  const [llmProviders, setLLMProviders] = useState<any>(null)
+  const [linkGeneratorOpened, { open: openLinkGenerator, close: closeLinkGenerator }] = useDisclosure(false)
+
+  useEffect(() => {
+    const fetchProviders = async () => {
+      try {
+        const response = await fetch('/api/models', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ projectName: course_name }),
+        })
+        if (!response.ok) throw new Error('Failed to fetch providers')
+        const providers = await response.json()
+        setLLMProviders(providers)
+      } catch (error) {
+        console.error('Error fetching LLM providers:', error)
+      }
+    }
+    if (course_name) {
+      fetchProviders()
+    }
+  }, [course_name])
+
   const { messages, input, handleInputChange, reload, setMessages, setInput } =
     useChat({
       api: '/api/chat/openAI',
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${llmProviders?.OpenAI?.apiKey || ''}`,
       },
+      body: {
+        model: 'gpt-4o'  // Using GPT-4o for enhanced prompt optimization with higher context window
+      }
     })
+
   const [optimizedSystemPrompt, setOptimizedSystemPrompt] = useState('')
   const [isRightSideVisible, setIsRightSideVisible] = useState(true)
 
@@ -114,6 +131,14 @@ const CourseMain: NextPage = () => {
   const [guidedLearning, setGuidedLearning] = useState(false)
   const [documentsOnly, setDocumentsOnly] = useState(false)
   const [systemPromptOnly, setSystemPromptOnly] = useState(false)
+  const [vectorSearchRewrite, setVectorSearchRewrite] = useState(false)
+  const [insightsOpen, setInsightsOpen] = useState(false)
+
+  const courseMetadataRef = useRef<CourseMetadata | null>(null);
+
+  useEffect(() => {
+    courseMetadataRef.current = courseMetadata;
+  }, [courseMetadata]);
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -134,10 +159,11 @@ const CourseMain: NextPage = () => {
         fetchedMetadata.system_prompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
       )
 
-      // Initialize checkbox states
+      // Initialize all state variables
       setGuidedLearning(fetchedMetadata.guidedLearning || false)
       setDocumentsOnly(fetchedMetadata.documentsOnly || false)
       setSystemPromptOnly(fetchedMetadata.systemPromptOnly || false)
+      setVectorSearchRewrite(!fetchedMetadata.vector_search_rewrite_disabled)
 
       setIsLoading(false)
     }
@@ -228,46 +254,134 @@ const CourseMain: NextPage = () => {
     return newPrompt
   }
 
-  const handleCheckboxChange = async (
-    updatedFields: Partial<CourseMetadata>,
-  ) => {
-    if (!courseMetadata || !course_name) {
-      showToastOnPromptUpdate(theme, true)
-      return
+  // Track initial state of switches
+  const initialSwitchStateRef = useRef<{
+    guidedLearning: boolean;
+    documentsOnly: boolean;
+    systemPromptOnly: boolean;
+    vectorSearchRewrite: boolean;
+  }>({
+    guidedLearning: false,
+    documentsOnly: false,
+    systemPromptOnly: false,
+    vectorSearchRewrite: false,
+  });
+
+  useEffect(() => {
+    if (courseMetadata) {
+      initialSwitchStateRef.current = {
+        guidedLearning: courseMetadata.guidedLearning || false,
+        documentsOnly: courseMetadata.documentsOnly || false,
+        systemPromptOnly: courseMetadata.systemPromptOnly || false,
+        vectorSearchRewrite: !courseMetadata.vector_search_rewrite_disabled,
+      };
+    }
+  }, [courseMetadata]);
+
+  const saveSettings = async () => {
+    if (!courseMetadataRef.current || !course_name) return;
+
+    const currentSwitchState = {
+      guidedLearning,
+      documentsOnly,
+      systemPromptOnly,
+      vectorSearchRewrite,
+    };
+
+    const initialSwitchState = initialSwitchStateRef.current;
+
+    const hasChanges = (Object.keys(currentSwitchState) as Array<keyof typeof currentSwitchState>).some(
+      (key) => currentSwitchState[key] !== initialSwitchState[key]
+    );
+
+    if (!hasChanges) {
+      return;
     }
 
-    // Immediately update local state
-    const newCourseMetadata = { ...courseMetadata, ...updatedFields }
-    const newSystemPrompt = updateSystemPrompt(updatedFields)
+    const updatedMetadata = {
+      ...courseMetadataRef.current,
+      guidedLearning,
+      documentsOnly,
+      systemPromptOnly,
+      vector_search_rewrite_disabled: !vectorSearchRewrite,
+    } as CourseMetadata;
 
-    setCourseMetadata(newCourseMetadata)
-    setBaseSystemPrompt(newSystemPrompt)
-
-    if (updatedFields.guidedLearning !== undefined) {
-      setGuidedLearning(updatedFields.guidedLearning)
-    }
-    if (updatedFields.documentsOnly !== undefined) {
-      setDocumentsOnly(updatedFields.documentsOnly)
-    }
-    if (updatedFields.systemPromptOnly !== undefined) {
-      setSystemPromptOnly(updatedFields.systemPromptOnly)
-    }
-
-    // Debounced API call
-    debouncedSave({ ...newCourseMetadata, system_prompt: newSystemPrompt })
-  }
-
-  const debouncedSave = useCallback(
-    debounce(async (updatedMetadata: CourseMetadata) => {
-      const success = await callSetCourseMetadata(course_name, updatedMetadata)
+    try {
+      const success = await callSetCourseMetadata(course_name, updatedMetadata);
       if (!success) {
-        showToastOnPromptUpdate(theme, true)
-      } else {
-        showToastOnPromptUpdate(theme)
+        showToastNotification(theme, 'Error', 'Failed to update settings', true);
+        return;
       }
-    }, 500),
-    [course_name, theme],
-  )
+
+      setCourseMetadata(updatedMetadata);
+      initialSwitchStateRef.current = currentSwitchState;
+
+      const changes: string[] = [];
+      if (initialSwitchState.vectorSearchRewrite !== currentSwitchState.vectorSearchRewrite) {
+        changes.push(`Smart Document Search ${currentSwitchState.vectorSearchRewrite ? 'enabled' : 'disabled'}`);
+      }
+      if (initialSwitchState.guidedLearning !== currentSwitchState.guidedLearning) {
+        changes.push(`Guided Learning ${currentSwitchState.guidedLearning ? 'enabled' : 'disabled'}`);
+      }
+      if (initialSwitchState.documentsOnly !== currentSwitchState.documentsOnly) {
+        changes.push(`Document-Based References Only ${currentSwitchState.documentsOnly ? 'enabled' : 'disabled'}`);
+      }
+      if (initialSwitchState.systemPromptOnly !== currentSwitchState.systemPromptOnly) {
+        changes.push(`Bypass UIUC.chat's internal prompting ${currentSwitchState.systemPromptOnly ? 'enabled' : 'disabled'}`);
+      }
+
+      if (changes.length > 0) {
+        showToastNotification(
+          theme,
+          changes.join(' & '),
+          'Settings have been saved successfully',
+          false
+        );
+      }
+    } catch (error) {
+      console.error('Error updating course settings:', error);
+      showToastNotification(theme, 'Error', 'Failed to update settings', true);
+    }
+  };
+
+  const debouncedSaveSettings = useDebouncedCallback(saveSettings, 500);
+
+  const handleSettingChange = (updates: PartialCourseMetadata) => {
+    if (!courseMetadata) return;
+
+    if ('vector_search_rewrite_disabled' in updates) {
+      setVectorSearchRewrite(!updates.vector_search_rewrite_disabled);
+    }
+
+    courseMetadataRef.current = {
+      ...courseMetadataRef.current!,
+      ...updates,
+    } as CourseMetadata;
+
+    debouncedSaveSettings();
+  };
+
+  const handleCheckboxChange = async (updatedFields: PartialCourseMetadata) => {
+    if (!courseMetadata || !course_name) {
+      showToastNotification(theme, 'Error', 'Failed to update settings', true);
+      return;
+    }
+
+    if ('guidedLearning' in updatedFields) setGuidedLearning(updatedFields.guidedLearning!);
+    if ('documentsOnly' in updatedFields) setDocumentsOnly(updatedFields.documentsOnly!);
+    if ('systemPromptOnly' in updatedFields) setSystemPromptOnly(updatedFields.systemPromptOnly!);
+
+    const newSystemPrompt = updateSystemPrompt(updatedFields);
+    setBaseSystemPrompt(newSystemPrompt);
+
+    courseMetadataRef.current = {
+      ...courseMetadataRef.current!,
+      ...updatedFields,
+      system_prompt: newSystemPrompt,
+    } as CourseMetadata;
+
+    debouncedSaveSettings();
+  };
 
   const handleCopyDefaultPrompt = async () => {
     try {
@@ -374,66 +488,108 @@ const CourseMain: NextPage = () => {
     reload: any,
     setMessages: any,
   ) => {
-    let newApiKey
-    if (courseMetadata?.openai_api_key) {
-      newApiKey = courseMetadata.openai_api_key
-    }
-    setApiKey(newApiKey)
-
-    console.log('apikey set to', apiKey)
     e.preventDefault()
 
-    const systemPrompt = `Understand the Task: Grasp the main objective, goals, requirements, constraints, and expected output.
+    if (!llmProviders) {
+      showToastNotification(
+        theme,
+        'Configuration Error',
+        'The Optimize System Prompt feature requires provider configuration to be loaded. Please refresh the page and try again.',
+        true
+      )
+      return
+    }
 
-- Minimal Changes: If an existing prompt is provided, improve it only if it's simple. For complex prompts, enhance clarity and add missing elements without altering the original structure.
+    if (!llmProviders.OpenAI?.enabled) {
+      showToastNotification(
+        theme,
+        'OpenAI Required',
+        'The Optimize System Prompt feature requires OpenAI to be enabled. Please enable OpenAI on the LLM page in your course settings to use this feature.',
+        true
+      )
+      return
+    }
 
-- Reasoning Before Conclusions: Encourage reasoning steps before any conclusions are reached. ATTENTION! If the user provides examples where the reasoning happens afterward, REVERSE the order! NEVER START EXAMPLES WITH CONCLUSIONS!
-  - Reasoning Order: Call out reasoning portions of the prompt and conclusion parts (specific fields by name). For each, determine the ORDER in which this is done, and whether it needs to be reversed.
-  - Conclusion, classifications, or results should ALWAYS appear last.
+    if (!llmProviders.OpenAI?.apiKey) {
+      showToastNotification(
+        theme,
+        'OpenAI API Key Required',
+        'The Optimize System Prompt feature requires an OpenAI API key. Please add your OpenAI API key on the LLM page in your course settings to use this feature.',
+        true
+      )
+      return
+    }
 
-- Examples: Include high-quality examples if helpful, using placeholders [in brackets] for complex elements.
-  - What kinds of examples may need to be included, how many, and whether they are complex enough to benefit from placeholders.
+    const systemPrompt = `You are an expert prompt engineer. Your task is to analyze and optimize the provided system prompt while preserving and combining ALL of its components and functionality. IMPORTANT: The input may contain multiple sections that appear distinct - you MUST combine ALL sections into a single cohesive prompt.
 
-- Clarity and Conciseness: Use clear, specific language. Avoid unnecessary instructions or bland statements.
+Key Requirements:
 
-- Formatting: Use markdown features for readability. DO NOT USE \`\`\` CODE BLOCKS UNLESS SPECIFICALLY REQUESTED.
+1. Identify and Combine ALL Sections:
+   - Analyze the ENTIRE input prompt from start to finish
+   - Identify ALL distinct sections, even if they appear to be separate prompts
+   - Combine ALL sections into a single, cohesive system prompt
+   - Ensure NO content is lost or omitted, regardless of where it appears in the input
 
-- Preserve User Content: If the input task or prompt includes extensive guidelines or examples, preserve them entirely, or as closely as possible. If they are vague, consider breaking down into sub-steps. Keep any details, guidelines, examples, variables, or placeholders provided by the user.
+2. Preserve ALL Functionality:
+   - Maintain ALL rules, constraints, and special behaviors from EVERY section
+   - Keep ALL examples and formatting specifications from THROUGHOUT the input
+   - Preserve ANY special modes or behaviors (e.g., guided learning, document-only mode)
+   - If sections seem to conflict, preserve BOTH behaviors and clarify when each applies
 
-- Constants: DO include constants in the prompt, as they are not susceptible to prompt injection. Such as guides, rubrics, and examples.
+3. Optimize and Integrate:
+   - Merge sections cohesively while maintaining their individual purposes
+   - Find common themes and combine related instructions
+   - Eliminate redundancy while preserving distinct functionalities
+   - Ensure all special behaviors are properly integrated
+   - Create smooth transitions between different aspects of the prompt
 
-- Output Format: Explicitly the most appropriate output format, in detail. This should include length and syntax (e.g. short sentence, paragraph, JSON, etc.)
-  - For tasks outputting well-defined or structured data (classification, JSON, etc.) bias toward outputting a JSON.
-  - JSON should never be wrapped in code blocks (\`\`\`) unless explicitly requested.
+4. Structure and Format:
+   - Use clear section headings to organize combined content
+   - Maintain specific formatting requirements from all sections
+   - Keep all examples and placeholders
+   - Preserve special syntax or notation from every section
+   - Create a logical flow between different types of instructions
 
-The final prompt you output should adhere to the following structure below. Do not include any additional commentary, only output the completed system prompt. SPECIFICALLY, do not include any additional messages at the start or end of the prompt. (e.g. no "---")
+5. Reasoning and Logic Flow:
+   - Ensure reasoning steps precede conclusions in all cases
+   - If examples show reasoning after conclusions, restructure to put reasoning first
+   - Maintain clear logical progression across all combined sections
+   - Use explicit step-by-step breakdowns where appropriate
 
-[Concise instruction describing the task - this should be the first line in the prompt, no section header]
+6. Examples and Formatting:
+   - Include high-quality examples with [placeholders] for complex elements
+   - Use markdown for readability (avoid code blocks unless specifically requested)
+   - For structured data outputs (e.g., classification, JSON), prefer JSON format
+   - Never wrap JSON in code blocks unless explicitly requested
+   - If examples are simplified versions, add notes about real-world complexity
 
-[Additional details as needed.]
+7. Content Guidelines:
+   - Start with a clear, concise task description that encompasses ALL aspects
+   - Include constants (guides, rubrics, examples) as they resist prompt injection
+   - Break down vague instructions into clear sub-steps
+   - Preserve all user-provided details, guidelines, and variables
+   - Specify output format requirements in detail (length, structure, syntax)
 
-[Optional sections with headings or bullet points for detailed steps.]
+8. Output Requirements:
+   - Return the COMPLETE optimized prompt combining ALL sections
+   - Include ALL functionality from EVERY part of the original
+   - Maintain ALL special modes and behaviors from all sections
+   - Keep the same level of detail for critical components
+   - Follow this structure:
+     * Comprehensive task description (no header)
+     * Combined additional details
+     * Integrated sections with appropriate headings
+     * Unified output format
+     * Combined examples (if needed)
+     * Comprehensive notes (if needed)
 
-# Steps [optional]
+CRITICAL: Review the ENTIRE output to verify that NO aspects from ANY section of the input prompt have been omitted. The final prompt MUST incorporate ALL functionality and requirements from ALL sections of the input.
 
-[optional: a detailed breakdown of the steps necessary to accomplish the task]
-
-# Output Format
-
-[Specifically call out how the output should be formatted, be it response length, structure e.g. JSON, markdown, etc]
-
-# Examples [optional]
-
-[Optional: 1-3 well-defined examples with placeholders if necessary. Clearly mark where examples start and end, and what the input and output are. User placeholders as necessary.]
-[If the examples are shorter than what a realistic example is expected to be, make a reference with () explaining how real examples should be longer / shorter / different. AND USE PLACEHOLDERS! ]
-
-# Notes [optional]
-
-[optional: edge cases, details, and an area to call or repeat out specific important considerations]`
+Do not include any commentary or explanations. Output only the optimized system prompt.`
 
     setMessages([
       { role: 'system', content: systemPrompt },
-      { role: 'user', content: e.target[0].value },
+      { role: 'user', content: baseSystemPrompt },
     ])
     reload()
   }
@@ -448,316 +604,472 @@ The final prompt you output should adhere to the following structure below. Do n
               shadow="xs"
               padding="none"
               radius="xl"
-              className="mt-[2%] w-[96%] md:w-[90%]"
+              className="mt-[2%] w-[96%] md:w-[90%] 2xl:w-[90%]"
             >
-              <Flex
-                direction={isSmallScreen ? 'column' : 'row'}
-                style={{ height: '100%' }}
-              >
+              <Flex direction={isSmallScreen ? 'column' : 'row'}>
                 <div
                   style={{
                     flex: isSmallScreen ? '1 1 100%' : '1 1 60%',
-                    padding: '1rem',
+                    border: 'None',
                     color: 'white',
-                    alignItems: 'center',
                   }}
-                  className="min-h-full justify-center bg-gradient-to-r from-purple-900 via-indigo-800 to-blue-800"
+                  className="min-h-full bg-gradient-to-r from-purple-900 via-indigo-800 to-blue-800"
                 >
-                  <div className="card flex h-full flex-col">
-                    <Group
-                      m="3rem"
-                      align="center"
-                      variant="column"
-                      className="w-[100%] md:w-[90%] lg:w-[80%]"
-                      style={{
-                        justifyContent: 'center',
-                        alignSelf: 'center',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <Title
-                        order={2}
-                        variant="gradient"
-                        gradient={{ from: 'gold', to: 'white', deg: 50 }}
-                        style={{ marginBottom: '0.5rem' }}
-                        className={`label ${montserrat_heading.variable} font-montserratHeading`}
-                      >
-                        Customize System Prompt
-                      </Title>
-                      <Paper
-                        className="rounded-xl"
-                        shadow="xs"
-                        p="md"
+                  <div className="w-full border-b border-white/10 bg-black/20 px-4 py-3 sm:px-6 sm:py-4 md:px-8">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
+                        <Title
+                          order={2}
+                          className={`${montserrat_heading.variable} font-montserratHeading text-lg text-white/90 sm:text-2xl`}
+                        >
+                          Prompting
+                        </Title>
+                        <Text className="text-white/60">/</Text>
+                        <Title
+                          order={3}
+                          variant="gradient"
+                          gradient={{ from: 'gold', to: 'white', deg: 50 }}
+                          className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base sm:text-xl ${course_name.length > 40
+                            ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
+                            : ''
+                            }`}
+                        >
+                          {course_name}
+                        </Title>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Left Section Content */}
+                  <div
+                    style={{
+                      padding: '1rem',
+                      color: 'white',
+                      alignItems: 'center',
+                    }}
+                    className="min-h-full justify-center"
+                  >
+                    <div className="card flex h-full flex-col">
+
+
+
+                      <Group
+                        m="2rem"
+                        align="center"
+                        variant="column"
+                        className="w-[100%] md:w-[95%] lg:w-[95%]"
                         style={{
-                          width: '100%',
-                          backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                          justifyContent: 'center',
+                          alignSelf: 'center',
+                          overflow: 'hidden',
                         }}
                       >
-                        <Text
-                          size={'md'}
-                          className={`${montserrat_paragraph.variable} select-text font-montserratParagraph`}
+                        {/* Prompt Engineering Guide */}
+                        <Paper
+                          className="rounded-xl w-full px-4 sm:px-6 md:px-8"
+                          shadow="xs"
+                          p="md"
+                          sx={{
+                            backgroundColor: '#15162c',
+                            border: '1px solid rgba(147, 51, 234, 0.3)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            '&:hover': {
+                              backgroundColor: '#1a1b34',
+                              borderColor: 'rgba(147, 51, 234, 0.5)',
+                              transform: 'translateY(-1px)',
+                            },
+                          }}
+                          onClick={() => setInsightsOpen(!insightsOpen)}
                         >
-                          For guidance on crafting prompts, consult
-                          <br />
-                          <List withPadding>
-                            <List.Item>
-                              the
-                              <a
-                                className={`pl-1 text-sm text-purple-600 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                href="https://platform.openai.com/docs/guides/prompt-engineering"
-                                target="_blank"
-                                rel="noopener noreferrer"
+                          <Flex
+                            align="center"
+                            justify="space-between"
+                            sx={{
+                              padding: '4px 8px',
+                              borderRadius: '8px',
+                            }}
+                          >
+                            <Flex align="center" gap="md">
+                              <IconBook
+                                size={24}
+                                style={{
+                                  color: 'hsl(280,100%,70%)',
+                                }}
+                              />
+                              <Text
+                                size="md"
+                                weight={600}
+                                className={`${montserrat_paragraph.variable} select-text font-montserratParagraph`}
+                                variant="gradient"
+                                gradient={{ from: 'gold', to: 'white', deg: 50 }}
                               >
-                                official OpenAI prompt engineering guide
-                                <IconExternalLink
-                                  size={18}
-                                  className="inline-block pl-1"
-                                  style={{ position: 'relative', top: '-2px' }}
-                                />
-                              </a>
-                            </List.Item>
+                                Prompt Engineering Guide
+                              </Text>
+                            </Flex>
+                            <div
+                              className="transition-transform duration-200"
+                              style={{
+                                transform: insightsOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                                color: 'hsl(280,100%,70%)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              <IconChevronDown size={24} />
+                            </div>
+                          </Flex>
 
-                            <List.Item>
-                              the
-                              <a
-                                className={`pl-1 text-sm text-purple-600 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                href="https://docs.anthropic.com/claude/prompt-library"
-                                target="_blank"
-                                rel="noopener noreferrer"
+                          <Collapse in={insightsOpen} transitionDuration={200}>
+                            <div className="mt-4 px-2">
+                              <Text
+                                size="md"
+                                className={`${montserrat_paragraph.variable} select-text font-montserratParagraph`}
                               >
-                                official Anthropic Prompt Library
-                                <IconExternalLink
-                                  size={18}
-                                  className="inline-block pl-1"
-                                  style={{ position: 'relative', top: '-2px' }}
-                                />
-                              </a>
-                            </List.Item>
-                          </List>
-                        </Text>
+                                For additional insights and best practices on prompt creation, please review:
+                                <List
+                                  withPadding
+                                  className="mt-2"
+                                  spacing="sm"
+                                  icon={
+                                    <div
+                                      style={{
+                                        width: '6px',
+                                        height: '6px',
+                                        borderRadius: '50%',
+                                        backgroundColor: 'hsl(280,100%,70%)',
+                                        marginTop: '8px'
+                                      }}
+                                    />
+                                  }
+                                >
+                                  <List.Item>
+                                    <a
+                                      className={`text-sm hover:text-purple-400 transition-colors duration-200 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                      style={{ color: 'hsl(280,100%,70%)' }}
+                                      href="https://platform.openai.com/docs/guides/prompt-engineering"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      The Official OpenAI Prompt Engineering Guide
+                                      <IconExternalLink
+                                        size={18}
+                                        className="inline-block pl-1"
+                                        style={{ position: 'relative', top: '-2px' }}
+                                      />
+                                    </a>
+                                  </List.Item>
+                                  <List.Item>
+                                    <a
+                                      className={`text-sm hover:text-purple-400 transition-colors duration-200 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                      style={{ color: 'hsl(280,100%,70%)' }}
+                                      href="https://docs.anthropic.com/claude/prompt-library"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      The Official Anthropic Prompt Library
+                                      <IconExternalLink
+                                        size={18}
+                                        className="inline-block pl-1"
+                                        style={{ position: 'relative', top: '-2px' }}
+                                      />
+                                    </a>
+                                  </List.Item>
+                                </List>
 
-                        <Text
-                          className={`label ${montserrat_paragraph.variable} inline-block select-text font-montserratParagraph`}
-                          size={'md'}
-                        >
-                          The System Prompt is used during <i>all</i>{' '}
-                          conversations on this project. It is the most powerful
-                          form of instructions to the model. It is the most
-                          powerful form of instructions to the model.
-                          <br></br>
-                          Include the most salient information possible, like
-                          good examples, welcome greetings and links to where
-                          users can learn more about your work.
-                        </Text>
-                      </Paper>
+                                <Text
+                                  className={`label ${montserrat_paragraph.variable} inline-block select-text font-montserratParagraph`}
+                                  size="md"
+                                  style={{ marginTop: '1.5rem' }}
+                                >
+                                  The System Prompt provides the foundation for every conversation in this project. It defines the model&apos;s role, tone, and behavior. Consider including:
+                                  <List
+                                    withPadding
+                                    className="mt-2"
+                                    spacing="xs"
+                                    icon={
+                                      <div
+                                        style={{
+                                          width: '6px',
+                                          height: '6px',
+                                          borderRadius: '50%',
+                                          backgroundColor: 'hsl(280,100%,70%)',
+                                          marginTop: '8px'
+                                        }}
+                                      />
+                                    }
+                                  >
+                                    <List.Item>Key instructions or examples</List.Item>
+                                    <List.Item>A warm welcome message</List.Item>
+                                    <List.Item>Helpful links for further learning</List.Item>
+                                  </List>
+                                </Text>
+                              </Text>
+                            </div>
+                          </Collapse>
+                        </Paper>
 
-                      <div
-                        style={{
-                          width: isRightSideVisible ? '100%' : '100%',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          background: '#15162c',
-                        }}
-                        className="rounded-xl px-3 py-6 md:px-10 md:py-8"
-                      >
+
+                        {/* SYSTEM PROMPT INPUT BOX */}
                         <div
                           style={{
-                            width: '100%',
-                            justifyContent: 'space-between',
+                            width: isRightSideVisible ? '100%' : '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
                             alignItems: 'center',
                             background: '#15162c',
                           }}
+                          className="rounded-xl px-4 py-6 sm:px-6 sm:py-6 md:px-8"
                         >
-                          <Flex justify="space-between" align="center">
-                            <Title
-                              className={`label ${montserrat_heading.variable} pl-3 font-montserratHeading md:pl-0`}
-                              variant="gradient"
-                              gradient={{ from: 'gold', to: 'white', deg: 170 }}
-                              order={4}
-                            >
-                              System Prompt
-                            </Title>
-                            {isRightSideVisible ? (
-                              <Tooltip label="Close Prompt Builder" key="close">
-                                <div className="cursor-pointer p-4 hover:opacity-75 md:p-0">
-                                  <IconLayoutSidebarRight
-                                    stroke={2}
-                                    onClick={() =>
-                                      setIsRightSideVisible(!isRightSideVisible)
-                                    }
-                                  />
-                                </div>
-                              </Tooltip>
-                            ) : (
-                              <Tooltip label="Open Prompt Builder" key="open">
-                                <div className="cursor-pointer p-4 hover:opacity-75 md:p-0">
-                                  <IconLayoutSidebarRightExpand
-                                    stroke={2}
-                                    onClick={() =>
-                                      setIsRightSideVisible(!isRightSideVisible)
-                                    }
-                                  />
-                                </div>
-                              </Tooltip>
-                            )}{' '}
-                          </Flex>
-                          <form
-                            className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                            onSubmit={(e) =>
-                              handleSubmitPromptOptimization(
-                                e,
-                                reload,
-                                setMessages,
-                              )
-                            }
+                          <div
+                            style={{
+                              width: '100%',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              background: '#15162c',
+                            }}
                           >
-                            <Textarea
-                              autosize
-                              minRows={3}
-                              maxRows={20}
-                              placeholder="Enter the system prompt..."
-                              className="px-1 pt-3 md:px-0"
-                              value={baseSystemPrompt}
-                              onChange={(e) => {
-                                setBaseSystemPrompt(e.target.value)
-                              }}
-                              style={{ width: '100%' }}
-                              styles={{
-                                input: {
-                                  fontFamily: 'var(--font-montserratParagraph)',
-                                },
-                              }}
-                            />
-                            <Group mt="md" spacing="sm">
-                              <Button
-                                className={`relative bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                type="button"
-                                onClick={() => {
-                                  handleSystemPromptSubmit(baseSystemPrompt)
-                                }}
-                                style={{ minWidth: 'fit-content' }}
+                            <Flex justify="space-between" align="center">
+                              <Title
+                                className={`label ${montserrat_heading.variable} pl-3 font-montserratHeading md:pl-0`}
+                                variant="gradient"
+                                gradient={{ from: 'gold', to: 'white', deg: 170 }}
+                                order={4}
                               >
-                                Update System Prompt
-                              </Button>
-                              <Button
-                                type="submit"
-                                onClick={open}
-                                style={{
-                                  minWidth: 'fit-content',
-                                  background:
-                                    'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%)',
-                                  transition: 'background 0.3s ease-in-out',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  padding: '0 8px',
-                                  backgroundSize: '100% 100%',
-                                  backgroundRepeat: 'no-repeat',
-                                  boxSizing: 'border-box',
-                                  border: 'none',
-                                  outline: 'none',
-                                  backgroundOrigin: 'border-box',
-                                  backgroundClip: 'border-box',
-                                }}
-                                className={`relative text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                onMouseEnter={(e) =>
-                                  (e.currentTarget.style.background =
-                                    'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%)')
-                                }
-                                onMouseLeave={(e) =>
-                                  (e.currentTarget.style.background =
-                                    'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%)')
-                                }
-                              >
-                                <IconSparkles
-                                  stroke={1}
-                                  style={{ marginRight: '4px' }}
-                                />
-                                Optimize System Prompt
-                              </Button>
-                            </Group>
-
-                            <Modal
-                              opened={opened}
-                              onClose={close}
-                              size="xl"
-                              title="Optimized System Prompt"
-                              className={`${montserrat_heading.variable} rounded-xl font-montserratHeading`}
-                              centered
-                              radius={'lg'}
-                              styles={{
-                                title: { marginTop: '1rem' },
-                                header: { backgroundColor: '#15162c' },
-                                content: { backgroundColor: '#15162c' },
-                              }}
+                                System Prompt
+                              </Title>
+                              {isRightSideVisible ? (
+                                <Tooltip label="Close Prompt Builder" key="close">
+                                  <div className="cursor-pointer p-4 hover:opacity-75 md:p-0" data-right-sidebar-icon>
+                                    <IconLayoutSidebarRight
+                                      stroke={2}
+                                      onClick={() => setIsRightSideVisible(false)}
+                                    />
+                                  </div>
+                                </Tooltip>
+                              ) : (
+                                <Tooltip label="Open Prompt Builder" key="open">
+                                  <div className="cursor-pointer p-4 hover:opacity-75 md:p-0" data-right-sidebar-icon>
+                                    <IconLayoutSidebarRightExpand
+                                      stroke={2}
+                                      onClick={() => setIsRightSideVisible(true)}
+                                    />
+                                  </div>
+                                </Tooltip>
+                              )}
+                            </Flex>
+                            <form
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                              onSubmit={(e) =>
+                                handleSubmitPromptOptimization(
+                                  e,
+                                  reload,
+                                  setMessages,
+                                )
+                              }
                             >
-                              <Group mt="md">
-                                {messages.map((message, i, { length }) => {
-                                  if (
-                                    length - 1 === i &&
-                                    message.role === 'assistant'
-                                  ) {
-                                    return (
-                                      <div
-                                        key={i}
-                                        style={{
-                                          border: '1px solid #6D28D9',
-                                          padding: '10px',
-                                          borderRadius: '5px',
-                                          whiteSpace: 'pre-wrap',
-                                        }}
-                                        className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                                      >
-                                        {message.content}
-                                      </div>
-                                    )
+                              <Textarea
+                                autosize
+                                minRows={3}
+                                maxRows={20}
+                                placeholder="Enter the system prompt..."
+                                className="px-1 pt-3 md:px-0"
+                                value={baseSystemPrompt}
+                                onChange={(e) => {
+                                  setBaseSystemPrompt(e.target.value)
+                                }}
+                                style={{ width: '100%' }}
+                                styles={{
+                                  input: {
+                                    fontFamily: 'var(--font-montserratParagraph)',
+                                    '&:focus': {
+                                      borderColor: '#8441ba',
+                                      boxShadow: '0 0 0 1px #8441ba'
+                                    }
                                   }
-                                }, null)}
-
-                                {/* TODO: add the return value if there is no message found
-                                  double confirm the handleSystemPromptSubmit */}
+                                }}
+                              />
+                              <Group mt="md" spacing="sm">
                                 <Button
-                                  className="relative m-1 self-end bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600"
+                                  variant="filled"
+                                  radius="md"
+                                  className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                                   type="button"
                                   onClick={() => {
-                                    const lastMessage =
-                                      messages[messages.length - 1]
-                                    if (
-                                      lastMessage &&
-                                      lastMessage.role === 'assistant'
-                                    ) {
-                                      const newSystemPrompt =
-                                        lastMessage.content
-                                      setOptimizedSystemPrompt(newSystemPrompt)
-                                      setBaseSystemPrompt(newSystemPrompt)
-                                      handleSystemPromptSubmit(newSystemPrompt)
-                                      console.log(
-                                        'system prompt',
-                                        newSystemPrompt,
-                                      )
-                                    }
-                                    close()
+                                    handleSystemPromptSubmit(baseSystemPrompt)
                                   }}
+                                  sx={(theme) => ({
+                                    backgroundColor: `${theme.colors?.purple?.[8] || '#6d28d9'} !important`,
+                                    border: 'none',
+                                    color: '#fff',
+                                    padding: '10px 20px',
+                                    fontWeight: 600,
+                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    transition: 'all 0.2s ease',
+                                    '&:hover': {
+                                      backgroundColor: `${theme.colors?.purple?.[9] || '#5b21b6'} !important`,
+                                      transform: 'translateY(-1px)',
+                                      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
+                                    },
+                                    '&:active': {
+                                      transform: 'translateY(0)',
+                                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    },
+                                  })}
                                   style={{ minWidth: 'fit-content' }}
                                 >
                                   Update System Prompt
                                 </Button>
                                 <Button
-                                  variant="outline"
-                                  className="relative m-1 self-end bg-red-500 text-white hover:border-red-600 hover:bg-red-600"
-                                  onClick={close}
+                                  onClick={(e) => {
+                                    if (!llmProviders) {
+                                      showToastNotification(
+                                        theme,
+                                        'Configuration Error',
+                                        'The Optimize System Prompt feature requires provider configuration to be loaded. Please refresh the page and try again.',
+                                        true
+                                      )
+                                      return
+                                    }
+
+                                    if (!llmProviders.OpenAI?.enabled) {
+                                      showToastNotification(
+                                        theme,
+                                        'OpenAI Required',
+                                        'The Optimize System Prompt feature requires OpenAI to be enabled. Please enable OpenAI on the LLM page in your course settings to use this feature.',
+                                        true
+                                      )
+                                      return
+                                    }
+
+                                    if (!llmProviders.OpenAI?.apiKey) {
+                                      showToastNotification(
+                                        theme,
+                                        'OpenAI API Key Required',
+                                        'The Optimize System Prompt feature requires an OpenAI API key. Please add your OpenAI API key on the LLM page in your course settings to use this feature.',
+                                        true
+                                      )
+                                      return
+                                    }
+
+                                    handleSubmitPromptOptimization(e, reload, setMessages)
+                                    open()
+                                  }}
+                                  variant="filled"
+                                  radius="md"
+                                  leftIcon={<IconSparkles stroke={1} />}
+                                  className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                  sx={(theme) => ({
+                                    background: 'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%) !important',
+                                    border: 'none',
+                                    color: '#fff',
+                                    padding: '10px 20px',
+                                    fontWeight: 600,
+                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    transition: 'all 0.2s ease',
+                                    '&:hover': {
+                                      background: 'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%) !important',
+                                      transform: 'translateY(-1px)',
+                                      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
+                                    },
+                                    '&:active': {
+                                      transform: 'translateY(0)',
+                                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    },
+                                  })}
+                                  style={{ minWidth: 'fit-content' }}
                                 >
-                                  Cancel
+                                  Optimize System Prompt
                                 </Button>
                               </Group>
-                            </Modal>
-                          </form>
+
+                              <Modal
+                                opened={opened}
+                                onClose={close}
+                                size="xl"
+                                title="Optimized System Prompt"
+                                className={`${montserrat_heading.variable} rounded-xl font-montserratHeading`}
+                                centered
+                                radius={'lg'}
+                                styles={{
+                                  title: { marginTop: '1rem' },
+                                  header: { backgroundColor: '#15162c' },
+                                  content: { backgroundColor: '#15162c' },
+                                }}
+                              >
+                                <Group mt="md">
+                                  {messages.map((message, i, { length }) => {
+                                    if (
+                                      length - 1 === i &&
+                                      message.role === 'assistant'
+                                    ) {
+                                      return (
+                                        <div
+                                          key={i}
+                                          style={{
+                                            border: '1px solid #6D28D9',
+                                            padding: '10px',
+                                            borderRadius: '5px',
+                                            whiteSpace: 'pre-wrap',
+                                          }}
+                                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                        >
+                                          {message.content}
+                                        </div>
+                                      )
+                                    }
+                                  }, null)}
+
+                                  {/* TODO: add the return value if there is no message found
+                                    double confirm the handleSystemPromptSubmit */}
+                                  <Button
+                                    className="relative m-1 self-end bg-purple-800 text-white hover:border-indigo-600"
+                                    type="button"
+                                    onClick={() => {
+                                      const lastMessage =
+                                        messages[messages.length - 1]
+                                      if (
+                                        lastMessage &&
+                                        lastMessage.role === 'assistant'
+                                      ) {
+                                        const newSystemPrompt =
+                                          lastMessage.content
+                                        setOptimizedSystemPrompt(newSystemPrompt)
+                                        setBaseSystemPrompt(newSystemPrompt)
+                                        handleSystemPromptSubmit(newSystemPrompt)
+                                        console.log(
+                                          'system prompt',
+                                          newSystemPrompt,
+                                        )
+                                      }
+                                      close()
+                                    }}
+                                    style={{ minWidth: 'fit-content' }}
+                                  >
+                                    Update System Prompt
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    className="relative m-1 self-end bg-red-500 text-white hover:border-red-600 hover:bg-red-600"
+                                    onClick={close}
+                                  >
+                                    Cancel
+                                  </Button>
+                                </Group>
+                              </Modal>
+                            </form>
+                          </div>
                         </div>
-                      </div>
-                    </Group>
-                    {/* <Alert icon={<IconAlertCircle size="1rem" />} title="Attention!" color="pink" style={{ width: isRightSideVisible ? '90%' : '73%', margin: 'auto', marginTop: '0px', color: 'pink' }}>
-                      <span style={{ color: 'pink' }}>Remember to save and update the system prompt before you leave this page.</span>
-                    </Alert> */}
+
+
+
+                      </Group>
+                      {/* <Alert icon={<IconAlertCircle size="1rem" />} title="Attention!" color="pink" style={{ width: isRightSideVisible ? '90%' : '73%', margin: 'auto', marginTop: '0px', color: 'pink' }}>
+                        <span style={{ color: 'pink' }}>Remember to save and update the system prompt before you leave this page.</span>
+                      </Alert> */}
+                    </div>
                   </div>
                 </div>
                 {/* RIGHT SIDE OF CARD */}
@@ -773,6 +1085,50 @@ The final prompt you output should adhere to the following structure below. Do n
                     >
                       <div className="card flex h-full flex-col">
                         <Flex direction="column" m="3rem" gap="md">
+                          <Flex align="center">
+                            <Title
+                              className={`${montserrat_heading.variable} font-montserratHeading`}
+                              variant="gradient"
+                              gradient={{ from: 'gold', to: 'white', deg: 170 }}
+                              order={3}
+                              pl={'md'}
+                              pr={'md'}
+                              pt={'sm'}
+                              pb={'xs'}
+                              style={{ alignSelf: 'left', marginLeft: '-11px' }}
+                            >
+                              Document Search Optimization
+                            </Title>
+                            <Indicator
+                              label={
+                                <Text className={`${montserrat_heading.variable} font-montserratHeading`}>
+                                  New
+                                </Text>
+                              }
+                              color="hsl(280,100%,70%)"
+                              size={13}
+                              styles={{
+                                indicator: {
+                                  top: '-17px !important',
+                                  right: '7px !important',
+                                },
+                              }}
+                            >
+                              <span className={`${montserrat_heading.variable} font-montserratHeading`}></span>
+                            </Indicator>
+                          </Flex>
+
+                          <CustomSwitch
+                            label="Smart Document Search"
+                            tooltip="When enabled, UIUC.chat optimizes your queries to better search through course materials and find relevant content. Note: This only affects how documents are searched - your chat messages remain exactly as you write them."
+                            checked={vectorSearchRewrite}
+                            onChange={(value: boolean) => {
+                              handleSettingChange({ vector_search_rewrite_disabled: !value })
+                            }}
+                          />
+
+                          <Divider />
+
                           <Flex align="center" style={{ paddingTop: '15px' }}>
                             <Title
                               className={`label ${montserrat_heading.variable} mr-[8px] font-montserratHeading`}
@@ -808,58 +1164,273 @@ The final prompt you output should adhere to the following structure below. Do n
                           </Flex>
 
                           {/* Enhanced Switches */}
-                          <CustomSwitch
-                            label="Guided Learning"
-                            tooltip="Enables a tutoring mode where the AI encourages independent problem-solving. It provides hints and asks questions instead of giving direct answers, promoting critical thinking and discovery."
-                            checked={guidedLearning}
-                            onChange={(value: boolean) =>
-                              handleCheckboxChange({ guidedLearning: value })
-                            }
-                          />
-
-                          <CustomSwitch
-                            label="Document-Based References Only"
-                            tooltip="Restricts the AI to use only information from the provided documents. Useful for maintaining accuracy in fields like legal research where external knowledge could be problematic."
-                            checked={documentsOnly}
-                            onChange={(value: boolean) =>
-                              handleCheckboxChange({ documentsOnly: value })
-                            }
-                          />
-
-                          <CustomSwitch
-                            label="Bypass UIUC.chat's internal prompting"
-                            tooltip="Internally, we prompt the model to (1) add citations and (2) always be as helpful as possible. You can bypass this for full un-modified control over your bot."
-                            checked={systemPromptOnly}
-                            onChange={(value: boolean) =>
-                              handleCheckboxChange({ systemPromptOnly: value })
-                            }
-                          />
-
-                          {/* Conditional Button */}
-                          {systemPromptOnly && (
-                            <Flex
-                              mt="sm"
-                              direction="column"
-                              gap="xs"
-                              className="mt-[-4px] pl-[82px]"
-                            >
-                              <CustomCopyButton
-                                label="Copy UIUC.chat's internal prompt"
-                                tooltip="You can use and customize our default internal prompting to suit your needs. Note, only the specific citation formatting described will work with our citation 'find and replace' system. This provides a solid starting point for defining AI behavior in raw prompt mode."
-                                onClick={handleCopyDefaultPrompt}
+                          <Flex direction="column" gap="md">
+                            <div className="flex flex-col gap-1">
+                              <CustomSwitch
+                                label="Guided Learning"
+                                tooltip="When enabled course-wide, this setting applies to all students and cannot be disabled by them. The AI will encourage independent problem-solving by providing hints and questions instead of direct answers, while still finding and citing relevant course materials. This promotes critical thinking while ensuring students have access to proper resources."
+                                checked={guidedLearning}
+                                onChange={(value: boolean) =>
+                                  handleCheckboxChange({ guidedLearning: value })
+                                }
                               />
-                            </Flex>
-                          )}
 
-                          {/* Reset Button */}
-                          <Flex mt="md" justify="flex-start">
-                            <Button
-                              className="relative bg-red-500 text-white hover:border-red-600 hover:bg-red-600"
-                              onClick={resetSystemPrompt}
-                              style={{ minWidth: 'fit-content' }}
-                            >
-                              Reset
-                            </Button>
+                              <CustomSwitch
+                                label="Document-Based References Only"
+                                tooltip="Restricts the AI to use only information from the provided documents. Useful for maintaining accuracy in fields like legal research where external knowledge could be problematic."
+                                checked={documentsOnly}
+                                onChange={(value: boolean) =>
+                                  handleCheckboxChange({ documentsOnly: value })
+                                }
+                              />
+
+                              <CustomSwitch
+                                label="Bypass UIUC.chat&apos;s internal prompting"
+                                tooltip="Internally, we prompt the model to (1) add citations and (2) always be as helpful as possible. You can bypass this for full un-modified control over your bot."
+                                checked={systemPromptOnly}
+                                onChange={(value: boolean) =>
+                                  handleCheckboxChange({ systemPromptOnly: value })
+                                }
+                              />
+
+                              {/* Conditional Button */}
+                              {systemPromptOnly && (
+                                <Flex
+                                  mt="sm"
+                                  direction="column"
+                                  gap="xs"
+                                  className="mt-[-4px] pl-[82px]"
+                                >
+                                  <CustomCopyButton
+                                    label="Copy UIUC.chat&apos;s internal prompt"
+                                    tooltip="You can use and customize our default internal prompting to suit your needs. Note, only the specific citation formatting described will work with our citation &apos;find and replace&apos; system. This provides a solid starting point for defining AI behavior in raw prompt mode."
+                                    onClick={handleCopyDefaultPrompt}
+                                  />
+                                </Flex>
+                              )}
+
+                              {/* Reset Button and Modal */}
+                              <Modal
+                                opened={resetModalOpened}
+                                onClose={closeResetModal}
+                                title={
+                                  <Text
+                                    className={`${montserrat_heading.variable} font-montserratHeading`}
+                                    size="lg"
+                                    weight={700}
+                                    gradient={{ from: 'red', to: 'white', deg: 45 }}
+                                    variant="gradient"
+                                  >
+                                    Reset Prompting Settings
+                                  </Text>
+                                }
+                                centered
+                                radius="md"
+                                size="md"
+                                styles={{
+                                  header: {
+                                    backgroundColor: '#15162c',
+                                    borderBottom: '1px solid #2D2F48',
+                                    padding: '20px 24px',
+                                    marginBottom: '16px'
+                                  },
+                                  content: {
+                                    backgroundColor: '#15162c',
+                                    border: '1px solid #2D2F48',
+                                  },
+                                  body: {
+                                    padding: '0 24px 24px 24px',
+                                  },
+                                  title: {
+                                    marginBottom: '0',
+                                  },
+                                  close: {
+                                    marginTop: '4px'
+                                  }
+                                }}
+                              >
+                                <Flex direction="column" gap="xl" style={{ marginTop: '8px' }}>
+                                  <Flex align="flex-start" gap="md">
+                                    <IconAlertTriangle
+                                      size={24}
+                                      color={theme.colors.red[5]}
+                                      style={{ marginTop: '2px' }}
+                                    />
+                                    <Text
+                                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                      size="sm"
+                                      weight={500}
+                                      style={{ color: 'white', lineHeight: 1.5 }}
+                                    >
+                                      Are you sure you want to reset your system prompt and all behavior settings to their default values?
+                                    </Text>
+                                  </Flex>
+
+                                  <Divider style={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+
+                                  <div>
+                                    <Text
+                                      size="sm"
+                                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                      weight={600}
+                                      style={{ color: '#D1D1D1', marginBottom: '12px' }}
+                                    >
+                                      This action will:
+                                    </Text>
+                                    <List
+                                      size="sm"
+                                      spacing="sm"
+                                      style={{ color: '#D1D1D1' }}
+                                      icon={
+                                        <div
+                                          style={{
+                                            width: '6px',
+                                            height: '6px',
+                                            borderRadius: '50%',
+                                            backgroundColor: 'hsl(0,100%,70%)',
+                                            marginTop: '8px'
+                                          }}
+                                        />
+                                      }
+                                    >
+                                      <List.Item>Restore the system prompt to the default template</List.Item>
+                                      <List.Item>Disable Guided Learning, Document-Only mode, and other custom settings</List.Item>
+                                    </List>
+                                  </div>
+
+                                  <Text
+                                    size="sm"
+                                    style={{ color: '#D1D1D1' }}
+                                    className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                  >
+                                    This cannot be undone. Please confirm you wish to proceed.
+                                  </Text>
+
+                                  <Group position="right" mt="md">
+                                    <Button
+                                      variant="outline"
+                                      color="gray"
+                                      radius="md"
+                                      onClick={closeResetModal}
+                                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                      styles={(theme) => ({
+                                        root: {
+                                          borderColor: theme.colors.gray[6],
+                                          color: '#fff',
+                                          '&:hover': {
+                                            backgroundColor: theme.colors.gray[8],
+                                          },
+                                        },
+                                      })}
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      variant="filled"
+                                      color="red"
+                                      radius="md"
+                                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                      sx={(theme) => ({
+                                        backgroundColor: `${theme.colors.red[8]} !important`,
+                                        border: 'none',
+                                        color: '#fff',
+                                        padding: '10px 20px',
+                                        fontWeight: 600,
+                                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                        transition: 'all 0.2s ease',
+                                        '&:hover': {
+                                          backgroundColor: `${theme.colors.red[9]} !important`,
+                                          transform: 'translateY(-1px)',
+                                          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
+                                        },
+                                        '&:active': {
+                                          transform: 'translateY(0)',
+                                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                        },
+                                      })}
+                                      onClick={() => {
+                                        resetSystemPrompt();
+                                        closeResetModal();
+                                      }}
+                                    >
+                                      Confirm
+                                    </Button>
+                                  </Group>
+                                </Flex>
+                              </Modal>
+
+                              {/* Reset and Share Link buttons */}
+                              <Flex mt="md" justify="flex-start" align="center" gap="md">
+                                <Button
+                                  variant="filled"
+                                  color="red"
+                                  radius="md"
+                                  leftIcon={<IconAlertTriangle size={16} />}
+                                  className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                  sx={(theme) => ({
+                                    backgroundColor: `${theme.colors.red[8]} !important`,
+                                    border: 'none',
+                                    color: '#fff',
+                                    padding: '10px 20px',
+                                    fontWeight: 600,
+                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    transition: 'all 0.2s ease',
+                                    '&:hover': {
+                                      backgroundColor: `${theme.colors.red[9]} !important`,
+                                      transform: 'translateY(-1px)',
+                                      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
+                                    },
+                                    '&:active': {
+                                      transform: 'translateY(0)',
+                                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    },
+                                  })}
+                                  onClick={openResetModal}
+                                >
+                                  Reset Prompting Settings
+                                </Button>
+
+                                <Button
+                                  variant="filled"
+                                  radius="md"
+                                  leftIcon={<IconLink size={16} />}
+                                  onClick={openLinkGenerator}
+                                  className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                  sx={(theme) => ({
+                                    background: 'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%) !important',
+                                    border: 'none',
+                                    color: '#fff',
+                                    padding: '10px 20px',
+                                    fontWeight: 600,
+                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    transition: 'all 0.2s ease',
+                                    '&:hover': {
+                                      background: 'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%) !important',
+                                      transform: 'translateY(-1px)',
+                                      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
+                                    },
+                                    '&:active': {
+                                      transform: 'translateY(0)',
+                                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    },
+                                  })}
+                                >
+                                  Generate Share Link
+                                </Button>
+                              </Flex>
+
+                              {/* Add the Link Generator Modal */}
+                              <LinkGeneratorModal
+                                opened={linkGeneratorOpened}
+                                onClose={closeLinkGenerator}
+                                course_name={course_name}
+                                currentSettings={{
+                                  guidedLearning,
+                                  documentsOnly,
+                                  systemPromptOnly,
+                                }}
+                              />
+                            </div>
                           </Flex>
                         </Flex>
                       </div>
@@ -885,9 +1456,14 @@ export const showToastNotification = (
   isError = false,
   icon?: React.ReactNode,
 ) => {
+  // Calculate duration based on message length (minimum 5 seconds, add 1 second for every 20 characters)
+  const baseDuration = 5000;
+  const durationPerChar = 50;  // 50ms per character
+  const duration = Math.max(baseDuration, Math.min(15000, message.length * durationPerChar));
+
   notifications.show({
     withCloseButton: true,
-    autoClose: 5000,
+    autoClose: duration,
     title: title,
     message: message,
     icon: icon || (isError ? <IconAlertTriangle /> : <IconCheck />),
@@ -897,6 +1473,7 @@ export const showToastNotification = (
         borderColor: isError ? '#E53935' : '#6D28D9', // Red for errors, purple for success
         borderWidth: '1px',
         borderStyle: 'solid',
+        borderRadius: '8px', // Added rounded corners
       },
       title: {
         color: '#FFFFFF', // White text for the title
@@ -907,6 +1484,7 @@ export const showToastNotification = (
       },
       closeButton: {
         color: '#FFFFFF', // White color for the close button
+        borderRadius: '4px', // Added rounded corners to close button
         '&:hover': {
           backgroundColor: 'rgba(255, 255, 255, 0.1)', // Subtle hover effect
         },

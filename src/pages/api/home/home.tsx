@@ -17,8 +17,6 @@ import { type KeyValuePair } from '@/types/data'
 
 import { Chat } from '@/components/Chat/Chat'
 import { Chatbar } from '@/components/Chatbar/Chatbar'
-import { Navbar } from '@/components/Mobile/Navbar'
-import Promptbar from '@/components/Promptbar'
 
 import HomeContext from './home.context'
 import { type HomeInitialState, initialState } from './home.state'
@@ -39,15 +37,24 @@ import { useUpdateConversation } from '~/hooks/conversationQueries'
 import { FolderType, FolderWithConversation } from '~/types/folder'
 import { useQueryClient } from '@tanstack/react-query'
 import { useCreateFolder } from '~/hooks/folderQueries'
+import { selectBestTemperature } from '~/components/Chat/Temperature'
 
 const Home = ({
   current_email,
   course_metadata,
   course_name,
+  document_count,
+  link_parameters,
 }: {
   current_email: string
   course_metadata: CourseMetadata | null
   course_name: string
+  document_count: number | null
+  link_parameters: {
+    guidedLearning: boolean
+    documentsOnly: boolean
+    systemPromptOnly: boolean
+  }
 }) => {
   // States
   const [isInitialSetupDone, setIsInitialSetupDone] = useState(false)
@@ -56,6 +63,10 @@ const Home = ({
 
   // Make a new conversation if the current one isn't empty
   const [hasMadeNewConvoAlready, setHasMadeNewConvoAlready] = useState(false)
+
+  // Add these two new state setters
+  const [isQueryRewriting, setIsQueryRewriting] = useState<boolean>(false)
+  const [queryRewriteResult, setQueryRewriteResult] = useState<string>('')
 
   // Hooks
   const { t } = useTranslation('chat')
@@ -151,7 +162,7 @@ const Home = ({
   // Use effects for setting up the course metadata and models depending on the course/project
   useEffect(() => {
     // Set model after we fetch available models
-    if (!llmProviders || Object.keys(llmProviders).length === 0) return
+    if (Object.keys(llmProviders).length == 0) return
     const model = selectBestModel(llmProviders)
 
     dispatch({
@@ -189,8 +200,6 @@ const Home = ({
         value: true,
       })
       dispatch({ field: 'apiKey', value: '' })
-      // TODO: add logging for axiom, after merging with main (to get the axiom code)
-      // log.debug('Using Course-Wide OpenAI API Key', { course_metadata: { course_metadata } })
     } else if (local_api_key) {
       if (local_api_key.startsWith('sk-')) {
         console.log(
@@ -318,36 +327,40 @@ const Home = ({
   }
 
   const handleNewConversation = () => {
+    // If we're already in an empty conversation, don't create a new one
+    if (selectedConversation && selectedConversation.messages.length === 0) {
+      return
+    }
+
     const lastConversation = conversations[conversations.length - 1]
 
     // Determine the model to use for the new conversation
     const model = selectBestModel(llmProviders)
 
+    // Ensure link parameters are properly set
+    const newLinkParameters = {
+      guidedLearning: link_parameters.guidedLearning || false,
+      documentsOnly: link_parameters.documentsOnly || false,
+      systemPromptOnly: link_parameters.systemPromptOnly || false,
+    }
+
     const newConversation: Conversation = {
       id: uuidv4(),
-      name: t('New Conversation'),
+      name: '',
       messages: [],
       model: model,
       prompt: DEFAULT_SYSTEM_PROMPT,
-      temperature: lastConversation?.temperature ?? DEFAULT_TEMPERATURE,
+      temperature: selectBestTemperature(lastConversation, model, llmProviders),
       folderId: null,
       userEmail: current_email || undefined,
       projectName: course_name,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      linkParameters: newLinkParameters,
     }
 
-    const updatedConversations = [newConversation, ...conversations]
-
+    // Only update selectedConversation, don't add to conversations list yet
     dispatch({ field: 'selectedConversation', value: newConversation })
-    dispatch({ field: 'conversations', value: updatedConversations })
-
-    // saveConversation(newConversation)
-    // saveConversations(updatedConversations)
-    // saveConversationToServer(newConversation).catch((error) => {
-    //   console.error('Error saving updated conversation to server:', error)
-    // })
-
     dispatch({ field: 'loading', value: false })
     localStorage.setItem(
       'selectedConversation',
@@ -390,7 +403,7 @@ const Home = ({
       // Add new conversation to the list
       updatedConversations = [updatedConversation, ...conversations]
     }
-
+    updateConversationMutation.mutate(updatedConversation)
     dispatch({ field: 'conversations', value: updatedConversations })
   }
 
@@ -398,24 +411,24 @@ const Home = ({
     conversation: Conversation,
     data: KeyValuePair,
   ) => {
-    if (!conversation?.messages) return;
+    if (!conversation?.messages) return
 
     // Create updated conversation object
     const updatedConversation = {
       ...conversation,
       [data.key]: data.value,
-    };
+    }
 
     // Update state
-    dispatch({ field: 'selectedConversation', value: updatedConversation });
+    dispatch({ field: 'selectedConversation', value: updatedConversation })
 
     // Update conversations list
-    const updatedConversations = conversations.map((c) => 
-      c.id === conversation.id ? updatedConversation : c
-    );
+    const updatedConversations = conversations.map((c) =>
+      c.id === conversation.id ? updatedConversation : c,
+    )
 
-    dispatch({ field: 'conversations', value: updatedConversations });
-  };
+    dispatch({ field: 'conversations', value: updatedConversations })
+  }
 
   // Other context actions --------------------------------------------
 
@@ -571,22 +584,11 @@ const Home = ({
 
       if (window.innerWidth < 640) {
         dispatch({ field: 'showChatbar', value: false })
-        dispatch({ field: 'showPromptbar', value: false })
       }
 
       const showChatbar = localStorage.getItem('showChatbar')
       if (showChatbar) {
         dispatch({ field: 'showChatbar', value: showChatbar === 'true' })
-      }
-
-      const showPromptbar = localStorage.getItem('showPromptbar')
-      if (showPromptbar) {
-        dispatch({ field: 'showPromptbar', value: showPromptbar === 'true' })
-      }
-
-      const prompts = localStorage.getItem('prompts')
-      if (prompts) {
-        dispatch({ field: 'prompts', value: JSON.parse(prompts) })
       }
 
       const selectedConversation = localStorage.getItem('selectedConversation')
@@ -650,6 +652,8 @@ const Home = ({
           setIsRetrievalLoading,
           handleUpdateDocumentGroups,
           handleUpdateTools,
+          setIsQueryRewriting,
+          setQueryRewriteResult,
         }}
       >
         <Head>
@@ -665,14 +669,7 @@ const Home = ({
           <main
             className={`flex h-screen w-screen flex-col text-sm text-white dark:text-white ${lightMode}`}
           >
-            <div className="fixed top-0 w-full sm:hidden">
-              <Navbar
-                selectedConversation={selectedConversation}
-                onNewConversation={handleDuplicateRequest}
-              />
-            </div>
-
-            <div className="flex h-full w-full pt-[48px] sm:pt-0">
+            <div className="flex h-full w-full sm:pt-0">
               {isDragging &&
                 VisionCapableModels.has(
                   selectedConversation?.model.id as OpenAIModelID,
@@ -686,18 +683,15 @@ const Home = ({
                 )}
               <Chatbar current_email={current_email} courseName={course_name} />
 
-              <div className="flex max-w-full flex-1 overflow-x-hidden">
-                {course_metadata && (
-                  <Chat
-                    stopConversationRef={stopConversationRef}
-                    courseMetadata={course_metadata}
-                    courseName={course_name}
-                    currentEmail={current_email}
-                  />
-                )}
-              </div>
-
-              <Promptbar />
+              {course_metadata && (
+                <Chat
+                  stopConversationRef={stopConversationRef}
+                  courseMetadata={course_metadata}
+                  courseName={course_name}
+                  currentEmail={current_email}
+                  documentCount={document_count}
+                />
+              )}
             </div>
           </main>
         )}

@@ -40,4 +40,4 @@ We're a group of passionate indie hackers building the best AI Teaching Assistan
 </div>
 
 ## Repo activity
-![Alt](https://repobeats.axiom.co/api/embed/0dbb8d9b2448fd4dbef44b00731f92f985f4163c.svg "Contributors")
+![Alt](https://repobeats.axiom.co/api/embed/1c4916d2e30187aaa32c54635bdbc1059f0563b0.svg "Repo activity and contributors")

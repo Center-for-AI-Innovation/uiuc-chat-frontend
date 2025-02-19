@@ -46,10 +46,14 @@ import ChatUI, {
   WebllmModel,
   webLLMModels,
 } from '~/utils/modelProviders/WebLLM'
-import { VisionCapableModels } from '~/utils/modelProviders/LLMProvider'
+import {
+  selectBestModel,
+  VisionCapableModels,
+} from '~/utils/modelProviders/LLMProvider'
 import { OpenAIModelID } from '~/utils/modelProviders/types/openai'
 import { UserSettings } from '~/components/Chat/UserSettings'
 import { IconChevronRight } from '@tabler/icons-react'
+import { findDefaultModel } from '../UIUC-Components/api-inputs/LLMsApiKeyInputForm'
 import { showConfirmationToast } from '../UIUC-Components/api-inputs/LLMsApiKeyInputForm'
 
 const montserrat_med = Montserrat({
@@ -95,6 +99,7 @@ export const ChatInput = ({
       messageIsStreaming,
       prompts,
       showModelSettings,
+      llmProviders,
     },
 
     dispatch: homeDispatch,
@@ -124,8 +129,21 @@ export const ChatInput = ({
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [imageUrls, setImageUrls] = useState<string[]>([])
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
-  // const [showModelSettings, setShowModelSettings] = useState(false);
   const modelSelectContainerRef = useRef<HTMLDivElement | null>(null)
+
+  const handleFocus = () => {
+    setIsFocused(true)
+    if (chatInputParentContainerRef.current) {
+      chatInputParentContainerRef.current.style.boxShadow = `0 0 2px rgba(42,42,120, 1)`
+    }
+  }
+
+  const handleBlur = () => {
+    setIsFocused(false)
+    if (chatInputParentContainerRef.current) {
+      chatInputParentContainerRef.current.style.boxShadow = 'none'
+    }
+  }
 
   const handleTextClick = () => {
     console.log('handleTextClick')
@@ -459,18 +477,18 @@ export const ChatInput = ({
   const handleImageUpload = useCallback(
     async (files: File[]) => {
       // TODO: FIX IMAGE UPLOADS ASAP
-      showConfirmationToast({
-        title: `😢 We can't handle all these images...`,
-        message: `Image uploads are temporarily disabled. I'm really sorry, I'm working on getting them back. Email me if you want to complain: kvday2@illinois.edu`,
-        isError: true,
-        autoClose: 10000,
-      })
+      // showConfirmationToast({
+      //   title: `😢 We can't handle all these images...`,
+      //   message: `Image uploads are temporarily disabled. I'm really sorry, I'm working on getting them back. Email me if you want to complain: kvday2@illinois.edu`,
+      //   isError: true,
+      //   autoClose: 10000,
+      // })
 
       // Clear any selected files
       if (imageUploadRef.current) {
         imageUploadRef.current.value = ''
       }
-      return // Exit early to prevent processing
+      // return // Exit early to prevent processing
 
       const validFiles = files.filter((file) => isImageValid(file.name))
       const invalidFilesCount = files.length - validFiles.length
@@ -733,7 +751,10 @@ export const ChatInput = ({
   ): Promise<string> {
     try {
       const uploadedImageUrl = await uploadToS3(file, courseName)
-      const presignedUrl = await fetchPresignedUrl(uploadedImageUrl as string)
+      const presignedUrl = await fetchPresignedUrl(
+        uploadedImageUrl as string,
+        courseName,
+      )
       return presignedUrl as string
     } catch (error) {
       console.error('Upload failed for file', file.name, error)
@@ -748,6 +769,41 @@ export const ChatInput = ({
   // useEffect(() => {
   //   localStorage.setItem('UseMQRetrieval', useMQRetrieval ? 'true' : 'false');
   // }, [useMQRetrieval]);
+
+  // Debounce the resize handler to avoid too frequent updates
+  const handleResize = useCallback(() => {
+    if (textareaRef.current) {
+      // Reset height to auto to recalculate
+      textareaRef.current.style.height = 'auto'
+      // Set new height based on scrollHeight
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+      // Update overflow if needed
+      textareaRef.current.style.overflow =
+        textareaRef.current.scrollHeight > 400 ? 'auto' : 'hidden'
+    }
+  }, [])
+
+  // Add resize observer effect
+  useEffect(() => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+
+    // Create resize observer
+    const resizeObserver = new ResizeObserver(handleResize)
+
+    // Observe both the textarea and window resize events
+    resizeObserver.observe(textarea)
+    window.addEventListener('resize', handleResize)
+
+    // Initial size adjustment
+    handleResize()
+
+    // Cleanup
+    return () => {
+      resizeObserver.disconnect()
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [handleResize])
 
   return (
     <div
@@ -907,30 +963,60 @@ export const ChatInput = ({
                   `}
             >
               <textarea
-                autoFocus
                 ref={textareaRef}
-                className="m-0 w-full flex-grow resize-none bg-[#070712] p-0 py-2 pr-8 text-black dark:bg-[#070712] dark:text-white md:py-2"
-                placeholder={
-                  t('Type a message or type "/" to select a prompt...') || ''
-                }
-                aria-label={
-                  t('Type a message or type "/" to select a prompt...') || ''
-                }
+                className={`chat-input m-0 h-[24px] max-h-[400px] w-full resize-none bg-transparent py-2 pl-2 pr-8 text-white outline-none ${
+                  isFocused ? 'border-blue-500' : ''
+                }`}
+                style={{
+                  resize: 'none',
+                  minHeight: '24px',
+                  height: 'auto',
+                  maxHeight: '400px',
+                  overflow: 'hidden',
+                }}
+                placeholder={'Message UIUC.chat'}
                 value={content}
                 rows={1}
                 onCompositionStart={() => setIsTyping(true)}
                 onCompositionEnd={() => setIsTyping(false)}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+              />
+              {/* <textarea
+                ref={textareaRef}
+                className={`chat-input m-0 h-[24px] max-h-[400px] w-full resize-none bg-transparent py-2 pl-2 pr-8 text-white outline-none ${isFocused ? 'border-blue-500' : ''
+                  }`}
                 style={{
                   resize: 'none',
+                  bottom: `${textareaRef?.current?.scrollHeight}px`,
                   maxHeight: '400px',
-                  overflow: 'hidden',
-                  outline: 'none', // Add this line to remove the outline from the textarea
-                  paddingTop: '14px',
-                  paddingBottom: '14px',
+                  overflow: `${textareaRef.current &&
+                    textareaRef.current.scrollHeight > 400
+                    ? 'auto'
+                    : 'hidden'
+                    }`,
                 }}
-              />
+                placeholder={'Message UIUC.chat'}
+                value={content}
+                rows={1}
+                onInput={(e) => {
+                  const target = e.target as HTMLTextAreaElement;
+                  // Reset height to auto to get the correct scrollHeight
+                  target.style.height = 'auto';
+                  // Set actual height based on content
+                  target.style.height = `${target.scrollHeight}px`;
+                  // Add scrollbar if content exceeds max height
+                  target.style.overflow = target.scrollHeight > 400 ? 'auto' : 'hidden';
+                }}
+                onCompositionStart={() => setIsTyping(true)}
+                onCompositionEnd={() => setIsTyping(false)}
+                onChange={handleChange}
+                onKeyDown={handleKeyDown}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+              /> */}
             </div>
 
             <button
@@ -980,11 +1066,10 @@ export const ChatInput = ({
           <Text
             size={isSmallScreen ? '10px' : 'xs'}
             className={`font-montserratHeading ${montserrat_heading.variable} absolute bottom-2 left-5 break-words rounded-full p-1 text-neutral-400 text-neutral-800 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200`}
-            tt={'capitalize'}
             onClick={handleTextClick}
             style={{ cursor: 'pointer' }}
           >
-            {selectedConversation?.model?.name}
+            {selectBestModel(llmProviders)?.name}
             {selectedConversation?.model &&
               webLLMModels.some(
                 (m) => m.name === selectedConversation?.model?.name,

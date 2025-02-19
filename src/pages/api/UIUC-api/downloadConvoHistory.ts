@@ -47,18 +47,3 @@ export const downloadConversationHistory = async (
   }
   return { message: 'Unexpected error occurred.' }
 }
-//   }
-//     } else {
-//       const url = window.URL.createObjectURL(new Blob([response.data]))
-//       const link = document.createElement('a')
-//       link.href = url
-//       link.setAttribute('download', courseName + '_conversation_history.csv')
-//       document.body.appendChild(link)
-//       link.click()
-//       return { message: "Your download will start shortly." };
-//     }
-//   } catch (error) {
-//     console.error('Error fetching conversation history:', error)
-//     return { message: 'Error fetching conversation history.' };
-//   }
-// }

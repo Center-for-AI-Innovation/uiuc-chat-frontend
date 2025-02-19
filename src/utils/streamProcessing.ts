@@ -1,27 +1,27 @@
 import {
-  ChatApiBody,
-  ChatBody,
-  Content,
-  ContextWithMetadata,
-  Conversation,
-  Message,
+  type ChatApiBody,
+  type ChatBody,
+  type Content,
+  type ContextWithMetadata,
+  type Conversation,
+  type Message,
 } from '~/types/chat'
-import { CourseMetadata } from '~/types/courseMetadata'
-import { decrypt, decryptKeyIfNeeded } from './crypto'
+import { type CourseMetadata } from '~/types/courseMetadata'
 import { OpenAIError } from './server'
-import { NextRequest, NextResponse } from 'next/server'
 import { replaceCitationLinks } from './citations'
 import { fetchImageDescription } from '~/pages/api/UIUC-api/fetchImageDescription'
 import { getBaseUrl } from '~/utils/apiUtils'
 import posthog from 'posthog-js'
 import {
-  AllLLMProviders,
+  type AllLLMProviders,
   AllSupportedModels,
-  AnthropicProvider,
-  GenericSupportedModel,
-  NCSAHostedProvider,
-  OllamaProvider,
+  type AnthropicProvider,
+  type GenericSupportedModel,
+  type NCSAHostedVLMProvider,
+  type OllamaProvider,
   VisionCapableModels,
+  type BedrockProvider,
+  type GeminiProvider,
 } from '~/utils/modelProviders/LLMProvider'
 import fetchMQRContexts from '~/pages/api/getContextsMQR'
 import fetchContexts from '~/pages/api/getContexts'
@@ -31,8 +31,17 @@ import { OpenAIModelID } from './modelProviders/types/openai'
 import { v4 as uuidv4 } from 'uuid'
 import { AzureModelID } from './modelProviders/azure'
 import { AnthropicModelID } from './modelProviders/types/anthropic'
-import { NCSAHostedModelID } from './modelProviders/NCSAHosted'
-import { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiRequest, type NextApiResponse } from 'next'
+import { BedrockModelID } from './modelProviders/types/bedrock'
+import { GeminiModelID } from './modelProviders/types/gemini'
+import { runOllamaChat } from '~/app/utils/ollama'
+import { openAIAzureChat } from './modelProviders/OpenAIAzureChat'
+import { runAnthropicChat } from '~/app/utils/anthropic'
+import { NCSAHostedVLMModelID } from './modelProviders/types/NCSAHostedVLM'
+import { runVLLM } from '~/app/utils/vllm'
+import { type CoreMessage } from 'ai'
+import { runGeminiChat } from '~/app/api/chat/gemini/route'
+import { runBedrockChat } from '~/app/api/chat/bedrock/route'
 
 export const maxDuration = 60
 
@@ -41,9 +50,8 @@ export const maxDuration = 60
  */
 export enum State {
   Normal,
-  PossibleCitationOrFilename,
-  InCitation,
-  InCitationPage,
+  InCiteTag,
+  InCiteContent,
   InFilename,
   InFilenameLink,
   PossibleFilename,
@@ -64,6 +72,7 @@ export async function processChunkWithStateMachine(
   lastMessage: Message,
   stateMachineContext: { state: State; buffer: string },
   citationLinkCache: Map<number, string>,
+  courseName: string,
 ): Promise<string> {
   let { state, buffer } = stateMachineContext
   let processedChunk = ''
@@ -72,35 +81,55 @@ export async function processChunkWithStateMachine(
     return ''
   }
 
-  for (let i = 0; i < chunk.length; i++) {
-    const char = chunk[i]!
+  // Combine any leftover buffer with the new chunk
+  const combinedChunk = buffer + chunk
+  buffer = ''
+
+  for (let i = 0; i < combinedChunk.length; i++) {
+    const char = combinedChunk[i]!
+    const remainingChars = combinedChunk.length - i
+
     switch (state) {
       case State.Normal:
-        // console.log('in state normal with char: ', char)
-        if (char === '[') {
-          state = State.PossibleCitationOrFilename
-          // console.log('state changed to possible citation or filename')
-          buffer += char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
+        if (char === '<') {
+          // Always buffer '<' initially since it might be start of <cite>
+          buffer = char
+
+          // If we have enough chars to check for <cite
+          if (remainingChars >= 5) {
+            const nextChars = combinedChunk.slice(i, i + 5)
+            if (nextChars === '<cite') {
+              state = State.InCiteTag
+              buffer = '<cite'
+              i += 4 // Skip the rest of 'cite'
+              continue
+            } else {
+              // Definitely not a <cite> tag, output the buffered '<'
+              processedChunk += buffer
+              buffer = ''
+            }
+          } else {
+            // Not enough chars to check - keep in buffer and wait for next chunk
+            buffer = combinedChunk.slice(i)
+            i = combinedChunk.length // Exit the loop
+            continue
+          }
         } else if (char.match(/\d/)) {
           let j = i + 1
-          // console.log(chunk[j])
-          while (j < chunk.length && /\d/.test(chunk[j] as string)) {
+          while (
+            j < combinedChunk.length &&
+            /\d/.test(combinedChunk[j] as string)
+          ) {
             j++
           }
-          if (j < chunk.length && chunk[j] === '.') {
+          if (j < combinedChunk.length && combinedChunk[j] === '.') {
             state = State.AfterDigitPeriod
-            // console.log('state changed to after digit period')
-            buffer += chunk.substring(i, j + 1)
-            // console.log(`added chunk to buffer: ${chunk.substring(i, j + 1)}, buffer: ${buffer}`)
+            buffer = combinedChunk.substring(i, j + 1)
             i = j
-          } else if (j === chunk.length) {
-            // If the chunk ends with a digit, keep it in the buffer and continue to the next chunk
-            // console.log('chunk ends with a digit, keeping it in the buffer and continuing to the next chunk')
+          } else if (j === combinedChunk.length) {
             state = State.PossibleFilename
-            // console.log('state changed to possible filename')
-            buffer += char
-            // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
+            buffer = combinedChunk.substring(i)
+            i = j - 1
           } else {
             processedChunk += char
           }
@@ -109,218 +138,122 @@ export async function processChunkWithStateMachine(
         }
         break
 
-      case State.PossibleFilename:
-        if (char === '.') {
-          // console.log('in state possible filename with char: ', char)
-          state = State.AfterDigitPeriod
+      case State.InCiteTag:
+        if (char === '>') {
+          state = State.InCiteContent
           buffer += char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
-        } else if (char.match(/\d/)) {
-          // console.log('in state possible filename with char: ', char)
-          buffer += char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
         } else {
-          processedChunk += buffer + char
-          buffer = ''
-          // console.log('Clearing buffer after invalid filename')
-          state = State.Normal
-          // console.log('state changed to normal')
+          buffer += char
         }
         break
 
-      case State.PossibleCitationOrFilename:
-        // console.log('in state possible citation or filename with char: ', char)
-        if (char.match(/\d/)) {
-          state = State.InCitation
-          // console.log('state changed to in citation')
-          buffer += char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
-        } else if (char === '.') {
-          state = State.InFilename
-          // console.log('state changed to in filename')
-          buffer += char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
-        } else if (char.match(/[a-zA-Z0-9-]/)) {
-          state = State.InFilenameLink // Change state to InFilenameLink
-          // console.log('state changed to in filename link')
-          buffer += char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
-        } else {
-          state = State.Normal
-          // console.log('state changed to normal')
-          processedChunk += buffer + char
-          // console.log(`added buffer and char to processed chunk: ${buffer + char}, processedChunk: ${processedChunk}`)
-          buffer = ''
-        }
-        break
-
-      case State.InCitation:
-        // console.log('in state in citation with char: ', char)
-        if (char === ']') {
-          state = State.Normal
-          // console.log('state changed to normal')
-          processedChunk += await replaceCitationLinks(
-            buffer + char,
-            lastMessage,
-            citationLinkCache,
-          )
-          buffer = ''
-          // console.log('Clearing buffer after citation replacement')
-        } else if (char === ',' && buffer.match(/\[\d+$/)) {
-          // Detecting the start of a page number after the citation index
-          buffer += char
-          state = State.InCitationPage // Add a new state for handling page numbers
-          // console.log('state changed to in citation page')
-        } else {
-          buffer += char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
-        }
-        break
-
-      case State.InCitationPage:
-        // Handle characters after the page number prefix
-        if (char === ']') {
-          state = State.Normal
-          // console.log('state changed to normal')
-          processedChunk += await replaceCitationLinks(
-            buffer + char,
-            lastMessage,
-            citationLinkCache,
-          )
-          buffer = ''
-          // console.log('Clearing buffer after citation page replacement')
-        } else {
-          buffer += char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
-        }
-        break
-
-      case State.InFilename:
-        // console.log('in state in filename with char: ', char)
-        if (char.match(/\s/)) {
-          buffer += char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
-        } else if (char === '[') {
-          buffer += char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
-          state = State.InFilenameLink
-          // console.log('state changed to in filename link')
-        } else if (char.match(/\d/) && chunk[i + 1] === '.') {
-          processedChunk += await replaceCitationLinks(
-            buffer,
-            lastMessage,
-            citationLinkCache,
-          )
-          buffer = char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
-        } else {
-          buffer += char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
-        }
-        break
-
-      case State.InFilenameLink:
-        // console.log('in state in filename link with char: ', char)
-        if (char === ')') {
-          processedChunk += await replaceCitationLinks(
-            buffer + char,
-            lastMessage,
-            citationLinkCache,
-          )
-          buffer = ''
-          // console.log('Clearing buffer after filename replacement')
-          if (i < chunk.length - 1 && chunk[i + 1]?.match(/\d/)) {
-            state = State.InCitation
-            // console.log('state changed to in citation')
+      case State.InCiteContent:
+        if (char === '<') {
+          // Check for </cite> tag
+          if (remainingChars >= 7) {
+            const nextChars = combinedChunk.slice(i, i + 7)
+            if (nextChars === '</cite>') {
+              buffer += '</cite>'
+              i += 6 // Skip all 7 characters (loop will increment i by 1)
+              state = State.Normal
+              const processedCitation = await replaceCitationLinks(
+                buffer,
+                lastMessage,
+                citationLinkCache,
+                courseName,
+              )
+              processedChunk += processedCitation
+              buffer = ''
+              continue
+            } else {
+              // Not a closing cite tag, just add the '<' to buffer
+              buffer += char
+            }
           } else {
-            state = State.Normal
-            // console.log('state changed to normal')
+            // Not enough chars to check - keep everything in buffer
+            buffer += combinedChunk.slice(i)
+            i = combinedChunk.length // Exit the loop
+            continue
           }
         } else {
           buffer += char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
+        }
+        break
+
+      case State.PossibleFilename:
+        if (char === '.') {
+          state = State.AfterDigitPeriod
+          buffer += char
+        } else if (char.match(/\d/)) {
+          buffer += char
+        } else {
+          processedChunk += buffer + char
+          buffer = ''
+          state = State.Normal
         }
         break
 
       case State.AfterDigitPeriod:
-        // console.log('in state after digit period with char: ', char)
         if (char === ' ') {
-          // console.log('char is a space')
-          // Transition to a new state to handle the space after a digit and a period
           state = State.AfterDigitPeriodSpace
           buffer += char
         } else if (char === '[') {
-          // console.log('char is a [, transition to in filename link')
-          // It's a filename link, transition to the appropriate state
           state = State.InFilenameLink
           buffer += char
         } else {
-          // console.log('char is not a space or [, transition to normal')
-          // If it's neither, revert to normal text processing
           state = State.Normal
-          // console.log('state changed to normal')
           processedChunk += buffer
-          // console.log(`added buffer to processed chunk: ${buffer}, processedChunk: ${processedChunk}`)
           buffer = ''
-          // console.log('Clearing buffer after invalid filename')
-          i-- // Re-evaluate this character in the Normal state
+          i--
         }
         break
 
       case State.AfterDigitPeriodSpace:
         if (char === '[') {
-          // It's a filename link, transition to the appropriate state
           state = State.InFilenameLink
-          // console.log('state changed to in filename link')
           buffer += char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
         } else {
-          // It's a list item, output the buffer and revert to normal
           state = State.Normal
-          // console.log('state changed to normal')
           processedChunk += buffer + char
-          // console.log(`added buffer and char to processed chunk: ${buffer + char}, processedChunk: ${processedChunk}`)
           buffer = ''
+        }
+        break
+
+      case State.InFilenameLink:
+        if (char === ')') {
+          processedChunk += await replaceCitationLinks(
+            buffer + char,
+            lastMessage,
+            citationLinkCache,
+            courseName,
+          )
+          buffer = ''
+          if (
+            i < combinedChunk.length - 1 &&
+            combinedChunk[i + 1]?.match(/\d/)
+          ) {
+            state = State.InCiteContent
+          } else {
+            state = State.Normal
+          }
+        } else {
+          buffer += char
         }
         break
     }
   }
 
+  // Update the state machine context
   stateMachineContext.state = state
   stateMachineContext.buffer = buffer
 
-  if (state !== State.Normal && buffer.length > 0) {
-    return processedChunk
-  }
-
-  if (buffer.length > 0) {
-    processedChunk += await replaceCitationLinks(
-      buffer,
-      lastMessage,
-      citationLinkCache,
-    )
+  // Only output buffer content if we're in Normal state and not potentially mid-tag
+  if (buffer.length > 0 && state === State.Normal && !buffer.startsWith('<')) {
+    processedChunk += buffer
     buffer = ''
   }
 
   return processedChunk
-}
-
-/**
- * Fetches the OpenAI key to use for the request.
- * @param {string | undefined} openai_key - The OpenAI key provided in the request.
- * @param {CourseMetadata} courseMetadata - The course metadata containing the fallback OpenAI key.
- * @returns {Promise<string>} The OpenAI key to use.
- */
-export async function fetchKeyToUse(
-  openai_key: string | undefined,
-  courseMetadata: CourseMetadata,
-): Promise<string> {
-  return (
-    openai_key ||
-    ((await decryptKeyIfNeeded(
-      courseMetadata.openai_api_key as string,
-    )) as string)
-  )
 }
 
 /**
@@ -331,7 +264,6 @@ export async function fetchKeyToUse(
  * @returns {Promise<{ activeModel: GenericSupportedModel, modelsWithProviders: AllLLMProviders }>} The validated OpenAI key and available models.
  */
 export async function determineAndValidateModel(
-  keyToUse: string,
   modelId: string,
   projectName: string,
 ): Promise<{
@@ -345,7 +277,7 @@ export async function determineAndValidateModel(
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ openAIApiKey: keyToUse, projectName }),
+    body: JSON.stringify({ projectName }),
   })
 
   if (!response.ok) {
@@ -373,7 +305,7 @@ export async function determineAndValidateModel(
   if (!activeModel) {
     console.error(`Model with ID ${modelId} not found in available models.`)
     throw new Error(
-      `The requested model '${modelId}' is not available in this project. It has likely been restricted by the project's admins. You can enable this model on the admin page here: https://uiuc.chat/${projectName}/materials. These models are available to use: ${Array.from(
+      `The requested model '${modelId}' is not available in this project. It has likely been restricted by the project's admins. You can enable this model on the admin page here: https://uiuc.chat/${projectName}/dashboard. These models are available to use: ${Array.from(
         availableModels,
       )
         .filter(
@@ -572,6 +504,7 @@ export async function handleStreamingResponse(
         lastMessage,
         stateMachineContext,
         citationLinkCache,
+        course_name,
       )
       fullAssistantResponse += decodedChunk
       res.write(decodedChunk)
@@ -584,6 +517,7 @@ export async function handleStreamingResponse(
         lastMessage,
         stateMachineContext,
         citationLinkCache,
+        course_name,
       )
       fullAssistantResponse += finalChunk
       res.write(finalChunk)
@@ -632,6 +566,7 @@ async function processResponseData(
       lastMessage,
       stateMachineContext,
       citationLinkCache,
+      course_name,
     )
     await updateConversationInDatabase(conversation, course_name, req)
     return processedData
@@ -695,7 +630,7 @@ export async function updateConversationInDatabase(
 ) {
   // Log conversation to Supabase
   try {
-    const baseUrl = getBaseUrl()
+    const baseUrl = await getBaseUrl()
     const response = await fetch(
       `${baseUrl}/api/UIUC-api/logConversationToSupabase`,
       {
@@ -797,10 +732,47 @@ export const getOpenAIKey = (
   return key
 }
 
-import { POST as ollamaPost } from '@/app/api/chat/ollama/route'
-import { runOllamaChat } from '~/app/utils/ollama'
-import { openAIAzureChat } from './modelProviders/OpenAIAzureChat'
-import { runAnthropicChat } from '~/app/utils/anthropic'
+// Helper function to convert conversation to Vercel AI SDK v3 format
+function convertMessagesToVercelAISDKv3(
+  conversation: Conversation,
+): CoreMessage[] {
+  const coreMessages: CoreMessage[] = []
+
+  const systemMessage = conversation.messages.findLast(
+    (msg) => msg.latestSystemMessage !== undefined,
+  )
+  if (systemMessage) {
+    coreMessages.push({
+      role: 'system',
+      content: systemMessage.latestSystemMessage || '',
+    })
+  }
+
+  conversation.messages.forEach((message, index) => {
+    if (message.role === 'system') return
+
+    let content: string
+    if (index === conversation.messages.length - 1 && message.role === 'user') {
+      content = message.finalPromtEngineeredMessage || ''
+      content +=
+        '\n\nIf you use the <Potentially Relevant Documents> in your response, please remember cite your sources using the required formatting, e.g. "The grass is green. [29, page: 11]'
+    } else if (Array.isArray(message.content)) {
+      content = message.content
+        .filter((c) => c.type === 'text')
+        .map((c) => c.text)
+        .join('\n')
+    } else {
+      content = message.content as string
+    }
+
+    coreMessages.push({
+      role: message.role as 'user' | 'assistant',
+      content: content,
+    })
+  })
+
+  return coreMessages
+}
 
 export const routeModelRequest = async (
   chatBody: ChatBody,
@@ -808,11 +780,13 @@ export const routeModelRequest = async (
   baseUrl?: string,
 ): Promise<any> => {
   /*  Use this to call the LLM. It will call the appropriate endpoint based on the conversation.model.
-      🧠 ADD NEW LLM PROVIDERS HERE 🧠
+  🧠 ADD NEW LLM PROVIDERS HERE 🧠
+  NOTE: WebLLM is handled separately, because it MUST be called from the Client browser itself. 
   */
-  const selectedConversation = chatBody.conversation!
 
-  // Add this check at the beginning of the function
+  console.log('In routeModelRequest: ', chatBody, baseUrl)
+
+  const selectedConversation = chatBody.conversation!
   if (!selectedConversation.model || !selectedConversation.model.id) {
     throw new Error('Conversation model is undefined or missing "id" property.')
   }
@@ -829,24 +803,19 @@ export const routeModelRequest = async (
   })
 
   if (
-    Object.values(NCSAHostedModelID).includes(
+    Object.values(NCSAHostedVLMModelID).includes(
       selectedConversation.model.id as any,
     )
   ) {
-    // NCSA Hosted LLMs
-    const newChatBody = chatBody!.llmProviders!.NCSAHosted as NCSAHostedProvider
-    newChatBody.baseUrl = process.env.OLLAMA_SERVER_URL // inject proper baseURL
-
-    return await runOllamaChat(
-      chatBody.conversation!,
-      chatBody!.llmProviders!.Ollama as OllamaProvider,
+    // NCSA Hosted VLM
+    return await runVLLM(
+      selectedConversation,
+      chatBody?.llmProviders?.NCSAHostedVLM as NCSAHostedVLMProvider,
       chatBody.stream,
     )
   } else if (
     Object.values(OllamaModelIDs).includes(selectedConversation.model.id as any)
   ) {
-    // User-supplied Ollama instance
-
     return await runOllamaChat(
       selectedConversation,
       chatBody!.llmProviders!.Ollama as OllamaProvider,
@@ -857,11 +826,10 @@ export const routeModelRequest = async (
       selectedConversation.model.id as any,
     )
   ) {
-    // ANTHROPIC
     try {
       return await runAnthropicChat(
         selectedConversation,
-        chatBody!.llmProviders!.Anthropic as AnthropicProvider,
+        chatBody.llmProviders?.Anthropic as AnthropicProvider,
         chatBody.stream,
       )
     } catch (error) {
@@ -884,8 +852,53 @@ export const routeModelRequest = async (
     ) ||
     Object.values(AzureModelID).includes(selectedConversation.model.id as any)
   ) {
-    // Call the OpenAI or Azure API
     return await openAIAzureChat(chatBody, chatBody.stream)
+  } else if (
+    Object.values(BedrockModelID).includes(selectedConversation.model.id as any)
+  ) {
+    try {
+      return await runBedrockChat(
+        selectedConversation,
+        chatBody.llmProviders?.Bedrock as BedrockProvider,
+        chatBody.stream,
+      )
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Unknown error occurred when streaming Bedrock LLMs.',
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      )
+    }
+  } else if (
+    Object.values(GeminiModelID).includes(selectedConversation.model.id as any)
+  ) {
+    try {
+      return await runGeminiChat(
+        selectedConversation,
+        chatBody.llmProviders?.Gemini as GeminiProvider,
+        chatBody.stream,
+      )
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Unknown error occurred when streaming Gemini LLMs.',
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      )
+    }
   } else {
     throw new Error(
       `Model '${selectedConversation.model.name}' is not supported.`,

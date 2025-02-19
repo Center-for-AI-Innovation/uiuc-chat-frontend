@@ -9,7 +9,7 @@ export async function fetchConversationHistory(
   courseName: string,
   pageParam: number,
 ): Promise<ConversationPage> {
-  // console.log('fetchConversationHistory: ', user_email)
+  
   let finalResponse: ConversationPage = {
     conversations: [],
     nextCursor: null,
@@ -31,12 +31,37 @@ export async function fetchConversationHistory(
 
     const { conversations, nextCursor } = await response.json()
 
-    finalResponse = cleanConversationHistory(conversations)
+    // // Clean the conversations and ensure they're properly structured
+    const cleanedConversations = conversations.map((conversation: any) => {
+      // Ensure messages are properly ordered by creation time
+      if (conversation.messages) {
+        conversation.messages.sort((a: any, b: any) => {
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        })
+      }
+      return conversation
+    })
+
+    finalResponse = cleanConversationHistory(cleanedConversations)
     finalResponse.nextCursor = nextCursor
+
+    // Sync with local storage
+    const selectedConversation = localStorage.getItem('selectedConversation')
+    if (selectedConversation && finalResponse?.conversations?.length > 0) {
+      const parsed = JSON.parse(selectedConversation)
+      const serverConversation = finalResponse.conversations.find(
+        (c) => c.id === parsed.id
+      )
+      if (serverConversation) {
+        localStorage.setItem(
+          'selectedConversation',
+          JSON.stringify(serverConversation)
+        )
+      }
+    }
   } catch (error) {
-    console.error('Error fetching conversation history:', error)
+    console.error('utils/app/conversation.ts - Error fetching conversation history:', error)
   }
-  // console.log('finalResponse: ', finalResponse)
   return finalResponse
 }
 
@@ -62,7 +87,6 @@ export const deleteAllConversationsFromServer = async (
   user_email: string,
   course_name: string,
 ) => {
-  console.log('deleteAllConversationsFromServer')
   try {
     const response = await fetch('/api/conversation', {
       method: 'DELETE',
@@ -101,17 +125,17 @@ export const saveConversationToLocalStorage = (conversation: Conversation) => {
             feedback: existingMsg?.feedback || msg.feedback
           };
         });
-        
+
         const conversationWithFeedback = {
           ...conversation,
           messages: messagesWithFeedback
         };
-        
+
         localStorage.setItem('selectedConversation', JSON.stringify(conversationWithFeedback))
       } else {
         localStorage.setItem('selectedConversation', JSON.stringify(conversation))
       }
-      
+
       successful = true
     } catch (e) {
       console.debug(
@@ -216,20 +240,35 @@ export const saveConversations = (conversations: Conversation[]) => {
 // }
 
 export async function saveConversationToServer(conversation: Conversation) {
-  try {
-    console.debug('Saving conversation to server:', conversation)
-    const response = await fetch('/api/conversation', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ conversation }),
-    })
-    if (!response.ok) {
-      throw new Error('Error saving conversation')
+  const MAX_RETRIES = 3;
+  let retryCount = 0;
+
+  while (retryCount < MAX_RETRIES) {
+    try {
+      console.debug('Saving conversation to server:', conversation)
+      const response = await fetch('/api/conversation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ conversation }),
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        const errorMessage = errorData?.error || response.statusText;
+        throw new Error(`Error saving conversation: ${errorMessage}`);
+      }
+      
+      return response.json()
+    } catch (error: any) {
+      console.error(`Error saving conversation (attempt ${retryCount + 1}/${MAX_RETRIES}):`, error)
+      if (error.code === 'ECONNRESET' && retryCount < MAX_RETRIES - 1) {
+        retryCount++;
+        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount)); // Exponential backoff
+        continue;
+      }
+      throw error;
     }
-    return response.json()
-  } catch (error) {
-    console.error('Error saving conversation:', error)
   }
 }

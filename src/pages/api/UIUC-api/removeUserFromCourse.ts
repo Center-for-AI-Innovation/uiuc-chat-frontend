@@ -1,6 +1,7 @@
 import { kv } from '@vercel/kv'
 import { NextResponse } from 'next/server'
 import { CourseMetadata } from '~/types/courseMetadata'
+import { redisClient } from '~/utils/redisClient'
 
 export const runtime = 'edge'
 
@@ -14,9 +15,11 @@ const removeUserFromCourse = async (req: any, res: any) => {
   console.log('removeUserFromCourse: email_to_remove', email_to_remove)
 
   try {
-    const course_metadata = (await kv.get(
+    const courseMetadataString = await redisClient.get(
       course_name + '_metadata',
-    )) as CourseMetadata
+    )
+    if (!courseMetadataString) throw new Error('Course metadata not found')
+    const course_metadata = JSON.parse(courseMetadataString) as CourseMetadata
 
     if (!course_metadata) {
       res.status(500).json({ success: false })
@@ -33,7 +36,10 @@ const removeUserFromCourse = async (req: any, res: any) => {
       approved_emails_list: remaining_email_addresses,
     }
 
-    await kv.set(course_name + '_metadata', updated_course_metadata)
+    await redisClient.set(
+      course_name + '_metadata',
+      JSON.stringify(updated_course_metadata),
+    )
     // res.status(200).json({ success: true })
     console.log('removeUserFromCourse about to return success')
     return NextResponse.json({ success: true })

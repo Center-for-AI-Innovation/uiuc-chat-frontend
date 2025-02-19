@@ -22,7 +22,7 @@ import GlobalFooter from './GlobalFooter'
 import { montserrat_heading } from 'fonts'
 
 export const GetCurrentPageName = () => {
-  // /CS-125/materials --> CS-125
+  // /CS-125/dashboard --> CS-125
   return useRouter().asPath.slice(1).split('/')[0] as string
 }
 
@@ -38,13 +38,13 @@ export const CanViewOnlyCourse = ({
   const router = useRouter()
 
   const getCurrentPageName = () => {
-    // /CS-125/materials --> CS-125
+    // /CS-125/dashboard --> CS-125
     return router.asPath.slice(1).split('/')[0]
   }
 
   if (course_metadata == null || course_name == null) {
     // if you refresh the not_authorized page
-    router.push(`${getCurrentPageName}/materials`)
+    router.push(`${getCurrentPageName}/dashboard`)
   }
 
   return (

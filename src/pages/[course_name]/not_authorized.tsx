@@ -54,7 +54,7 @@ const NotAuthorizedPage: NextPage = () => {
     fetchCourseMetadata(course_name).then((courseMetadata) => {
       if (courseMetadata == null) {
         console.log('Course does not exist, redirecting to materials page')
-        router.replace(`/${course_name}/materials`)
+        router.replace(`/${course_name}/dashboard`)
         return
       }
 
@@ -89,7 +89,7 @@ const NotAuthorizedPage: NextPage = () => {
             console.log(
               'in [course_name]/index.tsx - Course exists & user is properly authed, CanViewOnlyCourse',
             )
-            router.push(`/${course_name}/materials`)
+            router.push(`/${course_name}/dashboard`)
           } else if (permission_str == 'view') {
             setComponentToRender(
               <CanViewOnlyCourse
@@ -102,7 +102,7 @@ const NotAuthorizedPage: NextPage = () => {
           }
         } else {
           console.log('Course does not exist, redirecting to materials page')
-          router.push(`/${course_name}/materials`)
+          router.push(`/${course_name}/dashboard`)
         }
       } else {
         console.log(

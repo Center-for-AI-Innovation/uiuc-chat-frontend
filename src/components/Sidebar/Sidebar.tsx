@@ -71,6 +71,12 @@ const Sidebar = <T,>({
             onClick={() => {
               handleCreateItem()
               handleSearchTerm('')
+              setTimeout(() => {
+                const chatInput = document.querySelector('textarea.chat-input') as HTMLTextAreaElement;
+                if (chatInput) {
+                  chatInput.focus();
+                }
+              }, 100);
             }}
           >
             <IconPlus size={16} />

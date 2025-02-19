@@ -1,6 +1,6 @@
-import { kv } from '@vercel/kv'
 import { CourseMetadata } from '~/types/courseMetadata'
 import { NextRequest, NextResponse } from 'next/server'
+import { redisClient } from '~/utils/redisClient'
 
 export const runtime = 'edge'
 
@@ -25,10 +25,12 @@ export default async function handler(req: NextRequest) {
 
     try {
       // FYI Redis itself doesn't provide direct commands to manipulate JSON data within a hash field, so this workaround is necessary.
-      const course_metadata = (await kv.hget(
+      const course_metadata_string = await redisClient.hGet(
         'course_metadatas',
         course_name,
-      )) as CourseMetadata
+      )
+      if (!course_metadata_string) throw new Error('Course metadata not found')
+      const course_metadata: CourseMetadata = JSON.parse(course_metadata_string)
 
       if (!course_metadata) {
         return NextResponse.json(
@@ -40,8 +42,8 @@ export default async function handler(req: NextRequest) {
       // Set disabled models
       course_metadata.disabled_models = disabled_models
 
-      await kv.hset('course_metadatas', {
-        [course_name]: course_metadata,
+      await redisClient.hSet('course_metadatas', {
+        [course_name]: JSON.stringify(course_metadata),
       })
       return NextResponse.json({ message: 'Success' }, { status: 200 })
     } catch (error) {

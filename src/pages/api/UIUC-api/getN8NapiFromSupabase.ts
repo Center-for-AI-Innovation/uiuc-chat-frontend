@@ -1,30 +1,30 @@
 import { supabase } from '@/utils/supabaseClient'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextApiRequest, NextApiResponse } from 'next'
 
-export const config = {
-  runtime: 'edge',
+type ApiResponse = {
+  success: boolean
+  api_key?: any
+  error?: any
 }
 
 export default async function getApiKeyByCourseName(
-  req: NextRequest,
-  res: NextResponse,
+  req: NextApiRequest,
+  res: NextApiResponse<ApiResponse>
 ) {
-  const requestBody = await req.json()
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, error: 'Method not allowed' })
+  }
 
-  const { course_name } = requestBody
+  const { course_name } = req.body
 
   const { data, error } = await supabase
     .from('projects')
     .select('n8n_api_key')
     .eq('course_name', course_name)
-  console.log('data from apifromsupa:', data)
+  // console.log('data from apifromsupa:', data)
   if (error) {
     console.error('Error: ', error)
-    return new NextResponse(JSON.stringify({ success: false, error: error }), {
-      status: 500,
-    })
+    return res.status(500).json({ success: false, error: error })
   }
-  return new NextResponse(JSON.stringify({ success: true, api_key: data }), {
-    status: 200,
-  })
+  return res.status(200).json({ success: true, api_key: data })
 }

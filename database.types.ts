@@ -691,6 +691,8 @@ export type Database = {
           role: string
           tools: Json | null
           updated_at: string | null
+          was_query_rewritten: boolean | null
+          query_rewrite_text: string | null
         }
         Insert: {
           content_image_url?: string[] | null
@@ -709,6 +711,8 @@ export type Database = {
           role: string
           tools?: Json | null
           updated_at?: string | null
+          was_query_rewritten?: boolean | null
+          query_rewrite_text?: string | null
         }
         Update: {
           content_image_url?: string[] | null
@@ -727,6 +731,8 @@ export type Database = {
           role?: string
           tools?: Json | null
           updated_at?: string | null
+          was_query_rewritten?: boolean | null
+          query_rewrite_text?: string | null
         }
         Relationships: [
           {

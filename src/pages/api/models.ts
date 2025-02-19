@@ -1,53 +1,49 @@
 import {
-  AllLLMProviders,
-  AnthropicProvider,
-  AzureProvider,
-  LLMProvider,
-  NCSAHostedProvider,
-  OllamaProvider,
-  OpenAIProvider,
+  type AllLLMProviders,
+  type AnthropicProvider,
+  type AzureProvider,
+  type LLMProvider,
+  type NCSAHostedProvider,
+  type NCSAHostedVLMProvider,
+  type OllamaProvider,
+  type OpenAIProvider,
+  type BedrockProvider,
+  type GeminiProvider,
   ProviderNames,
-  WebLLMProvider,
+  type WebLLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
 import { getOllamaModels } from '~/utils/modelProviders/ollama'
 import { getAzureModels } from '~/utils/modelProviders/azure'
 import { getAnthropicModels } from '~/utils/modelProviders/routes/anthropic'
 import { getWebLLMModels } from '~/utils/modelProviders/WebLLM'
-import { NextRequest, NextResponse } from 'next/server'
-import { kv } from '@vercel/kv'
+import { type NextApiRequest, type NextApiResponse } from 'next'
 import { getNCSAHostedModels } from '~/utils/modelProviders/NCSAHosted'
 import { getOpenAIModels } from '~/utils/modelProviders/routes/openai'
-import { OpenAIModelID } from '~/utils/modelProviders/types/openai'
-import { ProjectWideLLMProviders } from '~/types/courseMetadata'
+import { redisClient } from '~/utils/redisClient'
+import { getNCSAHostedVLMModels } from '~/utils/modelProviders/types/NCSAHostedVLM'
+import { getBedrockModels } from '~/utils/modelProviders/routes/bedrock'
+import { getGeminiModels } from '~/utils/modelProviders/routes/gemini'
 
-export const config = {
-  runtime: 'edge',
-}
-
-const handler = async (
-  req: NextRequest,
-): Promise<NextResponse<AllLLMProviders | { error: string }>> => {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<AllLLMProviders | { error: string }>,
+) {
   try {
-    const { projectName } = (await req.json()) as {
+    const { projectName } = req.body as {
       projectName: string
     }
 
     if (!projectName) {
-      return NextResponse.json(
-        { error: 'Missing project name' },
-        { status: 400 },
-      )
+      return res.status(400).json({ error: 'Missing project name' })
     }
 
     // Fetch the project's API keys
-    let llmProviders = (await kv.get(
-      `${projectName}-llms`,
-    )) as ProjectWideLLMProviders | null
-
-    if (!llmProviders) {
-      llmProviders = {} as ProjectWideLLMProviders
+    let llmProviders: AllLLMProviders
+    const redisValue = await redisClient.get(`${projectName}-llms`)
+    if (!redisValue) {
+      llmProviders = {} as AllLLMProviders
     } else {
-      llmProviders = llmProviders as ProjectWideLLMProviders
+      llmProviders = JSON.parse(redisValue) as AllLLMProviders
     }
 
     // Define a function to create a placeholder provider with default values
@@ -55,7 +51,7 @@ const handler = async (
       providerName: ProviderNames,
     ): LLMProvider => ({
       provider: providerName,
-      enabled: false,
+      enabled: true,
       models: [],
     })
 
@@ -66,14 +62,6 @@ const handler = async (
         // @ts-ignore -- I can't figure out why Ollama complains about undefined.
         llmProviders[providerName] = createPlaceholderProvider(providerName)
       }
-    }
-
-    // Ensure defaultModel and defaultTemp are set
-    if (!llmProviders.defaultModel) {
-      llmProviders.defaultModel = OpenAIModelID.GPT_4o_mini
-    }
-    if (!llmProviders.defaultTemp) {
-      llmProviders.defaultTemp = 0.1
     }
 
     const allLLMProviders: Partial<AllLLMProviders> = {}
@@ -114,19 +102,29 @@ const handler = async (
             llmProvider as NCSAHostedProvider,
           )
           break
+        case ProviderNames.NCSAHostedVLM:
+          allLLMProviders[providerName] = await getNCSAHostedVLMModels(
+            llmProvider as NCSAHostedVLMProvider,
+          )
+          break
+        case ProviderNames.Bedrock:
+          allLLMProviders[providerName] = await getBedrockModels(
+            llmProvider as BedrockProvider,
+          )
+          break
+        case ProviderNames.Gemini:
+          allLLMProviders[providerName] = await getGeminiModels(
+            llmProvider as GeminiProvider,
+          )
+          break
         default:
           console.warn(`Unhandled provider: ${providerName}`)
       }
     }
 
-    // console.log('FINAL -- allLLMProviders', allLLMProviders)
-    return NextResponse.json(allLLMProviders as AllLLMProviders, {
-      status: 200,
-    })
+    return res.status(200).json(allLLMProviders as AllLLMProviders)
   } catch (error) {
     console.error(error)
-    return NextResponse.json({ error: JSON.stringify(error) }, { status: 500 })
+    return res.status(500).json({ error: JSON.stringify(error) })
   }
 }
-
-export default handler
