@@ -51,10 +51,12 @@ export enum ProviderNames {
 export const LLM_PROVIDER_ORDER: ProviderNames[] = [
   ProviderNames.NCSAHostedVLM,
   ProviderNames.NCSAHosted,
+  ProviderNames.Anthropic,
   ProviderNames.OpenAI,
   ProviderNames.Azure,
   ProviderNames.Gemini,
   ProviderNames.Bedrock,
+  ProviderNames.Ollama,
   ProviderNames.WebLLM,
 ]
 
