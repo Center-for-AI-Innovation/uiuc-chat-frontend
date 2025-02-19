@@ -19,28 +19,29 @@ export async function POST(req: NextRequest, res: NextResponse) {
     courseMetadata,
     // stream,
     // llmProviders,
+    mode
   } = body as ChatBody
 
-  const buildPromptStartTime = Date.now()
-  const newConversation = await buildPrompt({
-    conversation,
-    projectName: course_name,
-    courseMetadata,
-  })
-  const buildPromptEndTime = Date.now()
-  const buildPromptDuration = buildPromptEndTime - buildPromptStartTime
-  console.log(`buildPrompt duration: ${buildPromptDuration}ms`)
-
-  body.conversation = newConversation
-
+  console.log('chat body', body)
   try {
-    const result = await routeModelRequest(body as ChatBody)
+    const buildPromptStartTime = Date.now()
+    const newConversation = await buildPrompt({
+      conversation,
+      projectName: course_name,
+      courseMetadata,
+      mode,
+    })
+    const buildPromptEndTime = Date.now()
+    const buildPromptDuration = buildPromptEndTime - buildPromptStartTime
+    console.log(`buildPrompt duration: ${buildPromptDuration}ms`)
 
+    body.conversation = newConversation
+    const result = await routeModelRequest(body as ChatBody)
     const endTime = Date.now()
     const duration = endTime - startTime
     console.log(`Total duration: ${duration}ms`)
-
     return result
+
   } catch (error) {
     console.error('Error in chat route:', error)
 
