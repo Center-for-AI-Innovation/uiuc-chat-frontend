@@ -1387,10 +1387,13 @@ export const Chat = memo(
                 __html:
                   courseMetadata?.course_intro_message
                     ?.replace(
-                      /(https?:\/\/[^\s]+)/g,
-                      '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-purple-400 hover:underline">$1</a>',
+                      /(https?:\/\/([^\s]+))/g,
+                      '<a href="https://$1" target="_blank" rel="noopener noreferrer" class="text-purple-400 hover:underline">$2</a>',
                     )
-                    ?.replace(/(https?:\/\/)/g, '') || '',
+                    ?.replace(
+                      /href="https:\/\/(https?:\/\/)/g,
+                      'href="https://',
+                    ) || '',
               }}
             />
 
@@ -1646,27 +1649,30 @@ export const Chat = memo(
                       </>
                     ) : (
                       <>
-                        {selectedConversation?.messages?.map((message, index) => (
-                          <MemoizedChatMessage
-                            key={index}
-                            message={message}
-                            contentRenderer={renderMessageContent}
-                            messageIndex={index}
-                            onEdit={(editedMessage) => {
-                              handleSend(
-                                editedMessage,
-                                selectedConversation?.messages?.length - index,
-                                null,
-                                tools,
-                                enabledDocumentGroups,
-                                llmProviders,
-                              )
-                            }}
-                            onFeedback={handleFeedback}
-                            onImageUrlsUpdate={onImageUrlsUpdate}
-                            courseName={courseName}
-                          />
-                        ))}
+                        {selectedConversation?.messages?.map(
+                          (message, index) => (
+                            <MemoizedChatMessage
+                              key={index}
+                              message={message}
+                              contentRenderer={renderMessageContent}
+                              messageIndex={index}
+                              onEdit={(editedMessage) => {
+                                handleSend(
+                                  editedMessage,
+                                  selectedConversation?.messages?.length -
+                                    index,
+                                  null,
+                                  tools,
+                                  enabledDocumentGroups,
+                                  llmProviders,
+                                )
+                              }}
+                              onFeedback={handleFeedback}
+                              onImageUrlsUpdate={onImageUrlsUpdate}
+                              courseName={courseName}
+                            />
+                          ),
+                        )}
                         {loading && <ChatLoader />}
                         <div
                           className="h-[162px] bg-gradient-to-t from-transparent to-[rgba(14,14,21,0.4)]"
