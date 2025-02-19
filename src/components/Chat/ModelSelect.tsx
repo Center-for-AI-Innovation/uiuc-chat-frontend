@@ -752,7 +752,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                                 rel="noopener noreferrer"
                                 className="text-blue-500 visited:text-purple-600 hover:text-blue-700 hover:underline"
                               >
-                                Gemini's full suite{' '}
+                                Gemini&apos;s full suite{' '}
                                 <IconExternalLink
                                   size={15}
                                   style={{ position: 'relative', top: '2px' }}
@@ -780,7 +780,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
-                                Bedrock's full suite{' '}
+                                Bedrock&apos;s full suite{' '}
                                 <IconExternalLink
                                   size={15}
                                   style={{ position: 'relative', top: '2px' }}
