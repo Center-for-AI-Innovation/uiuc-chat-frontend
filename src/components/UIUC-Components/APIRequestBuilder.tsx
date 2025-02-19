@@ -134,7 +134,7 @@ data = {
 }
 
 response = requests.post(url, headers=headers, json=data)
-print(response.json())`,
+${streamEnabled ? 'print(response.text)' : 'print(response.json())'}`,
     node: `const data = {
   "model": "${selectedModel}",
   "messages": [
@@ -161,10 +161,17 @@ fetch('${baseUrl}/api/chat-api/chat', {
   },
   body: JSON.stringify(data)
 })
-.then(response => response.json())
+${
+  streamEnabled
+    ? `.then(response => response.text())
 .then(data => {
   console.log(data);
-})
+})`
+    : `.then(response => response.json())
+.then(data => {
+  console.log(data);
+})`
+}
 .catch(error => {
   console.error('Error:', error);
 });`,
