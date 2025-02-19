@@ -47,6 +47,17 @@ export enum ProviderNames {
   Gemini = 'Gemini',
 }
 
+// Define the preferred order of providers, like in modelSelect dropdown
+export const LLM_PROVIDER_ORDER: ProviderNames[] = [
+  ProviderNames.NCSAHostedVLM,
+  ProviderNames.NCSAHosted,
+  ProviderNames.OpenAI,
+  ProviderNames.Azure,
+  ProviderNames.Gemini,
+  ProviderNames.Bedrock,
+  ProviderNames.WebLLM,
+]
+
 export type AnySupportedModel =
   | OllamaModel
   | OpenAIModel
@@ -268,10 +279,10 @@ export const selectBestModel = (
       .filter((model) => model.enabled)
       .find((m) => m.id === preferredId)
     if (model) {
-      localStorage.setItem('defaultModel', preferredId)
+      // localStorage.setItem('defaultModel', preferredId)
       return model
     }
   }
   // If no preferred models are available, fallback to llama3.1:8b-instruct-fp16
-  return OllamaModels[OllamaModelIDs.QWEN25_14b_fp16]
+  return NCSAHostedVLMModels[NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT]
 }

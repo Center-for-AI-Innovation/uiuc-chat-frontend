@@ -22,6 +22,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   type AllLLMProviders,
   type AnySupportedModel,
+  LLM_PROVIDER_ORDER,
   type LLMProvider,
   ProviderNames,
   selectBestModel,
@@ -343,7 +344,7 @@ const ModelDropdown: React.FC<
           className="menu z-[50] w-full"
           size="md"
           placeholder="Select a model"
-          searchable
+          // searchable
           value={value}
           onChange={async (modelId) => {
             if (state.webLLMModelIdLoading.isLoading) {
@@ -356,21 +357,35 @@ const ModelDropdown: React.FC<
             }
             await onChange(modelId!)
           }}
-          data={Object.values(enabledProvidersAndModels).flatMap(
-            (provider: LLMProvider) =>
-              provider.models?.map((model) => ({
-                value: model.id,
-                label: model.name,
-                // @ts-ignore -- this being missing is fine
-                downloadSize: model?.downloadSize,
-                modelId: model.id,
-                selectedModelId: value,
-                modelType: provider.provider,
-                group: provider.provider,
-                // @ts-ignore -- this being missing is fine
-                vram_required_MB: model.vram_required_MB,
-              })) || [],
-          )}
+          data={Object.entries(enabledProvidersAndModels)
+            // Sort by LLM_PROVIDER_ORDER
+            .sort(([providerA], [providerB]) => {
+              const indexA = LLM_PROVIDER_ORDER.indexOf(
+                providerA as ProviderNames,
+              )
+              const indexB = LLM_PROVIDER_ORDER.indexOf(
+                providerB as ProviderNames,
+              )
+              // Providers not in the order list will be placed at the end
+              if (indexA === -1) return 1
+              if (indexB === -1) return -1
+              return indexA - indexB
+            })
+            .flatMap(
+              ([_, provider]) =>
+                provider.models?.map((model) => ({
+                  value: model.id,
+                  label: model.name,
+                  // @ts-ignore -- this being missing is fine
+                  downloadSize: model?.downloadSize,
+                  modelId: model.id,
+                  selectedModelId: value,
+                  modelType: provider.provider,
+                  group: provider.provider,
+                  // @ts-ignore -- this being missing is fine
+                  vram_required_MB: model.vram_required_MB,
+                })) || [],
+            )}
           itemComponent={(props) => (
             <ModelItem
               {...props}
@@ -689,7 +704,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               size={'sm'}
                               className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
                             >
-                              On-device LLMs
+                              On-device AI with WebLLM
                             </Text>
                             <Text
                               size={'sm'}
