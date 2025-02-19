@@ -24,6 +24,7 @@ import {
   MessageCode,
   Code,
   Brain,
+  FileDescription,
 } from 'tabler-icons-react'
 import { IconHome, IconFilePlus, IconClipboardText } from '@tabler/icons-react'
 
@@ -365,6 +366,16 @@ export function ClipboardIcon() {
   return <IconClipboardText size={20} strokeWidth={2} style={{ margin: '0' }} />
 }
 
+export function MetadataIcon() {
+  return (
+    <FileDescription
+      size={18}
+      strokeWidth={2}
+      style={{ marginRight: '3px', marginLeft: '3px' }}
+    />
+  )
+}
+
 export default function Navbar({
   course_name = '',
   bannerUrl = '',
@@ -405,6 +416,20 @@ export default function Navbar({
       ),
       icon: <ReportIcon />,
       link: `/${course_name}/analysis`,
+    },
+    {
+      name: (
+        <Indicator
+          label="New"
+          color="hsl(280,100%,70%)"
+          size={13}
+          styles={{ indicator: { top: '-4px !important' } }}
+        >
+          <NavText>Metadata</NavText>
+        </Indicator>
+      ),
+      icon: <MetadataIcon />,
+      link: `/${course_name}/metadata`,
     },
     {
       name: <NavText>Prompting</NavText>,

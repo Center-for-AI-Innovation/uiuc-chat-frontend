@@ -6,6 +6,13 @@ import {
 import { v4 as uuidv4 } from 'uuid'
 import { Conversation, Message } from '~/types/chat'
 import { CoreMessage } from 'ai'
+import {
+  type MetadataGenerationResponse,
+  type DocumentStatus,
+  type MetadataDocument,
+  type MetadataField,
+  type MetadataRun,
+} from '~/types/metadata'
 
 // Configuration for runtime environment
 
@@ -277,10 +284,151 @@ interface PresignedPostResponse {
   }
 }
 
+// Function to generate metadata
+export async function generateMetadata(
+  prompt: string,
+  documentIds: number[],
+): Promise<MetadataGenerationResponse> {
+  const response = await fetch(
+    `https://flask-pr-363.up.railway.app/generateMetadata`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        metadata_prompt: prompt,
+        document_ids: documentIds,
+      }),
+    },
+  )
+
+  if (!response.ok) {
+    throw new Error('Failed to generate metadata')
+  }
+
+  return response.json()
+}
+
+// Function to check document statuses
+export async function getDocumentStatuses(
+  documentIds: number[],
+  runId: number,
+): Promise<DocumentStatus[]> {
+  // If no document IDs, return empty array
+  if (!documentIds?.length) return []
+
+  const queryParams = new URLSearchParams({
+    run_id: runId.toString(),
+    document_ids: documentIds.join(','),
+  })
+
+  const response = await fetch(
+    `/api/UIUC-api/getDocumentStatuses?${queryParams.toString()}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  )
+
+  if (!response.ok) {
+    throw new Error('Failed to get document statuses')
+  }
+
+  const data = await response.json()
+  return data.statuses || []
+}
+
+// Function to get metadata history from cedar_runs table
+export async function getMetadataHistory(
+  courseName: string,
+): Promise<MetadataRun[]> {
+  const response = await fetch(
+    `/api/UIUC-api/getMetadataHistory?course_name=${encodeURIComponent(courseName)}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  )
+
+  if (!response.ok) {
+    throw new Error('Failed to get metadata history')
+  }
+
+  const data = await response.json()
+  return data.history || []
+}
+
+// Function to download metadata CSV
+export async function downloadMetadataCSV(runIds: number[]): Promise<Blob> {
+  const response = await fetch(
+    `https://flask-pr-363.up.railway.app/downloadMetadataCSV`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        run_ids: runIds,
+      }),
+    },
+  )
+
+  if (!response.ok) {
+    throw new Error('Failed to download metadata CSV')
+  }
+
+  return response.blob()
+}
+
+// Function to get metadata documents from cedar_documents table
+export async function getMetadataDocuments(
+  courseName: string,
+): Promise<MetadataDocument[]> {
+  const response = await fetch(
+    `/api/UIUC-api/getMetadataDocuments?course_name=${encodeURIComponent(courseName)}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  )
+
+  if (!response.ok) {
+    throw new Error(`Failed to get metadata documents: ${response.statusText}`)
+  }
+
+  return response.json()
+}
+
+export async function getMetadataFields(
+  runId: number,
+): Promise<MetadataField[]> {
+  const response = await fetch(
+    `/api/UIUC-api/getMetadataFields?run_id=${runId}`,
+  )
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch metadata fields')
+  }
+
+  const data = await response.json()
+  return data.metadata || []
+}
+
 // Export all functions as part of the API Utils module
-export default {
+const apiUtils = {
   callSetCourseMetadata,
   uploadToS3,
   fetchPresignedUrl,
   fetchCourseMetadata,
+  getMetadataDocuments,
+  getMetadataFields,
 }
+
+export default apiUtils
