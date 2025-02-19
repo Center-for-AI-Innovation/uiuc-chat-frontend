@@ -1,5 +1,13 @@
 import { useState, useEffect } from 'react'
-import { Textarea, Select, Button, Title, Switch, Divider, Slider } from '@mantine/core'
+import {
+  Textarea,
+  Select,
+  Button,
+  Title,
+  Switch,
+  Divider,
+  Slider,
+} from '@mantine/core'
 import { IconCheck, IconCopy, IconChevronDown } from '@tabler/icons-react'
 import { useGetProjectLLMProviders } from '~/hooks/useProjectAPIKeys'
 import { findDefaultModel } from './api-inputs/LLMsApiKeyInputForm'
@@ -27,7 +35,6 @@ export default function APIRequestBuilder({
     courseMetadata?.system_prompt ||
       'You are a helpful AI assistant. Follow instructions carefully. Respond using markdown.',
   )
-  console.log(courseMetadata?.system_prompt)
   const [selectedModel, setSelectedModel] = useState<string>('')
   const [retrievalOnly, setRetrievalOnly] = useState(false)
   const [streamEnabled, setStreamEnabled] = useState(true)
@@ -48,7 +55,6 @@ export default function APIRequestBuilder({
 
   useEffect(() => {
     if (courseMetadata?.system_prompt) {
-      console.log('changing system prompt')
       setSystemPrompt(courseMetadata.system_prompt)
     }
   }, [courseMetadata?.system_prompt])
