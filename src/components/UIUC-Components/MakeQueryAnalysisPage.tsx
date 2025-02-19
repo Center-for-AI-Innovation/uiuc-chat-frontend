@@ -44,6 +44,7 @@ import {
   IconMessageCircle2,
   IconInfoCircle,
   IconUsers,
+  IconMinus,
 } from '@tabler/icons-react'
 import { getWeeklyTrends } from '../../pages/api/UIUC-api/getWeeklyTrends'
 import ModelUsageChart from './ModelUsageChart'
@@ -685,32 +686,50 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           )
                           if (!trend) return null
 
+                          const isZeroChange = trend.percentage_change === 0
+
                           return (
                             <div
                               className={`flex items-center gap-2 rounded-md px-2 py-1 ${
-                                trend.percentage_change > 0
-                                  ? 'bg-green-400/10'
-                                  : 'bg-red-400/10'
+                                isZeroChange
+                                  ? 'bg-gray-400/10'
+                                  : trend.percentage_change > 0
+                                    ? 'bg-green-400/10'
+                                    : 'bg-red-400/10'
                               }`}
                             >
-                              {trend.percentage_change > 0 ? (
+                              {isZeroChange ? (
+                                <IconMinus
+                                  size={18}
+                                  className="text-gray-400"
+                                />
+                              ) : trend.percentage_change > 0 ? (
                                 <IconTrendingUp
                                   size={18}
                                   className="text-green-400"
                                 />
-                              ) : (
+                              ) : trend.percentage_change < 0 ? (
                                 <IconTrendingDown
                                   size={18}
                                   className="text-red-400"
+                                />
+                              ) : (
+                                <IconMinus
+                                  size={18}
+                                  className="text-gray-400"
                                 />
                               )}
                               <Text
                                 size="sm"
                                 weight={500}
                                 className={
-                                  trend.percentage_change > 0
-                                    ? 'text-green-400'
-                                    : 'text-red-400'
+                                  isZeroChange
+                                    ? 'text-gray-400'
+                                    : trend.percentage_change > 0
+                                      ? 'text-green-400'
+                                      : trend.percentage_change < 0
+                                        ? 'text-red-400'
+                                        : 'text-gray-400'
                                 }
                               >
                                 {trend.percentage_change > 0 ? '+' : ''}
@@ -756,32 +775,50 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           )
                           if (!trend) return null
 
+                          const isZeroChange = trend.percentage_change === 0
+
                           return (
                             <div
                               className={`flex items-center gap-2 rounded-md px-2 py-1 ${
-                                trend.percentage_change > 0
-                                  ? 'bg-green-400/10'
-                                  : 'bg-red-400/10'
+                                isZeroChange
+                                  ? 'bg-gray-400/10'
+                                  : trend.percentage_change > 0
+                                    ? 'bg-green-400/10'
+                                    : 'bg-red-400/10'
                               }`}
                             >
-                              {trend.percentage_change > 0 ? (
+                              {isZeroChange ? (
+                                <IconMinus
+                                  size={18}
+                                  className="text-gray-400"
+                                />
+                              ) : trend.percentage_change > 0 ? (
                                 <IconTrendingUp
                                   size={18}
                                   className="text-green-400"
                                 />
-                              ) : (
+                              ) : trend.percentage_change < 0 ? (
                                 <IconTrendingDown
                                   size={18}
                                   className="text-red-400"
+                                />
+                              ) : (
+                                <IconMinus
+                                  size={18}
+                                  className="text-gray-400"
                                 />
                               )}
                               <Text
                                 size="sm"
                                 weight={500}
                                 className={
-                                  trend.percentage_change > 0
-                                    ? 'text-green-400'
-                                    : 'text-red-400'
+                                  isZeroChange
+                                    ? 'text-gray-400'
+                                    : trend.percentage_change > 0
+                                      ? 'text-green-400'
+                                      : trend.percentage_change < 0
+                                        ? 'text-red-400'
+                                        : 'text-gray-400'
                                 }
                               >
                                 {trend.percentage_change > 0 ? '+' : ''}
@@ -827,32 +864,50 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           )
                           if (!trend) return null
 
+                          const isZeroChange = trend.percentage_change === 0
+
                           return (
                             <div
                               className={`flex items-center gap-2 rounded-md px-2 py-1 ${
-                                trend.percentage_change > 0
-                                  ? 'bg-green-400/10'
-                                  : 'bg-red-400/10'
+                                isZeroChange
+                                  ? 'bg-gray-400/10'
+                                  : trend.percentage_change > 0
+                                    ? 'bg-green-400/10'
+                                    : 'bg-red-400/10'
                               }`}
                             >
-                              {trend.percentage_change > 0 ? (
+                              {isZeroChange ? (
+                                <IconMinus
+                                  size={18}
+                                  className="text-gray-400"
+                                />
+                              ) : trend.percentage_change > 0 ? (
                                 <IconTrendingUp
                                   size={18}
                                   className="text-green-400"
                                 />
-                              ) : (
+                              ) : trend.percentage_change < 0 ? (
                                 <IconTrendingDown
                                   size={18}
                                   className="text-red-400"
+                                />
+                              ) : (
+                                <IconMinus
+                                  size={18}
+                                  className="text-gray-400"
                                 />
                               )}
                               <Text
                                 size="sm"
                                 weight={500}
                                 className={
-                                  trend.percentage_change > 0
-                                    ? 'text-green-400'
-                                    : 'text-red-400'
+                                  isZeroChange
+                                    ? 'text-gray-400'
+                                    : trend.percentage_change > 0
+                                      ? 'text-green-400'
+                                      : trend.percentage_change < 0
+                                        ? 'text-red-400'
+                                        : 'text-gray-400'
                                 }
                               >
                                 {trend.percentage_change > 0 ? '+' : ''}
