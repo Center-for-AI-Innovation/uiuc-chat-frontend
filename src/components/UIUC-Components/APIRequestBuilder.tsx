@@ -135,9 +135,7 @@ data = {
 
 response = requests.post(url, headers=headers, json=data)
 print(response.json())`,
-    node: `const axios = require('axios');
-
-const data = {
+    node: `const data = {
   "model": "${selectedModel}",
   "messages": [
     {
@@ -156,16 +154,19 @@ const data = {
   "retrieval_only": ${retrievalOnly}
 };
 
-axios.post('${baseUrl}/api/chat-api/chat', data, {
+fetch('${baseUrl}/api/chat-api/chat', {
+  method: 'POST',
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  body: JSON.stringify(data)
 })
-.then(response => {
-  console.log(response.data);
+.then(response => response.json())
+.then(data => {
+  console.log(data);
 })
 .catch(error => {
-  console.error(error);
+  console.error('Error:', error);
 });`,
   }
 
