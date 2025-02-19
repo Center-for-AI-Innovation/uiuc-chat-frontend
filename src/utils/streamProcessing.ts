@@ -767,12 +767,12 @@ export async function handleImageContent(
     )
 
     if (imgDescIndex !== -1) {
-      ;(message.content as Content[])[imgDescIndex] = {
+      ; (message.content as Content[])[imgDescIndex] = {
         type: 'text',
         text: `Image description: ${imgDesc}`,
       }
     } else {
-      ;(message.content as Content[]).push({
+      ; (message.content as Content[]).push({
         type: 'text',
         text: `Image description: ${imgDesc}`,
       })
@@ -851,7 +851,9 @@ export const routeModelRequest = async (
   console.log('In routeModelRequest: ', chatBody, baseUrl)
 
   const selectedConversation = chatBody.conversation!
+  console.log('Selected conversation:', selectedConversation)
   if (!selectedConversation.model || !selectedConversation.model.id) {
+    console.log('Invalid conversation:', selectedConversation)
     throw new Error('Conversation model is undefined or missing "id" property.')
   }
 

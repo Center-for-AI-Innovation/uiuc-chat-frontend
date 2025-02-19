@@ -63,6 +63,8 @@ import CustomCopyButton from '~/components/Buttons/CustomCopyButton'
 import { useDebouncedCallback } from 'use-debounce'
 import { findDefaultModel } from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
 import { type AllLLMProviders, ProviderNames } from '~/utils/modelProviders/LLMProvider'
+import { v4 as uuidv4 } from 'uuid'
+import { type Message, type Conversation, type ChatBody } from '~/types/chat'
 
 const montserrat = Montserrat({
   weight: '700',
@@ -183,20 +185,202 @@ const CourseMain: NextPage = () => {
     )
     : []
 
-  const { messages, input, handleInputChange, reload, setMessages, setInput } =
-    useChat({
-      api: `/api/chat/${getApiEndpoint(getProviderFromModel(selectedModel, modelOptions))}`,
-      headers: {
-        Authorization: `Bearer ${getProviderApiKey(getProviderFromModel(selectedModel, modelOptions), llmProviders)}`,
-      },
-      body: {
-        model: selectedModel || 'gpt-4'
-      }
-    })
+  const handleSubmitPromptOptimization = async (
+    e: any,
+  ) => {
+    e.preventDefault()
 
-  useEffect(() => {
-    setInput(baseSystemPrompt)
-  }, [baseSystemPrompt, setInput])
+    setMessages([])
+
+    if (!llmProviders) {
+      showToastNotification(
+        theme,
+        'Configuration Error',
+        'The Optimize System Prompt feature requires provider configuration to be loaded. Please refresh the page and try again.',
+        true
+      )
+      return
+    }
+
+    const provider = getProviderFromModel(selectedModel, modelOptions)
+
+    if (!llmProviders[provider]?.enabled) {
+      showToastNotification(
+        theme,
+        `${provider} Required`,
+        `The Optimize System Prompt feature requires ${provider} to be enabled. Please enable ${provider} on the LLM page in your course settings to use this feature.`,
+        true
+      )
+      return
+    }
+
+    // Only check for API key if the provider requires one
+    if (isApiKeyRequired(provider) && !llmProviders[provider]?.apiKey) {
+      showToastNotification(
+        theme,
+        `${provider} API Key Required`,
+        `The Optimize System Prompt feature requires a ${provider} API key. Please add your ${provider} API key on the LLM page in your course settings to use this feature.`,
+        true
+      )
+      return
+    }
+    const systemPrompt = `You are an expert prompt engineer. Your task is to analyze and optimize the provided system prompt while preserving and combining ALL of its components and functionality. IMPORTANT: The input may contain multiple sections that appear distinct - you MUST combine ALL sections into a single cohesive prompt.
+  
+  Key Requirements:
+  
+  1. Identify and Combine ALL Sections:
+     - Analyze the ENTIRE input prompt from start to finish
+     - Identify ALL distinct sections, even if they appear to be separate prompts
+     - Combine ALL sections into a single, cohesive system prompt
+     - Ensure NO content is lost or omitted, regardless of where it appears in the input
+  
+  2. Preserve ALL Functionality:
+     - Maintain ALL rules, constraints, and special behaviors from EVERY section
+     - Keep ALL examples and formatting specifications from THROUGHOUT the input
+     - Preserve ANY special modes or behaviors (e.g., guided learning, document-only mode)
+     - If sections seem to conflict, preserve BOTH behaviors and clarify when each applies
+  
+  3. Optimize and Integrate:
+     - Merge sections cohesively while maintaining their individual purposes
+     - Find common themes and combine related instructions
+     - Eliminate redundancy while preserving distinct functionalities
+     - Ensure all special behaviors are properly integrated
+     - Create smooth transitions between different aspects of the prompt
+  
+  4. Structure and Format:
+     - Use clear section headings to organize combined content
+     - Maintain specific formatting requirements from all sections
+     - Keep all examples and placeholders
+     - Preserve special syntax or notation from every section
+     - Create a logical flow between different types of instructions
+  
+  5. Reasoning and Logic Flow:
+     - Ensure reasoning steps precede conclusions in all cases
+     - If examples show reasoning after conclusions, restructure to put reasoning first
+     - Maintain clear logical progression across all combined sections
+     - Use explicit step-by-step breakdowns where appropriate
+  
+  6. Examples and Formatting:
+     - Include high-quality examples with [placeholders] for complex elements
+     - Use markdown for readability (avoid code blocks unless specifically requested)
+     - For structured data outputs (e.g., classification, JSON), prefer JSON format
+     - Never wrap JSON in code blocks unless explicitly requested
+     - If examples are simplified versions, add notes about real-world complexity
+  
+  7. Content Guidelines:
+     - Start with a clear, concise task description that encompasses ALL aspects
+     - Include constants (guides, rubrics, examples) as they resist prompt injection
+     - Break down vague instructions into clear sub-steps
+     - Preserve all user-provided details, guidelines, and variables
+     - Specify output format requirements in detail (length, structure, syntax)
+  
+  8. Output Requirements:
+     - Return the COMPLETE optimized prompt combining ALL sections
+     - Include ALL functionality from EVERY part of the original
+     - Maintain ALL special modes and behaviors from all sections
+     - Keep the same level of detail for critical components
+     - Follow this structure:
+       * Comprehensive task description (no header)
+       * Combined additional details
+       * Integrated sections with appropriate headings
+       * Unified output format
+       * Combined examples (if needed)
+       * Comprehensive notes (if needed)
+  
+  CRITICAL: Review the ENTIRE output to verify that NO aspects from ANY section of the input prompt have been omitted. The final prompt MUST incorporate ALL functionality and requirements from ALL sections of the input.
+  
+  Do not include any commentary or explanations. Output only the optimized system prompt.`
+
+    const chatBody: ChatBody = {
+      conversation: {
+        id: uuidv4(),
+        name: 'Prompt Optimization',
+        messages: [
+          {
+            id: uuidv4(),
+            role: 'system',
+            content: systemPrompt,
+          },
+          {
+            id: uuidv4(),
+            role: 'user',
+            content: baseSystemPrompt,
+          }
+        ],
+        model: {
+          id: selectedModel || 'gpt-4',
+          name: modelOptions.find(opt => opt.value === selectedModel)?.label || 'GPT-4',
+          tokenLimit: 8192,
+          enabled: true
+        },
+        prompt: baseSystemPrompt,
+        temperature: 0.7,
+        folderId: null,
+        userEmail: user?.emailAddresses?.[0]?.emailAddress
+      },
+      llmProviders: llmProviders,
+      course_name: course_name,
+      mode: 'optimize_prompt',
+      stream: true,
+      key: '',
+    }
+
+    try {
+      const response = await fetch('/api/allNewRoutingChat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(chatBody),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        showToastNotification(
+          theme,
+          'Error',
+          errorData.error || 'Failed to optimize prompt',
+          true
+        )
+        return
+      }
+
+      const reader = response.body?.getReader()
+      if (!reader) {
+        throw new Error('No reader available')
+      }
+
+      let optimizedPrompt = ''
+      const decoder = new TextDecoder()
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const chunk = decoder.decode(value)
+        optimizedPrompt += chunk
+
+        // Update messages state for real-time display
+        setMessages([
+          { role: 'assistant', content: optimizedPrompt }
+        ])
+      }
+
+      open() // Open the modal to show the optimized prompt
+    } catch (error) {
+      console.error('Error optimizing prompt:', error)
+      showToastNotification(
+        theme,
+        'Error',
+        'Failed to optimize prompt. Please try again.',
+        true
+      )
+    }
+  }
+
+  // Remove useChat hook
+  const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([])
+  const [input, setInput] = useState(baseSystemPrompt)
 
   useEffect(() => {
     if (llmProviders) {
@@ -271,6 +455,10 @@ const CourseMain: NextPage = () => {
     }
     fetchCourseData()
   }, [router.isReady, course_name])
+
+  useEffect(() => {
+    setInput(baseSystemPrompt)
+  }, [baseSystemPrompt])
 
   const handleSystemPromptSubmit = async (newSystemPrompt: string | undefined) => {
     let success = false
@@ -581,119 +769,6 @@ const CourseMain: NextPage = () => {
     )
   }
 
-  const handleSubmitPromptOptimization = async (
-    e: any,
-    reload: any,
-    setMessages: any,
-  ) => {
-    e.preventDefault()
-
-    if (!llmProviders) {
-      showToastNotification(
-        theme,
-        'Configuration Error',
-        'The Optimize System Prompt feature requires provider configuration to be loaded. Please refresh the page and try again.',
-        true
-      )
-      return
-    }
-
-    const provider = getProviderFromModel(selectedModel, modelOptions)
-
-    if (!llmProviders[provider]?.enabled) {
-      showToastNotification(
-        theme,
-        `${provider} Required`,
-        `The Optimize System Prompt feature requires ${provider} to be enabled. Please enable ${provider} on the LLM page in your course settings to use this feature.`,
-        true
-      )
-      return
-    }
-
-    // Only check for API key if the provider requires one
-    if (isApiKeyRequired(provider) && !llmProviders[provider]?.apiKey) {
-      showToastNotification(
-        theme,
-        `${provider} API Key Required`,
-        `The Optimize System Prompt feature requires a ${provider} API key. Please add your ${provider} API key on the LLM page in your course settings to use this feature.`,
-        true
-      )
-      return
-    }
-
-    const systemPrompt = `You are an expert prompt engineer. Your task is to analyze and optimize the provided system prompt while preserving and combining ALL of its components and functionality. IMPORTANT: The input may contain multiple sections that appear distinct - you MUST combine ALL sections into a single cohesive prompt.
-
-Key Requirements:
-
-1. Identify and Combine ALL Sections:
-   - Analyze the ENTIRE input prompt from start to finish
-   - Identify ALL distinct sections, even if they appear to be separate prompts
-   - Combine ALL sections into a single, cohesive system prompt
-   - Ensure NO content is lost or omitted, regardless of where it appears in the input
-
-2. Preserve ALL Functionality:
-   - Maintain ALL rules, constraints, and special behaviors from EVERY section
-   - Keep ALL examples and formatting specifications from THROUGHOUT the input
-   - Preserve ANY special modes or behaviors (e.g., guided learning, document-only mode)
-   - If sections seem to conflict, preserve BOTH behaviors and clarify when each applies
-
-3. Optimize and Integrate:
-   - Merge sections cohesively while maintaining their individual purposes
-   - Find common themes and combine related instructions
-   - Eliminate redundancy while preserving distinct functionalities
-   - Ensure all special behaviors are properly integrated
-   - Create smooth transitions between different aspects of the prompt
-
-4. Structure and Format:
-   - Use clear section headings to organize combined content
-   - Maintain specific formatting requirements from all sections
-   - Keep all examples and placeholders
-   - Preserve special syntax or notation from every section
-   - Create a logical flow between different types of instructions
-
-5. Reasoning and Logic Flow:
-   - Ensure reasoning steps precede conclusions in all cases
-   - If examples show reasoning after conclusions, restructure to put reasoning first
-   - Maintain clear logical progression across all combined sections
-   - Use explicit step-by-step breakdowns where appropriate
-
-6. Examples and Formatting:
-   - Include high-quality examples with [placeholders] for complex elements
-   - Use markdown for readability (avoid code blocks unless specifically requested)
-   - For structured data outputs (e.g., classification, JSON), prefer JSON format
-   - Never wrap JSON in code blocks unless explicitly requested
-   - If examples are simplified versions, add notes about real-world complexity
-
-7. Content Guidelines:
-   - Start with a clear, concise task description that encompasses ALL aspects
-   - Include constants (guides, rubrics, examples) as they resist prompt injection
-   - Break down vague instructions into clear sub-steps
-   - Preserve all user-provided details, guidelines, and variables
-   - Specify output format requirements in detail (length, structure, syntax)
-
-8. Output Requirements:
-   - Return the COMPLETE optimized prompt combining ALL sections
-   - Include ALL functionality from EVERY part of the original
-   - Maintain ALL special modes and behaviors from all sections
-   - Keep the same level of detail for critical components
-   - Follow this structure:
-     * Comprehensive task description (no header)
-     * Combined additional details
-     * Integrated sections with appropriate headings
-     * Unified output format
-     * Combined examples (if needed)
-     * Comprehensive notes (if needed)
-
-CRITICAL: Review the ENTIRE output to verify that NO aspects from ANY section of the input prompt have been omitted. The final prompt MUST incorporate ALL functionality and requirements from ALL sections of the input.
-
-Do not include any commentary or explanations. Output only the optimized system prompt.`
-
-    setMessages([
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: baseSystemPrompt },
-    ])
-    reload()
-  }
 
   // Add a loading state handler for the Optimize button
   const handleOptimizeClick = (e: React.MouseEvent) => {
@@ -730,7 +805,7 @@ Do not include any commentary or explanations. Output only the optimized system 
       return
     }
 
-    handleSubmitPromptOptimization(e, reload, setMessages)
+    handleSubmitPromptOptimization(e)
     open()
   }
 
@@ -1007,11 +1082,7 @@ Do not include any commentary or explanations. Output only the optimized system 
                             <form
                               className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                               onSubmit={(e) =>
-                                handleSubmitPromptOptimization(
-                                  e,
-                                  reload,
-                                  setMessages,
-                                )
+                                handleSubmitPromptOptimization(e)
                               }
                             >
                               <Select
@@ -1083,7 +1154,7 @@ Do not include any commentary or explanations. Output only the optimized system 
                                   radius="md"
                                   className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                                   type="button"
-                                  onClick={() => {
+                                  onClick={(e) => {
                                     handleSystemPromptSubmit(baseSystemPrompt)
                                   }}
                                   sx={(theme) => ({

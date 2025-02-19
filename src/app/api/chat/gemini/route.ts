@@ -53,7 +53,7 @@ export async function runGeminiChat(
     const messages = convertConversationToVercelAISDKv3(conversation)
     console.log('Converted messages:', JSON.stringify(messages, null, 2))
 
-    // Check if we're using vision model with image content
+    // Check if we're using vision model with image content 
     const hasImageContent = messages.some(
       (msg) =>
         typeof msg.content === 'object' &&
