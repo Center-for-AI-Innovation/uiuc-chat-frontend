@@ -1,20 +1,23 @@
 import {
   Card,
   Title,
-  Tabs,
-  Indicator,
-  Tooltip,
   Button,
   Modal,
   Text,
   createStyles,
+  Select,
 } from '@mantine/core'
 import { ProjectFilesTable } from './ProjectFilesTable'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { useState, useEffect } from 'react'
 import { useMediaQuery } from '@mantine/hooks'
-import { IconFileExport, IconRefresh } from '@tabler/icons-react'
+import {
+  IconFileExport,
+  IconRefresh,
+  IconChevronDown,
+  IconChevronLeft,
+} from '@tabler/icons-react'
 import { useRouter } from 'next/router'
 import { handleExport } from '~/pages/api/UIUC-api/exportAllDocuments'
 import { showToastOnUpdate } from './MakeQueryAnalysisPage'
@@ -75,10 +78,16 @@ function DocumentsCard({
   const [exportModalOpened, setExportModalOpened] = useState(false)
   const [rescrapeModalOpened, setRescrapeModalOpened] = useState(false)
   const [hasBaseUrls, setHasBaseUrls] = useState(false)
+  const [selectedBaseUrl, setSelectedBaseUrl] = useState<string | null>(null)
+  const [availableBaseUrls, setAvailableBaseUrls] = useState<
+    { value: string; label: string }[]
+  >([])
+  const [baseUrlsData, setBaseUrlsData] = useState<Record<string, any>>({})
   const router = useRouter()
   const { classes, theme } = useStyles()
   const queryClient = useQueryClient()
   const [uploadFiles, setUploadFiles] = useState<FileUpload[]>([])
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
   useEffect(() => {
     const checkIngestStatus = async () => {
@@ -223,9 +232,8 @@ function DocumentsCard({
     },
   })
 
-  const handleRescrape = async () => {
-    setRescrapeModalOpened(false)
-
+  // Function to fetch base URLs when modal opens
+  const fetchBaseUrls = async () => {
     try {
       const response = await fetch(
         `/api/materialsTable/getBaseUrlsWithGroups?course_name=${course_name}`,
@@ -234,13 +242,43 @@ function DocumentsCard({
         throw new Error('Failed to fetch base URLs')
       }
 
-      const baseUrlsData = await response.json()
-      const baseUrls = baseUrlsData.data
+      const { data: baseUrls } = await response.json()
 
-      if (!baseUrls || Object.keys(baseUrls).length === 0) {
+      if (baseUrls && Object.keys(baseUrls).length > 0) {
+        setBaseUrlsData(baseUrls) // Store the full base URLs data
+        const urlOptions = Object.keys(baseUrls).map((url) => ({
+          value: url,
+          label: url,
+        }))
+        // Add "All URLs" option at the beginning
+        urlOptions.unshift({ value: 'all', label: 'All URLs' })
+        setAvailableBaseUrls(urlOptions)
+        setSelectedBaseUrl('all') // Default to "All URLs"
+      } else {
+        showToastOnUpdate(theme, true, false, 'No documents found to rescrape')
+      }
+    } catch (error) {
+      showToastOnUpdate(theme, true, false, 'Failed to fetch base URLs')
+    }
+  }
+
+  const handleRescrape = async () => {
+    setRescrapeModalOpened(false)
+
+    try {
+      if (!baseUrlsData || Object.keys(baseUrlsData).length === 0) {
         showToastOnUpdate(theme, true, false, 'No documents found to rescrape')
         return
       }
+
+      // Filter base URLs if a specific one is selected
+      const urlsToProcess =
+        selectedBaseUrl === 'all'
+          ? baseUrlsData
+          : {
+              [selectedBaseUrl as string]:
+                baseUrlsData[selectedBaseUrl as string],
+            }
 
       // Create a Map to store normalized URLs and their original forms
       const normalizedToOriginal = new Map<
@@ -253,18 +291,27 @@ function DocumentsCard({
         try {
           const urlObj = new URL(url)
           // Remove protocol, www, trailing slashes, and normalize domain case
-          return (
-            urlObj.hostname.toLowerCase().replace(/^www\./, '') +
-            urlObj.pathname.toLowerCase().replace(/\/+$/, '') +
-            urlObj.search.toLowerCase()
-          )
+          const hostname = urlObj.hostname.toLowerCase().replace(/^www\./, '')
+          const pathname = urlObj.pathname.toLowerCase().replace(/\/+$/, '')
+          const search = urlObj.search.toLowerCase()
+
+          // Combine and ensure no double slashes
+          let normalizedUrl = hostname
+          if (pathname !== '/') {
+            normalizedUrl += pathname
+          }
+          if (search) {
+            normalizedUrl += search
+          }
+          return normalizedUrl
         } catch (error) {
-          return url
+          console.warn('Error normalizing URL:', url, error)
+          return url.toLowerCase()
         }
       }
 
       // First pass: Collect all normalized forms and detect duplicates
-      Object.entries(baseUrls).forEach(([baseUrl, groups]) => {
+      Object.entries(urlsToProcess).forEach(([baseUrl, groups]) => {
         try {
           const normalizedUrl = normalizeUrl(baseUrl)
           if (!normalizedToOriginal.has(normalizedUrl)) {
@@ -404,25 +451,192 @@ function DocumentsCard({
 
         <Modal
           opened={rescrapeModalOpened}
-          onClose={() => setRescrapeModalOpened(false)}
+          onClose={() => {
+            setRescrapeModalOpened(false)
+            setSelectedBaseUrl(null)
+          }}
           title="Please confirm your action"
+          centered
+          size={'lg'}
+          closeOnEscape={true}
+          transitionProps={{ transition: 'fade', duration: 200 }}
+          radius={'lg'}
+          overlayProps={{ blur: 3, opacity: 0.55 }}
+          styles={{
+            header: {
+              backgroundColor: '#15162c',
+              borderBottom: '2px solid',
+              borderColor: theme.colors.dark[3],
+              padding: '1.25rem',
+            },
+            body: {
+              backgroundColor: '#15162c',
+              padding: '1.5rem',
+              fontFamily: `var(${montserrat_paragraph.variable})`,
+            },
+            title: {
+              color: 'white',
+              fontFamily: `var(${montserrat_heading.variable})`,
+              fontWeight: 'bold',
+              fontSize: '1.25rem',
+            },
+            close: {
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'rgba(147, 112, 219, 0.2)',
+              },
+            },
+            inner: {
+              padding: '0.5rem',
+            },
+          }}
         >
-          <Text size="sm" style={{ color: 'white' }}>
-            {`Are you sure you want to rescrape all documents? This will update all previously scraped web content.`}
-          </Text>
-          <div className="mt-5 flex justify-end gap-2">
-            <Button
-              className="rounded-md bg-transparent text-white hover:bg-indigo-600"
-              onClick={() => setRescrapeModalOpened(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              className="rounded-md bg-purple-800 text-white hover:bg-indigo-600"
-              onClick={handleRescrape}
-            >
-              Rescrape
-            </Button>
+          <div className="flex flex-col gap-6">
+            <div className="py-4">
+              <Text
+                size="sm"
+                style={{
+                  color: 'white',
+                  lineHeight: 1.5,
+                  opacity: 0.9,
+                }}
+                className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+              >
+                Select which website content you want to rescrape. This will
+                refresh the previously downloaded web content.
+              </Text>
+
+              <div className="py-2">
+                <Select
+                  label="Select Website to Rescrape"
+                  placeholder="Choose a website to rescrape"
+                  value={selectedBaseUrl}
+                  onChange={(value) => {
+                    setSelectedBaseUrl(value)
+                    setIsDropdownOpen(false) // Close dropdown immediately on selection
+                  }}
+                  data={availableBaseUrls}
+                  searchable
+                  clearable={false}
+                  onDropdownOpen={() => setIsDropdownOpen(true)}
+                  onDropdownClose={() => setIsDropdownOpen(false)}
+                  transitionProps={{
+                    transition: 'pop',
+                    duration: 200,
+                    timingFunction: 'spring',
+                    exitDuration: 200,
+                  }}
+                  rightSection={
+                    <div>
+                      {isDropdownOpen ? (
+                        <IconChevronLeft
+                          size={16}
+                          color="rgba(255, 255, 255, 0.6)"
+                        />
+                      ) : (
+                        <IconChevronDown
+                          size={16}
+                          color="rgba(255, 255, 255, 0.6)"
+                        />
+                      )}
+                    </div>
+                  }
+                  styles={{
+                    label: {
+                      color: 'white',
+                      marginBottom: '0.5rem',
+                      fontFamily: `var(${montserrat_heading.variable})`,
+                      fontSize: '0.9rem',
+                    },
+                    input: {
+                      backgroundColor: '#1A1B1E',
+                      color: 'white',
+                      borderColor: '#2C2E33',
+                      paddingTop: '12px',
+                      paddingBottom: '12px',
+                      fontFamily: `var(${montserrat_paragraph.variable})`,
+                      cursor: 'pointer',
+                      transition: 'border-color 200ms ease',
+                      '&:hover': {
+                        borderColor: '#9370DB',
+                      },
+                      '&:focus': {
+                        borderColor: '#9370DB',
+                      },
+                    },
+                    dropdown: {
+                      backgroundColor: '#1A1B1E',
+                      borderColor: '#9370DB',
+                      boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.7)',
+                      marginTop: '4px',
+                      zIndex: 1000,
+                      fontFamily: `var(${montserrat_paragraph.variable})`,
+                      transformOrigin: 'top',
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      animation: 'scaleIn 200ms ease',
+                      '@keyframes scaleIn': {
+                        from: {
+                          opacity: 0,
+                          transform: 'scale(0.9)',
+                        },
+                        to: {
+                          opacity: 1,
+                          transform: 'scale(1)',
+                        },
+                      },
+                    },
+                    item: {
+                      color: 'white',
+                      fontFamily: `var(${montserrat_paragraph.variable})`,
+                      cursor: 'pointer',
+                      transition: 'background-color 200ms ease',
+                      '&[data-selected]': {
+                        backgroundColor: '#9370DB',
+                        color: 'white',
+                      },
+                      '&[data-hovered]': {
+                        backgroundColor: 'rgba(147, 112, 219, 0.2)',
+                        color: 'white',
+                      },
+                    },
+                    rightSection: {
+                      pointerEvents: 'none',
+                      transition: 'transform 200ms ease',
+                    },
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <Button
+                className={`
+                  rounded-md bg-transparent text-white hover:bg-indigo-600
+                  ${montserrat_paragraph.variable} px-6
+                  py-2 font-montserratParagraph transition-colors duration-150
+                `}
+                onClick={() => {
+                  setRescrapeModalOpened(false)
+                  setSelectedBaseUrl(null)
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                className={`
+                  rounded-md bg-purple-800 text-white hover:bg-indigo-600
+                  ${montserrat_paragraph.variable} px-6
+                  py-2 font-montserratParagraph transition-colors duration-150
+                `}
+                onClick={handleRescrape}
+                disabled={!selectedBaseUrl}
+              >
+                Rescrape Websites
+              </Button>
+            </div>
           </div>
         </Modal>
 
@@ -439,7 +653,10 @@ function DocumentsCard({
               <Button
                 variant="subtle"
                 leftIcon={<IconRefresh size={20} />}
-                onClick={() => setRescrapeModalOpened(true)}
+                onClick={async () => {
+                  await fetchBaseUrls()
+                  setRescrapeModalOpened(true)
+                }}
                 disabled={!hasBaseUrls}
                 className={`
                   ${montserrat_paragraph.variable} 
@@ -449,8 +666,8 @@ function DocumentsCard({
                   sm:text-base
                 `}
               >
-                <span className="hidden sm:inline">Rescrape Documents</span>
-                <span className="inline sm:hidden">Rescrape</span>
+                <span className="hidden sm:inline">Update Website Content</span>
+                <span className="inline sm:hidden">Update</span>
               </Button>
 
               <Button
