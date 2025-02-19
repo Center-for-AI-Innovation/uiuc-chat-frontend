@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Card, Text, Button, Tooltip } from '@mantine/core'
+import { Card, Text, Button, Tooltip, ActionIcon } from '@mantine/core'
 import {
   IconCheck,
   IconChevronDown,
@@ -17,11 +17,13 @@ import {
   IconPhoto,
   IconMusic,
   IconWorld,
+  IconCopy,
 } from '@tabler/icons-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { LoadingSpinner } from './LoadingSpinner'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useQuery } from '@tanstack/react-query'
+import { showNotification } from '@mantine/notifications'
 
 export interface FileUpload {
   name: string
@@ -292,18 +294,54 @@ function UploadNotificationContent({
                     >
                       {file.name ? truncateText(file.name, 30) : file.name}
                     </Text>
-                    <Text
-                      size="xs"
-                      className={`truncate text-[#8e8eb2] ${montserrat_paragraph.variable} font-montserratParagraph`}
-                      title={getStatusMessage(file.status)}
-                    >
-                      {getStatusMessage(
-                        file.status,
-                        file.url,
-                        file.type,
-                        file.isBaseUrl,
+                    <div className="flex items-center gap-2">
+                      <Text
+                        size="xs"
+                        className={`truncate text-[#8e8eb2] ${montserrat_paragraph.variable} font-montserratParagraph`}
+                        title={getStatusMessage(file.status)}
+                      >
+                        {getStatusMessage(
+                          file.status,
+                          file.url,
+                          file.type,
+                          file.isBaseUrl,
+                        )}
+                      </Text>
+                      {file.status === 'error' && file.url && (
+                        <Tooltip label="Copy URL" position="right">
+                          <ActionIcon
+                            size="xs"
+                            variant="subtle"
+                            onClick={() => {
+                              navigator.clipboard.writeText(file.url || '')
+                              showNotification({
+                                title: 'URL Copied',
+                                message: 'URL has been copied to clipboard',
+                                color: 'teal',
+                                icon: <IconCheck size={16} />,
+                                styles: (theme) => ({
+                                  root: {
+                                    backgroundColor: '#1a1b3b',
+                                    borderColor: theme.colors.teal[6],
+                                  },
+                                  title: { color: 'white' },
+                                  description: { color: 'white' },
+                                  closeButton: {
+                                    color: 'white',
+                                    '&:hover': {
+                                      backgroundColor: theme.colors.teal[7],
+                                    },
+                                  },
+                                }),
+                              })
+                            }}
+                            className="hover:bg-[#2a2c4c] hover:text-white"
+                          >
+                            <IconCopy size={12} className="text-[#8e8eb2]" />
+                          </ActionIcon>
+                        </Tooltip>
                       )}
-                    </Text>
+                    </div>
                   </div>
                   <div className="ml-2 flex items-center">
                     {(file.status === 'uploading' ||

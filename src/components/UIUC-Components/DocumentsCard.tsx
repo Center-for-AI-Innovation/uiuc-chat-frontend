@@ -88,6 +88,7 @@ function DocumentsCard({
   const queryClient = useQueryClient()
   const [uploadFiles, setUploadFiles] = useState<FileUpload[]>([])
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isRescraping, setIsRescraping] = useState(false)
 
   useEffect(() => {
     const checkIngestStatus = async () => {
@@ -264,10 +265,12 @@ function DocumentsCard({
 
   const handleRescrape = async () => {
     setRescrapeModalOpened(false)
+    setIsRescraping(true)
 
     try {
       if (!baseUrlsData || Object.keys(baseUrlsData).length === 0) {
         showToastOnUpdate(theme, true, false, 'No documents found to rescrape')
+        setIsRescraping(false)
         return
       }
 
@@ -405,6 +408,7 @@ function DocumentsCard({
         `Failed to rescrape documents: ${error.message || 'Unknown error'}`,
       )
     }
+    setIsRescraping(false)
   }
 
   const getCurrentPageName = () => {
@@ -652,12 +656,17 @@ function DocumentsCard({
             <div className="flex gap-2">
               <Button
                 variant="subtle"
-                leftIcon={<IconRefresh size={20} />}
+                leftIcon={
+                  <IconRefresh
+                    size={20}
+                    className={isRescraping ? 'animate-spin' : ''}
+                  />
+                }
                 onClick={async () => {
                   await fetchBaseUrls()
                   setRescrapeModalOpened(true)
                 }}
-                disabled={!hasBaseUrls}
+                disabled={!hasBaseUrls || isRescraping}
                 className={`
                   ${montserrat_paragraph.variable} 
                   rounded-3xl bg-purple-800 px-4 font-montserratParagraph
@@ -666,8 +675,12 @@ function DocumentsCard({
                   sm:text-base
                 `}
               >
-                <span className="hidden sm:inline">Update Website Content</span>
-                <span className="inline sm:hidden">Update</span>
+                <span className="hidden sm:inline">
+                  {isRescraping ? 'Rescraping...' : 'Rescrape Websites'}
+                </span>
+                <span className="inline sm:hidden">
+                  {isRescraping ? 'Updating...' : 'Update'}
+                </span>
               </Button>
 
               <Button
