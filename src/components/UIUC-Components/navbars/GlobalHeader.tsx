@@ -13,18 +13,18 @@ import { IconClipboardText, IconFile } from '@tabler/icons-react'
 export default function Header({ isNavbar = false }: { isNavbar?: boolean }) {
   const headerStyle = isNavbar
     ? {
-      backgroundColor: 'var(--illinois-blue)',  
-      display: 'flex',
-      justifyContent: 'flex-end',
-      padding: '0.2em 0.2em',
-      paddingRight: '0.3em',
-    }
+        backgroundColor: 'var(--background)', //illinois-blue
+        display: 'flex',
+        justifyContent: 'flex-end',
+        padding: '0.2em 0.2em',
+        //      paddingRight: '0.3em', //why?
+      }
     : {
-      backgroundImage: 'var(--illinois-blue)',  
-      display: 'flex',
-      justifyContent: 'flex-end',
-      padding: '1em',
-    }
+        backgroundColor: 'var(--background)', //illinois-blue
+        display: 'flex',
+        justifyContent: 'flex-end',
+        padding: '0.5em',
+      }
 
   const clerk_obj = useUser()
   const posthog = usePostHog()
@@ -114,18 +114,18 @@ export function LandingPageHeader({
   const { classes, theme } = useStyles()
   const headerStyle = forGeneralPurposeNotLandingpage
     ? {
-      backgroundColor: 'var(--illinois-blue)',  
-      display: 'flex',
-      justifyContent: 'flex-end',
-      padding: '0.2em 0.2em',
-      paddingRight: '0.3em',
-    }
+        backgroundColor: 'var(--background)', //illinois-blue
+        display: 'flex',
+        justifyContent: 'flex-end',
+        padding: '0.2em 0.2em',
+        //      paddingRight: '0.3em', //why?
+      }
     : {
-      backgroundColor: 'var(--illinois-blue)',  
-      display: 'flex',
-      justifyContent: 'flex-end',
-      padding: '1em',
-    }
+        backgroundColor: 'var(--background)', //illinois-blue
+        display: 'flex',
+        justifyContent: 'flex-end',
+        padding: '0.5em',
+      }
 
   const clerk_obj = useUser()
   const [userEmail, setUserEmail] = useState('no_email')
@@ -199,52 +199,69 @@ export function LandingPageHeader({
 
   return (
     <header style={headerStyle}>
-      <Group spacing={'xs'}>
-        {forGeneralPurposeNotLandingpage === false && (
-          <>
-            <Link href="/new" className={classes.link}>
-              <span style={{ display: 'flex', alignItems: 'center' }}>
-                <FileIcon />
-                <span
-                  className={`${montserrat_heading.variable} font-montserratHeading`}
-                >
-                  New project
+      <div className="flex-end m-auto flex w-full max-w-5xl items-center gap-2 ">
+        <div className="flex grow items-center gap-1 font-bold">
+          <div style={{ width: '1.95rem', height: '1.95rem' }}>
+            <img
+              src="/media/logo_illinois.png"
+              width="auto"
+              height="100%"
+            ></img>
+          </div>
+          <div className="text-[var(--illinois-orange)] sm:ml-4">Illinois</div>
+          <div className="text-[var(--illinois-blue)]">Chat</div>
+        </div>
+
+        {/*        <Group spacing={'xs'}> */}
+
+        {/*
+          {forGeneralPurposeNotLandingpage === false && (
+            <>
+              <Link href="/new" className={classes.link}>
+                <span style={{ display: 'flex', alignItems: 'center' }}>
+                  <FileIcon />
+                  <span
+                    className={`${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    New project
+                  </span>
                 </span>
-              </span>
-            </Link>
-            <Link
-              href="https://docs.uiuc.chat/"
-              className={classes.link}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <span style={{ display: 'flex', alignItems: 'center' }}>
-                <IconClipboardTexts />
-                <span
-                  className={`${montserrat_heading.variable} font-montserratHeading`}
-                >
-                  Docs
+              </Link>
+              <Link
+                href="https://docs.uiuc.chat/"
+                className={classes.link}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span style={{ display: 'flex', alignItems: 'center' }}>
+                  <IconClipboardTexts />
+                  <span
+                    className={`${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    Docs
+                  </span>
                 </span>
-              </span>
-            </Link>
-          </>
-        )}
+              </Link>
+            </>
+          )}
+*/}
+
         <SignedIn>
           {/* Docs: https://www.magicbell.com/docs/libraries/react#custom-themes */}
           {/* <MagicBell
-            apiKey={process.env.NEXT_PUBLIC_MAGIC_BELL_API as string}
-            userEmail={userEmail}
-            theme={magicBellTheme}
-            locale="en"
-            images={{
-              emptyInboxUrl:
-                'https://assets.kastan.ai/minified_empty_chat_art.png',
-            }}
-          >
-            {(props) => (
-              <FloatingNotificationInbox width={400} height={500} {...props} />
-            )}
-          </MagicBell> */}
+              apiKey={process.env.NEXT_PUBLIC_MAGIC_BELL_API as string}
+              userEmail={userEmail}
+              theme={magicBellTheme}
+              locale="en"
+              images={{
+                emptyInboxUrl:
+                  'https://assets.kastan.ai/minified_empty_chat_art.png',
+              }}
+            >
+              {(props) => (
+                <FloatingNotificationInbox width={400} height={500} {...props} />
+              )}
+            </MagicBell> */}
           {/* Add a bit of spacing with an empty div */}
           <div />
           {/* appearance={ } */}
@@ -255,16 +272,17 @@ export function LandingPageHeader({
         <SignedOut>
           {/* Signed out users get sign in button */}
           <SignInButton>
-            <button className={classes.link}>
+            <button className={classes.link} style={{ borderRadius: '.25rem' }}>
               <span
                 className={`${montserrat_heading.variable} font-montserratHeading`}
               >
-                Sign in / Sign up
+                Login / Signup
               </span>
             </button>
           </SignInButton>
         </SignedOut>
-      </Group>
+        {/*        </Group> */}
+      </div>
     </header>
   )
 }
@@ -306,27 +324,41 @@ const useStyles = createStyles((theme) => ({
     },
   },
   link: {
-    fontSize: rem(13),
-    color: 'var(--illinois-white)',  
-    padding: `${theme.spacing.sm} ${theme.spacing.xs}`,
-    fontWeight: 700,
-    transition: 'border-color 100ms ease, color 100ms ease, background-color 100ms ease',
-    borderRadius: theme.radius.sm,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
 
+    height: '2.2rem',
+
+    color: 'var(--illinois-orange)', //illinois-white
+    padding: `${theme.spacing.xs}`, //${theme.spacing.sm} ${theme.spacing.xs}
+
+    fontSize: rem(11),
+    fontWeight: 700,
+
+    border: `1px solid var(--illinois-orange)}`,
+    //    borderRadius: '10px', //theme.radius.sm, //not sure why, but this isn't working here so was placed inline on each button
+
+    transition:
+      'border-color 100ms ease, color 100ms ease, background-color 100ms ease',
+
+    /* disabling this for now as it changes ALL divs on the page (and is weird when a non-button reacts to a hover)
     '&:hover': {
-      color: 'var(--illinois-industrial)',  
-      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      color: '#0ff', //'hsl(from var(--illinois-orange) h s 30%)', //'var(--illinois-orange)', //illinois-industrial
+      borderColor: 'hsl(from var(--illinois-orange) h s 30%)',
+//      backgroundColor: 'color-mix(in srgb, var(--illinois-orange) 10%, transparent);', //'rgba(255, 255, 255, 0.1)',
       textDecoration: 'none',
-      borderRadius: '10px',
+//      borderRadius: '10px',
     },
     '&[data-active="true"]': {
       color: 'var(--illinois-industrial)',  
       borderBottom: '2px solid var(--illinois-industrial)',  
       textDecoration: 'none',
-      borderRadius: '10px',
+//      borderRadius: '10px',
       backgroundColor: 'rgba(255, 255, 255, 0.1)',
       textAlign: 'right',
     },
+*/
   },
 }))
 
