@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Card, Text, Button, Tooltip, ActionIcon } from '@mantine/core'
 import {
   IconCheck,
@@ -63,11 +63,29 @@ function UploadNotificationContent({
 }: UploadNotificationProps) {
   const [isMinimized, setIsMinimized] = useState(false)
   const [currentFiles, setCurrentFiles] = useState<FileUpload[]>([])
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const prevFilesLengthRef = useRef(currentFiles.length)
   const { data: failedDocuments } = useQuery<FailedDocumentsResponse>({
     queryKey: ['failedDocuments', projectName, 1, '', '', 'created_at', 'desc'],
     staleTime: 10000,
     enabled: !!projectName,
   })
+
+  // Separate useEffect for scrolling
+  useEffect(() => {
+    // Only scroll if we have more files than before and not minimized
+    if (currentFiles.length > prevFilesLengthRef.current && !isMinimized) {
+      const scrollContainer = scrollContainerRef.current
+      if (scrollContainer) {
+        scrollContainer.scrollTo({
+          top: scrollContainer.scrollHeight,
+          behavior: 'smooth',
+        })
+      }
+    }
+    prevFilesLengthRef.current = currentFiles.length
+  }, [currentFiles.length, isMinimized])
+
   useEffect(() => {
     if (files && Array.isArray(files)) {
       setCurrentFiles((prevFiles) => {
@@ -104,6 +122,7 @@ function UploadNotificationContent({
             return file
           })
         }
+
         return updatedFiles
       })
     }
@@ -265,9 +284,12 @@ function UploadNotificationContent({
       </div>
 
       {!isMinimized && (
-        <div className="max-h-[300px] overflow-y-auto px-5 py-4">
+        <div
+          ref={scrollContainerRef}
+          className="max-h-[300px] overflow-y-auto scroll-smooth px-5 py-4"
+        >
           <AnimatePresence>
-            {currentFiles.map((file) => (
+            {currentFiles.map((file, index) => (
               <motion.div
                 key={file.name}
                 initial={{ opacity: 0, y: 20 }}
