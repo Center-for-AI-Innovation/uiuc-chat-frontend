@@ -10,39 +10,39 @@
 
 :root {
   /* Primary Colors */
-  --illinois-orange: #FF5F05;
-  --illinois-blue: #13294B;
-  
+  --illinois-orange: #ff5f05;
+  --illinois-blue: #13294b;
+
   /* Secondary Colors (Storm) */
   --illinois-storm-dark: #707372;
-  --illinois-storm-medium: #9C9A9D;
-  --illinois-storm-light: #C8C6C7;
-  --illinois-white: #FFFFFF;
+  --illinois-storm-medium: #9c9a9d;
+  --illinois-storm-light: #c8c6c7;
+  --illinois-white: #ffffff;
   --illinois-black: #000000;
 
   /* Supporting Colors */
-  --illinois-industrial: #1D58A7;
-  --illinois-arches: #009FD4;
-  --illinois-patina: #007E8E;
-  --illinois-berry: #5C0E41;
-  --illinois-harvest: #FCB316;
+  --illinois-industrial: #1d58a7;
+  --illinois-arches: #009fd4;
+  --illinois-patina: #007e8e;
+  --illinois-berry: #5c0e41;
+  --illinois-harvest: #fcb316;
   --illinois-prairie: #006230;
-  --illinois-earth: #7D3E13;
-  
+  --illinois-earth: #7d3e13;
+
   /* Accessibility Colors */
-  --illinois-altgeld: #C84113;
+  --illinois-altgeld: #c84113;
 
   /* Background Colors */
-  --illinois-storm-95: #F4F4F4;
+  --illinois-storm-95: #f4f4f4;
   --illinois-storm-10: #252525;
 
   /* Existing variables mapped to UIUC colors */
   --background: var(--illinois-white);
-  --foreground: var(--illinois-storm-10);
-  
+  --foreground: var(--illinois-blue);
+
   --primary: var(--illinois-orange);
   --primary-foreground: var(--illinois-white);
-  
+
   --secondary: var(--illinois-blue);
   --secondary-foreground: var(--illinois-white);
 
@@ -71,14 +71,17 @@
   --illinois-gold: #ffd700;
   --illinois-purple-light: #9d4edd;
 
-  
   /* Gradients */
-  --illinois-blue-gradient: linear-gradient(to top, #1d58a7, #13294b);
-  --illinois-orange-gradient: linear-gradient(to top, #fcb316, #ff5f05);
+  --illinois-blue-gradient: linear-gradient(135deg, #1d58a7, #13294b);
+  --illinois-orange-gradient: linear-gradient(-135deg, #fcb316, #ff5f05);
 }
+
 .illinois-blue-gradient-bg {
-  background-image: var(--illinois-blue-gradient);
+  /*  background-image: var(--illinois-blue-gradient);*/
+  color: var(--foreground);
+  background: var(--background);
 }
+
 .dark {
   --background: var(--illinois-blue);
   --foreground: var(--illinois-white);
@@ -103,16 +106,16 @@
   --ring: var(--illinois-orange);
 }
 
-/* Force dark mode for all users!! */
+/* Force light mode for all users!! */
 @media (prefers-color-scheme: dark) {
   html {
-    color-scheme: dark;
+    color-scheme: light;
   }
 }
 
 @media (prefers-color-scheme: light) {
   html {
-    color-scheme: dark;
+    color-scheme: light;
   }
 }
 
@@ -143,7 +146,8 @@
 }
 
 html {
-  background: var(--illinois-background-dark);
+  /*  background: var(--illinois-background-dark);*/
+  background: var(--illinois-white);
 }
 
 @media (max-width: 720px) {
@@ -180,14 +184,16 @@ pre:has(div.codeblock) {
 }
 
 /* Make the purple background fade out  */
-.course-page-main {
+.course-page-main2 {
   /* height: 400px;     */
-  background: -webkit-gradient(linear,
-      left top,
-      left bottom,
-      from(var(--illinois-purple)),
-      to(var(--illinois-background-darker)),
-      color-stop(0.75, var(--illinois-purple-dark)));
+  background: -webkit-gradient(
+    linear,
+    left top,
+    left bottom,
+    from(var(--illinois-purple)),
+    to(var(--illinois-background-darker)),
+    color-stop(0.75, var(--illinois-purple-dark))
+  );
   background-color: var(--illinois-background-darker);
   background-size:
     100% 45%,
@@ -221,7 +227,11 @@ pre:has(div.codeblock) {
   right: 0;
   width: 40%;
   height: 1.2em;
-  background: linear-gradient(to right, rgba(255, 255, 255, 0), var(--illinois-background-darker) 90%);
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0),
+    var(--illinois-background-darker) 90%
+  );
 }
 
 .fade-3-lines::after {
@@ -232,7 +242,11 @@ pre:has(div.codeblock) {
   right: 0;
   width: 40%;
   height: 1.2em;
-  background: linear-gradient(to right, rgba(255, 255, 255, 0), var(--illinois-background-darker) 90%);
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0),
+    var(--illinois-background-darker) 90%
+  );
 }
 
 /* Standard list properties. Didn't work before manually adding this. */
@@ -351,16 +365,13 @@ li {
   bottom: 0;
   left: 0;
   transform: translateX(-100%);
-  background-image: linear-gradient(90deg,
-      rgba(19, 41, 75, 0),
-      /* illinois-blue */
-      rgba(112, 115, 114, 0.2),
-      /* illinois-storm-dark */
-      rgba(29, 88, 167, 0.5),
-      /* illinois-industrial */
-      rgba(92, 14, 65, 0)
-      /* illinois-berry */
-    );
+  background-image: linear-gradient(
+    90deg,
+    rgba(19, 41, 75, 0),
+    /* illinois-blue */ rgba(112, 115, 114, 0.2),
+    /* illinois-storm-dark */ rgba(29, 88, 167, 0.5),
+    /* illinois-industrial */ rgba(92, 14, 65, 0) /* illinois-berry */
+  );
   /* Changed the primary color to purple-900 */
   animation: shimmer 5s infinite;
   content: '';
