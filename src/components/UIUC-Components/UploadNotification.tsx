@@ -356,7 +356,9 @@ function UploadNotificationContent({
                           tooltip: `${montserrat_paragraph.variable} font-montserratParagraph`,
                         }}
                       >
-                        <LoadingSpinner size="xs" />
+                        <div className="flex items-center justify-center">
+                          <LoadingSpinner size="xs" />
+                        </div>
                       </Tooltip>
                     )}
                     {file.status === 'complete' && (
