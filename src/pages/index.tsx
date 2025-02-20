@@ -37,7 +37,7 @@ const Home: NextPage = () => {
       <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#0E1116]">
         <div className="container flex w-full max-w-[95vw] flex-col items-center justify-center gap-4 px-4 py-8">
           <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
-            UIUC.<span className="text-[hsl(280,100%,70%)]">chat</span>
+            mHealth <span className="text-[hsl(280,100%,70%)]">Chatbot</span>
           </h1>
           <div className="w-full max-w-4xl">
             {/* size="lg"
@@ -53,9 +53,9 @@ const Home: NextPage = () => {
               ta="center"
               mt="md"
             >
-              Upload anything. Search everything.
+              Chat with your personal trainer
               <br></br>
-              <span className="home-header_text-underline">Discover More.</span>
+              <span className="home-header_text-underline">Be healthy</span>
             </Title>
 
             {/* <Text color="#57534e" c="dimmed" ta="center" mt="md">
@@ -63,22 +63,16 @@ const Home: NextPage = () => {
               <br></br>
               Test it in your area of expertise to best assess its capabilities.
             </Text> */}
-
-            <Text color="white" ta="center" weight={500} size="lg">
-              <span className="font-bold">Upload</span> your videos, any number
-              of PDFs, PowerPoint, Word, Excel and almost anything other
-              document to chat with your knowledge base.
-            </Text>
           </div>
 
           <ListProjectTable />
 
-          <Title color="white" order={3}>
+          {/* <Title color="white" order={3}>
             Explore the Courses
-          </Title>
+          </Title> */}
 
           {/* Main courses */}
-          <CourseCard />
+          {/* <CourseCard /> */}
 
           <h4 className="font-extrabold tracking-tight text-white sm:text-[3rem]">
             <div>

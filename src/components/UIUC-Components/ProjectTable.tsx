@@ -10,7 +10,11 @@ import { montserrat_heading } from 'fonts'
 import Link from 'next/link'
 import React from 'react'
 import { useMediaQuery } from '@mantine/hooks'
-import { IconChevronUp, IconChevronDown, IconSelector } from '@tabler/icons-react'
+import {
+  IconChevronUp,
+  IconChevronDown,
+  IconSelector,
+} from '@tabler/icons-react'
 
 const StyledRow = styled.tr`
   &:hover {
@@ -21,6 +25,7 @@ const StyledRow = styled.tr`
 const StyledTable = styled(Table)`
   table-layout: fixed;
   width: 100%;
+  margin: 0 auto;
 
   th,
   td {
@@ -28,6 +33,7 @@ const StyledTable = styled(Table)`
     overflow-wrap: break-word;
     hyphens: auto;
     padding: 8px;
+    height: 50px;
   }
 `
 
@@ -56,12 +62,14 @@ const ResponsiveTableWrapper = styled.div`
   }
 `
 
-type SortDirection = 'asc' | 'desc' | null;
-type SortableColumn = 'name' | 'privacy' | 'owner' | 'admins';
+type SortDirection = 'asc' | 'desc' | null
+type SortableColumn = 'name' | 'privacy' | 'owner' | 'admins'
 
 const ListProjectTable: React.FC = () => {
   const clerk_user = useUser()
-  const [courses, setProjects] = useState<{ [key: string]: CourseMetadata }[] | null>(null)
+  const [courses, setProjects] = useState<
+    { [key: string]: CourseMetadata }[] | null
+  >(null)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const [rows, setRows] = useState<JSX.Element[]>([])
@@ -69,7 +77,9 @@ const ListProjectTable: React.FC = () => {
   const isMobile = useMediaQuery('(max-width: 768px)')
   const [sortColumn, setSortColumn] = useState<SortableColumn>('name')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
-  const [rawData, setRawData] = useState<{ [key: string]: CourseMetadata }[]>([])
+  const [rawData, setRawData] = useState<{ [key: string]: CourseMetadata }[]>(
+    [],
+  )
 
   const handleSort = (column: SortableColumn) => {
     if (sortColumn === column) {
@@ -81,54 +91,73 @@ const ListProjectTable: React.FC = () => {
   }
 
   const getSortIcon = (column: SortableColumn) => {
-    if (sortColumn !== column) return <IconSelector size={14} />;
-    return sortDirection === 'asc' ? <IconChevronUp size={14} /> : <IconChevronDown size={14} />;
+    if (sortColumn !== column) return <IconSelector size={14} />
+    return sortDirection === 'asc' ? (
+      <IconChevronUp size={14} />
+    ) : (
+      <IconChevronDown size={14} />
+    )
   }
 
   const sortData = () => {
-    if (!rawData) return;
+    if (!rawData) return
 
     const sortedData = [...rawData].sort((a, b) => {
-      const courseNameA = Object.keys(a)[0] ?? '';
-      const courseNameB = Object.keys(b)[0] ?? '';
-      const metadataA = a[courseNameA as keyof typeof a];
-      const metadataB = b[courseNameB as keyof typeof b];
+      const courseNameA = Object.keys(a)[0] ?? ''
+      const courseNameB = Object.keys(b)[0] ?? ''
+      const metadataA = a[courseNameA as keyof typeof a]
+      const metadataB = b[courseNameB as keyof typeof b]
 
-      if (!metadataA || !metadataB) return 0;
+      if (!metadataA || !metadataB) return 0
 
-      let comparison = 0;
+      let comparison = 0
       switch (sortColumn) {
         case 'name':
-          comparison = courseNameA.toLowerCase().localeCompare(courseNameB.toLowerCase());
-          break;
+          comparison = courseNameA
+            .toLowerCase()
+            .localeCompare(courseNameB.toLowerCase())
+          break
         case 'privacy':
-          comparison = (metadataA.is_private === metadataB.is_private) ? 0 : metadataA.is_private ? 1 : -1;
-          break;
+          comparison =
+            metadataA.is_private === metadataB.is_private
+              ? 0
+              : metadataA.is_private
+                ? 1
+                : -1
+          break
         case 'owner':
-          comparison = metadataA.course_owner.toLowerCase().localeCompare(metadataB.course_owner.toLowerCase());
-          break;
+          comparison = metadataA.course_owner
+            .toLowerCase()
+            .localeCompare(metadataB.course_owner.toLowerCase())
+          break
         case 'admins':
-          const adminsA = metadataA.course_admins.filter((admin: string) => admin !== 'kvday2@illinois.edu').join(', ');
-          const adminsB = metadataB.course_admins.filter((admin: string) => admin !== 'kvday2@illinois.edu').join(', ');
-          comparison = adminsA.toLowerCase().localeCompare(adminsB.toLowerCase());
-          break;
+          const adminsA = metadataA.course_admins
+            .filter((admin: string) => admin !== 'kvday2@illinois.edu')
+            .join(', ')
+          const adminsB = metadataB.course_admins
+            .filter((admin: string) => admin !== 'kvday2@illinois.edu')
+            .join(', ')
+          comparison = adminsA
+            .toLowerCase()
+            .localeCompare(adminsB.toLowerCase())
+          break
       }
 
-      return sortDirection === 'asc' ? comparison : -comparison;
-    });
+      return sortDirection === 'asc' ? comparison : -comparison
+    })
 
     const newRows = sortedData
       .map((course) => {
-        const courseName = Object.keys(course)[0];
-        if (!courseName) return null;
-        
-        const courseMetadata = course[courseName as keyof typeof course];
-        if (!courseMetadata) return null;
+        const courseName = Object.keys(course)[0]
+        if (!courseName) return null
+
+        const courseMetadata = course[courseName as keyof typeof course]
+        if (!courseMetadata) return null
 
         const filteredAdmins = courseMetadata.course_admins.filter(
-          (admin: string) => admin !== 'kvday2@illinois.edu'
-        );
-        
+          (admin: string) => admin !== 'kvday2@illinois.edu',
+        )
+
         return (
           <StyledRow
             key={courseName}
@@ -136,20 +165,20 @@ const ListProjectTable: React.FC = () => {
             style={{ cursor: 'pointer' }}
           >
             <td>{courseName}</td>
-            <td>{courseMetadata.is_private ? 'Private' : 'Public'}</td>
+            {/* <td>{courseMetadata.is_private ? 'Private' : 'Public'}</td>
             <td>{courseMetadata.course_owner}</td>
-            <td>{filteredAdmins.join(', ')}</td>
+            <td>{filteredAdmins.join(', ')}</td> */}
           </StyledRow>
-        );
+        )
       })
-      .filter((row): row is JSX.Element => row !== null);
+      .filter((row): row is JSX.Element => row !== null)
 
-    setRows(newRows);
+    setRows(newRows)
   }
 
   useEffect(() => {
-    sortData();
-  }, [sortColumn, sortDirection, rawData]);
+    sortData()
+  }, [sortColumn, sortDirection, rawData])
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -172,7 +201,7 @@ const ListProjectTable: React.FC = () => {
         )
         const data = await response.json()
         if (data) {
-          setRawData(data);
+          setRawData(data)
           setIsFullyLoaded(true)
         } else {
           console.log('No project found with the given name')
@@ -206,34 +235,43 @@ const ListProjectTable: React.FC = () => {
       <>
         <div className="mx-auto w-full md:w-4/5">
           <Title order={2} color="white" ta="center" pb={16} pt={8}>
-            Your Projects
+            Explore the mHealth Chatbot
           </Title>
           {rows.length > 0 ? (
             <div
               style={{
                 overflowX: 'auto',
-                width: '100%',
+                width: '50%',
                 backgroundColor: '#15162b',
                 boxShadow: '0px 0px 10px 2px rgba(0,0,0,0,5)',
                 borderRadius: '15px',
+                margin: '0 auto',
               }}
             >
               <StyledTable>
                 <thead>
                   <tr>
                     {[
-                      { label: 'Project Name', key: 'name' },
-                      { label: 'Privacy', key: 'privacy' },
-                      { label: 'Project Owner', key: 'owner' },
-                      { label: 'Project Admins', key: 'admins' }
+                      { label: 'Chatbot Name', key: 'name' },
+                      // { label: 'Privacy', key: 'privacy' },
+                      // { label: 'Project Owner', key: 'owner' },
+                      // { label: 'Project Admins', key: 'admins' }
                     ].map(({ label, key }) => (
-                      <th 
-                        key={key} 
+                      <th
+                        key={key}
                         onClick={() => handleSort(key as SortableColumn)}
                         style={{ cursor: 'pointer' }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <span className={`text-md text-slate-200 ${montserrat_heading.variable} font-montserratHeading`}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                          }}
+                        >
+                          <span
+                            className={`text-md text-slate-200 ${montserrat_heading.variable} font-montserratHeading`}
+                          >
                             {label}
                           </span>
                           {getSortIcon(key as SortableColumn)}
