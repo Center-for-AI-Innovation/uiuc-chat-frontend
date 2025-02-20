@@ -1710,6 +1710,7 @@ export const Chat = memo(
                     }}
                     onScrollDownClick={handleScrollDown}
                     showScrollDownButton={showScrollDownButton}
+                    onRegenerate={handleRegenerate}
                     inputContent={inputContent}
                     setInputContent={setInputContent}
                     courseName={getCurrentPageName()}
