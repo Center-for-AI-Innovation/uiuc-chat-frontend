@@ -1046,15 +1046,65 @@ const CourseMain: NextPage = () => {
                               background: '#15162c',
                             }}
                           >
-                            <Flex justify="space-between" align="center">
-                              <Title
-                                className={`label ${montserrat_heading.variable} pl-3 font-montserratHeading md:pl-0`}
-                                variant="gradient"
-                                gradient={{ from: 'gold', to: 'white', deg: 170 }}
-                                order={4}
-                              >
-                                System Prompt
-                              </Title>
+                            <Flex justify="space-between" align="center" mb="md">
+                              <Flex align="center" gap="md">
+                                <Title
+                                  className={`label ${montserrat_heading.variable} pl-3 font-montserratHeading md:pl-0`}
+                                  variant="gradient"
+                                  gradient={{ from: 'gold', to: 'white', deg: 170 }}
+                                  order={4}
+                                >
+                                  System Prompt
+                                </Title>
+                                <Select
+                                  placeholder="Select model"
+                                  data={modelOptions}
+                                  value={selectedModel}
+                                  onChange={(value) => setSelectedModel(value || '')}
+                                  searchable
+                                  radius={'md'}
+                                  maxDropdownHeight={280}
+                                  styles={(theme) => ({
+                                    root: {
+                                      width: '280px',
+                                      zIndex: 200,
+                                    },
+                                    input: {
+                                      '&:focus': {
+                                        borderColor: '#6e56cf',
+                                      },
+                                      backgroundColor: '#1a1b3e',
+                                      fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+                                      cursor: 'pointer',
+                                      minWidth: 0,
+                                      flex: '1 1 auto',
+                                      height: '36px',
+                                    },
+                                    dropdown: {
+                                      backgroundColor: '#1a1b3e',
+                                      zIndex: 200,
+                                    },
+                                    item: {
+                                      '&[data-selected]': {
+                                        backgroundColor: theme.colors.grape[9],
+                                        '&:hover': {
+                                          backgroundColor: theme.colors.grape[8],
+                                        },
+                                      },
+                                      fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+                                      cursor: 'pointer',
+                                      whiteSpace: 'normal',
+                                      lineHeight: 1.2,
+                                    },
+                                    rightSection: {
+                                      pointerEvents: 'none',
+                                      color: theme.colors.gray[5],
+                                    },
+                                  })}
+                                  className={`min-w-0 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                  rightSection={<IconChevronDown size={14} />}
+                                />
+                              </Flex>
                               {isRightSideVisible ? (
                                 <Tooltip label="Close Prompt Builder" key="close">
                                   <div className="cursor-pointer p-4 hover:opacity-75 md:p-0">
@@ -1085,48 +1135,6 @@ const CourseMain: NextPage = () => {
                                 handleSubmitPromptOptimization(e)
                               }
                             >
-                              <Select
-                                placeholder="Select model"
-                                data={modelOptions}
-                                value={selectedModel}
-                                onChange={(value) => setSelectedModel(value || '')}
-                                searchable
-                                radius={'md'}
-                                maxDropdownHeight={400}
-                                styles={(theme) => ({
-                                  input: {
-                                    '&:focus': {
-                                      borderColor: '#6e56cf',
-                                    },
-                                    backgroundColor: '#1a1b3e',
-                                    fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
-                                    cursor: 'pointer',
-                                    minWidth: 0,
-                                    flex: '1 1 auto',
-                                  },
-                                  dropdown: {
-                                    backgroundColor: '#1a1b3e',
-                                  },
-                                  item: {
-                                    '&[data-selected]': {
-                                      backgroundColor: theme.colors.grape[9],
-                                      '&:hover': {
-                                        backgroundColor: theme.colors.grape[8],
-                                      },
-                                    },
-                                    fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
-                                    cursor: 'pointer',
-                                    whiteSpace: 'normal',
-                                    lineHeight: 1.2,
-                                  },
-                                  rightSection: {
-                                    pointerEvents: 'none',
-                                    color: theme.colors.gray[5],
-                                  },
-                                })}
-                                className={`min-w-0 flex-1 mb-4 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                rightSection={<IconChevronDown size={14} />}
-                              />
                               <Textarea
                                 autosize
                                 minRows={3}
