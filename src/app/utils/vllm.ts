@@ -33,15 +33,17 @@ export async function runVLLM(
     maxTokens: 8192,
   }
 
-  console.log('commonParams', commonParams)
-
   if (stream) {
     const result = await streamText(commonParams as any)
     return result.toTextStreamResponse()
   } else {
     const result = await generateText(commonParams as any)
-    const choices = [{ message: { content: result.text } }]
-    return { choices }
+    return new Response(
+      JSON.stringify({ choices: [{ message: { content: result.text } }] }),
+      {
+        headers: { 'Content-Type': 'application/json' },
+      },
+    )
   }
 }
 
