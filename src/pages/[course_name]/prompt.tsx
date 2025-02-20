@@ -104,21 +104,6 @@ const getProviderFromModel = (modelId: string, modelOptions: ModelOption[]): Pro
   return selectedOption?.group || ProviderNames.OpenAI
 }
 
-const getApiEndpoint = (provider: ProviderNames): string => {
-  const endpoints: Record<ProviderNames, string> = {
-    [ProviderNames.OpenAI]: 'openAI',
-    [ProviderNames.Anthropic]: 'anthropic',
-    [ProviderNames.Ollama]: 'ollama',
-    [ProviderNames.Gemini]: 'gemini',
-    [ProviderNames.Bedrock]: 'bedrock',
-    [ProviderNames.Azure]: 'azure',
-    [ProviderNames.NCSAHosted]: 'ncsa',
-    [ProviderNames.WebLLM]: 'webllm',
-    [ProviderNames.NCSAHostedVLM]: 'vlm'
-  }
-  return endpoints[provider]
-}
-
 const isApiKeyRequired = (provider: ProviderNames): boolean => {
   const providersRequiringApiKey = [
     ProviderNames.OpenAI,
@@ -128,25 +113,6 @@ const isApiKeyRequired = (provider: ProviderNames): boolean => {
     ProviderNames.Bedrock
   ]
   return providersRequiringApiKey.includes(provider)
-}
-
-const getProviderApiKey = (provider: ProviderNames, llmProviders: AllLLMProviders | null): string => {
-  // First check if llmProviders is loaded
-  if (!llmProviders) {
-    return ''
-  }
-
-  // Don't require API key for open source models
-  if (!isApiKeyRequired(provider)) {
-    return ''
-  }
-
-  // Check if the provider exists and has an API key
-  if (llmProviders[provider]?.apiKey) {
-    return llmProviders[provider].apiKey
-  }
-
-  return ''
 }
 
 const CourseMain: NextPage = () => {
@@ -170,6 +136,9 @@ const CourseMain: NextPage = () => {
   const [resetModalOpened, { close: closeResetModal, open: openResetModal }] = useDisclosure(false)
   const [llmProviders, setLLMProviders] = useState<any>(null)
   const [linkGeneratorOpened, { open: openLinkGenerator, close: closeLinkGenerator }] = useDisclosure(false)
+  const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([])
+  const [input, setInput] = useState(baseSystemPrompt)
+  const [isOptimizing, setIsOptimizing] = useState(false)
 
   const modelOptions = llmProviders
     ? Object.entries(llmProviders as AllLLMProviders).flatMap(([provider, config]) =>
@@ -189,42 +158,53 @@ const CourseMain: NextPage = () => {
     e: any,
   ) => {
     e.preventDefault()
-
+    setIsOptimizing(true)
     setMessages([])
 
-    if (!llmProviders) {
-      showToastNotification(
-        theme,
-        'Configuration Error',
-        'The Optimize System Prompt feature requires provider configuration to be loaded. Please refresh the page and try again.',
-        true
-      )
-      return
-    }
+    try {
+      if (!llmProviders) {
+        showToastNotification(
+          theme,
+          'Configuration Error',
+          'The Optimize System Prompt feature requires provider configuration to be loaded. Please refresh the page and try again.',
+          true
+        )
+        return
+      }
 
-    const provider = getProviderFromModel(selectedModel, modelOptions)
+      const provider = getProviderFromModel(selectedModel, modelOptions)
+      if (!llmProviders[provider]?.enabled) {
+        showToastNotification(
+          theme,
+          `${provider} Required`,
+          `The Optimize System Prompt feature requires ${provider} to be enabled. Please enable ${provider} on the LLM page in your course settings to use this feature.`,
+          true
+        )
+        return
+      }
 
-    if (!llmProviders[provider]?.enabled) {
-      showToastNotification(
-        theme,
-        `${provider} Required`,
-        `The Optimize System Prompt feature requires ${provider} to be enabled. Please enable ${provider} on the LLM page in your course settings to use this feature.`,
-        true
-      )
-      return
-    }
-
-    // Only check for API key if the provider requires one
-    if (isApiKeyRequired(provider) && !llmProviders[provider]?.apiKey) {
-      showToastNotification(
-        theme,
-        `${provider} API Key Required`,
-        `The Optimize System Prompt feature requires a ${provider} API key. Please add your ${provider} API key on the LLM page in your course settings to use this feature.`,
-        true
-      )
-      return
-    }
-    const systemPrompt = `You are an expert prompt engineer. Your task is to analyze and optimize the provided system prompt while preserving and combining ALL of its components and functionality. IMPORTANT: The input may contain multiple sections that appear distinct - you MUST combine ALL sections into a single cohesive prompt.
+      if (isApiKeyRequired(provider)) {
+        if (provider === 'Bedrock') {
+          if (!llmProviders[provider]?.accessKeyId || !llmProviders[provider]?.secretAccessKey || !llmProviders[provider]?.region) {
+            showToastNotification(
+              theme,
+              `${provider} Credentials Required`,
+              `The Optimize System Prompt feature requires AWS credentials (Access Key ID, Secret Access Key, and Region). Please add your AWS credentials on the LLM page in your course settings to use this feature.`,
+              true
+            )
+            return
+          }
+        } else if (!llmProviders[provider]?.apiKey) {
+          showToastNotification(
+            theme,
+            `${provider} API Key Required`,
+            `The Optimize System Prompt feature requires a ${provider} API key. Please add your ${provider} API key on the LLM page in your course settings to use this feature.`,
+            true
+          )
+          return
+        }
+      }
+      const systemPrompt = `You are an expert prompt engineer. Your task is to analyze and optimize the provided system prompt while preserving and combining ALL of its components and functionality. IMPORTANT: The input may contain multiple sections that appear distinct - you MUST combine ALL sections into a single cohesive prompt.
   
   Key Requirements:
   
@@ -291,41 +271,40 @@ const CourseMain: NextPage = () => {
   
   Do not include any commentary or explanations. Output only the optimized system prompt.`
 
-    const chatBody: ChatBody = {
-      conversation: {
-        id: uuidv4(),
-        name: 'Prompt Optimization',
-        messages: [
-          {
-            id: uuidv4(),
-            role: 'system',
-            content: systemPrompt,
+      const chatBody: ChatBody = {
+        conversation: {
+          id: uuidv4(),
+          name: 'Prompt Optimization',
+          messages: [
+            {
+              id: uuidv4(),
+              role: 'system',
+              content: systemPrompt,
+            },
+            {
+              id: uuidv4(),
+              role: 'user',
+              content: baseSystemPrompt,
+            }
+          ],
+          model: {
+            id: selectedModel || 'gpt-4',
+            name: modelOptions.find(opt => opt.value === selectedModel)?.label || 'GPT-4',
+            tokenLimit: 8192,
+            enabled: true
           },
-          {
-            id: uuidv4(),
-            role: 'user',
-            content: baseSystemPrompt,
-          }
-        ],
-        model: {
-          id: selectedModel || 'gpt-4',
-          name: modelOptions.find(opt => opt.value === selectedModel)?.label || 'GPT-4',
-          tokenLimit: 8192,
-          enabled: true
+          prompt: baseSystemPrompt,
+          temperature: 0.7,
+          folderId: null,
+          userEmail: user?.emailAddresses?.[0]?.emailAddress
         },
-        prompt: baseSystemPrompt,
-        temperature: 0.7,
-        folderId: null,
-        userEmail: user?.emailAddresses?.[0]?.emailAddress
-      },
-      llmProviders: llmProviders,
-      course_name: course_name,
-      mode: 'optimize_prompt',
-      stream: true,
-      key: '',
-    }
+        llmProviders: llmProviders,
+        course_name: course_name,
+        mode: 'optimize_prompt',
+        stream: true,
+        key: '',
+      }
 
-    try {
       const response = await fetch('/api/allNewRoutingChat', {
         method: 'POST',
         headers: {
@@ -375,12 +354,10 @@ const CourseMain: NextPage = () => {
         'Failed to optimize prompt. Please try again.',
         true
       )
+    } finally {
+      setIsOptimizing(false)
     }
   }
-
-  // Remove useChat hook
-  const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([])
-  const [input, setInput] = useState(baseSystemPrompt)
 
   useEffect(() => {
     if (llmProviders) {
@@ -412,7 +389,6 @@ const CourseMain: NextPage = () => {
       fetchProviders()
     }
   }, [course_name])
-
   // Updated state variables for checkboxes
   const [guidedLearning, setGuidedLearning] = useState(false)
   const [documentsOnly, setDocumentsOnly] = useState(false)
@@ -769,50 +745,10 @@ const CourseMain: NextPage = () => {
     )
   }
 
-
-  // Add a loading state handler for the Optimize button
-  const handleOptimizeClick = (e: React.MouseEvent) => {
-    if (!llmProviders) {
-      showToastNotification(
-        theme,
-        'Loading Configuration',
-        'Please wait while we load the model configuration...',
-        true
-      )
-      return
-    }
-
-    const provider = getProviderFromModel(selectedModel, modelOptions)
-
-    if (!llmProviders[provider]?.enabled) {
-      showToastNotification(
-        theme,
-        `${provider} Required`,
-        `The Optimize System Prompt feature requires ${provider} to be enabled. Please enable ${provider} on the LLM page in your course settings to use this feature.`,
-        true
-      )
-      return
-    }
-
-    // Only check for API key if the provider requires one and llmProviders is loaded
-    if (isApiKeyRequired(provider) && !llmProviders[provider]?.apiKey) {
-      showToastNotification(
-        theme,
-        `${provider} API Key Required`,
-        `The Optimize System Prompt feature requires a ${provider} API key. Please add your ${provider} API key on the LLM page in your course settings to use this feature.`,
-        true
-      )
-      return
-    }
-
-    handleSubmitPromptOptimization(e)
-    open()
-  }
-
   return (
     <>
       <Navbar course_name={router.query.course_name as string} />
-      <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center pb-4">
+      <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
         <div className="items-left flex w-full flex-col justify-center py-0">
           <Flex direction="column" align="center" w="100%">
             <Card
@@ -1063,7 +999,7 @@ const CourseMain: NextPage = () => {
                                   onChange={(value) => setSelectedModel(value || '')}
                                   searchable
                                   radius={'md'}
-                                  maxDropdownHeight={280}
+                                  maxDropdownHeight={320}
                                   styles={(theme) => ({
                                     root: {
                                       width: '280px',
@@ -1188,11 +1124,11 @@ const CourseMain: NextPage = () => {
                                   Update System Prompt
                                 </Button>
                                 <Button
-                                  onClick={handleOptimizeClick}
-                                  disabled={!llmProviders} // Disable button while loading
+                                  onClick={handleSubmitPromptOptimization}
+                                  disabled={!llmProviders || isOptimizing}
                                   variant="filled"
                                   radius="md"
-                                  leftIcon={<IconSparkles stroke={1} />}
+                                  leftIcon={isOptimizing ? <LoadingSpinner size="sm" /> : <IconSparkles stroke={1} />}
                                   className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                                   sx={(theme) => ({
                                     background: 'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%) !important',
@@ -1220,7 +1156,7 @@ const CourseMain: NextPage = () => {
                                   })}
                                   style={{ minWidth: 'fit-content' }}
                                 >
-                                  {!llmProviders ? 'Loading...' : 'Optimize System Prompt'}
+                                  {isOptimizing ? 'Optimizing...' : 'Optimize System Prompt'}
                                 </Button>
                               </Group>
 
