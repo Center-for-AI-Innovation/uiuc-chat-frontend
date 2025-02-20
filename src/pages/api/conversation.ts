@@ -165,7 +165,7 @@ export function convertChatToDBMessage(
   chatMessage: ChatMessage,
   conversationId: string,
 ): DBMessage {
-  let content_type = ''
+  const content_type = ''
   let content_text = ''
   let content_image_urls: string[] = []
   let image_description = ''
