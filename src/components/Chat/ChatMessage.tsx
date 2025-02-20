@@ -1987,32 +1987,6 @@ export const ChatMessage: React.FC<Props> = memo(
                             </button>
                           </Tooltip>
                           <Tooltip
-                            label="Regenerate Response"
-                            position="bottom"
-                            withArrow
-                            arrowSize={6}
-                            transitionProps={{
-                              transition: 'fade',
-                              duration: 200,
-                            }}
-                            classNames={{
-                              tooltip: 'bg-gray-700 text-white text-sm py-1 px-2',
-                              arrow: 'border-gray-700',
-                            }}
-                          >
-                            <button
-                              className={`text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 ${
-                                messageIndex === (selectedConversation?.messages?.length ?? 0) - 1
-                                  ? 'opacity-100'
-                                  : 'opacity-0 transition-opacity duration-200 focus:opacity-100 group-hover:opacity-100'
-                              } ${isRegenerating ? 'animate-spin' : ''}`}
-                              onClick={handleRegenerate}
-                              disabled={isRegenerating}
-                            >
-                              <IconRepeat size={20} />
-                            </button>
-                          </Tooltip>
-                          <Tooltip
                             label={
                               isThumbsUp
                                 ? 'Remove Good Response'
@@ -2090,6 +2064,32 @@ export const ChatMessage: React.FC<Props> = memo(
                               ) : (
                                 <IconThumbDown size={20} />
                               )}
+                            </button>
+                          </Tooltip>
+                          <Tooltip
+                            label="Regenerate Response"
+                            position="bottom"
+                            withArrow
+                            arrowSize={6}
+                            transitionProps={{
+                              transition: 'fade',
+                              duration: 200,
+                            }}
+                            classNames={{
+                              tooltip: 'bg-gray-700 text-white text-sm py-1 px-2',
+                              arrow: 'border-gray-700',
+                            }}
+                          >
+                            <button
+                              className={`text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 ${
+                                messageIndex === (selectedConversation?.messages?.length ?? 0) - 1
+                                  ? 'opacity-100'
+                                  : 'opacity-0 transition-opacity duration-200 focus:opacity-100 group-hover:opacity-100'
+                              } ${isRegenerating ? 'animate-spin' : ''}`}
+                              onClick={handleRegenerate}
+                              disabled={isRegenerating}
+                            >
+                              <IconRepeat size={20} />
                             </button>
                           </Tooltip>
                         </div>
