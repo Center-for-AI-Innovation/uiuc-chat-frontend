@@ -2,7 +2,6 @@
 import {
   IconArrowDown,
   IconPlayerStop,
-  IconRepeat,
   IconSend,
   IconPhoto,
   IconAlertCircle,
@@ -63,7 +62,6 @@ const montserrat_med = Montserrat({
 
 interface Props {
   onSend: (message: Message, plugin: Plugin | null) => void
-  onRegenerate: () => void
   onScrollDownClick: () => void
   stopConversationRef: MutableRefObject<boolean>
   textareaRef: MutableRefObject<HTMLTextAreaElement | null>
@@ -81,7 +79,6 @@ interface ProcessedImage {
 
 export const ChatInput = ({
   onSend,
-  onRegenerate,
   onScrollDownClick,
   stopConversationRef,
   textareaRef,
@@ -818,18 +815,6 @@ export const ChatInput = ({
             <IconPlayerStop size={16} /> {t('Stop Generating')}
           </button>
         )}
-
-        {!messageIsStreaming &&
-          selectedConversation &&
-          selectedConversation.messages &&
-          selectedConversation.messages?.length > 0 && (
-            <button
-              className={`absolute ${isSmallScreen ? '-top-28' : '-top-20'} left-0 right-0 mx-auto mb-24 flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white px-4 py-2 text-black hover:opacity-50 dark:border-neutral-600 dark:bg-[#343541] dark:text-white md:mb-0 md:mt-2`}
-              onClick={onRegenerate}
-            >
-              <IconRepeat size={16} /> {t('Regenerate response')}
-            </button>
-          )}
 
         <div
           ref={chatInputParentContainerRef}
