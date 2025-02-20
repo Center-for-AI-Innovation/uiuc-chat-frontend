@@ -7,8 +7,9 @@ import {
   Switch,
   Divider,
   Slider,
+  Tooltip,
 } from '@mantine/core'
-import { IconCheck, IconCopy, IconChevronDown } from '@tabler/icons-react'
+import { IconCheck, IconCopy, IconChevronDown, IconInfoCircle } from '@tabler/icons-react'
 import { useGetProjectLLMProviders } from '~/hooks/useProjectAPIKeys'
 import { findDefaultModel } from './api-inputs/LLMsApiKeyInputForm'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
@@ -379,22 +380,43 @@ ${
         </div>
 
         <div className="flex gap-4">
-          <Switch
-            checked={retrievalOnly}
-            onChange={(event) => setRetrievalOnly(event.currentTarget.checked)}
-            label="Retrieval Only"
-            size="md"
-            color="grape"
-            className={`mt-4 ${montserrat_paragraph.variable} font-montserratParagraph`}
-            styles={(theme) => ({
-              track: {
-                backgroundColor: '#4a4b6a',
-              },
-              label: {
-                fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
-              },
-            })}
-          />
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={retrievalOnly}
+              onChange={(event) => setRetrievalOnly(event.currentTarget.checked)}
+              label="Retrieval Only"
+              size="md"
+              color="grape"
+              className={`mt-4 ${montserrat_paragraph.variable} font-montserratParagraph`}
+              styles={(theme) => ({
+                track: {
+                  backgroundColor: '#4a4b6a',
+                },
+                label: {
+                  fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+                },
+              })}
+            />
+            <Tooltip
+              label="Retrieval Only bypasses the LLM call, making it free to retrieve relevant documents that match your prompt."
+              position="top"
+              multiline
+              width={220}
+              withArrow
+              styles={(theme) => ({
+                tooltip: {
+                  backgroundColor: theme.colors.dark[7],
+                  color: theme.colors.gray[0],
+                  fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+                },
+              })}
+            >
+              <IconInfoCircle 
+                size={16} 
+                className="mt-4 text-gray-400 cursor-help"
+              />
+            </Tooltip>
+          </div>
 
           <Switch
             checked={streamEnabled}
@@ -412,6 +434,17 @@ ${
               },
             })}
           />
+        </div>
+
+        <div className="text-sm text-gray-400">
+          <a 
+            href="https://docs.uiuc.chat/api/endpoints#image-input-example" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-blue-400 hover:text-blue-300"
+          >
+            Using image inputs (docs) →
+          </a>
         </div>
 
         <Textarea
