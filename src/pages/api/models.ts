@@ -9,6 +9,7 @@ import {
   type OpenAIProvider,
   type BedrockProvider,
   type GeminiProvider,
+  type SambaNovaProvider,
   ProviderNames,
   type WebLLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
@@ -23,6 +24,7 @@ import { redisClient } from '~/utils/redisClient'
 import { getNCSAHostedVLMModels } from '~/utils/modelProviders/types/NCSAHostedVLM'
 import { getBedrockModels } from '~/utils/modelProviders/routes/bedrock'
 import { getGeminiModels } from '~/utils/modelProviders/routes/gemini'
+import { getSambaNovaModels } from '~/utils/modelProviders/routes/sambanova'
 
 export default async function handler(
   req: NextApiRequest,
@@ -115,6 +117,11 @@ export default async function handler(
         case ProviderNames.Gemini:
           allLLMProviders[providerName] = await getGeminiModels(
             llmProvider as GeminiProvider,
+          )
+          break
+        case ProviderNames.SambaNova:
+          allLLMProviders[providerName] = await getSambaNovaModels(
+            llmProvider as SambaNovaProvider,
           )
           break
         default:
