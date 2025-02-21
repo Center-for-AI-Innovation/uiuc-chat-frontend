@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   try {
     const { chatBody, stream }: { chatBody: ChatBody; stream?: boolean } = await req.json()
 
-    console.log('chatBody: ', chatBody)
+    // console.log('chatBody: ', chatBody)
 
     const conversation = chatBody.conversation
     if (!conversation) {
