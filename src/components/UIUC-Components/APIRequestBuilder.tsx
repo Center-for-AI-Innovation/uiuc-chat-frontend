@@ -158,7 +158,7 @@ print(response.json().get('message'))
   ],
   "api_key": "${apiKey || 'YOUR-API-KEY'}",
   "course_name": "${course_name}",
-  "stream": ${streamEnabled},
+  "stream": false,
   "temperature": ${temperature},
   "retrieval_only": ${retrievalOnly}
 };
@@ -170,31 +170,14 @@ fetch('${baseUrl}/api/chat-api/chat', {
   },
   body: JSON.stringify(data)
 })
-${
-  streamEnabled
-    ? `.then(response => {
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  
-  function readStream() {
-    reader.read().then(({done, value}) => {
-      if (done) return;
-      console.log(decoder.decode(value));
-      readStream();
-    });
-  }
-  
-  readStream();
-})`
-    : `.then(response => response.json())
+.then(response => response.json())
 .then(data => {
   // Print just the message
   console.log(data.message);
   
   // Optionally print contexts
   // console.log(data.contexts);
-})`
-}
+})
 .catch(error => {
   console.error('Error:', error);
 });`,
@@ -440,22 +423,24 @@ ${
             </Tooltip>
           </div>
 
-          <Switch
-            checked={streamEnabled}
-            onChange={(event) => setStreamEnabled(event.currentTarget.checked)}
-            label="Stream Response"
-            size="md"
-            color="grape"
-            className={`mt-4 ${montserrat_paragraph.variable} font-montserratParagraph`}
-            styles={(theme) => ({
-              track: {
-                backgroundColor: '#4a4b6a',
-              },
-              label: {
-                fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
-              },
-            })}
-          />
+          {selectedLanguage !== 'node' && (
+            <Switch
+              checked={streamEnabled}
+              onChange={(event) => setStreamEnabled(event.currentTarget.checked)}
+              label="Stream Response"
+              size="md"
+              color="grape"
+              className={`mt-4 ${montserrat_paragraph.variable} font-montserratParagraph`}
+              styles={(theme) => ({
+                track: {
+                  backgroundColor: '#4a4b6a',
+                },
+                label: {
+                  fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+                },
+              })}
+            />
+          )}
         </div>
 
         <div className="text-sm text-gray-400">
