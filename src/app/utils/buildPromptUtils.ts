@@ -114,15 +114,11 @@ export const buildPrompt = async ({
       // Extract system messages from conversation history
       const systemMessagesFromHistory = _extractSystemMessages(conversation);
 
-      // If there are system messages in history, prepend them to the system prompt
       if (systemMessagesFromHistory && conversation.messages.length > 0) {
-        const existingSystemPrompt = await _getSystemPrompt({ courseMetadata, conversation });
-        const combinedSystemPrompt = `${systemMessagesFromHistory}\n\n${existingSystemPrompt || DEFAULT_SYSTEM_PROMPT}`;
-
-        // Update the latest message with the combined system prompt
         const lastMessage = conversation.messages[conversation.messages.length - 1];
-        if (lastMessage) {
-          lastMessage.latestSystemMessage = combinedSystemPrompt;
+        if (lastMessage && lastMessage.role === 'user') {
+          lastMessage.latestSystemMessage = systemMessagesFromHistory;
+          lastMessage.finalPromtEngineeredMessage = typeof lastMessage.content === 'string' ? lastMessage.content : '';
         }
       }
       return conversation;
