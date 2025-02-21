@@ -88,10 +88,9 @@ const convertConversationToBedrockMessages = (
       strippedMessage.content = strippedMessage.content.map((content) => {
         // Convert image formats if needed
         if (content.type === 'tool_image_url') {
-          // Bedrock might use a different format for images
           return {
-            type: 'image',
-            url: content.url
+            type: 'tool_image_url',
+            image_url: content.image_url
           }
         }
         
@@ -198,7 +197,7 @@ async function BedrockStream(
 
     // Create a TransformStream to process the chunks
     const transformStream = new TransformStream({
-      transform(chunk, controller) {
+      transform(chunk: Uint8Array, controller) {
         try {
           const decoded = new TextDecoder().decode(chunk);
           const parsed = JSON.parse(decoded);
@@ -223,7 +222,27 @@ async function BedrockStream(
       },
     });
 
-    return response.body.pipe(transformStream);
+    // Create a ReadableStream from the AsyncIterable
+    const readableStream = new ReadableStream({
+      async start(controller) {
+        try {
+          if (!response.body) {
+            throw new Error('No response body from Bedrock');
+          }
+          
+          for await (const chunk of response.body) {
+            if (chunk instanceof Uint8Array) {
+              controller.enqueue(chunk);
+            }
+          }
+          controller.close();
+        } catch (error) {
+          controller.error(error);
+        }
+      }
+    });
+
+    return readableStream.pipeThrough(transformStream);
   } else {
     // Non-streaming response
     const command = new InvokeModelWithResponseStreamCommand({
@@ -236,12 +255,18 @@ async function BedrockStream(
     const response = await bedrockClient.send(command);
     let fullResponse = '';
 
+    if (!response.body) {
+      throw new Error('No response body from Bedrock');
+    }
+
     // Collect all chunks
-    for await (const chunk of response.body!) {
-      const decoded = new TextDecoder().decode(chunk);
-      const parsed = JSON.parse(decoded);
-      if (parsed.completion) {
-        fullResponse += parsed.completion;
+    for await (const chunk of response.body) {
+      if (chunk instanceof Uint8Array) {
+        const decoded = new TextDecoder().decode(chunk);
+        const parsed = JSON.parse(decoded);
+        if (parsed.completion) {
+          fullResponse += parsed.completion;
+        }
       }
     }
 

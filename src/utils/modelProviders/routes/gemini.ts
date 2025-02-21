@@ -67,7 +67,7 @@ export const getGeminiModels = async (
 export async function runGeminiChat(
   conversation: Conversation,
   geminiProvider: GeminiProvider,
-  stream: boolean = true,
+  stream = true,
 ): Promise<any> {
   if (!conversation) {
     throw new Error('Conversation is missing')
