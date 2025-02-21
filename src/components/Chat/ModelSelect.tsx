@@ -58,19 +58,19 @@ interface ModelItemProps extends React.ComponentPropsWithoutRef<'div'> {
 export const getModelLogo = (modelType: string) => {
   switch (modelType) {
     case ProviderNames.OpenAI:
-      return 'https://images.squarespace-cdn.com/content/v1/5a4908d949fc2b8e312bdf53/1676298536608-GQSN44SGOEHWCFSIZIGK/openai_icon.png?format=750w'
+      return '/media/llm_icons/Openai.png'
     case ProviderNames.Ollama:
-      return 'https://raw.githubusercontent.com/deepset-ai/haystack-integrations/main/logos/ollama.png'
+      return '/media/llm_icons/Ollama.png'
     case ProviderNames.WebLLM:
-      return 'https://avatars.githubusercontent.com/u/106173866?s=48&v=4'
+      return '/media/llm_icons/WebLLM.png'
     case ProviderNames.Anthropic:
-      return 'https://www.anthropic.com/images/icons/safari-pinned-tab.svg'
+      return '/media/llm_icons/Anthropic.png'
     case ProviderNames.NCSAHosted:
-      return 'https://assets.kastan.ai/UofI-logo-white.jpg'
+      return '/media/llm_icons/NCSAHosted.png'
     case ProviderNames.NCSAHostedVLM:
-      return 'https://assets.kastan.ai/UofI-logo-white.jpg'
+      return '/media/llm_icons/NCSAHosted.png'
     case ProviderNames.Azure:
-      return 'https://assets.kastan.ai/uiuc-chat-emails/msft-logo.png'
+      return '/media/llm_icons/Azure.png'
     case ProviderNames.Bedrock:
       return 'https://icon2.cleanpng.com/20190418/vhc/kisspng-amazon-web-services-logo-cloud-computing-amazon-co-logoaws-1-itnext-summit-1713897597915.webp'
     case ProviderNames.Gemini:
