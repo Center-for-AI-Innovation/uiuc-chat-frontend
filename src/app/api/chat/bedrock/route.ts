@@ -90,7 +90,7 @@ export async function runBedrockChat(
         maxTokens: 4096,
       })
       const choices = [{ message: { content: result.text } }]
-      return { choices }
+      return NextResponse.json({ choices })
     }
   } catch (error) {
     console.log('Error in runBedrockChat:', error)
