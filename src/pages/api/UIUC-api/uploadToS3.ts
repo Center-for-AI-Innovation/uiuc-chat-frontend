@@ -45,7 +45,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     const s3_filepath = `courses/${courseName}/${uniqueFileName}`
 
     let post
-    if (courseName === 'vyriad' || courseName === 'pubmed') {
+    if (courseName === 'vyriad') {
       if (!vyriadMinioClient) {
         throw new Error(
           'MinIO client not configured - missing required environment variables',
