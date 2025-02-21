@@ -18,8 +18,8 @@ import { NextResponse } from 'next/server'
 export async function runAnthropicChat(
   conversation: Conversation,
   anthropicProvider: AnthropicProvider,
-  stream: boolean,
-) {
+  stream: boolean = true,
+): Promise<any> {
   if (!conversation) {
     throw new Error('Conversation is missing')
   }
@@ -50,8 +50,12 @@ export async function runAnthropicChat(
     return result.toTextStreamResponse()
   } else {
     const result = await generateText(commonParams)
-    const choices = [{ message: { content: result.text } }]
-    return { choices }
+    return new Response(
+      JSON.stringify({ choices: [{ message: { content: result.text } }] }),
+      {
+        headers: { 'Content-Type': 'application/json' },
+      },
+    )
   }
 }
 
