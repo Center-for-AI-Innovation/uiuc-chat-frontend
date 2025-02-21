@@ -34,6 +34,7 @@ import {
   type NCSAHostedVLMProvider,
   type BedrockProvider,
   type GeminiProvider,
+  type SambaNovaProvider,
   LLM_PROVIDER_ORDER,
 } from '~/utils/modelProviders/LLMProvider'
 import { notifications } from '@mantine/notifications'
@@ -59,6 +60,7 @@ import NCSAHostedVLMProviderInput from './providers/NCSAHostedVLMProviderInput'
 import { t } from 'i18next'
 import BedrockProviderInput from './providers/BedrockProviderInput'
 import GeminiProviderInput from './providers/GeminiProviderInput'
+import SambaNovaProviderInput from './providers/SambaNovaProviderInput'
 
 const isSmallScreen = false
 
@@ -252,7 +254,7 @@ const NewModelDropdown: React.FC<{
               })) || [],
           )}
         itemComponent={(props) => (
-          <ModelItem {...props} setLoadingModelId={() => {}} />
+          <ModelItem {...props} setLoadingModelId={() => { }} />
         )}
         maxDropdownHeight={520}
         rightSectionWidth="auto"
@@ -462,13 +464,13 @@ export default function APIKeyInputForm() {
         })
 
         // Set the new default model
-        const provider = updatedProviders[newDefaultModel.provider]
+        const provider = updatedProviders[newDefaultModel.provider as keyof AllLLMProviders]
         if (provider && provider.models) {
           const modelIndex = provider.models.findIndex(
-            (model) => model.id === newDefaultModel.id,
+            (model: AnySupportedModel) => model.id === newDefaultModel.id,
           )
           if (modelIndex !== -1) {
-            ;(provider.models as any[])[modelIndex] = {
+            ; (provider.models as any[])[modelIndex] = {
               ...(provider.models as any[])[modelIndex],
               default: true,
             }
@@ -498,10 +500,10 @@ export default function APIKeyInputForm() {
         const updatedProviders = { ...prevProviders }
 
         // Update the temperature for the default model
-        const provider = updatedProviders[currdefaultModel.provider]
+        const provider = updatedProviders[currdefaultModel.provider as keyof AllLLMProviders]
         if (provider?.models) {
           const modelIndex = provider.models.findIndex(
-            (model) => model.default === true,
+            (model: AnySupportedModel) => model.default === true,
           )
           if (modelIndex !== -1) {
             const currentModel = provider.models[modelIndex]
@@ -711,6 +713,13 @@ export default function APIKeyInputForm() {
                               <GeminiProviderInput
                                 provider={
                                   llmProviders?.Gemini as GeminiProvider
+                                }
+                                form={form}
+                                isLoading={isLoadingLLMProviders}
+                              />
+                              <SambaNovaProviderInput
+                                provider={
+                                  llmProviders?.SambaNova as SambaNovaProvider
                                 }
                                 form={form}
                                 isLoading={isLoadingLLMProviders}

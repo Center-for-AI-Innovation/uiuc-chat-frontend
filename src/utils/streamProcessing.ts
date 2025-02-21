@@ -22,6 +22,7 @@ import {
   VisionCapableModels,
   type BedrockProvider,
   type GeminiProvider,
+  type SambaNovaProvider,
 } from '~/utils/modelProviders/LLMProvider'
 import fetchMQRContexts from '~/pages/api/getContextsMQR'
 import fetchContexts from '~/pages/api/getContexts'
@@ -34,6 +35,7 @@ import { AnthropicModelID } from './modelProviders/types/anthropic'
 import { type NextApiRequest, type NextApiResponse } from 'next'
 import { BedrockModelID } from './modelProviders/types/bedrock'
 import { GeminiModelID } from './modelProviders/types/gemini'
+import { SambaNovaModelID } from './modelProviders/types/SambaNova'
 import { runOllamaChat } from '~/app/utils/ollama'
 import { openAIAzureChat } from './modelProviders/OpenAIAzureChat'
 import { runAnthropicChat } from '~/app/utils/anthropic'
@@ -42,6 +44,7 @@ import { runVLLM } from '~/app/utils/vllm'
 import { type CoreMessage } from 'ai'
 import { runGeminiChat } from '~/app/api/chat/gemini/route'
 import { runBedrockChat } from '~/app/api/chat/bedrock/route'
+import { runSambaNovaChat } from '~/app/api/chat/sambanova/route'
 
 export const maxDuration = 60
 
@@ -703,12 +706,12 @@ export async function handleImageContent(
     )
 
     if (imgDescIndex !== -1) {
-      ;(message.content as Content[])[imgDescIndex] = {
+      ; (message.content as Content[])[imgDescIndex] = {
         type: 'text',
         text: `Image description: ${imgDesc}`,
       }
     } else {
-      ;(message.content as Content[]).push({
+      ; (message.content as Content[]).push({
         type: 'text',
         text: `Image description: ${imgDesc}`,
       })
@@ -892,6 +895,29 @@ export const routeModelRequest = async (
             error instanceof Error
               ? error.message
               : 'Unknown error occurred when streaming Gemini LLMs.',
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      )
+    }
+  } else if (
+    Object.values(SambaNovaModelID).includes(selectedConversation.model.id as any)
+  ) {
+    try {
+      return await runSambaNovaChat(
+        selectedConversation,
+        chatBody.llmProviders?.SambaNova as SambaNovaProvider,
+        chatBody.stream,
+      )
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Unknown error occurred when streaming SambaNova LLMs.',
         }),
         {
           status: 500,
