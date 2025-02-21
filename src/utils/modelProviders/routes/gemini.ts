@@ -9,6 +9,7 @@ import { type CoreMessage, generateText, streamText } from 'ai'
 import { type Conversation } from '~/types/chat'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
+import { NextResponse } from 'next/server'
 
 export const getGeminiModels = async (
   geminiProvider: GeminiProvider,
@@ -85,50 +86,43 @@ export async function runGeminiChat(
     throw new Error('Conversation messages array is empty')
   }
 
-  if (!Object.values(GeminiModels).some(model => model.id === conversation.model.id)) {
+  if (
+    !Object.values(GeminiModels).some(
+      (model) => model.id === conversation.model.id,
+    )
+  ) {
     throw new Error(`Invalid Gemini model ID: ${conversation.model.id}`)
   }
 
   const model = gemini(conversation.model.id)
-  
+
   const commonParams = {
     model: model as any,
     messages: convertConversationToVercelAISDKv3(conversation),
-    temperature: conversation.temperature || 0.7,
+    temperature: conversation.temperature || 0.1,
     maxTokens: conversation.model.tokenLimit || 4096,
   }
 
   try {
     if (stream) {
+      console.log('In gemini stream')
       const result = await streamText(commonParams)
-      return new Response(result.textStream, {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-        },
-      })
+      return result.toTextStreamResponse()
     } else {
+      console.log('In gemini NON STREAM')
       const result = await generateText(commonParams)
-      return new Response(
-        JSON.stringify({
-          choices: [{
-            message: {
-              content: result.text,
-              role: 'assistant'
-            }
-          }]
-        }),
-        {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
-      )
+      return NextResponse.json({
+        choices: [{ message: { content: result.text } }],
+      })
     }
   } catch (error) {
-    if (error instanceof Error && error.message.includes('Developer instruction is not enabled')) {
-      throw new Error('This Gemini API key does not have access to the requested model. Please verify your API key permissions in the Google AI Studio.')
+    if (
+      error instanceof Error &&
+      error.message.includes('Developer instruction is not enabled')
+    ) {
+      throw new Error(
+        'This Gemini API key does not have access to the requested model. Please verify your API key permissions in the Google AI Studio.',
+      )
     }
     throw error
   }

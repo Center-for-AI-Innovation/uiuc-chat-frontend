@@ -1,3 +1,4 @@
+import { ChatBody } from '~/types/chat'
 import {
   OllamaProvider,
   ProviderNames,
@@ -87,7 +88,7 @@ export const OllamaModels: Record<OllamaModelIDs, OllamaModel> = {
   //   name: 'Llama 3.1 7B',
   //   parameterSize: '70B',
   //   tokenLimit: 128000,
-  //   usableTokenLimit: 2000, // NOT SURE OF TRUE VALUE! 
+  //   usableTokenLimit: 2000, // NOT SURE OF TRUE VALUE!
   //   enabled: true,
   // },
   // [OllamaModelIDs.LLAMA31_8b]: {
@@ -95,7 +96,7 @@ export const OllamaModels: Record<OllamaModelIDs, OllamaModel> = {
   //   name: 'Llama 3.1 8B (quantized)',
   //   parameterSize: '8B',
   //   tokenLimit: 128000,
-  //   usableTokenLimit: 12_000, // NOT SURE OF TRUE VALUE! 
+  //   usableTokenLimit: 12_000, // NOT SURE OF TRUE VALUE!
   //   enabled: true,
   // },
   // [OllamaModelIDs.LLAMA31_latest]: {
@@ -157,51 +158,5 @@ export const getOllamaModels = async (
     console.warn('ERROR in getOllamaModels', error)
     ollamaProvider.models = [] // clear any previous models.
     return ollamaProvider as OllamaProvider
-  }
-}
-
-export const ollamaChat = async (
-  chatBody: ChatBody,
-  stream = true
-): Promise<any> => {
-  const { conversation, llmProviders } = chatBody
-  const ollamaProvider = llmProviders?.find(p => p.provider === ProviderNames.Ollama)
-  
-  if (!ollamaProvider?.baseUrl) {
-    throw new Error('Ollama base URL not configured')
-  }
-
-  const response = await fetch(`${ollamaProvider.baseUrl}/api/chat`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: conversation.model,
-      messages: conversation.messages,
-      stream: stream,
-      temperature: conversation.temperature
-    })
-  })
-
-  if (!response.ok) {
-    throw new Error(`Ollama API error: ${response.status}`)
-  }
-
-  if (stream) {
-    return new Response(response.body, {
-      headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-      }
-    })
-  } else {
-    const data = await response.json()
-    return new Response(JSON.stringify(data), {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
   }
 }
