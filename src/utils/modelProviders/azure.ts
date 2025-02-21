@@ -159,7 +159,7 @@ export const getAzureModels = async (
 
 export const azureChat = async (
   chatBody: ChatBody,
-  stream: boolean = true
+  stream = true
 ): Promise<any> => {
   const { conversation, llmProviders } = chatBody
 

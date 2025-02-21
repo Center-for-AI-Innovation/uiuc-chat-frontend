@@ -62,7 +62,7 @@ export const getNCSAHostedModels = async (
 
 export const ncsaHostedChat = async (
   chatBody: ChatBody,
-  stream: boolean = true
+  stream = true
 ): Promise<any> => {
   const { conversation } = chatBody
   
