@@ -1,24 +1,15 @@
 import { type CoreMessage, generateText, streamText } from 'ai'
-import { type ChatBody, type Conversation } from '~/types/chat'
+import { type Conversation } from '~/types/chat'
 import { createAnthropic } from '@ai-sdk/anthropic'
-import {
-  AnthropicModels,
-  type AnthropicModel,
-} from '~/utils/modelProviders/types/anthropic'
-import {
-  AnthropicProvider,
-  ProviderNames,
-} from '~/utils/modelProviders/LLMProvider'
+import { AnthropicProvider } from '~/utils/modelProviders/LLMProvider'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
-import { NextResponse } from 'next/server'
-
 export async function runAnthropicChat(
   conversation: Conversation,
   anthropicProvider: AnthropicProvider,
-  stream: boolean = true,
+  stream = true,
 ): Promise<any> {
   if (!conversation) {
     throw new Error('Conversation is missing')
@@ -49,7 +40,9 @@ export async function runAnthropicChat(
     const result = await streamText(commonParams)
     return result.toTextStreamResponse()
   } else {
+    console.log('In anthropic app utils generateText')
     const result = await generateText(commonParams)
+    console.log('In anthropic app utils generateText 2')
     return new Response(
       JSON.stringify({ choices: [{ message: { content: result.text } }] }),
       {
@@ -96,22 +89,4 @@ function convertConversationToVercelAISDKv3(
   })
 
   return coreMessages
-}
-
-export async function GET(req: Request) {
-  const apiKey = process.env.ANTHROPIC_API_KEY
-
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: 'Anthropic API key not set.' },
-      { status: 500 },
-    )
-  }
-
-  const models = Object.values(AnthropicModels) as AnthropicModel[]
-
-  return NextResponse.json({
-    provider: ProviderNames.Anthropic,
-    models: models,
-  })
 }
