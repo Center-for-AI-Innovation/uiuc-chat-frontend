@@ -33,8 +33,10 @@ const Home: NextPage = () => {
       </Head>
 
       <LandingPageHeader />
-
-      <main className="illinois-blue-gradient-bg flex min-h-screen flex-col items-center justify-center">
+      <main
+        className={`illinois-blue-gradient-bg flex min-h-screen flex-col items-center justify-center
+          ${montserrat_paragraph.variable} font-montserratParagraph`}
+      >
         <div className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 px-8 py-8 sm:py-20">
           <div
             className="
@@ -46,10 +48,11 @@ const Home: NextPage = () => {
             <div className="sm:w-1/2 ">
               <div
                 style={{ color: 'var(--illinois-blue)', lineHeight: '110%' }}
-                className="
-                text-3xl font-bold sm:mt-4
-                sm:text-3xl
-              "
+                className={`
+                  text-3xl font-bold sm:mt-4
+                  sm:text-3xl
+                  ${montserrat_heading.variable} font-montserratHeading
+                `}
               >
                 <h2>
                   Create a chatbot with{' '}
@@ -131,8 +134,13 @@ const Home: NextPage = () => {
 */}
 
           <Title order={3} className="mt-16">
-            Featured Chatbots
+            Flagship Chatbots
           </Title>
+
+          <div className="text-sm text-neutral-400">
+            Dive right into our bots trained on everything Illinois
+          </div>
+
           {/*
           <ListProjectTable />
 */}
@@ -159,7 +167,7 @@ const Home: NextPage = () => {
         "
         >
           <div
-            className="
+            className={`
             whitespace-wrap flex flex-col items-center
             justify-center gap-3
 
@@ -167,9 +175,13 @@ const Home: NextPage = () => {
             text-white sm:flex-row
 
             sm:whitespace-nowrap md:text-3xl
-          "
+
+            ${montserrat_heading.variable} font-montserratHeading
+          `}
           >
-            <div className="">An AI that knows about your</div>
+            <div className="">
+              An AI that knows <span class="whitespace-nowrap">about your</span>
+            </div>
 
             <div className="">_________</div>
           </div>
@@ -177,7 +189,14 @@ const Home: NextPage = () => {
 
         {/* second section below the orange banner */}
         <div className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 px-8 py-8 sm:py-20">
-          <h2 className="text-4xl font-bold">How Illinois Chat works</h2>
+          <h2
+            className={`
+            text-4xl font-bold
+            ${montserrat_heading.variable} font-montserratHeading
+          `}
+          >
+            How Illinois Chat works
+          </h2>
 
           {/* step 1 */}
           <div className="w-full max-w-3xl">
@@ -201,12 +220,20 @@ const Home: NextPage = () => {
               <div className="sm:order-first sm:w-1/2">
                 <div className="flex items-center gap-4 sm:mt-8">
                   <div
-                    className="text-4xl font-black"
+                    className={`
+                      text-4xl font-black
+                      ${montserrat_heading.variable} font-montserratHeading
+                    `}
                     style={{ color: 'var(--illinois-orange)' }}
                   >
                     1
                   </div>
-                  <div className="text-xl font-bold">
+                  <div
+                    className={`
+                    text-xl font-bold
+                    ${montserrat_heading.variable} font-montserratHeading
+                  `}
+                  >
                     Connect your documents{' '}
                     <span className="whitespace-nowrap">and tools</span>
                   </div>
@@ -217,7 +244,7 @@ const Home: NextPage = () => {
                   et massa mi. Aliquam in hendrerit urna. Pellentesque sit amet
                   sapien fringilla, mattis.
                 </div>
-
+                {/*
                 <Button
                   className="mt-4 bg-neutral-400"
                   variant="light"
@@ -235,6 +262,7 @@ const Home: NextPage = () => {
                     className="ml-1"
                   />
                 </Button>
+*/}
               </div>
             </div>
 
@@ -259,12 +287,20 @@ const Home: NextPage = () => {
               <div className="sm:w-1/2">
                 <div className="flex items-center gap-4 sm:mt-8">
                   <div
-                    className="text-4xl font-black"
+                    className={`
+                      text-4xl font-black
+                      ${montserrat_heading.variable} font-montserratHeading
+                    `}
                     style={{ color: 'var(--illinois-orange)' }}
                   >
                     2
                   </div>
-                  <div className="text-xl font-bold">
+                  <div
+                    className={`
+                    text-xl font-bold
+                    ${montserrat_heading.variable} font-montserratHeading
+                  `}
+                  >
                     Customize prompts, tools{' '}
                     <span className="whitespace-nowrap">
                       and LLMs <span className="font-normal">(optional)</span>
@@ -277,7 +313,7 @@ const Home: NextPage = () => {
                   et massa mi. Aliquam in hendrerit urna. Pellentesque sit amet
                   sapien fringilla, mattis.
                 </div>
-
+                {/*
                 <Button
                   className="mt-4 bg-neutral-400"
                   variant="light"
@@ -295,6 +331,7 @@ const Home: NextPage = () => {
                     className="ml-1"
                   />
                 </Button>
+*/}
               </div>
             </div>
 
@@ -319,12 +356,20 @@ const Home: NextPage = () => {
               <div className="sm:order-first sm:w-1/2">
                 <div className="flex items-center gap-4 sm:mt-8">
                   <div
-                    className="text-4xl font-black"
+                    className={`
+                      text-4xl font-black
+                      ${montserrat_heading.variable} font-montserratHeading
+                    `}
                     style={{ color: 'var(--illinois-orange)' }}
                   >
                     3
                   </div>
-                  <div className="text-xl font-bold">
+                  <div
+                    className={`
+                    text-xl font-bold
+                    ${montserrat_heading.variable} font-montserratHeading
+                  `}
+                  >
                     Customize prompts, tools{' '}
                     <span className="whitespace-nowrap">
                       and LLMs <span className="font-normal">(optional)</span>
@@ -337,7 +382,7 @@ const Home: NextPage = () => {
                   et massa mi. Aliquam in hendrerit urna. Pellentesque sit amet
                   sapien fringilla, mattis.
                 </div>
-
+                {/*
                 <Button
                   className="mt-4 bg-neutral-400"
                   variant="light"
@@ -355,6 +400,7 @@ const Home: NextPage = () => {
                     className="ml-1"
                   />
                 </Button>
+*/}
               </div>
             </div>
           </div>
@@ -381,7 +427,14 @@ const Home: NextPage = () => {
           "
           >
             <div className="sm:w-1/2">
-              <h2 className="text-xl font-bold">Ready to build?</h2>
+              <h2
+                className={`
+                text-xl font-bold
+                ${montserrat_heading.variable} font-montserratHeading
+              `}
+              >
+                Ready to build?
+              </h2>
 
               <div className="mt-4">
                 If features like custom LLMs, 52+ models to choose from, and
@@ -410,7 +463,14 @@ const Home: NextPage = () => {
             </div>
 
             <div className="sm:w-1/2">
-              <h2 className="text-xl font-bold">Want something custom?</h2>
+              <h2
+                className={`
+                text-xl font-bold
+                ${montserrat_heading.variable} font-montserratHeading
+              `}
+              >
+                Want something custom?
+              </h2>
 
               <div className="mt-4">
                 We build features for industry partners to bring GenAI to their
@@ -422,16 +482,28 @@ const Home: NextPage = () => {
 
         {/* second section below the blue banner */}
         <div className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 px-8 py-8 sm:py-20">
-          <h4 className="text-2xl font-extrabold tracking-tight sm:text-[3rem]">
+          <h4
+            className={`
+            text-4xl font-extrabold tracking-tight
+            ${montserrat_heading.variable} font-montserratHeading
+          `}
+          >
             About Us
           </h4>
-          <div className="grid grid-cols-1 gap-14 sm:grid-cols-2 md:gap-8">
+          <div className="mt-4 grid grid-cols-1 gap-14 sm:grid-cols-2 md:gap-8">
             <Link
               className="bg-[var(--illinois-white)]/10 flex max-w-xs flex-col gap-4 rounded-xl sm:p-4 "
               href="https://github.com/kastanday/ai-ta-frontend"
               target="_blank"
             >
-              <h3 className="text-2xl font-bold">Read the code →</h3>
+              <h3
+                className={`
+                text-2xl font-bold
+                ${montserrat_heading.variable} font-montserratHeading
+              `}
+              >
+                Read the code
+              </h3>
               <div className="text-lg">
                 100% free<br></br>100% open source &#40;MIT License&#41;
                 <br></br>100% awesome
@@ -442,8 +514,14 @@ const Home: NextPage = () => {
               href="https://ai.ncsa.illinois.edu/"
               target="_blank"
             >
-              <h3 className="text-2xl font-bold">
-                Sponsored by the Center of AI Innovation
+              <h3
+                className={`
+                text-2xl font-bold
+                ${montserrat_heading.variable} font-montserratHeading
+              `}
+              >
+                Sponsored by the Center of{' '}
+                <span class="whitespace-nowrap">AI Innovation</span>
               </h3>
               <div className="text-lg">
                 Part of the National Center for Supercomputing Applications.
@@ -454,7 +532,14 @@ const Home: NextPage = () => {
               href="https://kastanday.com/"
               target="_blank"
             >
-              <h3 className="text-2xl font-bold">Bio 👋</h3>
+              <h3
+                className={`
+                text-2xl font-bold
+                ${montserrat_heading.variable} font-montserratHeading
+              `}
+              >
+                Bio
+              </h3>
               <div className="text-lg">
                 Made by Kastan Day at the University of Illinois.
               </div>
@@ -467,7 +552,14 @@ const Home: NextPage = () => {
               target="_blank"
             >
               {/* text-[var(--illinois-white)] hover:bg-[var(--illinois-white)]/20 */}
-              <h3 className="text-2xl font-bold">Status page 📊</h3>
+              <h3
+                className={`
+                text-2xl font-bold
+                ${montserrat_heading.variable} font-montserratHeading
+              `}
+              >
+                Status page
+              </h3>
               {/* <div className="text-lg">Check service uptime.</div> */}
               <Image
                 src="https://status.uiuc.chat/api/badge/1/uptime/24?label=Uptime%2024%20hours"
@@ -714,7 +806,10 @@ function CourseCard() {
 
           <Card.Section>
             <div
-              className="flex items-center px-3 text-sm font-semibold text-neutral-600"
+              className={`
+                flex items-center px-3 text-sm font-semibold text-neutral-600
+                ${montserrat_heading.variable} font-montserratHeading
+              `}
               style={{ height: '2rem' }}
             >
               {card.badge}
