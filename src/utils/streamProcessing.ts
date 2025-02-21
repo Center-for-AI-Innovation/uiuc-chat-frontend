@@ -644,9 +644,7 @@ export async function updateConversationInDatabase(
         }),
       },
     )
-    const data = await response.json()
-    console.log('Updated conversation in Supabase:', data)
-    // return data.success
+    // const data = await response.json()
   } catch (error) {
     console.error('Error setting course data:', error)
     // return false
