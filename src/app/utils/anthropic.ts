@@ -40,9 +40,7 @@ export async function runAnthropicChat(
     const result = await streamText(commonParams)
     return result.toTextStreamResponse()
   } else {
-    console.log('In anthropic app utils generateText')
     const result = await generateText(commonParams)
-    console.log('In anthropic app utils generateText 2')
     return new Response(
       JSON.stringify({ choices: [{ message: { content: result.text } }] }),
       {
