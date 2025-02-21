@@ -162,7 +162,7 @@ export const getOllamaModels = async (
 
 export const ollamaChat = async (
   chatBody: ChatBody,
-  stream: boolean = true
+  stream = true
 ): Promise<any> => {
   const { conversation, llmProviders } = chatBody
   const ollamaProvider = llmProviders?.find(p => p.provider === ProviderNames.Ollama)
