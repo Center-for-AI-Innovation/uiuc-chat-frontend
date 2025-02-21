@@ -159,3 +159,49 @@ export const getOllamaModels = async (
     return ollamaProvider as OllamaProvider
   }
 }
+
+export const ollamaChat = async (
+  chatBody: ChatBody,
+  stream: boolean = true
+): Promise<any> => {
+  const { conversation, llmProviders } = chatBody
+  const ollamaProvider = llmProviders?.find(p => p.provider === ProviderNames.Ollama)
+  
+  if (!ollamaProvider?.baseUrl) {
+    throw new Error('Ollama base URL not configured')
+  }
+
+  const response = await fetch(`${ollamaProvider.baseUrl}/api/chat`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: conversation.model,
+      messages: conversation.messages,
+      stream: stream,
+      temperature: conversation.temperature
+    })
+  })
+
+  if (!response.ok) {
+    throw new Error(`Ollama API error: ${response.status}`)
+  }
+
+  if (stream) {
+    return new Response(response.body, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      }
+    })
+  } else {
+    const data = await response.json()
+    return new Response(JSON.stringify(data), {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+  }
+}
