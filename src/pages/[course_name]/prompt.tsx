@@ -331,6 +331,7 @@ const CourseMain: NextPage = () => {
 
       let optimizedPrompt = ''
       const decoder = new TextDecoder()
+      let isFirstChunk = true
 
       while (true) {
         const { done, value } = await reader.read()
@@ -339,13 +340,18 @@ const CourseMain: NextPage = () => {
         const chunk = decoder.decode(value)
         optimizedPrompt += chunk
 
+        // Open modal and update UI state on first chunk of content
+        if (isFirstChunk && chunk.trim()) {
+          isFirstChunk = false
+          open()
+          setIsOptimizing(false)
+        }
+
         // Update messages state for real-time display
         setMessages([
           { role: 'assistant', content: optimizedPrompt }
         ])
       }
-
-      open() // Open the modal to show the optimized prompt
     } catch (error) {
       console.error('Error optimizing prompt:', error)
       showToastNotification(
@@ -354,8 +360,7 @@ const CourseMain: NextPage = () => {
         'Failed to optimize prompt. Please try again.',
         true
       )
-    } finally {
-      setIsOptimizing(false)
+      setIsOptimizing(false)  // Keep this here for error cases
     }
   }
 
