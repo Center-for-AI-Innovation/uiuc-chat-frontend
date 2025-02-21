@@ -135,7 +135,15 @@ data = {
 }
 
 response = requests.post(url, headers=headers, json=data)
-${streamEnabled ? 'print(response.text)' : 'print(response.json())'}`,
+${streamEnabled 
+  ? `for chunk in response.iter_lines():
+    if chunk:
+        print(chunk.decode())`
+  : `# Print just the message
+print(response.json().get('message'))
+
+# Optionally print contexts
+# print(response.json().get('contexts'))`}`,
     node: `const data = {
   "model": "${selectedModel}",
   "messages": [
@@ -164,13 +172,27 @@ fetch('${baseUrl}/api/chat-api/chat', {
 })
 ${
   streamEnabled
-    ? `.then(response => response.text())
-.then(data => {
-  console.log(data);
+    ? `.then(response => {
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  
+  function readStream() {
+    reader.read().then(({done, value}) => {
+      if (done) return;
+      console.log(decoder.decode(value));
+      readStream();
+    });
+  }
+  
+  readStream();
 })`
     : `.then(response => response.json())
 .then(data => {
-  console.log(data);
+  // Print just the message
+  console.log(data.message);
+  
+  // Optionally print contexts
+  // console.log(data.contexts);
 })`
 }
 .catch(error => {
