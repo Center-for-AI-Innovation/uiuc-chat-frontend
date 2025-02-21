@@ -105,11 +105,9 @@ export async function runGeminiChat(
 
   try {
     if (stream) {
-      console.log('In gemini stream')
       const result = await streamText(commonParams)
       return result.toTextStreamResponse()
     } else {
-      console.log('In gemini NON STREAM')
       const result = await generateText(commonParams)
       return NextResponse.json({
         choices: [{ message: { content: result.text } }],
