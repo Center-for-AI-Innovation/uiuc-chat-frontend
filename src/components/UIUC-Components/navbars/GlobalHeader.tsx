@@ -200,7 +200,12 @@ export function LandingPageHeader({
   return (
     <header style={headerStyle}>
       <div className="flex-end m-auto flex w-full max-w-5xl items-center gap-2 ">
-        <div className="flex grow items-center gap-1 font-bold">
+        <div
+          className={`
+          flex grow items-center gap-1 font-bold
+          ${montserrat_heading.variable} font-montserratHeading
+        `}
+        >
           <div style={{ width: '1.95rem', height: '1.95rem' }}>
             <img
               src="/media/logo_illinois.png"
