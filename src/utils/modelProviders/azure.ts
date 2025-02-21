@@ -7,8 +7,6 @@ import { decryptKeyIfNeeded } from '../crypto'
 import { OPENAI_API_VERSION } from '../app/const'
 import { ChatBody } from '~/types/chat'
 
-
-
 // OMG azure sucks
 // the azureDeploymentID is require to make requests. Grab it from the /deployments list in getAzureModels()
 // The azureDeploymentModelName is the Azure-standardized model names, similar to OpenAI model IDs.
@@ -126,10 +124,12 @@ export const getAzureModels = async (
             enabled:
               azureProvider.models?.find((m) => m.id === predefinedModel.id)
                 ?.enabled ?? predefinedModel.enabled,
-            default: azureProvider.models?.find((m) => m.id === predefinedModel.id)
-              ?.default ?? predefinedModel.default,
-            temperature: azureProvider.models?.find((m) => m.id === predefinedModel.id)
-              ?.temperature ?? predefinedModel.temperature, 
+            default:
+              azureProvider.models?.find((m) => m.id === predefinedModel.id)
+                ?.default ?? predefinedModel.default,
+            temperature:
+              azureProvider.models?.find((m) => m.id === predefinedModel.id)
+                ?.temperature ?? predefinedModel.temperature,
           })
         }
         return acc
@@ -154,64 +154,5 @@ export const getAzureModels = async (
     console.warn('Error fetching Azure models:', error)
     azureProvider.models = [] // clear any previous models.
     return azureProvider
-  }
-}
-
-export const azureChat = async (
-  chatBody: ChatBody,
-  stream = true
-): Promise<any> => {
-  const { conversation, llmProviders } = chatBody
-
-  // Ensure llmProviders is an array before using find
-  const azureProvider = Array.isArray(llmProviders) 
-    ? llmProviders.find(p => p.provider === ProviderNames.Azure) 
-    : undefined;
-
-  if (!azureProvider?.AzureEndpoint) {
-    throw new Error('Azure endpoint not configured')
-  }
-
-  const model = azureProvider.models?.find((m: AzureModel) => {
-    // Check if conversation?.model is a string before comparison
-    return typeof conversation?.model === 'string' && m.id === conversation.model;
-  });
-
-  if (!model?.azureDeploymentID) {
-    throw new Error('Azure deployment ID not found for model')
-  }
-
-  const response = await fetch(`${azureProvider.AzureEndpoint}/openai/deployments/${model.azureDeploymentID}/chat/completions?api-version=${OPENAI_API_VERSION}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'api-key': await decryptKeyIfNeeded(azureProvider.apiKey!)
-    },
-    body: JSON.stringify({
-      messages: conversation?.messages,
-      stream: stream,
-      temperature: conversation?.temperature
-    })
-  })
-
-  if (!response.ok) {
-    throw new Error(`Azure API error: ${response.status}`)
-  }
-
-  if (stream) {
-    return new Response(response.body, {
-      headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-      }
-    })
-  } else {
-    const data = await response.json()
-    return new Response(JSON.stringify(data), {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
   }
 }
