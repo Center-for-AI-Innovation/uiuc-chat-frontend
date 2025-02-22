@@ -3,6 +3,7 @@ import {
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { OllamaModels, OllamaModelIDs } from './ollama'
+import { ChatBody } from '~/types/chat'
 
 export const getNCSAHostedModels = async (
   ncsaHostedProvider: NCSAHostedProvider,
