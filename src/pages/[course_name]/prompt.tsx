@@ -225,7 +225,7 @@ const CourseMain: NextPage = () => {
           return
         }
       }
-      const systemPrompt = `You are an expert prompt engineer specializing in optimizing prompts for educational and RAG-based AI systems. Your task is to analyze and enhance the provided system prompt while preserving its core functionality and improving its effectiveness.
+      const systemPrompt = `You are an expert prompt engineer specializing in optimizing prompts with the ability to handle various different use cases. Your task is to analyze and enhance the provided system prompt while preserving its core functionality and improving its effectiveness.
 
 Key Objectives:
 
@@ -241,7 +241,7 @@ Key Objectives:
    - Ensure explanations precede conclusions
    - Maintain academic integrity guidelines if specified
 
-3. RAG Integration (When Applicable):
+3. RAG Integration (OPTIONAL, ONLY IF APPLICABLE):
    - Optimize document reference and citation patterns
    - Enhance context retrieval instructions
    - Improve document summarization guidelines
@@ -268,25 +268,26 @@ Key Objectives:
 7. Technical Requirements:
    - Keep all special syntax and formatting intact
    - Preserve any API-specific formatting
-   - Maintain compatibility with UIUC.chat's citation system
+   - Maintain compatibility with UIUC.chat's citation system (OPTIONAL, ONLY IF APPLICABLE and mentioned in the original prompt)
    - Ensure proper handling of code blocks and markdown
 
 Output Format:
 Return ONLY the optimized system prompt with no additional commentary. The prompt should follow this structure:
 1. Core role and purpose statement
 2. Primary behavioral guidelines
-3. Document interaction rules (if applicable)
+3. Document interaction rules (OPTIONAL, ONLY IF APPLICABLE)
 4. Step-by-step instruction flow
 5. Output format requirements
-6. Special mode handling (if any)
+6. Special mode handling (OPTIONAL, ONLY IF APPLICABLE)
 
 CRITICAL: The optimized prompt must:
 - Preserve ALL core functionality from the original
 - Enhance clarity and effectiveness
-- Maintain compatibility with UIUC.chat's features
+- Maintain compatibility with UIUC.chat's features (OPTIONAL, ONLY IF APPLICABLE and mentioned in the original prompt)
 - Support both RAG and non-RAG interactions appropriately
 - Keep any existing citation or formatting requirements
-- ONLY MENTION SPECIAL MODE HANDLING IF IT IS PRESENT IN THE ORIGINAL PROMPT`
+- SHOULD NOT MENTION SPECIAL MODE HANDLING OR OPTIONAL SECTIONS IF THEY ARE NOT EXPLICITLY PRESENT IN THE ORIGINAL PROMPT
+- be concise and NOT include any special mode handling or optional sections unless they are explicitly present in the original prompt`
 
       const chatBody: ChatBody = {
         conversation: {
@@ -313,7 +314,7 @@ CRITICAL: The optimized prompt must:
             enabled: true,
           },
           prompt: baseSystemPrompt,
-          temperature: 0.7,
+          temperature: 0.1,
           folderId: null,
           userEmail: user?.emailAddresses?.[0]?.emailAddress,
         },
