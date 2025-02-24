@@ -33,7 +33,11 @@ import {
   Select,
 } from '@mantine/core'
 import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
-import { DEFAULT_SYSTEM_PROMPT, GUIDED_LEARNING_PROMPT, DOCUMENT_FOCUS_PROMPT } from '~/utils/app/const'
+import {
+  DEFAULT_SYSTEM_PROMPT,
+  GUIDED_LEARNING_PROMPT,
+  DOCUMENT_FOCUS_PROMPT,
+} from '~/utils/app/const'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
@@ -62,7 +66,10 @@ import CustomSwitch from '~/components/Switches/CustomSwitch'
 import CustomCopyButton from '~/components/Buttons/CustomCopyButton'
 import { useDebouncedCallback } from 'use-debounce'
 import { findDefaultModel } from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
-import { type AllLLMProviders, ProviderNames } from '~/utils/modelProviders/LLMProvider'
+import {
+  type AllLLMProviders,
+  ProviderNames,
+} from '~/utils/modelProviders/LLMProvider'
 import { v4 as uuidv4 } from 'uuid'
 import { type Message, type Conversation, type ChatBody } from '~/types/chat'
 
@@ -72,8 +79,8 @@ const montserrat = Montserrat({
 })
 
 type PartialCourseMetadata = {
-  [K in keyof CourseMetadata]?: CourseMetadata[K];
-};
+  [K in keyof CourseMetadata]?: CourseMetadata[K]
+}
 
 interface LLMModel {
   id: string
@@ -97,10 +104,13 @@ interface ModelOption {
   label: string
 }
 
-const getProviderFromModel = (modelId: string, modelOptions: ModelOption[]): ProviderNames => {
+const getProviderFromModel = (
+  modelId: string,
+  modelOptions: ModelOption[],
+): ProviderNames => {
   if (!modelId || !modelOptions.length) return ProviderNames.OpenAI // default fallback
 
-  const selectedOption = modelOptions.find(option => option.value === modelId)
+  const selectedOption = modelOptions.find((option) => option.value === modelId)
   return selectedOption?.group || ProviderNames.OpenAI
 }
 
@@ -110,7 +120,7 @@ const isApiKeyRequired = (provider: ProviderNames): boolean => {
     ProviderNames.Anthropic,
     ProviderNames.Azure,
     ProviderNames.Gemini,
-    ProviderNames.Bedrock
+    ProviderNames.Bedrock,
   ]
   return providersRequiringApiKey.includes(provider)
 }
@@ -127,36 +137,43 @@ const CourseMain: NextPage = () => {
   const { user, isLoaded, isSignedIn } = useUser()
   const [courseExists, setCourseExists] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(null)
+  const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
+    null,
+  )
   const [baseSystemPrompt, setBaseSystemPrompt] = useState('')
   const [optimizedSystemPrompt, setOptimizedSystemPrompt] = useState('')
   const [isRightSideVisible, setIsRightSideVisible] = useState(true)
   const [selectedModel, setSelectedModel] = useState<string>('')
   const [opened, { close, open }] = useDisclosure(false)
-  const [resetModalOpened, { close: closeResetModal, open: openResetModal }] = useDisclosure(false)
+  const [resetModalOpened, { close: closeResetModal, open: openResetModal }] =
+    useDisclosure(false)
   const [llmProviders, setLLMProviders] = useState<any>(null)
-  const [linkGeneratorOpened, { open: openLinkGenerator, close: closeLinkGenerator }] = useDisclosure(false)
-  const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([])
+  const [
+    linkGeneratorOpened,
+    { open: openLinkGenerator, close: closeLinkGenerator },
+  ] = useDisclosure(false)
+  const [messages, setMessages] = useState<
+    Array<{ role: string; content: string }>
+  >([])
   const [input, setInput] = useState(baseSystemPrompt)
   const [isOptimizing, setIsOptimizing] = useState(false)
 
   const modelOptions = llmProviders
-    ? Object.entries(llmProviders as AllLLMProviders).flatMap(([provider, config]) =>
-      config.enabled && config.models && provider !== 'WebLLM'
-        ? config.models
-          .filter((model) => model.enabled)
-          .map((model) => ({
-            group: provider as ProviderNames,
-            value: model.id,
-            label: model.name,
-          }))
-        : [],
-    )
+    ? Object.entries(llmProviders as AllLLMProviders).flatMap(
+        ([provider, config]) =>
+          config.enabled && config.models && provider !== 'WebLLM'
+            ? config.models
+                .filter((model) => model.enabled)
+                .map((model) => ({
+                  group: provider as ProviderNames,
+                  value: model.id,
+                  label: model.name,
+                }))
+            : [],
+      )
     : []
 
-  const handleSubmitPromptOptimization = async (
-    e: any,
-  ) => {
+  const handleSubmitPromptOptimization = async (e: any) => {
     e.preventDefault()
     setIsOptimizing(true)
     setMessages([])
@@ -167,7 +184,7 @@ const CourseMain: NextPage = () => {
           theme,
           'Configuration Error',
           'The Optimize System Prompt feature requires provider configuration to be loaded. Please refresh the page and try again.',
-          true
+          true,
         )
         return
       }
@@ -178,19 +195,23 @@ const CourseMain: NextPage = () => {
           theme,
           `${provider} Required`,
           `The Optimize System Prompt feature requires ${provider} to be enabled. Please enable ${provider} on the LLM page in your course settings to use this feature.`,
-          true
+          true,
         )
         return
       }
 
       if (isApiKeyRequired(provider)) {
         if (provider === 'Bedrock') {
-          if (!llmProviders[provider]?.accessKeyId || !llmProviders[provider]?.secretAccessKey || !llmProviders[provider]?.region) {
+          if (
+            !llmProviders[provider]?.accessKeyId ||
+            !llmProviders[provider]?.secretAccessKey ||
+            !llmProviders[provider]?.region
+          ) {
             showToastNotification(
               theme,
               `${provider} Credentials Required`,
               `The Optimize System Prompt feature requires AWS credentials (Access Key ID, Secret Access Key, and Region). Please add your AWS credentials on the LLM page in your course settings to use this feature.`,
-              true
+              true,
             )
             return
           }
@@ -199,77 +220,73 @@ const CourseMain: NextPage = () => {
             theme,
             `${provider} API Key Required`,
             `The Optimize System Prompt feature requires a ${provider} API key. Please add your ${provider} API key on the LLM page in your course settings to use this feature.`,
-            true
+            true,
           )
           return
         }
       }
-      const systemPrompt = `You are an expert prompt engineer. Your task is to analyze and optimize the provided system prompt while preserving and combining ALL of its components and functionality. IMPORTANT: The input may contain multiple sections that appear distinct - you MUST combine ALL sections into a single cohesive prompt.
-  
-  Key Requirements:
-  
-  1. Identify and Combine ALL Sections:
-     - Analyze the ENTIRE input prompt from start to finish
-     - Identify ALL distinct sections, even if they appear to be separate prompts
-     - Combine ALL sections into a single, cohesive system prompt
-     - Ensure NO content is lost or omitted, regardless of where it appears in the input
-  
-  2. Preserve ALL Functionality:
-     - Maintain ALL rules, constraints, and special behaviors from EVERY section
-     - Keep ALL examples and formatting specifications from THROUGHOUT the input
-     - Preserve ANY special modes or behaviors (e.g., guided learning, document-only mode)
-     - If sections seem to conflict, preserve BOTH behaviors and clarify when each applies
-  
-  3. Optimize and Integrate:
-     - Merge sections cohesively while maintaining their individual purposes
-     - Find common themes and combine related instructions
-     - Eliminate redundancy while preserving distinct functionalities
-     - Ensure all special behaviors are properly integrated
-     - Create smooth transitions between different aspects of the prompt
-  
-  4. Structure and Format:
-     - Use clear section headings to organize combined content
-     - Maintain specific formatting requirements from all sections
-     - Keep all examples and placeholders
-     - Preserve special syntax or notation from every section
-     - Create a logical flow between different types of instructions
-  
-  5. Reasoning and Logic Flow:
-     - Ensure reasoning steps precede conclusions in all cases
-     - If examples show reasoning after conclusions, restructure to put reasoning first
-     - Maintain clear logical progression across all combined sections
-     - Use explicit step-by-step breakdowns where appropriate
-  
-  6. Examples and Formatting:
-     - Include high-quality examples with [placeholders] for complex elements
-     - Use markdown for readability (avoid code blocks unless specifically requested)
-     - For structured data outputs (e.g., classification, JSON), prefer JSON format
-     - Never wrap JSON in code blocks unless explicitly requested
-     - If examples are simplified versions, add notes about real-world complexity
-  
-  7. Content Guidelines:
-     - Start with a clear, concise task description that encompasses ALL aspects
-     - Include constants (guides, rubrics, examples) as they resist prompt injection
-     - Break down vague instructions into clear sub-steps
-     - Preserve all user-provided details, guidelines, and variables
-     - Specify output format requirements in detail (length, structure, syntax)
-  
-  8. Output Requirements:
-     - Return the COMPLETE optimized prompt combining ALL sections
-     - Include ALL functionality from EVERY part of the original
-     - Maintain ALL special modes and behaviors from all sections
-     - Keep the same level of detail for critical components
-     - Follow this structure:
-       * Comprehensive task description (no header)
-       * Combined additional details
-       * Integrated sections with appropriate headings
-       * Unified output format
-       * Combined examples (if needed)
-       * Comprehensive notes (if needed)
-  
-  CRITICAL: Review the ENTIRE output to verify that NO aspects from ANY section of the input prompt have been omitted. The final prompt MUST incorporate ALL functionality and requirements from ALL sections of the input.
-  
-  Do not include any commentary or explanations. Output only the optimized system prompt.`
+      const systemPrompt = `You are an expert prompt engineer specializing in optimizing prompts for educational and RAG-based AI systems. Your task is to analyze and enhance the provided system prompt while preserving its core functionality and improving its effectiveness.
+
+Key Objectives:
+
+1. Core Functionality Analysis:
+   - Identify the primary purpose and key behaviors specified in the prompt
+   - Determine if the prompt involves document/RAG interactions
+   - Recognize any special modes (e.g., guided learning, document-only)
+   - Map out any specific output format requirements
+
+2. Educational Enhancement:
+   - Strengthen pedagogical elements if present
+   - Add clear reasoning steps where appropriate
+   - Ensure explanations precede conclusions
+   - Maintain academic integrity guidelines if specified
+
+3. RAG Integration (When Applicable):
+   - Optimize document reference and citation patterns
+   - Enhance context retrieval instructions
+   - Improve document summarization guidelines
+   - Add safeguards against hallucination
+
+4. Prompt Structure Optimization:
+   - Organize instructions in a clear, logical flow
+   - Remove redundancy while preserving distinct requirements
+   - Add explicit step-by-step breakdowns where helpful
+   - Create smooth transitions between different behaviors
+
+5. Output Quality Assurance:
+   - Specify clear formatting requirements
+   - Add validation steps for responses
+   - Include error handling guidelines
+   - Define success criteria
+
+6. Behavioral Calibration:
+   - Adjust tone and formality to match educational context
+   - Balance helpfulness with academic integrity
+   - Maintain consistent personality throughout interactions
+   - Preserve any specific behavioral constraints
+
+7. Technical Requirements:
+   - Keep all special syntax and formatting intact
+   - Preserve any API-specific formatting
+   - Maintain compatibility with UIUC.chat's citation system
+   - Ensure proper handling of code blocks and markdown
+
+Output Format:
+Return ONLY the optimized system prompt with no additional commentary. The prompt should follow this structure:
+1. Core role and purpose statement
+2. Primary behavioral guidelines
+3. Document interaction rules (if applicable)
+4. Step-by-step instruction flow
+5. Output format requirements
+6. Special mode handling (if any)
+
+CRITICAL: The optimized prompt must:
+- Preserve ALL core functionality from the original
+- Enhance clarity and effectiveness
+- Maintain compatibility with UIUC.chat's features
+- Support both RAG and non-RAG interactions appropriately
+- Keep any existing citation or formatting requirements
+- ONLY MENTION SPECIAL MODE HANDLING IF IT IS PRESENT IN THE ORIGINAL PROMPT`
 
       const chatBody: ChatBody = {
         conversation: {
@@ -285,18 +302,20 @@ const CourseMain: NextPage = () => {
               id: uuidv4(),
               role: 'user',
               content: baseSystemPrompt,
-            }
+            },
           ],
           model: {
             id: selectedModel || 'gpt-4',
-            name: modelOptions.find(opt => opt.value === selectedModel)?.label || 'GPT-4',
+            name:
+              modelOptions.find((opt) => opt.value === selectedModel)?.label ||
+              'GPT-4',
             tokenLimit: 8192,
-            enabled: true
+            enabled: true,
           },
           prompt: baseSystemPrompt,
           temperature: 0.7,
           folderId: null,
-          userEmail: user?.emailAddresses?.[0]?.emailAddress
+          userEmail: user?.emailAddresses?.[0]?.emailAddress,
         },
         llmProviders: llmProviders,
         course_name: course_name,
@@ -319,7 +338,7 @@ const CourseMain: NextPage = () => {
           theme,
           'Error',
           errorData.error || 'Failed to optimize prompt',
-          true
+          true,
         )
         return
       }
@@ -348,9 +367,7 @@ const CourseMain: NextPage = () => {
         }
 
         // Update messages state for real-time display
-        setMessages([
-          { role: 'assistant', content: optimizedPrompt }
-        ])
+        setMessages([{ role: 'assistant', content: optimizedPrompt }])
       }
     } catch (error) {
       console.error('Error optimizing prompt:', error)
@@ -358,9 +375,9 @@ const CourseMain: NextPage = () => {
         theme,
         'Error',
         'Failed to optimize prompt. Please try again.',
-        true
+        true,
       )
-      setIsOptimizing(false)  // Keep this here for error cases
+      setIsOptimizing(false) // Keep this here for error cases
     }
   }
 
@@ -401,11 +418,11 @@ const CourseMain: NextPage = () => {
   const [vectorSearchRewrite, setVectorSearchRewrite] = useState(false)
   const [insightsOpen, setInsightsOpen] = useState(false)
 
-  const courseMetadataRef = useRef<CourseMetadata | null>(null);
+  const courseMetadataRef = useRef<CourseMetadata | null>(null)
 
   useEffect(() => {
-    courseMetadataRef.current = courseMetadata;
-  }, [courseMetadata]);
+    courseMetadataRef.current = courseMetadata
+  }, [courseMetadata])
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -423,7 +440,7 @@ const CourseMain: NextPage = () => {
       const fetchedMetadata = (await response_metadata.json()).course_metadata
       setCourseMetadata(fetchedMetadata)
       setBaseSystemPrompt(
-        fetchedMetadata.system_prompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
+        fetchedMetadata.system_prompt ?? DEFAULT_SYSTEM_PROMPT ?? '',
       )
 
       // Initialize all state variables
@@ -441,7 +458,9 @@ const CourseMain: NextPage = () => {
     setInput(baseSystemPrompt)
   }, [baseSystemPrompt])
 
-  const handleSystemPromptSubmit = async (newSystemPrompt: string | undefined) => {
+  const handleSystemPromptSubmit = async (
+    newSystemPrompt: string | undefined,
+  ) => {
     let success = false
     if (courseMetadata && course_name) {
       const updatedCourseMetadata = {
@@ -468,7 +487,7 @@ const CourseMain: NextPage = () => {
     if (courseMetadata && course_name) {
       const updatedCourseMetadata = {
         ...courseMetadata,
-        system_prompt: null,  // Explicitly set to undefined
+        system_prompt: null, // Explicitly set to undefined
         guidedLearning: false,
         documentsOnly: false,
         systemPromptOnly: false,
@@ -523,16 +542,16 @@ const CourseMain: NextPage = () => {
 
   // Track initial state of switches
   const initialSwitchStateRef = useRef<{
-    guidedLearning: boolean;
-    documentsOnly: boolean;
-    systemPromptOnly: boolean;
-    vectorSearchRewrite: boolean;
+    guidedLearning: boolean
+    documentsOnly: boolean
+    systemPromptOnly: boolean
+    vectorSearchRewrite: boolean
   }>({
     guidedLearning: false,
     documentsOnly: false,
     systemPromptOnly: false,
     vectorSearchRewrite: false,
-  });
+  })
 
   useEffect(() => {
     if (courseMetadata) {
@@ -541,28 +560,28 @@ const CourseMain: NextPage = () => {
         documentsOnly: courseMetadata.documentsOnly || false,
         systemPromptOnly: courseMetadata.systemPromptOnly || false,
         vectorSearchRewrite: !courseMetadata.vector_search_rewrite_disabled,
-      };
+      }
     }
-  }, [courseMetadata]);
+  }, [courseMetadata])
 
   const saveSettings = async () => {
-    if (!courseMetadataRef.current || !course_name) return;
+    if (!courseMetadataRef.current || !course_name) return
 
     const currentSwitchState = {
       guidedLearning,
       documentsOnly,
       systemPromptOnly,
       vectorSearchRewrite,
-    };
+    }
 
-    const initialSwitchState = initialSwitchStateRef.current;
+    const initialSwitchState = initialSwitchStateRef.current
 
-    const hasChanges = (Object.keys(currentSwitchState) as Array<keyof typeof currentSwitchState>).some(
-      (key) => currentSwitchState[key] !== initialSwitchState[key]
-    );
+    const hasChanges = (
+      Object.keys(currentSwitchState) as Array<keyof typeof currentSwitchState>
+    ).some((key) => currentSwitchState[key] !== initialSwitchState[key])
 
     if (!hasChanges) {
-      return;
+      return
     }
 
     const updatedMetadata = {
@@ -571,30 +590,48 @@ const CourseMain: NextPage = () => {
       documentsOnly,
       systemPromptOnly,
       vector_search_rewrite_disabled: !vectorSearchRewrite,
-    } as CourseMetadata;
+    } as CourseMetadata
 
     try {
-      const success = await callSetCourseMetadata(course_name, updatedMetadata);
+      const success = await callSetCourseMetadata(course_name, updatedMetadata)
       if (!success) {
-        showToastNotification(theme, 'Error', 'Failed to update settings', true);
-        return;
+        showToastNotification(theme, 'Error', 'Failed to update settings', true)
+        return
       }
 
-      setCourseMetadata(updatedMetadata);
-      initialSwitchStateRef.current = currentSwitchState;
+      setCourseMetadata(updatedMetadata)
+      initialSwitchStateRef.current = currentSwitchState
 
-      const changes: string[] = [];
-      if (initialSwitchState.vectorSearchRewrite !== currentSwitchState.vectorSearchRewrite) {
-        changes.push(`Smart Document Search ${currentSwitchState.vectorSearchRewrite ? 'enabled' : 'disabled'}`);
+      const changes: string[] = []
+      if (
+        initialSwitchState.vectorSearchRewrite !==
+        currentSwitchState.vectorSearchRewrite
+      ) {
+        changes.push(
+          `Smart Document Search ${currentSwitchState.vectorSearchRewrite ? 'enabled' : 'disabled'}`,
+        )
       }
-      if (initialSwitchState.guidedLearning !== currentSwitchState.guidedLearning) {
-        changes.push(`Guided Learning ${currentSwitchState.guidedLearning ? 'enabled' : 'disabled'}`);
+      if (
+        initialSwitchState.guidedLearning !== currentSwitchState.guidedLearning
+      ) {
+        changes.push(
+          `Guided Learning ${currentSwitchState.guidedLearning ? 'enabled' : 'disabled'}`,
+        )
       }
-      if (initialSwitchState.documentsOnly !== currentSwitchState.documentsOnly) {
-        changes.push(`Document-Based References Only ${currentSwitchState.documentsOnly ? 'enabled' : 'disabled'}`);
+      if (
+        initialSwitchState.documentsOnly !== currentSwitchState.documentsOnly
+      ) {
+        changes.push(
+          `Document-Based References Only ${currentSwitchState.documentsOnly ? 'enabled' : 'disabled'}`,
+        )
       }
-      if (initialSwitchState.systemPromptOnly !== currentSwitchState.systemPromptOnly) {
-        changes.push(`Bypass UIUC.chat's internal prompting ${currentSwitchState.systemPromptOnly ? 'enabled' : 'disabled'}`);
+      if (
+        initialSwitchState.systemPromptOnly !==
+        currentSwitchState.systemPromptOnly
+      ) {
+        changes.push(
+          `Bypass UIUC.chat's internal prompting ${currentSwitchState.systemPromptOnly ? 'enabled' : 'disabled'}`,
+        )
       }
 
       if (changes.length > 0) {
@@ -602,53 +639,56 @@ const CourseMain: NextPage = () => {
           theme,
           changes.join(' & '),
           'Settings have been saved successfully',
-          false
-        );
+          false,
+        )
       }
     } catch (error) {
-      console.error('Error updating course settings:', error);
-      showToastNotification(theme, 'Error', 'Failed to update settings', true);
+      console.error('Error updating course settings:', error)
+      showToastNotification(theme, 'Error', 'Failed to update settings', true)
     }
-  };
+  }
 
-  const debouncedSaveSettings = useDebouncedCallback(saveSettings, 500);
+  const debouncedSaveSettings = useDebouncedCallback(saveSettings, 500)
 
   const handleSettingChange = (updates: PartialCourseMetadata) => {
-    if (!courseMetadata) return;
+    if (!courseMetadata) return
 
     if ('vector_search_rewrite_disabled' in updates) {
-      setVectorSearchRewrite(!updates.vector_search_rewrite_disabled);
+      setVectorSearchRewrite(!updates.vector_search_rewrite_disabled)
     }
 
     courseMetadataRef.current = {
       ...courseMetadataRef.current!,
       ...updates,
-    } as CourseMetadata;
+    } as CourseMetadata
 
-    debouncedSaveSettings();
-  };
+    debouncedSaveSettings()
+  }
 
   const handleCheckboxChange = async (updatedFields: PartialCourseMetadata) => {
     if (!courseMetadata || !course_name) {
-      showToastNotification(theme, 'Error', 'Failed to update settings', true);
-      return;
+      showToastNotification(theme, 'Error', 'Failed to update settings', true)
+      return
     }
 
-    if ('guidedLearning' in updatedFields) setGuidedLearning(updatedFields.guidedLearning!);
-    if ('documentsOnly' in updatedFields) setDocumentsOnly(updatedFields.documentsOnly!);
-    if ('systemPromptOnly' in updatedFields) setSystemPromptOnly(updatedFields.systemPromptOnly!);
+    if ('guidedLearning' in updatedFields)
+      setGuidedLearning(updatedFields.guidedLearning!)
+    if ('documentsOnly' in updatedFields)
+      setDocumentsOnly(updatedFields.documentsOnly!)
+    if ('systemPromptOnly' in updatedFields)
+      setSystemPromptOnly(updatedFields.systemPromptOnly!)
 
-    const newSystemPrompt = updateSystemPrompt(updatedFields);
-    setBaseSystemPrompt(newSystemPrompt);
+    const newSystemPrompt = updateSystemPrompt(updatedFields)
+    setBaseSystemPrompt(newSystemPrompt)
 
     courseMetadataRef.current = {
       ...courseMetadataRef.current!,
       ...updatedFields,
       system_prompt: newSystemPrompt,
-    } as CourseMetadata;
+    } as CourseMetadata
 
-    debouncedSaveSettings();
-  };
+    debouncedSaveSettings()
+  }
 
   const handleCopyDefaultPrompt = async () => {
     try {
@@ -785,10 +825,11 @@ const CourseMain: NextPage = () => {
                           order={3}
                           variant="gradient"
                           gradient={{ from: 'gold', to: 'white', deg: 50 }}
-                          className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base sm:text-xl ${course_name.length > 40
-                            ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
-                            : ''
-                            }`}
+                          className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base sm:text-xl ${
+                            course_name.length > 40
+                              ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
+                              : ''
+                          }`}
                         >
                           {course_name}
                         </Title>
@@ -805,9 +846,6 @@ const CourseMain: NextPage = () => {
                     className="min-h-full justify-center"
                   >
                     <div className="card flex h-full flex-col">
-
-
-
                       <Group
                         m="2rem"
                         align="center"
@@ -821,7 +859,7 @@ const CourseMain: NextPage = () => {
                       >
                         {/* Prompt Engineering Guide */}
                         <Paper
-                          className="rounded-xl w-full px-4 sm:px-6 md:px-8"
+                          className="w-full rounded-xl px-4 sm:px-6 md:px-8"
                           shadow="xs"
                           p="md"
                           sx={{
@@ -857,7 +895,11 @@ const CourseMain: NextPage = () => {
                                 weight={600}
                                 className={`${montserrat_paragraph.variable} select-text font-montserratParagraph`}
                                 variant="gradient"
-                                gradient={{ from: 'gold', to: 'white', deg: 50 }}
+                                gradient={{
+                                  from: 'gold',
+                                  to: 'white',
+                                  deg: 50,
+                                }}
                               >
                                 Prompt Engineering Guide
                               </Text>
@@ -865,7 +907,9 @@ const CourseMain: NextPage = () => {
                             <div
                               className="transition-transform duration-200"
                               style={{
-                                transform: insightsOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                                transform: insightsOpen
+                                  ? 'rotate(180deg)'
+                                  : 'rotate(0deg)',
                                 color: 'hsl(280,100%,70%)',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -882,7 +926,8 @@ const CourseMain: NextPage = () => {
                                 size="md"
                                 className={`${montserrat_paragraph.variable} select-text font-montserratParagraph`}
                               >
-                                For additional insights and best practices on prompt creation, please review:
+                                For additional insights and best practices on
+                                prompt creation, please review:
                                 <List
                                   withPadding
                                   className="mt-2"
@@ -894,31 +939,35 @@ const CourseMain: NextPage = () => {
                                         height: '6px',
                                         borderRadius: '50%',
                                         backgroundColor: 'hsl(280,100%,70%)',
-                                        marginTop: '8px'
+                                        marginTop: '8px',
                                       }}
                                     />
                                   }
                                 >
                                   <List.Item>
                                     <a
-                                      className={`text-sm hover:text-purple-400 transition-colors duration-200 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                      className={`text-sm transition-colors duration-200 hover:text-purple-400 ${montserrat_paragraph.variable} font-montserratParagraph`}
                                       style={{ color: 'hsl(280,100%,70%)' }}
                                       href="https://platform.openai.com/docs/guides/prompt-engineering"
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       onClick={(e) => e.stopPropagation()}
                                     >
-                                      The Official OpenAI Prompt Engineering Guide
+                                      The Official OpenAI Prompt Engineering
+                                      Guide
                                       <IconExternalLink
                                         size={18}
                                         className="inline-block pl-1"
-                                        style={{ position: 'relative', top: '-2px' }}
+                                        style={{
+                                          position: 'relative',
+                                          top: '-2px',
+                                        }}
                                       />
                                     </a>
                                   </List.Item>
                                   <List.Item>
                                     <a
-                                      className={`text-sm hover:text-purple-400 transition-colors duration-200 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                      className={`text-sm transition-colors duration-200 hover:text-purple-400 ${montserrat_paragraph.variable} font-montserratParagraph`}
                                       style={{ color: 'hsl(280,100%,70%)' }}
                                       href="https://docs.anthropic.com/claude/prompt-library"
                                       target="_blank"
@@ -929,18 +978,23 @@ const CourseMain: NextPage = () => {
                                       <IconExternalLink
                                         size={18}
                                         className="inline-block pl-1"
-                                        style={{ position: 'relative', top: '-2px' }}
+                                        style={{
+                                          position: 'relative',
+                                          top: '-2px',
+                                        }}
                                       />
                                     </a>
                                   </List.Item>
                                 </List>
-
                                 <Text
                                   className={`label ${montserrat_paragraph.variable} inline-block select-text font-montserratParagraph`}
                                   size="md"
                                   style={{ marginTop: '1.5rem' }}
                                 >
-                                  The System Prompt provides the foundation for every conversation in this project. It defines the model&apos;s role, tone, and behavior. Consider including:
+                                  The System Prompt provides the foundation for
+                                  every conversation in this project. It defines
+                                  the model&apos;s role, tone, and behavior.
+                                  Consider including:
                                   <List
                                     withPadding
                                     className="mt-2"
@@ -952,21 +1006,26 @@ const CourseMain: NextPage = () => {
                                           height: '6px',
                                           borderRadius: '50%',
                                           backgroundColor: 'hsl(280,100%,70%)',
-                                          marginTop: '8px'
+                                          marginTop: '8px',
                                         }}
                                       />
                                     }
                                   >
-                                    <List.Item>Key instructions or examples</List.Item>
-                                    <List.Item>A warm welcome message</List.Item>
-                                    <List.Item>Helpful links for further learning</List.Item>
+                                    <List.Item>
+                                      Key instructions or examples
+                                    </List.Item>
+                                    <List.Item>
+                                      A warm welcome message
+                                    </List.Item>
+                                    <List.Item>
+                                      Helpful links for further learning
+                                    </List.Item>
                                   </List>
                                 </Text>
                               </Text>
                             </div>
                           </Collapse>
                         </Paper>
-
 
                         {/* SYSTEM PROMPT INPUT BOX */}
                         <div
@@ -987,12 +1046,20 @@ const CourseMain: NextPage = () => {
                               background: '#15162c',
                             }}
                           >
-                            <Flex justify="space-between" align="center" mb="md">
+                            <Flex
+                              justify="space-between"
+                              align="center"
+                              mb="md"
+                            >
                               <Flex align="center" gap="md">
                                 <Title
                                   className={`label ${montserrat_heading.variable} pl-3 font-montserratHeading md:pl-0`}
                                   variant="gradient"
-                                  gradient={{ from: 'gold', to: 'white', deg: 170 }}
+                                  gradient={{
+                                    from: 'gold',
+                                    to: 'white',
+                                    deg: 170,
+                                  }}
                                   order={4}
                                 >
                                   System Prompt
@@ -1001,7 +1068,9 @@ const CourseMain: NextPage = () => {
                                   placeholder="Select model"
                                   data={modelOptions}
                                   value={selectedModel}
-                                  onChange={(value) => setSelectedModel(value || '')}
+                                  onChange={(value) =>
+                                    setSelectedModel(value || '')
+                                  }
                                   searchable
                                   radius={'md'}
                                   maxDropdownHeight={320}
@@ -1029,7 +1098,8 @@ const CourseMain: NextPage = () => {
                                       '&[data-selected]': {
                                         backgroundColor: theme.colors.grape[9],
                                         '&:hover': {
-                                          backgroundColor: theme.colors.grape[8],
+                                          backgroundColor:
+                                            theme.colors.grape[8],
                                         },
                                       },
                                       fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
@@ -1047,12 +1117,17 @@ const CourseMain: NextPage = () => {
                                 />
                               </Flex>
                               {isRightSideVisible ? (
-                                <Tooltip label="Close Prompt Builder" key="close">
+                                <Tooltip
+                                  label="Close Prompt Builder"
+                                  key="close"
+                                >
                                   <div className="cursor-pointer p-4 hover:opacity-75 md:p-0">
                                     <IconLayoutSidebarRight
                                       stroke={2}
                                       onClick={() =>
-                                        setIsRightSideVisible(!isRightSideVisible)
+                                        setIsRightSideVisible(
+                                          !isRightSideVisible,
+                                        )
                                       }
                                     />
                                   </div>
@@ -1063,7 +1138,9 @@ const CourseMain: NextPage = () => {
                                     <IconLayoutSidebarRightExpand
                                       stroke={2}
                                       onClick={() =>
-                                        setIsRightSideVisible(!isRightSideVisible)
+                                        setIsRightSideVisible(
+                                          !isRightSideVisible,
+                                        )
                                       }
                                     />
                                   </div>
@@ -1089,12 +1166,13 @@ const CourseMain: NextPage = () => {
                                 style={{ width: '100%' }}
                                 styles={{
                                   input: {
-                                    fontFamily: 'var(--font-montserratParagraph)',
+                                    fontFamily:
+                                      'var(--font-montserratParagraph)',
                                     '&:focus': {
                                       borderColor: '#8441ba',
-                                      boxShadow: '0 0 0 1px #8441ba'
-                                    }
-                                  }
+                                      boxShadow: '0 0 0 1px #8441ba',
+                                    },
+                                  },
                                 }}
                               />
                               <Group mt="md" spacing="sm">
@@ -1133,10 +1211,17 @@ const CourseMain: NextPage = () => {
                                   disabled={!llmProviders || isOptimizing}
                                   variant="filled"
                                   radius="md"
-                                  leftIcon={isOptimizing ? <LoadingSpinner size="sm" /> : <IconSparkles stroke={1} />}
+                                  leftIcon={
+                                    isOptimizing ? (
+                                      <LoadingSpinner size="sm" />
+                                    ) : (
+                                      <IconSparkles stroke={1} />
+                                    )
+                                  }
                                   className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                                   sx={(theme) => ({
-                                    background: 'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%) !important',
+                                    background:
+                                      'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%) !important',
                                     border: 'none',
                                     color: '#fff',
                                     padding: '10px 20px',
@@ -1144,7 +1229,8 @@ const CourseMain: NextPage = () => {
                                     boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
                                     transition: 'all 0.2s ease',
                                     '&:hover': {
-                                      background: 'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%) !important',
+                                      background:
+                                        'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%) !important',
                                       transform: 'translateY(-1px)',
                                       boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
                                     },
@@ -1161,7 +1247,9 @@ const CourseMain: NextPage = () => {
                                   })}
                                   style={{ minWidth: 'fit-content' }}
                                 >
-                                  {isOptimizing ? 'Optimizing...' : 'Optimize System Prompt'}
+                                  {isOptimizing
+                                    ? 'Optimizing...'
+                                    : 'Optimize System Prompt'}
                                 </Button>
                               </Group>
 
@@ -1169,82 +1257,173 @@ const CourseMain: NextPage = () => {
                                 opened={opened}
                                 onClose={close}
                                 size="xl"
-                                title="Optimized System Prompt"
+                                title={
+                                  <Text
+                                    className={`${montserrat_heading.variable} font-montserratHeading`}
+                                    size="lg"
+                                    weight={700}
+                                    gradient={{
+                                      from: 'gold',
+                                      to: 'white',
+                                      deg: 45,
+                                    }}
+                                    variant="gradient"
+                                  >
+                                    Optimized System Prompt
+                                  </Text>
+                                }
                                 className={`${montserrat_heading.variable} rounded-xl font-montserratHeading`}
                                 centered
-                                radius={'lg'}
+                                radius="lg"
                                 styles={{
-                                  title: { marginTop: '1rem' },
-                                  header: { backgroundColor: '#15162c' },
-                                  content: { backgroundColor: '#15162c' },
+                                  title: { marginBottom: '0' },
+                                  header: {
+                                    backgroundColor: '#15162c',
+                                    borderBottom: '1px solid #2D2F48',
+                                    padding: '20px 24px',
+                                  },
+                                  content: {
+                                    backgroundColor: '#15162c',
+                                    border: '1px solid #2D2F48',
+                                  },
+                                  body: {
+                                    padding: '24px',
+                                    marginTop: '2%',
+                                    paddingTop: '4%',
+                                    maxHeight: 'calc(85vh - 76px)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                  },
+                                  close: {
+                                    color: '#D1D1D1',
+                                    '&:hover': {
+                                      backgroundColor:
+                                        'rgba(255, 255, 255, 0.1)',
+                                    },
+                                  },
                                 }}
                               >
-                                <Group mt="md">
-                                  {messages.map((message, i, { length }) => {
-                                    if (
-                                      length - 1 === i &&
-                                      message.role === 'assistant'
-                                    ) {
-                                      return (
-                                        <div
-                                          key={i}
-                                          style={{
-                                            border: '1px solid #6D28D9',
-                                            padding: '10px',
-                                            borderRadius: '5px',
-                                            whiteSpace: 'pre-wrap',
-                                          }}
-                                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                                        >
-                                          {message.content}
-                                        </div>
-                                      )
-                                    }
-                                  }, null)}
-
-                                  {/* TODO: add the return value if there is no message found
-                                    double confirm the handleSystemPromptSubmit */}
-                                  <Button
-                                    className="relative m-1 self-end bg-purple-800 text-white hover:border-indigo-600"
-                                    type="button"
-                                    onClick={() => {
-                                      const lastMessage =
-                                        messages[messages.length - 1]
+                                <div
+                                  style={{
+                                    flex: 1,
+                                    minHeight: 0,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '24px',
+                                  }}
+                                >
+                                  <Paper
+                                    p="md"
+                                    radius="md"
+                                    style={{
+                                      backgroundColor: '#1a1b34',
+                                      border:
+                                        '1px solid rgba(147, 51, 234, 0.3)',
+                                      flex: 1,
+                                      overflow: 'auto',
+                                      minHeight: '200px',
+                                      maxHeight: 'calc(85vh - 200px)',
+                                      marginTop: '4px',
+                                    }}
+                                  >
+                                    {messages.map((message, i, { length }) => {
                                       if (
-                                        lastMessage &&
-                                        lastMessage.role === 'assistant'
+                                        length - 1 === i &&
+                                        message.role === 'assistant'
                                       ) {
-                                        const newSystemPrompt =
-                                          lastMessage.content
-                                        setOptimizedSystemPrompt(newSystemPrompt)
-                                        setBaseSystemPrompt(newSystemPrompt)
-                                        handleSystemPromptSubmit(newSystemPrompt)
-                                        console.log(
-                                          'system prompt',
-                                          newSystemPrompt,
+                                        return (
+                                          <div
+                                            key={i}
+                                            style={{
+                                              padding: '16px',
+                                              borderRadius: '8px',
+                                              whiteSpace: 'pre-wrap',
+                                              color: '#D1D1D1',
+                                              lineHeight: '1.6',
+                                              fontSize: '0.95rem',
+                                            }}
+                                            className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                          >
+                                            {message.content}
+                                          </div>
                                         )
                                       }
-                                      close()
-                                    }}
-                                    style={{ minWidth: 'fit-content' }}
-                                  >
-                                    Update System Prompt
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    className="relative m-1 self-end bg-red-500 text-white hover:border-red-600 hover:bg-red-600"
-                                    onClick={close}
-                                  >
-                                    Cancel
-                                  </Button>
-                                </Group>
+                                    }, null)}
+                                  </Paper>
+
+                                  <Group position="right" spacing="sm">
+                                    <Button
+                                      variant="outline"
+                                      radius="md"
+                                      onClick={close}
+                                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                      styles={(theme) => ({
+                                        root: {
+                                          borderColor: theme.colors.gray[6],
+                                          color: '#fff',
+                                          '&:hover': {
+                                            backgroundColor:
+                                              theme.colors.gray[8],
+                                          },
+                                        },
+                                      })}
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      radius="md"
+                                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                      onClick={() => {
+                                        const lastMessage =
+                                          messages[messages.length - 1]
+                                        if (
+                                          lastMessage &&
+                                          lastMessage.role === 'assistant'
+                                        ) {
+                                          const newSystemPrompt =
+                                            lastMessage.content
+                                          setOptimizedSystemPrompt(
+                                            newSystemPrompt,
+                                          )
+                                          setBaseSystemPrompt(newSystemPrompt)
+                                          handleSystemPromptSubmit(
+                                            newSystemPrompt,
+                                          )
+                                        }
+                                        close()
+                                      }}
+                                      sx={(theme) => ({
+                                        background:
+                                          'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%) !important',
+                                        border: 'none',
+                                        color: '#fff',
+                                        padding: '10px 20px',
+                                        fontWeight: 600,
+                                        boxShadow:
+                                          '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                        transition: 'all 0.2s ease',
+                                        '&:hover': {
+                                          background:
+                                            'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%) !important',
+                                          transform: 'translateY(-1px)',
+                                          boxShadow:
+                                            '0 4px 8px rgba(0, 0, 0, 0.3)',
+                                        },
+                                        '&:active': {
+                                          transform: 'translateY(0)',
+                                          boxShadow:
+                                            '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                        },
+                                      })}
+                                    >
+                                      Update System Prompt
+                                    </Button>
+                                  </Group>
+                                </div>
                               </Modal>
                             </form>
                           </div>
                         </div>
-
-
-
                       </Group>
                       {/* <Alert icon={<IconAlertCircle size="1rem" />} title="Attention!" color="pink" style={{ width: isRightSideVisible ? '90%' : '73%', margin: 'auto', marginTop: '0px', color: 'pink' }}>
                         <span style={{ color: 'pink' }}>Remember to save and update the system prompt before you leave this page.</span>
@@ -1281,7 +1460,9 @@ const CourseMain: NextPage = () => {
                             </Title>
                             <Indicator
                               label={
-                                <Text className={`${montserrat_heading.variable} font-montserratHeading`}>
+                                <Text
+                                  className={`${montserrat_heading.variable} font-montserratHeading`}
+                                >
                                   New
                                 </Text>
                               }
@@ -1294,7 +1475,9 @@ const CourseMain: NextPage = () => {
                                 },
                               }}
                             >
-                              <span className={`${montserrat_heading.variable} font-montserratHeading`}></span>
+                              <span
+                                className={`${montserrat_heading.variable} font-montserratHeading`}
+                              ></span>
                             </Indicator>
                           </Flex>
 
@@ -1303,7 +1486,9 @@ const CourseMain: NextPage = () => {
                             tooltip="When enabled, UIUC.chat optimizes your queries to better search through course materials and find relevant content. Note: This only affects how documents are searched - your chat messages remain exactly as you write them."
                             checked={vectorSearchRewrite}
                             onChange={(value: boolean) => {
-                              handleSettingChange({ vector_search_rewrite_disabled: !value })
+                              handleSettingChange({
+                                vector_search_rewrite_disabled: !value,
+                              })
                             }}
                           />
 
@@ -1351,7 +1536,9 @@ const CourseMain: NextPage = () => {
                                 tooltip="When enabled course-wide, this setting applies to all students and cannot be disabled by them. The AI will encourage independent problem-solving by providing hints and questions instead of direct answers, while still finding and citing relevant course materials. This promotes critical thinking while ensuring students have access to proper resources."
                                 checked={guidedLearning}
                                 onChange={(value: boolean) =>
-                                  handleCheckboxChange({ guidedLearning: value })
+                                  handleCheckboxChange({
+                                    guidedLearning: value,
+                                  })
                                 }
                               />
 
@@ -1365,11 +1552,13 @@ const CourseMain: NextPage = () => {
                               />
 
                               <CustomSwitch
-                                label="Bypass UIUC.chat&apos;s internal prompting"
+                                label="Bypass UIUC.chat's internal prompting"
                                 tooltip="Internally, we prompt the model to (1) add citations and (2) always be as helpful as possible. You can bypass this for full un-modified control over your bot."
                                 checked={systemPromptOnly}
                                 onChange={(value: boolean) =>
-                                  handleCheckboxChange({ systemPromptOnly: value })
+                                  handleCheckboxChange({
+                                    systemPromptOnly: value,
+                                  })
                                 }
                               />
 
@@ -1382,8 +1571,8 @@ const CourseMain: NextPage = () => {
                                   className="mt-[-4px] pl-[82px]"
                                 >
                                   <CustomCopyButton
-                                    label="Copy UIUC.chat&apos;s internal prompt"
-                                    tooltip="You can use and customize our default internal prompting to suit your needs. Note, only the specific citation formatting described will work with our citation &apos;find and replace&apos; system. This provides a solid starting point for defining AI behavior in raw prompt mode."
+                                    label="Copy UIUC.chat's internal prompt"
+                                    tooltip="You can use and customize our default internal prompting to suit your needs. Note, only the specific citation formatting described will work with our citation 'find and replace' system. This provides a solid starting point for defining AI behavior in raw prompt mode."
                                     onClick={handleCopyDefaultPrompt}
                                   />
                                 </Flex>
@@ -1398,7 +1587,11 @@ const CourseMain: NextPage = () => {
                                     className={`${montserrat_heading.variable} font-montserratHeading`}
                                     size="lg"
                                     weight={700}
-                                    gradient={{ from: 'red', to: 'white', deg: 45 }}
+                                    gradient={{
+                                      from: 'red',
+                                      to: 'white',
+                                      deg: 45,
+                                    }}
                                     variant="gradient"
                                   >
                                     Reset Prompting Settings
@@ -1412,7 +1605,7 @@ const CourseMain: NextPage = () => {
                                     backgroundColor: '#15162c',
                                     borderBottom: '1px solid #2D2F48',
                                     padding: '20px 24px',
-                                    marginBottom: '16px'
+                                    marginBottom: '16px',
                                   },
                                   content: {
                                     backgroundColor: '#15162c',
@@ -1425,11 +1618,15 @@ const CourseMain: NextPage = () => {
                                     marginBottom: '0',
                                   },
                                   close: {
-                                    marginTop: '4px'
-                                  }
+                                    marginTop: '4px',
+                                  },
                                 }}
                               >
-                                <Flex direction="column" gap="xl" style={{ marginTop: '8px' }}>
+                                <Flex
+                                  direction="column"
+                                  gap="xl"
+                                  style={{ marginTop: '8px' }}
+                                >
                                   <Flex align="flex-start" gap="md">
                                     <IconAlertTriangle
                                       size={24}
@@ -1440,20 +1637,32 @@ const CourseMain: NextPage = () => {
                                       className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                                       size="sm"
                                       weight={500}
-                                      style={{ color: 'white', lineHeight: 1.5 }}
+                                      style={{
+                                        color: 'white',
+                                        lineHeight: 1.5,
+                                      }}
                                     >
-                                      Are you sure you want to reset your system prompt and all behavior settings to their default values?
+                                      Are you sure you want to reset your system
+                                      prompt and all behavior settings to their
+                                      default values?
                                     </Text>
                                   </Flex>
 
-                                  <Divider style={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+                                  <Divider
+                                    style={{
+                                      borderColor: 'rgba(255,255,255,0.1)',
+                                    }}
+                                  />
 
                                   <div>
                                     <Text
                                       size="sm"
                                       className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                                       weight={600}
-                                      style={{ color: '#D1D1D1', marginBottom: '12px' }}
+                                      style={{
+                                        color: '#D1D1D1',
+                                        marginBottom: '12px',
+                                      }}
                                     >
                                       This action will:
                                     </Text>
@@ -1468,13 +1677,19 @@ const CourseMain: NextPage = () => {
                                             height: '6px',
                                             borderRadius: '50%',
                                             backgroundColor: 'hsl(0,100%,70%)',
-                                            marginTop: '8px'
+                                            marginTop: '8px',
                                           }}
                                         />
                                       }
                                     >
-                                      <List.Item>Restore the system prompt to the default template</List.Item>
-                                      <List.Item>Disable Guided Learning, Document-Only mode, and other custom settings</List.Item>
+                                      <List.Item>
+                                        Restore the system prompt to the default
+                                        template
+                                      </List.Item>
+                                      <List.Item>
+                                        Disable Guided Learning, Document-Only
+                                        mode, and other custom settings
+                                      </List.Item>
                                     </List>
                                   </div>
 
@@ -1483,7 +1698,8 @@ const CourseMain: NextPage = () => {
                                     style={{ color: '#D1D1D1' }}
                                     className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                                   >
-                                    This cannot be undone. Please confirm you wish to proceed.
+                                    This cannot be undone. Please confirm you
+                                    wish to proceed.
                                   </Text>
 
                                   <Group position="right" mt="md">
@@ -1498,7 +1714,8 @@ const CourseMain: NextPage = () => {
                                           borderColor: theme.colors.gray[6],
                                           color: '#fff',
                                           '&:hover': {
-                                            backgroundColor: theme.colors.gray[8],
+                                            backgroundColor:
+                                              theme.colors.gray[8],
                                           },
                                         },
                                       })}
@@ -1516,21 +1733,24 @@ const CourseMain: NextPage = () => {
                                         color: '#fff',
                                         padding: '10px 20px',
                                         fontWeight: 600,
-                                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                        boxShadow:
+                                          '0 2px 4px rgba(0, 0, 0, 0.2)',
                                         transition: 'all 0.2s ease',
                                         '&:hover': {
                                           backgroundColor: `${theme.colors.red[9]} !important`,
                                           transform: 'translateY(-1px)',
-                                          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
+                                          boxShadow:
+                                            '0 4px 8px rgba(0, 0, 0, 0.3)',
                                         },
                                         '&:active': {
                                           transform: 'translateY(0)',
-                                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                          boxShadow:
+                                            '0 2px 4px rgba(0, 0, 0, 0.2)',
                                         },
                                       })}
                                       onClick={() => {
-                                        resetSystemPrompt();
-                                        closeResetModal();
+                                        resetSystemPrompt()
+                                        closeResetModal()
                                       }}
                                     >
                                       Confirm
@@ -1540,7 +1760,12 @@ const CourseMain: NextPage = () => {
                               </Modal>
 
                               {/* Reset and Share Link buttons */}
-                              <Flex mt="md" justify="flex-start" align="center" gap="md">
+                              <Flex
+                                mt="md"
+                                justify="flex-start"
+                                align="center"
+                                gap="md"
+                              >
                                 <Button
                                   variant="filled"
                                   color="red"
@@ -1577,7 +1802,8 @@ const CourseMain: NextPage = () => {
                                   onClick={openLinkGenerator}
                                   className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                                   sx={(theme) => ({
-                                    background: 'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%) !important',
+                                    background:
+                                      'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%) !important',
                                     border: 'none',
                                     color: '#fff',
                                     padding: '10px 20px',
@@ -1585,7 +1811,8 @@ const CourseMain: NextPage = () => {
                                     boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
                                     transition: 'all 0.2s ease',
                                     '&:hover': {
-                                      background: 'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%) !important',
+                                      background:
+                                        'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%) !important',
                                       transform: 'translateY(-1px)',
                                       boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
                                     },
@@ -1637,9 +1864,12 @@ export const showToastNotification = (
   icon?: React.ReactNode,
 ) => {
   // Calculate duration based on message length (minimum 5 seconds, add 1 second for every 20 characters)
-  const baseDuration = 5000;
-  const durationPerChar = 50;  // 50ms per character
-  const duration = Math.max(baseDuration, Math.min(15000, message.length * durationPerChar));
+  const baseDuration = 5000
+  const durationPerChar = 50 // 50ms per character
+  const duration = Math.max(
+    baseDuration,
+    Math.min(15000, message.length * durationPerChar),
+  )
 
   notifications.show({
     withCloseButton: true,
