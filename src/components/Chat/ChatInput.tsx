@@ -2,11 +2,11 @@
 import {
   IconArrowDown,
   IconPlayerStop,
-  IconRepeat,
   IconSend,
   IconPhoto,
   IconAlertCircle,
   IconX,
+  IconRepeat,
 } from '@tabler/icons-react'
 import { Text } from '@mantine/core'
 import {
@@ -46,7 +46,10 @@ import ChatUI, {
   WebllmModel,
   webLLMModels,
 } from '~/utils/modelProviders/WebLLM'
-import { selectBestModel, VisionCapableModels } from '~/utils/modelProviders/LLMProvider'
+import {
+  selectBestModel,
+  VisionCapableModels,
+} from '~/utils/modelProviders/LLMProvider'
 import { OpenAIModelID } from '~/utils/modelProviders/types/openai'
 import { UserSettings } from '~/components/Chat/UserSettings'
 import { IconChevronRight } from '@tabler/icons-react'
@@ -60,7 +63,6 @@ const montserrat_med = Montserrat({
 
 interface Props {
   onSend: (message: Message, plugin: Plugin | null) => void
-  onRegenerate: () => void
   onScrollDownClick: () => void
   stopConversationRef: MutableRefObject<boolean>
   textareaRef: MutableRefObject<HTMLTextAreaElement | null>
@@ -69,6 +71,7 @@ interface Props {
   setInputContent: (content: string) => void
   courseName: string
   chat_ui?: ChatUI
+  onRegenerate?: () => void
 }
 
 interface ProcessedImage {
@@ -78,7 +81,6 @@ interface ProcessedImage {
 
 export const ChatInput = ({
   onSend,
-  onRegenerate,
   onScrollDownClick,
   stopConversationRef,
   textareaRef,
@@ -87,6 +89,7 @@ export const ChatInput = ({
   setInputContent,
   courseName,
   chat_ui,
+  onRegenerate,
 }: Props) => {
   const { t } = useTranslation('chat')
 
@@ -96,7 +99,7 @@ export const ChatInput = ({
       messageIsStreaming,
       prompts,
       showModelSettings,
-      llmProviders
+      llmProviders,
     },
 
     dispatch: homeDispatch,
@@ -221,10 +224,10 @@ export const ChatInput = ({
           imageUrls.length > 0
             ? imageUrls
             : await Promise.all(
-              imageFiles.map((file) =>
-                uploadImageAndGetUrl(file, courseName),
-              ),
-            )
+                imageFiles.map((file) =>
+                  uploadImageAndGetUrl(file, courseName),
+                ),
+              )
 
         // Construct image content for the message
         imageContent = imageUrlsToUse
@@ -681,8 +684,9 @@ export const ChatInput = ({
     if (textareaRef && textareaRef.current) {
       textareaRef.current.style.height = 'inherit'
       textareaRef.current.style.height = `${textareaRef.current?.scrollHeight}px`
-      textareaRef.current.style.overflow = `${textareaRef?.current?.scrollHeight > 400 ? 'auto' : 'hidden'
-        }`
+      textareaRef.current.style.overflow = `${
+        textareaRef?.current?.scrollHeight > 400 ? 'auto' : 'hidden'
+      }`
     }
   }, [content])
 
@@ -747,7 +751,10 @@ export const ChatInput = ({
   ): Promise<string> {
     try {
       const uploadedImageUrl = await uploadToS3(file, courseName)
-      const presignedUrl = await fetchPresignedUrl(uploadedImageUrl as string, courseName)
+      const presignedUrl = await fetchPresignedUrl(
+        uploadedImageUrl as string,
+        courseName,
+      )
       return presignedUrl as string
     } catch (error) {
       console.error('Upload failed for file', file.name, error)
@@ -762,6 +769,41 @@ export const ChatInput = ({
   // useEffect(() => {
   //   localStorage.setItem('UseMQRetrieval', useMQRetrieval ? 'true' : 'false');
   // }, [useMQRetrieval]);
+
+  // Debounce the resize handler to avoid too frequent updates
+  const handleResize = useCallback(() => {
+    if (textareaRef.current) {
+      // Reset height to auto to recalculate
+      textareaRef.current.style.height = 'auto'
+      // Set new height based on scrollHeight
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+      // Update overflow if needed
+      textareaRef.current.style.overflow =
+        textareaRef.current.scrollHeight > 400 ? 'auto' : 'hidden'
+    }
+  }, [])
+
+  // Add resize observer effect
+  useEffect(() => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+
+    // Create resize observer
+    const resizeObserver = new ResizeObserver(handleResize)
+
+    // Observe both the textarea and window resize events
+    resizeObserver.observe(textarea)
+    window.addEventListener('resize', handleResize)
+
+    // Initial size adjustment
+    handleResize()
+
+    // Cleanup
+    return () => {
+      resizeObserver.disconnect()
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [handleResize])
 
   return (
     <div
@@ -780,12 +822,13 @@ export const ChatInput = ({
         {!messageIsStreaming &&
           selectedConversation &&
           selectedConversation.messages &&
-          selectedConversation.messages?.length > 0 && (
+          selectedConversation.messages.length > 0 &&
+          selectedConversation.messages[selectedConversation.messages.length - 1]?.role === 'user' && (
             <button
-              className={`absolute ${isSmallScreen ? '-top-28' : '-top-20'} left-0 right-0 mx-auto mb-24 flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white px-4 py-2 text-black hover:opacity-50 dark:border-neutral-600 dark:bg-[#343541] dark:text-white md:mb-0 md:mt-2`}
+              className={`absolute ${isSmallScreen ? '-top-28' : '-top-20'} left-0 right-0 mx-auto mb-12 flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white px-4 py-2 text-black hover:opacity-50 dark:border-neutral-600 dark:bg-[#343541] dark:text-white md:mb-0 md:mt-2`}
               onClick={onRegenerate}
             >
-              <IconRepeat size={16} /> {t('Regenerate response')}
+              <IconRepeat size={16} /> {t('Regenerate Response')}
             </button>
           )}
 
@@ -911,30 +954,28 @@ export const ChatInput = ({
             {/* Button 3: main input text area  */}
             <div
               className={`
-                ${VisionCapableModels.has(
-                selectedConversation?.model?.id as OpenAIModelID,
-              )
-                  ? 'pl-8'
-                  : 'pl-1'
+                ${
+                  VisionCapableModels.has(
+                    selectedConversation?.model?.id as OpenAIModelID,
+                  )
+                    ? 'pl-8'
+                    : 'pl-1'
                 }
                   `}
             >
               <textarea
                 ref={textareaRef}
-                className={`chat-input m-0 h-[24px] max-h-[400px] w-full resize-none bg-transparent py-2 pr-8 pl-2 text-white outline-none ${isFocused ? 'border-blue-500' : ''
-                  }`}
+                className={`chat-input m-0 h-[24px] max-h-[400px] w-full resize-none bg-transparent py-2 pl-2 pr-8 text-white outline-none ${
+                  isFocused ? 'border-blue-500' : ''
+                }`}
                 style={{
                   resize: 'none',
-                  bottom: `${textareaRef?.current?.scrollHeight}px`,
+                  minHeight: '24px',
+                  height: 'auto',
                   maxHeight: '400px',
-                  overflow: `${textareaRef.current && textareaRef.current.scrollHeight > 400
-                    ? 'auto'
-                    : 'hidden'
-                    }`,
+                  overflow: 'hidden',
                 }}
-                placeholder={
-                  t('Type a message or type "/" to select a prompt...') || ''
-                }
+                placeholder={'Message UIUC.chat'}
                 value={content}
                 rows={1}
                 onCompositionStart={() => setIsTyping(true)}
@@ -944,6 +985,39 @@ export const ChatInput = ({
                 onFocus={handleFocus}
                 onBlur={handleBlur}
               />
+              {/* <textarea
+                ref={textareaRef}
+                className={`chat-input m-0 h-[24px] max-h-[400px] w-full resize-none bg-transparent py-2 pl-2 pr-8 text-white outline-none ${isFocused ? 'border-blue-500' : ''
+                  }`}
+                style={{
+                  resize: 'none',
+                  bottom: `${textareaRef?.current?.scrollHeight}px`,
+                  maxHeight: '400px',
+                  overflow: `${textareaRef.current &&
+                    textareaRef.current.scrollHeight > 400
+                    ? 'auto'
+                    : 'hidden'
+                    }`,
+                }}
+                placeholder={'Message UIUC.chat'}
+                value={content}
+                rows={1}
+                onInput={(e) => {
+                  const target = e.target as HTMLTextAreaElement;
+                  // Reset height to auto to get the correct scrollHeight
+                  target.style.height = 'auto';
+                  // Set actual height based on content
+                  target.style.height = `${target.scrollHeight}px`;
+                  // Add scrollbar if content exceeds max height
+                  target.style.overflow = target.scrollHeight > 400 ? 'auto' : 'hidden';
+                }}
+                onCompositionStart={() => setIsTyping(true)}
+                onCompositionEnd={() => setIsTyping(false)}
+                onChange={handleChange}
+                onKeyDown={handleKeyDown}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+              /> */}
             </div>
 
             <button
@@ -993,7 +1067,6 @@ export const ChatInput = ({
           <Text
             size={isSmallScreen ? '10px' : 'xs'}
             className={`font-montserratHeading ${montserrat_heading.variable} absolute bottom-2 left-5 break-words rounded-full p-1 text-neutral-400 text-neutral-800 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200`}
-            tt={'capitalize'}
             onClick={handleTextClick}
             style={{ cursor: 'pointer' }}
           >

@@ -1,7 +1,13 @@
 // src/app/api/queryRewrite/route.ts
 
+
 import { routeModelRequest } from '~/utils/streamProcessing'
 import { type ChatBody } from '@/types/chat'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+export const revalidate = 0
 
 export async function POST(req: Request) {
   try {

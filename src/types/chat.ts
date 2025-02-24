@@ -24,6 +24,11 @@ export interface Conversation {
   projectName?: string
   createdAt?: string
   updatedAt?: string
+  linkParameters?: {
+    guidedLearning: boolean
+    documentsOnly: boolean
+    systemPromptOnly: boolean
+  }
 }
 
 export interface Message {
@@ -101,6 +106,7 @@ export interface ContextWithMetadata {
   'course_name ': string
   s3_path: string
   pagenumber: string
+  pagenumber_or_timestamp?: string
   url: string
   base_url: string
 }

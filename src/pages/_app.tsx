@@ -15,8 +15,8 @@ import { useEffect, useRef, useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
-import { SpeedInsights } from "@vercel/speed-insights/next"
-import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next'
+import { Analytics } from '@vercel/analytics/next'
 
 import { KeycloakProvider } from '../providers/KeycloakProvider';
 import { AuthProvider } from 'react-oidc-context'
@@ -27,7 +27,14 @@ if (typeof window !== 'undefined') {
     api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com',
     opt_in_site_apps: true,
     autocapture: false,
-    // Enable debug mode in development
+    session_recording: {
+      maskAllInputs: false,
+      maskInputOptions: {
+        password: true,
+        email: true,
+        creditCard: true,
+      },
+    },
     loaded: (posthog) => {
       if (process.env.NODE_ENV === 'development') posthog.debug()
     },
@@ -63,8 +70,7 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
       try {
         const response = await fetch('/api/UIUC-api/getMaintenanceModeFast')
         const data = await response.json()
-        console.log("Maintenance mode", data)
-        setIsMaintenanceMode(false)
+        setIsMaintenanceMode(data.isMaintenanceMode)
       } catch (error) {
         console.error('Failed to check maintenance mode:', error)
         setIsMaintenanceMode(false)
