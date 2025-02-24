@@ -32,11 +32,9 @@ const isPreviewDeployment = () => {
 }
 
 // Helper to check if this is an auth-related path
-const isAuthPath = (pathname: string) => {
-  return pathname.includes('/silent-renew') || 
-         pathname.includes('/callback') ||
-         // Check for Keycloak auth callback
-         pathname === '/' && pathname.includes('code=') && pathname.includes('state=')
+const isAuthPath = (pathname: string, search: string) => {
+  // Check if this is the initial auth request (not the callback)
+  return pathname === '/' && !search.includes('code=') && !search.includes('state=');
 }
 
 // Create a middleware handler that runs before Clerk
@@ -61,9 +59,8 @@ function materialsRedirectMiddleware(request: NextRequest) {
 export default async function middleware(request: NextRequest) {
   const { pathname, search, origin } = request.nextUrl
 
-  // If this is a preview deployment and an auth-related request
-  if (isPreviewDeployment() && isAuthPath(pathname + search)) {
-    // Store the preview URL in state parameter for return redirect
+  // Only redirect the initial auth request, not the callback
+  if (isPreviewDeployment() && isAuthPath(pathname, search)) {
     const stateData = {
       redirect: origin,
       timestamp: Date.now()
@@ -73,18 +70,16 @@ export default async function middleware(request: NextRequest) {
       .replace(/\//g, '_')
       .replace(/=+$/, '')
 
-    // Redirect to main domain for auth
-    const mainDomainUrl = new URL(pathname, MAIN_DOMAIN)
-    mainDomainUrl.search = search
-    if (search.includes('state=')) {
-      // Replace existing state parameter
-      mainDomainUrl.searchParams.set('state', encodedState)
-    } else {
-      // Add state parameter
-      mainDomainUrl.searchParams.append('state', encodedState)
-    }
+    // Redirect to Keycloak auth URL directly
+    const keycloakUrl = `${process.env.NEXT_PUBLIC_KEYCLOAK_URL}realms/${process.env.NEXT_PUBLIC_KEYCLOAK_REALM}/protocol/openid-connect/auth`;
+    const authUrl = new URL(keycloakUrl);
+    authUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'uiucchat');
+    authUrl.searchParams.set('redirect_uri', origin);
+    authUrl.searchParams.set('state', encodedState);
+    authUrl.searchParams.set('response_type', 'code');
+    authUrl.searchParams.set('scope', 'openid profile email');
 
-    return NextResponse.redirect(mainDomainUrl)
+    return NextResponse.redirect(authUrl);
   }
 
   // // First check for materials redirect

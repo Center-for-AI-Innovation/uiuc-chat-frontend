@@ -118,12 +118,6 @@ const decodeState = (state: string): { redirect: string; timestamp: number } | n
 
 const getBaseUrl = () => {
   if (typeof window === 'undefined') return '';
-  
-  // Always use the main domain for auth-related URLs in preview
-  if (process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview') {
-    return 'https://uiuc.chat';
-  }
-  
   return window.location.origin;
 };
 
@@ -146,22 +140,17 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
         const state = params.get('state');
         const code = params.get('code');
 
-        // Only process if this is actually an auth callback
         if (!code) {
           window.location.replace('/');
           return;
         }
 
         try {
-          // Clear URL parameters
           window.history.replaceState({}, document.title, window.location.pathname);
 
-          // Parse state if it exists
           if (state) {
             const stateObj = decodeState(state);
-            
             if (stateObj?.redirect) {
-              // Redirect back to the preview deployment
               window.location.replace(stateObj.redirect);
               return;
             }
