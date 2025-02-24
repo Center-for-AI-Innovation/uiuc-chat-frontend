@@ -170,6 +170,7 @@ const CourseMain: NextPage = () => {
         config.enabled && config.models && provider !== 'WebLLM'
           ? config.models
             .filter((model) => model.enabled)
+            .filter((model) => model.id !== 'learnlm-1.5-pro-experimental')
             .map((model) => ({
               group: provider as ProviderNames,
               value: model.id,
