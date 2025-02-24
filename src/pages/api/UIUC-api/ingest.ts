@@ -9,13 +9,13 @@ type IngestResponse = {
 
 const handler = async (
   req: NextApiRequest,
-  res: NextApiResponse<IngestResponse>
+  res: NextApiResponse<IngestResponse>,
 ) => {
   try {
     if (req.method !== 'POST') {
       console.error('Request method not allowed')
       return res.status(405).json({
-        error: '❌❌ Request method not allowed'
+        error: '❌❌ Request method not allowed',
       })
     }
 
@@ -31,7 +31,7 @@ const handler = async (
     if (!uniqueFileName || !courseName || !readableFilename) {
       console.error('Missing body parameters')
       return res.status(400).json({
-        error: '❌❌ Missing body parameters'
+        error: '❌❌ Missing body parameters',
       })
     }
 

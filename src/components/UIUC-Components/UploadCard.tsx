@@ -246,6 +246,7 @@ export const UploadCard = memo(function UploadCard({
           <UploadNotification
             files={uploadFiles}
             onClose={handleCloseNotification}
+            projectName={projectName}
           />
         </div>
 

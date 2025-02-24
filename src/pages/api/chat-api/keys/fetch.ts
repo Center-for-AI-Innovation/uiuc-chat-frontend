@@ -11,7 +11,7 @@ type ApiResponse = {
 
 export default async function fetchKey(
   req: NextApiRequest,
-  res: NextApiResponse<ApiResponse>
+  res: NextApiResponse<ApiResponse>,
 ) {
   console.log('Fetching API key...')
   console.log('Request method:', req.method)
@@ -85,18 +85,16 @@ export default async function fetchKey(
     }
 
     if (!data || data.length === 0) {
-      console.log('No API key found for user')
       return res.status(200).json({ apiKey: null })
     }
 
     if (data && data.length > 0) {
-      console.log('API key found for user')
       return res.status(200).json({ apiKey: data[0]?.key })
     }
   } catch (error) {
     console.error('Failed to fetch API key:', error)
     return res.status(500).json({
-      error: (error as Error).message
+      error: (error as Error).message,
     })
   }
 }
