@@ -39,10 +39,17 @@ async function updateKeycloakRedirectURIs() {
 
     const [client] = await clientResponse.json();
 
-    // Add Vercel preview URL to redirect URIs
-    const vercelPreviewUrl = `https://${process.env.VERCEL_URL}/*`;
+    // Add both root and wildcard URLs for Vercel preview
+    const vercelBaseUrl = `https://${process.env.VERCEL_URL}`;
     const currentRedirectUris = new Set(client.redirectUris);
-    currentRedirectUris.add(vercelPreviewUrl);
+    const currentWebOrigins = new Set(client.webOrigins || []);
+
+    // Add to redirect URIs
+    currentRedirectUris.add(vercelBaseUrl); // Add root URL
+    currentRedirectUris.add(`${vercelBaseUrl}/*`); // Add wildcard path
+
+    // Add to web origins
+    currentWebOrigins.add(vercelBaseUrl);
 
     // Update client
     await fetch(
@@ -56,13 +63,22 @@ async function updateKeycloakRedirectURIs() {
         body: JSON.stringify({
           ...client,
           redirectUris: Array.from(currentRedirectUris),
+          webOrigins: Array.from(currentWebOrigins),
         }),
       }
     );
 
-    console.log('Successfully added Vercel preview URL to Keycloak redirect URIs');
+    console.log('Successfully updated Keycloak client configuration:', {
+      redirectUris: {
+        root: vercelBaseUrl,
+        wildcard: `${vercelBaseUrl}/*`
+      },
+      webOrigins: {
+        root: vercelBaseUrl
+      }
+    });
   } catch (error) {
-    console.error('Error updating Keycloak redirect URIs:', error);
+    console.error('Error updating Keycloak client configuration:', error);
     process.exit(1);
   }
 }
