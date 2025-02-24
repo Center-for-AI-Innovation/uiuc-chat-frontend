@@ -85,10 +85,25 @@ const Home: NextPage = () => {
             <div className="order-first text-center sm:order-last sm:w-1/2">
               <div className="min-h-8 rounded-xl sm:p-4">
                 {/* p-10                style={{ background: 'var(--illinois-orange-gradient)' }} */}
-                <img
-                  src="/media/banner_upload_materials.png"
-                  className="rounded-xl"
-                ></img>
+                <div className="">
+                  <img
+                    src="/media/banner_upload_materials.png"
+                    className="rounded-xl"
+                  ></img>
+                </div>
+
+                <div className="icons_scrolling_container">
+                  <div className="icons_scrolling">
+                    <img
+                      src="/media/banner_icons.png"
+                      className="rounded-xl"
+                    ></img>
+                    <img
+                      src="/media/banner_icons.png"
+                      className="rounded-xl"
+                    ></img>
+                  </div>
+                </div>
               </div>
 
               <div
