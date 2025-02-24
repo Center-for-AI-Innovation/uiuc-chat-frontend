@@ -121,6 +121,17 @@ const getBaseUrl = () => {
   return window.location.origin;
 };
 
+const isValidRedirectUrl = (url: string): boolean => {
+  try {
+    const parsedUrl = new URL(url);
+    // Only allow redirects to URLs on our domain
+    const allowedDomains = [window.location.hostname];
+    return allowedDomains.includes(parsedUrl.hostname);
+  } catch {
+    return false;
+  }
+};
+
 export const KeycloakProvider = ({ children }: AuthProviderProps) => {
   // Add state to track if we're on client side
   const [isMounted, setIsMounted] = useState(false)
@@ -151,7 +162,13 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
           if (state) {
             const stateObj = decodeState(state);
             if (stateObj?.redirect) {
-              window.location.replace(stateObj.redirect);
+              // Validate the redirect URL before using it
+              if (isValidRedirectUrl(stateObj.redirect)) {
+                window.location.href = stateObj.redirect; // Using href instead of replace for better browser history handling
+              } else {
+                // Fallback to a safe default route if the redirect URL is invalid
+                window.location.href = '/chat'; // Or your default safe route
+              }
               return;
             }
           }
