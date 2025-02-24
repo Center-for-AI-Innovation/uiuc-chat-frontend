@@ -24,6 +24,21 @@ const PUBLIC_ROUTES = [
   '/:singleLevel([^/]+)/chat',
 ]
 
+const MAIN_DOMAIN = 'https://uiuc.chat'
+
+// Helper to check if this is a preview deployment
+const isPreviewDeployment = () => {
+  return process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview'
+}
+
+// Helper to check if this is an auth-related path
+const isAuthPath = (pathname: string) => {
+  return pathname.includes('/silent-renew') || 
+         pathname.includes('/callback') ||
+         // Check for Keycloak auth callback
+         pathname === '/' && pathname.includes('code=') && pathname.includes('state=')
+}
+
 // Create a middleware handler that runs before Clerk
 function materialsRedirectMiddleware(request: NextRequest) {
   const url = request.nextUrl
@@ -44,6 +59,34 @@ function materialsRedirectMiddleware(request: NextRequest) {
 
 // Combine the middlewares
 export default async function middleware(request: NextRequest) {
+  const { pathname, search, origin } = request.nextUrl
+
+  // If this is a preview deployment and an auth-related request
+  if (isPreviewDeployment() && isAuthPath(pathname + search)) {
+    // Store the preview URL in state parameter for return redirect
+    const stateData = {
+      redirect: origin,
+      timestamp: Date.now()
+    }
+    const encodedState = Buffer.from(JSON.stringify(stateData)).toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '')
+
+    // Redirect to main domain for auth
+    const mainDomainUrl = new URL(pathname, MAIN_DOMAIN)
+    mainDomainUrl.search = search
+    if (search.includes('state=')) {
+      // Replace existing state parameter
+      mainDomainUrl.searchParams.set('state', encodedState)
+    } else {
+      // Add state parameter
+      mainDomainUrl.searchParams.append('state', encodedState)
+    }
+
+    return NextResponse.redirect(mainDomainUrl)
+  }
+
   // // First check for materials redirect
   // const redirectResponse = materialsRedirectMiddleware(request)
   // if (redirectResponse) return redirectResponse
@@ -57,8 +100,6 @@ export default async function middleware(request: NextRequest) {
 
   // // Pass both request and event arguments
   // return authMiddleware(request, {} as NextFetchEvent)
-
-  const { pathname } = request.nextUrl
 
   // Allow auth callbacks to proceed without interference
   if (request.nextUrl.searchParams.has('state') && 

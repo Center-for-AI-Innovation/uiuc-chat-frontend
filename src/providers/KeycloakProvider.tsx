@@ -116,6 +116,17 @@ const decodeState = (state: string): { redirect: string; timestamp: number } | n
   }
 }
 
+const getBaseUrl = () => {
+  if (typeof window === 'undefined') return '';
+  
+  // Always use the main domain for auth-related URLs in preview
+  if (process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview') {
+    return 'https://uiuc.chat';
+  }
+  
+  return window.location.origin;
+};
+
 export const KeycloakProvider = ({ children }: AuthProviderProps) => {
   // Add state to track if we're on client side
   const [isMounted, setIsMounted] = useState(false)
@@ -123,7 +134,7 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
   const [oidcConfig, setOidcConfig] = useState({
     authority: process.env.NEXT_PUBLIC_KEYCLOAK_URL + "realms/" + process.env.NEXT_PUBLIC_KEYCLOAK_REALM,
     client_id: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'uiucchat',
-    redirect_uri: '',  // Initialize empty, will set in useEffect
+    redirect_uri: '',
     silent_redirect_uri: '',
     post_logout_redirect_uri: '',
     scope: 'openid profile email',
@@ -134,67 +145,53 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
         const params = new URLSearchParams(window.location.search);
         const state = params.get('state');
         const code = params.get('code');
-    
-        console.log('[KeycloakProvider][onSigninCallback] URL params:', {
-          state,
-          code,
-          fullSearch: window.location.search
-        });
-    
+
         // Only process if this is actually an auth callback
         if (!code) {
-          console.log('[KeycloakProvider][onSigninCallback] No code found, redirecting to homepage');
           window.location.replace('/');
           return;
         }
-    
-        console.log('[KeycloakProvider][onSigninCallback] Processing signin callback');
-    
+
         try {
-          // Clear the URL parameters first to prevent loops
-          console.log('[KeycloakProvider][onSigninCallback] Clearing URL parameters');
-          window.history.replaceState(
-            {},
-            document.title,
-            window.location.pathname
-          );
-    
+          // Clear URL parameters
+          window.history.replaceState({}, document.title, window.location.pathname);
+
           // Parse state if it exists
           if (state) {
             const stateObj = decodeState(state);
-            console.log('[KeycloakProvider][onSigninCallback] Decoded state:', stateObj);
             
             if (stateObj?.redirect) {
-              const redirectPath = sanitizeRedirect(stateObj.redirect);
-              console.log('[KeycloakProvider][onSigninCallback] Redirecting to:', redirectPath);
-              window.location.replace(redirectPath);
+              // Redirect back to the preview deployment
+              window.location.replace(stateObj.redirect);
               return;
             }
           }
           
-          // Fallback to homepage if no valid redirect
-          console.log('[KeycloakProvider][onSigninCallback] No valid redirect found, going to homepage');
           window.location.replace('/');
         } catch (e) {
-          console.error('[KeycloakProvider][onSigninCallback] Error processing callback:', e);
+          console.error('[KeycloakProvider][onSigninCallback] Error:', e);
           window.location.replace('/');
         }
       }
     }
-  })
+  });
 
   // Set up client-side values after mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setIsMounted(true)
+      setIsMounted(true);
+      const baseUrl = getBaseUrl();
+      
       setOidcConfig(prev => ({
         ...prev,
-        redirect_uri: window.location.origin, // Update to use root
-        silent_redirect_uri: window.location.origin + '/silent-renew',
-        post_logout_redirect_uri: window.location.origin
-      }))
+        redirect_uri: baseUrl, // Use baseUrl instead of window.location.origin
+        silent_redirect_uri: `${baseUrl}/silent-renew`,
+        post_logout_redirect_uri: baseUrl
+      }));
+      
+      console.log('[KeycloakProvider] Setting up with base URL:', baseUrl);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && isMounted) {
