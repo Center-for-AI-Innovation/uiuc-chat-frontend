@@ -82,6 +82,37 @@
   background: var(--background);
 }
 
+@keyframes icon_scrolling {
+  0% {
+    translate: 0% 0%;
+  }
+
+  100% {
+    translate: -100% 0%;
+  }
+}
+
+.icons_scrolling_container {
+  overflow: hidden;
+  position: relative;
+
+  mask-image: linear-gradient(
+    90deg,
+    transparent 5%,
+    #fff 20%,
+    #fff 80%,
+    transparent 95%
+  );
+}
+
+.icons_scrolling {
+  display: flex;
+  align-items: flex-start;
+  gap: 0rem;
+
+  animation: icon_scrolling 20s linear 0s infinite;
+}
+
 .dark {
   --background: var(--illinois-blue);
   --foreground: var(--illinois-white);
