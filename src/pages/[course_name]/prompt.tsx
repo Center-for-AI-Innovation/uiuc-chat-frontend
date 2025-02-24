@@ -158,19 +158,25 @@ const CourseMain: NextPage = () => {
   const [input, setInput] = useState(baseSystemPrompt)
   const [isOptimizing, setIsOptimizing] = useState(false)
 
+  const removeThinkSections = (text: string): string => {
+    const cleanedText = text.replace(/<think>[\s\S]*?<\/think>/g, '');
+
+    return cleanedText.replace(/<\/?think>/g, '').trim();
+  }
+
   const modelOptions = llmProviders
     ? Object.entries(llmProviders as AllLLMProviders).flatMap(
-        ([provider, config]) =>
-          config.enabled && config.models && provider !== 'WebLLM'
-            ? config.models
-                .filter((model) => model.enabled)
-                .map((model) => ({
-                  group: provider as ProviderNames,
-                  value: model.id,
-                  label: model.name,
-                }))
-            : [],
-      )
+      ([provider, config]) =>
+        config.enabled && config.models && provider !== 'WebLLM'
+          ? config.models
+            .filter((model) => model.enabled)
+            .map((model) => ({
+              group: provider as ProviderNames,
+              value: model.id,
+              label: model.name,
+            }))
+          : [],
+    )
     : []
 
   const handleSubmitPromptOptimization = async (e: any) => {
@@ -367,8 +373,16 @@ CRITICAL: The optimized prompt must:
           setIsOptimizing(false)
         }
 
+        // Check if we're using DeepSeek model (part of Ollama)
+        const isDeepSeekModel = selectedModel.toLowerCase().includes('deepseek');
+
+        // Process the optimized prompt to remove <think> sections if using DeepSeek
+        const processedPrompt = isDeepSeekModel ? removeThinkSections(optimizedPrompt) : optimizedPrompt;
+
         // Update messages state for real-time display
-        setMessages([{ role: 'assistant', content: optimizedPrompt }])
+        setMessages([
+          { role: 'assistant', content: processedPrompt }
+        ])
       }
     } catch (error) {
       console.error('Error optimizing prompt:', error)
@@ -826,11 +840,10 @@ CRITICAL: The optimized prompt must:
                           order={3}
                           variant="gradient"
                           gradient={{ from: 'gold', to: 'white', deg: 50 }}
-                          className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base sm:text-xl ${
-                            course_name.length > 40
-                              ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
-                              : ''
-                          }`}
+                          className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base sm:text-xl ${course_name.length > 40
+                            ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
+                            : ''
+                            }`}
                         >
                           {course_name}
                         </Title>
@@ -1162,6 +1175,35 @@ CRITICAL: The optimized prompt must:
                                     />
                                   }
                                 />
+                                <Tooltip
+                                  label="The selected model will be used when Optimizing System Prompt"
+                                  position="top"
+                                  multiline
+                                  withArrow
+                                  arrowSize={10}
+                                  offset={20}
+                                  styles={(theme) => ({
+                                    tooltip: {
+                                      backgroundColor: theme.colors.dark[7],
+                                      color: theme.white,
+                                      fontSize: '0.875rem',
+                                      padding: '0.5rem 0.75rem',
+                                      fontFamily: 'var(--font-montserratParagraph)',
+                                      maxWidth: '300px'
+                                    },
+                                    arrow: {
+                                      backgroundColor: theme.colors.dark[7],
+                                    },
+                                  })}
+                                >
+                                  <div>
+                                    <IconInfoCircle
+                                      size={18}
+                                      className="text-white/60 hover:text-white/80 transition-colors duration-200"
+                                      style={{ cursor: 'pointer' }}
+                                    />
+                                  </div>
+                                </Tooltip>
                               </Flex>
                               {isRightSideVisible ? (
                                 <Tooltip
