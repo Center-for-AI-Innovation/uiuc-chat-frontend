@@ -1078,6 +1078,12 @@ CRITICAL: The optimized prompt must:
                                     root: {
                                       width: '280px',
                                       zIndex: 200,
+                                      '@media (max-width: 768px)': {
+                                        width: '200px',
+                                      },
+                                      '@media (max-width: 480px)': {
+                                        width: '160px',
+                                      },
                                     },
                                     input: {
                                       '&:focus': {
@@ -1089,10 +1095,23 @@ CRITICAL: The optimized prompt must:
                                       minWidth: 0,
                                       flex: '1 1 auto',
                                       height: '36px',
+                                      fontSize: '0.9rem',
+                                      '@media (max-width: 768px)': {
+                                        fontSize: '0.85rem',
+                                        height: '34px',
+                                      },
+                                      '@media (max-width: 480px)': {
+                                        fontSize: '0.8rem',
+                                        height: '32px',
+                                      },
                                     },
                                     dropdown: {
                                       backgroundColor: '#1a1b3e',
                                       zIndex: 200,
+                                      '@media (max-width: 768px)': {
+                                        width: 'auto',
+                                        minWidth: '200px',
+                                      },
                                     },
                                     item: {
                                       '&[data-selected]': {
@@ -1106,14 +1125,41 @@ CRITICAL: The optimized prompt must:
                                       cursor: 'pointer',
                                       whiteSpace: 'normal',
                                       lineHeight: 1.2,
+                                      fontSize: '0.9rem',
+                                      padding: '8px 12px',
+                                      '@media (max-width: 768px)': {
+                                        fontSize: '0.85rem',
+                                        padding: '6px 10px',
+                                      },
+                                      '@media (max-width: 480px)': {
+                                        fontSize: '0.8rem',
+                                        padding: '6px 8px',
+                                      },
                                     },
                                     rightSection: {
                                       pointerEvents: 'none',
                                       color: theme.colors.gray[5],
+                                      width: '24px',
+                                      '@media (max-width: 480px)': {
+                                        width: '20px',
+                                      },
+                                    },
+                                    label: {
+                                      fontSize: '0.9rem',
+                                      '@media (max-width: 768px)': {
+                                        fontSize: '0.85rem',
+                                      },
+                                      '@media (max-width: 480px)': {
+                                        fontSize: '0.8rem',
+                                      },
                                     },
                                   })}
                                   className={`min-w-0 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                  rightSection={<IconChevronDown size={14} />}
+                                  rightSection={
+                                    <IconChevronDown
+                                      size={isSmallScreen ? 12 : 14}
+                                    />
+                                  }
                                 />
                               </Flex>
                               {isRightSideVisible ? (
