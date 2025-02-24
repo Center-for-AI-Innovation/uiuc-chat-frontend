@@ -60,11 +60,24 @@ export async function runSambaNovaChat(
     const messages = convertConversationToVercelAISDKv3(conversation)
     console.log('Converted messages:', JSON.stringify(messages, null, 2))
 
+    // Get model's token limit
+    const modelConfig = Object.values(SambaNovaModels).find(
+      (m) => m.id === conversation.model.id,
+    )
+    if (!modelConfig) {
+      throw new Error(`Model configuration not found for ${conversation.model.id}`)
+    }
+
+    // Reserve 20% of tokens for the response
+    const maxResponseTokens = Math.floor(modelConfig.tokenLimit * 0.2)
+    // Use remaining tokens for the conversation
+    const maxContextTokens = modelConfig.tokenLimit - maxResponseTokens
+
     const commonParams = {
       model: model as any,
       messages: messages,
       temperature: conversation.temperature || 0.7,
-      maxTokens: conversation.model.tokenLimit || 4096,
+      max_tokens: maxResponseTokens,
     }
 
     console.log(
@@ -73,7 +86,8 @@ export async function runSambaNovaChat(
         {
           modelId: conversation.model.id,
           temperature: commonParams.temperature,
-          maxTokens: commonParams.maxTokens,
+          max_tokens: commonParams.max_tokens,
+          maxContextTokens,
           messageCount: messages.length,
         },
         null,
