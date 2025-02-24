@@ -6,6 +6,8 @@ import {
   useUser,
 } from '@clerk/nextjs'
 import { IconClipboardText, IconFile } from '@tabler/icons-react'
+import { Menu2 } from 'tabler-icons-react'
+
 // import MagicBell, {
 //   FloatingNotificationInbox,
 // } from '@magicbell/magicbell-react'
@@ -106,6 +108,8 @@ import { useEffect, useState } from 'react'
 import { usePostHog } from 'posthog-js/react'
 import { IconFilePlus } from '@tabler/icons-react'
 
+let isMenuOpen = true //NOTE: needs to be changed to control the menu div visibility of flex/hidden (line  251)
+
 export function LandingPageHeader({
   forGeneralPurposeNotLandingpage = false,
 }: {
@@ -199,9 +203,18 @@ export function LandingPageHeader({
 
   return (
     <header style={headerStyle}>
-      <div className="flex-end m-auto flex w-full max-w-5xl items-center gap-2 ">
+      <div
+        className="
+        flex-end m-auto
+        flex
+
+        w-full max-w-5xl flex-wrap items-center
+        gap-2 sm:flex-nowrap
+      "
+      >
         <div
           className={`
+          relative
           flex grow items-center gap-1 font-bold
           ${montserrat_heading.variable} font-montserratHeading
         `}
@@ -217,26 +230,51 @@ export function LandingPageHeader({
           <div className="text-[var(--illinois-blue)]">Chat</div>
         </div>
 
-        {/*        <Group spacing={'xs'}> */}
+        <div
+          className={`
+          ${classes.link}
 
-        {/*
+          border-none
+          sm:hidden
+        `}
+          onClick={() => {
+            isMenuOpen = !isMenuOpen
+          }}
+        >
+          <Menu2 size={24} strokeWidth={2} />
+        </div>
+
+        {/*        <Group spacing={'xs'}> */}
+        <div
+          className={`
+          w-full
+          flex-col items-stretch
+          gap-2 p-4
+
+          sm:w-auto sm:flex-row
+
+          sm:items-center sm:p-0
+
+          ${isMenuOpen ? 'flex' : 'hidden'}
+        `}
+        >
+          <div
+            className="
+            absolute bottom-0
+            left-0 right-0 top-0 z-[-10]
+            sm:hidden
+          "
+            style={{ background: 'var(--illinois-orange-gradient)' }}
+          ></div>
+
           {forGeneralPurposeNotLandingpage === false && (
             <>
-              <Link href="/new" className={classes.link}>
-                <span style={{ display: 'flex', alignItems: 'center' }}>
-                  <FileIcon />
-                  <span
-                    className={`${montserrat_heading.variable} font-montserratHeading`}
-                  >
-                    New project
-                  </span>
-                </span>
-              </Link>
               <Link
                 href="https://docs.uiuc.chat/"
                 className={classes.link}
                 target="_blank"
                 rel="noopener noreferrer"
+                style={{ borderRadius: '.25rem' }}
               >
                 <span style={{ display: 'flex', alignItems: 'center' }}>
                   <IconClipboardTexts />
@@ -247,13 +285,43 @@ export function LandingPageHeader({
                   </span>
                 </span>
               </Link>
+
+              <Link
+                href="http://news.uiuc.chat/"
+                target="_blank"
+                className={classes.link}
+                style={{ borderRadius: '.25rem' }}
+              >
+                <span style={{ display: 'flex', alignItems: 'center' }}>
+                  <FileIcon />
+                  <span
+                    className={`${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    Blog
+                  </span>
+                </span>
+              </Link>
+
+              <Link
+                href="/new"
+                className={classes.link}
+                style={{ borderRadius: '.25rem' }}
+              >
+                <span style={{ display: 'flex', alignItems: 'center' }}>
+                  <FileIcon />
+                  <span
+                    className={`${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    New project
+                  </span>
+                </span>
+              </Link>
             </>
           )}
-*/}
 
-        <SignedIn>
-          {/* Docs: https://www.magicbell.com/docs/libraries/react#custom-themes */}
-          {/* <MagicBell
+          <SignedIn>
+            {/* Docs: https://www.magicbell.com/docs/libraries/react#custom-themes */}
+            {/* <MagicBell
               apiKey={process.env.NEXT_PUBLIC_MAGIC_BELL_API as string}
               userEmail={userEmail}
               theme={magicBellTheme}
@@ -267,26 +335,31 @@ export function LandingPageHeader({
                 <FloatingNotificationInbox width={400} height={500} {...props} />
               )}
             </MagicBell> */}
-          {/* Add a bit of spacing with an empty div */}
-          <div />
-          {/* appearance={ } */}
-          <div style={{ all: 'unset' }}>
-            <UserButton />
-          </div>
-        </SignedIn>
-        <SignedOut>
-          {/* Signed out users get sign in button */}
-          <SignInButton>
-            <button className={classes.link} style={{ borderRadius: '.25rem' }}>
-              <span
-                className={`${montserrat_heading.variable} font-montserratHeading`}
+            {/* Add a bit of spacing with an empty div */}
+            <div />
+            {/* appearance={ } */}
+            <div style={{ all: 'unset' }}>
+              <UserButton />
+            </div>
+          </SignedIn>
+          <SignedOut>
+            {/* Signed out users get sign in button */}
+            <SignInButton>
+              <button
+                className={classes.link}
+                style={{ borderRadius: '.25rem' }}
               >
-                Login / Signup
-              </span>
-            </button>
-          </SignInButton>
-        </SignedOut>
-        {/*        </Group> */}
+                <span
+                  className={`${montserrat_heading.variable} font-montserratHeading`}
+                >
+                  Login / Signup
+                </span>
+              </button>
+            </SignInButton>
+          </SignedOut>
+
+          {/*        </Group> */}
+        </div>
       </div>
     </header>
   )
@@ -336,6 +409,7 @@ const useStyles = createStyles((theme) => ({
     height: '2.2rem',
 
     color: 'var(--illinois-orange)', //illinois-white
+
     padding: `${theme.spacing.xs}`, //${theme.spacing.sm} ${theme.spacing.xs}
 
     fontSize: rem(11),
