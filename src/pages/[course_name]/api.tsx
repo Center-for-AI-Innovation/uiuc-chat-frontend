@@ -12,6 +12,7 @@ import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { Flex } from '@mantine/core'
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 import { initiateSignIn } from '~/utils/authHelpers'
+import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 
 const ApiPage: NextPage = () => {
   const router = useRouter()
@@ -102,6 +103,7 @@ const ApiPage: NextPage = () => {
             />
           </Flex>
         </div>
+        <GlobalFooter />
       </main>
     </>
   )
