@@ -1088,7 +1088,7 @@ CRITICAL: The optimized prompt must:
                                   }
                                   searchable
                                   radius={'md'}
-                                  maxDropdownHeight={320}
+                                  maxDropdownHeight={280}
                                   styles={(theme) => ({
                                     root: {
                                       width: '280px',
