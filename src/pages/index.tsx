@@ -56,16 +56,17 @@ const Home: NextPage = () => {
               >
                 <h2>
                   Create a chatbot with{' '}
-                  <span class="whitespace-nowrap">your content.</span>
+                  <span className="whitespace-nowrap">your content.</span>
                 </h2>
                 <h2 className="mt-4">
-                  Share it with <span class="whitespace-nowrap">a click.</span>
+                  Share it with{' '}
+                  <span className="whitespace-nowrap">a click.</span>
                 </h2>
               </div>
 
               <div className="mb-8 mt-4 text-sm text-neutral-400">
                 Build an AI-teaching assistant, literature review, document
-                search, <span class="whitespace-nowrap">and more.</span>
+                search, <span className="whitespace-nowrap">and more.</span>
               </div>
 
               <Button
@@ -82,21 +83,19 @@ const Home: NextPage = () => {
             </div>
 
             <div className="order-first text-center sm:order-last sm:w-1/2">
-              <div
-                className="min-h-8 rounded-xl p-10"
-                style={{ background: 'var(--illinois-orange-gradient)' }}
-              >
+              <div className="min-h-8 rounded-xl sm:p-4">
+                {/* p-10                style={{ background: 'var(--illinois-orange-gradient)' }} */}
                 <img
                   src="/media/banner_upload_materials.png"
                   className="rounded-xl"
                 ></img>
               </div>
 
-              <div className="mt-2 text-xs text-neutral-400">
-                Bring your knowledge, go to{' '}
-                <a href="http://chat.Illinois.edu/new" target="_blank">
-                  chat.Illinois.edu/new
-                </a>
+              <div
+                className="mt-2 text-xs text-neutral-400 sm:mr-4 sm:text-right"
+                style={{ color: 'var(--illinois-orange)' }}
+              >
+                Upload almost anything
               </div>
             </div>
           </div>
@@ -180,7 +179,8 @@ const Home: NextPage = () => {
           `}
           >
             <div className="">
-              An AI that knows <span class="whitespace-nowrap">about your</span>
+              An AI that knows{' '}
+              <span className="whitespace-nowrap">about your</span>
             </div>
 
             <div className="">_________</div>
@@ -191,11 +191,14 @@ const Home: NextPage = () => {
         <div className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 px-8 py-8 sm:py-20">
           <h2
             className={`
-            text-4xl font-bold
-            ${montserrat_heading.variable} font-montserratHeading
+              max-w-lg
+              text-3xl font-bold sm:text-center
+              sm:text-4xl
+              ${montserrat_heading.variable} font-montserratHeading
           `}
           >
-            How Illinois Chat works
+            It’s the easiest way to make your{' '}
+            <span className="whitespace-nowrap">own Chatbot</span>
           </h2>
 
           {/* step 1 */}
@@ -212,7 +215,7 @@ const Home: NextPage = () => {
                 style={{ background: 'var(--illinois-orange-gradient)' }}
               >
                 <img
-                  src="/media/banner_upload_materials.png"
+                  src="/media/banner_step_001.png"
                   className="rounded-xl"
                 ></img>
               </div>
@@ -234,15 +237,37 @@ const Home: NextPage = () => {
                     ${montserrat_heading.variable} font-montserratHeading
                   `}
                   >
-                    Connect your documents{' '}
+                    Bring your documents{' '}
                     <span className="whitespace-nowrap">and tools</span>
                   </div>
                 </div>
 
-                <div className="mt-4">
-                  Subtitle ipsum dolor sit amet consectetur adipiscing elit Ut
-                  et massa mi. Aliquam in hendrerit urna. Pellentesque sit amet
-                  sapien fringilla, mattis.
+                <div className="mt-4 flex flex-col gap-2 text-sm">
+                  <div className="">
+                    Simply{' '}
+                    <span
+                      className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                    >
+                      Drag-n-Drop
+                    </span>{' '}
+                    your files for analysis
+                  </div>
+                  <div className="">
+                    <span
+                      className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                    >
+                      Connect
+                    </span>{' '}
+                    to Canvas, GitHub, Notion and more
+                  </div>
+                  <div className="">
+                    <span
+                      className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                    >
+                      Web crawl
+                    </span>{' '}
+                    your favorite articles and blogs
+                  </div>
                 </div>
                 {/*
                 <Button
@@ -279,7 +304,7 @@ const Home: NextPage = () => {
                 style={{ background: 'var(--illinois-orange-gradient)' }}
               >
                 <img
-                  src="/media/banner_upload_materials.png"
+                  src="/media/banner_step_002.png"
                   className="rounded-xl"
                 ></img>
               </div>
@@ -301,17 +326,33 @@ const Home: NextPage = () => {
                     ${montserrat_heading.variable} font-montserratHeading
                   `}
                   >
-                    Customize prompts, tools{' '}
+                    Customize LLMs, prompts, and{' '}
                     <span className="whitespace-nowrap">
-                      and LLMs <span className="font-normal">(optional)</span>
+                      tools <span className="font-normal">(optional)</span>
                     </span>
                   </div>
                 </div>
 
-                <div className="mt-4">
-                  Subtitle ipsum dolor sit amet consectetur adipiscing elit Ut
-                  et massa mi. Aliquam in hendrerit urna. Pellentesque sit amet
-                  sapien fringilla, mattis.
+                <div className="mt-4 text-sm">
+                  Updated with the{' '}
+                  <span
+                    className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    world’s
+                  </span>{' '}
+                  best AI models at your fingertips, enhanced with
+                  <span
+                    className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    tools
+                  </span>{' '}
+                  and advanced{' '}
+                  <span
+                    className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    prompt engineering
+                  </span>
+                  .
                 </div>
                 {/*
                 <Button
@@ -348,7 +389,7 @@ const Home: NextPage = () => {
                 style={{ background: 'var(--illinois-orange-gradient)' }}
               >
                 <img
-                  src="/media/banner_upload_materials.png"
+                  src="/media/banner_step_003.png"
                   className="rounded-xl"
                 ></img>
               </div>
@@ -370,17 +411,24 @@ const Home: NextPage = () => {
                     ${montserrat_heading.variable} font-montserratHeading
                   `}
                   >
-                    Customize prompts, tools{' '}
-                    <span className="whitespace-nowrap">
-                      and LLMs <span className="font-normal">(optional)</span>
-                    </span>
+                    Share with anyone
                   </div>
                 </div>
 
-                <div className="mt-4">
-                  Subtitle ipsum dolor sit amet consectetur adipiscing elit Ut
-                  et massa mi. Aliquam in hendrerit urna. Pellentesque sit amet
-                  sapien fringilla, mattis.
+                <div className="mt-4 text-sm">
+                  Collaborate and{' '}
+                  <span
+                    className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    publish your chatbot
+                  </span>{' '}
+                  for whoever you want to use it, or{' '}
+                  <span
+                    className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    discover other chatbots
+                  </span>{' '}
+                  from the Illinois Chat community.
                 </div>
                 {/*
                 <Button
@@ -410,21 +458,23 @@ const Home: NextPage = () => {
         <div
           style={{ background: 'var(--illinois-blue-gradient)' }}
           className="
-          my-12
-          flex w-full items-center
-          justify-center px-8
-          py-12 text-white sm:my-0
-          sm:py-36
-        "
+            my-12
+
+            w-full px-8
+            py-12 text-white sm:my-0
+
+            sm:py-36
+          "
         >
           <div
             className="
-            flex w-full
-            max-w-3xl flex-col items-start justify-center gap-16
-            text-white sm:flex-row
+              mx-auto flex
+              w-full
 
-            sm:gap-16
-          "
+              max-w-3xl flex-col items-start
+              justify-center gap-8
+              sm:flex-row sm:gap-16
+            "
           >
             <div className="sm:w-1/2">
               <h2
@@ -433,7 +483,7 @@ const Home: NextPage = () => {
                 ${montserrat_heading.variable} font-montserratHeading
               `}
               >
-                Ready to build?
+                Ready to build? Use our API
               </h2>
 
               <div className="mt-4">
@@ -462,7 +512,30 @@ const Home: NextPage = () => {
               </Button>
             </div>
 
-            <div className="sm:w-1/2">
+            <div
+              className="
+              -mx-4
+              mt-0 sm:mx-0
+              sm:mt-8 sm:w-1/2
+            "
+            >
+              <img
+                src="/media/homepage_banner_code.png"
+                className="rounded-xl"
+              ></img>
+            </div>
+          </div>
+
+          <div
+            className="
+              mx-auto flex
+              w-full
+
+              max-w-3xl flex-col items-start justify-center
+              gap-16 sm:flex-row
+            "
+          >
+            <div className="mt-16 sm:w-1/2">
               <h2
                 className={`
                 text-xl font-bold
@@ -521,7 +594,7 @@ const Home: NextPage = () => {
               `}
               >
                 Sponsored by the Center of{' '}
-                <span class="whitespace-nowrap">AI Innovation</span>
+                <span className="whitespace-nowrap">AI Innovation</span>
               </h3>
               <div className="text-lg">
                 Part of the National Center for Supercomputing Applications.
@@ -789,7 +862,7 @@ function CourseCard() {
           style={{
             height: '12rem',
             background: 'var(--background)',
-            'box-shadow': '4px 4px 10px rgba(0,0,0, .2)',
+            boxShadow: '4px 4px 10px rgba(0,0,0, .2)',
           }}
         >
           {/*
