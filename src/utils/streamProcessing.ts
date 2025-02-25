@@ -50,9 +50,8 @@ export const maxDuration = 60
  */
 export enum State {
   Normal,
-  PossibleCitationOrFilename,
-  InCitation,
-  InCitationPage,
+  InCiteTag,
+  InCiteContent,
   InFilename,
   InFilenameLink,
   PossibleFilename,
@@ -82,35 +81,55 @@ export async function processChunkWithStateMachine(
     return ''
   }
 
-  for (let i = 0; i < chunk.length; i++) {
-    const char = chunk[i]!
+  // Combine any leftover buffer with the new chunk
+  const combinedChunk = buffer + chunk
+  buffer = ''
+
+  for (let i = 0; i < combinedChunk.length; i++) {
+    const char = combinedChunk[i]!
+    const remainingChars = combinedChunk.length - i
+
     switch (state) {
       case State.Normal:
-        // console.log('in state normal with char: ', char)
-        if (char === '[') {
-          state = State.PossibleCitationOrFilename
-          // console.log('state changed to possible citation or filename')
-          buffer += char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
+        if (char === '<') {
+          // Always buffer '<' initially since it might be start of <cite>
+          buffer = char
+
+          // If we have enough chars to check for <cite
+          if (remainingChars >= 5) {
+            const nextChars = combinedChunk.slice(i, i + 5)
+            if (nextChars === '<cite') {
+              state = State.InCiteTag
+              buffer = '<cite'
+              i += 4 // Skip the rest of 'cite'
+              continue
+            } else {
+              // Definitely not a <cite> tag, output the buffered '<'
+              processedChunk += buffer
+              buffer = ''
+            }
+          } else {
+            // Not enough chars to check - keep in buffer and wait for next chunk
+            buffer = combinedChunk.slice(i)
+            i = combinedChunk.length // Exit the loop
+            continue
+          }
         } else if (char.match(/\d/)) {
           let j = i + 1
-          // console.log(chunk[j])
-          while (j < chunk.length && /\d/.test(chunk[j] as string)) {
+          while (
+            j < combinedChunk.length &&
+            /\d/.test(combinedChunk[j] as string)
+          ) {
             j++
           }
-          if (j < chunk.length && chunk[j] === '.') {
+          if (j < combinedChunk.length && combinedChunk[j] === '.') {
             state = State.AfterDigitPeriod
-            // console.log('state changed to after digit period')
-            buffer += chunk.substring(i, j + 1)
-            // console.log(`added chunk to buffer: ${chunk.substring(i, j + 1)}, buffer: ${buffer}`)
+            buffer = combinedChunk.substring(i, j + 1)
             i = j
-          } else if (j === chunk.length) {
-            // If the chunk ends with a digit, keep it in the buffer and continue to the next chunk
-            // console.log('chunk ends with a digit, keeping it in the buffer and continuing to the next chunk')
+          } else if (j === combinedChunk.length) {
             state = State.PossibleFilename
-            // console.log('state changed to possible filename')
-            buffer += char
-            // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
+            buffer = combinedChunk.substring(i)
+            i = j - 1
           } else {
             processedChunk += char
           }
@@ -119,121 +138,88 @@ export async function processChunkWithStateMachine(
         }
         break
 
+      case State.InCiteTag:
+        if (char === '>') {
+          state = State.InCiteContent
+          buffer += char
+        } else {
+          buffer += char
+        }
+        break
+
+      case State.InCiteContent:
+        if (char === '<') {
+          // Check for </cite> tag
+          if (remainingChars >= 7) {
+            const nextChars = combinedChunk.slice(i, i + 7)
+            if (nextChars === '</cite>') {
+              buffer += '</cite>'
+              i += 6 // Skip all 7 characters (loop will increment i by 1)
+              state = State.Normal
+              const processedCitation = await replaceCitationLinks(
+                buffer,
+                lastMessage,
+                citationLinkCache,
+                courseName,
+              )
+              processedChunk += processedCitation
+              buffer = ''
+              continue
+            } else {
+              // Not a closing cite tag, just add the '<' to buffer
+              buffer += char
+            }
+          } else {
+            // Not enough chars to check - keep everything in buffer
+            buffer += combinedChunk.slice(i)
+            i = combinedChunk.length // Exit the loop
+            continue
+          }
+        } else {
+          buffer += char
+        }
+        break
+
       case State.PossibleFilename:
         if (char === '.') {
-          // console.log('in state possible filename with char: ', char)
           state = State.AfterDigitPeriod
           buffer += char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
         } else if (char.match(/\d/)) {
-          // console.log('in state possible filename with char: ', char)
           buffer += char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
         } else {
           processedChunk += buffer + char
           buffer = ''
-          // console.log('Clearing buffer after invalid filename')
           state = State.Normal
-          // console.log('state changed to normal')
         }
         break
 
-      case State.PossibleCitationOrFilename:
-        // console.log('in state possible citation or filename with char: ', char)
-        if (char.match(/\d/)) {
-          state = State.InCitation
-          // console.log('state changed to in citation')
+      case State.AfterDigitPeriod:
+        if (char === ' ') {
+          state = State.AfterDigitPeriodSpace
           buffer += char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
-        } else if (char === '.') {
-          state = State.InFilename
-          // console.log('state changed to in filename')
-          buffer += char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
-        } else if (char.match(/[a-zA-Z0-9-]/)) {
-          state = State.InFilenameLink // Change state to InFilenameLink
-          // console.log('state changed to in filename link')
-          buffer += char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
-        } else {
-          state = State.Normal
-          // console.log('state changed to normal')
-          processedChunk += buffer + char
-          // console.log(`added buffer and char to processed chunk: ${buffer + char}, processedChunk: ${processedChunk}`)
-          buffer = ''
-        }
-        break
-
-      case State.InCitation:
-        // console.log('in state in citation with char: ', char)
-        if (char === ']') {
-          state = State.Normal
-          // console.log('state changed to normal')
-          processedChunk += await replaceCitationLinks(
-            buffer + char,
-            lastMessage,
-            citationLinkCache,
-            courseName,
-          )
-          buffer = ''
-          // console.log('Clearing buffer after citation replacement')
-        } else if (char === ',' && buffer.match(/\[\d+$/)) {
-          // Detecting the start of a page number after the citation index
-          buffer += char
-          state = State.InCitationPage // Add a new state for handling page numbers
-          // console.log('state changed to in citation page')
-        } else {
-          buffer += char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
-        }
-        break
-
-      case State.InCitationPage:
-        // Handle characters after the page number prefix
-        if (char === ']') {
-          state = State.Normal
-          // console.log('state changed to normal')
-          processedChunk += await replaceCitationLinks(
-            buffer + char,
-            lastMessage,
-            citationLinkCache,
-            courseName,
-          )
-          buffer = ''
-          // console.log('Clearing buffer after citation page replacement')
-        } else {
-          buffer += char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
-        }
-        break
-
-      case State.InFilename:
-        // console.log('in state in filename with char: ', char)
-        if (char.match(/\s/)) {
-          buffer += char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
         } else if (char === '[') {
-          buffer += char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
           state = State.InFilenameLink
-          // console.log('state changed to in filename link')
-        } else if (char.match(/\d/) && chunk[i + 1] === '.') {
-          processedChunk += await replaceCitationLinks(
-            buffer,
-            lastMessage,
-            citationLinkCache,
-            courseName,
-          )
-          buffer = char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
-        } else {
           buffer += char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
+        } else {
+          state = State.Normal
+          processedChunk += buffer
+          buffer = ''
+          i--
+        }
+        break
+
+      case State.AfterDigitPeriodSpace:
+        if (char === '[') {
+          state = State.InFilenameLink
+          buffer += char
+        } else {
+          state = State.Normal
+          processedChunk += buffer + char
+          buffer = ''
         }
         break
 
       case State.InFilenameLink:
-        // console.log('in state in filename link with char: ', char)
         if (char === ')') {
           processedChunk += await replaceCitationLinks(
             buffer + char,
@@ -242,78 +228,28 @@ export async function processChunkWithStateMachine(
             courseName,
           )
           buffer = ''
-          // console.log('Clearing buffer after filename replacement')
-          if (i < chunk.length - 1 && chunk[i + 1]?.match(/\d/)) {
-            state = State.InCitation
-            // console.log('state changed to in citation')
+          if (
+            i < combinedChunk.length - 1 &&
+            combinedChunk[i + 1]?.match(/\d/)
+          ) {
+            state = State.InCiteContent
           } else {
             state = State.Normal
-            // console.log('state changed to normal')
           }
         } else {
           buffer += char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
-        }
-        break
-
-      case State.AfterDigitPeriod:
-        // console.log('in state after digit period with char: ', char)
-        if (char === ' ') {
-          // console.log('char is a space')
-          // Transition to a new state to handle the space after a digit and a period
-          state = State.AfterDigitPeriodSpace
-          buffer += char
-        } else if (char === '[') {
-          // console.log('char is a [, transition to in filename link')
-          // It's a filename link, transition to the appropriate state
-          state = State.InFilenameLink
-          buffer += char
-        } else {
-          // console.log('char is not a space or [, transition to normal')
-          // If it's neither, revert to normal text processing
-          state = State.Normal
-          // console.log('state changed to normal')
-          processedChunk += buffer
-          // console.log(`added buffer to processed chunk: ${buffer}, processedChunk: ${processedChunk}`)
-          buffer = ''
-          // console.log('Clearing buffer after invalid filename')
-          i-- // Re-evaluate this character in the Normal state
-        }
-        break
-
-      case State.AfterDigitPeriodSpace:
-        if (char === '[') {
-          // It's a filename link, transition to the appropriate state
-          state = State.InFilenameLink
-          // console.log('state changed to in filename link')
-          buffer += char
-          // console.log(`added char to buffer: ${char}, buffer: ${buffer}`)
-        } else {
-          // It's a list item, output the buffer and revert to normal
-          state = State.Normal
-          // console.log('state changed to normal')
-          processedChunk += buffer + char
-          // console.log(`added buffer and char to processed chunk: ${buffer + char}, processedChunk: ${processedChunk}`)
-          buffer = ''
         }
         break
     }
   }
 
+  // Update the state machine context
   stateMachineContext.state = state
   stateMachineContext.buffer = buffer
 
-  if (state !== State.Normal && buffer.length > 0) {
-    return processedChunk
-  }
-
-  if (buffer.length > 0) {
-    processedChunk += await replaceCitationLinks(
-      buffer,
-      lastMessage,
-      citationLinkCache,
-      courseName,
-    )
+  // Only output buffer content if we're in Normal state and not potentially mid-tag
+  if (buffer.length > 0 && state === State.Normal && !buffer.startsWith('<')) {
+    processedChunk += buffer
     buffer = ''
   }
 
@@ -694,7 +630,7 @@ export async function updateConversationInDatabase(
 ) {
   // Log conversation to Supabase
   try {
-    const baseUrl = getBaseUrl()
+    const baseUrl = await getBaseUrl()
     const response = await fetch(
       `${baseUrl}/api/UIUC-api/logConversationToSupabase`,
       {
@@ -708,9 +644,7 @@ export async function updateConversationInDatabase(
         }),
       },
     )
-    const data = await response.json()
-    console.log('Updated conversation in Supabase:', data)
-    // return data.success
+    // const data = await response.json()
   } catch (error) {
     console.error('Error setting course data:', error)
     // return false

@@ -137,9 +137,7 @@ export async function fetchPresignedUrl(
  */
 export async function fetchCourseMetadata(course_name: string): Promise<any> {
   try {
-    console.log("Vercel base URL", process.env.VERCEL_URL)
     const endpoint = `${getBaseUrl()}/api/UIUC-api/getCourseMetadata?course_name=${course_name}`
-    console.log("endpoint url of metadata:", endpoint)
     const response = await fetch(endpoint)
 
     if (!response.ok) {
@@ -198,8 +196,6 @@ export function convertConversatonToVercelAISDKv3(
     if (index === conversation.messages.length - 1 && message.role === 'user') {
       // Use finalPromtEngineeredMessage for the most recent user message
       content = message.finalPromtEngineeredMessage || ''
-
-      // just for Llama 3.1 70b, remind it to use proper citation format.
     } else if (Array.isArray(message.content)) {
       // Combine text content from array
       content = message.content

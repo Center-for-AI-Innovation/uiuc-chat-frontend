@@ -267,8 +267,6 @@ export default async function chat(
     searchQuery,
     doc_groups,
   )
-  console.log('After context search:', { contextsLength: contexts.length })
-
   // Check if contexts were found
   if (contexts.length === 0) {
     console.error('No contexts found')
@@ -276,17 +274,17 @@ export default async function chat(
       distinct_id: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
       user_id: email,
     })
-    res.status(500).json({ error: 'No contexts found' })
-    return
-  }
+    // res.status(500).json({ error: 'No contexts found' })
+    // return
+  } else {
+    if (retrieval_only) {
+      res.status(200).json({ contexts: contexts })
+      return
+    }
 
-  if (retrieval_only) {
-    res.status(200).json({ contexts: contexts })
-    return
+    // Attach contexts to the last message
+    attachContextsToLastMessage(lastMessage, contexts)
   }
-
-  // Attach contexts to the last message
-  attachContextsToLastMessage(lastMessage, contexts)
 
   // Handle tools
   let updatedConversation = conversation

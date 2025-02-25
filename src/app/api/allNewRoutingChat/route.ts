@@ -7,6 +7,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { buildPrompt } from '~/app/utils/buildPromptUtils'
 import { OpenAIError } from '~/utils/server'
 
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+export const revalidate = 0
+
 export async function POST(req: NextRequest, res: NextResponse) {
   const startTime = Date.now()
 
@@ -43,7 +48,7 @@ export async function POST(req: NextRequest, res: NextResponse) {
     return result
 
   } catch (error) {
-    console.error('Error in chat route:', error)
+    console.error('Error in routeModelRequest:', error)
 
     let errorMessage = 'An unexpected error occurred'
     let statusCode = 500

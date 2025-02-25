@@ -1,4 +1,4 @@
-import { type CoreMessage, streamText } from 'ai'
+import { type CoreMessage, generateText, streamText } from 'ai'
 import { type ChatBody, type Conversation } from '~/types/chat'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import {
@@ -7,8 +7,11 @@ import {
 } from '~/utils/modelProviders/types/anthropic'
 import { ProviderNames } from '~/utils/modelProviders/LLMProvider'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
+
+export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-export const maxDuration = 60
+export const fetchCache = 'force-no-store'
+export const revalidate = 0
 
 import { NextResponse } from 'next/server'
 
@@ -40,15 +43,22 @@ export async function POST(req: Request) {
       throw new Error('Conversation messages array is empty')
     }
 
-    const model = anthropic(conversation.model.id)
-
-    const result = await streamText({
-      model: model,
-      messages: convertConversationToVercelAISDKv3(conversation),
-      temperature: conversation.temperature,
-      maxTokens: 4096,
-    })
-    return result.toTextStreamResponse()
+    if (chatBody.stream) {
+      const result = await streamText({
+        model: anthropic(conversation.model.id),
+        temperature: conversation.temperature,
+        messages: convertConversationToVercelAISDKv3(conversation),
+      })
+      return result.toTextStreamResponse()
+    } else {
+      const result = await generateText({
+        model: anthropic(conversation.model.id),
+        temperature: conversation.temperature,
+        messages: convertConversationToVercelAISDKv3(conversation),
+      })
+      const choices = [{ message: { content: result.text } }]
+      return NextResponse.json({ choices })
+    }
   } catch (error) {
     if (
       error &&
@@ -114,22 +124,4 @@ function convertConversationToVercelAISDKv3(
   })
 
   return coreMessages
-}
-
-export async function GET(req: Request) {
-  const apiKey = process.env.ANTHROPIC_API_KEY
-
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: 'Anthropic API key not set.' },
-      { status: 500 },
-    )
-  }
-
-  const models = Object.values(AnthropicModels) as AnthropicModel[]
-
-  return NextResponse.json({
-    provider: ProviderNames.Anthropic,
-    models: models,
-  })
 }
