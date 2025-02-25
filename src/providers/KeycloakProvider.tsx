@@ -195,7 +195,7 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
         post_logout_redirect_uri: baseUrl
       }));
       
-      console.log('[KeycloakProvider] Setting up with base URL:', baseUrl);
+      // console.log('[KeycloakProvider] Setting up with base URL:', baseUrl);
     }
   }, []);
 
@@ -214,7 +214,7 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
 
       // If we don't have a redirect_uri, redirect to homepage
       if (!oidcConfig.redirect_uri) {
-        console.log('[KeycloakProvider][useEffect] No redirect URI found, redirecting to homepage')
+        // console.log('[KeycloakProvider][useEffect] No redirect URI found, redirecting to homepage')
         window.location.replace('/')
         return
       }
@@ -223,15 +223,15 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
 
   // Don't render anything during SSR or before client-side mount
   if (typeof window === 'undefined' || !isMounted) {
-    console.log('[KeycloakProvider] Not rendering - SSR or not mounted')
+    // console.log('[KeycloakProvider] Not rendering - SSR or not mounted')
     return null
   }
 
-  console.log('[KeycloakProvider] Rendering with config:', {
-    hasRedirectUri: !!oidcConfig.redirect_uri,
-    redirectUri: oidcConfig.redirect_uri,
-    currentUrl: window.location.href
-  })
+  // console.log('[KeycloakProvider] Rendering with config:', {
+  //   hasRedirectUri: !!oidcConfig.redirect_uri,
+  //   redirectUri: oidcConfig.redirect_uri,
+  //   currentUrl: window.location.href
+  // })
 
   return (
     <AuthProvider {...oidcConfig}>
