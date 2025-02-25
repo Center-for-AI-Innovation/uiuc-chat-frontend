@@ -110,6 +110,19 @@ export const VisionCapableModels: Set<
   BedrockModelID.Llama3_2_90B_Instruct,
 ])
 
+/**
+ * Models that support extended reasoning/thinking capabilities
+ * These models can process <think> tags and have extended thinking enabled
+ */
+export const ReasoningCapableModels: Set<
+  AnthropicModelID | OpenAIModelID | OllamaModelIDs
+> = new Set([
+  AnthropicModelID.Claude_3_7_Sonnet_Thinking,
+  OpenAIModelID.O3_mini,
+  OllamaModelIDs.DEEPSEEK_R1_14b_qwen_fp16,
+  // Add other reasoning-capable models as they become available
+])
+
 export const AllSupportedModels: Set<GenericSupportedModel> = new Set([
   ...Object.values(AnthropicModels),
   ...Object.values(OpenAIModels),
