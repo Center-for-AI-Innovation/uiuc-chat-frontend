@@ -39,17 +39,29 @@ async function updateKeycloakRedirectURIs() {
 
     const [client] = await clientResponse.json();
 
-    // Add both root and wildcard URLs for Vercel preview
+    // Get Vercel deployment URLs
     const vercelBaseUrl = `https://${process.env.VERCEL_URL}`;
+    const branchName = process.env.VERCEL_GIT_COMMIT_REF; // Gets the branch name
+    const projectName = 'uiuc-chat-frontend'; // Your project name
+    const teamSlug = 'caiis-projects'; // Your team slug
+    
+    // Construct branch-specific URL
+    const branchUrl = branchName ? 
+      `https://${projectName}-git-${branchName}-${teamSlug}.vercel.app` : 
+      vercelBaseUrl;
+
     const currentRedirectUris = new Set(client.redirectUris);
     const currentWebOrigins = new Set(client.webOrigins || []);
 
     // Add to redirect URIs
-    currentRedirectUris.add(vercelBaseUrl); // Add root URL
-    currentRedirectUris.add(`${vercelBaseUrl}/*`); // Add wildcard path
+    currentRedirectUris.add(vercelBaseUrl); // Add deployment-specific URL
+    currentRedirectUris.add(`${vercelBaseUrl}/*`);
+    currentRedirectUris.add(branchUrl); // Add branch URL
+    currentRedirectUris.add(`${branchUrl}/*`);
 
     // Add to web origins
     currentWebOrigins.add(vercelBaseUrl);
+    currentWebOrigins.add(branchUrl);
 
     // Update client
     await fetch(
@@ -70,11 +82,14 @@ async function updateKeycloakRedirectURIs() {
 
     console.log('Successfully updated Keycloak client configuration:', {
       redirectUris: {
-        root: vercelBaseUrl,
-        wildcard: `${vercelBaseUrl}/*`
+        deploymentUrl: vercelBaseUrl,
+        deploymentUrlWildcard: `${vercelBaseUrl}/*`,
+        branchUrl,
+        branchUrlWildcard: `${branchUrl}/*`
       },
       webOrigins: {
-        root: vercelBaseUrl
+        deploymentUrl: vercelBaseUrl,
+        branchUrl
       }
     });
   } catch (error) {
