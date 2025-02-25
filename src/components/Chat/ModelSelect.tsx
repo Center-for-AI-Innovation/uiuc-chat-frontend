@@ -58,7 +58,7 @@ interface ModelItemProps extends React.ComponentPropsWithoutRef<'div'> {
 export const getModelLogo = (modelType: string) => {
   switch (modelType) {
     case ProviderNames.OpenAI:
-      return '/media/llm_icons/Openai.png'
+      return '/media/llm_icons/OpenAI.png'
     case ProviderNames.Ollama:
       return '/media/llm_icons/Ollama.png'
     case ProviderNames.WebLLM:
@@ -180,7 +180,7 @@ export const ModelItem = forwardRef<
                   {downloadSize}
                 </Text>
                 {state.webLLMModelIdLoading.id == modelId &&
-                  state.webLLMModelIdLoading.isLoading ? (
+                state.webLLMModelIdLoading.isLoading ? (
                   <div
                     style={{
                       marginLeft: '8px',
@@ -200,8 +200,8 @@ export const ModelItem = forwardRef<
                 ) : (
                   <>
                     {isModelCached ||
-                      (state.webLLMModelIdLoading.id == modelId &&
-                        !state.webLLMModelIdLoading.isLoading) ? (
+                    (state.webLLMModelIdLoading.id == modelId &&
+                      !state.webLLMModelIdLoading.isLoading) ? (
                       <>
                         <IconCircleCheck
                           size="1rem"
@@ -219,15 +219,15 @@ export const ModelItem = forwardRef<
                       style={{ marginLeft: '4px' }}
                       className={
                         isModelCached ||
-                          (state.webLLMModelIdLoading.id == modelId &&
-                            !state.webLLMModelIdLoading.isLoading)
+                        (state.webLLMModelIdLoading.id == modelId &&
+                          !state.webLLMModelIdLoading.isLoading)
                           ? 'text-purple-400'
                           : ''
                       }
                     >
                       {isModelCached ||
-                        (state.webLLMModelIdLoading.id == modelId &&
-                          !state.webLLMModelIdLoading.isLoading)
+                      (state.webLLMModelIdLoading.id == modelId &&
+                        !state.webLLMModelIdLoading.isLoading)
                         ? 'downloaded'
                         : 'download'}
                     </Text>
@@ -285,56 +285,56 @@ const ModelDropdown: React.FC<
   setLoadingModelId,
   chat_ui,
 }) => {
-    const { state, dispatch: homeDispatch } = useContext(HomeContext)
+  const { state, dispatch: homeDispatch } = useContext(HomeContext)
 
-    // Filter out providers that are not enabled and their models which are disabled
-    const { enabledProvidersAndModels, allModels } = Object.keys(
-      llmProviders,
-    ).reduce(
-      (
-        acc: {
-          enabledProvidersAndModels: Record<string, LLMProvider>
-          allModels: AnySupportedModel[]
-        },
-        key,
-      ) => {
-        const provider = llmProviders[key as keyof typeof llmProviders]
-        if (provider && provider.enabled) {
-          const enabledModels =
-            provider.models?.filter((model) => model.enabled) || []
-          if (enabledModels.length > 0) {
-            // @ts-ignore -- Can't figure out why the types aren't perfect.
-            acc.enabledProvidersAndModels[key as keyof typeof llmProviders] = {
-              ...provider,
-              models: enabledModels,
-            }
-            acc.allModels.push(
-              ...enabledModels.map((model) => ({
-                ...model,
-                provider: provider.provider,
-              })),
-            )
+  // Filter out providers that are not enabled and their models which are disabled
+  const { enabledProvidersAndModels, allModels } = Object.keys(
+    llmProviders,
+  ).reduce(
+    (
+      acc: {
+        enabledProvidersAndModels: Record<string, LLMProvider>
+        allModels: AnySupportedModel[]
+      },
+      key,
+    ) => {
+      const provider = llmProviders[key as keyof typeof llmProviders]
+      if (provider && provider.enabled) {
+        const enabledModels =
+          provider.models?.filter((model) => model.enabled) || []
+        if (enabledModels.length > 0) {
+          // @ts-ignore -- Can't figure out why the types aren't perfect.
+          acc.enabledProvidersAndModels[key as keyof typeof llmProviders] = {
+            ...provider,
+            models: enabledModels,
           }
+          acc.allModels.push(
+            ...enabledModels.map((model) => ({
+              ...model,
+              provider: provider.provider,
+            })),
+          )
         }
-        return acc
-      },
-      {
-        enabledProvidersAndModels: {} as Record<string, LLMProvider>,
-        allModels: [] as AnySupportedModel[],
-      },
-    )
+      }
+      return acc
+    },
+    {
+      enabledProvidersAndModels: {} as Record<string, LLMProvider>,
+      allModels: [] as AnySupportedModel[],
+    },
+  )
 
-    const selectedModel = allModels.find((model) => model.id === value)
+  const selectedModel = allModels.find((model) => model.id === value)
 
-    return (
-      <>
-        <Title
-          className={`px-4 pt-4 ${montserrat_heading.variable} rounded-lg bg-[#15162c] p-4 font-montserratHeading md:rounded-lg`}
-          color="white"
-          order={isSmallScreen ? 5 : 4}
-        >
-          Model
-        </Title>
+  return (
+    <>
+      <Title
+        className={`px-4 pt-4 ${montserrat_heading.variable} rounded-lg bg-[#15162c] p-4 font-montserratHeading md:rounded-lg`}
+        color="white"
+        order={isSmallScreen ? 5 : 4}
+      >
+        Model
+      </Title>
 
       <div
         tabIndex={0}
@@ -373,19 +373,19 @@ const ModelDropdown: React.FC<
             })
             .flatMap(
               ([_, provider]) =>
-              provider.models?.map((model) => ({
-                value: model.id,
-                label: model.name,
-                // @ts-ignore -- this being missing is fine
-                downloadSize: model?.downloadSize,
-                modelId: model.id,
-                selectedModelId: value,
-                modelType: provider.provider,
-                group: provider.provider,
-                // @ts-ignore -- this being missing is fine
-                vram_required_MB: model.vram_required_MB,
-              })) || [],
-          )}
+                provider.models?.map((model) => ({
+                  value: model.id,
+                  label: model.name,
+                  // @ts-ignore -- this being missing is fine
+                  downloadSize: model?.downloadSize,
+                  modelId: model.id,
+                  selectedModelId: value,
+                  modelType: provider.provider,
+                  group: provider.provider,
+                  // @ts-ignore -- this being missing is fine
+                  vram_required_MB: model.vram_required_MB,
+                })) || [],
+            )}
           itemComponent={(props) => (
             <ModelItem
               {...props}
