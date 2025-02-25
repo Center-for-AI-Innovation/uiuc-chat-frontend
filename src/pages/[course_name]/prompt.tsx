@@ -31,6 +31,7 @@ import {
   useMantineTheme,
   Divider,
   Select,
+  Image,
 } from '@mantine/core'
 import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
 import {
@@ -57,6 +58,7 @@ import {
   IconChevronUp,
   IconBook,
   IconLink,
+  IconAlertTriangleFilled,
 } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import { useChat } from 'ai/react'
@@ -69,9 +71,15 @@ import { findDefaultModel } from '~/components/UIUC-Components/api-inputs/LLMsAp
 import {
   type AllLLMProviders,
   ProviderNames,
+  LLM_PROVIDER_ORDER,
 } from '~/utils/modelProviders/LLMProvider'
 import { v4 as uuidv4 } from 'uuid'
 import { type Message, type Conversation, type ChatBody } from '~/types/chat'
+import { getModelLogo } from '~/components/Chat/ModelSelect'
+import {
+  recommendedModelIds,
+  warningLargeModelIds,
+} from '~/utils/modelProviders/ConfigWebLLM'
 
 const montserrat = Montserrat({
   weight: '700',
@@ -159,25 +167,41 @@ const CourseMain: NextPage = () => {
   const [isOptimizing, setIsOptimizing] = useState(false)
 
   const removeThinkSections = (text: string): string => {
-    const cleanedText = text.replace(/<think>[\s\S]*?<\/think>/g, '');
+    const cleanedText = text.replace(/<think>[\s\S]*?<\/think>/g, '')
 
-    return cleanedText.replace(/<\/?think>/g, '').trim();
+    return cleanedText.replace(/<\/?think>/g, '').trim()
   }
 
   const modelOptions = llmProviders
-    ? Object.entries(llmProviders as AllLLMProviders).flatMap(
-      ([provider, config]) =>
-        config.enabled && config.models && provider !== 'WebLLM'
-          ? config.models
-            .filter((model) => model.enabled)
-            .filter((model) => model.id !== 'learnlm-1.5-pro-experimental')
-            .map((model) => ({
-              group: provider as ProviderNames,
-              value: model.id,
-              label: model.name,
-            }))
-          : [],
-    )
+    ? Object.entries(llmProviders as AllLLMProviders)
+        // Sort by LLM_PROVIDER_ORDER
+        .sort(([providerA], [providerB]) => {
+          const indexA = LLM_PROVIDER_ORDER.indexOf(providerA as ProviderNames)
+          const indexB = LLM_PROVIDER_ORDER.indexOf(providerB as ProviderNames)
+          // Providers not in the order list will be placed at the end
+          if (indexA === -1) return 1
+          if (indexB === -1) return -1
+          return indexA - indexB
+        })
+        .flatMap(([provider, config]) =>
+          config.enabled && config.models && provider !== 'WebLLM'
+            ? config.models
+                .filter((model) => model.enabled)
+                .filter((model) => model.id !== 'learnlm-1.5-pro-experimental')
+                .map((model) => ({
+                  group: provider as ProviderNames,
+                  value: model.id,
+                  label: model.name,
+                  modelId: model.id,
+                  selectedModelId: selectedModel,
+                  modelType: provider,
+                  // @ts-ignore -- this being missing is fine
+                  downloadSize: model?.downloadSize,
+                  // @ts-ignore -- this being missing is fine
+                  vram_required_MB: model?.vram_required_MB,
+                }))
+            : [],
+        )
     : []
 
   const handleSubmitPromptOptimization = async (e: any) => {
@@ -375,15 +399,15 @@ CRITICAL: The optimized prompt must:
         }
 
         // Check if we're using DeepSeek model (part of Ollama)
-        const isDeepSeekModel = selectedModel.toLowerCase().includes('deepseek');
+        const isDeepSeekModel = selectedModel.toLowerCase().includes('deepseek')
 
         // Process the optimized prompt to remove <think> sections if using DeepSeek
-        const processedPrompt = isDeepSeekModel ? removeThinkSections(optimizedPrompt) : optimizedPrompt;
+        const processedPrompt = isDeepSeekModel
+          ? removeThinkSections(optimizedPrompt)
+          : optimizedPrompt
 
         // Update messages state for real-time display
-        setMessages([
-          { role: 'assistant', content: processedPrompt }
-        ])
+        setMessages([{ role: 'assistant', content: processedPrompt }])
       }
     } catch (error) {
       console.error('Error optimizing prompt:', error)
@@ -841,10 +865,11 @@ CRITICAL: The optimized prompt must:
                           order={3}
                           variant="gradient"
                           gradient={{ from: 'gold', to: 'white', deg: 50 }}
-                          className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base sm:text-xl ${course_name.length > 40
-                            ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
-                            : ''
-                            }`}
+                          className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base sm:text-xl ${
+                            course_name.length > 40
+                              ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
+                              : ''
+                          }`}
                         >
                           {course_name}
                         </Title>
@@ -1066,9 +1091,9 @@ CRITICAL: The optimized prompt must:
                               align="center"
                               mb="md"
                             >
-                              <Flex align="center" gap="md">
+                              <Flex align="center" className="gap-2">
                                 <Title
-                                  className={`label ${montserrat_heading.variable} pl-3 font-montserratHeading md:pl-0`}
+                                  className={`label ${montserrat_heading.variable} pl-1 pr-0 font-montserratHeading md:pl-0 md:pr-2`}
                                   variant="gradient"
                                   gradient={{
                                     from: 'gold',
@@ -1089,28 +1114,144 @@ CRITICAL: The optimized prompt must:
                                   searchable
                                   radius={'md'}
                                   maxDropdownHeight={280}
+                                  itemComponent={(props) => (
+                                    <div {...props}>
+                                      <Group
+                                        noWrap
+                                        style={{ overflow: 'visible' }}
+                                      >
+                                        <div
+                                          style={{
+                                            width: '100%',
+                                            paddingLeft: '4px',
+                                            overflow: 'visible',
+                                          }}
+                                        >
+                                          <div
+                                            style={{
+                                              display: 'flex',
+                                              alignItems: 'center',
+                                              overflow: 'visible',
+                                            }}
+                                          >
+                                            <Image
+                                              src={getModelLogo(
+                                                props.modelType,
+                                              )}
+                                              alt={`${props.modelType} logo`}
+                                              width={20}
+                                              height={20}
+                                              style={{
+                                                minWidth: '20px',
+                                                borderRadius: '4px',
+                                                overflow: 'hidden',
+                                              }}
+                                            />
+                                            <Text
+                                              size="sm"
+                                              style={{ marginLeft: '12px' }}
+                                            >
+                                              {props.label}
+                                            </Text>
+                                          </div>
+                                          {props.downloadSize && (
+                                            <div
+                                              style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                marginTop: '4px',
+                                                marginLeft: '32px',
+                                              }}
+                                            >
+                                              <Text size="xs" opacity={0.65}>
+                                                {props.downloadSize}
+                                              </Text>
+                                              {recommendedModelIds.includes(
+                                                props.label,
+                                              ) && (
+                                                <div
+                                                  style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                  }}
+                                                >
+                                                  <IconSparkles
+                                                    size="1rem"
+                                                    style={{
+                                                      marginLeft: '8px',
+                                                    }}
+                                                  />
+                                                  <Text
+                                                    size="xs"
+                                                    opacity={0.65}
+                                                    style={{
+                                                      marginLeft: '4px',
+                                                    }}
+                                                  >
+                                                    recommended
+                                                  </Text>
+                                                </div>
+                                              )}
+                                              {warningLargeModelIds.includes(
+                                                props.label,
+                                              ) && (
+                                                <div
+                                                  style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                  }}
+                                                >
+                                                  <IconAlertTriangleFilled
+                                                    size="1rem"
+                                                    style={{
+                                                      marginLeft: '8px',
+                                                    }}
+                                                  />
+                                                  <Text
+                                                    size="xs"
+                                                    opacity={0.65}
+                                                    style={{
+                                                      marginLeft: '4px',
+                                                    }}
+                                                  >
+                                                    warning, requires large vRAM
+                                                    GPU
+                                                  </Text>
+                                                </div>
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
+                                      </Group>
+                                    </div>
+                                  )}
                                   styles={(theme) => ({
                                     root: {
-                                      width: '280px',
+                                      width: '320px',
                                       zIndex: 200,
                                       '@media (max-width: 768px)': {
-                                        width: '200px',
+                                        width: '240px',
                                       },
                                       '@media (max-width: 480px)': {
-                                        width: '160px',
+                                        width: '220px',
                                       },
                                     },
                                     input: {
+                                      backgroundColor: 'rgb(107, 33, 168)',
+                                      border: 'none',
+                                      color: theme.white,
                                       '&:focus': {
                                         borderColor: '#6e56cf',
                                       },
-                                      backgroundColor: '#1a1b3e',
                                       fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
                                       cursor: 'pointer',
                                       minWidth: 0,
                                       flex: '1 1 auto',
                                       height: '36px',
                                       fontSize: '0.9rem',
+                                      paddingRight: '30px',
+                                      paddingLeft: '36px',
+                                      overflow: 'visible',
                                       '@media (max-width: 768px)': {
                                         fontSize: '0.85rem',
                                         height: '34px',
@@ -1121,20 +1262,36 @@ CRITICAL: The optimized prompt must:
                                       },
                                     },
                                     dropdown: {
-                                      backgroundColor: '#1a1b3e',
+                                      backgroundColor: '#1d1f33',
+                                      border: '1px solid rgba(42,42,120,1)',
+                                      borderRadius: theme.radius.md,
+                                      marginTop: '2px',
+                                      boxShadow: theme.shadows.xs,
+                                      width: '100%',
+                                      maxWidth: '100%',
+                                      position: 'absolute',
                                       zIndex: 200,
+                                      overflow: 'visible',
                                       '@media (max-width: 768px)': {
                                         width: 'auto',
-                                        minWidth: '200px',
+                                        minWidth: '240px',
                                       },
                                     },
                                     item: {
+                                      backgroundColor: '#1d1f33',
+                                      borderRadius: theme.radius.md,
+                                      margin: '2px',
+                                      overflow: 'visible',
                                       '&[data-selected]': {
-                                        backgroundColor: theme.colors.grape[9],
+                                        backgroundColor: 'transparent',
                                         '&:hover': {
-                                          backgroundColor:
-                                            theme.colors.grape[8],
+                                          backgroundColor: 'rgb(107, 33, 168)',
+                                          color: theme.white,
                                         },
+                                      },
+                                      '&[data-hovered]': {
+                                        backgroundColor: 'rgb(107, 33, 168)',
+                                        color: theme.white,
                                       },
                                       fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
                                       cursor: 'pointer',
@@ -1154,26 +1311,39 @@ CRITICAL: The optimized prompt must:
                                     rightSection: {
                                       pointerEvents: 'none',
                                       color: theme.colors.gray[5],
-                                      width: '24px',
+                                      width: '30px',
                                       '@media (max-width: 480px)': {
-                                        width: '20px',
-                                      },
-                                    },
-                                    label: {
-                                      fontSize: '0.9rem',
-                                      '@media (max-width: 768px)': {
-                                        fontSize: '0.85rem',
-                                      },
-                                      '@media (max-width: 480px)': {
-                                        fontSize: '0.8rem',
+                                        width: '24px',
                                       },
                                     },
                                   })}
-                                  className={`min-w-0 ${montserrat_paragraph.variable} font-montserratParagraph`}
                                   rightSection={
                                     <IconChevronDown
                                       size={isSmallScreen ? 12 : 14}
+                                      style={{ marginRight: '8px' }}
                                     />
+                                  }
+                                  icon={
+                                    selectedModel ? (
+                                      <Image
+                                        src={getModelLogo(
+                                          modelOptions.find(
+                                            (opt) =>
+                                              opt.value === selectedModel,
+                                          )?.modelType || '',
+                                        )}
+                                        alt={`${modelOptions.find((opt) => opt.value === selectedModel)?.modelType || ''} logo`}
+                                        width={20}
+                                        height={20}
+                                        style={{
+                                          position: 'absolute',
+                                          left: '8px',
+                                          minWidth: '20px',
+                                          borderRadius: '4px',
+                                          overflow: 'hidden',
+                                        }}
+                                      />
+                                    ) : null
                                   }
                                 />
                                 <Tooltip
@@ -1189,8 +1359,9 @@ CRITICAL: The optimized prompt must:
                                       color: theme.white,
                                       fontSize: '0.875rem',
                                       padding: '0.5rem 0.75rem',
-                                      fontFamily: 'var(--font-montserratParagraph)',
-                                      maxWidth: '300px'
+                                      fontFamily:
+                                        'var(--font-montserratParagraph)',
+                                      maxWidth: '300px',
                                     },
                                     arrow: {
                                       backgroundColor: theme.colors.dark[7],
@@ -1200,27 +1371,40 @@ CRITICAL: The optimized prompt must:
                                   <div>
                                     <IconInfoCircle
                                       size={18}
-                                      className="text-white/60 hover:text-white/80 transition-colors duration-200"
+                                      className="text-white/60 transition-colors duration-200 hover:text-white/80"
                                       style={{ cursor: 'pointer' }}
                                     />
                                   </div>
                                 </Tooltip>
                               </Flex>
                               {isRightSideVisible ? (
-                                <Tooltip label="Close Prompt Builder" key="close">
-                                  <div className="cursor-pointer p-4 hover:opacity-75 md:p-0" data-right-sidebar-icon>
+                                <Tooltip
+                                  label="Close Prompt Builder"
+                                  key="close"
+                                >
+                                  <div
+                                    className="cursor-pointer p-0"
+                                    data-right-sidebar-icon
+                                  >
                                     <IconLayoutSidebarRight
                                       stroke={2}
-                                      onClick={() => setIsRightSideVisible(false)}
+                                      onClick={() =>
+                                        setIsRightSideVisible(false)
+                                      }
                                     />
                                   </div>
                                 </Tooltip>
                               ) : (
                                 <Tooltip label="Open Prompt Builder" key="open">
-                                  <div className="cursor-pointer p-4 hover:opacity-75 md:p-0" data-right-sidebar-icon>
+                                  <div
+                                    className="mr-2 cursor-pointer p-0"
+                                    data-right-sidebar-icon
+                                  >
                                     <IconLayoutSidebarRightExpand
                                       stroke={2}
-                                      onClick={() => setIsRightSideVisible(true)}
+                                      onClick={() =>
+                                        setIsRightSideVisible(true)
+                                      }
                                     />
                                   </div>
                                 </Tooltip>
