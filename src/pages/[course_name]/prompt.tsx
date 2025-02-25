@@ -2,7 +2,7 @@
 'use client'
 import { type NextPage } from 'next'
 import MakeNewCoursePage from '~/components/UIUC-Components/MakeNewCoursePage'
-import React, { useEffect, useState, useCallback, useRef } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { Montserrat } from 'next/font/google'
 import { useRouter } from 'next/router'
 import { useUser } from '@clerk/nextjs'
@@ -21,7 +21,7 @@ import {
   Group,
   Indicator,
   List,
-  MantineTheme,
+  type MantineTheme,
   Modal,
   Paper,
   Text,
@@ -53,28 +53,27 @@ import {
   IconLayoutSidebarRightExpand,
   IconSparkles,
   IconInfoCircle,
-  IconCopy,
   IconChevronDown,
-  IconChevronUp,
   IconBook,
   IconLink,
   IconAlertTriangleFilled,
 } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
-import { useChat } from 'ai/react'
 import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
-import { debounce } from 'lodash'
 import CustomSwitch from '~/components/Switches/CustomSwitch'
 import CustomCopyButton from '~/components/Buttons/CustomCopyButton'
 import { useDebouncedCallback } from 'use-debounce'
 import { findDefaultModel } from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
 import {
+  ReasoningCapableModels,
   type AllLLMProviders,
   ProviderNames,
   LLM_PROVIDER_ORDER,
+  type AnySupportedModel,
 } from '~/utils/modelProviders/LLMProvider'
+import { type AnthropicModel } from '~/utils/modelProviders/types/anthropic'
 import { v4 as uuidv4 } from 'uuid'
-import { type Message, type Conversation, type ChatBody } from '~/types/chat'
+import { type ChatBody } from '~/types/chat'
 import { getModelLogo } from '~/components/Chat/ModelSelect'
 import {
   recommendedModelIds,
@@ -188,7 +187,7 @@ const CourseMain: NextPage = () => {
             ? config.models
                 .filter((model) => model.enabled)
                 .filter((model) => model.id !== 'learnlm-1.5-pro-experimental')
-                .map((model) => ({
+                .map((model: AnySupportedModel) => ({
                   group: provider as ProviderNames,
                   value: model.id,
                   label: model.name,
@@ -199,6 +198,8 @@ const CourseMain: NextPage = () => {
                   downloadSize: model?.downloadSize,
                   // @ts-ignore -- this being missing is fine
                   vram_required_MB: model?.vram_required_MB,
+                  extendedThinking:
+                    (model as AnthropicModel)?.extendedThinking || false,
                 }))
             : [],
         )
@@ -343,6 +344,9 @@ CRITICAL: The optimized prompt must:
               'GPT-4',
             tokenLimit: 8192,
             enabled: true,
+            extendedThinking:
+              modelOptions.find((opt) => opt.value === selectedModel)
+                ?.extendedThinking || false,
           },
           prompt: baseSystemPrompt,
           temperature: 0.1,
@@ -398,11 +402,9 @@ CRITICAL: The optimized prompt must:
           setIsOptimizing(false)
         }
 
-        // Check if we're using DeepSeek model (part of Ollama)
-        const isDeepSeekModel = selectedModel.toLowerCase().includes('deepseek')
-
+        // Check if we're using a model that supports thinking tags
         // Process the optimized prompt to remove <think> sections if using DeepSeek
-        const processedPrompt = isDeepSeekModel
+        const processedPrompt = ReasoningCapableModels.has(selectedModel as any)
           ? removeThinkSections(optimizedPrompt)
           : optimizedPrompt
 
