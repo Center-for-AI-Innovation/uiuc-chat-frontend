@@ -7,6 +7,18 @@ async function updateKeycloakRedirectURIs() {
   const adminUser = process.env.KEYCLOAK_ADMIN_USERNAME;
   const adminPass = process.env.KEYCLOAK_ADMIN_PASSWORD;
 
+  // Check if required environment variables are set
+  if (!keycloakUrl || !realm || !clientId || !adminUser || !adminPass) {
+    console.error('Missing required environment variables.');
+    process.exit(1);
+  }
+
+  // Ensure keycloakUrl is a valid absolute URL
+  if (!/^https?:\/\//.test(keycloakUrl)) {
+    console.error('Invalid Keycloak URL:', keycloakUrl);
+    process.exit(1);
+  }
+
   try {
     // Get access token
     const tokenResponse = await fetch(
