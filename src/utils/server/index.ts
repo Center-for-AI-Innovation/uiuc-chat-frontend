@@ -130,8 +130,8 @@ export const OpenAIStream = async (
       }),
       ...(apiType === ProviderNames.OpenAI &&
         OPENAI_ORGANIZATION && {
-        'OpenAI-Organization': OPENAI_ORGANIZATION,
-      }),
+          'OpenAI-Organization': OPENAI_ORGANIZATION,
+        }),
     },
     method: 'POST',
     body: body,
@@ -151,7 +151,8 @@ export const OpenAIStream = async (
       )
     } else {
       throw new Error(
-        `OpenAI API returned an error: ${decoder.decode(result?.value) || result.statusText
+        `OpenAI API returned an error: ${
+          decoder.decode(result?.value) || result.statusText
         }`,
       )
     }

@@ -24,7 +24,7 @@ export async function POST(req: NextRequest, res: NextResponse) {
     courseMetadata,
     // stream,
     // llmProviders,
-    mode
+    mode,
   } = body as ChatBody
 
   console.log('chat body', body)
@@ -46,7 +46,6 @@ export async function POST(req: NextRequest, res: NextResponse) {
     const duration = endTime - startTime
     console.log(`Total duration: ${duration}ms`)
     return result
-
   } catch (error) {
     console.error('Error in routeModelRequest:', error)
 
