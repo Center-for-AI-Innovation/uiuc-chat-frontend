@@ -617,6 +617,7 @@ export const Chat = memo(
                   courseMetadata: courseMetadata,
                   llmProviders: llmProviders,
                   model: selectedConversation.model,
+                  mode: 'chat',
                 }
 
                 if (!queryRewriteBody.model || !queryRewriteBody.model.id) {
@@ -819,6 +820,7 @@ export const Chat = memo(
             llmProviders: llmProviders,
             model: selectedConversation.model,
             skipQueryRewrite: documentCount === 0,
+            mode: 'chat',
           }
           updatedConversation = finalChatBody.conversation!
 
@@ -1668,11 +1670,17 @@ export const Chat = memo(
                               }}
                               onRegenerate={(message, index) => {
                                 // Find the user message that came before this assistant message
-                                const userMessage = selectedConversation?.messages[index - 1]
-                                if (userMessage && userMessage.role === 'user') {
+                                const userMessage =
+                                  selectedConversation?.messages[index - 1]
+                                if (
+                                  userMessage &&
+                                  userMessage.role === 'user'
+                                ) {
                                   handleSend(
                                     userMessage,
-                                    selectedConversation?.messages?.length - index + 1,
+                                    selectedConversation?.messages?.length -
+                                      index +
+                                      1,
                                     null,
                                     tools,
                                     enabledDocumentGroups,

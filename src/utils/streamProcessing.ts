@@ -785,7 +785,9 @@ export const routeModelRequest = async (
   console.log('In routeModelRequest: ', chatBody, baseUrl)
 
   const selectedConversation = chatBody.conversation!
+  console.log('Selected conversation:', selectedConversation)
   if (!selectedConversation.model || !selectedConversation.model.id) {
+    console.log('Invalid conversation:', selectedConversation)
     throw new Error('Conversation model is undefined or missing "id" property.')
   }
 

@@ -58,7 +58,7 @@ interface ModelItemProps extends React.ComponentPropsWithoutRef<'div'> {
 export const getModelLogo = (modelType: string) => {
   switch (modelType) {
     case ProviderNames.OpenAI:
-      return '/media/llm_icons/Openai.png'
+      return '/media/llm_icons/OpenAI.png'
     case ProviderNames.Ollama:
       return '/media/llm_icons/Ollama.png'
     case ProviderNames.WebLLM:
@@ -344,7 +344,7 @@ const ModelDropdown: React.FC<
           className="menu z-[50] w-full"
           size="md"
           placeholder="Select a model"
-          // searchable
+          searchable
           value={value}
           onChange={async (modelId) => {
             if (state.webLLMModelIdLoading.isLoading) {
@@ -408,7 +408,7 @@ const ModelDropdown: React.FC<
               />
             ) : null
           }
-          // rightSection={<IconChevronDown size="1rem" className="mr-2" />}
+          rightSection={<IconChevronDown size="1rem" className="mr-2" />}
           classNames={{
             root: 'w-full',
             wrapper: 'w-full',
