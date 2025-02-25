@@ -20,6 +20,8 @@ export const getAnthropicModels = async (
   // If no models, return default models sorted by our preference
   if (!anthropicProvider.models || anthropicProvider.models.length === 0) {
     const preferredAnthropicModelIds = [
+      AnthropicModelID.Claude_3_7_Sonnet,
+      AnthropicModelID.Claude_3_7_Sonnet,
       AnthropicModelID.Claude_3_5_Sonnet,
       AnthropicModelID.Claude_3_5_Haiku,
       AnthropicModelID.Claude_3_Opus,
