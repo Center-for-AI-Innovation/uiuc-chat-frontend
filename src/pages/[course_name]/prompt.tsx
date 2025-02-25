@@ -1207,35 +1207,24 @@ CRITICAL: The optimized prompt must:
                                 </Tooltip>
                               </Flex>
                               {isRightSideVisible ? (
-                                <Tooltip
-                                  label="Close Prompt Builder"
-                                  key="close"
-                                >
-                                  <div className="cursor-pointer p-4 hover:opacity-75 md:p-0">
+                                <Tooltip label="Close Prompt Builder" key="close">
+                                  <div className="cursor-pointer p-4 hover:opacity-75 md:p-0" data-right-sidebar-icon>
                                     <IconLayoutSidebarRight
                                       stroke={2}
-                                      onClick={() =>
-                                        setIsRightSideVisible(
-                                          !isRightSideVisible,
-                                        )
-                                      }
+                                      onClick={() => setIsRightSideVisible(false)}
                                     />
                                   </div>
                                 </Tooltip>
                               ) : (
                                 <Tooltip label="Open Prompt Builder" key="open">
-                                  <div className="cursor-pointer p-4 hover:opacity-75 md:p-0">
+                                  <div className="cursor-pointer p-4 hover:opacity-75 md:p-0" data-right-sidebar-icon>
                                     <IconLayoutSidebarRightExpand
                                       stroke={2}
-                                      onClick={() =>
-                                        setIsRightSideVisible(
-                                          !isRightSideVisible,
-                                        )
-                                      }
+                                      onClick={() => setIsRightSideVisible(true)}
                                     />
                                   </div>
                                 </Tooltip>
-                              )}{' '}
+                              )}
                             </Flex>
                             <form
                               className={`${montserrat_paragraph.variable} font-montserratParagraph`}

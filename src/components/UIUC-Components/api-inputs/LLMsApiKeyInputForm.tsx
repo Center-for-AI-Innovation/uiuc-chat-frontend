@@ -34,6 +34,7 @@ import {
   type NCSAHostedVLMProvider,
   type BedrockProvider,
   type GeminiProvider,
+  LLM_PROVIDER_ORDER,
 } from '~/utils/modelProviders/LLMProvider'
 import { notifications } from '@mantine/notifications'
 import {
@@ -213,7 +214,7 @@ const NewModelDropdown: React.FC<{
         className="menu z-[50] w-full"
         size="md"
         placeholder="Select a model"
-        searchable
+        // searchable
         value={value?.id || ''}
         onChange={async (modelId) => {
           const selectedModel = allModels.find((model) => model.id === modelId)
@@ -221,25 +222,39 @@ const NewModelDropdown: React.FC<{
             await onChange(selectedModel)
           }
         }}
-        data={Object.values(enabledProvidersAndModels).flatMap(
-          (provider: LLMProvider) =>
-            provider.models?.map((model) => ({
-              value: model.id,
-              label: model.name,
-              // @ts-ignore -- this being missing is fine
-              downloadSize: model?.downloadSize,
-              modelId: model.id,
-              selectedModelId: value,
-              modelType: provider.provider,
-              group: provider.provider,
-              // @ts-ignore -- this being missing is fine
-              vram_required_MB: model.vram_required_MB,
-            })) || [],
-        )}
+        data={Object.entries(enabledProvidersAndModels)
+          // Sort by LLM_PROVIDER_ORDER
+          .sort(([providerA], [providerB]) => {
+            const indexA = LLM_PROVIDER_ORDER.indexOf(
+              providerA as ProviderNames,
+            )
+            const indexB = LLM_PROVIDER_ORDER.indexOf(
+              providerB as ProviderNames,
+            )
+            // Providers not in the order list will be placed at the end
+            if (indexA === -1) return 1
+            if (indexB === -1) return -1
+            return indexA - indexB
+          })
+          .flatMap(
+            ([_, provider]) =>
+              provider.models?.map((model) => ({
+                value: model.id,
+                label: model.name,
+                // @ts-ignore -- this being missing is fine
+                downloadSize: model?.downloadSize,
+                modelId: model.id,
+                selectedModelId: value,
+                modelType: provider.provider,
+                group: provider.provider,
+                // @ts-ignore -- this being missing is fine
+                vram_required_MB: model.vram_required_MB,
+              })) || [],
+          )}
         itemComponent={(props) => (
           <ModelItem {...props} setLoadingModelId={() => { }} />
         )}
-        maxDropdownHeight={480}
+        maxDropdownHeight={520}
         rightSectionWidth="auto"
         icon={
           selectedModel ? (
@@ -254,7 +269,7 @@ const NewModelDropdown: React.FC<{
             />
           ) : null
         }
-        rightSection={<IconChevronDown size="1rem" className="mr-2" />}
+        // rightSection={<IconChevronDown size="1rem" className="mr-2" />}
         classNames={{
           root: 'w-full',
           wrapper: 'w-full',
@@ -374,7 +389,6 @@ export const ModelItem = forwardRef<
 export function findDefaultModel(
   providers: AllLLMProviders,
 ): (AnySupportedModel & { provider: ProviderNames }) | undefined {
-  // console.log('providers inside', providers)
   for (const providerKey in providers) {
     const provider = providers[providerKey as keyof typeof providers]
     if (provider && provider.models) {
@@ -830,7 +844,7 @@ export default function APIKeyInputForm() {
                           )}
                         </div>
                         <div className="pt-6"></div>
-                        <div>
+                        {/* <div>
                           {llmProviders && (
                             // @ts-ignore - we don't really need this named functionality... gonna skip fixing this.
                             <form.Field name="defaultTemperature">
@@ -893,7 +907,7 @@ export default function APIKeyInputForm() {
                               )}
                             </form.Field>
                           )}
-                        </div>
+                        </div> */}
                         <div className="pt-2" />
                       </div>
                     </div>
