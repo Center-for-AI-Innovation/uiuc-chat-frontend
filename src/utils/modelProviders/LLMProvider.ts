@@ -86,7 +86,10 @@ export const VisionCapableModels: Set<
   AzureModelID.GPT_4o,
   AzureModelID.GPT_4o_mini,
   // claude-3.5....
+  AnthropicModelID.Claude_3_7_Sonnet,
+  AnthropicModelID.Claude_3_7_Sonnet_Thinking,
   AnthropicModelID.Claude_3_5_Sonnet,
+  AnthropicModelID.Claude_3_5_Haiku,
 
   // VLM
   NCSAHostedVLMModelID.Llama_3_2_11B_Vision_Instruct,
