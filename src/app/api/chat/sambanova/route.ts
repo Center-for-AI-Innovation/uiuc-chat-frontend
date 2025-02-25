@@ -68,16 +68,11 @@ export async function runSambaNovaChat(
       throw new Error(`Model configuration not found for ${conversation.model.id}`)
     }
 
-    // Reserve 20% of tokens for the response
-    const maxResponseTokens = Math.floor(modelConfig.tokenLimit * 0.2)
-    // Use remaining tokens for the conversation
-    const maxContextTokens = modelConfig.tokenLimit - maxResponseTokens
-
     const commonParams = {
       model: model as any,
       messages: messages,
       temperature: conversation.temperature || 0.7,
-      max_tokens: maxResponseTokens,
+      max_tokens: 4096,
     }
 
     console.log(
@@ -87,7 +82,6 @@ export async function runSambaNovaChat(
           modelId: conversation.model.id,
           temperature: commonParams.temperature,
           max_tokens: commonParams.max_tokens,
-          maxContextTokens,
           messageCount: messages.length,
         },
         null,
