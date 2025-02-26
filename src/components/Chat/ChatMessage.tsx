@@ -26,6 +26,7 @@ import {
   IconBook2,
   IconChevronDown,
   IconBrain,
+  IconRepeat,
 } from '@tabler/icons-react'
 import { Fragment } from 'react'
 
@@ -126,6 +127,7 @@ export interface Props {
   message: Message
   messageIndex: number
   onEdit?: (editedMessage: Message) => void
+  onRegenerate?: (message: Message, messageIndex: number) => void
   onFeedback?: (
     message: Message,
     isPositive: boolean | null,
@@ -291,6 +293,7 @@ export const ChatMessage: React.FC<Props> = memo(
     message,
     messageIndex,
     onEdit,
+    onRegenerate,
     onFeedback,
     onImageUrlsUpdate,
     courseName,
@@ -1350,6 +1353,18 @@ export const ChatMessage: React.FC<Props> = memo(
       }
     }
 
+    // Add this state for regenerate animation
+    const [isRegenerating, setIsRegenerating] = useState(false)
+
+    // Add this handler
+    const handleRegenerate = () => {
+      if (onRegenerate) {
+        setIsRegenerating(true)
+        onRegenerate(message, messageIndex)
+        setTimeout(() => setIsRegenerating(false), 1000)
+      }
+    }
+
     return (
       <>
         <div
@@ -1468,8 +1483,7 @@ export const ChatMessage: React.FC<Props> = memo(
                                   (selectedConversation?.messages.length ?? 0) -
                                     1 ||
                                   messageIndex ===
-                                    (selectedConversation?.messages.length ??
-                                      0) -
+                                    (selectedConversation?.messages.length ?? 0) -
                                       2) && (
                                   <IntermediateStateAccordion
                                     accordionKey="imageDescription"
@@ -2050,6 +2064,32 @@ export const ChatMessage: React.FC<Props> = memo(
                               ) : (
                                 <IconThumbDown size={20} />
                               )}
+                            </button>
+                          </Tooltip>
+                          <Tooltip
+                            label="Regenerate Response"
+                            position="bottom"
+                            withArrow
+                            arrowSize={6}
+                            transitionProps={{
+                              transition: 'fade',
+                              duration: 200,
+                            }}
+                            classNames={{
+                              tooltip: 'bg-gray-700 text-white text-sm py-1 px-2',
+                              arrow: 'border-gray-700',
+                            }}
+                          >
+                            <button
+                              className={`text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 ${
+                                messageIndex === (selectedConversation?.messages?.length ?? 0) - 1
+                                  ? 'opacity-100'
+                                  : 'opacity-0 transition-opacity duration-200 focus:opacity-100 group-hover:opacity-100'
+                              } ${isRegenerating ? 'animate-spin' : ''}`}
+                              onClick={handleRegenerate}
+                              disabled={isRegenerating}
+                            >
+                              <IconRepeat size={20} />
                             </button>
                           </Tooltip>
                         </div>

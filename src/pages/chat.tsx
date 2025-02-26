@@ -12,11 +12,16 @@ import {
 import Home from '~/pages/api/home/home'
 import { CourseMetadata } from '~/types/courseMetadata'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
+import { useUser } from '@clerk/nextjs'
+import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
 
 const ChatPage: NextPage = () => {
   const [metadata, setMetadata] = useState<CourseMetadata | null>()
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
+  const clerk_user_outer = useUser()
+  const { user, isLoaded, isSignedIn } = clerk_user_outer
+  const [currentEmail, setCurrentEmail] = useState('')
 
   useEffect(() => {
     if (!router.isReady) return
@@ -48,6 +53,21 @@ const ChatPage: NextPage = () => {
     setIsLoading(false)
   }, [router.isReady, metadata])
 
+  useEffect(() => {
+    if (!isLoaded) return
+    const email = extractEmailsFromClerk(user)[0]
+    if (email) {
+      setCurrentEmail(email)
+    } else {
+      const key = process.env.NEXT_PUBLIC_POSTHOG_KEY as string
+      const postHogUserObj = localStorage.getItem('ph_' + key + '_posthog')
+      if (postHogUserObj) {
+        const postHogUser = JSON.parse(postHogUserObj)
+        setCurrentEmail(postHogUser.distinct_id)
+      }
+    }
+  }, [isLoaded, user])
+
   if (isLoading) {
     return <LoadingPlaceholderForAdminPages />
   }
@@ -71,7 +91,7 @@ const ChatPage: NextPage = () => {
   return (
     <>
       <Home
-        current_email={'kvday2@illinois.edu'}
+        current_email={currentEmail}
         course_metadata={course_metadata}
         course_name={'chat'}
         document_count={0}

@@ -52,12 +52,8 @@ export async function runBedrockChat(
     if (conversation.messages.length === 0) {
       throw new Error('Conversation messages array is empty')
     }
-
-    console.log('Model ID:', conversation.model.id)
-    const model = bedrock(conversation.model.id)
-
     const commonParams = {
-      model: model,
+      model: bedrock(conversation.model.id),
       messages: convertConversationToBedrockFormat(conversation),
       temperature: conversation.temperature,
       maxTokens: 4096,
@@ -66,34 +62,21 @@ export async function runBedrockChat(
       toolChoice: undefined,
     }
 
-    console.log(
-      'Final params being sent to Bedrock:',
-      JSON.stringify(commonParams, null, 2),
-    )
-
     if (stream) {
       const result = await streamText({
-        model: model as any,
+        ...commonParams,
         messages: commonParams.messages.map((msg) => ({
           role: msg.role === 'tool' ? 'tool' : msg.role,
           content: msg.content,
         })) as CoreMessage[],
-        temperature: conversation.temperature,
-        maxTokens: 4096,
       })
       return result.toTextStreamResponse()
     } else {
-      const result = await generateText({
-        model: model as any,
-        messages: commonParams.messages,
-        temperature: conversation.temperature,
-        maxTokens: 4096,
-      })
+      const result = await generateText(commonParams)
       const choices = [{ message: { content: result.text } }]
-      return { choices }
+      return NextResponse.json({ choices })
     }
   } catch (error) {
-    console.log('Error in runBedrockChat:', error)
     console.error('Error in runBedrockChat:', error)
     throw error
   }
@@ -103,17 +86,10 @@ function convertConversationToBedrockFormat(
   conversation: Conversation,
 ): CoreMessage[] {
   const messages = []
-
-  console.log(
-    'Original conversation:',
-    JSON.stringify(conversation.messages, null, 2),
-  )
-
   const systemMessage = conversation.messages.findLast(
     (msg) => msg.latestSystemMessage !== undefined,
   )
   if (systemMessage) {
-    console.log('Found system message:', systemMessage.latestSystemMessage)
     messages.push({
       role: 'system',
       content: systemMessage.latestSystemMessage || '',
@@ -122,15 +98,12 @@ function convertConversationToBedrockFormat(
 
   conversation.messages.forEach((message, index) => {
     if (message.role === 'system') {
-      console.log('Skipping system message in forEach')
       return
     }
 
     let content: string
     if (index === conversation.messages.length - 1 && message.role === 'user') {
       content = message.finalPromtEngineeredMessage || ''
-      content +=
-        '\n\nIf you use the <Potentially Relevant Documents> in your response, please remember cite your sources using the required formatting, e.g. "The grass is green. [29, page: 11]'
     } else if (Array.isArray(message.content)) {
       content = message.content
         .filter((c) => c.type === 'text')
@@ -145,11 +118,6 @@ function convertConversationToBedrockFormat(
       content: content,
     })
   })
-
-  console.log(
-    'Final messages array being sent to Bedrock:',
-    JSON.stringify(messages, null, 2),
-  )
   return messages as CoreMessage[]
 }
 

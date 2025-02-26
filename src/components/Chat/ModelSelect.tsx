@@ -58,19 +58,19 @@ interface ModelItemProps extends React.ComponentPropsWithoutRef<'div'> {
 export const getModelLogo = (modelType: string) => {
   switch (modelType) {
     case ProviderNames.OpenAI:
-      return 'https://images.squarespace-cdn.com/content/v1/5a4908d949fc2b8e312bdf53/1676298536608-GQSN44SGOEHWCFSIZIGK/openai_icon.png?format=750w'
+      return '/media/llm_icons/OpenAI.png'
     case ProviderNames.Ollama:
-      return 'https://raw.githubusercontent.com/deepset-ai/haystack-integrations/main/logos/ollama.png'
+      return '/media/llm_icons/Ollama.png'
     case ProviderNames.WebLLM:
-      return 'https://avatars.githubusercontent.com/u/106173866?s=48&v=4'
+      return '/media/llm_icons/WebLLM.png'
     case ProviderNames.Anthropic:
-      return 'https://www.anthropic.com/images/icons/safari-pinned-tab.svg'
+      return '/media/llm_icons/Anthropic.png'
     case ProviderNames.NCSAHosted:
-      return 'https://assets.kastan.ai/UofI-logo-white.jpg'
+      return '/media/llm_icons/NCSAHosted.png'
     case ProviderNames.NCSAHostedVLM:
-      return 'https://assets.kastan.ai/UofI-logo-white.jpg'
+      return '/media/llm_icons/NCSAHosted.png'
     case ProviderNames.Azure:
-      return 'https://assets.kastan.ai/uiuc-chat-emails/msft-logo.png'
+      return '/media/llm_icons/Azure.png'
     case ProviderNames.Bedrock:
       return 'https://icon2.cleanpng.com/20190418/vhc/kisspng-amazon-web-services-logo-cloud-computing-amazon-co-logoaws-1-itnext-summit-1713897597915.webp'
     case ProviderNames.Gemini:
@@ -465,6 +465,133 @@ const ModelDropdown: React.FC<
       </>
     )
   }
+<div
+  tabIndex={0}
+  className="relative mt-4 flex w-full flex-col items-start px-4"
+>
+  <Select
+    className="menu z-[50] w-full"
+    size="md"
+    placeholder="Select a model"
+    searchable
+    value={value}
+    onChange={async (modelId) => {
+      if (state.webLLMModelIdLoading.isLoading) {
+        setLoadingModelId(modelId)
+        // console.log('model id', modelId)
+        // console.log('loading model id', loadingModelId)
+        // console.log('model is loading', state.webLLMModelIdLoading.id)
+      } else if (!state.webLLMModelIdLoading.isLoading) {
+        setLoadingModelId(null)
+      }
+      await onChange(modelId!)
+    }}
+    data={Object.entries(enabledProvidersAndModels)
+      // Sort by LLM_PROVIDER_ORDER
+      .sort(([providerA], [providerB]) => {
+        const indexA = LLM_PROVIDER_ORDER.indexOf(
+          providerA as ProviderNames,
+        )
+        const indexB = LLM_PROVIDER_ORDER.indexOf(
+          providerB as ProviderNames,
+        )
+        // Providers not in the order list will be placed at the end
+        if (indexA === -1) return 1
+        if (indexB === -1) return -1
+        return indexA - indexB
+      })
+      .flatMap(
+        ([_, provider]) =>
+          provider.models?.map((model) => ({
+            value: model.id,
+            label: model.name,
+            // @ts-ignore -- this being missing is fine
+            downloadSize: model?.downloadSize,
+            modelId: model.id,
+            selectedModelId: value,
+            modelType: provider.provider,
+            group: provider.provider,
+            // @ts-ignore -- this being missing is fine
+            vram_required_MB: model.vram_required_MB,
+          })) || [],
+      )}
+    itemComponent={(props) => (
+      <ModelItem
+        {...props}
+        loadingModelId={loadingModelId}
+        setLoadingModelId={setLoadingModelId}
+      />
+    )}
+    maxDropdownHeight={480}
+    rightSectionWidth="auto"
+    icon={
+      selectedModel ? (
+        <Image
+          // @ts-ignore -- this being missing is fine
+          src={getModelLogo(selectedModel.provider)}
+          // @ts-ignore -- this being missing is fine
+          alt={`${selectedModel.provider} logo`}
+          width={20}
+          height={20}
+          style={{ marginLeft: '4px', borderRadius: '4px' }}
+        />
+      ) : null
+    }
+    rightSection={<IconChevronDown size="1rem" className="mr-2" />}
+    classNames={{
+      root: 'w-full',
+      wrapper: 'w-full',
+      input: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'} w-full`,
+      rightSection: 'pointer-events-none',
+      item: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`,
+    }}
+    styles={(theme) => ({
+      input: {
+        backgroundColor: 'rgb(107, 33, 168)',
+        border: 'none',
+        // color: theme.white,
+        // borderRadius: theme.radius.md,
+        // width: '24rem',
+        // [`@media (max-width: 960px)`]: {
+        //   width: '17rem', // Smaller width for small screens
+        // },
+      },
+      dropdown: {
+        backgroundColor: '#1d1f33',
+        border: '1px solid rgba(42,42,120,1)',
+        borderRadius: theme.radius.md,
+        marginTop: '2px',
+        boxShadow: theme.shadows.xs,
+        width: '100%',
+        maxWidth: '100%',
+        position: 'absolute',
+      },
+      item: {
+        backgroundColor: '#1d1f33',
+        borderRadius: theme.radius.md,
+        margin: '2px',
+        '&[data-selected]': {
+          '&': {
+            backgroundColor: 'transparent',
+          },
+          '&:hover': {
+            backgroundColor: 'rgb(107, 33, 168)',
+            color: theme.white,
+          },
+        },
+        '&[data-hovered]': {
+          backgroundColor: 'rgb(107, 33, 168)',
+          color: theme.white,
+        },
+      },
+    })}
+    dropdownPosition="bottom"
+    withinPortal
+  />
+</div>
+    </>
+  )
+}
 
 export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
   ({ chat_ui, props }, ref) => {

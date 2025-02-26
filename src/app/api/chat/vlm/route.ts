@@ -38,7 +38,8 @@ export async function POST(req: Request) {
         temperature: conversation.temperature,
         messages,
       })
-      return NextResponse.json({ text: result.text })
+      const choices = [{ message: { content: result.text } }]
+      return NextResponse.json({ choices })
     }
   } catch (error) {
     console.error('Error in POST request:', error)

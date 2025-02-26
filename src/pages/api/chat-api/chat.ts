@@ -267,8 +267,6 @@ export default async function chat(
     searchQuery,
     doc_groups,
   )
-  console.log('After context search:', { contextsLength: contexts.length })
-
   // Check if contexts were found
   if (contexts.length === 0) {
     console.error('No contexts found')
@@ -310,6 +308,7 @@ export default async function chat(
     stream,
     courseMetadata,
     llmProviders,
+    mode: 'chat',
   }
 
   // Build the prompt

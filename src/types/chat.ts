@@ -125,10 +125,9 @@ export interface ChatBody {
   stream: boolean
   isImage?: boolean
   courseMetadata?: CourseMetadata
-  // provider?: BaseLLMProvider // TODO: make mandatory
   llmProviders?: AllLLMProviders
   skipQueryRewrite?: boolean
-  // NO FOLDER ID
+  mode: 'chat' | 'optimize_prompt'
 }
 
 export interface ImageBody {

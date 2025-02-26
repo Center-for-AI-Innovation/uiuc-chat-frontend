@@ -5,8 +5,7 @@ import {
 } from '~/utils/modelProviders/LLMProvider'
 import { decryptKeyIfNeeded } from '../crypto'
 import { OPENAI_API_VERSION } from '../app/const'
-
-
+import { ChatBody } from '~/types/chat'
 
 // OMG azure sucks
 // the azureDeploymentID is require to make requests. Grab it from the /deployments list in getAzureModels()
@@ -125,10 +124,12 @@ export const getAzureModels = async (
             enabled:
               azureProvider.models?.find((m) => m.id === predefinedModel.id)
                 ?.enabled ?? predefinedModel.enabled,
-            default: azureProvider.models?.find((m) => m.id === predefinedModel.id)
-              ?.default ?? predefinedModel.default,
-            temperature: azureProvider.models?.find((m) => m.id === predefinedModel.id)
-              ?.temperature ?? predefinedModel.temperature, 
+            default:
+              azureProvider.models?.find((m) => m.id === predefinedModel.id)
+                ?.default ?? predefinedModel.default,
+            temperature:
+              azureProvider.models?.find((m) => m.id === predefinedModel.id)
+                ?.temperature ?? predefinedModel.temperature,
           })
         }
         return acc

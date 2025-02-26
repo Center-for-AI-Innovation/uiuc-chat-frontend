@@ -34,13 +34,13 @@ export const NCSAHostedVLMModels: Record<
   },
   [NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT]: {
     id: NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT,
-    name: 'Qwen 2 72B',
+    name: 'Qwen 2 VL 72B',
     tokenLimit: 8192,
     enabled: true,
   },
   [NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT]: {
     id: NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT,
-    name: 'Qwen 2.5 72B (Best in open source)',
+    name: 'Qwen 2.5 VL 72B (Best in open source)',
     tokenLimit: 23000,
     enabled: true,
   },

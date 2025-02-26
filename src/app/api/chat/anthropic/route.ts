@@ -1,4 +1,4 @@
-import { type CoreMessage, streamText } from 'ai'
+import { type CoreMessage, generateText, streamText, smoothStream } from 'ai'
 import { type ChatBody, type Conversation } from '~/types/chat'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import {
@@ -43,15 +43,53 @@ export async function POST(req: Request) {
       throw new Error('Conversation messages array is empty')
     }
 
-    const model = anthropic(conversation.model.id)
+    if (chatBody.stream) {
+      // Check if it's a Claude model that supports reasoning
+      const isClaudeWithReasoning =
+        conversation.model.id.includes('claude') &&
+        (conversation.model as AnthropicModel).extendedThinking === true
 
-    const result = await streamText({
-      model: model,
-      messages: convertConversationToVercelAISDKv3(conversation),
-      temperature: conversation.temperature,
-      maxTokens: 4096,
-    })
-    return result.toTextStreamResponse()
+      const result = await streamText({
+        model: anthropic(conversation.model.id),
+        temperature: conversation.temperature,
+        messages: convertConversationToVercelAISDKv3(conversation),
+        ...(isClaudeWithReasoning && {
+          experimental_transform: [
+            smoothStream({
+              chunking: 'word',
+            }),
+          ],
+          providerOptions: {
+            anthropic: {
+              thinking: {
+                type: 'enabled',
+                budget_tokens: 16000,
+              },
+            },
+          },
+        }),
+      })
+
+      if (isClaudeWithReasoning) {
+        console.log('Using Claude with reasoning enabled')
+        return result.toDataStreamResponse({
+          sendReasoning: true,
+          getErrorMessage: () => {
+            return `An error occurred while streaming the response.`
+          },
+        })
+      } else {
+        return result.toTextStreamResponse()
+      }
+    } else {
+      const result = await generateText({
+        model: anthropic(conversation.model.id),
+        temperature: conversation.temperature,
+        messages: convertConversationToVercelAISDKv3(conversation),
+      })
+      const choices = [{ message: { content: result.text } }]
+      return NextResponse.json({ choices })
+    }
   } catch (error) {
     if (
       error &&
@@ -117,22 +155,4 @@ function convertConversationToVercelAISDKv3(
   })
 
   return coreMessages
-}
-
-export async function GET(req: Request) {
-  const apiKey = process.env.ANTHROPIC_API_KEY
-
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: 'Anthropic API key not set.' },
-      { status: 500 },
-    )
-  }
-
-  const models = Object.values(AnthropicModels) as AnthropicModel[]
-
-  return NextResponse.json({
-    provider: ProviderNames.Anthropic,
-    models: models,
-  })
 }

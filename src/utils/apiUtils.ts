@@ -137,9 +137,7 @@ export async function fetchPresignedUrl(
  */
 export async function fetchCourseMetadata(course_name: string): Promise<any> {
   try {
-    console.log('Vercel base URL', process.env.VERCEL_URL)
     const endpoint = `${getBaseUrl()}/api/UIUC-api/getCourseMetadata?course_name=${course_name}`
-    console.log('endpoint url of metadata:', endpoint)
     const response = await fetch(endpoint)
 
     if (!response.ok) {
@@ -238,15 +236,15 @@ export function convertConversationToCoreMessagesWithoutSystem(
       content = [{ type: 'text', text: message.content as string }]
     }
 
-    if (isLastUserMessage) {
-      const citationReminder =
-        '\n\nIf you use the <Potentially Relevant Documents> in your response, please remember cite your sourcesng, e.g. "The grass is green. [29, page: 11]'
-      if (content[0].type === 'text') {
-        content[0].text += citationReminder
-      } else {
-        content.push({ type: 'text', text: citationReminder })
-      }
-    }
+    // if (isLastUserMessage) {
+    //   const citationReminder =
+    //     '\n\nIf you use the <Potentially Relevant Documents> in your response, please remember cite your sources using the required formatting, e.g. "The grass is green. [29, page: 11]'
+    //   if (content[0].type === 'text') {
+    //     content[0].text += citationReminder
+    //   } else {
+    //     content.push({ type: 'text', text: citationReminder })
+    //   }
+    // }
 
     return content
   }
