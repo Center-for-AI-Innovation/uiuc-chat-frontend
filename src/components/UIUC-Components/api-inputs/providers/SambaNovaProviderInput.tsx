@@ -1,108 +1,142 @@
 import React from 'react'
-import { Card, Switch, Title, Text } from '@mantine/core'
-import { type FieldApi } from '@tanstack/react-form'
-import { type AllLLMProviders, type SambaNovaProvider } from '~/utils/modelProviders/LLMProvider'
+import { Text, Switch, Card, Skeleton } from '@mantine/core'
+import { IconCheck, IconExternalLink, IconX } from '@tabler/icons-react'
+import { ModelToggles } from '../ModelToggles'
+import {
+  SambaNovaProvider,
+  ProviderNames,
+} from '~/utils/modelProviders/LLMProvider'
+import { motion, AnimatePresence } from 'framer-motion'
 import { APIKeyInput } from '../LLMsApiKeyInputForm'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { IconInfoCircle } from '@tabler/icons-react'
 
-interface SambaNovaProviderInputProps {
-  provider: SambaNovaProvider | undefined
-  form: any // Using any here since the form type is complex and not exported correctly
-  isLoading: boolean
-}
-
-const SambaNovaProviderInput: React.FC<SambaNovaProviderInputProps> = ({
+export default function SambaNovaProviderInput({
   provider,
   form,
   isLoading,
-}) => {
-  if (!provider || isLoading) return null
+}: {
+  provider: SambaNovaProvider
+  form: any
+  isLoading: boolean
+}) {
+  if (isLoading) {
+    return <Skeleton height={200} width={330} radius={'lg'} />
+  }
 
   return (
-    <Card
-      shadow="sm"
-      padding="lg"
-      radius="md"
-      withBorder
-      style={{
-        backgroundColor: '#15162c',
-        width: '100%',
-        maxWidth: '450px',
-        minWidth: '350px',
-      }}
-    >
-      <div className="flex items-center justify-between">
-        <Title
-          className={`${montserrat_heading.variable} font-montserratHeading`}
-          order={4}
+    <motion.div layout>
+      <Card
+        shadow="sm"
+        p="lg"
+        radius="lg"
+        className="max-w-[330px] bg-[#15162c] md:w-[330px]"
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            width: '100%',
+          }}
         >
-          SambaNova
-        </Title>
-        <form.Field
-          name={`providers.SambaNova.enabled`}
-          defaultValue={provider.enabled}
-        >
-          {(field: FieldApi<any, any, any, any>) => (
-            <Switch
-              checked={field.state.value}
-              onChange={(event) => {
-                field.handleChange(event.currentTarget.checked)
-                field.form.handleSubmit()
+          <div>
+            <a
+              className="mb-3"
+              href="https://sambanova.ai/api"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <Text
+                  size="lg"
+                  weight={500}
+                  mb="xs"
+                  style={{ paddingRight: '8px' }}
+                >
+                  SambaNova
+                </Text>
+                <IconExternalLink size={16} className="mb-3" />
+              </div>
+            </a>
+          </div>
+          <form.Field name={`providers.${ProviderNames.SambaNova}.enabled`}>
+            {(field: any) => (
+              <Switch
+                size="md"
+                labelPosition="left"
+                onLabel="ON"
+                offLabel="OFF"
+                aria-label="Enable SambaNova provider"
+                checked={field.state.value}
+                onChange={(event) => {
+                  field.handleChange(event.currentTarget.checked)
+
+                  // Trigger form submission
+                  setTimeout(() => form.handleSubmit(), 0)
+                }}
+                thumbIcon={
+                  field.state.value ? (
+                    <IconCheck size="0.8rem" color="purple" stroke={3} />
+                  ) : (
+                    <IconX size="0.8rem" color="grey" stroke={3} />
+                  )
+                }
+                styles={{
+                  track: {
+                    backgroundColor: field.state.value
+                      ? '#6a29a4 !important'
+                      : '#25262b',
+                    borderColor: field.state.value
+                      ? '#6a29a4 !important'
+                      : '#25262b',
+                  },
+                }}
+              />
+            )}
+          </form.Field>
+        </div>
+        {provider?.error &&
+          (form.state.values?.providers?.SambaNova?.enabled ||
+            provider.enabled) && (
+            <Text
+              size="sm"
+              color="red"
+              mb="md"
+              style={{
+                padding: '8px',
+                borderRadius: '4px',
+                backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                border: '1px solid rgba(255, 0, 0, 0.2)',
               }}
-              color="violet"
-              size="md"
-            />
+            >
+              {provider.error}
+            </Text>
+          )}
+        <form.Field name={`providers.${ProviderNames.SambaNova}.enabled`}>
+          {(field: any) => (
+            <AnimatePresence>
+              {field.state.value && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <form.Field name={`providers.${ProviderNames.SambaNova}.apiKey`}>
+                    {(apiKeyField: any) => (
+                      <APIKeyInput
+                        field={apiKeyField}
+                        placeholder="SambaNova API Key"
+                      />
+                    )}
+                  </form.Field>
+
+                  <ModelToggles form={form} provider={provider} />
+                </motion.div>
+              )}
+            </AnimatePresence>
           )}
         </form.Field>
-      </div>
-
-      {provider.enabled && (
-        <>
-          <Text
-            className={`${montserrat_paragraph.variable} mt-4 font-montserratParagraph`}
-            size="sm"
-          >
-            Enter your SambaNova API key to enable SambaNova models.
-          </Text>
-
-          <div className="mt-4">
-            <form.Field
-              name={`providers.SambaNova.apiKey`}
-              defaultValue={provider.apiKey}
-            >
-              {(field: FieldApi<any, any, any, any>) => (
-                <APIKeyInput
-                  field={field}
-                  placeholder="Enter your SambaNova API key"
-                />
-              )}
-            </form.Field>
-          </div>
-
-          <div className="mt-4 flex items-start gap-2">
-            <IconInfoCircle size={20} className="mt-0.5 min-w-[20px]" />
-            <Text
-              className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-              size="sm"
-              color="dimmed"
-            >
-              Get your API key from the{' '}
-              <a
-                href="https://sambanova.ai/api"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-500 hover:text-blue-600"
-              >
-                SambaNova API dashboard
-              </a>
-              .
-            </Text>
-          </div>
-        </>
-      )}
-    </Card>
+      </Card>
+    </motion.div>
   )
-}
-
-export default SambaNovaProviderInput 
+} 
