@@ -18,7 +18,7 @@ const logConversationToSupabase = async (req: any, res: any) => {
   }
 
   // Sanitize the entire conversation object
-  const sanitizedConversation = sanitizeForLogging(conversation);
+  const sanitizedConversation = sanitizeForLogging(conversation)
 
   const { data, error } = await supabase.from('llm-convo-monitor').upsert(
     [
@@ -35,6 +35,29 @@ const logConversationToSupabase = async (req: any, res: any) => {
   )
   if (error) {
     console.log('new error form supabase in logConversationToSupabase:', error)
+  }
+
+  // Send to our custom monitor
+  try {
+    const response = await fetch(
+      process.env.RAILWAY_URL + '/llm-monitor-message',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: sanitizedConversation.messages,
+          course_name: course_name,
+        }),
+      },
+    )
+
+    if (!response.ok) {
+      console.error('Error sending to AI TA backend:', response.statusText)
+    }
+  } catch (error) {
+    console.error('Error sending to AI TA backend:', error)
   }
 
   // console.log('👇👇👇👇👇👇👇👇👇👇👇👇👇')
@@ -76,28 +99,32 @@ const logConversationToSupabase = async (req: any, res: any) => {
     name: 'Final Response Log',
     inputs: {
       'User input': sanitizeForLogging(
-        (conversation.messages[conversation.messages.length - 2]
-          ?.content[0] as Content)?.text
+        (
+          conversation.messages[conversation.messages.length - 2]
+            ?.content[0] as Content
+        )?.text,
       ),
       'System message': sanitizeForLogging(
         conversation.messages[conversation.messages.length - 2]!
-          .latestSystemMessage
+          .latestSystemMessage,
       ),
       'Engineered prompt': sanitizeForLogging(
         conversation.messages[conversation.messages.length - 2]!
-          .finalPromtEngineeredMessage
+          .finalPromtEngineeredMessage,
       ),
     },
     outputs: {
       Assistant: sanitizeForLogging(
-        conversation.messages[conversation.messages.length - 1]?.content
+        conversation.messages[conversation.messages.length - 1]?.content,
       ),
     },
     project_name: 'uiuc-chat-production',
     metadata: {
       projectName: course_name,
       conversation_id: conversation.id,
-      tools: sanitizeForLogging(conversation.messages[conversation.messages.length - 2]?.tools),
+      tools: sanitizeForLogging(
+        conversation.messages[conversation.messages.length - 2]?.tools,
+      ),
     }, // "conversation_id" is a SPECIAL KEYWORD. CANNOT BE ALTERED: https://docs.smith.langchain.com/old/monitoring/faq/threads
     // id: conversation.id, // DON'T USE - breaks the threading support
   })

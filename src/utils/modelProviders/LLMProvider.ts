@@ -94,7 +94,10 @@ export const VisionCapableModels: Set<
   AzureModelID.GPT_4o,
   AzureModelID.GPT_4o_mini,
   // claude-3.5....
+  AnthropicModelID.Claude_3_7_Sonnet,
+  AnthropicModelID.Claude_3_7_Sonnet_Thinking,
   AnthropicModelID.Claude_3_5_Sonnet,
+  AnthropicModelID.Claude_3_5_Haiku,
 
   // VLM
   NCSAHostedVLMModelID.Llama_3_2_11B_Vision_Instruct,
@@ -113,6 +116,19 @@ export const VisionCapableModels: Set<
   BedrockModelID.Nova_Lite,
   BedrockModelID.Llama3_2_11B_Instruct,
   BedrockModelID.Llama3_2_90B_Instruct,
+])
+
+/**
+ * Models that support extended reasoning/thinking capabilities
+ * These models can process <think> tags and have extended thinking enabled
+ */
+export const ReasoningCapableModels: Set<
+  AnthropicModelID | OpenAIModelID | OllamaModelIDs
+> = new Set([
+  AnthropicModelID.Claude_3_7_Sonnet_Thinking,
+  OpenAIModelID.O3_mini,
+  OllamaModelIDs.DEEPSEEK_R1_14b_qwen_fp16,
+  // Add other reasoning-capable models as they become available
 ])
 
 export const AllSupportedModels: Set<GenericSupportedModel> = new Set([
