@@ -54,8 +54,8 @@ async function updateKeycloakRedirectURIs() {
     const currentWebOrigins = new Set(client.webOrigins || []);
 
     // Add to redirect URIs
-    currentRedirectUris.add(vercelBaseUrl); // Add deployment-specific URL
-    currentRedirectUris.add(`${vercelBaseUrl}/*`);
+    // currentRedirectUris.add(vercelBaseUrl); // Add deployment-specific URL
+    // currentRedirectUris.add(`${vercelBaseUrl}/*`);
     currentRedirectUris.add(branchUrl); // Add branch URL
     currentRedirectUris.add(`${branchUrl}/*`);
 
