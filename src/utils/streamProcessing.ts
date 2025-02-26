@@ -647,9 +647,7 @@ export async function updateConversationInDatabase(
         }),
       },
     )
-    const data = await response.json()
-    console.log('Updated conversation in Supabase:', data)
-    // return data.success
+    // const data = await response.json()
   } catch (error) {
     console.error('Error setting course data:', error)
     // return false
@@ -790,7 +788,9 @@ export const routeModelRequest = async (
   console.log('In routeModelRequest: ', chatBody, baseUrl)
 
   const selectedConversation = chatBody.conversation!
+  console.log('Selected conversation:', selectedConversation)
   if (!selectedConversation.model || !selectedConversation.model.id) {
+    console.log('Invalid conversation:', selectedConversation)
     throw new Error('Conversation model is undefined or missing "id" property.')
   }
 
