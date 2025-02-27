@@ -263,7 +263,7 @@ const Home: NextPage = () => {
               </div>
 
               <div
-                className="mt-2 text-xs text-neutral-400 sm:mr-4 sm:text-right"
+                className="mt-[-8px] text-xs text-neutral-400 sm:mr-4 sm:text-right"
                 style={{ color: 'var(--illinois-orange)' }}
               >
                 Upload almost anything
@@ -271,9 +271,29 @@ const Home: NextPage = () => {
             </div>
           </div>
 
+          <div className="mb-6 w-full text-center">
+            <h2
+              className={`
+                pt-6
+                text-2xl font-bold sm:pt-2 
+                ${montserrat_heading.variable} font-montserratHeading
+              `}
+              style={{ color: 'var(--illinois-blue)' }}
+            >
+              Flagship Chatbots
+            </h2>
+            <p
+              className={`
+                text-md mt-2
+                ${montserrat_paragraph.variable} font-montserratParagraph
+              `}
+            >
+              Dive right into our bots trained on everything Illinois
+            </p>
+          </div>
+
           <div
             className="
-            mt-4
             flex w-full max-w-5xl
             flex-col items-center
             gap-8 sm:flex-row
