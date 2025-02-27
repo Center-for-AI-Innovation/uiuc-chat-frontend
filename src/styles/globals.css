@@ -96,13 +96,11 @@
   overflow: hidden;
   position: relative;
 
-  mask-image: linear-gradient(
-    90deg,
-    transparent 5%,
-    #fff 20%,
-    #fff 80%,
-    transparent 95%
-  );
+  mask-image: linear-gradient(90deg,
+      transparent 5%,
+      #fff 20%,
+      #fff 80%,
+      transparent 95%);
 }
 
 .icons_scrolling {
@@ -150,30 +148,34 @@
   }
 }
 
-::-webkit-scrollbar-track {
+/* Scrollbar Styles - Clean gray theme with hover effects */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
   background-color: transparent;
 }
 
-::-webkit-scrollbar-thumb {
-  background-color: #ccc;
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background-color: #aaa;
+::-webkit-scrollbar-track {
+  background-color: transparent;
+  transition: background-color 0.2s ease;
 }
 
 ::-webkit-scrollbar-track:hover {
-  background-color: #f2f2f2;
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.3);
 }
 
 ::-webkit-scrollbar-corner {
   background-color: transparent;
-}
-
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
 }
 
 html {
@@ -217,14 +219,12 @@ pre:has(div.codeblock) {
 /* Make the purple background fade out  */
 .course-page-main2 {
   /* height: 400px;     */
-  background: -webkit-gradient(
-    linear,
-    left top,
-    left bottom,
-    from(var(--illinois-purple)),
-    to(var(--illinois-background-darker)),
-    color-stop(0.75, var(--illinois-purple-dark))
-  );
+  background: -webkit-gradient(linear,
+      left top,
+      left bottom,
+      from(var(--illinois-purple)),
+      to(var(--illinois-background-darker)),
+      color-stop(0.75, var(--illinois-purple-dark)));
   background-color: var(--illinois-background-darker);
   background-size:
     100% 45%,
@@ -235,14 +235,12 @@ pre:has(div.codeblock) {
 /* Make the purple background fade out  */
 .course-page-main {
   /* height: 400px;     */
-  background: -webkit-gradient(
-    linear,
-    left top,
-    left bottom,
-    from(#2e026d),
-    to(#020307),
-    color-stop(0.75, #15162c)
-  );
+  background: -webkit-gradient(linear,
+      left top,
+      left bottom,
+      from(#2e026d),
+      to(#020307),
+      color-stop(0.75, #15162c));
   background-color: #020307;
   background-size:
     100% 45%,
@@ -276,11 +274,9 @@ pre:has(div.codeblock) {
   right: 0;
   width: 40%;
   height: 1.2em;
-  background: linear-gradient(
-    to right,
-    rgba(255, 255, 255, 0),
-    var(--illinois-background-darker) 90%
-  );
+  background: linear-gradient(to right,
+      rgba(255, 255, 255, 0),
+      var(--illinois-background-darker) 90%);
 }
 
 .fade-3-lines::after {
@@ -291,11 +287,9 @@ pre:has(div.codeblock) {
   right: 0;
   width: 40%;
   height: 1.2em;
-  background: linear-gradient(
-    to right,
-    rgba(255, 255, 255, 0),
-    var(--illinois-background-darker) 90%
-  );
+  background: linear-gradient(to right,
+      rgba(255, 255, 255, 0),
+      var(--illinois-background-darker) 90%);
 }
 
 /* Standard list properties. Didn't work before manually adding this. */
@@ -414,13 +408,16 @@ li {
   bottom: 0;
   left: 0;
   transform: translateX(-100%);
-  background-image: linear-gradient(
-    90deg,
-    rgba(19, 41, 75, 0),
-    /* illinois-blue */ rgba(112, 115, 114, 0.2),
-    /* illinois-storm-dark */ rgba(29, 88, 167, 0.5),
-    /* illinois-industrial */ rgba(92, 14, 65, 0) /* illinois-berry */
-  );
+  background-image: linear-gradient(90deg,
+      rgba(19, 41, 75, 0),
+      /* illinois-blue */
+      rgba(112, 115, 114, 0.2),
+      /* illinois-storm-dark */
+      rgba(29, 88, 167, 0.5),
+      /* illinois-industrial */
+      rgba(92, 14, 65, 0)
+      /* illinois-berry */
+    );
   /* Changed the primary color to purple-900 */
   animation: shimmer 5s infinite;
   content: '';
@@ -477,90 +474,84 @@ a[data-footnote-backref] {
 }
 
 /* Styling for citation links */
-.supMarkdown a {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  min-width: 1.25em;
-  height: 1.25em;
-  border-radius: 50%;
-  font-size: 75%;
-  line-height: 1;
-  color: var(--illinois-industrial);
-  background-color: var(--illinois-storm-dark);
-  margin-right: 4px;
-  padding: 2px 4px;
-  border: none;
+.supMarkDown a {
+  display: inline;
+  font-size: 100%;
+  line-height: inherit;
+  color: rgba(255, 255, 255, 0.95);
   text-decoration: none;
+  white-space: normal;
+  font-weight: 400;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  background-color: rgba(157, 78, 221, 0.15);
+  border: 1px solid rgba(157, 78, 221, 0.3);
+  border-radius: 4px;
+  padding: 0 4px;
+  margin: 0;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  vertical-align: baseline;
+  position: relative;
+  top: 0;
+}
+
+/* Add responsive adjustments for small screens */
+@media (max-width: 640px) {
+  .supMarkDown a {
+    padding: 1px 4px;
+    line-height: 1.6;
+  }
 }
 
 /* Styling for visited citation links */
-.supMarkdown a:visited {
-  color: var(--illinois-berry);
+.supMarkDown a:visited {
+  color: rgba(255, 255, 255, 0.8);
+  background-color: rgba(157, 78, 221, 0.12);
+  border-color: rgba(157, 78, 221, 0.25);
 }
 
-.supMarkdown a:hover,
-.supMarkdown a:focus {
-  background-color: var(--illinois-industrial);
-  color: var(--illinois-white);
+/* Simple, consistent hover state for all citation links */
+.supMarkDown a:hover,
+.supMarkDown a:focus {
+  background-color: rgba(157, 78, 221, 0.3);
+  color: rgba(255, 255, 255, 0.95);
   cursor: pointer;
-}
-
-@media (max-width: 768px) {
-  .linkMarkDown button {
-    font-size: 0.8rem;
-    /* Smaller font size on smaller screens */
-    padding: 5px 10px;
-    /* Adjust padding to ensure text doesn't overlap */
-    color: var(--illinois-industrial);
-    background-color: var(--illinois-blue);
-  }
+  border-color: rgba(157, 78, 221, 0.4);
 }
 
 /* Styling for document buttons */
 .linkMarkDown button:not(.codeblock-button) {
   height: 100px;
   width: 150px;
-  /* width: 100%; */
-  /* height: 100%; */
-  /* Button occupies full width of its container (li) */
   text-align: center;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
   font-size: 1rem;
-  /* Adjust font size to fit the buttons */
   padding: 10px 10px;
   color: var(--illinois-link);
   background-color: var(--illinois-purple-dark);
   border-radius: 5px;
   border: none;
   text-decoration: none;
-  transition:
-    background-color 0.15s ease-in-out,
-    color 0.15s ease-in-out;
   white-space: break-spaces;
-  /* Allow text wrapping inside buttons */
   overflow: hidden;
-  /* Hide overflowed text */
   text-overflow: ellipsis;
-  /* Add ellipsis to overflowed text */
   position: relative;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-/* Hover and focus states for document buttons */
+/* Simple, consistent hover state for all document buttons */
 .linkMarkDown button:not(.codeblock-button):hover,
 .linkMarkDown button:not(.codeblock-button):focus {
   background-color: var(--illinois-blueviolet);
   color: var(--illinois-white);
   cursor: pointer;
-}
-
-/* Active state for document buttons */
-.linkMarkDown button:not(.codeblock-button):active {
-  transform: scale(0.98);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 /* Visited state for document buttons */
@@ -652,4 +643,127 @@ button.css-s37qmw {
   to {
     --r: 360deg;
   }
+}
+
+/* Think Tag Dropdown Styles */
+.think-tag-dropdown {
+  @apply mb-4 w-full rounded-lg border border-gray-200 bg-gray-50/30 shadow-sm transition-all duration-200 hover:border-purple-200 dark:border-gray-700/50 dark:bg-gray-800/20 dark:hover:border-purple-500/30;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.think-tag-header {
+  @apply flex cursor-pointer items-center justify-between p-4 text-gray-700 transition-colors duration-200 hover:bg-purple-50/50 dark:text-gray-200 dark:hover:bg-purple-900/20;
+  border-radius: 0.5rem;
+}
+
+.think-tag-header .loading-container {
+  @apply flex items-center gap-2;
+  opacity: 0.8;
+}
+
+.think-tag-brain-icon {
+  @apply text-purple-500 dark:text-purple-400;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1));
+  transition: transform 0.2s ease;
+}
+
+.think-tag-header:hover .think-tag-brain-icon {
+  transform: scale(1.1);
+}
+
+.think-tag-content {
+  @apply overflow-hidden bg-white/80 dark:bg-black/20;
+  position: relative;
+  visibility: hidden;
+  max-height: 0;
+  opacity: 0;
+  transform-origin: top;
+  transform: translateY(-4px);
+  will-change: transform, opacity, max-height;
+  transition:
+    max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0s linear 0.5s;
+}
+
+.think-tag-content>div {
+  @apply px-5 py-4 text-gray-700 dark:text-gray-200;
+  position: absolute;
+  width: 100%;
+  top: 0;
+  left: 0;
+  border-top: 1px solid;
+  @apply border-gray-100 dark:border-gray-700/50;
+  line-height: 1.6;
+}
+
+.think-tag-content.expanded {
+  position: relative;
+  visibility: visible;
+  max-height: 1000px;
+  opacity: 1;
+  transform: translateY(0);
+  cursor: pointer;
+  transition:
+    max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0s linear;
+}
+
+.think-tag-content.expanded:hover {
+  @apply bg-purple-50/30 dark:bg-purple-900/10;
+}
+
+.think-tag-content.expanded:focus {
+  @apply outline-none ring-2 ring-purple-500/30 dark:ring-purple-500/20;
+}
+
+.think-tag-content.expanded>div {
+  position: relative;
+}
+
+.think-tag-header:focus {
+  @apply outline-none ring-2 ring-purple-500/30 dark:ring-purple-500/20;
+}
+
+.think-tag-icon {
+  @apply text-gray-400 transform transition-all duration-300 dark:text-gray-500;
+}
+
+.think-tag-header:hover .think-tag-icon {
+  @apply text-purple-500 dark:text-purple-400;
+}
+
+.think-tag-icon.expanded {
+  transform: rotate(180deg);
+  @apply text-purple-500 dark:text-purple-400;
+}
+
+/* Update the link styles to show proper cursor and interaction states */
+.linkMarkDown a,
+.supMarkDown a {
+  cursor: pointer !important;
+  position: relative;
+  z-index: 0;
+  /* Changed from 1 to 0 to match surrounding text */
+  pointer-events: all !important;
+  user-select: all !important;
+  -webkit-user-drag: element;
+}
+
+.linkMarkDown a:active,
+.supMarkDown a:active {
+  transform: translateY(1px);
+}
+
+/* Ensure parent containers don't interfere with link events */
+.prose a,
+.markdown a {
+  pointer-events: all !important;
+  position: relative;
+  z-index: 0;
+  /* Changed from 1 to 0 to match surrounding text */
 }

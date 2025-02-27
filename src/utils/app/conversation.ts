@@ -9,7 +9,7 @@ export async function fetchConversationHistory(
   courseName: string,
   pageParam: number,
 ): Promise<ConversationPage> {
-  // console.log('fetchConversationHistory: ', user_email)
+  
   let finalResponse: ConversationPage = {
     conversations: [],
     nextCursor: null,
@@ -31,7 +31,7 @@ export async function fetchConversationHistory(
 
     const { conversations, nextCursor } = await response.json()
 
-    // Clean the conversations and ensure they're properly structured
+    // // Clean the conversations and ensure they're properly structured
     const cleanedConversations = conversations.map((conversation: any) => {
       // Ensure messages are properly ordered by creation time
       if (conversation.messages) {
@@ -240,20 +240,35 @@ export const saveConversations = (conversations: Conversation[]) => {
 // }
 
 export async function saveConversationToServer(conversation: Conversation) {
-  try {
-    console.debug('Saving conversation to server:', conversation)
-    const response = await fetch('/api/conversation', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ conversation }),
-    })
-    if (!response.ok) {
-      throw new Error('Error saving conversation')
+  const MAX_RETRIES = 3;
+  let retryCount = 0;
+
+  while (retryCount < MAX_RETRIES) {
+    try {
+      console.debug('Saving conversation to server:', conversation)
+      const response = await fetch('/api/conversation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ conversation }),
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        const errorMessage = errorData?.error || response.statusText;
+        throw new Error(`Error saving conversation: ${errorMessage}`);
+      }
+      
+      return response.json()
+    } catch (error: any) {
+      console.error(`Error saving conversation (attempt ${retryCount + 1}/${MAX_RETRIES}):`, error)
+      if (error.code === 'ECONNRESET' && retryCount < MAX_RETRIES - 1) {
+        retryCount++;
+        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount)); // Exponential backoff
+        continue;
+      }
+      throw error;
     }
-    return response.json()
-  } catch (error) {
-    console.error('Error saving conversation:', error)
   }
 }
