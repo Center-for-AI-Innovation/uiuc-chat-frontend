@@ -149,7 +149,46 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
+      {/* Rebranding announcement header bar */}
+      <div
+        className="relative w-full py-2 text-center"
+        style={{
+          background: 'var(--illinois-orange)',
+          color: 'var(--illinois-white)',
+        }}
+      >
+        <div
+          className={`inline-block ${montserrat_heading.variable} font-montserratHeading`}
+        >
+          <div className="group relative inline-block cursor-help">
+            <span className="text-lg font-bold">
+              Heads up: we're rebranded to Illinois Chat
+            </span>
+            <div
+              className="absolute left-1/2 top-full z-50 mt-2 w-72 -translate-x-1/2 transform rounded p-2 text-sm opacity-0 transition duration-300 group-hover:opacity-100"
+              style={{
+                background: '#333',
+                border: '1px solid #444',
+                boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+              }}
+            >
+              We're on our way to becoming a production service for all U of I
+              campuses.
+              <div
+                className="absolute bottom-full left-1/2 h-0 w-0 -translate-x-1/2 transform"
+                style={{
+                  borderLeft: '8px solid transparent',
+                  borderRight: '8px solid transparent',
+                  borderBottom: '8px solid #333',
+                }}
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <LandingPageHeader />
+
       <main
         className={`illinois-blue-gradient-bg flex min-h-screen flex-col items-center justify-center
           ${montserrat_paragraph.variable} font-montserratParagraph`}
