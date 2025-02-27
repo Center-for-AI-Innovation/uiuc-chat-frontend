@@ -143,7 +143,7 @@ const Home: NextPage = () => {
   return (
     <>
       <Head>
-        <title>UIUC.chat</title>
+        <title>Illinois Chat</title>
         <meta
           name="description"
           content="Chat with your documents, with full support for any format and web scraping."
@@ -168,7 +168,7 @@ const Home: NextPage = () => {
               onMouseEnter={() => setIsTooltipVisible(true)}
               onMouseLeave={() => setIsTooltipVisible(false)}
             >
-              Heads up: we're rebranded to Illinois Chat
+              Heads up: we&apos;ve rebranded to Illinois Chat
             </span>
             <div
               className={`absolute left-1/2 top-full z-50 mt-2 w-72 -translate-x-1/2 transform rounded p-2 text-sm transition duration-300 ${isTooltipVisible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
@@ -178,8 +178,8 @@ const Home: NextPage = () => {
                 boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
               }}
             >
-              We're on our way to becoming a production service for all U of I
-              campuses.
+              We&apos;re on our way to becoming a production service for all U
+              of I campuses.
               <div
                 className="absolute bottom-full left-1/2 h-0 w-0 -translate-x-1/2 transform"
                 style={{
@@ -356,7 +356,7 @@ const Home: NextPage = () => {
               ${montserrat_heading.variable} font-montserratHeading
           `}
           >
-            It's the easiest way to make your{' '}
+            It&apos;s the easiest way to make your{' '}
             <span className="whitespace-nowrap">own Chatbot</span>
           </h2>
 
@@ -497,7 +497,7 @@ const Home: NextPage = () => {
                   <span
                     className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
                   >
-                    world's
+                    world&apos;s
                   </span>{' '}
                   best AI models at your fingertips, enhanced with
                   <span
@@ -651,11 +651,11 @@ const Home: NextPage = () => {
               </h2>
 
               <div className="mt-4">
-                If you're tired of the OpenAI API and want an AI that's trained
-                to understand your data, come build on our API with 52+ models
-                to choose from. We're always updated with the latest State of
-                the Art (SOTA) open source LLMs for free, hosted here at
-                Illinois.
+                If you&apos;re tired of the OpenAI API and want an AI
+                that&apos;s trained to understand your data, come build on our
+                API with 52+ models to choose from. We&apos;re always updated
+                with the latest State of the Art (SOTA) open source LLMs for
+                free, hosted here at Illinois.
               </div>
 
               <Button
@@ -697,25 +697,39 @@ const Home: NextPage = () => {
                     <span className="text-[#9cdcfe]">data</span> = {'{'}
                     {'\n'}
                     {'  '}
-                    <span className="text-[#ce9178]">"model"</span>:{' '}
-                    <span className="text-[#ce9178]">"llama3.1:70b"</span>,
-                    {'\n'}
+                    <span className="text-[#ce9178]">
+                      &quot;model&quot;
+                    </span>:{' '}
+                    <span className="text-[#ce9178]">
+                      &quot;llama3.1:70b&quot;
+                    </span>
+                    ,{'\n'}
                     {'  '}
-                    <span className="text-[#ce9178]">"apiKey"</span>:{' '}
-                    <span className="text-[#ce9178]">"&lt;********&gt;"</span>,
-                    {'\n'}
+                    <span className="text-[#ce9178]">
+                      &quot;apiKey&quot;
+                    </span>:{' '}
+                    <span className="text-[#ce9178]">
+                      &quot;&lt;********&gt;&quot;
+                    </span>
+                    ,{'\n'}
                     {'  '}
-                    <span className="text-[#ce9178]">"messages"</span>: [{'\n'}
+                    <span className="text-[#ce9178]">&quot;messages&quot;</span>
+                    : [{'\n'}
                     {'    '}
                     {'{'}
                     {'\n'}
                     {'      '}
-                    <span className="text-[#ce9178]">"role"</span>:{' '}
-                    <span className="text-[#ce9178]">"user"</span>,{'\n'}
-                    {'      '}
-                    <span className="text-[#ce9178]">"content"</span>:{' '}
                     <span className="text-[#ce9178]">
-                      "How do I use the Illinois Chat API?"
+                      &quot;role&quot;
+                    </span>:{' '}
+                    <span className="text-[#ce9178]">&quot;user&quot;</span>,
+                    {'\n'}
+                    {'      '}
+                    <span className="text-[#ce9178]">
+                      &quot;content&quot;
+                    </span>:{' '}
+                    <span className="text-[#ce9178]">
+                      &quot;How do I use the Illinois Chat API?&quot;
                     </span>
                     {'\n'}
                     {'    '}
@@ -730,7 +744,7 @@ const Home: NextPage = () => {
                     <span className="text-[#dcdcaa]">post</span>({'\n'}
                     {'  '}
                     <span className="text-[#ce9178]">
-                      "https://uiuc.chat/api/chat-api/chat"
+                      &quot;https://uiuc.chat/api/chat-api/chat&quot;
                     </span>
                     ,{'\n'}
                     {'  '}
