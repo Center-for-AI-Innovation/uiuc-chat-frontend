@@ -146,12 +146,34 @@ function extractUsedCitationIndexes(content: string | Content[]): number[] {
         .join(' ')
     : content
 
-  // Updated regex to match new citation format: (Document Title | citation_number) or (Document Title, p.page_number | citation_number)
-  const citationRegex = /\([^|]+\|\s*(\d+)\)/g
+  // Look for tooltip titles with "Citation X" format
+  const citationRegex = /"Citation (\d+)"/g
   const found: number[] = []
 
+  // Extract citations
   let match
   while ((match = citationRegex.exec(text)) !== null) {
+    const idx = parseInt(match[1] as string, 10)
+    if (!Number.isNaN(idx)) {
+      found.push(idx)
+    }
+  }
+
+  // Fallback to the old pattern for backward compatibility
+  // 1. Multiple citations format: "Citations X, Y, Z"
+  const multipleCitationsRegex = /"Citations ([\d, ]+)"/g
+  while ((match = multipleCitationsRegex.exec(text)) !== null) {
+    const indices = (match[1] as string)
+      .split(',')
+      .map(idx => parseInt(idx.trim(), 10))
+      .filter(idx => !Number.isNaN(idx))
+    
+    found.push(...indices)
+  }
+  
+  // 2. Old pipe format: (Document | X)
+  const oldCitationRegex = /\([^|]+\|\s*(\d+)\)/g
+  while ((match = oldCitationRegex.exec(text)) !== null) {
     const idx = parseInt(match[1] as string, 10)
     if (!Number.isNaN(idx)) {
       found.push(idx)
@@ -890,7 +912,7 @@ export const ChatMessage: React.FC<Props> = memo(
           )}
           {contentToRender && (
             <MemoizedReactMarkdown
-              className="dark:prose-invert linkMarkDown supMarkDown codeBlock prose mb-2 flex-1 flex-col items-start space-y-2"
+              className="dark:prose-invert linkMarkDown supMarkDown codeBlock prose mb-2 flex-1 flex-col items-start space-y-2 overflow-visible"
               remarkPlugins={[remarkGfm, remarkMath]}
               rehypePlugins={[rehypeMathjax]}
               components={{
@@ -1089,15 +1111,24 @@ export const ChatMessage: React.FC<Props> = memo(
     }> = ({ href, title, children }) => {
       const firstChild =
         children && Array.isArray(children) ? children[0] : null
-      const isValidCitation =
+      
+      // Check if this is a citation link by looking for:
+      // 1. Title attribute containing "Citation" or "Citations"
+      // 2. Content that includes document titles from contexts
+      // 3. The old format with pipe and citation number
+      const isCitationByTitle = title && (title.startsWith('Citation ') || title.startsWith('Citations '))
+      const isCitationByContent = 
         typeof firstChild === 'string' &&
-        (firstChild.includes('Source') ||
-          (message.contexts?.some(
-            (ctx) =>
-              ctx.readable_filename &&
-              firstChild.includes(ctx.readable_filename),
-          ) ??
-            false))
+        (message.contexts?.some(
+          (ctx) =>
+            ctx.readable_filename &&
+            firstChild.includes(ctx.readable_filename),
+        ) ??
+          false)
+      const isOldFormatCitation = 
+        typeof firstChild === 'string' && firstChild.includes(' | ')
+      
+      const isValidCitation = isCitationByTitle || isCitationByContent || isOldFormatCitation
 
       const handleClick = useCallback(
         (e: React.MouseEvent) => {
@@ -1110,22 +1141,84 @@ export const ChatMessage: React.FC<Props> = memo(
         [href],
       )
 
+      // Reference to the link element
+      const linkRef = React.useRef<HTMLAnchorElement>(null);
+      // State to track tooltip alignment
+      const [tooltipAlignment, setTooltipAlignment] = React.useState<'center' | 'left' | 'right'>('center');
+      // State to track if tooltip should be shown
+      const [showTooltip, setShowTooltip] = useState(false);
+
+      // Check if tooltip needs alignment adjustment when link is hovered
+      const handleMouseEnter = useCallback(() => {
+        if (!linkRef.current || !title) return;
+        
+        // Set tooltip visibility
+        setShowTooltip(true);
+        
+        const linkRect = linkRef.current.getBoundingClientRect();
+        const tooltipWidth = 200; // Approximate width of tooltip
+        
+        // Check if tooltip would overflow left or right side of viewport
+        if (linkRect.left < tooltipWidth / 2) {
+          setTooltipAlignment('left');
+        } else if (linkRect.right + (tooltipWidth / 2) > window.innerWidth) {
+          setTooltipAlignment('right');
+        } else {
+          setTooltipAlignment('center');
+        }
+      }, [title]);
+
+      // Handle mouse leave to hide tooltip
+      const handleMouseLeave = useCallback(() => {
+        setShowTooltip(false);
+      }, []);
+
+      // Check if this message is currently streaming
+      const isCurrentlyStreaming = 
+        messageIsStreaming && 
+        messageIndex === (selectedConversation?.messages.length ?? 0) - 1;
+
       const commonProps = {
         id: 'styledLink',
         href,
         target: '_blank',
         rel: 'noopener noreferrer',
-        title,
         onMouseUp: handleClick,
+        onMouseEnter: handleMouseEnter,
+        onMouseLeave: handleMouseLeave,
         onClick: (e: React.MouseEvent) => e.preventDefault(), // Prevent default click behavior
         style: { pointerEvents: 'all' as const },
+        ref: linkRef
       }
 
       if (isValidCitation) {
+        // Determine tooltip class based on streaming state
+        const tooltipClass = `citation-tooltip-container ${
+          tooltipAlignment === 'left' 
+            ? 'left-align' 
+            : tooltipAlignment === 'right' 
+              ? 'right-align' 
+              : ''
+        } ${isCurrentlyStreaming ? 'streaming-tooltip' : ''}`;
+
         return (
-          <a {...commonProps} className={'supMarkdown'}>
-            {children}
-          </a>
+          <span className="citation-wrapper" style={{ display: 'inline' }}>
+            <a {...commonProps} className={'supMarkDown'}>
+              {children}
+              {title && (
+                <div 
+                  className={tooltipClass}
+                  style={{
+                    // Force visibility based on hover state when streaming
+                    visibility: isCurrentlyStreaming && showTooltip ? 'visible' : undefined,
+                    opacity: isCurrentlyStreaming && showTooltip ? 1 : undefined
+                  }}
+                >
+                  <div className="citation-tooltip">{title}</div>
+                </div>
+              )}
+            </a>
+          </span>
         )
       } else {
         return (
@@ -1160,7 +1253,7 @@ export const ChatMessage: React.FC<Props> = memo(
           } max-w-[100%]`}
           style={{ overflowWrap: 'anywhere' }}
         >
-          <div className="relative flex w-full px-2 py-4 text-base md:mx-[5%] md:max-w-[90%] md:gap-6 md:p-6 lg:mx-[10%]">
+          <div className="relative flex w-full px-2 py-4 text-base md:mx-[5%] md:max-w-[90%] md:gap-6 md:p-6 lg:mx-[10%] overflow-visible">
             <div className="min-w-[40px] text-left">
               {message.role === 'assistant' ? (
                 <>
@@ -1172,7 +1265,7 @@ export const ChatMessage: React.FC<Props> = memo(
               )}
             </div>
 
-            <div className="dark:prose-invert prose mt-[-2px] flex w-full max-w-full flex-wrap lg:w-[90%]">
+            <div className="dark:prose-invert prose mt-[-2px] flex w-full max-w-full flex-wrap lg:w-[90%] overflow-visible">
               {message.role === 'user' ? (
                 <div className="flex w-[90%] flex-col">
                   {isEditing ? (
@@ -1215,7 +1308,7 @@ export const ChatMessage: React.FC<Props> = memo(
                     </div>
                   ) : (
                     <>
-                      <div className="dark:prose-invert prose w-full flex-1 whitespace-pre-wrap">
+                      <div className="dark:prose-invert prose w-full flex-1 whitespace-pre-wrap overflow-visible">
                         {Array.isArray(message.content) ? (
                           <>
                             <div className="mb-2 flex w-full flex-col items-start space-y-2">
@@ -1662,7 +1755,7 @@ export const ChatMessage: React.FC<Props> = memo(
                 </div>
               ) : (
                 <div className="flex w-[90%] flex-col">
-                  <div className="w-full max-w-full flex-1 overflow-hidden">
+                  <div className="w-full max-w-full flex-1 overflow-visible">
                     {renderContent()}
                   </div>
                   {/* Action Buttons Container */}

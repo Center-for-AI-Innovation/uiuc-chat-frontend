@@ -300,11 +300,27 @@ a[data-footnote-backref] {
   visibility: hidden;
 }
 
+/* Improve paragraph styling to allow better citation wrapping */
+.supMarkDown p {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: normal;
+  hyphens: auto;
+}
+
+/* Citation wrapper to help with natural wrapping */
+.citation-wrapper {
+  display: inline;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
 /* Styling for citation links */
 .supMarkDown a {
   display: inline;
   font-size: 100%;
-  line-height: inherit;
+  line-height: 1.5;
   color: rgba(255, 255, 255, 0.95);
   text-decoration: none;
   white-space: normal;
@@ -315,14 +331,18 @@ a[data-footnote-backref] {
   border: 1px solid rgba(157, 78, 221, 0.3);
   border-radius: 4px;
   padding: 0 4px;
-  margin: 0;
-  overflow-wrap: break-word;
+  margin: 0 2px; /* Add small margin between adjacent citation links */
+  overflow-wrap: anywhere;
   word-wrap: break-word;
-  word-break: break-word;
+  word-break: normal;
   hyphens: auto;
   vertical-align: baseline;
   position: relative;
   top: 0;
+  overflow: visible; /* Ensure tooltips aren't clipped */
+  z-index: 1; /* Ensure proper stacking context */
+  max-width: 100%; /* Ensure citations don't overflow their container */
+  box-sizing: border-box;
 }
 
 /* Add responsive adjustments for small screens */
@@ -330,6 +350,9 @@ a[data-footnote-backref] {
   .supMarkDown a {
     padding: 1px 4px;
     line-height: 1.6;
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
   }
 }
 
@@ -348,6 +371,121 @@ a[data-footnote-backref] {
   cursor: pointer;
   border-color: rgba(157, 78, 221, 0.4);
 }
+
+/* Custom tooltip for citation links */
+.supMarkDown a {
+  position: relative;
+}
+
+/* Tooltip container - positioned relative to the citation link */
+.citation-tooltip-container {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999; /* Increased z-index to ensure it appears above other elements */
+  pointer-events: none;
+  margin-bottom: 5px;
+  visibility: hidden;
+  opacity: 0;
+  /* Remove transition during streaming to prevent flickering */
+  width: max-content;
+  max-width: 300px;
+  overflow: visible; /* Ensure the tooltip is not clipped */
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.2)); /* Add shadow for better visibility */
+}
+
+/* Show tooltip on hover - apply transition only when not streaming */
+.supMarkDown a:hover .citation-tooltip-container {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 0.1s ease-in;
+}
+
+/* Add a special class for tooltips during streaming */
+.streaming-tooltip {
+  /* No transitions during streaming to prevent flickering */
+  transition: none !important;
+}
+
+/* More specific selector for streaming tooltips to ensure it takes precedence */
+.supMarkDown a:hover .streaming-tooltip {
+  transition: none !important;
+}
+
+/* Tooltip content */
+.citation-tooltip {
+  background-color: rgba(30, 30, 50, 0.95);
+  color: white;
+  text-align: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+/* Tooltip arrow */
+.citation-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: rgba(30, 30, 50, 0.95) transparent transparent transparent;
+}
+
+/* Ensure tooltip stays within viewport */
+.citation-tooltip-container.left-align {
+  left: 0;
+  transform: translateX(0);
+}
+
+.citation-tooltip-container.left-align .citation-tooltip::after {
+  left: 10px;
+  transform: translateX(0);
+}
+
+.citation-tooltip-container.right-align {
+  left: auto;
+  right: 0;
+  transform: translateX(0);
+}
+
+.citation-tooltip-container.right-align .citation-tooltip::after {
+  left: auto;
+  right: 10px;
+  transform: translateX(0);
+}
+
+/* For links that wrap to multiple lines, ensure tooltip appears above the first line */
+/* Removing duplicate rule - this was causing the block-like behavior */
+/* .supMarkDown a {
+  display: inline-block;
+  font-size: 100%;
+  line-height: inherit;
+  color: rgba(255, 255, 255, 0.95);
+  text-decoration: none;
+  white-space: normal;
+  font-weight: 400;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  background-color: rgba(157, 78, 221, 0.15);
+  border: 1px solid rgba(157, 78, 221, 0.3);
+  border-radius: 4px;
+  padding: 0 4px;
+  margin: 0 2px;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  vertical-align: baseline;
+  position: relative;
+  top: 0;
+} */
 
 /* Styling for document buttons */
 .linkMarkDown button:not(.codeblock-button) {

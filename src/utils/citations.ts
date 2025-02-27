@@ -76,8 +76,9 @@ export async function replaceCitationLinks(
   }
 
   // Process citations first - this is the most common case
+  // Updated pattern to match multiple citation indices separated by commas
   // Using bounded whitespace to prevent catastrophic backtracking
-  const citationPattern = /[ \t]{0,100}(?:&lt;cite|<cite)[ \t]{0,100}>(\d+)(?:[ \t]{0,100},[ \t]{0,100}p\.[ \t]{0,100}(\d+))?[ \t]{0,100}(?:&lt;\/cite&gt;|<\/cite>)[ \t]{0,100}/g;
+  const citationPattern = /[ \t]{0,100}(?:&lt;cite|<cite)[ \t]{0,100}>([0-9,\s]+)(?:[ \t]{0,100},[ \t]{0,100}p\.[ \t]{0,100}(\d+))?[ \t]{0,100}(?:&lt;\/cite&gt;|<\/cite>)[ \t]{0,100}/g;
   
   // Fast path - if no citations, skip the replacement
   if (!citationPattern.test(content)) {
@@ -94,41 +95,116 @@ export async function replaceCitationLinks(
   let match;
   while ((match = citationPattern.exec(result)) !== null) {
     const originalCitation = match[0];
-    const citationIndex = parseInt(match[1] as string, 10);
-    const context = lastMessage.contexts[citationIndex - 1];
+    // Parse multiple citation indices
+    const citationIndicesStr = match[1] as string;
+    const citationIndices = citationIndicesStr
+      .split(',')
+      .map(idx => parseInt(idx.trim(), 10))
+      .filter(idx => !isNaN(idx) && idx > 0 && idx <= lastMessage.contexts!.length);
     
-    if (context) {
-      // Get or create the citation link
-      const link = await getCitationLink(
-        context,
-        citationLinkCache,
-        citationIndex,
-        courseName,
-      );
+    // Skip if no valid citation indices
+    if (citationIndices.length === 0) continue;
+    
+    // Page number applies to all citations in this group
+    const pageNumber = match[2] ? safeText(match[2]) : undefined;
+    
+    // Process each citation index
+    const citationLinks = await Promise.all(
+      citationIndices.map(async (citationIndex) => {
+        const context = lastMessage.contexts![citationIndex - 1];
+        if (!context) return null;
+        
+        // Get or create the citation link
+        const link = await getCitationLink(
+          context,
+          citationLinkCache,
+          citationIndex,
+          courseName,
+        );
+        
+        // Sanitize all text content and validate URL
+        const safeLink = safeUrl(link);
+        const displayTitle = safeText(context.readable_filename || `Document ${citationIndex}`);
+        const contextPageNumber = context.pagenumber 
+          ? safeText(context.pagenumber.toString()) 
+          : pageNumber;
+        
+        return {
+          index: citationIndex,
+          title: displayTitle,
+          pageNumber: contextPageNumber,
+          link: safeLink,
+        };
+      })
+    );
+    
+    // Filter out null values
+    const validCitations = citationLinks.filter(citation => citation !== null) as {
+      index: number;
+      title: string;
+      pageNumber?: string;
+      link: string;
+    }[];
+    
+    if (validCitations.length === 0) continue;
+    
+    let replacementText = '';
+    
+    if (validCitations.length === 1) {
+      // Single citation case - modified to keep parentheses outside the link
+      const citation = validCitations[0]!;
+      // Create inner text without parentheses
+      const innerText = citation.pageNumber
+        ? `${citation.title}, p.${citation.pageNumber}`
+        : `${citation.title}`;
       
-      // Sanitize all text content and validate URL
-      const safeLink = safeUrl(link);
-      const displayTitle = safeText(context.readable_filename || `Document ${citationIndex}`);
-      const pageNumber = context.pagenumber ? safeText(context.pagenumber.toString()) : safeText(match[2] || '');
-      
-      const sourceRef = pageNumber
-        ? `(${displayTitle}, p.${pageNumber} | ${citationIndex})`
-        : `(${displayTitle} | ${citationIndex})`;
+      // Create tooltip with citation number
+      const tooltipTitle = `Citation ${citation.index}`;
       
       // Only create link if we have a valid safe URL
-      const replacementText = safeLink 
-        ? `[${sourceRef}](${safeLink}${pageNumber ? `#page=${pageNumber}` : ''})`
-        : sourceRef; // Fallback to plain text if URL is invalid
+      const linkText = citation.link 
+        ? `[${innerText}](${citation.link}${citation.pageNumber ? `#page=${citation.pageNumber}` : ''} "${tooltipTitle}")`
+        : innerText; // Fallback to plain text if URL is invalid
       
-      // Replace at exact position accounting for previous replacements
-      result = 
-        result.slice(0, match.index + offset) + 
-        replacementText + 
-        result.slice(match.index + offset + originalCitation.length);
+      // Add parentheses around the link
+      replacementText = `(${linkText})`;
+    } else {
+      // Multiple citations case - create separate links within a single set of parentheses
+      // Start with opening parenthesis
+      replacementText = '(';
       
-      // Adjust offset for future replacements
-      offset += replacementText.length - originalCitation.length;
+      // Add each citation as a separate link, separated by semicolons with space for better wrapping
+      replacementText += validCitations.map((citation, idx) => {
+        // For each citation, create the inner text without parentheses
+        const innerText = citation.pageNumber
+          ? `${citation.title}, p.${citation.pageNumber}`
+          : `${citation.title}`;
+        
+        // Create tooltip with citation number
+        const tooltipTitle = `Citation ${citation.index}`;
+        
+        // Only create link if we have a valid safe URL
+        const linkText = citation.link 
+          ? `[${innerText}](${citation.link}${citation.pageNumber ? `#page=${citation.pageNumber}` : ''} "${tooltipTitle}")`
+          : innerText; // Fallback to plain text if URL is invalid
+        
+        // Add semicolon between citations except for the last one
+        // Use a space after semicolon to allow natural line breaks
+        return idx < validCitations.length - 1 ? `${linkText}; ` : linkText;
+      }).join('');
+      
+      // Close with ending parenthesis
+      replacementText += ')';
     }
+    
+    // Replace at exact position accounting for previous replacements
+    result = 
+      result.slice(0, match.index + offset) + 
+      replacementText + 
+      result.slice(match.index + offset + originalCitation.length);
+    
+    // Adjust offset for future replacements
+    offset += replacementText.length - originalCitation.length;
   }
 
   // Fast path - if no filename patterns, return early
@@ -165,14 +241,21 @@ export async function replaceCitationLinks(
       }
       
       const displayTitle = safeText(context.readable_filename || `Document ${filenameIndex}`);
-      const sourceRef = pageNumber
-        ? `(${displayTitle}, p.${pageNumber} | ${filenameIndex})`
-        : `(${displayTitle} | ${filenameIndex})`;
+      // Create inner text without parentheses for consistency
+      const innerText = pageNumber
+        ? `${displayTitle}, p.${pageNumber}`
+        : `${displayTitle}`;
+      
+      // Add citation number to tooltip
+      const tooltipTitle = `Citation ${filenameIndex}`;
       
       // Only create link if we have a valid safe URL
-      const replacementText = safeLink
-        ? `${match[1]} [${sourceRef}](${safeLink}${pageNumber ? `#page=${pageNumber}` : ''})`
-        : `${match[1]} ${sourceRef}`; // Fallback to plain text if URL is invalid
+      const linkText = safeLink
+        ? `[${innerText}](${safeLink}${pageNumber ? `#page=${pageNumber}` : ''} "${tooltipTitle}")`
+        : innerText; // Fallback to plain text if URL is invalid
+      
+      // Keep parentheses outside the link for consistency
+      const replacementText = `${match[1]} (${linkText})`;
       
       // Replace at exact position accounting for previous replacements
       result = 
