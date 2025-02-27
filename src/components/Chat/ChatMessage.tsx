@@ -35,6 +35,8 @@ import { MemoizedReactMarkdown } from '../Markdown/MemoizedReactMarkdown'
 import { ImagePreview } from './ImagePreview'
 import { LoadingSpinner } from '../UIUC-Components/LoadingSpinner'
 import { fetchPresignedUrl } from '~/utils/apiUtils'
+import ThinkTagDropdown, { extractThinkTagContent } from './ThinkTagDropdown'
+import MessageActions from './MessageActions'
 
 import rehypeMathjax from 'rehype-mathjax'
 import remarkGfm from 'remark-gfm'
@@ -171,111 +173,6 @@ function getFileType(s3Path?: string, url?: string) {
   return 'other'
 }
 
-// Add ThinkTagDropdown component
-const ThinkTagDropdown: React.FC<{
-  content: string
-  isStreaming?: boolean
-}> = ({ content, isStreaming }) => {
-  const [isExpanded, setIsExpanded] = useState(true) // open by default
-
-  // Function to process the content and preserve formatting
-  const formatContent = (text: string) => {
-    return text.split('\n').map((line, index) => (
-      <Fragment key={index}>
-        {line}
-        {index < text.split('\n').length - 1 && <br />}
-      </Fragment>
-    ))
-  }
-
-  const handleClick = () => {
-    setIsExpanded(!isExpanded)
-  }
-
-  return (
-    <div
-      className="think-tag-dropdown"
-      role="region"
-      aria-expanded={isExpanded}
-    >
-      <div
-        className="think-tag-header"
-        onClick={handleClick}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault()
-            handleClick()
-          }
-        }}
-        aria-expanded={isExpanded}
-        aria-controls="think-tag-content"
-      >
-        <div className="flex items-center gap-2">
-          <IconBrain size={20} className="think-tag-brain-icon" />
-          <span
-            className={`text-base font-medium ${montserrat_paragraph.variable} font-montserratParagraph`}
-          >
-            AI&apos;s Thought Process
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          {isStreaming && <LoadingSpinner size="xs" />}
-          <IconChevronDown
-            size={20}
-            className={`think-tag-icon ${isExpanded ? 'expanded' : ''}`}
-          />
-        </div>
-      </div>
-      <div
-        id="think-tag-content"
-        className={`think-tag-content ${isExpanded ? 'expanded' : ''}`}
-        onClick={isExpanded ? handleClick : undefined}
-        role={isExpanded ? 'button' : undefined}
-        tabIndex={isExpanded ? 0 : -1}
-        onKeyDown={
-          isExpanded
-            ? (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault()
-                  handleClick()
-                }
-              }
-            : undefined
-        }
-      >
-        <div
-          className={`whitespace-pre-line text-base ${montserrat_paragraph.variable} font-montserratParagraph`}
-        >
-          {formatContent(content)}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// Add helper function to extract think tag content
-function extractThinkTagContent(content: string): {
-  thoughts: string | null
-  remainingContent: string
-} {
-  if (content.startsWith('<think>')) {
-    const endTagIndex = content.indexOf('</think>')
-    if (endTagIndex !== -1) {
-      // Complete think tag found
-      const thoughts = content.slice(7, endTagIndex).trim()
-      const remainingContent = content.slice(endTagIndex + 8).trim()
-      return { thoughts, remainingContent }
-    } else {
-      // Incomplete think tag (streaming) - treat all content as thoughts
-      const thoughts = content.slice(7).trim()
-      return { thoughts, remainingContent: '' }
-    }
-  }
-  return { thoughts: null, remainingContent: content }
-}
-
 // Add this helper function at the top
 function decodeHtmlEntities(str: string | undefined): string {
   if (!str) return ''
@@ -319,12 +216,8 @@ export const ChatMessage: React.FC<Props> = memo(
     )
     const [imageUrls, setImageUrls] = useState<Set<string>>(new Set())
 
-    const [messagedCopied, setMessageCopied] = useState(false)
     const [isRightSideVisible, setIsRightSideVisible] = useState(false)
     const [sourceThumbnails, setSourceThumbnails] = useState<string[]>([])
-    const [isThumbsUp, setIsThumbsUp] = useState<boolean>(false)
-    const [isThumbsDown, setIsThumbsDown] = useState<boolean>(false)
-    const [isPositiveFeedback, setIsPositiveFeedback] = useState<boolean>(false)
     const [isFeedbackModalOpen, setIsFeedbackModalOpen] =
       useState<boolean>(false)
 
@@ -384,26 +277,6 @@ export const ChatMessage: React.FC<Props> = memo(
           setTimerVisible(true)
         } else {
           setTimerVisible(false)
-
-          // save time to Message
-          // const updatedMessages: Message[] =
-          //   selectedConversation?.messages.map((message, index) => {
-          //     if (index === messageIndex) {
-          //       return {
-          //         ...message,
-          //         responseTimeSec: Timer.timer as number, // todo: get the timer value out of that component.
-          //       }
-          //     }
-          //     return message
-          //   })
-          // const updatedConversation = {
-          //   ...updatedConversation,
-          //   messages: updatedMessages,
-          // }
-          // homeDispatch({
-          //   field: 'selectedConversation',
-          //   value: updatedConversation,
-          // })
         }
       }
     }, [message.role, messageIsStreaming, messageIndex, selectedConversation])
@@ -445,22 +318,12 @@ export const ChatMessage: React.FC<Props> = memo(
           const updatedContent = await Promise.all(
             message.content.map(async (content) => {
               if (content.type === 'image_url' && content.image_url) {
-                // console.log(
-                // 'Checking if image url is valid: ',
-                // content.image_url.url,
-                // )
                 isValid = await checkIfUrlIsValid(content.image_url.url)
                 if (isValid) {
-                  // console.log('Image url is valid: ', content.image_url.url)
                   setImageUrls(
                     (prevUrls) =>
                       new Set([...prevUrls, content.image_url?.url as string]),
                   )
-                  // setImageUrls((prevUrls) => [
-                  //   ...new Set([...prevUrls],
-                  //   content.image_url?.url as string,
-                  // ])
-                  // console.log('Set the image urls: ', imageUrls)
                   return content
                 } else {
                   const path = extractPathFromUrl(content.image_url.url)
@@ -472,7 +335,6 @@ export const ChatMessage: React.FC<Props> = memo(
                   setImageUrls(
                     (prevUrls) => new Set([...prevUrls, presignedUrl]),
                   )
-                  // console.log('Set the image urls: ', imageUrls)
                   return { ...content, image_url: { url: presignedUrl } }
                 }
               }
@@ -573,87 +435,15 @@ export const ChatMessage: React.FC<Props> = memo(
       }
     }
 
-    const copyOnClick = () => {
-      if (!navigator.clipboard) return
-
-      navigator.clipboard.writeText(message.content as string).then(() => {
-        setMessageCopied(true)
-        setTimeout(() => {
-          setMessageCopied(false)
-        }, 2000)
-      })
-    }
-
     useEffect(() => {
       if (
         message.feedback &&
         message.feedback.isPositive !== undefined &&
         message.feedback.isPositive !== null
       ) {
-        setIsThumbsUp(message.feedback.isPositive)
-        setIsThumbsDown(!message.feedback.isPositive)
-      } else {
-        setIsThumbsUp(false)
-        setIsThumbsDown(false)
+        setIsFeedbackModalOpen(true)
       }
     }, [message])
-
-    const handleThumbsUp = useCallback(() => {
-      if (isThumbsUp) {
-        // Unlike action
-        setIsThumbsUp(false)
-        setIsThumbsDown(false)
-
-        if (onFeedback) {
-          onFeedback(message, null) // Pass null to indicate removal of feedback
-        }
-        return
-      }
-
-      // Regular like action
-      setIsThumbsUp(true)
-      setIsThumbsDown(false)
-      setIsPositiveFeedback(true)
-
-      if (onFeedback) {
-        onFeedback(message, true)
-      }
-    }, [isThumbsUp, onFeedback, message])
-
-    const handleThumbsDown = useCallback(() => {
-      if (isThumbsDown) {
-        // Remove negative feedback
-        setIsThumbsUp(false)
-        setIsThumbsDown(false)
-
-        if (onFeedback) {
-          onFeedback(message, null)
-        }
-        return
-      }
-
-      // Regular thumbs down action
-      setIsThumbsUp(false)
-      setIsThumbsDown(false) // Don't set to true until feedback is submitted
-      setIsPositiveFeedback(false)
-      setIsFeedbackModalOpen(true)
-    }, [isThumbsDown, onFeedback, message])
-
-    const handleFeedbackSubmit = useCallback(
-      (feedback: string, category?: string) => {
-        // Create a deep copy of just the message
-        const messageCopy = JSON.parse(JSON.stringify(message))
-
-        setIsThumbsUp(isPositiveFeedback)
-        setIsThumbsDown(!isPositiveFeedback)
-
-        if (onFeedback) {
-          onFeedback(messageCopy, isPositiveFeedback, category, feedback)
-        }
-        setIsFeedbackModalOpen(false)
-      },
-      [isPositiveFeedback],
-    )
 
     useEffect(() => {
       // setMessageContent(message.content)
@@ -1346,17 +1136,19 @@ export const ChatMessage: React.FC<Props> = memo(
       }
     }
 
-    // Add this state for regenerate animation
-    const [isRegenerating, setIsRegenerating] = useState(false)
+    // Fix the handleFeedbackSubmit function to match the expected signature
+    const handleFeedbackSubmit = useCallback(
+      (feedback: string, category: string) => {
+        // Create a deep copy of just the message
+        const messageCopy = JSON.parse(JSON.stringify(message))
 
-    // Add this handler
-    const handleRegenerate = () => {
-      if (onRegenerate) {
-        setIsRegenerating(true)
-        onRegenerate(messageIndex)
-        setTimeout(() => setIsRegenerating(false), 1000)
-      }
-    }
+        if (onFeedback) {
+          onFeedback(messageCopy, false, category, feedback)
+        }
+        setIsFeedbackModalOpen(false)
+      },
+      [message, onFeedback]
+    )
 
     return (
       <>
@@ -1944,148 +1736,14 @@ export const ChatMessage: React.FC<Props> = memo(
                         messageIndex ===
                           (selectedConversation?.messages.length ?? 0) - 1
                       ) && (
-                        <div className="flex items-center justify-start gap-2">
-                          <Tooltip
-                            label={messagedCopied ? 'Copied!' : 'Copy'}
-                            position="bottom"
-                            withArrow
-                            arrowSize={6}
-                            transitionProps={{
-                              transition: 'fade',
-                              duration: 200,
-                            }}
-                            classNames={{
-                              tooltip:
-                                'bg-gray-700 text-white text-sm py-1 px-2',
-                              arrow: 'border-gray-700',
-                            }}
-                          >
-                            <button
-                              className={`text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 ${
-                                messageIndex ===
-                                (selectedConversation?.messages.length ?? 0) - 1
-                                  ? 'opacity-100'
-                                  : 'opacity-0 transition-opacity duration-200 focus:opacity-100 group-hover:opacity-100'
-                              }`}
-                              onClick={copyOnClick}
-                            >
-                              {messagedCopied ? (
-                                <IconCheck
-                                  size={20}
-                                  className="text-green-500 dark:text-green-400"
-                                />
-                              ) : (
-                                <IconCopy size={20} />
-                              )}
-                            </button>
-                          </Tooltip>
-                          <Tooltip
-                            label={
-                              isThumbsUp
-                                ? 'Remove Good Response'
-                                : 'Good Response'
-                            }
-                            position="bottom"
-                            withArrow
-                            arrowSize={6}
-                            transitionProps={{
-                              transition: 'fade',
-                              duration: 200,
-                            }}
-                            classNames={{
-                              tooltip:
-                                'bg-gray-700 text-white text-sm py-1 px-2',
-                              arrow: 'border-gray-700',
-                            }}
-                          >
-                            <button
-                              className={`text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 ${
-                                messageIndex ===
-                                (selectedConversation?.messages.length ?? 0) - 1
-                                  ? 'opacity-100'
-                                  : 'opacity-0 transition-opacity duration-200 focus:opacity-100 group-hover:opacity-100'
-                              }`}
-                              onClick={handleThumbsUp}
-                            >
-                              <div
-                                className={
-                                  messageIndex ===
-                                  (selectedConversation?.messages.length ?? 0) -
-                                    1
-                                    ? ''
-                                    : 'opacity-0 transition-opacity duration-200 group-hover:opacity-100'
-                                }
-                              >
-                                {isThumbsUp ? (
-                                  <IconThumbUpFilled size={20} />
-                                ) : (
-                                  <IconThumbUp size={20} />
-                                )}
-                              </div>
-                            </button>
-                          </Tooltip>
-                          <Tooltip
-                            label={
-                              isThumbsDown
-                                ? 'Remove Bad Response'
-                                : 'Bad Response'
-                            }
-                            position="bottom"
-                            withArrow
-                            arrowSize={6}
-                            transitionProps={{
-                              transition: 'fade',
-                              duration: 200,
-                            }}
-                            classNames={{
-                              tooltip:
-                                'bg-gray-700 text-white text-sm py-1 px-2',
-                              arrow: 'border-gray-700',
-                            }}
-                          >
-                            <button
-                              className={`text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 ${
-                                messageIndex ===
-                                (selectedConversation?.messages.length ?? 0) - 1
-                                  ? 'opacity-100'
-                                  : 'opacity-0 transition-opacity duration-200 focus:opacity-100 group-hover:opacity-100'
-                              }`}
-                              onClick={handleThumbsDown}
-                            >
-                              {isThumbsDown ? (
-                                <IconThumbDownFilled size={20} />
-                              ) : (
-                                <IconThumbDown size={20} />
-                              )}
-                            </button>
-                          </Tooltip>
-                          <Tooltip
-                            label="Regenerate Response"
-                            position="bottom"
-                            withArrow
-                            arrowSize={6}
-                            transitionProps={{
-                              transition: 'fade',
-                              duration: 200,
-                            }}
-                            classNames={{
-                              tooltip: 'bg-gray-700 text-white text-sm py-1 px-2',
-                              arrow: 'border-gray-700',
-                            }}
-                          >
-                            <button
-                              className={`text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 ${
-                                messageIndex === (selectedConversation?.messages?.length ?? 0) - 1
-                                  ? 'opacity-100'
-                                  : 'opacity-0 transition-opacity duration-200 focus:opacity-100 group-hover:opacity-100'
-                              } ${isRegenerating ? 'animate-spin' : ''}`}
-                              onClick={handleRegenerate}
-                              disabled={isRegenerating}
-                            >
-                              <IconRepeat size={20} />
-                            </button>
-                          </Tooltip>
-                        </div>
+                        <MessageActions
+                          message={message}
+                          messageIndex={messageIndex}
+                          isLastMessage={messageIndex === (selectedConversation?.messages.length ?? 0) - 1}
+                          onRegenerate={onRegenerate}
+                          onFeedback={onFeedback}
+                          onOpenFeedbackModal={() => setIsFeedbackModalOpen(true)}
+                        />
                       )}
                   </div>
                 </div>
