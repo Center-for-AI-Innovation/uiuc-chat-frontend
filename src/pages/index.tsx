@@ -2,7 +2,7 @@ import Image from 'next/image'
 import { type NextPage } from 'next'
 import Head from 'next/head'
 import Link from 'next/link'
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 
 import {
   // MantineProvider,
@@ -18,7 +18,124 @@ import {
 
 import { LandingPageHeader } from '~/components/UIUC-Components/navbars/GlobalHeader'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import { montserrat_heading, montserrat_paragraph, doto_font } from 'fonts'
+
+// Typing animation component
+const TypingAnimation: React.FC = () => {
+  const words = [
+    'favorite websites',
+    'GitHub',
+    'projects',
+    'business',
+    'personal portfolio',
+    'research',
+    'school',
+    'favorite journals',
+    'club',
+    'favorite blogs',
+  ]
+
+  const [displayText, setDisplayText] = useState('')
+  const [wordIndex, setWordIndex] = useState(0)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  useEffect(() => {
+    const currentWord = words[wordIndex] || ''
+
+    // Set typing/deleting speed (in ms)
+    const typingSpeed = 150 // Slightly slower typing for readability
+    const deletingSpeed = 80 // Slightly slower deletion for readability
+    const pauseBeforeDelete = 1500 // Longer pause to allow reading
+    const pauseBeforeNewWord = 300 // Brief pause between words
+
+    let timer: NodeJS.Timeout
+
+    if (isDeleting) {
+      // Deleting mode
+      if (displayText) {
+        timer = setTimeout(() => {
+          setDisplayText(displayText.slice(0, -1))
+        }, deletingSpeed)
+      } else {
+        // When fully deleted, pause briefly before moving to next word
+        timer = setTimeout(() => {
+          setIsDeleting(false)
+          setWordIndex((prevIndex) => (prevIndex + 1) % words.length)
+        }, pauseBeforeNewWord)
+      }
+    } else {
+      // Typing mode
+      if (displayText === currentWord) {
+        // When fully typed, pause then start deleting
+        timer = setTimeout(() => {
+          setIsDeleting(true)
+        }, pauseBeforeDelete)
+      } else {
+        // Continue typing the current word
+        timer = setTimeout(() => {
+          setDisplayText(currentWord.slice(0, displayText.length + 1))
+        }, typingSpeed)
+      }
+    }
+
+    return () => clearTimeout(timer)
+  }, [displayText, isDeleting, wordIndex, words])
+
+  return (
+    <div className={`typing-animation ${doto_font.variable}`}>
+      <span
+        style={{
+          position: 'relative',
+          fontWeight: 'bold',
+          fontSize: 'inherit',
+          color: 'var(--illinois-white)',
+          fontFamily: 'var(--font-doto)',
+        }}
+      >
+        {displayText}
+        <span
+          className="cursor"
+          style={{
+            display: 'inline-block',
+            width: '3px',
+            height: '1.2em',
+            backgroundColor: 'var(--illinois-white)',
+            marginLeft: '2px',
+            verticalAlign: 'middle',
+            animation: 'blink 1s step-start infinite',
+          }}
+        />
+      </span>
+      <style jsx>{`
+        @keyframes blink {
+          0%,
+          100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0;
+          }
+        }
+        .typing-animation {
+          display: inline-block;
+          width: 100%;
+          min-width: 400px; /* Increased for longer words */
+          max-width: 400px; /* Limit maximum width */
+          text-align: left; /* Left-align text for natural typing look */
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+          .typing-animation {
+            min-width: 250px;
+            max-width: 250px;
+            margin-top: 8px; /* Add space in mobile view */
+          }
+        }
+      `}</style>
+    </div>
+  )
+}
 
 const Home: NextPage = () => {
   return (
@@ -115,49 +232,6 @@ const Home: NextPage = () => {
             </div>
           </div>
 
-          {/*
-          <h1 className="mt-8 text-5xl font-extrabold tracking-tight sm:text-[5rem]">
-            UIUC.<span className="text-[var(--illinois-orange)]">chat</span>
-          </h1>
-
-          <div>
-            <Title
-              color="var(--illinois-storm-dark)"
-              order={2}
-              variant="gradient"
-              weight={800}
-              gradient={{
-                from: 'var(--illinois-orange)',
-                to: 'var(--illinois-industrial)',
-                deg: 45
-              }}
-              ta="center"
-              mt="md"
-            >
-              Upload anything. Search everything.
-              <br></br>
-              <span className="home-header_text-underline">Discover More.</span>
-            </Title>
-
-            <Text color="var(--illinois-orange)" ta="center" weight={500} size="lg">
-              <span className="font-bold">Upload</span> your videos, any number
-              of PDFs, PowerPoint, Word, Excel and almost anything other
-              document to chat with your knowledge base.
-            </Text>
-          </div>
-*/}
-
-          <Title order={3} className="mt-16">
-            Flagship Chatbots
-          </Title>
-
-          <div className="text-sm text-neutral-400">
-            Dive right into our bots trained on everything Illinois
-          </div>
-
-          {/*
-          <ListProjectTable />
-*/}
           <div
             className="
             mt-4
@@ -182,23 +256,28 @@ const Home: NextPage = () => {
         >
           <div
             className={`
-            whitespace-wrap flex flex-col items-center
+            whitespace-wrap mx-auto
+            flex max-w-3xl flex-col items-center
             justify-center gap-3
 
             text-center text-2xl font-bold
-            text-white sm:flex-row
+            text-white sm:flex-row sm:gap-2
 
             sm:whitespace-nowrap md:text-3xl
 
             ${montserrat_heading.variable} font-montserratHeading
           `}
           >
-            <div className="">
-              An AI that knows{' '}
-              <span className="whitespace-nowrap">about your</span>
-            </div>
+            {/* Adjusted container with better spacing */}
+            <div className="flex w-full flex-col items-center justify-center sm:flex-row">
+              <div className="pr-2 sm:flex-shrink-0 sm:text-right">
+                Your AI trained on your{' '}
+              </div>
 
-            <div className="">_________</div>
+              <div className="sm:max-w-[300px] sm:flex-grow">
+                <TypingAnimation />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -212,7 +291,7 @@ const Home: NextPage = () => {
               ${montserrat_heading.variable} font-montserratHeading
           `}
           >
-            It’s the easiest way to make your{' '}
+            It's the easiest way to make your{' '}
             <span className="whitespace-nowrap">own Chatbot</span>
           </h2>
 
@@ -353,7 +432,7 @@ const Home: NextPage = () => {
                   <span
                     className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
                   >
-                    world’s
+                    world's
                   </span>{' '}
                   best AI models at your fingertips, enhanced with
                   <span
@@ -504,7 +583,7 @@ const Home: NextPage = () => {
               <div className="mt-4">
                 If features like custom LLMs, 52+ models to choose from, and
                 APIs are important to you (and you understand what those mean),
-                then you’ll be excited to know we support all of that and more.
+                then you'll be excited to know we support all of that and more.
               </div>
 
               <Button
