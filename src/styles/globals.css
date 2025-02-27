@@ -232,6 +232,24 @@ pre:has(div.codeblock) {
   background-repeat: no-repeat;
 }
 
+/* Make the purple background fade out  */
+.course-page-main {
+  /* height: 400px;     */
+  background: -webkit-gradient(
+    linear,
+    left top,
+    left bottom,
+    from(#2e026d),
+    to(#020307),
+    color-stop(0.75, #15162c)
+  );
+  background-color: #020307;
+  background-size:
+    100% 45%,
+    0%;
+  background-repeat: no-repeat;
+}
+
 .fade-2-lines {
   overflow: hidden;
   position: relative;
