@@ -56,7 +56,6 @@ import {
   getOpenAIKey,
   handleContextSearch,
   processChunkWithStateMachine,
-  routeModelRequest,
 } from '~/utils/streamProcessing'
 import {
   handleFunctionCall,
@@ -76,7 +75,6 @@ import { useUpdateConversation } from '~/hooks/conversationQueries'
 import { motion } from 'framer-motion'
 import { useDeleteMessages } from '~/hooks/messageQueries'
 import { AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
-import util from 'util'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -108,12 +106,7 @@ export const Chat = memo(
       return router.asPath.slice(1).split('/')[0] as string
     }
     const user_email = extractEmailsFromClerk(clerk_obj.user)[0]
-    // const [user_email, setUserEmail] = useState<string | undefined>(undefined)
 
-    // const updateConversationMutation = useUpdateConversation(
-    //   user_email as string,
-    //   queryClient,
-    // )
     const [chat_ui] = useState(new ChatUI(new MLCEngine()))
 
     const [inputContent, setInputContent] = useState<string>('')
@@ -135,7 +128,6 @@ export const Chat = memo(
       isLoading: isLoadingTools,
       isError: isErrorTools,
       error: toolLoadingError,
-      // refetch: refetchTools,
     } = useFetchAllWorkflows(getCurrentPageName())
 
     useEffect(() => {
@@ -157,20 +149,14 @@ export const Chat = memo(
         conversations,
         apiKey,
         pluginKeys,
-        serverSideApiKeyIsSet,
         messageIsStreaming,
         modelError,
         loading,
-        prompts,
         showModelSettings,
-        isImg2TextLoading,
-        isRouting,
-        isRunningTool, // TODO change to isFunctionCallLoading
-        isRetrievalLoading,
         documentGroups,
         tools,
-        webLLMModelIdLoading,
         llmProviders,
+        selectedModel,
       },
       handleUpdateConversation,
       handleFeedbackUpdate,
@@ -204,14 +190,12 @@ export const Chat = memo(
 
     const [currentMessage, setCurrentMessage] = useState<Message>()
     const [autoScrollEnabled, setAutoScrollEnabled] = useState<boolean>(true)
-    // const [showSettings, setShowSettings] = useState<boolean>(false)
     const [showScrollDownButton, setShowScrollDownButton] =
       useState<boolean>(false)
 
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const chatContainerRef = useRef<HTMLDivElement>(null)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
-    // const createConversationMutation = useCreateConversation(queryClient)
     const updateConversationMutation = useUpdateConversation(
       currentEmail,
       queryClient,
@@ -874,19 +858,35 @@ export const Chat = memo(
             }
           } else {
             try {
-              // Route to the specific model provider
-              // response = await routeModelRequest(chatBody, controller)
-
               // CALL OUR NEW ENDPOINT... /api/chat
               startOfCallToLLM = performance.now()
-              response = await fetch('/api/allNewRoutingChat', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(finalChatBody),
-              })
-              console.log('response from /api/chat', response)
+              try {
+                response = await fetch('/api/allNewRoutingChat', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(finalChatBody),
+                })
+                console.log('response from /api/chat', response)
+                
+                // Check if response is ok before proceeding
+                if (!response.ok) {
+                  const errorData = await response.json();
+                  throw new Error(errorData.error || 'Failed to get response from the server');
+                }
+              } catch (error) {
+                // TODO: Improve error messages here...
+                console.error('Error routing to model provider:', error)
+                errorToast({
+                  title: 'Error routing to model provider',
+                  message:
+                    (error as Error).message || 'An unexpected error occurred',
+                })
+                homeDispatch({ field: 'loading', value: false })
+                homeDispatch({ field: 'messageIsStreaming', value: false })
+                return;
+              }
             } catch (error) {
               // TODO: Improve error messages here...
               console.error('Error routing to model provider:', error)
@@ -895,6 +895,9 @@ export const Chat = memo(
                 message:
                   (error as Error).message || 'An unexpected error occurred',
               })
+              homeDispatch({ field: 'loading', value: false })
+              homeDispatch({ field: 'messageIsStreaming', value: false })
+              return;
             }
           }
 
@@ -1229,46 +1232,141 @@ export const Chat = memo(
       ],
     )
 
-    const handleRegenerate = useCallback(() => {
-      if (currentMessage && Array.isArray(currentMessage.content)) {
-        // Find the index of the existing image description
-        const imgDescIndex = (currentMessage.content as Content[]).findIndex(
-          (content) =>
-            content.type === 'text' &&
-            (content.text as string).startsWith('Image description: '),
-        )
+    const handleRegenerate = useCallback(async (messageIndex?: number) => {
+      try {
+        if (!selectedConversation) {
+          return;
+        }
 
-        if (imgDescIndex !== -1) {
-          // Remove the existing image description
-          ;(currentMessage.content as Content[]).splice(imgDescIndex, 1)
+        // If no messageIndex is provided, regenerate the last message
+        const targetIndex = messageIndex !== undefined ? 
+          messageIndex : 
+          selectedConversation.messages.length - 1;
+        
+        // Get the message to regenerate
+        const messageToRegenerate = selectedConversation.messages[targetIndex];
+        if (!messageToRegenerate) {
+          return;
         }
-        if (
-          selectedConversation?.messages[
-            selectedConversation?.messages?.length - 1
-          ]?.role === 'user'
-        ) {
-          // console.log('user')
-          handleSend(
-            currentMessage,
-            1,
-            null,
-            tools,
-            enabledDocumentGroups,
-            llmProviders,
-          )
+        
+        // Create a temporary conversation with messages up to the target message
+        const tempConversation = { 
+          ...selectedConversation,
+          messages: selectedConversation.messages.slice(0, targetIndex + 1)
+        };
+        
+        // If there's a model selected in the context, use that instead of the conversation's model
+        if (selectedModel) {
+          tempConversation.model = selectedModel;
+        }
+        
+        // Determine if we need to delete one or two messages
+        // If the target message is from the user, we delete one message (just the user message)
+        // If the target message is from the assistant, we delete two messages (the assistant message and the user message before it)
+        let deleteCount = 1;
+        let userMessageToRegenerate: Message;
+        
+        if (messageToRegenerate.role === 'assistant' && targetIndex > 0) {
+          deleteCount = 2;
+          // If regenerating an assistant message, use the user message before it
+          const prevUserMessage = selectedConversation.messages[targetIndex - 1];
+          
+          // Ensure prevUserMessage exists
+          if (!prevUserMessage) {
+            throw new Error('Previous user message not found');
+          }
+          
+          userMessageToRegenerate = { 
+            ...prevUserMessage,
+            id: prevUserMessage.id || uuidv4(), // Ensure ID is always defined
+            role: 'user', // Ensure role is always defined
+            content: prevUserMessage.content, // Ensure content is always defined
+            contexts: [], // Clear contexts for fresh search
+            wasQueryRewritten: undefined, // Clear previous query rewrite information
+            queryRewriteText: undefined // Clear previous query rewrite text
+          } as Message;
         } else {
-          // console.log('assistant')
-          handleSend(
-            currentMessage,
-            2,
-            null,
-            tools,
-            enabledDocumentGroups,
-            llmProviders,
-          )
+          // If regenerating a user message
+          userMessageToRegenerate = { 
+            ...messageToRegenerate,
+            id: messageToRegenerate.id || uuidv4(), // Ensure ID is always defined
+            role: 'user', // Ensure role is always defined
+            content: messageToRegenerate.content, // Ensure content is always defined
+            contexts: [], // Clear contexts for fresh search
+            wasQueryRewritten: undefined, // Clear previous query rewrite information
+            queryRewriteText: undefined // Clear previous query rewrite text
+          } as Message;
         }
+        
+        // Calculate how many messages to delete from the end of the conversation
+        const messagesToDeleteCount = selectedConversation.messages.length - (targetIndex + 1 - deleteCount);
+        
+        // Get the messages that will be deleted
+        const messagesToDelete = selectedConversation.messages.slice(targetIndex + 1 - deleteCount);
+        
+        // Create a modified conversation for query rewriting that doesn't include the messages being regenerated
+        const modifiedConversation = {
+          ...tempConversation,
+          messages: tempConversation.messages.slice(0, tempConversation.messages.length - deleteCount)
+        };
+        
+        // CRITICAL: Ensure the modified conversation ends with the user message we want to regenerate
+        // This ensures buildPrompt can find the last user input
+        modifiedConversation.messages.push(userMessageToRegenerate);
+        
+        // Reset query rewriting state in the global context
+        homeDispatch({ field: 'wasQueryRewritten', value: undefined });
+        homeDispatch({ field: 'queryRewriteText', value: undefined });
+        
+        // IMPORTANT: Update the selected conversation with the modified one BEFORE proceeding with handleSend
+        // This ensures that the query rewriting process uses the correct conversation state
+        homeDispatch({
+          field: 'selectedConversation',
+          value: modifiedConversation,
+        });
+        
+        // Wait for state update to propagate before proceeding
+        await new Promise(resolve => setTimeout(resolve, 0));
+        
+        // Ensure we have a valid API key before proceeding
+        // This is crucial after page refresh when the key might not be in memory
+        let currentApiKey = apiKey;
+        
+        // If we don't have an API key in the state, try to get it from localStorage
+        if (!currentApiKey && !courseMetadata?.openai_api_key) {
+          const storedApiKey = localStorage.getItem('apiKey');
+          if (storedApiKey) {
+            // Update the API key in the state
+            homeDispatch({ field: 'apiKey', value: storedApiKey });
+            currentApiKey = storedApiKey;
+          }
+        }
+        
+        // Call handleSend with the prepared message and delete count
+        handleSend(
+          userMessageToRegenerate,
+          messagesToDeleteCount,
+          null,
+          tools,
+          enabledDocumentGroups,
+          llmProviders,
+        );
+        
+        // Ensure the messages are deleted from the database
+        if (messagesToDelete.length > 0) {
+          await deleteMessagesMutation.mutate({
+            convoId: selectedConversation.id,
+            deletedMessages: messagesToDelete,
+          });
+        }
+      } catch (error) {
+        console.error('Error in handleRegenerate:', error);
+        errorToast({
+          title: 'Regeneration Error',
+          message: error instanceof Error ? error.message : 'An unexpected error occurred while regenerating the message.',
+        });
       }
-    }, [currentMessage, handleSend])
+    }, [selectedConversation, handleSend, llmProviders, tools, enabledDocumentGroups, selectedModel, homeDispatch, deleteMessagesMutation, apiKey, courseMetadata])
 
     const scrollToBottom = useCallback(() => {
       if (autoScrollEnabled) {
@@ -1668,26 +1766,7 @@ export const Chat = memo(
                                   llmProviders,
                                 )
                               }}
-                              onRegenerate={(message, index) => {
-                                // Find the user message that came before this assistant message
-                                const userMessage =
-                                  selectedConversation?.messages[index - 1]
-                                if (
-                                  userMessage &&
-                                  userMessage.role === 'user'
-                                ) {
-                                  handleSend(
-                                    userMessage,
-                                    selectedConversation?.messages?.length -
-                                      index +
-                                      1,
-                                    null,
-                                    tools,
-                                    enabledDocumentGroups,
-                                    llmProviders,
-                                  )
-                                }
-                              }}
+                              onRegenerate={() => handleRegenerate(index)}
                               onFeedback={handleFeedback}
                               onImageUrlsUpdate={onImageUrlsUpdate}
                               courseName={courseName}
@@ -1718,7 +1797,7 @@ export const Chat = memo(
                     }}
                     onScrollDownClick={handleScrollDown}
                     showScrollDownButton={showScrollDownButton}
-                    onRegenerate={handleRegenerate}
+                    onRegenerate={() => handleRegenerate()}
                     inputContent={inputContent}
                     setInputContent={setInputContent}
                     courseName={getCurrentPageName()}

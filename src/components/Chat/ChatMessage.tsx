@@ -1,6 +1,5 @@
 // ChatMessage.tsx
 import React, {
-  FC,
   memo,
   useContext,
   useEffect,
@@ -16,14 +15,12 @@ import {
   IconCopy,
   IconEdit,
   IconRobot,
-  IconTrash,
   IconUser,
   IconThumbUp,
   IconThumbDown,
   IconThumbUpFilled,
   IconThumbDownFilled,
   IconX,
-  IconBook2,
   IconChevronDown,
   IconBrain,
   IconRepeat,
@@ -48,9 +45,7 @@ import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { IntermediateStateAccordion } from '../UIUC-Components/IntermediateStateAccordion'
 import { FeedbackModal } from './FeedbackModal'
 import { saveConversationToServer } from '@/utils/app/conversation'
-import { ContextCards } from '../UIUC-Components/ContextCards'
 import SourcesSidebar from '../UIUC-Components/SourcesSidebar'
-import { useRouter } from 'next/router'
 
 const useStyles = createStyles((theme) => ({
   imageContainerStyle: {
@@ -127,7 +122,7 @@ export interface Props {
   message: Message
   messageIndex: number
   onEdit?: (editedMessage: Message) => void
-  onRegenerate?: (message: Message, messageIndex: number) => void
+  onRegenerate?: (messageIndex: number) => void
   onFeedback?: (
     message: Message,
     isPositive: boolean | null,
@@ -305,7 +300,6 @@ export const ChatMessage: React.FC<Props> = memo(
     const {
       state: {
         selectedConversation,
-        conversations,
         messageIsStreaming,
         isImg2TextLoading,
         isRouting,
@@ -313,7 +307,6 @@ export const ChatMessage: React.FC<Props> = memo(
         isRetrievalLoading,
         isQueryRewriting,
         loading,
-        showChatbar,
       },
       dispatch: homeDispatch,
     } = useContext(HomeContext)
@@ -1360,7 +1353,7 @@ export const ChatMessage: React.FC<Props> = memo(
     const handleRegenerate = () => {
       if (onRegenerate) {
         setIsRegenerating(true)
-        onRegenerate(message, messageIndex)
+        onRegenerate(messageIndex)
         setTimeout(() => setIsRegenerating(false), 1000)
       }
     }

@@ -15,20 +15,18 @@ export const revalidate = 0
 export async function POST(req: NextRequest, res: NextResponse) {
   const startTime = Date.now()
 
-  const body = await req.json()
-
-  const {
-    conversation,
-    // key,
-    course_name,
-    courseMetadata,
-    // stream,
-    // llmProviders,
-    mode,
-  } = body as ChatBody
-
-  console.log('chat body', body)
   try {
+    const body = await req.json()
+
+    const {
+      conversation,
+      course_name,
+      courseMetadata,
+      mode,
+    } = body as ChatBody
+
+    console.log('chat body', body)
+    
     const buildPromptStartTime = Date.now()
     const newConversation = await buildPrompt({
       conversation,
@@ -53,7 +51,8 @@ export async function POST(req: NextRequest, res: NextResponse) {
     let statusCode = 500
 
     if (error instanceof OpenAIError) {
-      statusCode = parseInt(error.code || '500')
+      const parsedCode = parseInt(error.code || '500')
+      statusCode = parsedCode >= 200 && parsedCode <= 599 ? parsedCode : 500
       errorMessage = error.message
     } else if (error instanceof Error) {
       errorMessage = error.message
