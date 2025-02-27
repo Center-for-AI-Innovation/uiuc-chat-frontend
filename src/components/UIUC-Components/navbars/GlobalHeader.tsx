@@ -5,7 +5,14 @@ import {
   UserButton,
   useUser,
 } from '@clerk/nextjs'
-import { IconClipboardText, IconFile } from '@tabler/icons-react'
+import {
+  IconCirclePlus,
+  IconClipboardText,
+  IconFile,
+  IconNews,
+  IconPlus,
+  IconSquareRoundedPlus,
+} from '@tabler/icons-react'
 import { Menu2 } from 'tabler-icons-react'
 
 // import MagicBell, {
@@ -145,7 +152,11 @@ export function LandingPageHeader({
             <>
               <Link href="/new" className={classes.link}>
                 <span style={{ display: 'flex', alignItems: 'center' }}>
-                  <FileIcon />
+                  <IconFilePlus
+                    size={20}
+                    strokeWidth={2}
+                    style={{ marginRight: '5px' }}
+                  />
                   <span
                     className={`${montserrat_heading.variable} font-montserratHeading`}
                   >
@@ -276,11 +287,15 @@ export function LandingPageHeader({
                 style={{ borderRadius: '.25rem' }}
               >
                 <span style={{ display: 'flex', alignItems: 'center' }}>
-                  <FileIcon />
+                  <IconNews
+                    size={20}
+                    strokeWidth={2}
+                    style={{ marginRight: '5px' }}
+                  />
                   <span
                     className={`${montserrat_heading.variable} font-montserratHeading`}
                   >
-                    Blog
+                    News
                   </span>
                 </span>
               </Link>
@@ -291,11 +306,15 @@ export function LandingPageHeader({
                 style={{ borderRadius: '.25rem' }}
               >
                 <span style={{ display: 'flex', alignItems: 'center' }}>
-                  <FileIcon />
+                  <IconPlus
+                    size={20}
+                    strokeWidth={2}
+                    style={{ marginRight: '5px' }}
+                  />
                   <span
                     className={`${montserrat_heading.variable} font-montserratHeading`}
                   >
-                    New project
+                    New Project
                   </span>
                 </span>
               </Link>
@@ -303,8 +322,7 @@ export function LandingPageHeader({
           )}
 
           <SignedIn>
-            <div />
-            <div style={{ all: 'unset' }}>
+            <div className="mt-1 pl-1 pr-2">
               <UserButton />
             </div>
           </SignedIn>
@@ -326,12 +344,6 @@ export function LandingPageHeader({
         </div>
       </div>
     </header>
-  )
-}
-
-export function FileIcon() {
-  return (
-    <IconFilePlus size={20} strokeWidth={2} style={{ marginRight: '5px' }} />
   )
 }
 
