@@ -138,6 +138,8 @@ const TypingAnimation: React.FC = () => {
 }
 
 const Home: NextPage = () => {
+  const [isTooltipVisible, setIsTooltipVisible] = useState(false)
+
   return (
     <>
       <Head>
@@ -160,12 +162,16 @@ const Home: NextPage = () => {
         <div
           className={`inline-block ${montserrat_heading.variable} font-montserratHeading`}
         >
-          <div className="group relative inline-block cursor-help">
-            <span className="text-lg font-bold">
+          <div className="relative inline-block cursor-help">
+            <span
+              className="text-lg font-bold"
+              onMouseEnter={() => setIsTooltipVisible(true)}
+              onMouseLeave={() => setIsTooltipVisible(false)}
+            >
               Heads up: we're rebranded to Illinois Chat
             </span>
             <div
-              className="absolute left-1/2 top-full z-50 mt-2 w-72 -translate-x-1/2 transform rounded p-2 text-sm opacity-0 transition duration-300 group-hover:opacity-100"
+              className={`absolute left-1/2 top-full z-50 mt-2 w-72 -translate-x-1/2 transform rounded p-2 text-sm transition duration-300 ${isTooltipVisible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
               style={{
                 background: '#333',
                 border: '1px solid #444',
