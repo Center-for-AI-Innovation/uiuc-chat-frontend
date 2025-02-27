@@ -1606,7 +1606,7 @@ export const Chat = memo(
           />
           <link rel="icon" href="/favicon.ico" />
         </Head>
-        <div className="overflow-wrap relative flex h-screen w-full flex-col overflow-hidden bg-white dark:bg-[#15162c]">
+        <div className="overflow-wrap relative flex h-screen w-full flex-col overflow-hidden bg-[#15162c]">
           <div className="justify-center" style={{ height: '40px' }}>
             <ChatNavbar bannerUrl={bannerUrl as string} isgpt4={true} />
           </div>

@@ -83,15 +83,15 @@ const ApiPage: NextPage = () => {
     return <></>
   }
 
-  const styles = {
-    container: {
-      backgroundColor: 'var(--illinois-background-dark)',
-      color: 'var(--illinois-white)',
-    },
-    header: {
-      borderBottom: '1px solid var(--illinois-storm-light)',
-    },
-  };
+  // const styles = {
+  //   container: {
+  //     backgroundColor: 'var(--illinois-background-dark)',
+  //     color: 'var(--illinois-white)',
+  //   },
+  //   header: {
+  //     borderBottom: '1px solid var(--illinois-storm-light)',
+  //   },
+  // };
 
   return (
     <>
