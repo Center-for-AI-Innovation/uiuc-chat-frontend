@@ -9,7 +9,7 @@ import {
   IconThumbDownFilled,
   IconRepeat
 } from '@tabler/icons-react'
-import { Message } from '@/types/chat'
+import { Message, Content } from '@/types/chat'
 import { useTranslation } from 'next-i18next'
 
 interface MessageActionsProps {
@@ -60,7 +60,19 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
   const copyOnClick = () => {
     if (!navigator.clipboard) return
 
-    navigator.clipboard.writeText(message.content as string).then(() => {
+    let textToCopy = '';
+    
+    if (typeof message.content === 'string') {
+      textToCopy = message.content;
+    } else if (Array.isArray(message.content)) {
+      // Extract text content from array of Content objects
+      textToCopy = message.content
+        .filter((content) => content.type === 'text')
+        .map((content) => content.text)
+        .join(' ');
+    }
+
+    navigator.clipboard.writeText(textToCopy).then(() => {
       setMessageCopied(true)
       setTimeout(() => {
         setMessageCopied(false)
