@@ -553,21 +553,18 @@ const Home: NextPage = () => {
           style={{ background: 'var(--illinois-blue-gradient)' }}
           className="
             my-12
-
             w-full px-8
-            py-12 text-white sm:my-0
-
-            sm:py-36
+            py-8 text-white sm:my-0
+            sm:py-24
           "
         >
           <div
             className="
               mx-auto flex
               w-full
-
               max-w-3xl flex-col items-start
-              justify-center gap-8
-              sm:flex-row sm:gap-16
+              justify-center gap-4
+              sm:flex-row sm:gap-8
             "
           >
             <div className="sm:w-1/2">
@@ -577,13 +574,23 @@ const Home: NextPage = () => {
                 ${montserrat_heading.variable} font-montserratHeading
               `}
               >
-                Ready to build? Use our API
+                Ready to build?
+              </h2>
+              <h2
+                className={`
+                text-xl font-bold
+                ${montserrat_heading.variable} font-montserratHeading
+              `}
+              >
+                Use our API.
               </h2>
 
               <div className="mt-4">
-                If features like custom LLMs, 52+ models to choose from, and
-                APIs are important to you (and you understand what those mean),
-                then you'll be excited to know we support all of that and more.
+                If you're tired of the OpenAI API and want an AI that's trained
+                to understand your data, come build on our API with 52+ models
+                to choose from. We're always updated with the latest State of
+                the Art (SOTA) open source LLMs for free, hosted here at
+                Illinois.
               </div>
 
               <Button
@@ -595,8 +602,12 @@ const Home: NextPage = () => {
                   border: '1px solid var(--illinois-white)',
                 }}
                 radius="sm"
+                component="a"
+                href="https://docs.uiuc.chat/api"
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                Learn More{' '}
+                Read the docs{' '}
                 <ExternalLink
                   size={20}
                   strokeWidth={1.75}
@@ -608,15 +619,65 @@ const Home: NextPage = () => {
 
             <div
               className="
-              -mx-4
-              mt-0 sm:mx-0
-              sm:mt-8 sm:w-1/2
+              mt-0 
+              sm:mt-0 sm:w-2/3
             "
             >
-              <img
-                src="/media/homepage_banner_code.png"
-                className="rounded-xl"
-              ></img>
+              <div className="relative overflow-hidden rounded-xl bg-[#1e1e1e] p-4 text-white">
+                <pre className="overflow-x-auto font-mono text-sm">
+                  <code>
+                    <span className="text-[#569cd6]">import</span>{' '}
+                    <span className="text-[#9cdcfe]">requests</span>
+                    {'\n\n'}
+                    <span className="text-[#9cdcfe]">data</span> = {'{'}
+                    {'\n'}
+                    {'  '}
+                    <span className="text-[#ce9178]">"model"</span>:{' '}
+                    <span className="text-[#ce9178]">"llama3.1:70b"</span>,
+                    {'\n'}
+                    {'  '}
+                    <span className="text-[#ce9178]">"apiKey"</span>:{' '}
+                    <span className="text-[#ce9178]">"&lt;********&gt;"</span>,
+                    {'\n'}
+                    {'  '}
+                    <span className="text-[#ce9178]">"messages"</span>: [{'\n'}
+                    {'    '}
+                    {'{'}
+                    {'\n'}
+                    {'      '}
+                    <span className="text-[#ce9178]">"role"</span>:{' '}
+                    <span className="text-[#ce9178]">"user"</span>,{'\n'}
+                    {'      '}
+                    <span className="text-[#ce9178]">"content"</span>:{' '}
+                    <span className="text-[#ce9178]">
+                      "How do I use the Illinois Chat API?"
+                    </span>
+                    {'\n'}
+                    {'    '}
+                    {'}'}
+                    {'\n'}
+                    {'  '}],
+                    {'\n'}
+                    {'}'}
+                    {'\n\n'}
+                    <span className="text-[#9cdcfe]">response</span> ={' '}
+                    <span className="text-[#9cdcfe]">requests</span>.
+                    <span className="text-[#dcdcaa]">post</span>({'\n'}
+                    {'  '}
+                    <span className="text-[#ce9178]">
+                      "https://uiuc.chat/api/chat-api/chat"
+                    </span>
+                    ,{'\n'}
+                    {'  '}
+                    <span className="text-[#9cdcfe]">json</span>=
+                    <span className="text-[#9cdcfe]">data</span>
+                    {'\n'}){'\n'}
+                    <span className="text-[#dcdcaa]">print</span>(
+                    <span className="text-[#9cdcfe]">response</span>.
+                    <span className="text-[#9cdcfe]">text</span>)
+                  </code>
+                </pre>
+              </div>
             </div>
           </div>
 
