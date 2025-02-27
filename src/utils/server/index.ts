@@ -119,8 +119,6 @@ export const OpenAIStream = async (
     throw new Error('URL is undefined')
   }
 
-  console.log("Body that's being sent to the endpoint: ", body)
-
   const res = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',

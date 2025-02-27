@@ -22,6 +22,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   type AllLLMProviders,
   type AnySupportedModel,
+  LLM_PROVIDER_ORDER,
   type LLMProvider,
   ProviderNames,
   selectBestModel,
@@ -57,19 +58,23 @@ interface ModelItemProps extends React.ComponentPropsWithoutRef<'div'> {
 export const getModelLogo = (modelType: string) => {
   switch (modelType) {
     case ProviderNames.OpenAI:
-      return 'https://images.squarespace-cdn.com/content/v1/5a4908d949fc2b8e312bdf53/1676298536608-GQSN44SGOEHWCFSIZIGK/openai_icon.png?format=750w'
+      return '/media/llm_icons/OpenAI.png'
     case ProviderNames.Ollama:
-      return 'https://raw.githubusercontent.com/deepset-ai/haystack-integrations/main/logos/ollama.png'
+      return '/media/llm_icons/Ollama.png'
     case ProviderNames.WebLLM:
-      return 'https://avatars.githubusercontent.com/u/106173866?s=48&v=4'
+      return '/media/llm_icons/WebLLM.png'
     case ProviderNames.Anthropic:
-      return 'https://www.anthropic.com/images/icons/safari-pinned-tab.svg'
+      return '/media/llm_icons/Anthropic.png'
     case ProviderNames.NCSAHosted:
-      return 'https://assets.kastan.ai/UofI-logo-white.jpg'
+      return '/media/llm_icons/NCSAHosted.png'
     case ProviderNames.NCSAHostedVLM:
-      return 'https://assets.kastan.ai/UofI-logo-white.jpg'
+      return '/media/llm_icons/NCSAHosted.png'
     case ProviderNames.Azure:
-      return 'https://assets.kastan.ai/uiuc-chat-emails/msft-logo.png'
+      return '/media/llm_icons/Azure.png'
+    case ProviderNames.Bedrock:
+      return 'https://icon2.cleanpng.com/20190418/vhc/kisspng-amazon-web-services-logo-cloud-computing-amazon-co-logoaws-1-itnext-summit-1713897597915.webp'
+    case ProviderNames.Gemini:
+      return 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png'
     default:
       throw new Error(`Unknown model type: ${modelType}`)
   }
@@ -352,21 +357,35 @@ const ModelDropdown: React.FC<
             }
             await onChange(modelId!)
           }}
-          data={Object.values(enabledProvidersAndModels).flatMap(
-            (provider: LLMProvider) =>
-              provider.models?.map((model) => ({
-                value: model.id,
-                label: model.name,
-                // @ts-ignore -- this being missing is fine
-                downloadSize: model?.downloadSize,
-                modelId: model.id,
-                selectedModelId: value,
-                modelType: provider.provider,
-                group: provider.provider,
-                // @ts-ignore -- this being missing is fine
-                vram_required_MB: model.vram_required_MB,
-              })) || [],
-          )}
+          data={Object.entries(enabledProvidersAndModels)
+            // Sort by LLM_PROVIDER_ORDER
+            .sort(([providerA], [providerB]) => {
+              const indexA = LLM_PROVIDER_ORDER.indexOf(
+                providerA as ProviderNames,
+              )
+              const indexB = LLM_PROVIDER_ORDER.indexOf(
+                providerB as ProviderNames,
+              )
+              // Providers not in the order list will be placed at the end
+              if (indexA === -1) return 1
+              if (indexB === -1) return -1
+              return indexA - indexB
+            })
+            .flatMap(
+              ([_, provider]) =>
+                provider.models?.map((model) => ({
+                  value: model.id,
+                  label: model.name,
+                  // @ts-ignore -- this being missing is fine
+                  downloadSize: model?.downloadSize,
+                  modelId: model.id,
+                  selectedModelId: value,
+                  modelType: provider.provider,
+                  group: provider.provider,
+                  // @ts-ignore -- this being missing is fine
+                  vram_required_MB: model.vram_required_MB,
+                })) || [],
+            )}
           itemComponent={(props) => (
             <ModelItem
               {...props}
@@ -498,29 +517,30 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
               chat_ui={chat_ui}
             />
             <div className="px-5">
-              <div className="flex items-center justify-between">
-                <Title
-                  className={`pb-1 pl-4 pt-2 ${montserrat_heading.variable} font-montserratHeading`}
-                  variant="gradient"
-                  gradient={{
-                    from: 'hsl(280,100%,70%)',
-                    to: 'white',
-                    deg: 185,
-                  }}
-                  order={5}
-                >
-                  More info on Available Models
-                </Title>
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  onClick={() => setIsAccordionOpen(!isAccordionOpen)}
-                  className="ml-2 hover:bg-white/10"
-                  title="More info on available models"
-                >
-                  <IconInfoCircle className="text-white/60" />
-                </ActionIcon>
-              </div>
+              <button
+                onClick={() => setIsAccordionOpen(!isAccordionOpen)}
+                className="w-full transition-colors duration-200 hover:bg-white/5"
+              >
+                <div className="flex items-center justify-between rounded-md p-2">
+                  <Title
+                    className={`pb-1 pl-4 pt-2 ${montserrat_heading.variable} font-montserratHeading`}
+                    variant="gradient"
+                    gradient={{
+                      from: 'hsl(280,100%,70%)',
+                      to: 'white',
+                      deg: 185,
+                    }}
+                    order={5}
+                  >
+                    More details about the AI models
+                  </Title>
+                  <IconChevronDown
+                    className={`text-white/60 transition-transform duration-200 ${
+                      isAccordionOpen ? 'rotate-180' : ''
+                    }`}
+                  />
+                </div>
+              </button>
               <AnimatePresence>
                 {isAccordionOpen && (
                   <motion.div
@@ -542,30 +562,13 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               size={'sm'}
                               className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
                             >
-                              NCSA Hosted VLM Models (100% free)
+                              NCSA Hosted Models (100% free)
                             </Text>
                             <Text
                               size={'sm'}
                               className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
                             >
                               The best free option is the Qwen 2 72B model,
-                              hosted by NCSA.
-                            </Text>
-                          </div>
-
-                          {/* NCSA LLM Section */}
-                          <div>
-                            <Text
-                              size={'sm'}
-                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
-                            >
-                              NCSA Hosted LLM Models (100% free)
-                            </Text>
-                            <Text
-                              size={'sm'}
-                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
-                            >
-                              The best free option is the Llama 3.1 8b model,
                               hosted by NCSA.
                             </Text>
                           </div>
@@ -701,7 +704,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               size={'sm'}
                               className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
                             >
-                              On-device LLMs
+                              On-device AI with WebLLM
                             </Text>
                             <Text
                               size={'sm'}
@@ -736,13 +739,55 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               size={'sm'}
                               className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
                             >
-                              Coming Soon
+                              Google Gemini
                             </Text>
                             <Text
                               size={'sm'}
                               className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
                             >
-                              Google Gemini
+                              We support{' '}
+                              <Link
+                                href="https://ai.google.dev/gemini-api/docs/models/gemini"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-500 visited:text-purple-600 hover:text-blue-700 hover:underline"
+                              >
+                                Gemini&apos;s full suite{' '}
+                                <IconExternalLink
+                                  size={15}
+                                  style={{ position: 'relative', top: '2px' }}
+                                  className={'mb-2 inline'}
+                                />
+                              </Link>
+                              .
+                            </Text>
+                          </div>
+                          <div>
+                            <Text
+                              size={'sm'}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
+                            >
+                              AWS Bedrock
+                            </Text>
+                            <Text
+                              size={'sm'}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
+                            >
+                              We support{' '}
+                              <Link
+                                href="https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html"
+                                className="text-blue-500 visited:text-purple-600 hover:text-blue-700 hover:underline"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                Bedrock&apos;s full suite{' '}
+                                <IconExternalLink
+                                  size={15}
+                                  style={{ position: 'relative', top: '2px' }}
+                                  className={'mb-2 inline'}
+                                />
+                              </Link>
+                              .
                             </Text>
                           </div>
                         </div>
