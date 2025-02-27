@@ -1,6 +1,15 @@
 import { useState, useEffect } from 'react'
-import { Textarea, Select, Button, Title, Switch, Divider } from '@mantine/core'
-import { IconCheck, IconCopy, IconChevronDown } from '@tabler/icons-react'
+import {
+  Textarea,
+  Select,
+  Button,
+  Title,
+  Switch,
+  Divider,
+  Slider,
+  Tooltip,
+} from '@mantine/core'
+import { IconCheck, IconCopy, IconChevronDown, IconInfoCircle } from '@tabler/icons-react'
 import { useGetProjectLLMProviders } from '~/hooks/useProjectAPIKeys'
 import { findDefaultModel } from './api-inputs/LLMsApiKeyInputForm'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
@@ -27,9 +36,10 @@ export default function APIRequestBuilder({
     courseMetadata?.system_prompt ||
       'You are a helpful AI assistant. Follow instructions carefully. Respond using markdown.',
   )
-  console.log(courseMetadata?.system_prompt)
   const [selectedModel, setSelectedModel] = useState<string>('')
-  const [retrievalOnly, setRetrievalOnly] = useState(false) // Add this state
+  const [retrievalOnly, setRetrievalOnly] = useState(false)
+  const [streamEnabled, setStreamEnabled] = useState(true)
+  const [temperature, setTemperature] = useState(0.1)
 
   const { data: llmProviders } = useGetProjectLLMProviders({
     projectName: course_name,
@@ -46,7 +56,6 @@ export default function APIRequestBuilder({
 
   useEffect(() => {
     if (courseMetadata?.system_prompt) {
-      console.log('changing system prompt')
       setSystemPrompt(courseMetadata.system_prompt)
     }
   }, [courseMetadata?.system_prompt])
@@ -96,8 +105,8 @@ export default function APIRequestBuilder({
     ],
     "api_key": "${apiKey || 'YOUR-API-KEY'}",
     "course_name": "${course_name}",
-    "stream": true,
-    "temperature": 0.1,
+    "stream": ${streamEnabled},
+    "temperature": ${temperature.toFixed(1)},
     "retrieval_only": ${retrievalOnly}
   }'`,
     python: `import requests
@@ -120,16 +129,22 @@ data = {
   ],
   "api_key": "${apiKey || 'YOUR-API-KEY'}",
   "course_name": "${course_name}",
-  "stream": True,
-  "temperature": 0.1,
+  "stream": ${streamEnabled ? 'True' : 'False'},
+  "temperature": ${temperature.toFixed(1)},
   "retrieval_only": ${retrievalOnly ? 'True' : 'False'}
 }
 
 response = requests.post(url, headers=headers, json=data)
-print(response.json())`,
-    node: `const axios = require('axios');
+${streamEnabled 
+  ? `for chunk in response.iter_lines():
+    if chunk:
+        print(chunk.decode())`
+  : `# Print just the message
+print(response.json().get('message'))
 
-const data = {
+# Optionally print contexts
+# print(response.json().get('contexts'))`}`,
+    node: `const data = {
   "model": "${selectedModel}",
   "messages": [
     {
@@ -143,21 +158,28 @@ const data = {
   ],
   "api_key": "${apiKey || 'YOUR-API-KEY'}",
   "course_name": "${course_name}",
-  "stream": true,
-  "temperature": 0.1,
+  "stream": false,
+  "temperature": ${temperature},
   "retrieval_only": ${retrievalOnly}
 };
 
-axios.post('${baseUrl}/api/chat-api/chat', data, {
+fetch('${baseUrl}/api/chat-api/chat', {
+  method: 'POST',
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  body: JSON.stringify(data)
 })
-.then(response => {
-  console.log(response.data);
+.then(response => response.json())
+.then(data => {
+  // Print just the message
+  console.log(data.message);
+  
+  // Optionally print contexts
+  // console.log(data.contexts);
 })
 .catch(error => {
-  console.error(error);
+  console.error('Error:', error);
 });`,
   }
 
@@ -347,22 +369,109 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
           />
         </div>
 
-        <Switch
-          checked={retrievalOnly}
-          onChange={(event) => setRetrievalOnly(event.currentTarget.checked)}
-          label="Retrieval Only"
-          size="md"
-          color="grape"
-          className={`mt-4 ${montserrat_paragraph.variable} font-montserratParagraph`}
-          styles={(theme) => ({
-            track: {
-              backgroundColor: '#4a4b6a',
-            },
-            label: {
-              fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
-            },
-          })}
-        />
+        <div className="space-y-2">
+          <Title
+            order={4}
+            className={`font-medium text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
+          >
+            Temperature
+          </Title>
+          <Slider
+            value={temperature}
+            onChange={setTemperature}
+            min={0}
+            max={1}
+            step={0.1}
+            label={(value) => value.toFixed(1)}
+            styles={(theme) => ({
+              track: {
+                backgroundColor: '#4a4b6a',
+              },
+              bar: {
+                backgroundColor: theme.colors.grape[6],
+              },
+              thumb: {
+                borderColor: theme.colors.grape[6],
+                backgroundColor: theme.colors.grape[6],
+              },
+              label: {
+                backgroundColor: theme.colors.grape[6],
+                fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+              },
+            })}
+            className="mt-4"
+          />
+        </div>
+
+        <div className="flex gap-4">
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={retrievalOnly}
+              onChange={(event) => setRetrievalOnly(event.currentTarget.checked)}
+              label="Retrieval Only"
+              size="md"
+              color="grape"
+              className={`mt-4 ${montserrat_paragraph.variable} font-montserratParagraph`}
+              styles={(theme) => ({
+                track: {
+                  backgroundColor: '#4a4b6a',
+                },
+                label: {
+                  fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+                },
+              })}
+            />
+            <Tooltip
+              label="Retrieval Only bypasses the LLM call, making it free to retrieve relevant documents that match your prompt."
+              position="top"
+              multiline
+              width={220}
+              withArrow
+              styles={(theme) => ({
+                tooltip: {
+                  backgroundColor: theme.colors.dark[7],
+                  color: theme.colors.gray[0],
+                  fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+                },
+              })}
+            >
+              <IconInfoCircle 
+                size={16} 
+                className="mt-4 text-gray-400 cursor-help"
+              />
+            </Tooltip>
+          </div>
+
+          {selectedLanguage !== 'node' && (
+            <Switch
+              checked={streamEnabled}
+              onChange={(event) => setStreamEnabled(event.currentTarget.checked)}
+              label="Stream Response"
+              size="md"
+              color="grape"
+              className={`mt-4 ${montserrat_paragraph.variable} font-montserratParagraph`}
+              styles={(theme) => ({
+                track: {
+                  backgroundColor: '#4a4b6a',
+                },
+                label: {
+                  fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+                },
+              })}
+            />
+          )}
+        </div>
+
+        <div className="text-sm text-gray-400">
+          <a 
+            href="https://docs.uiuc.chat/api/endpoints#image-input-example" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-blue-400 hover:text-blue-300"
+          >
+            Using image inputs (docs) →
+          </a>
+        </div>
 
         <Textarea
           value={codeSnippets[selectedLanguage]}

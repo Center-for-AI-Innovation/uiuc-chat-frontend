@@ -34,13 +34,13 @@ export const NCSAHostedVLMModels: Record<
   },
   [NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT]: {
     id: NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT,
-    name: 'Qwen 2 72B',
+    name: 'Qwen 2 VL 72B',
     tokenLimit: 8192,
     enabled: true,
   },
   [NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT]: {
     id: NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT,
-    name: 'Qwen 2.5 72B (Best in open source)',
+    name: 'Qwen 2.5 VL 72B (Best in open source)',
     tokenLimit: 23000,
     enabled: true,
   },
@@ -53,10 +53,16 @@ export const getNCSAHostedVLMModels = async (
   vlmProvider.provider = ProviderNames.NCSAHostedVLM
 
   // Store existing model states
-  const existingModelStates = new Map<string, boolean>()
+  const existingModelStates = new Map<
+    string,
+    { enabled: boolean; default: boolean }
+  >()
   if (vlmProvider.models) {
     vlmProvider.models.forEach((model) => {
-      existingModelStates.set(model.id, model.enabled ?? true)
+      existingModelStates.set(model.id, {
+        enabled: model.enabled ?? true,
+        default: model.default ?? false,
+      })
     })
   }
 
@@ -77,12 +83,13 @@ export const getNCSAHostedVLMModels = async (
     const data = await response.json()
     const vlmModels: NCSAHostedVLMModel[] = data.data.map((model: any) => {
       const knownModel = NCSAHostedVLMModels[model.id as NCSAHostedVLMModelID]
+      const existingState = existingModelStates.get(model.id)
       return {
         id: model.id,
         name: knownModel ? knownModel.name : 'Experimental: ' + model.id,
         tokenLimit: model.max_tokens || knownModel.tokenLimit,
-        enabled: existingModelStates.get(model.id) ?? true,
-        default: existingModelStates.get(model.id) ?? false,
+        enabled: existingState?.enabled ?? true,
+        default: existingState?.default ?? false,
       }
     })
 
