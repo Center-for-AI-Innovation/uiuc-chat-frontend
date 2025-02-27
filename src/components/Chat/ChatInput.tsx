@@ -823,7 +823,9 @@ export const ChatInput = ({
           selectedConversation &&
           selectedConversation.messages &&
           selectedConversation.messages.length > 0 &&
-          selectedConversation.messages[selectedConversation.messages.length - 1]?.role === 'user' && (
+          selectedConversation.messages[
+            selectedConversation.messages.length - 1
+          ]?.role === 'user' && (
             <button
               className={`absolute ${isSmallScreen ? '-top-28' : '-top-20'} left-0 right-0 mx-auto mb-12 flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white px-4 py-2 text-black hover:opacity-50 dark:border-neutral-600 dark:bg-[#343541] dark:text-white md:mb-0 md:mt-2`}
               onClick={onRegenerate}
