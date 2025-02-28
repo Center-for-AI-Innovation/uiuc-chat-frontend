@@ -427,7 +427,7 @@ const Home: NextPage = () => {
                     >
                       Drag-n-Drop
                     </span>{' '}
-                    your files for analysis
+                    your files for analysis.
                   </div>
                   <div className="">
                     <span
@@ -435,7 +435,7 @@ const Home: NextPage = () => {
                     >
                       Connect
                     </span>{' '}
-                    to Canvas, GitHub, Notion and more
+                    to Canvas, GitHub, Notion and more.
                   </div>
                   <div className="">
                     <span
@@ -443,7 +443,7 @@ const Home: NextPage = () => {
                     >
                       Web crawl
                     </span>{' '}
-                    your favorite articles and blogs
+                    your favorite articles and blogs.
                   </div>
                 </div>
                 {/*
@@ -517,7 +517,7 @@ const Home: NextPage = () => {
                   >
                     world&apos;s
                   </span>{' '}
-                  best AI models at your fingertips, enhanced with
+                  best AI models at your fingertips, enhanced with{' '}
                   <span
                     className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
                   >
@@ -599,7 +599,7 @@ const Home: NextPage = () => {
                   >
                     publish your chatbot
                   </span>{' '}
-                  for whoever you want to use it, or{' '}
+                  for whoever you want to use it or{' '}
                   <span
                     className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
                   >
