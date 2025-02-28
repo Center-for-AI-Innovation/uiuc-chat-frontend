@@ -1103,7 +1103,7 @@ function FlagshipChatbots() {
           key={card.course_slug}
           component="a"
           href={`/${card.course_slug}/chat`}
-          target="_blank"
+          // target="_blank"
           radius="md"
           className="flex h-56 flex-col"
           style={{
