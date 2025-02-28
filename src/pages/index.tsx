@@ -305,7 +305,7 @@ const Home: NextPage = () => {
           </div>
         </div>
 
-        <div className="mb-6 w-full px-2 text-center sm:px-4">
+        <div className="mb-6 w-full px-2 pt-4 text-center sm:mt-[-24px] sm:px-4">
           <ProjectTable />
         </div>
 
