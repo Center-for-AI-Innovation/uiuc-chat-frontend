@@ -31,49 +31,49 @@ export const SambaNovaModels: Record<SambaNovaModelID, SambaNovaModel> = {
   [SambaNovaModelID.DeepSeek_R1]: {
     id: SambaNovaModelID.DeepSeek_R1,
     name: 'DeepSeek R1 (SambaNova)',
-    tokenLimit: 16384, // not sure of this token limit
+    tokenLimit: 8_000,
     enabled: true,
   },
   [SambaNovaModelID.DeepSeek_R1_Distill_Llama_70B]: {
     id: SambaNovaModelID.DeepSeek_R1_Distill_Llama_70B,
     name: 'DeepSeek R1 Distill Llama 70B (SambaNova)',
-    tokenLimit: 16384, // not sure of this token limit
+    tokenLimit: 32_000,
     enabled: true,
   },
   [SambaNovaModelID.Llama_3_1_Tulu_3_405B]: {
     id: SambaNovaModelID.Llama_3_1_Tulu_3_405B,
     name: 'Llama 3.1 Tulu 3 405B (SambaNova)',
-    tokenLimit: 16384, // not sure of this token limit
+    tokenLimit: 16_000,
     enabled: true,
   },
   [SambaNovaModelID.Meta_Llama_3_1_405B_Instruct]: {
     id: SambaNovaModelID.Meta_Llama_3_1_405B_Instruct,
     name: 'Meta Llama 3.1 405B Instruct (SambaNova)',
-    tokenLimit: 128_000,
+    tokenLimit: 16_000,
     enabled: true,
   },
   [SambaNovaModelID.Meta_Llama_3_1_70B_Instruct]: {
     id: SambaNovaModelID.Meta_Llama_3_1_70B_Instruct,
     name: 'Meta Llama 3.1 70B Instruct (SambaNova)',
-    tokenLimit: 8_000,
+    tokenLimit: 128_000,
     enabled: true,
   },
   [SambaNovaModelID.Meta_Llama_3_1_8B_Instruct]: {
     id: SambaNovaModelID.Meta_Llama_3_1_8B_Instruct,
     name: 'Meta Llama 3.1 8B Instruct (SambaNova)',
-    tokenLimit: 128_000,
+    tokenLimit: 16_000,
     enabled: true,
   },
   [SambaNovaModelID.Meta_Llama_3_2_1B_Instruct]: {
     id: SambaNovaModelID.Meta_Llama_3_2_1B_Instruct,
     name: 'Meta Llama 3.2 1B Instruct (SambaNova)',
-    tokenLimit: 8_000,
+    tokenLimit: 16_000,
     enabled: true,
   },
   [SambaNovaModelID.Meta_Llama_3_2_3B_Instruct]: {
     id: SambaNovaModelID.Meta_Llama_3_2_3B_Instruct,
     name: 'Meta Llama 3.2 3B Instruct (SambaNova)',
-    tokenLimit: 4096,
+    tokenLimit: 8_000,
     enabled: true,
   },
   [SambaNovaModelID.Meta_Llama_3_3_70B_Instruct]: {
@@ -85,37 +85,37 @@ export const SambaNovaModels: Record<SambaNovaModelID, SambaNovaModel> = {
   [SambaNovaModelID.Qwen2_5_72B_Instruct]: {
     id: SambaNovaModelID.Qwen2_5_72B_Instruct,
     name: 'Qwen 2.5 72B Instruct (SambaNova)',
-    tokenLimit: 131_000,
+    tokenLimit: 16_000,
     enabled: true,
   },
   [SambaNovaModelID.Qwen2_5_Coder_32B_Instruct]: {
     id: SambaNovaModelID.Qwen2_5_Coder_32B_Instruct,
     name: 'Qwen 2.5 Coder 32B Instruct (SambaNova)',
-    tokenLimit: 16384, // not sure of this token limit
+    tokenLimit: 16_000,
     enabled: true,
   },
   [SambaNovaModelID.QwQ_32B_Preview]: {
     id: SambaNovaModelID.QwQ_32B_Preview,
     name: 'QwQ 32B Preview (SambaNova)',
-    tokenLimit: 16384, // not sure of this token limit
+    tokenLimit: 16_000,
     enabled: true,
   },
   [SambaNovaModelID.Llama_3_2_11B_Vision_Instruct]: {
     id: SambaNovaModelID.Llama_3_2_11B_Vision_Instruct,
     name: 'Llama 3.2 11B Vision Instruct (SambaNova)',
-    tokenLimit: 16384, // not sure of this token limit
+    tokenLimit: 4_000,
     enabled: true,
   },
   [SambaNovaModelID.Llama_3_2_90B_Vision_Instruct]: {
     id: SambaNovaModelID.Llama_3_2_90B_Vision_Instruct,
     name: 'Llama 3.2 90B Vision Instruct (SambaNova)',
-    tokenLimit: 16384, // not sure of this token limit
+    tokenLimit: 4_000,
     enabled: true,
   },
   [SambaNovaModelID.Qwen2_Audio_7B_Instruct]: {
     id: SambaNovaModelID.Qwen2_Audio_7B_Instruct,
     name: 'Qwen2 Audio 7B Instruct (SambaNova)',
-    tokenLimit: 16384, // not sure of this token limit
+    tokenLimit: 16384,
     enabled: true,
   },
 }

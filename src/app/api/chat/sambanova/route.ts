@@ -94,6 +94,7 @@ export async function runSambaNovaChat(
         const result = await streamText(commonParams)
         return result.toTextStreamResponse()
       } catch (error) {
+        console.log('SambaNova streaming error:', error)
         console.error('SambaNova streaming error:', error)
         throw error
       }
@@ -103,6 +104,7 @@ export async function runSambaNovaChat(
         const choices = [{ message: { content: result.text } }]
         return { choices }
       } catch (error) {
+        console.log('SambaNova generation error:', error)
         console.error('SambaNova generation error:', error)
         throw error
       }
