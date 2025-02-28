@@ -238,6 +238,8 @@ const Home: NextPage = () => {
                   color: 'var(--illinois-white)',
                 }}
                 radius="sm"
+                component="a"
+                href="/chat"
               >
                 Try it out{' '}
                 <ArrowNarrowRight size={32} strokeWidth={1} color={'white'} />
@@ -298,14 +300,8 @@ const Home: NextPage = () => {
             </p>
           </div>
 
-          <div
-            className="
-            flex w-full max-w-5xl
-            flex-col items-center
-            gap-8 sm:flex-row
-          "
-          >
-            <CourseCard />
+          <div className="w-full max-w-5xl">
+            <FlagshipChatbots />
           </div>
         </div>
 
@@ -1011,30 +1007,33 @@ export function FeaturesCards() {
   )
 }
 
-// TODO: USE BETTER CARDS! https://ui.mantine.dev/category/article-cards
-function CourseCard() {
+function FlagshipChatbots() {
   const cards = [
     {
-      course_slug: 'ece120',
-      imageSrc: '/media/hero_courses_banners/ECE_logo.jpg',
-      title: 'Electrical & Computer Engineering, ECE 120',
-      badge: 'ECE @ UIUC',
+      course_slug: 'Research', // TODO: change to Illinois when ready
+      imageSrc: '/media/hero_courses_banners/UofI.png',
+      title: 'University of Illinois',
+      badge: 'Illinois',
+      tagline: 'Ask anything about U of I',
       description:
-        'Prof. Volodymyr (Vlad) Kindratenko, Director of the Center for Artificial Intelligence Innovation at NCSA, in Fall 2023. We also have <a href="/ECE220FA23/chat">ECE 220</a> & <a href="/ECE408FA23/chat">ECE 408</a>.',
+        "Using all of Illinois's documentation, get detailed examples, advice and information about the conference.",
     },
     {
-      course_slug: 'NCSA',
-      imageSrc: '/media/hero_courses_banners/NCSA_more_than_imagine.jpg',
-      title: 'NCSA',
-      badge: 'NCSA Docs',
+      course_slug: 'NeurIPS-2024',
+      imageSrc: '/media/hero_courses_banners/NEURIPS.png',
+      title: 'NeurIPS 2024',
+      badge: 'NeurIPS',
+      tagline: 'Trained on All 4,000+ papers from NeurIPS 2024',
       description:
-        "Using all of NCSA's public information, get answers for detailed questions about the organization.",
+        "Using all of NeurIPS 2024's documentation, get detailed examples, advice and information about the conference.",
     },
     {
       course_slug: 'NCSADelta',
       imageSrc: '/media/hero_courses_banners/delta_hero.jpg',
-      title: 'NCSA Delta Documentation',
+      title: 'NCSA Delta Supercomputer',
       badge: 'NCSA Docs',
+      tagline:
+        "Quickstart on our Delta supercomputer, it'll write SLRUM scripts for you 😁",
       description:
         "Using all of Delta's documentation, get detailed examples, advice and information about how to use the Delta supercomputer.",
     },
@@ -1084,7 +1083,7 @@ function CourseCard() {
   ]
 
   return (
-    <>
+    <div className="grid w-full grid-cols-1 gap-6 sm:grid-cols-3">
       {cards.map((card) => (
         <Card
           key={card.course_slug}
@@ -1092,74 +1091,57 @@ function CourseCard() {
           href={`/${card.course_slug}/chat`}
           target="_blank"
           radius="md"
-          className=""
+          className="flex h-48 flex-col"
           style={{
-            height: '12rem',
             background: 'var(--background)',
             boxShadow: '4px 4px 10px rgba(0,0,0, .2)',
           }}
         >
-          {/*
-
-          bg="var(--background)"
-          className=""
-          style={{
-            width: 'calc(100% / 3)',
-          }}
-          shadow="xl"
-          padding="lg"
-          radius="sm"
-*/}
-
-          <Card.Section>
+          <Card.Section className="h-12">
             <div
               className={`
                 flex items-center px-3 text-sm font-semibold text-neutral-600
                 ${montserrat_heading.variable} font-montserratHeading
               `}
-              style={{ height: '2rem' }}
+              style={{ height: '100%' }}
             >
-              {card.badge}
+              {card.title}
             </div>
           </Card.Section>
 
           {card.imageSrc && (
-            <Card.Section>
-              <div
-                className="flex items-center overflow-hidden px-3"
-                style={{ height: '8rem' }}
-              >
+            <Card.Section className="flex-1 overflow-hidden">
+              <div className="h-full w-full">
                 <Image
                   src={card.imageSrc}
                   width={720}
-                  height={100}
+                  height={160}
                   quality={80}
                   alt={`A photo representing ${card.title}`}
                   style={{
                     display: 'block',
                     width: '100%',
-                    height: 'auto', // '100%',
-                    objectFit: 'fill', //'cover',
+                    height: '100%',
+                    objectFit: 'contain',
+                    backgroundColor: 'var(--background)',
                   }}
                 />
               </div>
             </Card.Section>
           )}
 
-          <Card.Section>
+          <Card.Section className="h-12">
             <div
               className="flex items-center gap-2 px-3"
-              style={{ height: '2rem' }}
+              style={{ height: '100%' }}
             >
               <div
                 className="
-                rounded-md bg-neutral-100
-                px-2
-                py-1 text-xs
+                py-2 text-xs
                 text-neutral-600
               "
               >
-                {card.badge}
+                {card.tagline}
               </div>
 
               <div className="flex grow justify-end">
@@ -1167,73 +1149,8 @@ function CourseCard() {
               </div>
             </div>
           </Card.Section>
-
-          {/*
-
-old code and can be removed
-
-          {card.imageSrc && (
-            // <Card.Section style={{ height: 'auto' }}>
-            <Card.Section style={{ height: '8rem' }}>
-              <Link href={`/${card.course_slug}/chat`}>
-                <Image
-                  src={card.imageSrc}
-                  width={720}
-                  height={100}
-                  quality={80}
-                  alt={`A photo representing ${card.title}`}
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    height: 'auto', // '100%',
-                    objectFit: 'fill', //'cover',
-                  }}
-                />
-              </Link>
-            </Card.Section>
-          )}
-
-          <Card.Section className="pb-2 pl-4 pr-4 pt-2">
-            <Group position="apart" mt="md" mb="xs">
-              <Text
-                className={`${montserrat_heading.variable} font-montserratHeading`}
-              >
-                {card.title}
-              </Text>
-              <Badge size="xl" color="var(--illinois-orange)" variant="light">
-                {card.badge}
-              </Badge>
-            </Group>
-
-            <Text size="sm" color="dimmed">
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: card.description.replace(
-                    /<a/g,
-                    '<a style="color: var(--illinois-arches); text-decoration: underline;"',
-                  ),
-                }}
-              />
-            </Text>
-
-            <Link href={`/${card.course_slug}/chat`}>
-              <Button
-                variant="light"
-                style={{
-                  backgroundColor: 'var(--illinois-industrial)',
-                  color: 'var(--illinois-white)',
-                }}
-                fullWidth
-                mt="md"
-                radius="md"
-              >
-                View
-              </Button>
-            </Link>
-          </Card.Section>
-*/}
         </Card>
       ))}
-    </>
+    </div>
   )
 }
