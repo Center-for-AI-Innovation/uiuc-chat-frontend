@@ -14,16 +14,14 @@ import { montserrat_heading, montserrat_paragraph, doto_font } from 'fonts'
 // Typing animation component
 const TypingAnimation: React.FC = () => {
   const words = [
-    'favorite websites',
-    'GitHub',
-    'projects',
-    'business',
     'personal portfolio',
+    'favorite websites',
     'research',
-    'school',
-    'favorite journals',
-    'club',
+    'academic journals',
+    'GitHub',
+    'business',
     'favorite blogs',
+    'clubs',
   ]
 
   const [displayText, setDisplayText] = useState('')
@@ -34,7 +32,7 @@ const TypingAnimation: React.FC = () => {
     const currentWord = words[wordIndex] || ''
 
     // Set typing/deleting speed (in ms)
-    const typingSpeed = 100 // Slightly slower typing for readability
+    const typingSpeed = 75 // Slightly slower typing for readability
     const deletingSpeed = 40 // Slightly slower deletion for readability
     const pauseBeforeDelete = 1500 // Longer pause to allow reading
     const pauseBeforeNewWord = 300 // Brief pause between words
