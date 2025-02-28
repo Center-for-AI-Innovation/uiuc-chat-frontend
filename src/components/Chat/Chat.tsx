@@ -1661,10 +1661,48 @@ export const Chat = memo(
 
         try {
           // Update localStorage
-          localStorage.setItem(
-            'selectedConversation',
-            JSON.stringify(updatedConversation),
-          )
+          try {
+            localStorage.setItem(
+              'selectedConversation',
+              JSON.stringify(updatedConversation),
+            )
+          } catch (storageError) {
+            // Handle localStorage quota exceeded error
+            if (storageError instanceof DOMException && 
+                (storageError.name === 'QuotaExceededError' || 
+                 storageError.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+                 storageError.code === 22 ||
+                 storageError.code === 1014)) {
+              console.warn('localStorage quota exceeded in handleFeedback, saving minimal conversation data instead')
+              
+              // Create a minimal version of the conversation with just essential data
+              const minimalConversation = {
+                id: updatedConversation.id,
+                name: updatedConversation.name,
+                model: updatedConversation.model,
+                temperature: updatedConversation.temperature,
+                folderId: updatedConversation.folderId,
+                userEmail: updatedConversation.userEmail,
+                projectName: updatedConversation.projectName,
+                createdAt: updatedConversation.createdAt,
+                updatedAt: updatedConversation.updatedAt,
+              }
+              
+              try {
+                // Try to save the minimal version
+                localStorage.setItem(
+                  'selectedConversation',
+                  JSON.stringify(minimalConversation)
+                )
+              } catch (minimalError) {
+                // If even minimal version fails, just log the error
+                console.error('Failed to save even minimal conversation data to localStorage', minimalError)
+              }
+            } else {
+              // Some other error occurred
+              console.error('Error saving conversation to localStorage:', storageError)
+            }
+          }
 
           // Update the conversation using handleUpdateConversation
           handleFeedbackUpdate(updatedConversation, {
