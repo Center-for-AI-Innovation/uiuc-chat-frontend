@@ -78,7 +78,8 @@ export async function replaceCitationLinks(
   // Process citations first - this is the most common case
   // Updated pattern to match multiple citation indices separated by commas
   // Using bounded whitespace to prevent catastrophic backtracking
-  const citationPattern = /[ \t]{0,100}(?:&lt;cite|<cite)[ \t]{0,100}>([0-9,\s]+)(?:[ \t]{0,100},[ \t]{0,100}p\.[ \t]{0,100}(\d+))?[ \t]{0,100}(?:&lt;\/cite&gt;|<\/cite>)[ \t]{0,100}/g;
+  // Removed extra whitespace from the pattern to prevent capturing it
+  const citationPattern = /(?:&lt;cite|<cite)[ \t]{0,100}>([0-9,\s]+)(?:[ \t]{0,100},[ \t]{0,100}p\.[ \t]{0,100}(\d+))?[ \t]{0,100}(?:&lt;\/cite&gt;|<\/cite>)/g;
   
   // Fast path - if no citations, skip the replacement
   if (!citationPattern.test(content)) {
@@ -166,14 +167,14 @@ export async function replaceCitationLinks(
         ? `[${innerText}](${citation.link}${citation.pageNumber ? `#page=${citation.pageNumber}` : ''} "${tooltipTitle}")`
         : innerText; // Fallback to plain text if URL is invalid
       
-      // Add parentheses around the link
+      // Add parentheses around the link without extra spaces
       replacementText = `(${linkText})`;
     } else {
       // Multiple citations case - create separate links within a single set of parentheses
       // Start with opening parenthesis
       replacementText = '(';
       
-      // Add each citation as a separate link, separated by semicolons with space for better wrapping
+      // Add each citation as a separate link, separated by semicolons with minimal space for better wrapping
       replacementText += validCitations.map((citation, idx) => {
         // For each citation, create the inner text without parentheses
         const innerText = citation.pageNumber
@@ -189,9 +190,9 @@ export async function replaceCitationLinks(
           : innerText; // Fallback to plain text if URL is invalid
         
         // Add semicolon between citations except for the last one
-        // Use a space after semicolon to allow natural line breaks
-        return idx < validCitations.length - 1 ? `${linkText}; ` : linkText;
-      }).join('');
+        // Use minimal space after semicolon to allow natural line breaks without excess space
+        return idx < validCitations.length - 1 ? `${linkText};` : linkText;
+      }).join(' '); // Join with a single space between citations
       
       // Close with ending parenthesis
       replacementText += ')';

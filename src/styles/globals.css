@@ -330,13 +330,13 @@ a[data-footnote-backref] {
   background-color: rgba(157, 78, 221, 0.15);
   border: 1px solid rgba(157, 78, 221, 0.3);
   border-radius: 4px;
-  padding: 0 4px;
-  margin: 0 2px; /* Add small margin between adjacent citation links */
+  padding: 0 0px; /* Slightly reduced padding */
+  margin: 0;
   overflow-wrap: anywhere;
   word-wrap: break-word;
   word-break: normal;
   hyphens: auto;
-  vertical-align: baseline;
+  vertical-align: baseline; /* Ensure alignment with text baseline */
   position: relative;
   top: 0;
   overflow: visible; /* Ensure tooltips aren't clipped */
