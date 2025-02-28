@@ -336,7 +336,7 @@ const Home: NextPage = () => {
             {/* Adjusted container with better spacing */}
             <div className="flex w-full flex-col items-center justify-center sm:flex-row">
               <div className="pr-2 sm:flex-shrink-0 sm:text-right">
-                Your AI trained on your{' '}
+                Your AI trained on your
               </div>
 
               <div className="sm:max-w-[300px] sm:flex-grow">
@@ -365,7 +365,7 @@ const Home: NextPage = () => {
             <div
               className="
               mt-4 flex
-              flex-col items-start justify-center gap-2 sm:mt-20
+              flex-col items-center justify-center gap-2
               sm:flex-row sm:gap-16
             "
             >
@@ -454,7 +454,7 @@ const Home: NextPage = () => {
             <div
               className="
               mt-12 flex
-              flex-col items-start justify-center gap-2 sm:mt-20
+              flex-col items-center justify-center gap-2
               sm:flex-row sm:gap-16
             "
             >
@@ -539,7 +539,7 @@ const Home: NextPage = () => {
             <div
               className="
               mt-12 flex
-              flex-col items-start justify-center gap-2 sm:mt-20
+              flex-col items-center justify-center gap-2
               sm:flex-row sm:gap-16
             "
             >
