@@ -305,6 +305,10 @@ const Home: NextPage = () => {
           </div>
         </div>
 
+        <div className="mb-6 w-full text-center">
+          <ProjectTable />
+        </div>
+
         {/* orange banner */}
         <div
           style={{ background: 'var(--illinois-orange-gradient)' }}
@@ -896,6 +900,7 @@ import { createStyles, SimpleGrid, Container } from '@mantine/core'
 import { IconGauge, IconUser, IconCookie } from '@tabler/icons-react'
 import { ArrowNarrowRight, ExternalLink } from 'tabler-icons-react'
 import ListProjectTable from '~/components/UIUC-Components/ProjectTable'
+import ProjectTable from '~/components/UIUC-Components/ProjectTable'
 
 const mockdata = [
   {
@@ -1009,12 +1014,21 @@ export function FeaturesCards() {
 
 function FlagshipChatbots() {
   const cards = [
+    // {
+    //   course_slug: 'Illinois', // TODO: Replace the "research finder" to Illinois when ready
+    //   imageSrc: '/media/hero_courses_banners/UofI.png',
+    //   title: 'University of Illinois',
+    //   badge: 'Illinois',
+    //   tagline: 'Ask anything about U of I',
+    //   description:
+    //     "Using all of Illinois's documentation, get detailed examples, advice and information about the conference.",
+    // },
     {
-      course_slug: 'Research', // TODO: change to Illinois when ready
+      course_slug: 'Research', // TODO: Replace the "research finder" to Illinois when ready
       imageSrc: '/media/hero_courses_banners/UofI.png',
-      title: 'University of Illinois',
+      title: 'Illinois Research Finder',
       badge: 'Illinois',
-      tagline: 'Ask anything about U of I',
+      tagline: 'Find professors based on your research interests',
       description:
         "Using all of Illinois's documentation, get detailed examples, advice and information about the conference.",
     },
@@ -1023,7 +1037,7 @@ function FlagshipChatbots() {
       imageSrc: '/media/hero_courses_banners/NEURIPS.png',
       title: 'NeurIPS 2024',
       badge: 'NeurIPS',
-      tagline: 'Trained on All 4,000+ papers from NeurIPS 2024',
+      tagline: 'Trained on all 4,000+ papers from NeurIPS 2024',
       description:
         "Using all of NeurIPS 2024's documentation, get detailed examples, advice and information about the conference.",
     },
@@ -1091,7 +1105,7 @@ function FlagshipChatbots() {
           href={`/${card.course_slug}/chat`}
           target="_blank"
           radius="md"
-          className="flex h-48 flex-col"
+          className="flex h-56 flex-col"
           style={{
             background: 'var(--background)',
             boxShadow: '4px 4px 10px rgba(0,0,0, .2)',
@@ -1130,16 +1144,16 @@ function FlagshipChatbots() {
             </Card.Section>
           )}
 
-          <Card.Section className="h-12">
+          <Card.Section className="h-16">
             <div
               className="flex items-center gap-2 px-3"
               style={{ height: '100%' }}
             >
               <div
                 className="
-                py-2 text-xs
+                text-xs
                 text-neutral-600
-              "
+                "
               >
                 {card.tagline}
               </div>
