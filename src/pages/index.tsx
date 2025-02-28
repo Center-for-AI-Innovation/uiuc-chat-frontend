@@ -271,7 +271,7 @@ const Home: NextPage = () => {
               </div>
 
               <div
-                className="mt-[2px] text-xs text-neutral-400 sm:mr-4 sm:mt-[-8px] sm:text-right"
+                className="mr-8 mt-[2px] text-right text-xs sm:mr-4 sm:mt-[-8px]"
                 style={{ color: 'var(--illinois-orange)' }}
               >
                 Upload almost anything
