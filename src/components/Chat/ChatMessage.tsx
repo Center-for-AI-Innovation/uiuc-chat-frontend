@@ -12,20 +12,11 @@ import React, {
 import { Text, createStyles, Badge, Tooltip } from '@mantine/core'
 import {
   IconCheck,
-  IconCopy,
   IconEdit,
   IconRobot,
   IconUser,
-  IconThumbUp,
-  IconThumbDown,
-  IconThumbUpFilled,
-  IconThumbDownFilled,
   IconX,
-  IconChevronDown,
-  IconBrain,
-  IconRepeat,
 } from '@tabler/icons-react'
-import { Fragment } from 'react'
 
 import { useTranslation } from 'next-i18next'
 import { Content, ContextWithMetadata, Message } from '@/types/chat'
