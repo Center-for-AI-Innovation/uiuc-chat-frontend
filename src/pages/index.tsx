@@ -43,8 +43,8 @@ const TypingAnimation: React.FC = () => {
     const currentWord = words[wordIndex] || ''
 
     // Set typing/deleting speed (in ms)
-    const typingSpeed = 150 // Slightly slower typing for readability
-    const deletingSpeed = 80 // Slightly slower deletion for readability
+    const typingSpeed = 100 // Slightly slower typing for readability
+    const deletingSpeed = 40 // Slightly slower deletion for readability
     const pauseBeforeDelete = 1500 // Longer pause to allow reading
     const pauseBeforeNewWord = 300 // Brief pause between words
 
