@@ -98,8 +98,6 @@ import { useEffect, useState } from 'react'
 import { usePostHog } from 'posthog-js/react'
 import { IconFilePlus } from '@tabler/icons-react'
 
-let isMenuOpen = true //NOTE: needs to be changed to control the menu div visibility of flex/hidden (line  251)
-
 export function LandingPageHeader({
   forGeneralPurposeNotLandingpage = false,
 }: {
@@ -124,6 +122,7 @@ export function LandingPageHeader({
   const clerk_obj = useUser()
   const [userEmail, setUserEmail] = useState('no_email')
   const [isLoaded, setIsLoaded] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const posthog = usePostHog()
 
   useEffect(() => {
@@ -232,22 +231,22 @@ export function LandingPageHeader({
           sm:hidden
         `}
           onClick={() => {
-            isMenuOpen = !isMenuOpen
+            setIsMenuOpen(!isMenuOpen)
           }}
         >
           <Menu2 size={24} strokeWidth={2} />
         </div>
 
-        {/*        <Group spacing={'xs'}> */}
         <div
           className={`
           w-full
           flex-col items-stretch
           gap-2 p-4
 
-          sm:w-auto sm:flex-row
+          sm:flex sm:w-auto
 
-          sm:items-center sm:p-0
+          sm:flex-row sm:items-center
+          sm:p-0
 
           ${isMenuOpen ? 'flex' : 'hidden'}
         `}
