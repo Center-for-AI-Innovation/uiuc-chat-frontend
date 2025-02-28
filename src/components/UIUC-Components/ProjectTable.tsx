@@ -159,7 +159,16 @@ const ListProjectTable: React.FC = () => {
         return (
           <StyledRow
             key={courseName}
-            onClick={() => router.push(`/${courseName}/chat`)}
+            onClick={(e) => {
+              // Check if cmd (Mac) or ctrl (Windows/Linux) key is pressed
+              if (e.metaKey || e.ctrlKey) {
+                // Open in new tab
+                window.open(`/${courseName}/chat`, '_blank')
+              } else {
+                // Normal navigation in current tab
+                router.push(`/${courseName}/chat`)
+              }
+            }}
             style={{ cursor: 'pointer' }}
           >
             <td>{courseName}</td>
