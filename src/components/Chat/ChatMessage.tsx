@@ -1206,7 +1206,7 @@ export const ChatMessage: React.FC<Props> = memo(
             <a {...commonProps} className={'supMarkDown'}>
               {children}
               {title && (
-                <div 
+                <span 
                   className={tooltipClass}
                   style={{
                     // Force visibility based on hover state when streaming
@@ -1214,8 +1214,8 @@ export const ChatMessage: React.FC<Props> = memo(
                     opacity: isCurrentlyStreaming && showTooltip ? 1 : undefined
                   }}
                 >
-                  <div className="citation-tooltip">{title}</div>
-                </div>
+                  <span className="citation-tooltip">{title}</span>
+                </span>
               )}
             </a>
           </span>
