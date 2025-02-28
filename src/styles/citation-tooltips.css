@@ -1,5 +1,10 @@
 /* Citation tooltip styles */
 
+/* Ensure citation links have no margin */
+.supMarkDown a {
+  margin: 0;
+}
+
 /* Tooltip container - positioned relative to the citation link */
 .citation-tooltip-container {
   position: absolute;
