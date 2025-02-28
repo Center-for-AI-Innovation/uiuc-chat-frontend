@@ -132,9 +132,14 @@ export function LandingPageHeader({
   const [menuPosition, setMenuPosition] = useState({ right: '20px' })
 
   // Determine which elements should be visible based on screen width
-  const showDocsInNav = windowWidth >= 768
-  const showNewsInNav = windowWidth >= 900
-  const showNewProjectInNav = windowWidth >= 1024
+  const showDocsInNav = windowWidth >= 640 // Changed from 768 to 568 (subtract 200px)
+  const showNewsInNav = windowWidth >= 700 // Changed from 900 to 700 (subtract 200px)
+  const showNewProjectInNav = windowWidth >= 824 // Changed from 1024 to 824 (subtract 200px)
+
+  // Fix for hamburger menu logic to ensure menu is shown until all items are visible in nav
+  const showHamburgerMenu =
+    (!showDocsInNav || !showNewsInNav || !showNewProjectInNav) &&
+    forGeneralPurposeNotLandingpage === false
 
   // Update window width on resize
   useEffect(() => {
@@ -148,6 +153,16 @@ export function LandingPageHeader({
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
+  // Auto-toggle the menu when needed as screen size changes
+  // useEffect(() => {
+  //   // Always ensure the hamburger button appears immediately when Docs disappears from nav
+  //   if (!showDocsInNav && showHamburgerMenu && !isMenuOpen) {
+  //     // Show hamburger menu icon explicitly when Docs would be hidden
+  //     setIsMenuOpen(false)
+  //     setMenuVisible(false)
+  //   }
+  // }, [windowWidth, showDocsInNav, showHamburgerMenu, isMenuOpen])
 
   useEffect(() => {
     if (clerk_obj.isLoaded) {
@@ -420,20 +435,15 @@ export function LandingPageHeader({
           </div>
 
           {/* Hamburger menu for small screens */}
-          {(!showDocsInNav || !showNewsInNav || !showNewProjectInNav) &&
-            forGeneralPurposeNotLandingpage === false && (
-              <div
-                className={`${classes.menuIcon} order-2`}
-                onClick={(e) => toggleMenu(e)}
-                ref={menuButtonRef}
-              >
-                <Menu2
-                  size={24}
-                  strokeWidth={2}
-                  color="var(--illinois-orange)"
-                />
-              </div>
-            )}
+          {showHamburgerMenu && (
+            <div
+              className={`${classes.menuIcon} order-2 ${!showDocsInNav ? 'highlight-button' : ''}`}
+              onClick={(e) => toggleMenu(e)}
+              ref={menuButtonRef}
+            >
+              <Menu2 size={24} strokeWidth={2} color="var(--illinois-orange)" />
+            </div>
+          )}
         </div>
 
         {/* Mobile dropdown menu with animation */}
@@ -452,16 +462,17 @@ export function LandingPageHeader({
               <div className="menu-pointer"></div>
 
               {forGeneralPurposeNotLandingpage === false && (
-                <div className="flex flex-col p-1">
+                <div className="flex flex-col gap-1 p-2">
+                  {/* Show Docs in dropdown whenever not visible in main nav */}
                   {!showDocsInNav && (
                     <Link
                       href="https://docs.uiuc.chat/"
-                      className="menu-item"
+                      className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => handleLinkClick(e)}
                     >
-                      <div className="menu-item-content flex items-center">
+                      <div className="menu-item-content flex items-center p-2">
                         <IconClipboardText
                           size={18}
                           strokeWidth={2}
@@ -483,12 +494,12 @@ export function LandingPageHeader({
                   {!showNewsInNav && (
                     <Link
                       href="http://news.uiuc.chat/"
-                      className="menu-item"
+                      className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => handleLinkClick(e)}
                     >
-                      <div className="menu-item-content flex items-center">
+                      <div className="menu-item-content flex items-center p-2">
                         <IconNews
                           size={18}
                           strokeWidth={2}
@@ -510,10 +521,10 @@ export function LandingPageHeader({
                   {!showNewProjectInNav && (
                     <Link
                       href="/new"
-                      className="menu-item"
+                      className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
                       onClick={(e) => handleLinkClick(e)}
                     >
-                      <div className="menu-item-content flex items-center">
+                      <div className="menu-item-content flex items-center p-2">
                         <IconPlus
                           size={18}
                           strokeWidth={2}
@@ -616,27 +627,36 @@ export function LandingPageHeader({
         .menu-item {
           display: block;
           text-decoration: none;
-          padding: 0.5rem 0.375rem;
-          margin: 0.25rem 0.5rem;
+          padding: 0.75rem 0.5rem; /* Increased padding from 0.5rem 0.375rem */
+          margin: 0.5rem 0.75rem; /* Increased margin from 0.25rem 0.5rem */
           border-radius: 0.375rem;
           transition: all 150ms ease;
           cursor: pointer;
           border: 1px solid transparent;
+          font-size: 0.875rem; /* Added to match rem(14) */
+        }
+
+        .menu-item:last-child {
+          border-bottom: none;
         }
 
         .menu-item-content {
           display: flex;
           align-items: center;
+          font-size: 0.875rem; /* Added to match rem(14) */
+          font-weight: 500; /* Added to match navigation links */
         }
 
         .menu-item:hover {
-          background-color: rgba(255, 95, 5, 0.12);
-          border-color: rgba(255, 95, 5, 0.2);
-          box-shadow: 0 1px 3px rgba(255, 95, 5, 0.1);
-        }
-
-        .menu-item:last-child {
-          border-bottom: none;
+          background-color: rgba(
+            255,
+            95,
+            5,
+            0.18
+          ); /* Increased opacity from 0.12 */
+          border-color: rgba(255, 95, 5, 0.25); /* Increased opacity from 0.2 */
+          box-shadow: 0 2px 4px rgba(255, 95, 5, 0.15); /* Enhanced shadow */
+          transform: translateY(-1px); /* Slight lift effect on hover */
         }
 
         .menu-item svg {
@@ -660,6 +680,24 @@ export function LandingPageHeader({
         .menu-item:hover span,
         .menu-item:hover svg {
           transform: translateX(1px);
+        }
+
+        /* Special styling to draw attention to the menu button when Docs is hidden */
+        .highlight-button {
+          animation: pulse 2s 1;
+          box-shadow: 0 0 0 0 rgba(255, 95, 5, 0.4);
+        }
+
+        @keyframes pulse {
+          0% {
+            box-shadow: 0 0 0 0 rgba(255, 95, 5, 0.4);
+          }
+          70% {
+            box-shadow: 0 0 0 8px rgba(255, 95, 5, 0);
+          }
+          100% {
+            box-shadow: 0 0 0 0 rgba(255, 95, 5, 0);
+          }
         }
       `}</style>
     </header>
