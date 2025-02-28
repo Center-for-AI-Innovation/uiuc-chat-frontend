@@ -78,9 +78,9 @@ export default function Header({ isNavbar = false }: { isNavbar?: boolean }) {
   return (
     <header style={headerStyle} className="py-16">
       <SignedIn>
-        <div style={{ paddingLeft: '0px', paddingRight: '10px' }}></div>
-        {/* Mount the UserButton component */}
-        <UserButton />
+        <div className="pt-4">
+          <UserButton />
+        </div>
       </SignedIn>
       <SignedOut>
         {/* Signed out users get sign in button */}
@@ -417,7 +417,7 @@ export function LandingPageHeader({
           {/* Login/User button - always visible */}
           <div className="order-1">
             <SignedIn>
-              <div className="pl-1 pr-2">
+              <div className="pl-1 pt-1">
                 <UserButton />
               </div>
             </SignedIn>
