@@ -3,18 +3,9 @@ import { type NextPage } from 'next'
 import Head from 'next/head'
 import Link from 'next/link'
 import React, { useState, useEffect } from 'react'
-
-import {
-  // MantineProvider,
-  rem,
-  Card,
-  Text,
-  Title,
-  Badge,
-  Button,
-  Group,
-  Flex,
-} from '@mantine/core'
+import { ArrowNarrowRight, ExternalLink } from 'tabler-icons-react'
+import ProjectTable from '~/components/UIUC-Components/ProjectTable'
+import { Card, Button } from '@mantine/core'
 
 import { LandingPageHeader } from '~/components/UIUC-Components/navbars/GlobalHeader'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
@@ -817,9 +808,10 @@ const Home: NextPage = () => {
           </h4>
           <div className="mt-4 grid grid-cols-1 gap-14 sm:grid-cols-2 md:gap-8">
             <Link
-              className="bg-[var(--illinois-white)]/10 flex max-w-xs flex-col gap-4 rounded-xl sm:p-4 "
+              className="bg-[var(--illinois-white)]/10 duration-600 flex max-w-xs flex-col gap-4 rounded-xl transition-transform hover:scale-[1.01] sm:p-4"
               href="https://github.com/kastanday/ai-ta-frontend"
               target="_blank"
+              style={{ boxShadow: '4px 4px 10px rgba(0,0,0, .2)' }}
             >
               <h3
                 className={`
@@ -835,9 +827,10 @@ const Home: NextPage = () => {
               </div>
             </Link>
             <Link
-              className="bg-[var(--illinois-white)]/10 flex max-w-xs flex-col gap-4 rounded-xl sm:p-4 "
+              className="bg-[var(--illinois-white)]/10 duration-600 flex max-w-xs flex-col gap-4 rounded-xl transition-transform hover:scale-[1.01] sm:p-4"
               href="https://ai.ncsa.illinois.edu/"
               target="_blank"
+              style={{ boxShadow: '4px 4px 10px rgba(0,0,0, .2)' }}
             >
               <h3
                 className={`
@@ -853,9 +846,10 @@ const Home: NextPage = () => {
               </div>
             </Link>
             <Link
-              className="bg-[var(--illinois-white)]/10 flex max-w-xs flex-col gap-4 rounded-xl sm:p-4 "
+              className="bg-[var(--illinois-white)]/10 duration-600 flex max-w-xs flex-col gap-4 rounded-xl transition-transform hover:scale-[1.01] sm:p-4"
               href="https://kastanday.com/"
               target="_blank"
+              style={{ boxShadow: '4px 4px 10px rgba(0,0,0, .2)' }}
             >
               <h3
                 className={`
@@ -866,15 +860,28 @@ const Home: NextPage = () => {
                 Bio
               </h3>
               <div className="text-lg">
-                Made by Kastan Day at the University of Illinois.
+                Started by Kastan Day at the University of Illinois. But it{' '}
+                <a
+                  href="https://github.com/CAII-NCSA/uiuc-chat-frontend/graphs/contributors"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    textDecoration: 'underline',
+                    textDecorationColor: 'var(--illinois-blue)',
+                  }}
+                >
+                  takes a village
+                </a>
+                .
               </div>
               {/* <div className="text-lg">Sponsored by the </div> */}
             </Link>
 
             <Link
-              className="bg-[var(--illinois-white)]/10 flex max-w-xs flex-col gap-4 rounded-xl sm:p-4"
+              className="bg-[var(--illinois-white)]/10 duration-600 flex max-w-xs flex-col gap-4 rounded-xl transition-transform hover:scale-[1.01] sm:p-4"
               href="https://status.uiuc.chat/"
               target="_blank"
+              style={{ boxShadow: '4px 4px 10px rgba(0,0,0, .2)' }}
             >
               {/* text-[var(--illinois-white)] hover:bg-[var(--illinois-white)]/20 */}
               <h3
@@ -902,10 +909,6 @@ const Home: NextPage = () => {
           </div>
         </div>
 
-        {/* search */}
-        {/* <script async src="https://cse.google.com/cse.js?cx=2616b82a523e047b2">
-        </script>
-        <div className="gcse-search"></div> */}
         <GlobalFooter />
       </main>
     </>
@@ -913,122 +916,6 @@ const Home: NextPage = () => {
 }
 
 export default Home
-
-import { createStyles, SimpleGrid, Container } from '@mantine/core'
-import { IconGauge, IconUser, IconCookie } from '@tabler/icons-react'
-import { ArrowNarrowRight, ExternalLink } from 'tabler-icons-react'
-import ListProjectTable from '~/components/UIUC-Components/ProjectTable'
-import ProjectTable from '~/components/UIUC-Components/ProjectTable'
-
-const mockdata = [
-  {
-    title: 'Faster than ChatGPT, with better prompts',
-    description:
-      'It is said to have an IQ of 5,000 and is a math genius, and can answer any question you throw at it.',
-    icon: IconGauge,
-  },
-  {
-    title: 'Course Specific',
-    description:
-      'Made by your professor, with all your course materials for hyper-detailed answers.',
-    icon: IconUser,
-  },
-  {
-    title: 'Upload anything, get answers',
-    description:
-      'Add your own study materials and get answers from the AI. Optionally, share these with your classmates.',
-    icon: IconCookie,
-  },
-]
-
-const useStyles = createStyles((theme) => ({
-  title: {
-    fontSize: rem(34),
-    fontWeight: 900,
-
-    [theme.fn.smallerThan('sm')]: {
-      fontSize: rem(24),
-    },
-  },
-
-  description: {
-    maxWidth: 600,
-    margin: 'auto',
-
-    '&::after': {
-      content: '""',
-      display: 'block',
-      backgroundColor: 'var(--illinois-white)',
-      width: rem(45),
-      height: rem(2),
-      marginTop: theme.spacing.sm,
-      marginLeft: 'auto',
-      marginRight: 'auto',
-    },
-  },
-
-  card: {
-    border: `${rem(1)} solid var(--illinois-storm-light)`,
-  },
-
-  cardTitle: {
-    '&::after': {
-      content: '""',
-      display: 'block',
-      backgroundColor: 'var(--illinois-white)',
-      width: rem(45),
-      height: rem(2),
-      marginTop: theme.spacing.sm,
-    },
-  },
-}))
-
-export function FeaturesCards() {
-  const { classes, theme } = useStyles()
-  const features = mockdata.map((feature) => (
-    <Card
-      bg="var(--illinois-background-darker)"
-      key={feature.title}
-      shadow="md"
-      radius="md"
-      className={classes.card}
-      padding="xl"
-      style={{ position: 'relative', minHeight: '100%' }}
-    >
-      <feature.icon size={rem(50)} stroke={2} color="var(--illinois-orange)" />
-      <Text
-        color="var(--illinois-white)"
-        fz="lg"
-        fw={500}
-        className={classes.cardTitle}
-        mt="md"
-      >
-        {feature.title}
-      </Text>
-      <Text
-        style={{ color: 'var(--illinois-white)' }}
-        fz="sm"
-        c="dimmed"
-        mt="sm"
-      >
-        {feature.description}
-      </Text>
-    </Card>
-  ))
-
-  return (
-    // <Container size="lg" py="xl" style={{ position: 'relative' }}>
-
-    <SimpleGrid
-      cols={3}
-      spacing="xl"
-      mt={50}
-      breakpoints={[{ maxWidth: 'md', cols: 1 }]}
-    >
-      {features}
-    </SimpleGrid>
-  )
-}
 
 function FlagshipChatbots() {
   const cards = [
