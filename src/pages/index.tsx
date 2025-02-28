@@ -271,7 +271,7 @@ const Home: NextPage = () => {
               </div>
 
               <div
-                className="mt-[-8px] text-xs text-neutral-400 sm:mr-4 sm:text-right"
+                className="mt-[2px] text-xs text-neutral-400 sm:mr-4 sm:mt-[-8px] sm:text-right"
                 style={{ color: 'var(--illinois-orange)' }}
               >
                 Upload almost anything
@@ -305,7 +305,7 @@ const Home: NextPage = () => {
           </div>
         </div>
 
-        <div className="mb-6 w-full text-center">
+        <div className="mb-6 w-full px-2 text-center sm:px-4">
           <ProjectTable />
         </div>
 
@@ -1144,22 +1144,19 @@ function FlagshipChatbots() {
             </Card.Section>
           )}
 
-          <Card.Section className="h-16">
-            <div
-              className="flex items-center gap-2 px-3"
-              style={{ height: '100%' }}
-            >
+          <Card.Section className="h-16 sm:h-20">
+            <div className="flex h-full flex-col justify-center px-3 sm:flex-row sm:items-center">
               <div
                 className="
-                text-xs
-                text-neutral-600
+                line-clamp-2 max-w-full
+                text-xs text-neutral-600 sm:line-clamp-5
                 "
               >
                 {card.tagline}
               </div>
 
-              <div className="flex grow justify-end">
-                <ArrowNarrowRight size={32} strokeWidth={1.25} color={'#888'} />
+              <div className="mt-1 flex justify-end sm:ml-auto sm:mt-0">
+                <ArrowNarrowRight size={28} strokeWidth={1.25} color={'#888'} />
               </div>
             </div>
           </Card.Section>
