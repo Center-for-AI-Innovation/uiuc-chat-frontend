@@ -68,10 +68,9 @@ export default function SambaNovaProviderInput({
                 aria-label="Enable SambaNova provider"
                 checked={field.state.value}
                 onChange={(event) => {
+                  event.preventDefault()
                   field.handleChange(event.currentTarget.checked)
-
-                  // Trigger form submission
-                  setTimeout(() => form.handleSubmit(), 0)
+                  form.handleSubmit()
                 }}
                 thumbIcon={
                   field.state.value ? (
@@ -130,7 +129,9 @@ export default function SambaNovaProviderInput({
                     )}
                   </form.Field>
 
-                  <ModelToggles form={form} provider={provider} />
+                  {form.state.values?.providers?.SambaNova?.apiKey && (
+                    <ModelToggles form={form} provider={provider} />
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
