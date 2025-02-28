@@ -127,8 +127,8 @@ const TypingAnimation: React.FC = () => {
         /* Responsive adjustments */
         @media (max-width: 640px) {
           .typing-animation {
-            min-width: 250px;
-            max-width: 250px;
+            min-width: 100%; /* Use percentage instead of fixed width */
+            max-width: 100%; /* Use percentage instead of fixed width */
             margin-top: 8px; /* Add space in mobile view */
           }
         }
@@ -149,6 +149,24 @@ const Home: NextPage = () => {
           content="Chat with your documents, with full support for any format and web scraping."
         />
         <link rel="icon" href="/favicon.ico" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+        />
+        <style>
+          {`
+            * {
+              box-sizing: border-box;
+              max-width: 100vw;
+            }
+            body, html {
+              overflow-x: hidden;
+              width: 100%;
+              margin: 0;
+              padding: 0;
+            }
+          `}
+        </style>
       </Head>
 
       {/* Rebranding announcement header bar */}
@@ -196,10 +214,10 @@ const Home: NextPage = () => {
       <LandingPageHeader />
 
       <main
-        className={`illinois-blue-gradient-bg flex min-h-screen flex-col items-center justify-center
+        className={`illinois-blue-gradient-bg flex min-h-screen flex-col items-center justify-center overflow-hidden
           ${montserrat_paragraph.variable} font-montserratParagraph`}
       >
-        <div className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 px-8 py-8 sm:py-20">
+        <div className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 px-4 py-8 sm:px-8 sm:py-20">
           <div
             className="
             flex w-full
@@ -252,19 +270,19 @@ const Home: NextPage = () => {
                 <div className="">
                   <img
                     src="/media/banner_upload_materials.png"
-                    className="rounded-xl"
+                    className="w-full max-w-full rounded-xl"
                   ></img>
                 </div>
 
-                <div className="icons_scrolling_container">
+                <div className="icons_scrolling_container overflow-hidden">
                   <div className="icons_scrolling">
                     <img
                       src="/media/banner_icons.png"
-                      className="rounded-xl"
+                      className="max-w-full rounded-xl"
                     ></img>
                     <img
                       src="/media/banner_icons.png"
-                      className="rounded-xl"
+                      className="max-w-full rounded-xl"
                     ></img>
                   </div>
                 </div>
@@ -314,8 +332,8 @@ const Home: NextPage = () => {
           style={{ background: 'var(--illinois-orange-gradient)' }}
           className="
           my-14
-          flex w-full items-center
-          justify-center px-4
+          flex w-full items-center justify-center
+          overflow-hidden px-4
           py-36 sm:my-0
         "
         >
@@ -347,7 +365,7 @@ const Home: NextPage = () => {
         </div>
 
         {/* second section below the orange banner */}
-        <div className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 px-8 py-8 sm:py-20">
+        <div className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 overflow-hidden px-4 py-8 sm:px-8 sm:py-20">
           <h2
             className={`
               max-w-lg
@@ -375,7 +393,7 @@ const Home: NextPage = () => {
               >
                 <img
                   src="/media/banner_step_001.png"
-                  className="rounded-xl"
+                  className="w-full max-w-full rounded-xl"
                 ></img>
               </div>
 
@@ -464,7 +482,7 @@ const Home: NextPage = () => {
               >
                 <img
                   src="/media/banner_step_002.png"
-                  className="rounded-xl"
+                  className="w-full max-w-full rounded-xl"
                 ></img>
               </div>
 
@@ -549,7 +567,7 @@ const Home: NextPage = () => {
               >
                 <img
                   src="/media/banner_step_003.png"
-                  className="rounded-xl"
+                  className="w-full max-w-full rounded-xl"
                 ></img>
               </div>
 
@@ -618,9 +636,9 @@ const Home: NextPage = () => {
           style={{ background: 'var(--illinois-blue-gradient)' }}
           className="
             my-12
-            w-full px-8
+            w-full overflow-hidden px-4
             py-8 text-white sm:my-0
-            sm:py-24
+            sm:px-8 sm:py-24
           "
         >
           <div
@@ -788,7 +806,7 @@ const Home: NextPage = () => {
         </div>
 
         {/* second section below the blue banner */}
-        <div className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 px-8 py-8 sm:py-20">
+        <div className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 overflow-hidden px-4 py-8 sm:px-8 sm:py-20">
           <h4
             className={`
             text-4xl font-extrabold tracking-tight
