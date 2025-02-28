@@ -202,7 +202,7 @@ function decodeHtmlEntities(str: string | undefined): string {
   return doc.body.textContent || str
 }
 
-export const ChatMessage: React.FC<Props> = memo(
+export const ChatMessage = memo(
   ({
     message,
     messageIndex,
@@ -211,7 +211,7 @@ export const ChatMessage: React.FC<Props> = memo(
     onFeedback,
     onImageUrlsUpdate,
     courseName,
-  }) => {
+  }: Props) => {
     const { t } = useTranslation('chat')
     const { activeSidebarMessageId, setActiveSidebarMessageId } =
       useReactContext(SourcesSidebarContext)
@@ -1119,12 +1119,13 @@ export const ChatMessage: React.FC<Props> = memo(
       const isCitationByTitle = title && (title.startsWith('Citation ') || title.startsWith('Citations '))
       const isCitationByContent = 
         typeof firstChild === 'string' &&
-        (message.contexts?.some(
-          (ctx) =>
-            ctx.readable_filename &&
-            firstChild.includes(ctx.readable_filename),
-        ) ??
-          false)
+        (Array.isArray(message.contexts) 
+          ? message.contexts.some(
+              (ctx) =>
+                ctx.readable_filename &&
+                firstChild.includes(ctx.readable_filename),
+            )
+          : false)
       const isOldFormatCitation = 
         typeof firstChild === 'string' && firstChild.includes(' | ')
       
@@ -1242,6 +1243,11 @@ export const ChatMessage: React.FC<Props> = memo(
       },
       [message, onFeedback]
     )
+
+    // Helper function to safely get contexts length
+    const getContextsLength = (contexts: any): number => {
+      return Array.isArray(contexts) ? contexts.length : 0;
+    };
 
     return (
       <>
@@ -1449,13 +1455,13 @@ export const ChatMessage: React.FC<Props> = memo(
                             )}
 
                           {/* Retrieval results for all messages */}
-                          {message.contexts && message.contexts.length > 0 && (
+                          {Array.isArray(message.contexts) && message.contexts.length > 0 && (
                             <IntermediateStateAccordion
                               accordionKey="retrieval loading"
                               title="Retrieved documents"
                               isLoading={false}
                               error={false}
-                              content={`Found ${message.contexts?.length} document chunks.`}
+                              content={`Found ${getContextsLength(message.contexts)} document chunks.`}
                             />
                           )}
 
@@ -1472,7 +1478,7 @@ export const ChatMessage: React.FC<Props> = memo(
                                 title="Retrieving documents"
                                 isLoading={isRetrievalLoading}
                                 error={false}
-                                content={`Found ${message.contexts?.length} document chunks.`}
+                                content={`Found ${getContextsLength(message.contexts)} document chunks.`}
                               />
                             )}
 
@@ -1761,7 +1767,7 @@ export const ChatMessage: React.FC<Props> = memo(
                   {/* Action Buttons Container */}
                   <div className="flex flex-col gap-2">
                     {/* Sources button */}
-                    {message.contexts &&
+                    {Array.isArray(message.contexts) &&
                       message.contexts.length > 0 &&
                       !(
                         messageIsStreaming &&
@@ -1781,7 +1787,7 @@ export const ChatMessage: React.FC<Props> = memo(
                             <span className="whitespace-nowrap">
                               Sources
                               <span className="ml-0.5 rounded-md bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600 group-hover/button:bg-purple-100 group-hover/button:text-purple-600 dark:bg-gray-700/50 dark:text-gray-400 dark:group-hover/button:bg-purple-900/30 dark:group-hover/button:text-purple-300">
-                                {message.contexts.length}
+                                {getContextsLength(message.contexts)}
                               </span>
                             </span>
 
@@ -1849,7 +1855,7 @@ export const ChatMessage: React.FC<Props> = memo(
         {isSourcesSidebarOpen && (
           <SourcesSidebar
             isOpen={isSourcesSidebarOpen}
-            contexts={message.contexts || []}
+            contexts={Array.isArray(message.contexts) ? message.contexts : []}
             onClose={handleSourcesSidebarClose}
             hideRightSidebarIcon={isAnySidebarOpen}
             courseName={courseName}
