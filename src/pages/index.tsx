@@ -940,7 +940,8 @@ function FlagshipChatbots() {
       imageSrc: '/media/hero_courses_banners/NEURIPS.png',
       title: 'NeurIPS 2024',
       badge: 'NeurIPS',
-      tagline: 'Trained on all 4,000+ papers from NeurIPS 2024',
+      tagline:
+        'Trained on all 4,000+ papers from the largest AI conference in the world',
       description:
         "Using all of NeurIPS 2024's documentation, get detailed examples, advice and information about the conference.",
     },
