@@ -234,8 +234,9 @@ const Home: NextPage = () => {
               </div>
 
               <div className="mb-8 mt-4 text-sm text-neutral-400">
-                Build an AI-teaching assistant, literature review, document
-                search, <span className="whitespace-nowrap">and more.</span>
+                Deep search your documents, build an AI-teaching assistant,
+                accelerate your literature review,{' '}
+                <span className="whitespace-nowrap">and get creative.</span>
               </div>
 
               <Button
@@ -286,10 +287,10 @@ const Home: NextPage = () => {
             </div>
           </div>
 
-          <div className="mb-6 w-full text-center">
+          <div className="mb-6 w-full pt-8 text-center">
             <h2
               className={`
-                pt-6
+                pt-12
                 text-2xl font-bold sm:pt-2 
                 ${montserrat_heading.variable} font-montserratHeading
               `}
