@@ -18,13 +18,15 @@ import {
 
 const StyledRow = styled.tr`
   &:hover {
-    background-color: hsla(280, 100%, 70%, 0.5);
+    background-color: rgba(255, 95, 5, 0.6);
   }
 `
 
 const StyledTable = styled(Table)`
   table-layout: fixed;
   width: 100%;
+  background-color: white;
+  color: var(--illinois-blue);
 
   th,
   td {
@@ -38,8 +40,8 @@ const StyledTable = styled(Table)`
 const ResponsiveTableWrapper = styled.div`
   overflow-x: auto;
   width: 100%;
-  background-color: #15162b;
-  box-shadow: 0px 0px 10px 2px rgba(0, 0, 0, 0.5);
+  background-color: white;
+  box-shadow: 0px 0px 10px 2px rgba(0, 0, 0, 0.1);
   border-radius: 15px;
   padding: 0;
 
@@ -89,11 +91,12 @@ const ListProjectTable: React.FC = () => {
   }
 
   const getSortIcon = (column: SortableColumn) => {
-    if (sortColumn !== column) return <IconSelector size={14} />
+    if (sortColumn !== column)
+      return <IconSelector size={14} color="var(--illinois-blue)" />
     return sortDirection === 'asc' ? (
-      <IconChevronUp size={14} />
+      <IconChevronUp size={14} color="var(--illinois-blue)" />
     ) : (
-      <IconChevronDown size={14} />
+      <IconChevronDown size={14} color="var(--illinois-blue)" />
     )
   }
 
@@ -169,7 +172,7 @@ const ListProjectTable: React.FC = () => {
                 router.push(`/${courseName}/chat`)
               }
             }}
-            style={{ cursor: 'pointer' }}
+            style={{ cursor: 'pointer', color: 'var(--illinois-blue)' }}
           >
             <td>{courseName}</td>
             <td>{courseMetadata.is_private ? 'Private' : 'Public'}</td>
@@ -240,7 +243,7 @@ const ListProjectTable: React.FC = () => {
 
     return (
       <>
-        <div className="mx-auto w-full md:w-4/5">
+        <div className="mx-auto w-full max-w-[950px] md:w-11/12 lg:w-5/6">
           <Title
             order={2}
             ta="center"
@@ -248,6 +251,7 @@ const ListProjectTable: React.FC = () => {
               text-2xl font-bold sm:pt-2 
               ${montserrat_heading.variable} font-montserratHeading
             `}
+            style={{ color: 'var(--illinois-blue)' }}
           >
             Your Chatbots
           </Title>
@@ -258,6 +262,7 @@ const ListProjectTable: React.FC = () => {
                 text-md pb-8 pt-2
                 ${montserrat_paragraph.variable} font-montserratParagraph
               `}
+                style={{ color: 'var(--illinois-blue)' }}
               >
                 These are projects you&apos;ve created, or where you are an
                 admin.
@@ -266,8 +271,8 @@ const ListProjectTable: React.FC = () => {
                 style={{
                   overflowX: 'auto',
                   width: '100%',
-                  backgroundColor: '#15162b',
-                  boxShadow: '0px 0px 10px 2px rgba(0,0,0,0,5)',
+                  backgroundColor: 'white',
+                  boxShadow: '0px 0px 10px 2px rgba(0, 0, 0, 0.1)',
                   borderRadius: '15px',
                 }}
               >
@@ -275,10 +280,10 @@ const ListProjectTable: React.FC = () => {
                   <thead>
                     <tr>
                       {[
-                        { label: 'Project Name', key: 'name' },
+                        { label: 'Chatbot Name', key: 'name' },
                         { label: 'Privacy', key: 'privacy' },
-                        { label: 'Project Owner', key: 'owner' },
-                        { label: 'Project Admins', key: 'admins' },
+                        { label: 'Owner', key: 'owner' },
+                        { label: 'Admins', key: 'admins' },
                       ].map(({ label, key }) => (
                         <th
                           key={key}
@@ -289,11 +294,12 @@ const ListProjectTable: React.FC = () => {
                             style={{
                               display: 'flex',
                               alignItems: 'center',
+                              justifyContent: 'center',
                               gap: '4px',
                             }}
                           >
                             <span
-                              className={`text-md text-slate-200 ${montserrat_heading.variable} font-montserratHeading`}
+                              className={`text-md text-[var(--illinois-blue)] ${montserrat_heading.variable} font-montserratHeading`}
                             >
                               {label}
                             </span>
@@ -312,7 +318,11 @@ const ListProjectTable: React.FC = () => {
               size="md"
               className={`pt-2 ${montserrat_heading.variable} font-montserratHeading`}
               bg={'bg-transparent'}
-              style={{ backgroundColor: 'clear', textAlign: 'center' }}
+              style={{
+                backgroundColor: 'transparent',
+                textAlign: 'center',
+                color: 'var(--illinois-blue)',
+              }}
             >
               You haven&apos;t created any projects yet. Let&apos;s{' '}
               <Link
