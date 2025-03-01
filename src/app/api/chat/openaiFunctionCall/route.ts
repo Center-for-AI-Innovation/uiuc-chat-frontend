@@ -1,19 +1,17 @@
-import OpenAI from 'openai'
-import { wrapOpenAI } from 'langsmith/wrappers'
+import { OpenAIStream } from '~/utils/server'
 import type {
   ChatCompletionMessageParam,
   ChatCompletionMessageToolCall,
   ChatCompletionTool,
 } from 'openai/resources/chat/completions'
-
 import { Conversation } from '~/types/chat'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 
-export const runtime = 'nodejs'
+// Change runtime to edge
+export const runtime = 'edge'
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 export const revalidate = 0
-
 
 const conversationToMessages = (
   inputData: Conversation,
@@ -48,36 +46,16 @@ export async function POST(req: Request) {
     openaiKey: string
   } = await req.json()
 
-  let decryptedKey
-  if (openaiKey) {
-    decryptedKey = await decryptKeyIfNeeded(openaiKey) as string
-  }
+  let decryptedKey = openaiKey ? 
+    await decryptKeyIfNeeded(openaiKey) : 
+    process.env.VLADS_OPENAI_KEY
 
-  if (!decryptedKey || !decryptedKey.startsWith('sk-')) {
-    // fallback to Vlad's key
+  if (!decryptedKey?.startsWith('sk-')) {
     decryptedKey = process.env.VLADS_OPENAI_KEY as string
   }
-  // console.log('Decrypted key: ', decryptedKey)
 
-  // Create an OpenAI API client (that's edge friendly!)
-  // const openai = new OpenAI({ apiKey: decryptedKey })
-
-  // Cloudflare proxy format: https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_slug}/openai
-  // const openai = new OpenAI({ apiKey: decryptedKey, baseURL: "https://gateway.ai.cloudflare.com/v1/74022ae0779bc80e94e2346e1720449d/uiucchat/openai" })
-
-  // Auto-trace LLM calls w/ langsmith
-  const openai = wrapOpenAI(new OpenAI({ apiKey: decryptedKey }), {
-    project_name: 'uiuc-chat-production',
-    metadata: {
-      user_email: conversation.userEmail,
-      conversation_id: conversation.id,
-    },
-    name: 'tool-routing',
-  })
-
-  // format into OpenAI message format
-  const message_to_send: ChatCompletionMessageParam[] =
-    conversationToMessages(conversation)
+  // Format messages
+  const message_to_send: ChatCompletionMessageParam[] = conversationToMessages(conversation)
 
   // Add system message
   const globalToolsSytemPromptPrefix =
@@ -87,17 +65,15 @@ export async function POST(req: Request) {
     content: globalToolsSytemPromptPrefix + conversation.prompt,
   })
 
-  // MAKE USE OF IMAGE DESCRIPTION AND IMAGE URLS when selecting tools.
+  // Add image info if present
   if (imageUrls.length > 0 && imageDescription) {
     const imageInfo = `Image URL(s): ${imageUrls.join(', ')};\nImage Description: ${imageDescription}`
     if (message_to_send.length > 0) {
       const lastMessage = message_to_send[message_to_send.length - 1]
       if (lastMessage) {
-        // Ensure the last message is defined
         lastMessage.content += `\n\n${imageInfo}`
       }
     } else {
-      // If there are no messages, add a new one with the image information
       message_to_send.push({
         role: 'system',
         content: imageInfo,
@@ -105,45 +81,86 @@ export async function POST(req: Request) {
     }
   }
 
-  // console.log('Message to send: ', message_to_send)
-  // console.log('Tools to be used: ', tools)
-
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4o', // hard code function calling model
-    messages: message_to_send,
-    tools: tools,
-    stream: false,
-  })
-
-  if (!response.choices) {
-    console.error('❌ ERROR --- No response from OpenAI!!')
-    return new Response('No response from OpenAI', { status: 500 })
-  } else if (!response.choices[0]?.message.tool_calls) {
-    return new Response(
-      JSON.stringify({ message: 'No tools invoked by OpenAI' }),
-      { status: 200 },
-    )
-  } else {
-    const tools = response.choices[0]?.message
-      .tool_calls as ChatCompletionMessageToolCall[]
-
-    // Response format, it's an array.
-    // "tool_calls": [
-    //   {
-    //     "id": "call_abc123",
-    //     "type": "function",
-    //     "function": {
-    //       "name": "get_current_weather",
-    //       "arguments": "{\n\"location\": \"Boston, MA\"\n}"
-    //     }
-    //   }
-    // ]
-
-    return new Response(JSON.stringify(tools), {
-      status: 200,
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Authorization: `Bearer ${decryptedKey}`,
       },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: message_to_send,
+        tools: tools,
+        stream: false,
+      }),
     })
+
+    if (!response.ok) {
+      return new Response(
+        JSON.stringify({ error: `OpenAI API error: ${response.status}` }), 
+        { 
+          status: response.status,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
+    const data = await response.json()
+
+    if (!data.choices) {
+      return new Response(
+        JSON.stringify({ error: 'No response from OpenAI' }), 
+        { 
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
+    if (!data.choices[0]?.message.tool_calls) {
+      return new Response(
+        JSON.stringify({
+          choices: [{
+            message: {
+              content: 'No tools invoked by OpenAI',
+              role: 'assistant'
+            }
+          }]
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
+    const toolCalls = data.choices[0].message.tool_calls
+
+    return new Response(
+      JSON.stringify({
+        choices: [{
+          message: {
+            content: JSON.stringify(toolCalls),
+            role: 'assistant',
+            tool_calls: toolCalls
+          }
+        }]
+      }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    )
+  } catch (error) {
+    return new Response(
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : 'An unexpected error occurred'
+      }),
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    )
   }
 }

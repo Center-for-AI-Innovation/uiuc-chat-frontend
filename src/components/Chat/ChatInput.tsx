@@ -2,11 +2,11 @@
 import {
   IconArrowDown,
   IconPlayerStop,
-  IconRepeat,
   IconSend,
   IconPhoto,
   IconAlertCircle,
   IconX,
+  IconRepeat,
 } from '@tabler/icons-react'
 import { Text } from '@mantine/core'
 import {
@@ -63,7 +63,6 @@ const montserrat_med = Montserrat({
 
 interface Props {
   onSend: (message: Message, plugin: Plugin | null) => void
-  onRegenerate: () => void
   onScrollDownClick: () => void
   stopConversationRef: MutableRefObject<boolean>
   textareaRef: MutableRefObject<HTMLTextAreaElement | null>
@@ -72,6 +71,7 @@ interface Props {
   setInputContent: (content: string) => void
   courseName: string
   chat_ui?: ChatUI
+  onRegenerate?: () => void
 }
 
 interface ProcessedImage {
@@ -81,7 +81,6 @@ interface ProcessedImage {
 
 export const ChatInput = ({
   onSend,
-  onRegenerate,
   onScrollDownClick,
   stopConversationRef,
   textareaRef,
@@ -90,6 +89,7 @@ export const ChatInput = ({
   setInputContent,
   courseName,
   chat_ui,
+  onRegenerate,
 }: Props) => {
   const { t } = useTranslation('chat')
 
@@ -822,12 +822,15 @@ export const ChatInput = ({
         {!messageIsStreaming &&
           selectedConversation &&
           selectedConversation.messages &&
-          selectedConversation.messages?.length > 0 && (
+          selectedConversation.messages.length > 0 &&
+          selectedConversation.messages[
+            selectedConversation.messages.length - 1
+          ]?.role === 'user' && (
             <button
-              className={`absolute ${isSmallScreen ? '-top-28' : '-top-20'} left-0 right-0 mx-auto mb-24 flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white px-4 py-2 text-black hover:opacity-50 dark:border-neutral-600 dark:bg-[#343541] dark:text-white md:mb-0 md:mt-2`}
+              className={`absolute ${isSmallScreen ? '-top-28' : '-top-20'} left-0 right-0 mx-auto mb-12 flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white px-4 py-2 text-black hover:opacity-50 dark:border-neutral-600 dark:bg-[#343541] dark:text-white md:mb-0 md:mt-2`}
               onClick={onRegenerate}
             >
-              <IconRepeat size={16} /> {t('Regenerate response')}
+              <IconRepeat size={16} /> {t('Regenerate Response')}
             </button>
           )}
 
@@ -841,7 +844,7 @@ export const ChatInput = ({
               selectedConversation.model?.id as OpenAIModelID,
             ) && (
               <button
-                className="absolute bottom-11 left-5 rounded-full p-1 text-neutral-800 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
+                className="absolute bottom-11 left-5 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
                 onClick={() => document.getElementById('imageUpload')?.click()}
               >
                 <div className="">
@@ -1065,7 +1068,7 @@ export const ChatInput = ({
 
           <Text
             size={isSmallScreen ? '10px' : 'xs'}
-            className={`font-montserratHeading ${montserrat_heading.variable} absolute bottom-2 left-5 break-words rounded-full p-1 text-neutral-400 text-neutral-800 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200`}
+            className={`font-montserratHeading ${montserrat_heading.variable} absolute bottom-2 left-5 break-words rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200`}
             onClick={handleTextClick}
             style={{ cursor: 'pointer' }}
           >
