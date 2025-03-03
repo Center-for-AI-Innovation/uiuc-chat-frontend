@@ -1401,35 +1401,22 @@ export const Chat = memo(
     // Add a useEffect to handle conversation selection with multiple scroll attempts
     useEffect(() => {
       if (selectedConversation?.id) {
-        // Reset user scroll state when conversation changes
+        // Reset scroll state for new conversation
         setUserHasScrolled(false);
         setAutoScrollEnabled(true);
         setShowScrollDownButton(false);
         
-        // Immediate scroll first
+        // Initial scroll
         forceScrollToBottom();
         
-        // Then use a sequence of scroll attempts to handle dynamic content loading
-        // with more frequent attempts at the beginning, but fewer attempts overall
-        const scrollSequence = [10, 50, 200, 500];
+        // Handle any dynamic content adjustments with a short delay
+        const timeoutId = setTimeout(() => {
+          if (!userHasScrolled) {
+            forceScrollToBottom();
+          }
+        }, 100);
         
-        // Create an array to store timeout IDs so we can clear them if user scrolls
-        const timeoutIds: NodeJS.Timeout[] = [];
-        
-        scrollSequence.forEach(delay => {
-          const timeoutId = setTimeout(() => {
-            // Only continue auto-scrolling if user hasn't manually scrolled
-            if (!userHasScrolled) {
-              forceScrollToBottom();
-            }
-          }, delay);
-          timeoutIds.push(timeoutId);
-        });
-        
-        // Clean up timeouts if component unmounts or conversation changes
-        return () => {
-          timeoutIds.forEach(id => clearTimeout(id));
-        };
+        return () => clearTimeout(timeoutId);
       }
     }, [selectedConversation?.id, forceScrollToBottom]);
 
@@ -1437,42 +1424,46 @@ export const Chat = memo(
     useEffect(() => {
       if (!chatContainerRef.current) return;
       
+      let initialRender = true;
+      let lastScrollHeight = chatContainerRef.current.scrollHeight;
+      let lastScrollTop = chatContainerRef.current.scrollTop;
+      
       const resizeObserver = new ResizeObserver(() => {
-        // Only scroll if we're supposed to be at the bottom and user hasn't manually scrolled
-        if (autoScrollEnabled && selectedConversation?.id && !userHasScrolled) {
+        if (!chatContainerRef.current) return;
+        
+        // On initial render, allow scrolling to bottom
+        if (initialRender) {
           forceScrollToBottom();
+          initialRender = false;
+          return;
         }
+        
+        // Calculate how close to bottom we were before resize
+        const wasAtBottom = lastScrollTop + chatContainerRef.current.clientHeight >= lastScrollHeight - 30;
+        
+        // If user was at bottom before resize, keep them at bottom
+        if (wasAtBottom && !userHasScrolled) {
+          forceScrollToBottom();
+        } else {
+          // Otherwise maintain relative scroll position
+          const scrollHeightDiff = chatContainerRef.current.scrollHeight - lastScrollHeight;
+          chatContainerRef.current.scrollTop = lastScrollTop + scrollHeightDiff;
+        }
+        
+        // Update last known dimensions
+        lastScrollHeight = chatContainerRef.current.scrollHeight;
+        lastScrollTop = chatContainerRef.current.scrollTop;
       });
       
       // Start observing the chat container
       resizeObserver.observe(chatContainerRef.current);
       
       // Clean up the observer when component unmounts
-      return () => resizeObserver.disconnect();
-    }, [autoScrollEnabled, selectedConversation?.id, forceScrollToBottom, userHasScrolled]);
-
-    // Add a useEffect to ensure we scroll to bottom when messages are loaded
-    useEffect(() => {
-      if (selectedConversation?.messages && selectedConversation.messages.length > 0) {
-        // Use requestAnimationFrame to ensure DOM is fully rendered
-        requestAnimationFrame(() => {
-          // Only scroll if user hasn't manually scrolled
-          if (!userHasScrolled) {
-            forceScrollToBottom();
-            
-            // Add a second scroll attempt after a short delay to handle any late-loading content
-            const timeoutId = setTimeout(() => {
-              if (!userHasScrolled) {
-                forceScrollToBottom();
-              }
-            }, 100);
-            
-            // Clean up timeout if component unmounts
-            return () => clearTimeout(timeoutId);
-          }
-        });
-      }
-    }, [selectedConversation?.messages, forceScrollToBottom, userHasScrolled]);
+      return () => {
+        initialRender = false;
+        resizeObserver.disconnect();
+      };
+    }, [autoScrollEnabled, forceScrollToBottom, userHasScrolled]);
 
     const handleScroll = () => {
       if (chatContainerRef.current) {
@@ -1480,127 +1471,51 @@ export const Chat = memo(
           chatContainerRef.current
         const bottomTolerance = 30
 
-        // Detect if this is a user-initiated scroll
-        if (!userHasScrolled) {
-          // If we're not at the bottom and this is the first scroll event, mark as user scrolled
-          if (scrollTop + clientHeight < scrollHeight - bottomTolerance) {
-            setUserHasScrolled(true);
-            
-            // Cancel any pending scroll operations by setting this flag
-            // This ensures we respect the user's scroll position immediately
-            setAutoScrollEnabled(false);
-          }
-        }
-
-        if (scrollTop + clientHeight < scrollHeight - bottomTolerance) {
+        const isAtBottom = scrollTop + clientHeight >= scrollHeight - bottomTolerance
+        
+        // Update scroll button visibility
+        setShowScrollDownButton(!isAtBottom)
+        
+        // Only update scroll states when there's a significant change
+        if (!isAtBottom && !userHasScrolled) {
+          setUserHasScrolled(true)
           setAutoScrollEnabled(false)
-          setShowScrollDownButton(true)
-        } else {
-          // If user scrolls back to bottom, reset the userHasScrolled flag
-          setAutoScrollEnabled(true)
-          setShowScrollDownButton(false)
-          // Only reset userHasScrolled if we're very close to the bottom
-          if (scrollTop + clientHeight >= scrollHeight - 5) {
-            setUserHasScrolled(false);
-          }
         }
       }
     }
 
     const handleScrollDown = () => {
       if (chatContainerRef.current) {
-        // Use auto instead of smooth for more immediate scrolling
         chatContainerRef.current.scrollTo({
           top: chatContainerRef.current.scrollHeight,
           behavior: 'auto',
         });
         
-        // Also scroll the messagesEnd into view
         messagesEndRef.current?.scrollIntoView({ 
           behavior: 'auto',
           block: 'end' 
         });
         
-        // Reset user scroll state when they explicitly click to scroll down
-        setUserHasScrolled(false);
-        setAutoScrollEnabled(true);
+        // Only update necessary states for scroll button
         setShowScrollDownButton(false);
+        setAutoScrollEnabled(true);
       }
     }
-
-    const scrollDown = () => {
-      if (autoScrollEnabled && !userHasScrolled) {
-        // Use the same approach as forceScrollToBottom for consistency
-        if (chatContainerRef.current) {
-          chatContainerRef.current.scrollTo({
-            top: chatContainerRef.current.scrollHeight,
-            behavior: 'auto'
-          });
-        }
-        messagesEndRef.current?.scrollIntoView({ 
-          behavior: 'auto',
-          block: 'end' 
-        });
-      }
-    }
-    const throttledScrollDown = throttle(scrollDown, 100) // Reduce throttle time for more responsive scrolling
-
-    const handleSettings = () => {
-      homeDispatch({ field: 'showModelSettings', value: !showModelSettings })
-    }
-
-    const onClearAll = () => {
-      if (
-        confirm(t<string>('Are you sure you want to clear all messages?')) &&
-        selectedConversation
-      ) {
-        // Clear all messages, not used
-        handleUpdateConversation(selectedConversation, {
-          key: 'messages',
-          value: [],
-        })
-      }
-    }
-
-    useEffect(() => {
-      // Only auto-scroll during streaming if user hasn't manually scrolled
-      if (messageIsStreaming && !userHasScrolled) throttledScrollDown()
-      if (selectedConversation) {
-        const messages = selectedConversation.messages
-        if (messages?.length > 1) {
-          if (messages[messages?.length - 1]?.role === 'assistant') {
-            setCurrentMessage(messages[messages?.length - 2])
-          } else {
-            setCurrentMessage(messages[messages?.length - 1])
-          }
-        } else if (messages?.length === 1) {
-          setCurrentMessage(messages[0])
-        } else {
-          setCurrentMessage(undefined)
-        }
-      }
-    }, [selectedConversation, throttledScrollDown, messageIsStreaming, userHasScrolled])
 
     useEffect(() => {
       const observer = new IntersectionObserver(
         ([entry]) => {
-          setAutoScrollEnabled(entry?.isIntersecting || false)
-          if (entry?.isIntersecting) {
-            // Only reset userHasScrolled if the user has explicitly scrolled to the bottom
-            // This prevents automatic resets that might interfere with user scrolling
-            if (chatContainerRef.current) {
-              const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
-              // Only reset if we're very close to the bottom (within 5px)
-              if (scrollTop + clientHeight >= scrollHeight - 5) {
-                setUserHasScrolled(false);
-                textareaRef.current?.focus()
-              }
-            }
+          // Only enable auto-scroll if user explicitly scrolls to bottom
+          if (entry?.isIntersecting && userHasScrolled) {
+            setAutoScrollEnabled(true)
+            setUserHasScrolled(false)
           }
+          setShowScrollDownButton(!entry?.isIntersecting)
         },
         {
           root: null,
-          threshold: 0.5,
+          threshold: 0.9, // Increase threshold to require more visibility
+          rootMargin: '-10px', // Add small margin to make threshold more precise
         },
       )
       const messagesEndElement = messagesEndRef.current
@@ -1612,7 +1527,7 @@ export const Chat = memo(
           observer.unobserve(messagesEndElement)
         }
       }
-    }, [messagesEndRef])
+    }, [messagesEndRef, userHasScrolled])
 
     const statements =
       courseMetadata?.example_questions &&
