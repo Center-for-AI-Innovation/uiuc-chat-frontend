@@ -1483,7 +1483,8 @@ export const ChatMessage: React.FC<Props> = memo(
                                   (selectedConversation?.messages.length ?? 0) -
                                     1 ||
                                   messageIndex ===
-                                    (selectedConversation?.messages.length ?? 0) -
+                                    (selectedConversation?.messages.length ??
+                                      0) -
                                       2) && (
                                   <IntermediateStateAccordion
                                     accordionKey="imageDescription"
@@ -2076,13 +2077,16 @@ export const ChatMessage: React.FC<Props> = memo(
                               duration: 200,
                             }}
                             classNames={{
-                              tooltip: 'bg-gray-700 text-white text-sm py-1 px-2',
+                              tooltip:
+                                'bg-gray-700 text-white text-sm py-1 px-2',
                               arrow: 'border-gray-700',
                             }}
                           >
                             <button
                               className={`text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 ${
-                                messageIndex === (selectedConversation?.messages?.length ?? 0) - 1
+                                messageIndex ===
+                                (selectedConversation?.messages?.length ?? 0) -
+                                  1
                                   ? 'opacity-100'
                                   : 'opacity-0 transition-opacity duration-200 focus:opacity-100 group-hover:opacity-100'
                               } ${isRegenerating ? 'animate-spin' : ''}`}

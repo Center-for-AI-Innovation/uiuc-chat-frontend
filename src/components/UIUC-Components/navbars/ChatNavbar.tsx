@@ -21,6 +21,7 @@ import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelper
 import HomeContext from '~/pages/api/home/home.context'
 import { UserSettings } from '../../Chat/UserSettings'
 import { usePostHog } from 'posthog-js/react'
+import { ThemeToggle } from '../ThemeToggle'
 
 const styles: Record<string, React.CSSProperties> = {
   logoContainerBox: {
@@ -225,6 +226,9 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
               Illinois <span className="text-[--primary]">Chat</span>
             </h2>
           </Link>
+          <div className="pl-2">
+            <ThemeToggle />
+          </div>
 
           {bannerUrl ? (
             <div style={{ ...styles.logoContainerBox, flex: '1' }}>

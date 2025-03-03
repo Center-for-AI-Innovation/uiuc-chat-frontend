@@ -13,7 +13,6 @@ export interface HomeInitialState {
   apiKey: string
   pluginKeys: PluginKey[]
   loading: boolean
-  lightMode: 'light' | 'dark'
   messageIsStreaming: boolean
   modelError: ErrorMessage | null
   llmProviders: AllLLMProviders
@@ -52,7 +51,6 @@ export const initialState: HomeInitialState = {
   apiKey: '',
   loading: false,
   pluginKeys: [],
-  lightMode: 'dark',
   messageIsStreaming: false,
   modelError: null,
   llmProviders: {} as AllLLMProviders,
