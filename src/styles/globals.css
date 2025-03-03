@@ -128,6 +128,8 @@
   --background: var(--illinois-blue);
   --foreground: var(--illinois-white);
 
+  /* border: 20px solid #f00; */
+
   --primary: var(--illinois-orange);
   --primary-foreground: var(--illinois-blue);
 
@@ -146,19 +148,6 @@
   --border: var(--illinois-storm-dark);
   --input: var(--illinois-storm-dark);
   --ring: var(--illinois-orange);
-}
-
-/* Force light mode for all users!! */
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: light;
-  }
-}
-
-@media (prefers-color-scheme: light) {
-  html {
-    color-scheme: light;
-  }
 }
 
 /* Scrollbar Styles - Clean gray theme with hover effects */
@@ -192,7 +181,6 @@
 }
 
 html {
-  /*  background: var(--illinois-background-dark);*/
   background: var(--illinois-white);
 }
 

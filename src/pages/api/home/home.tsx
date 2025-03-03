@@ -140,7 +140,6 @@ const Home = ({
   const {
     state: {
       apiKey,
-      lightMode,
       folders,
       conversations,
       selectedConversation,
@@ -667,7 +666,7 @@ const Home = ({
         </Head>
         {selectedConversation && (
           <main
-            className={`flex h-screen w-screen flex-col text-sm text-white dark:text-white ${lightMode}`}
+            className={`flex h-screen w-screen flex-col text-sm text-white dark:text-white`}
           >
             <div className="flex h-full w-full sm:pt-0">
               {isDragging &&
