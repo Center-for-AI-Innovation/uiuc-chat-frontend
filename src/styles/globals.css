@@ -60,6 +60,17 @@
   --ring: var(--illinois-blue);
 
   --radius: 0.5rem;
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: calc(var(--radius) * 0.75);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.25);
+
+  --button-color: var(--foreground);
+  --button-text-color: var(--background);
+  --button-hover: color-mix(in srgb, var(--secondary) 100%, #fff);
+
+  --navbar-background: #03193b;
+  --navbar-shadow: var(--primary);
 
   /* Additional UI Colors */
   --illinois-background-dark: #202123;
