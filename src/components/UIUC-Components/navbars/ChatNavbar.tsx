@@ -48,15 +48,6 @@ const useStyles = createStyles((theme, { isAdmin }: { isAdmin: boolean }) => ({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  links: {
-    padding: 'theme.spacing.lg, 1em, 1em',
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    [theme.fn.smallerThan(825)]: {
-      display: 'none',
-    },
-  },
   link: {
     fontSize: rem(12),
     textAlign: 'center',
@@ -65,27 +56,28 @@ const useStyles = createStyles((theme, { isAdmin }: { isAdmin: boolean }) => ({
     fontWeight: 700,
     transition:
       'border-color 100ms ease, color 100ms ease, background-color 100ms ease',
-    borderRadius: theme.radius.sm,
+    borderRadius: 'var(--radius-sm)',
     '&:hover': {
-      color: 'hsl(280,100%,70%)',
-      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      color: 'var(--color-hover)', //hsl(280,100%,70%)
+      //      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      backgroundColor: 'var(--button-hover)',
       textDecoration: 'none',
-      borderRadius: '10px',
     },
     '&[data-active="true"]': {
       color: 'hsl(280,100%,70%)',
       borderBottom: '2px solid hsl(280,100%,70%)',
       textDecoration: 'none',
-      borderRadius: '10px',
-      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      //      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      backgroundColor: 'var(--button-hover)',
       textAlign: 'right',
     },
     [theme.fn.smallerThan(isAdmin ? 825 : 500)]: {
       display: 'list-item',
       textAlign: 'center',
-      borderRadius: 0,
+      borderRadius: '0rem',
       padding: theme.spacing.sm,
       margin: '0.2rem 0 0.2rem 0',
+      //      margin: '(var(--padding) * .2) 0rem 0rem (var(--padding) * .2)'
     },
   },
   burger: {
@@ -211,7 +203,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
 
   return (
     <div
-      className={`${isgpt4 ? 'bg-[#15162c]' : 'bg-[#2e026d]'} -mr-0 px-12 pb-16 pl-5`}
+      className={`-mr-0 bg-[--background] px-12 pb-16 pl-5`}
       style={{ display: show ? 'block' : 'none' }}
     >
       <div
@@ -226,11 +218,11 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
           justify="flex-start"
           direction="row"
           styles={{ height: '10px', flexWrap: 'nowrap', gap: '0rem' }}
-          className="navbar rounded-badge bg-[#15162c] shadow-lg shadow-purple-800"
+          className="navbar rounded-badge bg-[--navbar-background] shadow-lg shadow-[--navbar-shadow]"
         >
           <Link href="/" style={{ flex: 'none', flexWrap: 'nowrap' }}>
             <h2 className="cursor-pointer font-extrabold tracking-tight text-white sm:ms-3 sm:text-[2rem] sm:text-[2rem] md:text-3xl">
-              Illinois <span className="text-[hsl(280,100%,70%)]">Chat</span>
+              Illinois <span className="text-[--primary]">Chat</span>
             </h2>
           </Link>
 
@@ -401,9 +393,6 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
               className={classes.inner}
               style={{ padding: 0, margin: 0 }}
             >
-              <div className={classes.links}>
-                {/* Navigation links can be added here if needed */}
-              </div>
               <div className={classes.newChat}>
                 <button
                   className={`${classes.link}`}
