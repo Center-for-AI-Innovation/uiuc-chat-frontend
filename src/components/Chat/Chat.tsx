@@ -518,9 +518,16 @@ export const Chat = memo(
                   Remember: This query optimization is for vector database retrieval only, not for the final LLM prompt.`
 
                 // Get the last user message and some context
-                const lastUserMessageIndex = selectedConversation?.messages?.findLastIndex(msg => msg.role === 'user');
-                const contextStartIndex = Math.max(0, lastUserMessageIndex - 5); // Get up to 5 messages before the last user message
-                const contextMessages = selectedConversation?.messages?.slice(contextStartIndex, lastUserMessageIndex) || []; // Removed +1 to exclude last user message
+                const lastUserMessageIndex =
+                  selectedConversation?.messages?.findLastIndex(
+                    (msg) => msg.role === 'user',
+                  )
+                const contextStartIndex = Math.max(0, lastUserMessageIndex - 5) // Get up to 5 messages before the last user message
+                const contextMessages =
+                  selectedConversation?.messages?.slice(
+                    contextStartIndex,
+                    lastUserMessageIndex,
+                  ) || [] // Removed +1 to exclude last user message
 
                 const queryRewriteConversation: Conversation = {
                   id: uuidv4(),
@@ -872,11 +879,13 @@ export const Chat = memo(
                   body: JSON.stringify(finalChatBody),
                 })
                 console.log('response from /api/chat', response)
-                
+
                 // Check if response is ok before proceeding
                 if (!response.ok) {
-                  const errorData = await response.json();
-                  throw new Error(errorData.error || 'Failed to get response from the server');
+                  const errorData = await response.json()
+                  throw new Error(
+                    errorData.error || 'Failed to get response from the server',
+                  )
                 }
               } catch (error) {
                 // TODO: Improve error messages here...
@@ -888,7 +897,7 @@ export const Chat = memo(
                 })
                 homeDispatch({ field: 'loading', value: false })
                 homeDispatch({ field: 'messageIsStreaming', value: false })
-                return;
+                return
               }
             } catch (error) {
               // TODO: Improve error messages here...
@@ -900,7 +909,7 @@ export const Chat = memo(
               })
               homeDispatch({ field: 'loading', value: false })
               homeDispatch({ field: 'messageIsStreaming', value: false })
-              return;
+              return
             }
           }
 
@@ -1235,146 +1244,172 @@ export const Chat = memo(
       ],
     )
 
-    const handleRegenerate = useCallback(async (messageIndex?: number) => {
-      try {
-        if (!selectedConversation) {
-          return;
-        }
+    const handleRegenerate = useCallback(
+      async (messageIndex?: number) => {
+        try {
+          if (!selectedConversation) {
+            return
+          }
 
-        // If no messageIndex is provided, regenerate the last message
-        const targetIndex = messageIndex !== undefined ? 
-          messageIndex : 
-          selectedConversation.messages.length - 1;
-        
-        // Get the message to regenerate
-        const messageToRegenerate = selectedConversation.messages[targetIndex];
-        if (!messageToRegenerate) {
-          return;
-        }
-        
-        // Create a temporary conversation with messages up to the target message
-        const tempConversation = { 
-          ...selectedConversation,
-          messages: selectedConversation.messages.slice(0, targetIndex + 1)
-        };
-        
-        // If there's a model selected in the context, use that instead of the conversation's model
-        if (selectedModel) {
-          tempConversation.model = selectedModel;
-        }
-        
-        // Determine if we need to delete one or two messages
-        // If the target message is from the user, we delete one message (just the user message)
-        // If the target message is from the assistant, we delete two messages (the assistant message and the user message before it)
-        let deleteCount = 1;
-        let userMessageToRegenerate: Message;
-        
-        if (messageToRegenerate.role === 'assistant' && targetIndex > 0) {
-          deleteCount = 2;
-          // If regenerating an assistant message, use the user message before it
-          const prevUserMessage = selectedConversation.messages[targetIndex - 1];
-          
-          // Ensure prevUserMessage exists
-          if (!prevUserMessage) {
-            throw new Error('Previous user message not found');
+          // If no messageIndex is provided, regenerate the last message
+          const targetIndex =
+            messageIndex !== undefined
+              ? messageIndex
+              : selectedConversation.messages.length - 1
+
+          // Get the message to regenerate
+          const messageToRegenerate = selectedConversation.messages[targetIndex]
+          if (!messageToRegenerate) {
+            return
           }
-          
-          // Clear contexts from both the assistant message and the user message
-          messageToRegenerate.contexts = [];
-          messageToRegenerate.wasQueryRewritten = undefined;
-          messageToRegenerate.queryRewriteText = undefined;
-          
-          userMessageToRegenerate = { 
-            ...prevUserMessage,
-            id: prevUserMessage.id || uuidv4(), // Ensure ID is always defined
-            role: 'user', // Ensure role is always defined
-            content: prevUserMessage.content, // Ensure content is always defined
-            contexts: [], // Clear contexts for fresh search
-            wasQueryRewritten: undefined, // Clear previous query rewrite information
-            queryRewriteText: undefined // Clear previous query rewrite text
-          } as Message;
-        } else {
-          // If regenerating a user message
-          userMessageToRegenerate = { 
-            ...messageToRegenerate,
-            id: messageToRegenerate.id || uuidv4(), // Ensure ID is always defined
-            role: 'user', // Ensure role is always defined
-            content: messageToRegenerate.content, // Ensure content is always defined
-            contexts: [], // Clear contexts for fresh search
-            wasQueryRewritten: undefined, // Clear previous query rewrite information
-            queryRewriteText: undefined // Clear previous query rewrite text
-          } as Message;
-        }
-        
-        // Calculate how many messages to delete from the end of the conversation
-        const messagesToDeleteCount = selectedConversation.messages.length - (targetIndex + 1 - deleteCount);
-        
-        // Get the messages that will be deleted
-        const messagesToDelete = selectedConversation.messages.slice(targetIndex + 1 - deleteCount);
-        
-        // Create a modified conversation for query rewriting that doesn't include the messages being regenerated
-        const modifiedConversation = {
-          ...tempConversation,
-          messages: tempConversation.messages.slice(0, tempConversation.messages.length - deleteCount)
-        };
-        
-        // CRITICAL: Ensure the modified conversation ends with the user message we want to regenerate
-        // This ensures buildPrompt can find the last user input
-        modifiedConversation.messages.push(userMessageToRegenerate);
-        
-        // Reset query rewriting state in the global context
-        homeDispatch({ field: 'wasQueryRewritten', value: undefined });
-        homeDispatch({ field: 'queryRewriteText', value: undefined });
-        
-        // IMPORTANT: Update the selected conversation with the modified one BEFORE proceeding with handleSend
-        // This ensures that the query rewriting process uses the correct conversation state
-        homeDispatch({
-          field: 'selectedConversation',
-          value: modifiedConversation,
-        });
-        
-        // Wait for state update to propagate before proceeding
-        await new Promise(resolve => setTimeout(resolve, 0));
-        
-        // Ensure we have a valid API key before proceeding
-        // This is crucial after page refresh when the key might not be in memory
-        let currentApiKey = apiKey;
-        
-        // If we don't have an API key in the state, try to get it from localStorage
-        if (!currentApiKey && !courseMetadata?.openai_api_key) {
-          const storedApiKey = localStorage.getItem('apiKey');
-          if (storedApiKey) {
-            // Update the API key in the state
-            homeDispatch({ field: 'apiKey', value: storedApiKey });
-            currentApiKey = storedApiKey;
+
+          // Create a temporary conversation with messages up to the target message
+          const tempConversation = {
+            ...selectedConversation,
+            messages: selectedConversation.messages.slice(0, targetIndex + 1),
           }
+
+          // If there's a model selected in the context, use that instead of the conversation's model
+          if (selectedModel) {
+            tempConversation.model = selectedModel
+          }
+
+          // Determine if we need to delete one or two messages
+          // If the target message is from the user, we delete one message (just the user message)
+          // If the target message is from the assistant, we delete two messages (the assistant message and the user message before it)
+          let deleteCount = 1
+          let userMessageToRegenerate: Message
+
+          if (messageToRegenerate.role === 'assistant' && targetIndex > 0) {
+            deleteCount = 2
+            // If regenerating an assistant message, use the user message before it
+            const prevUserMessage =
+              selectedConversation.messages[targetIndex - 1]
+
+            // Ensure prevUserMessage exists
+            if (!prevUserMessage) {
+              throw new Error('Previous user message not found')
+            }
+
+            // Clear contexts from both the assistant message and the user message
+            messageToRegenerate.contexts = []
+            messageToRegenerate.wasQueryRewritten = undefined
+            messageToRegenerate.queryRewriteText = undefined
+
+            userMessageToRegenerate = {
+              ...prevUserMessage,
+              id: prevUserMessage.id || uuidv4(), // Ensure ID is always defined
+              role: 'user', // Ensure role is always defined
+              content: prevUserMessage.content, // Ensure content is always defined
+              contexts: [], // Clear contexts for fresh search
+              wasQueryRewritten: undefined, // Clear previous query rewrite information
+              queryRewriteText: undefined, // Clear previous query rewrite text
+            } as Message
+          } else {
+            // If regenerating a user message
+            userMessageToRegenerate = {
+              ...messageToRegenerate,
+              id: messageToRegenerate.id || uuidv4(), // Ensure ID is always defined
+              role: 'user', // Ensure role is always defined
+              content: messageToRegenerate.content, // Ensure content is always defined
+              contexts: [], // Clear contexts for fresh search
+              wasQueryRewritten: undefined, // Clear previous query rewrite information
+              queryRewriteText: undefined, // Clear previous query rewrite text
+            } as Message
+          }
+
+          // Calculate how many messages to delete from the end of the conversation
+          const messagesToDeleteCount =
+            selectedConversation.messages.length -
+            (targetIndex + 1 - deleteCount)
+
+          // Get the messages that will be deleted
+          const messagesToDelete = selectedConversation.messages.slice(
+            targetIndex + 1 - deleteCount,
+          )
+
+          // Create a modified conversation for query rewriting that doesn't include the messages being regenerated
+          const modifiedConversation = {
+            ...tempConversation,
+            messages: tempConversation.messages.slice(
+              0,
+              tempConversation.messages.length - deleteCount,
+            ),
+          }
+
+          // CRITICAL: Ensure the modified conversation ends with the user message we want to regenerate
+          // This ensures buildPrompt can find the last user input
+          modifiedConversation.messages.push(userMessageToRegenerate)
+
+          // Reset query rewriting state in the global context
+          homeDispatch({ field: 'wasQueryRewritten', value: undefined })
+          homeDispatch({ field: 'queryRewriteText', value: undefined })
+
+          // IMPORTANT: Update the selected conversation with the modified one BEFORE proceeding with handleSend
+          // This ensures that the query rewriting process uses the correct conversation state
+          homeDispatch({
+            field: 'selectedConversation',
+            value: modifiedConversation,
+          })
+
+          // Wait for state update to propagate before proceeding
+          await new Promise((resolve) => setTimeout(resolve, 0))
+
+          // Ensure we have a valid API key before proceeding
+          // This is crucial after page refresh when the key might not be in memory
+          let currentApiKey = apiKey
+
+          // If we don't have an API key in the state, try to get it from localStorage
+          if (!currentApiKey && !courseMetadata?.openai_api_key) {
+            const storedApiKey = localStorage.getItem('apiKey')
+            if (storedApiKey) {
+              // Update the API key in the state
+              homeDispatch({ field: 'apiKey', value: storedApiKey })
+              currentApiKey = storedApiKey
+            }
+          }
+
+          // Call handleSend with the prepared message and delete count
+          handleSend(
+            userMessageToRegenerate,
+            messagesToDeleteCount,
+            null,
+            tools,
+            enabledDocumentGroups,
+            llmProviders,
+          )
+
+          // Ensure the messages are deleted from the database
+          if (messagesToDelete.length > 0) {
+            await deleteMessagesMutation.mutate({
+              convoId: selectedConversation.id,
+              deletedMessages: messagesToDelete,
+            })
+          }
+        } catch (error) {
+          console.error('Error in handleRegenerate:', error)
+          errorToast({
+            title: 'Regeneration Error',
+            message:
+              error instanceof Error
+                ? error.message
+                : 'An unexpected error occurred while regenerating the message.',
+          })
         }
-        
-        // Call handleSend with the prepared message and delete count
-        handleSend(
-          userMessageToRegenerate,
-          messagesToDeleteCount,
-          null,
-          tools,
-          enabledDocumentGroups,
-          llmProviders,
-        );
-        
-        // Ensure the messages are deleted from the database
-        if (messagesToDelete.length > 0) {
-          await deleteMessagesMutation.mutate({
-            convoId: selectedConversation.id,
-            deletedMessages: messagesToDelete,
-          });
-        }
-      } catch (error) {
-        console.error('Error in handleRegenerate:', error);
-        errorToast({
-          title: 'Regeneration Error',
-          message: error instanceof Error ? error.message : 'An unexpected error occurred while regenerating the message.',
-        });
-      }
-    }, [selectedConversation, handleSend, llmProviders, tools, enabledDocumentGroups, selectedModel, homeDispatch, deleteMessagesMutation, apiKey, courseMetadata])
+      },
+      [
+        selectedConversation,
+        handleSend,
+        llmProviders,
+        tools,
+        enabledDocumentGroups,
+        selectedModel,
+        homeDispatch,
+        deleteMessagesMutation,
+        apiKey,
+        courseMetadata,
+      ],
+    )
 
     const scrollToBottom = useCallback(() => {
       if (autoScrollEnabled) {
@@ -1384,7 +1419,7 @@ export const Chat = memo(
     }, [autoScrollEnabled])
 
     // Add a state to track if user has manually scrolled
-    const [userHasScrolled, setUserHasScrolled] = useState<boolean>(false);
+    const [userHasScrolled, setUserHasScrolled] = useState<boolean>(false)
 
     // Add a more aggressive scroll to bottom function that doesn't depend on autoScrollEnabled
     const forceScrollToBottom = useCallback(() => {
@@ -1393,15 +1428,15 @@ export const Chat = memo(
         // Use scrollTo with behavior: 'instant' for immediate scrolling
         chatContainerRef.current.scrollTo({
           top: chatContainerRef.current.scrollHeight,
-          behavior: 'instant'
-        });
-        
+          behavior: 'instant',
+        })
+
         if (messagesEndRef.current) {
           // Use scrollIntoView with block: 'end' to ensure we're at the bottom
-          messagesEndRef.current.scrollIntoView({ 
+          messagesEndRef.current.scrollIntoView({
             behavior: 'auto',
-            block: 'end'
-          });
+            block: 'end',
+          })
         }
       }
     }, [userHasScrolled])
@@ -1410,68 +1445,71 @@ export const Chat = memo(
     useEffect(() => {
       if (selectedConversation?.id) {
         // Reset scroll state for new conversation
-        setUserHasScrolled(false);
-        setAutoScrollEnabled(true);
-        setShowScrollDownButton(false);
-        
+        setUserHasScrolled(false)
+        setAutoScrollEnabled(true)
+        setShowScrollDownButton(false)
+
         // Initial scroll
-        forceScrollToBottom();
-        
+        forceScrollToBottom()
+
         // Handle any dynamic content adjustments with a short delay
         const timeoutId = setTimeout(() => {
           if (!userHasScrolled) {
-            forceScrollToBottom();
+            forceScrollToBottom()
           }
-        }, 100);
-        
-        return () => clearTimeout(timeoutId);
+        }, 100)
+
+        return () => clearTimeout(timeoutId)
       }
-    }, [selectedConversation?.id, forceScrollToBottom]);
+    }, [selectedConversation?.id, forceScrollToBottom])
 
     // Add a ResizeObserver to detect content size changes and maintain scroll position
     useEffect(() => {
-      if (!chatContainerRef.current) return;
-      
-      let initialRender = true;
-      let lastScrollHeight = chatContainerRef.current.scrollHeight;
-      let lastScrollTop = chatContainerRef.current.scrollTop;
-      
+      if (!chatContainerRef.current) return
+
+      let initialRender = true
+      let lastScrollHeight = chatContainerRef.current.scrollHeight
+      let lastScrollTop = chatContainerRef.current.scrollTop
+
       const resizeObserver = new ResizeObserver(() => {
-        if (!chatContainerRef.current) return;
-        
+        if (!chatContainerRef.current) return
+
         // On initial render, allow scrolling to bottom
         if (initialRender) {
-          forceScrollToBottom();
-          initialRender = false;
-          return;
+          forceScrollToBottom()
+          initialRender = false
+          return
         }
-        
+
         // Calculate how close to bottom we were before resize
-        const wasAtBottom = lastScrollTop + chatContainerRef.current.clientHeight >= lastScrollHeight - 30;
-        
+        const wasAtBottom =
+          lastScrollTop + chatContainerRef.current.clientHeight >=
+          lastScrollHeight - 30
+
         // If user was at bottom before resize, keep them at bottom
         if (wasAtBottom && !userHasScrolled) {
-          forceScrollToBottom();
+          forceScrollToBottom()
         } else {
           // Otherwise maintain relative scroll position
-          const scrollHeightDiff = chatContainerRef.current.scrollHeight - lastScrollHeight;
-          chatContainerRef.current.scrollTop = lastScrollTop + scrollHeightDiff;
+          const scrollHeightDiff =
+            chatContainerRef.current.scrollHeight - lastScrollHeight
+          chatContainerRef.current.scrollTop = lastScrollTop + scrollHeightDiff
         }
-        
+
         // Update last known dimensions
-        lastScrollHeight = chatContainerRef.current.scrollHeight;
-        lastScrollTop = chatContainerRef.current.scrollTop;
-      });
-      
+        lastScrollHeight = chatContainerRef.current.scrollHeight
+        lastScrollTop = chatContainerRef.current.scrollTop
+      })
+
       // Start observing the chat container
-      resizeObserver.observe(chatContainerRef.current);
-      
+      resizeObserver.observe(chatContainerRef.current)
+
       // Clean up the observer when component unmounts
       return () => {
-        initialRender = false;
-        resizeObserver.disconnect();
-      };
-    }, [autoScrollEnabled, forceScrollToBottom, userHasScrolled]);
+        initialRender = false
+        resizeObserver.disconnect()
+      }
+    }, [autoScrollEnabled, forceScrollToBottom, userHasScrolled])
 
     const handleScroll = () => {
       if (chatContainerRef.current) {
@@ -1479,11 +1517,12 @@ export const Chat = memo(
           chatContainerRef.current
         const bottomTolerance = 30
 
-        const isAtBottom = scrollTop + clientHeight >= scrollHeight - bottomTolerance
-        
+        const isAtBottom =
+          scrollTop + clientHeight >= scrollHeight - bottomTolerance
+
         // Update scroll button visibility
         setShowScrollDownButton(!isAtBottom)
-        
+
         // Only update scroll states when there's a significant change
         if (!isAtBottom && !userHasScrolled) {
           setUserHasScrolled(true)
@@ -1497,16 +1536,16 @@ export const Chat = memo(
         chatContainerRef.current.scrollTo({
           top: chatContainerRef.current.scrollHeight,
           behavior: 'auto',
-        });
-        
-        messagesEndRef.current?.scrollIntoView({ 
+        })
+
+        messagesEndRef.current?.scrollIntoView({
           behavior: 'auto',
-          block: 'end' 
-        });
-        
+          block: 'end',
+        })
+
         // Only update necessary states for scroll button
-        setShowScrollDownButton(false);
-        setAutoScrollEnabled(true);
+        setShowScrollDownButton(false)
+        setAutoScrollEnabled(true)
       }
     }
 
@@ -1740,13 +1779,17 @@ export const Chat = memo(
             )
           } catch (storageError) {
             // Handle localStorage quota exceeded error
-            if (storageError instanceof DOMException && 
-                (storageError.name === 'QuotaExceededError' || 
-                 storageError.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
-                 storageError.code === 22 ||
-                 storageError.code === 1014)) {
-              console.warn('localStorage quota exceeded in handleFeedback, saving minimal conversation data instead')
-              
+            if (
+              storageError instanceof DOMException &&
+              (storageError.name === 'QuotaExceededError' ||
+                storageError.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+                storageError.code === 22 ||
+                storageError.code === 1014)
+            ) {
+              console.warn(
+                'localStorage quota exceeded in handleFeedback, saving minimal conversation data instead',
+              )
+
               // Create a minimal version of the conversation with just essential data
               const minimalConversation = {
                 id: updatedConversation.id,
@@ -1759,20 +1802,26 @@ export const Chat = memo(
                 createdAt: updatedConversation.createdAt,
                 updatedAt: updatedConversation.updatedAt,
               }
-              
+
               try {
                 // Try to save the minimal version
                 localStorage.setItem(
                   'selectedConversation',
-                  JSON.stringify(minimalConversation)
+                  JSON.stringify(minimalConversation),
                 )
               } catch (minimalError) {
                 // If even minimal version fails, just log the error
-                console.error('Failed to save even minimal conversation data to localStorage', minimalError)
+                console.error(
+                  'Failed to save even minimal conversation data to localStorage',
+                  minimalError,
+                )
               }
             } else {
               // Some other error occurred
-              console.error('Error saving conversation to localStorage:', storageError)
+              console.error(
+                'Error saving conversation to localStorage:',
+                storageError,
+              )
             }
           }
 

@@ -18,13 +18,8 @@ export async function POST(req: NextRequest, res: NextResponse) {
   try {
     const body = await req.json()
 
-    const {
-      conversation,
-      course_name,
-      courseMetadata,
-      mode,
-    } = body as ChatBody
-    
+    const { conversation, course_name, courseMetadata, mode } = body as ChatBody
+
     const buildPromptStartTime = Date.now()
     const newConversation = await buildPrompt({
       conversation,
