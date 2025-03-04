@@ -1,4 +1,4 @@
-import { type CoreMessage, generateText, streamText } from 'ai'
+import { type CoreMessage, generateText, streamText, smoothStream } from 'ai'
 import { type ChatBody, type Conversation } from '~/types/chat'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import {
@@ -23,8 +23,6 @@ export async function POST(req: Request) {
       chatBody: ChatBody
     } = await req.json()
 
-    console.log('chatBody: ', chatBody)
-
     const conversation = chatBody.conversation
     if (!conversation) {
       throw new Error('Conversation is missing from the chat body')
@@ -44,12 +42,43 @@ export async function POST(req: Request) {
     }
 
     if (chatBody.stream) {
+      // Check if it's a Claude model that supports reasoning
+      const isClaudeWithReasoning =
+        conversation.model.id.includes('claude') &&
+        (conversation.model as AnthropicModel).extendedThinking === true
+
       const result = await streamText({
         model: anthropic(conversation.model.id),
         temperature: conversation.temperature,
         messages: convertConversationToVercelAISDKv3(conversation),
+        ...(isClaudeWithReasoning && {
+          experimental_transform: [
+            smoothStream({
+              chunking: 'word',
+            }),
+          ],
+          providerOptions: {
+            anthropic: {
+              thinking: {
+                type: 'enabled',
+                budget_tokens: 16000,
+              },
+            },
+          },
+        }),
       })
-      return result.toTextStreamResponse()
+
+      if (isClaudeWithReasoning) {
+        console.log('Using Claude with reasoning enabled')
+        return result.toDataStreamResponse({
+          sendReasoning: true,
+          getErrorMessage: () => {
+            return `An error occurred while streaming the response.`
+          },
+        })
+      } else {
+        return result.toTextStreamResponse()
+      }
     } else {
       const result = await generateText({
         model: anthropic(conversation.model.id),

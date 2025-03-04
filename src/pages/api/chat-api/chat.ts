@@ -320,6 +320,7 @@ export default async function chat(
     stream,
     courseMetadata,
     llmProviders,
+    mode: 'chat',
   }
 
   // Build the prompt

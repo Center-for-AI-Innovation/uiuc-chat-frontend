@@ -176,7 +176,7 @@ function Logo() {
     <div className="flex-1">
       <Link href="/">
         <h2 className="ms-4 cursor-pointer text-2xl font-extrabold tracking-tight text-white sm:text-[1.8rem]">
-          UIUC.<span className="text-[hsl(280,100%,70%)]">chat</span>
+          Illinois <span className="text-[hsl(280,100%,70%)]">Chat</span>
         </h2>
       </Link>
     </div>

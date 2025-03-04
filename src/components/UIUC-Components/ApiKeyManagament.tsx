@@ -300,6 +300,21 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
     }
   }
 
+  const styles = {
+    input: {
+      border: '1px solid var(--illinois-storm-light)',
+      backgroundColor: 'var(--illinois-background-dark)',
+      color: 'var(--illinois-white)',
+    },
+    button: {
+      backgroundColor: 'var(--illinois-orange)',
+      color: 'var(--illinois-white)',
+      '&:hover': {
+        backgroundColor: 'var(--illinois-altgeld)',
+      },
+    },
+  }
+
   return (
     <Card
       shadow="xs"
@@ -580,20 +595,6 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                     </Button>
                   }
                   rightSectionWidth={'auto'}
-                  styles={{
-                    input: {
-                      backgroundColor: '#1a1b3e',
-                      paddingRight: '90px',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
-                      borderColor: '#4a4b6a',
-                      '&:focus': {
-                        borderColor: '#6e56cf',
-                      },
-                    },
-                  }}
                 />
               )}
             </div>
