@@ -1276,6 +1276,11 @@ export const Chat = memo(
             throw new Error('Previous user message not found');
           }
           
+          // Clear contexts from both the assistant message and the user message
+          messageToRegenerate.contexts = [];
+          messageToRegenerate.wasQueryRewritten = undefined;
+          messageToRegenerate.queryRewriteText = undefined;
+          
           userMessageToRegenerate = { 
             ...prevUserMessage,
             id: prevUserMessage.id || uuidv4(), // Ensure ID is always defined
