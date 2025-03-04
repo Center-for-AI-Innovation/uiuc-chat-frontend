@@ -65,7 +65,9 @@ export async function runSambaNovaChat(
       (m) => m.id === conversation.model.id,
     )
     if (!modelConfig) {
-      throw new Error(`Model configuration not found for ${conversation.model.id}`)
+      throw new Error(
+        `Model configuration not found for ${conversation.model.id}`,
+      )
     }
 
     const commonParams = {
@@ -163,4 +165,4 @@ export async function GET() {
     provider: ProviderNames.SambaNova,
     models: models,
   })
-} 
+}
