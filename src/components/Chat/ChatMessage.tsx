@@ -1409,12 +1409,7 @@ export const ChatMessage = memo(
                         <div className="flex w-full flex-col items-start space-y-2">
                           {/* Query rewrite loading state - only show for current message */}
                           {isQueryRewriting &&
-                            (messageIndex ===
-                              (selectedConversation?.messages.length ?? 0) -
-                                1 ||
-                              messageIndex ===
-                                (selectedConversation?.messages.length ?? 0) -
-                                  2) && (
+                            messageIndex === (selectedConversation?.messages?.length ?? 0) - 1 && (
                               <IntermediateStateAccordion
                                 accordionKey="query-rewrite"
                                 title="Optimizing search query"
@@ -1425,7 +1420,7 @@ export const ChatMessage = memo(
                             )}
 
                           {/* Query rewrite result - show for any message that was optimized */}
-                          {!isQueryRewriting &&
+                          {(!isQueryRewriting || messageIndex < (selectedConversation?.messages?.length ?? 0) - 1) &&
                             message.wasQueryRewritten !== undefined &&
                             message.wasQueryRewritten !== null && (
                               <IntermediateStateAccordion
