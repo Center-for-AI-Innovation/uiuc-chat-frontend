@@ -9,7 +9,12 @@ import {
   Slider,
   Tooltip,
 } from '@mantine/core'
-import { IconCheck, IconCopy, IconChevronDown, IconInfoCircle } from '@tabler/icons-react'
+import {
+  IconCheck,
+  IconCopy,
+  IconChevronDown,
+  IconInfoCircle,
+} from '@tabler/icons-react'
 import { useGetProjectLLMProviders } from '~/hooks/useProjectAPIKeys'
 import { findDefaultModel } from './api-inputs/LLMsApiKeyInputForm'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
@@ -135,15 +140,17 @@ data = {
 }
 
 response = requests.post(url, headers=headers, json=data)
-${streamEnabled 
-  ? `for chunk in response.iter_lines():
+${
+  streamEnabled
+    ? `for chunk in response.iter_lines():
     if chunk:
         print(chunk.decode())`
-  : `# Print just the message
+    : `# Print just the message
 print(response.json().get('message'))
 
 # Optionally print contexts
-# print(response.json().get('contexts'))`}`,
+# print(response.json().get('contexts'))`
+}`,
     node: `const data = {
   "model": "${selectedModel}",
   "messages": [
@@ -181,6 +188,25 @@ fetch('${baseUrl}/api/chat-api/chat', {
 .catch(error => {
   console.error('Error:', error);
 });`,
+  }
+
+  const styles = {
+    container: {
+      backgroundColor: 'var(--illinois-background-darker)',
+      border: '1px solid var(--illinois-storm-dark)',
+    },
+    input: {
+      backgroundColor: 'var(--illinois-background-dark)',
+      color: 'var(--illinois-white)',
+      border: '1px solid var(--illinois-storm-light)',
+    },
+    button: {
+      backgroundColor: 'var(--illinois-industrial)',
+      color: 'var(--illinois-white)',
+      '&:hover': {
+        backgroundColor: 'var(--illinois-blue)',
+      },
+    },
   }
 
   return (
@@ -388,7 +414,9 @@ fetch('${baseUrl}/api/chat-api/chat', {
           <div className="flex items-center gap-2">
             <Switch
               checked={retrievalOnly}
-              onChange={(event) => setRetrievalOnly(event.currentTarget.checked)}
+              onChange={(event) =>
+                setRetrievalOnly(event.currentTarget.checked)
+              }
               label="Retrieval Only"
               size="md"
               color="grape"
@@ -416,9 +444,9 @@ fetch('${baseUrl}/api/chat-api/chat', {
                 },
               })}
             >
-              <IconInfoCircle 
-                size={16} 
-                className="mt-4 text-gray-400 cursor-help"
+              <IconInfoCircle
+                size={16}
+                className="mt-4 cursor-help text-gray-400"
               />
             </Tooltip>
           </div>
@@ -426,7 +454,9 @@ fetch('${baseUrl}/api/chat-api/chat', {
           {selectedLanguage !== 'node' && (
             <Switch
               checked={streamEnabled}
-              onChange={(event) => setStreamEnabled(event.currentTarget.checked)}
+              onChange={(event) =>
+                setStreamEnabled(event.currentTarget.checked)
+              }
               label="Stream Response"
               size="md"
               color="grape"
@@ -444,9 +474,9 @@ fetch('${baseUrl}/api/chat-api/chat', {
         </div>
 
         <div className="text-sm text-gray-400">
-          <a 
-            href="https://docs.uiuc.chat/api/endpoints#image-input-example" 
-            target="_blank" 
+          <a
+            href="https://docs.uiuc.chat/api/endpoints#image-input-example"
+            target="_blank"
             rel="noopener noreferrer"
             className="text-blue-400 hover:text-blue-300"
           >
