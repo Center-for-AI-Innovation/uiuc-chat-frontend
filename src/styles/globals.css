@@ -635,32 +635,6 @@ a[data-footnote-backref] {
   transform: translateX(0);
 }
 
-/* For links that wrap to multiple lines, ensure tooltip appears above the first line */
-/* Removing duplicate rule - this was causing the block-like behavior */
-/* .supMarkDown a {
-  display: inline-block;
-  font-size: 100%;
-  line-height: inherit;
-  color: rgba(255, 255, 255, 0.95);
-  text-decoration: none;
-  white-space: normal;
-  font-weight: 400;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
-  background-color: rgba(157, 78, 221, 0.15);
-  border: 1px solid rgba(157, 78, 221, 0.3);
-  border-radius: 4px;
-  padding: 0 4px;
-  margin: 0 2px;
-  overflow-wrap: break-word;
-  word-wrap: break-word;
-  word-break: break-word;
-  hyphens: auto;
-  vertical-align: baseline;
-  position: relative;
-  top: 0;
-} */
-
 /* Styling for document buttons */
 .linkMarkDown button:not(.codeblock-button) {
   height: 100px;
