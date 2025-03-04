@@ -24,8 +24,6 @@ export async function POST(req: NextRequest, res: NextResponse) {
       courseMetadata,
       mode,
     } = body as ChatBody
-
-    console.log('chat body', body)
     
     const buildPromptStartTime = Date.now()
     const newConversation = await buildPrompt({
