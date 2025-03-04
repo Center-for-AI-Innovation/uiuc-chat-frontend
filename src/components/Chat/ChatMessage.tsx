@@ -449,16 +449,6 @@ export const ChatMessage = memo(
     }
 
     useEffect(() => {
-      if (
-        message.feedback &&
-        message.feedback.isPositive !== undefined &&
-        message.feedback.isPositive !== null
-      ) {
-        setIsFeedbackModalOpen(true)
-      }
-    }, [message])
-
-    useEffect(() => {
       // setMessageContent(message.content)
       if (Array.isArray(message.content)) {
         const textContent = message.content
