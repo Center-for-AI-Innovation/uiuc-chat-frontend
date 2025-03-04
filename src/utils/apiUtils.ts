@@ -236,16 +236,6 @@ export function convertConversationToCoreMessagesWithoutSystem(
       content = [{ type: 'text', text: message.content as string }]
     }
 
-    // if (isLastUserMessage) {
-    //   const citationReminder =
-    //     '\n\nIf you use the <Potentially Relevant Documents> in your response, please remember cite your sources using the required formatting, e.g. "The grass is green. [29, page: 11]'
-    //   if (content[0].type === 'text') {
-    //     content[0].text += citationReminder
-    //   } else {
-    //     content.push({ type: 'text', text: citationReminder })
-    //   }
-    // }
-
     return content
   }
 
