@@ -682,8 +682,9 @@ export const ChatMessage = memo(
     ): Promise<string> {
       if (!text) return ''
 
-      // Simplified regex to match markdown links first, then we'll check if they're citations
-      const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g
+      // Updated regex to match markdown links with citation tooltips
+      // This matches [text](url "Citation N") format
+      const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^)]+?)(?:\s+"Citation\s+\d+")?\)/g
       let match
       let finalText = text
 
@@ -696,47 +697,58 @@ export const ChatMessage = memo(
           // Decode HTML entities in the URL
           linkUrl = decodeHtmlEntities(linkUrl)
 
-          // Only process if it looks like a citation (contains a pipe character)
-          if (!citationText.includes('|')) {
-            continue
-          }
-
           if (!linkUrl) {
             continue
           }
 
           // Extract page number if present
-          const url = new URL(linkUrl)
-
-          // Only process S3 URLs
-          if (
-            !url.hostname.includes('s3') &&
-            !url.hostname.includes('amazonaws')
-          ) {
-            continue
+          let pageNumber = ''
+          let baseUrl = linkUrl
+          
+          // Handle #page=X format
+          if (linkUrl.includes('#page=')) {
+            const [urlPart, hashPart] = linkUrl.split('#')
+            baseUrl = urlPart || ''
+            pageNumber = '#' + hashPart
           }
 
-          const pageNumber = url.hash || '' // Includes #page=X if present
-          url.hash = '' // Remove hash before processing the main URL
+          // Only process S3 URLs
+          try {
+            const url = new URL(baseUrl)
+            if (
+              !url.hostname.includes('s3') &&
+              !url.hostname.includes('amazonaws')
+            ) {
+              continue
+            }
 
-          const refreshed = await refreshS3LinkIfExpired(
-            url.toString(),
-            courseName,
-          )
+            const refreshed = await refreshS3LinkIfExpired(
+              baseUrl,
+              courseName,
+            )
 
-          // Only replace if the URL actually changed
-          if (refreshed !== url.toString()) {
-            // Reconstruct the link with the page number if it existed
-            const newUrl = pageNumber ? `${refreshed}${pageNumber}` : refreshed
-            // Use regex-safe replacement to avoid special characters issues
-            const escapedFullMatch = fullMatch.replace(
-              /[.*+?^${}()|[\]\\]/g,
-              '\\$&',
-            )
-            finalText = finalText.replace(
-              new RegExp(escapedFullMatch, 'g'),
-              `[${citationText}](${newUrl})`,
-            )
+            // Only replace if the URL actually changed
+            if (refreshed !== baseUrl) {
+              // Reconstruct the link with the page number if it existed
+              const newUrl = pageNumber ? `${refreshed}${pageNumber}` : refreshed
+              
+              // Extract tooltip if present
+              const tooltipMatch = fullMatch.match(/\([^)]+\s+"([^"]+)"\)/)
+              const tooltip = tooltipMatch ? ` "${tooltipMatch[1]}"` : ''
+              
+              // Use regex-safe replacement to avoid special characters issues
+              const escapedFullMatch = fullMatch.replace(
+                /[.*+?^${}()|[\]\\]/g,
+                '\\$&',
+              )
+              finalText = finalText.replace(
+                new RegExp(escapedFullMatch, 'g'),
+                `[${citationText}](${newUrl}${tooltip})`,
+              )
+            }
+          } catch (urlError) {
+            console.error('Error parsing URL:', urlError, linkUrl)
+            continue
           }
         } catch (error) {
           console.error('Error processing link:', error)
@@ -1669,8 +1681,7 @@ export const ChatMessage = memo(
                             !isQueryRewriting &&
                             loading &&
                             (messageIndex ===
-                              (selectedConversation?.messages.length ?? 0) -
-                                1 ||
+                              (selectedConversation?.messages.length ?? 0) - 1 ||
                               messageIndex ===
                                 (selectedConversation?.messages.length ?? 0) -
                                   2) &&
