@@ -825,7 +825,9 @@ export const ChatInput = ({
           selectedConversation &&
           selectedConversation.messages &&
           selectedConversation.messages.length > 0 &&
-          selectedConversation.messages[selectedConversation.messages.length - 1]?.role === 'user' && (
+          selectedConversation.messages[
+            selectedConversation.messages.length - 1
+          ]?.role === 'user' && (
             <button
               className={`absolute ${isSmallScreen ? '-top-28' : '-top-20'} left-0 right-0 mx-auto mb-12 flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white px-4 py-2 text-black hover:opacity-50 dark:border-neutral-600 dark:bg-[#343541] dark:text-white md:mb-0 md:mt-2`}
               onClick={onRegenerate}
@@ -846,7 +848,7 @@ export const ChatInput = ({
               selectedConversation.model?.id as OpenAIModelID,
             ) && (
               <button
-                className="absolute bottom-11 left-5 rounded-full p-1 text-neutral-800 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
+                className="absolute bottom-11 left-5 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
                 onClick={() => document.getElementById('imageUpload')?.click()}
                 style={{ pointerEvents: 'auto' }}
               >
@@ -1044,7 +1046,7 @@ export const ChatInput = ({
 
           <Text
             size={isSmallScreen ? '10px' : 'xs'}
-            className={`font-montserratHeading ${montserrat_heading.variable} absolute bottom-2 left-5 break-words rounded-full p-1 text-neutral-400 text-neutral-800 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200`}
+            className={`font-montserratHeading ${montserrat_heading.variable} absolute bottom-2 left-5 break-words rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200`}
             onClick={handleTextClick}
             style={{ cursor: 'pointer', pointerEvents: 'auto' }}
           >
