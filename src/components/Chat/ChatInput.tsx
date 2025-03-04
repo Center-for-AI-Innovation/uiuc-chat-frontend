@@ -808,12 +808,17 @@ export const ChatInput = ({
   return (
     <div
       className={`absolute bottom-0 left-0 w-full border-transparent bg-transparent pt-6 dark:border-white/20 md:pt-2`}
+      style={{ pointerEvents: 'none' }}
     >
-      <div className="stretch mx-2 mt-4 flex flex-col gap-3 last:mb-2 md:mx-4 md:mt-[52px] md:last:mb-6 lg:mx-auto lg:max-w-3xl">
+      <div
+        className="stretch mx-2 mt-4 flex flex-col gap-3 last:mb-2 md:mx-4 md:mt-[52px] md:last:mb-6 lg:mx-auto lg:max-w-3xl"
+        style={{ pointerEvents: 'auto' }}
+      >
         {messageIsStreaming && (
           <button
             className={`absolute ${isSmallScreen ? '-top-28' : '-top-20'} left-0 right-0 mx-auto mb-12 flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white px-4 py-2 text-black hover:opacity-50 dark:border-neutral-600 dark:bg-[#15162c] dark:text-white md:mb-0 md:mt-2`}
             onClick={handleStopConversation}
+            style={{ pointerEvents: 'auto' }}
           >
             <IconPlayerStop size={16} /> {t('Stop Generating')}
           </button>
@@ -829,6 +834,7 @@ export const ChatInput = ({
             <button
               className={`absolute ${isSmallScreen ? '-top-28' : '-top-20'} left-0 right-0 mx-auto mb-12 flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white px-4 py-2 text-black hover:opacity-50 dark:border-neutral-600 dark:bg-[#343541] dark:text-white md:mb-0 md:mt-2`}
               onClick={onRegenerate}
+              style={{ pointerEvents: 'auto' }}
             >
               <IconRepeat size={16} /> {t('Regenerate Response')}
             </button>
@@ -837,6 +843,7 @@ export const ChatInput = ({
         <div
           ref={chatInputParentContainerRef}
           className="absolute bottom-0 mx-4 flex w-[80%] flex-col self-center rounded-t-3xl border border-black/10 bg-[#070712] px-4 pb-8 pt-4 shadow-[0_0_10px_rgba(0,0,0,0.10)] dark:border-gray-900/50 dark:text-white dark:shadow-[0_0_15px_rgba(0,0,0,0.10)] md:mx-20 md:w-[70%]"
+          style={{ pointerEvents: 'auto' }}
         >
           {/* BUTTON 2: Image Icon and Input */}
           {selectedConversation?.model?.id &&
@@ -846,6 +853,7 @@ export const ChatInput = ({
               <button
                 className="absolute bottom-11 left-5 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
                 onClick={() => document.getElementById('imageUpload')?.click()}
+                style={{ pointerEvents: 'auto' }}
               >
                 <div className="">
                   <IconPhoto size={22} />
@@ -857,7 +865,7 @@ export const ChatInput = ({
             multiple
             id="imageUpload"
             ref={imageUploadRef}
-            style={{ display: 'none' }}
+            style={{ display: 'none', pointerEvents: 'auto' }}
             onChange={(e) => {
               const files = e.target.files
               if (files) {
@@ -867,7 +875,10 @@ export const ChatInput = ({
           />
 
           {showPluginSelect && (
-            <div className="absolute bottom-14 left-0 rounded bg-white dark:bg-[#15162c]">
+            <div
+              className="absolute bottom-14 left-0 rounded bg-white dark:bg-[#15162c]"
+              style={{ pointerEvents: 'auto' }}
+            >
               <PluginSelect
                 plugin={plugin}
                 onKeyDown={(e: any) => {
@@ -895,9 +906,10 @@ export const ChatInput = ({
             tabIndex={0}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            onClick={() => textareaRef.current?.focus()} // Add this line
+            onClick={() => textareaRef.current?.focus()}
             style={{
-              ...chatInputContainerStyle, // Apply the dynamic padding here
+              ...chatInputContainerStyle,
+              pointerEvents: 'auto',
             }}
           >
             {/* Image preview section */}
@@ -976,6 +988,7 @@ export const ChatInput = ({
                   height: 'auto',
                   maxHeight: '400px',
                   overflow: 'hidden',
+                  pointerEvents: 'auto',
                 }}
                 placeholder={'Message UIUC.chat'}
                 value={content}
@@ -987,44 +1000,12 @@ export const ChatInput = ({
                 onFocus={handleFocus}
                 onBlur={handleBlur}
               />
-              {/* <textarea
-                ref={textareaRef}
-                className={`chat-input m-0 h-[24px] max-h-[400px] w-full resize-none bg-transparent py-2 pl-2 pr-8 text-white outline-none ${isFocused ? 'border-blue-500' : ''
-                  }`}
-                style={{
-                  resize: 'none',
-                  bottom: `${textareaRef?.current?.scrollHeight}px`,
-                  maxHeight: '400px',
-                  overflow: `${textareaRef.current &&
-                    textareaRef.current.scrollHeight > 400
-                    ? 'auto'
-                    : 'hidden'
-                    }`,
-                }}
-                placeholder={'Message UIUC.chat'}
-                value={content}
-                rows={1}
-                onInput={(e) => {
-                  const target = e.target as HTMLTextAreaElement;
-                  // Reset height to auto to get the correct scrollHeight
-                  target.style.height = 'auto';
-                  // Set actual height based on content
-                  target.style.height = `${target.scrollHeight}px`;
-                  // Add scrollbar if content exceeds max height
-                  target.style.overflow = target.scrollHeight > 400 ? 'auto' : 'hidden';
-                }}
-                onCompositionStart={() => setIsTyping(true)}
-                onCompositionEnd={() => setIsTyping(false)}
-                onChange={handleChange}
-                onKeyDown={handleKeyDown}
-                onFocus={handleFocus}
-                onBlur={handleBlur}
-              /> */}
             </div>
 
             <button
               className="absolute bottom-11 right-5 rounded-full p-1 text-neutral-800 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
               onClick={handleSend}
+              style={{ pointerEvents: 'auto' }}
             >
               {messageIsStreaming ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-t-2 border-neutral-800 opacity-60 dark:border-neutral-100"></div>
@@ -1038,6 +1019,7 @@ export const ChatInput = ({
                 <button
                   className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-300 text-gray-800 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-neutral-200"
                   onClick={onScrollDownClick}
+                  style={{ pointerEvents: 'auto' }}
                 >
                   <IconArrowDown size={18} />
                 </button>
@@ -1045,7 +1027,10 @@ export const ChatInput = ({
             )}
 
             {showPromptList && filteredPrompts.length > 0 && (
-              <div className="absolute bottom-12 w-full">
+              <div
+                className="absolute bottom-12 w-full"
+                style={{ pointerEvents: 'auto' }}
+              >
                 <PromptList
                   activePromptIndex={activePromptIndex}
                   prompts={filteredPrompts}
@@ -1057,12 +1042,14 @@ export const ChatInput = ({
             )}
 
             {isModalVisible && filteredPrompts[activePromptIndex] && (
-              <VariableModal
-                prompt={filteredPrompts[activePromptIndex]}
-                variables={variables}
-                onSubmit={handleSubmit}
-                onClose={() => setIsModalVisible(false)}
-              />
+              <div style={{ pointerEvents: 'auto' }}>
+                <VariableModal
+                  prompt={filteredPrompts[activePromptIndex]}
+                  variables={variables}
+                  onSubmit={handleSubmit}
+                  onClose={() => setIsModalVisible(false)}
+                />
+              </div>
             )}
           </div>
 
@@ -1070,7 +1057,7 @@ export const ChatInput = ({
             size={isSmallScreen ? '10px' : 'xs'}
             className={`font-montserratHeading ${montserrat_heading.variable} absolute bottom-2 left-5 break-words rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200`}
             onClick={handleTextClick}
-            style={{ cursor: 'pointer' }}
+            style={{ cursor: 'pointer', pointerEvents: 'auto' }}
           >
             {selectBestModel(llmProviders)?.name}
             {selectedConversation?.model &&
@@ -1096,6 +1083,7 @@ export const ChatInput = ({
                 zIndex: 100,
                 right: '30px',
                 top: '75px',
+                pointerEvents: 'auto',
               }}
             >
               <UserSettings />
