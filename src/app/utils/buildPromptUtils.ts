@@ -10,7 +10,11 @@ import {
 } from '@/types/chat'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { AnySupportedModel } from '~/utils/modelProviders/LLMProvider'
-import { DEFAULT_SYSTEM_PROMPT, GUIDED_LEARNING_PROMPT, DOCUMENT_FOCUS_PROMPT } from '@/utils/app/const'
+import {
+  DEFAULT_SYSTEM_PROMPT,
+  GUIDED_LEARNING_PROMPT,
+  DOCUMENT_FOCUS_PROMPT,
+} from '@/utils/app/const'
 import { routeModelRequest } from '~/utils/streamProcessing'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -75,14 +79,18 @@ const shouldAppendDocumentsOnlyPrompt = (
 
 const encoding = encodingForModel('gpt-4o')
 
+export type BuildPromptMode = 'chat' | 'optimize_prompt'
+
 export const buildPrompt = async ({
   conversation,
   projectName,
   courseMetadata,
+  mode,
 }: {
   conversation: Conversation | undefined
   projectName: string
   courseMetadata: CourseMetadata | undefined
+  mode?: BuildPromptMode
 }): Promise<Conversation> => {
   /*
     System prompt -- defined by user. If documents are provided, add the citations instructions to it.
@@ -105,6 +113,21 @@ export const buildPrompt = async ({
 
   try {
     // Execute asynchronous operations in parallel and await their results
+    if (mode === 'optimize_prompt') {
+      // Extract system messages from conversation history
+      const systemMessagesFromHistory = _extractSystemMessages(conversation)
+
+      if (systemMessagesFromHistory && conversation.messages.length > 0) {
+        const lastMessage =
+          conversation.messages[conversation.messages.length - 1]
+        if (lastMessage && lastMessage.role === 'user') {
+          lastMessage.latestSystemMessage = systemMessagesFromHistory
+          lastMessage.finalPromtEngineeredMessage =
+            typeof lastMessage.content === 'string' ? lastMessage.content : ''
+        }
+      }
+      return conversation
+    }
     const allPromises = []
     allPromises.push(_getLastUserTextInput({ conversation }))
     allPromises.push(_getLastToolResult({ conversation }))
@@ -188,7 +211,7 @@ export const buildPrompt = async ({
 
       // Add Tool Instructions and outputs
       const toolInstructions =
-        "<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool \`tool name`...' or 'According to tool \`tool name`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>"
+        "<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool `tool name`...' or 'According to tool `tool name`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>"
 
       // Add to user prompt sections
       userPromptSections.push(toolInstructions)
@@ -361,7 +384,7 @@ function _buildQueryTopContext({
       ?.contexts as ContextWithMetadata[]
 
     if (!contexts || !Array.isArray(contexts) || contexts.length === 0) {
-      return undefined;
+      return undefined
     }
 
     let tokenCounter = 0
@@ -508,27 +531,34 @@ export const getSystemPostPrompt = ({
   const isGuidedLearning = isGuidedLearningEnabled(conversation, courseMetadata)
   const isDocumentsOnly = isDocumentsOnlyEnabled(conversation, courseMetadata)
 
-  const postPrompt = `Please analyze and respond to the following question using the excerpts from the provided documents. These documents can be PDF files or web pages. You may also see output from API calls (labeled as "tools") and image descriptions. Use this information to craft a detailed and accurate answer.
+  const postPrompt =
+    `Please analyze and respond to the following question using the excerpts from the provided documents. These documents can be PDF files or web pages. You may also see output from API calls (labeled as "tools") and image descriptions. Use this information to craft a detailed and accurate answer.
 
-When referencing information from the documents, you MUST include citations in your response. Citations should be placed at the end of complete thoughts, immediately before the period. For each distinct piece of information or section, cite the single most relevant source using XML-style citation tags in the following format:
+When referencing information from the documents, you MUST include citations in your response. Citations should be placed at the end of complete thoughts, immediately before the period. For each distinct piece of information or section, cite the relevant source(s) using XML-style citation tags in the following format:
 - Use "<cite>1</cite>" when referencing document 1, placing it immediately before the period
+- For multiple sources, include all citation numbers within a single tag, separated by commas: "<cite>1, 2, 3</cite>"
 
 Here are examples of how to properly integrate citations in your response:
 - "The loop invariant is a condition that must be true before and after each iteration of the loop. This fundamental concept helps prove the correctness of loop-based algorithms <cite>1</cite>."
 - "Python lists are implemented as dynamic arrays. When the allocated space is filled, Python will automatically resize the array to accommodate more elements <cite>2</cite>."
 - "The course has a strict late submission policy. All assignments are due every Friday by 11:59 PM, and late submissions will incur a 10% penalty per day <cite>3</cite>."
+- "Object-oriented programming combines data and functionality into objects, while functional programming treats computation as the evaluation of mathematical functions and avoids changing state <cite>1, 3</cite>."
 
 Citations should be placed at the end of complete thoughts or sections, immediately before the period if applicable. This makes the text more readable while still maintaining clear attribution of information. Break down information into logical sections and cite the sources at the end of each complete thought.
 
 Note: You may see citations in the conversation history that appear differently due to post-processing formatting. Regardless of how they appear in previous messages, always use the XML-style citation format specified above in your responses.
 
-${isGuidedLearning 
-  ? 'IMPORTANT: While in guided learning mode, you must still cite all relevant course materials using the exact citation format—even if they contain direct answers. Never filter out or omit relevant materials.'
-  : ''}
+${
+  isGuidedLearning
+    ? 'IMPORTANT: While in guided learning mode, you must still cite all relevant course materials using the exact citation format—even if they contain direct answers. Never filter out or omit relevant materials.'
+    : ''
+}
 
-${!isGuidedLearning && !isDocumentsOnly 
-  ? 'If the answer is not in the provided documents, state so but still provide as helpful a response as possible to directly answer the question.'
-  : ''}
+${
+  !isGuidedLearning && !isDocumentsOnly
+    ? 'If the answer is not in the provided documents, state so but still provide as helpful a response as possible to directly answer the question.'
+    : ''
+}
 
 When using tool outputs in your response, place the tool reference at the end of the relevant statement, before the period, using code notation. For example: "The repository contains three JavaScript files \`as per tool ls\`." Always be honest and transparent about tool results.
 
@@ -570,9 +600,28 @@ export const getDefaultPostPrompt = (): string => {
       linkParameters: {
         guidedLearning: false,
         documentsOnly: false,
-        systemPromptOnly: false
-      }
+        systemPromptOnly: false,
+      },
     } as Conversation,
     courseMetadata: defaultCourseMetadata,
   })
+}
+
+const _extractSystemMessages = (conversation: Conversation): string => {
+  const systemMessages = conversation.messages
+    .filter((message) => message.role === 'system')
+    .map((message) => {
+      if (typeof message.content === 'string') {
+        return message.content
+      } else if (Array.isArray(message.content)) {
+        return message.content
+          .filter((c) => c.type === 'text')
+          .map((c) => c.text)
+          .join('\n')
+      }
+      return ''
+    })
+    .filter((content) => content.length > 0)
+
+  return systemMessages.join('\n\n')
 }
