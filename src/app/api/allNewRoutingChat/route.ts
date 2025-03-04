@@ -3,7 +3,6 @@
 import { ChatBody } from '@/types/chat'
 import { routeModelRequest } from '~/utils/streamProcessing'
 import { NextRequest, NextResponse } from 'next/server'
-
 import { buildPrompt } from '~/app/utils/buildPromptUtils'
 import { OpenAIError } from '~/utils/server'
 
