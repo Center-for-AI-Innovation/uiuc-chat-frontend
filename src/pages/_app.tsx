@@ -6,6 +6,7 @@ import { appWithTranslation } from 'next-i18next'
 // import { dark } from '@clerk/themes'
 
 import '~/styles/globals.css'
+import '~/styles/citation-tooltips.css'
 import Maintenance from '~/components/UIUC-Components/Maintenance'
 
 import posthog from 'posthog-js'
@@ -15,7 +16,7 @@ import { useEffect, useRef, useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
-import { SpeedInsights } from '@vercel/speed-insights/next'
+// import { SpeedInsights } from '@vercel/speed-insights/next'
 import { Analytics } from '@vercel/analytics/next'
 
 import { KeycloakProvider } from '../providers/KeycloakProvider';
@@ -88,7 +89,7 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
       <KeycloakProvider>
         <QueryClientProvider client={queryClient}>
         <PostHogProvider client={posthog}>
-          <SpeedInsights />
+          {/* <SpeedInsights /> */}
           <Analytics />
           <Notifications position="bottom-center" zIndex={2077} />
           <ReactQueryDevtools
@@ -102,24 +103,22 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
                 theme={{
                   colorScheme: 'dark',
                   colors: {
-                    // Add your color
-                    deepBlue: ['#E9EDFC', '#C1CCF6', '#99ABF0' /* ... */],
-                    lime: ['#a3e635', '#65a30d', '#365314' /* ... */],
-                    aiPurple: ['#C06BF9'],
-                    backgroundColors: ['#2e026d', '#020307'],
-                    nearlyBlack: ['#0E1116'],
-                    nearlyWhite: ['#F7F7F7'],
-                    disabled: ['#2A2F36'],
-                    errorBackground: ['#dc2626'],
-                    errorBorder: ['#dc2626'],
+                    // Using CSS variables for colors
+                    deepBlue: ['var(--illinois-blue)'],
+                    primary: ['var(--illinois-orange)'],
+                    secondary: ['var(--illinois-blue)'],
+                    accent: ['var(--illinois-industrial)'],
+                    background: ['var(--illinois-background-dark)'],
+                    nearlyBlack: ['var(--illinois-background-darker)'],
+                    nearlyWhite: ['var(--illinois-white)'],
+                    disabled: ['var(--illinois-storm-dark)'],
+                    errorBackground: ['var(--illinois-berry)'],
+                    errorBorder: ['var(--illinois-berry)'],
                   },
-                  // primaryColor: 'aiPurple',
-
                   shadows: {
                     // md: '1px 1px 3px rgba(0, 0, 0, .25)',
                     // xl: '5px 5px 3px rgba(0, 0, 0, .25)',
                   },
-
                   headings: {
                     fontFamily: 'Montserrat, Roboto, sans-serif',
                     sizes: {
@@ -128,8 +127,8 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
                     },
                   },
                   defaultGradient: {
-                    from: '#dc2626',
-                    to: '#431407',
+                    from: 'var(--illinois-berry)',
+                    to: 'var(--illinois-earth)',
                     deg: 80,
                   },
                 }}
