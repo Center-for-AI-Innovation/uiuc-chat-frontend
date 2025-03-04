@@ -517,9 +517,10 @@ export const Chat = memo(
 
                   Remember: This query optimization is for vector database retrieval only, not for the final LLM prompt.`
 
-                // Get conversation context (last 6 messages or fewer)
-                const contextMessages =
-                  selectedConversation?.messages?.slice(-6) || []
+                // Get the last user message and some context
+                const lastUserMessageIndex = selectedConversation?.messages?.findLastIndex(msg => msg.role === 'user');
+                const contextStartIndex = Math.max(0, lastUserMessageIndex - 5); // Get up to 5 messages before the last user message
+                const contextMessages = selectedConversation?.messages?.slice(contextStartIndex, lastUserMessageIndex) || []; // Removed +1 to exclude last user message
 
                 const queryRewriteConversation: Conversation = {
                   id: uuidv4(),
@@ -603,6 +604,8 @@ export const Chat = memo(
                   model: selectedConversation.model,
                   mode: 'chat',
                 }
+
+                console.log('queryRewriteBody:', queryRewriteBody)
 
                 if (!queryRewriteBody.model || !queryRewriteBody.model.id) {
                   queryRewriteBody.model = selectedConversation.model
