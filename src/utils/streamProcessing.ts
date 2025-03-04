@@ -701,12 +701,12 @@ export async function handleImageContent(
     )
 
     if (imgDescIndex !== -1) {
-      ; (message.content as Content[])[imgDescIndex] = {
+      ;(message.content as Content[])[imgDescIndex] = {
         type: 'text',
         text: `Image description: ${imgDesc}`,
       }
     } else {
-      ; (message.content as Content[]).push({
+      ;(message.content as Content[]).push({
         type: 'text',
         text: `Image description: ${imgDesc}`,
       })
@@ -898,7 +898,9 @@ export const routeModelRequest = async (
       )
     }
   } else if (
-    Object.values(SambaNovaModelID).includes(selectedConversation.model.id as any)
+    Object.values(SambaNovaModelID).includes(
+      selectedConversation.model.id as any,
+    )
   ) {
     try {
       return await runSambaNovaChat(
