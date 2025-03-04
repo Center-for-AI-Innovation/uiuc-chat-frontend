@@ -317,18 +317,22 @@ const Home = ({
       field: 'selectedConversation',
       value: conversation,
     })
-    
+
     try {
       localStorage.setItem('selectedConversation', JSON.stringify(conversation))
     } catch (error) {
       // Handle localStorage quota exceeded error
-      if (error instanceof DOMException && 
-          (error.name === 'QuotaExceededError' || 
-           error.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
-           error.code === 22 ||
-           error.code === 1014)) {
-        console.warn('localStorage quota exceeded in handleSelectConversation, saving minimal conversation data instead')
-        
+      if (
+        error instanceof DOMException &&
+        (error.name === 'QuotaExceededError' ||
+          error.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+          error.code === 22 ||
+          error.code === 1014)
+      ) {
+        console.warn(
+          'localStorage quota exceeded in handleSelectConversation, saving minimal conversation data instead',
+        )
+
         // Create a minimal version of the conversation with just essential data
         const minimalConversation = {
           id: conversation.id,
@@ -341,16 +345,19 @@ const Home = ({
           createdAt: conversation.createdAt,
           updatedAt: conversation.updatedAt,
         }
-        
+
         try {
           // Try to save the minimal version
           localStorage.setItem(
             'selectedConversation',
-            JSON.stringify(minimalConversation)
+            JSON.stringify(minimalConversation),
           )
         } catch (minimalError) {
           // If even minimal version fails, just log the error
-          console.error('Failed to save even minimal conversation data to localStorage', minimalError)
+          console.error(
+            'Failed to save even minimal conversation data to localStorage',
+            minimalError,
+          )
         }
       } else {
         // Some other error occurred
@@ -401,7 +408,7 @@ const Home = ({
     // Only update selectedConversation, don't add to conversations list yet
     dispatch({ field: 'selectedConversation', value: newConversation })
     dispatch({ field: 'loading', value: false })
-    
+
     try {
       localStorage.setItem(
         'selectedConversation',
@@ -431,13 +438,17 @@ const Home = ({
       )
     } catch (error) {
       // Handle localStorage quota exceeded error
-      if (error instanceof DOMException && 
-          (error.name === 'QuotaExceededError' || 
-           error.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
-           error.code === 22 ||
-           error.code === 1014)) {
-        console.warn('localStorage quota exceeded, saving minimal conversation data instead')
-        
+      if (
+        error instanceof DOMException &&
+        (error.name === 'QuotaExceededError' ||
+          error.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+          error.code === 22 ||
+          error.code === 1014)
+      ) {
+        console.warn(
+          'localStorage quota exceeded, saving minimal conversation data instead',
+        )
+
         // Create a minimal version of the conversation with just essential data
         const minimalConversation = {
           id: updatedConversation.id,
@@ -451,16 +462,19 @@ const Home = ({
           updatedAt: updatedConversation.updatedAt,
           // Don't include messages or contexts which are likely the largest parts
         }
-        
+
         try {
           // Try to save the minimal version
           localStorage.setItem(
             'selectedConversation',
-            JSON.stringify(minimalConversation)
+            JSON.stringify(minimalConversation),
           )
         } catch (minimalError) {
           // If even minimal version fails, just log the error
-          console.error('Failed to save even minimal conversation data to localStorage', minimalError)
+          console.error(
+            'Failed to save even minimal conversation data to localStorage',
+            minimalError,
+          )
         }
       } else {
         // Some other error occurred
