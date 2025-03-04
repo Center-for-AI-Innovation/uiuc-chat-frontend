@@ -6,6 +6,7 @@ import { ClerkLoaded, ClerkProvider, GoogleOneTap } from '@clerk/nextjs'
 import { dark } from '@clerk/themes'
 
 import '~/styles/globals.css'
+import '~/styles/citation-tooltips.css'
 import Maintenance from '~/components/UIUC-Components/Maintenance'
 
 import posthog from 'posthog-js'

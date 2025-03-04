@@ -480,12 +480,28 @@ a[data-footnote-backref] {
   visibility: hidden;
 }
 
+/* Improve paragraph styling to allow better citation wrapping */
+.supMarkDown p {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: normal;
+  hyphens: auto;
+}
+
+/* Citation wrapper to help with natural wrapping */
+.citation-wrapper {
+  display: inline;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
 /* Styling for citation links */
 .supMarkDown a {
   display: inline;
   font-size: 100%;
-  line-height: inherit;
-  color: rgba(255, 255, 255, 0.95);
+  line-height: 1.5;
+  color: rgb(175, 180, 184);
   text-decoration: none;
   white-space: normal;
   font-weight: 400;
@@ -494,15 +510,29 @@ a[data-footnote-backref] {
   background-color: rgba(157, 78, 221, 0.15);
   border: 1px solid rgba(157, 78, 221, 0.3);
   border-radius: 4px;
-  padding: 0 4px;
+  padding: 0 0px;
   margin: 0;
-  overflow-wrap: break-word;
+  overflow-wrap: anywhere;
   word-wrap: break-word;
-  word-break: break-word;
+  word-break: normal;
   hyphens: auto;
   vertical-align: baseline;
   position: relative;
   top: 0;
+  overflow: visible;
+  z-index: 1;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Simple, consistent hover state for all citation links */
+.supMarkDown a:hover,
+.supMarkDown a:focus {
+  background-color: rgba(157, 78, 221, 0.3);
+  color: rgb(180, 185, 190);
+  /* Slightly lighter version of the base color */
+  cursor: pointer;
+  border-color: rgba(157, 78, 221, 0.4);
 }
 
 /* Add responsive adjustments for small screens */
@@ -510,23 +540,102 @@ a[data-footnote-backref] {
   .supMarkDown a {
     padding: 1px 4px;
     line-height: 1.6;
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
   }
 }
 
-/* Styling for visited citation links */
-.supMarkDown a:visited {
-  color: rgba(255, 255, 255, 0.8);
-  background-color: rgba(157, 78, 221, 0.12);
-  border-color: rgba(157, 78, 221, 0.25);
+/* Custom tooltip for citation links */
+.supMarkDown a {
+  position: relative;
 }
 
-/* Simple, consistent hover state for all citation links */
-.supMarkDown a:hover,
-.supMarkDown a:focus {
-  background-color: rgba(157, 78, 221, 0.3);
-  color: rgba(255, 255, 255, 0.95);
-  cursor: pointer;
-  border-color: rgba(157, 78, 221, 0.4);
+/* Tooltip container - positioned relative to the citation link */
+.citation-tooltip-container {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  /* Increased z-index to ensure it appears above other elements */
+  pointer-events: none;
+  margin-bottom: 5px;
+  visibility: hidden;
+  opacity: 0;
+  /* Remove transition during streaming to prevent flickering */
+  width: max-content;
+  max-width: 300px;
+  overflow: visible;
+  /* Ensure the tooltip is not clipped */
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.2));
+  /* Add shadow for better visibility */
+}
+
+/* Show tooltip on hover - apply transition only when not streaming */
+.supMarkDown a:hover .citation-tooltip-container {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 0.1s ease-in;
+}
+
+/* Add a special class for tooltips during streaming */
+.streaming-tooltip {
+  /* No transitions during streaming to prevent flickering */
+  transition: none !important;
+}
+
+/* More specific selector for streaming tooltips to ensure it takes precedence */
+.supMarkDown a:hover .streaming-tooltip {
+  transition: none !important;
+}
+
+/* Tooltip content */
+.citation-tooltip {
+  background-color: rgba(30, 30, 50, 0.95);
+  color: white;
+  text-align: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+/* Tooltip arrow */
+.citation-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: rgba(30, 30, 50, 0.95) transparent transparent transparent;
+}
+
+/* Ensure tooltip stays within viewport */
+.citation-tooltip-container.left-align {
+  left: 0;
+  transform: translateX(0);
+}
+
+.citation-tooltip-container.left-align .citation-tooltip::after {
+  left: 10px;
+  transform: translateX(0);
+}
+
+.citation-tooltip-container.right-align {
+  left: auto;
+  right: 0;
+  transform: translateX(0);
+}
+
+.citation-tooltip-container.right-align .citation-tooltip::after {
+  left: auto;
+  right: 10px;
+  transform: translateX(0);
 }
 
 /* Styling for document buttons */
@@ -704,15 +813,27 @@ button.css-s37qmw {
   border-top: 1px solid;
   @apply border-gray-100 dark:border-gray-700/50;
   line-height: 1.6;
+  background-color: inherit;
+  /* Ensure it inherits the background color */
 }
 
 .think-tag-content.expanded {
   position: relative;
   visibility: visible;
-  max-height: 1000px;
+  max-height: 500px;
+  /* Reduced from 1000px to a more reasonable height */
   opacity: 1;
   transform: translateY(0);
-  cursor: pointer;
+  cursor: default;
+  /* Changed from pointer to default to allow text selection */
+  overflow-y: auto;
+  /* Add scrolling for overflow content */
+  -webkit-overflow-scrolling: touch;
+  /* Smooth scrolling on iOS */
+  scrollbar-width: thin;
+  /* For Firefox */
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  /* For Firefox - thumb and track colors */
   transition:
     max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
     opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
@@ -720,8 +841,46 @@ button.css-s37qmw {
     visibility 0s linear;
 }
 
+/* Custom scrollbar for the expanded content */
+.think-tag-content.expanded::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+  background-color: transparent;
+}
+
+.think-tag-content.expanded::-webkit-scrollbar-track {
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+}
+
+.think-tag-content.expanded::-webkit-scrollbar-track:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.think-tag-content.expanded::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.think-tag-content.expanded::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.think-tag-content.expanded::-webkit-scrollbar-corner {
+  background-color: transparent;
+}
+
+/* Remove hover background effect on the content area */
 .think-tag-content.expanded:hover {
-  @apply bg-purple-50/30 dark:bg-purple-900/10;
+  @apply bg-white/80 dark:bg-black/20;
+  /* Match the default background instead of transparent */
+}
+
+/* Add subtle highlight to the container on hover instead */
+.think-tag-dropdown:hover {
+  @apply border-purple-300 dark:border-purple-500/40;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .think-tag-content.expanded:focus {
@@ -730,6 +889,25 @@ button.css-s37qmw {
 
 .think-tag-content.expanded > div {
   position: relative;
+  max-height: none;
+  /* Remove any height restriction on the inner content */
+  height: auto;
+  cursor: text;
+  /* Add text selection cursor to make it clear text can be selected */
+  background-color: inherit;
+  /* Ensure it inherits the background color */
+}
+
+/* Add a specific rule to prevent hover highlighting */
+.think-tag-content.expanded > div:hover {
+  background-color: inherit;
+  /* Ensure no background change on hover */
+}
+
+/* Style text selection in the thought process content */
+.think-tag-content.expanded > div::selection,
+.think-tag-content.expanded > div *::selection {
+  @apply bg-purple-100 text-gray-900 dark:bg-purple-900/30 dark:text-gray-100;
 }
 
 .think-tag-header:focus {
