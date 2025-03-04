@@ -120,7 +120,9 @@ export default function SambaNovaProviderInput({
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <form.Field name={`providers.${ProviderNames.SambaNova}.apiKey`}>
+                  <form.Field
+                    name={`providers.${ProviderNames.SambaNova}.apiKey`}
+                  >
                     {(apiKeyField: any) => (
                       <APIKeyInput
                         field={apiKeyField}
@@ -140,4 +142,4 @@ export default function SambaNovaProviderInput({
       </Card>
     </motion.div>
   )
-} 
+}
