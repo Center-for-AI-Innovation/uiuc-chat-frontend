@@ -1822,10 +1822,10 @@ export const Chat = memo(
     return (
       <>
         <Head>
-          <title>{getCurrentPageName()} - UIUC.chat</title>
+          <title>{getCurrentPageName()} - Illinois Chat</title>
           <meta
             name="description"
-            content="The AI teaching assistant built for students at UIUC."
+            content="The easiest way to train your own AI model and share it like a Google doc."
           />
           <link rel="icon" href="/favicon.ico" />
         </Head>
