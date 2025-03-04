@@ -1,13 +1,13 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import { Tooltip } from '@mantine/core'
-import { 
-  IconCheck, 
-  IconCopy, 
-  IconThumbUp, 
+import {
+  IconCheck,
+  IconCopy,
+  IconThumbUp,
   IconThumbDown,
   IconThumbUpFilled,
   IconThumbDownFilled,
-  IconRepeat
+  IconRepeat,
 } from '@tabler/icons-react'
 import { Message, Content } from '@/types/chat'
 import { useTranslation } from 'next-i18next'
@@ -32,7 +32,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
   isLastMessage,
   onRegenerate,
   onFeedback,
-  onOpenFeedbackModal
+  onOpenFeedbackModal,
 }) => {
   const { t } = useTranslation('chat')
   const [messagedCopied, setMessageCopied] = useState(false)
@@ -40,7 +40,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
   const [isThumbsDown, setIsThumbsDown] = useState(false)
   const [isRegenerating, setIsRegenerating] = useState(false)
   const [isPositiveFeedback, setIsPositiveFeedback] = useState<boolean>(false)
-  
+
   // Initialize feedback state based on message
   useEffect(() => {
     if (
@@ -55,21 +55,21 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
       setIsThumbsDown(false)
     }
   }, [message])
-  
+
   // Copy message content to clipboard
   const copyOnClick = () => {
     if (!navigator.clipboard) return
 
-    let textToCopy = '';
-    
+    let textToCopy = ''
+
     if (typeof message.content === 'string') {
-      textToCopy = message.content;
+      textToCopy = message.content
     } else if (Array.isArray(message.content)) {
       // Extract text content from array of Content objects
       textToCopy = message.content
         .filter((content) => content.type === 'text')
         .map((content) => content.text)
-        .join(' ');
+        .join(' ')
     }
 
     navigator.clipboard.writeText(textToCopy).then(() => {
@@ -79,7 +79,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
       }, 2000)
     })
   }
-  
+
   // Handle thumbs up action
   const handleThumbsUp = useCallback(() => {
     if (isThumbsUp) {
@@ -102,7 +102,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
       onFeedback(message, true)
     }
   }, [isThumbsUp, onFeedback, message])
-  
+
   // Handle thumbs down action
   const handleThumbsDown = useCallback(() => {
     if (isThumbsDown) {
@@ -122,7 +122,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
     setIsPositiveFeedback(false)
     onOpenFeedbackModal()
   }, [isThumbsDown, onFeedback, message, onOpenFeedbackModal])
-  
+
   // Handle regenerate action
   const handleRegenerate = () => {
     if (onRegenerate) {
@@ -131,7 +131,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
       setTimeout(() => setIsRegenerating(false), 1000)
     }
   }
-  
+
   return (
     <div className="flex items-center justify-start gap-2">
       <Tooltip
@@ -166,7 +166,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
           )}
         </button>
       </Tooltip>
-      
+
       <Tooltip
         label={isThumbsUp ? 'Remove Good Response' : 'Good Response'}
         position="bottom"
@@ -204,7 +204,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
           </div>
         </button>
       </Tooltip>
-      
+
       <Tooltip
         label={isThumbsDown ? 'Remove Bad Response' : 'Bad Response'}
         position="bottom"
@@ -234,7 +234,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
           )}
         </button>
       </Tooltip>
-      
+
       <Tooltip
         label="Regenerate Response"
         position="bottom"
@@ -265,4 +265,4 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
   )
 }
 
-export default MessageActions 
+export default MessageActions

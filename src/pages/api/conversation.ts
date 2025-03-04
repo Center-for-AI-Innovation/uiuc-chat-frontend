@@ -186,9 +186,11 @@ export function convertChatToDBMessage(
   }
 
   // Ensure contexts is an array before calling map
-  const contextsArray = Array.isArray(chatMessage.contexts) 
-    ? chatMessage.contexts 
-    : (chatMessage.contexts ? [chatMessage.contexts] : []);
+  const contextsArray = Array.isArray(chatMessage.contexts)
+    ? chatMessage.contexts
+    : chatMessage.contexts
+      ? [chatMessage.contexts]
+      : []
 
   return {
     id: chatMessage.id || uuidv4(),

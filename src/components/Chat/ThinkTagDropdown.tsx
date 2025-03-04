@@ -120,4 +120,4 @@ export const ThinkTagDropdown: React.FC<ThinkTagDropdownProps> = ({
   )
 }
 
-export default ThinkTagDropdown 
+export default ThinkTagDropdown

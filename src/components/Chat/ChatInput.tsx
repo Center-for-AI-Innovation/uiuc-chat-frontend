@@ -810,7 +810,10 @@ export const ChatInput = ({
       className={`absolute bottom-0 left-0 w-full border-transparent bg-transparent pt-6 dark:border-white/20 md:pt-2`}
       style={{ pointerEvents: 'none' }}
     >
-      <div className="stretch mx-2 mt-4 flex flex-col gap-3 last:mb-2 md:mx-4 md:mt-[52px] md:last:mb-6 lg:mx-auto lg:max-w-3xl" style={{ pointerEvents: 'auto' }}>
+      <div
+        className="stretch mx-2 mt-4 flex flex-col gap-3 last:mb-2 md:mx-4 md:mt-[52px] md:last:mb-6 lg:mx-auto lg:max-w-3xl"
+        style={{ pointerEvents: 'auto' }}
+      >
         {messageIsStreaming && (
           <button
             className={`absolute ${isSmallScreen ? '-top-28' : '-top-20'} left-0 right-0 mx-auto mb-12 flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white px-4 py-2 text-black hover:opacity-50 dark:border-neutral-600 dark:bg-[#15162c] dark:text-white md:mb-0 md:mt-2`}
@@ -872,7 +875,10 @@ export const ChatInput = ({
           />
 
           {showPluginSelect && (
-            <div className="absolute bottom-14 left-0 rounded bg-white dark:bg-[#15162c]" style={{ pointerEvents: 'auto' }}>
+            <div
+              className="absolute bottom-14 left-0 rounded bg-white dark:bg-[#15162c]"
+              style={{ pointerEvents: 'auto' }}
+            >
               <PluginSelect
                 plugin={plugin}
                 onKeyDown={(e: any) => {
@@ -1021,7 +1027,10 @@ export const ChatInput = ({
             )}
 
             {showPromptList && filteredPrompts.length > 0 && (
-              <div className="absolute bottom-12 w-full" style={{ pointerEvents: 'auto' }}>
+              <div
+                className="absolute bottom-12 w-full"
+                style={{ pointerEvents: 'auto' }}
+              >
                 <PromptList
                   activePromptIndex={activePromptIndex}
                   prompts={filteredPrompts}

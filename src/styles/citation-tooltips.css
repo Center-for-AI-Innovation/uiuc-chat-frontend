@@ -16,7 +16,9 @@
   margin-bottom: 5px;
   visibility: hidden;
   opacity: 0;
-  transition: visibility 0s, opacity 0.2s ease;
+  transition:
+    visibility 0s,
+    opacity 0.2s ease;
   width: max-content;
   max-width: 300px;
   overflow: visible;
@@ -75,4 +77,4 @@
   left: auto;
   right: 10px;
   transform: translateX(0);
-} 
+}

@@ -9,7 +9,6 @@ export async function fetchConversationHistory(
   courseName: string,
   pageParam: number,
 ): Promise<ConversationPage> {
-  
   let finalResponse: ConversationPage = {
     conversations: [],
     nextCursor: null,
@@ -36,7 +35,9 @@ export async function fetchConversationHistory(
       // Ensure messages are properly ordered by creation time
       if (conversation.messages) {
         conversation.messages.sort((a: any, b: any) => {
-          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          return (
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          )
         })
       }
       return conversation
@@ -50,17 +51,20 @@ export async function fetchConversationHistory(
     if (selectedConversation && finalResponse?.conversations?.length > 0) {
       const parsed = JSON.parse(selectedConversation)
       const serverConversation = finalResponse.conversations.find(
-        (c) => c.id === parsed.id
+        (c) => c.id === parsed.id,
       )
       if (serverConversation) {
         localStorage.setItem(
           'selectedConversation',
-          JSON.stringify(serverConversation)
+          JSON.stringify(serverConversation),
         )
       }
     }
   } catch (error) {
-    console.error('utils/app/conversation.ts - Error fetching conversation history:', error)
+    console.error(
+      'utils/app/conversation.ts - Error fetching conversation history:',
+      error,
+    )
   }
   return finalResponse
 }
@@ -108,30 +112,40 @@ export const saveConversationToLocalStorage = (conversation: Conversation) => {
   let successful = false
   try {
     if (conversation.messages && conversation.messages.length > 0) {
-      const lastMessage = conversation.messages[conversation.messages.length - 1]
+      const lastMessage =
+        conversation.messages[conversation.messages.length - 1]
       if (lastMessage && lastMessage.feedback) {
-        const messagesWithFeedback = conversation.messages.map((message, index) => {
-          if (index === conversation.messages.length - 1) {
-            return { ...message, feedback: lastMessage.feedback }
-          }
-          return message
-        })
+        const messagesWithFeedback = conversation.messages.map(
+          (message, index) => {
+            if (index === conversation.messages.length - 1) {
+              return { ...message, feedback: lastMessage.feedback }
+            }
+            return message
+          },
+        )
         const conversationWithFeedback = {
           ...conversation,
-          messages: messagesWithFeedback
-        };
+          messages: messagesWithFeedback,
+        }
 
         try {
-          localStorage.setItem('selectedConversation', JSON.stringify(conversationWithFeedback))
+          localStorage.setItem(
+            'selectedConversation',
+            JSON.stringify(conversationWithFeedback),
+          )
         } catch (error) {
           // Handle localStorage quota exceeded error
-          if (error instanceof DOMException && 
-              (error.name === 'QuotaExceededError' || 
-               error.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
-               error.code === 22 ||
-               error.code === 1014)) {
-            console.warn('localStorage quota exceeded in saveConversationToLocalStorage, saving minimal conversation data instead')
-            
+          if (
+            error instanceof DOMException &&
+            (error.name === 'QuotaExceededError' ||
+              error.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+              error.code === 22 ||
+              error.code === 1014)
+          ) {
+            console.warn(
+              'localStorage quota exceeded in saveConversationToLocalStorage, saving minimal conversation data instead',
+            )
+
             // Create a minimal version of the conversation with just essential data
             const minimalConversation = {
               id: conversationWithFeedback.id,
@@ -144,16 +158,19 @@ export const saveConversationToLocalStorage = (conversation: Conversation) => {
               createdAt: conversationWithFeedback.createdAt,
               updatedAt: conversationWithFeedback.updatedAt,
             }
-            
+
             try {
               // Try to save the minimal version
               localStorage.setItem(
                 'selectedConversation',
-                JSON.stringify(minimalConversation)
+                JSON.stringify(minimalConversation),
               )
             } catch (minimalError) {
               // If even minimal version fails, just log the error
-              console.error('Failed to save even minimal conversation data to localStorage', minimalError)
+              console.error(
+                'Failed to save even minimal conversation data to localStorage',
+                minimalError,
+              )
             }
           } else {
             // Some other error occurred
@@ -162,16 +179,23 @@ export const saveConversationToLocalStorage = (conversation: Conversation) => {
         }
       } else {
         try {
-          localStorage.setItem('selectedConversation', JSON.stringify(conversation))
+          localStorage.setItem(
+            'selectedConversation',
+            JSON.stringify(conversation),
+          )
         } catch (error) {
           // Handle localStorage quota exceeded error
-          if (error instanceof DOMException && 
-              (error.name === 'QuotaExceededError' || 
-               error.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
-               error.code === 22 ||
-               error.code === 1014)) {
-            console.warn('localStorage quota exceeded in saveConversationToLocalStorage, saving minimal conversation data instead')
-            
+          if (
+            error instanceof DOMException &&
+            (error.name === 'QuotaExceededError' ||
+              error.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+              error.code === 22 ||
+              error.code === 1014)
+          ) {
+            console.warn(
+              'localStorage quota exceeded in saveConversationToLocalStorage, saving minimal conversation data instead',
+            )
+
             // Create a minimal version of the conversation with just essential data
             const minimalConversation = {
               id: conversation.id,
@@ -184,16 +208,19 @@ export const saveConversationToLocalStorage = (conversation: Conversation) => {
               createdAt: conversation.createdAt,
               updatedAt: conversation.updatedAt,
             }
-            
+
             try {
               // Try to save the minimal version
               localStorage.setItem(
                 'selectedConversation',
-                JSON.stringify(minimalConversation)
+                JSON.stringify(minimalConversation),
               )
             } catch (minimalError) {
               // If even minimal version fails, just log the error
-              console.error('Failed to save even minimal conversation data to localStorage', minimalError)
+              console.error(
+                'Failed to save even minimal conversation data to localStorage',
+                minimalError,
+              )
             }
           } else {
             // Some other error occurred
@@ -242,15 +269,19 @@ export const saveConversations = (conversations: Conversation[]) => {
     localStorage.setItem('conversationHistory', JSON.stringify(conversations))
   } catch (error) {
     // Handle localStorage quota exceeded error
-    if (error instanceof DOMException && 
-        (error.name === 'QuotaExceededError' || 
-         error.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
-         error.code === 22 ||
-         error.code === 1014)) {
-      console.warn('localStorage quota exceeded in saveConversations, saving minimal conversation data instead')
-      
+    if (
+      error instanceof DOMException &&
+      (error.name === 'QuotaExceededError' ||
+        error.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+        error.code === 22 ||
+        error.code === 1014)
+    ) {
+      console.warn(
+        'localStorage quota exceeded in saveConversations, saving minimal conversation data instead',
+      )
+
       // Create minimal versions of the conversations with just essential data
-      const minimalConversations = conversations.map(conversation => ({
+      const minimalConversations = conversations.map((conversation) => ({
         id: conversation.id,
         name: conversation.name,
         model: conversation.model,
@@ -260,36 +291,42 @@ export const saveConversations = (conversations: Conversation[]) => {
         projectName: conversation.projectName,
         createdAt: conversation.createdAt,
         updatedAt: conversation.updatedAt,
-      }));
-      
+      }))
+
       try {
         // Try to save the minimal versions
         localStorage.setItem(
           'conversationHistory',
-          JSON.stringify(minimalConversations)
+          JSON.stringify(minimalConversations),
         )
       } catch (minimalError) {
         // If even minimal versions fail, try to save just the most recent conversations
-        console.warn('Failed to save minimal conversation data, trying to save only recent conversations')
-        
+        console.warn(
+          'Failed to save minimal conversation data, trying to save only recent conversations',
+        )
+
         // Try with just the 5 most recent conversations
-        const recentMinimalConversations = minimalConversations.slice(-5);
-        
+        const recentMinimalConversations = minimalConversations.slice(-5)
+
         try {
           localStorage.setItem(
             'conversationHistory',
-            JSON.stringify(recentMinimalConversations)
+            JSON.stringify(recentMinimalConversations),
           )
         } catch (recentError) {
           // If that still fails, log the error
-          console.error('Failed to save even recent minimal conversation data to localStorage', recentError)
-          
+          console.error(
+            'Failed to save even recent minimal conversation data to localStorage',
+            recentError,
+          )
+
           // Track the error in analytics
           posthog.capture('local_storage_full', {
             course_name:
               conversations?.slice(-1)[0]?.messages?.[0]?.contexts?.[0]
                 ?.course_name || 'Unknown Course',
-            user_email: conversations?.slice(-1)[0]?.userEmail || 'Unknown Email',
+            user_email:
+              conversations?.slice(-1)[0]?.userEmail || 'Unknown Email',
             inSaveConversations: true,
           })
         }
@@ -297,7 +334,7 @@ export const saveConversations = (conversations: Conversation[]) => {
     } else {
       // Some other error occurred
       console.error('Error saving conversations to localStorage:', error)
-      
+
       // Track the error in analytics
       posthog.capture('local_storage_full', {
         course_name:
@@ -324,8 +361,8 @@ export const saveConversations = (conversations: Conversation[]) => {
 // }
 
 export async function saveConversationToServer(conversation: Conversation) {
-  const MAX_RETRIES = 3;
-  let retryCount = 0;
+  const MAX_RETRIES = 3
+  let retryCount = 0
 
   while (retryCount < MAX_RETRIES) {
     try {
@@ -337,22 +374,25 @@ export async function saveConversationToServer(conversation: Conversation) {
         },
         body: JSON.stringify({ conversation }),
       })
-      
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        const errorMessage = errorData?.error || response.statusText;
-        throw new Error(`Error saving conversation: ${errorMessage}`);
+        const errorData = await response.json().catch(() => null)
+        const errorMessage = errorData?.error || response.statusText
+        throw new Error(`Error saving conversation: ${errorMessage}`)
       }
-      
+
       return response.json()
     } catch (error: any) {
-      console.error(`Error saving conversation (attempt ${retryCount + 1}/${MAX_RETRIES}):`, error)
+      console.error(
+        `Error saving conversation (attempt ${retryCount + 1}/${MAX_RETRIES}):`,
+        error,
+      )
       if (error.code === 'ECONNRESET' && retryCount < MAX_RETRIES - 1) {
-        retryCount++;
-        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount)); // Exponential backoff
-        continue;
+        retryCount++
+        await new Promise((resolve) => setTimeout(resolve, 1000 * retryCount)) // Exponential backoff
+        continue
       }
-      throw error;
+      throw error
     }
   }
 }
