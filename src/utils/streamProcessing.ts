@@ -95,10 +95,7 @@ export async function processChunkWithStateMachine(
     switch (state) {
       case State.Normal:
         if (char === '<') {
-          // Always buffer '<' initially since it might be start of <cite>
-          buffer = char
-
-          // If we have enough chars to check for <cite
+          // Check if it's the start of a citation tag
           if (remainingChars >= 5) {
             const nextChars = combinedChunk.slice(i, i + 5)
             if (nextChars === '<cite') {
@@ -107,9 +104,8 @@ export async function processChunkWithStateMachine(
               i += 4 // Skip the rest of 'cite'
               continue
             } else {
-              // Definitely not a <cite> tag, output the buffered '<'
-              processedChunk += buffer
-              buffer = ''
+              // Not a citation tag, output the character
+              processedChunk += char
             }
           } else {
             // Not enough chars to check - keep in buffer and wait for next chunk
@@ -159,6 +155,7 @@ export async function processChunkWithStateMachine(
               buffer += '</cite>'
               i += 6 // Skip all 7 characters (loop will increment i by 1)
               state = State.Normal
+              // Process the citation without adding extra spaces
               const processedCitation = await replaceCitationLinks(
                 buffer,
                 lastMessage,
@@ -755,8 +752,6 @@ function convertMessagesToVercelAISDKv3(
     let content: string
     if (index === conversation.messages.length - 1 && message.role === 'user') {
       content = message.finalPromtEngineeredMessage || ''
-      content +=
-        '\n\nIf you use the <Potentially Relevant Documents> in your response, please remember cite your sources using the required formatting, e.g. "The grass is green. [29, page: 11]'
     } else if (Array.isArray(message.content)) {
       content = message.content
         .filter((c) => c.type === 'text')

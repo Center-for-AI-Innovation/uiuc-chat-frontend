@@ -8,16 +8,145 @@
   grid-template: auto / repeat(3, 1fr);
 } */
 
-/* Force dark mode for all users!! */
+:root {
+  /* Primary Colors */
+  --illinois-orange: #ff5f05;
+  --illinois-blue: #13294b;
+
+  /* Secondary Colors (Storm) */
+  --illinois-storm-dark: #707372;
+  --illinois-storm-medium: #9c9a9d;
+  --illinois-storm-light: #c8c6c7;
+  --illinois-white: #ffffff;
+  --illinois-black: #000000;
+
+  /* Supporting Colors */
+  --illinois-industrial: #1d58a7;
+  --illinois-arches: #009fd4;
+  --illinois-patina: #007e8e;
+  --illinois-berry: #5c0e41;
+  --illinois-harvest: #fcb316;
+  --illinois-prairie: #006230;
+  --illinois-earth: #7d3e13;
+
+  /* Accessibility Colors */
+  --illinois-altgeld: #c84113;
+
+  /* Background Colors */
+  --illinois-storm-95: #f4f4f4;
+  --illinois-storm-10: #252525;
+
+  /* Existing variables mapped to UIUC colors */
+  --background: var(--illinois-white);
+  --foreground: var(--illinois-blue);
+
+  --primary: var(--illinois-orange);
+  --primary-foreground: var(--illinois-white);
+
+  --secondary: var(--illinois-blue);
+  --secondary-foreground: var(--illinois-white);
+
+  --muted: var(--illinois-storm-95);
+  --muted-foreground: var(--illinois-storm-dark);
+
+  --accent: var(--illinois-industrial);
+  --accent-foreground: var(--illinois-white);
+
+  --destructive: var(--illinois-berry);
+  --destructive-foreground: var(--illinois-white);
+
+  --border: var(--illinois-storm-light);
+  --input: var(--illinois-storm-light);
+  --ring: var(--illinois-blue);
+
+  --radius: 0.5rem;
+
+  /* Additional UI Colors */
+  --illinois-background-dark: #202123;
+  --illinois-background-darker: #0e1116;
+  --illinois-purple: #2e026d;
+  --illinois-purple-dark: #15162c;
+  --illinois-link: #4a4ae8;
+  --illinois-scrollbar-hover: #807f7f;
+  --illinois-gold: #ffd700;
+  --illinois-purple-light: #9d4edd;
+
+  /* Gradients */
+  --illinois-blue-gradient: linear-gradient(135deg, #1d58a7, #13294b);
+  --illinois-orange-gradient: linear-gradient(-135deg, #fcb316, #ff5f05);
+}
+
+.illinois-blue-gradient-bg {
+  /*  background-image: var(--illinois-blue-gradient);*/
+  color: var(--foreground);
+  background: var(--background);
+}
+
+@keyframes icon_scrolling {
+  0% {
+    translate: 0% 0%;
+  }
+
+  100% {
+    translate: -100% 0%;
+  }
+}
+
+.icons_scrolling_container {
+  overflow: hidden;
+  position: relative;
+
+  mask-image: linear-gradient(
+    90deg,
+    transparent 5%,
+    #fff 20%,
+    #fff 80%,
+    transparent 95%
+  );
+}
+
+.icons_scrolling {
+  display: flex;
+  align-items: flex-start;
+  gap: 0rem;
+
+  animation: icon_scrolling 20s linear 0s infinite;
+}
+
+.dark {
+  --background: var(--illinois-blue);
+  --foreground: var(--illinois-white);
+
+  --primary: var(--illinois-orange);
+  --primary-foreground: var(--illinois-blue);
+
+  --secondary: var(--illinois-storm-dark);
+  --secondary-foreground: var(--illinois-white);
+
+  --muted: var(--illinois-storm-10);
+  --muted-foreground: var(--illinois-storm-light);
+
+  --accent: var(--illinois-industrial);
+  --accent-foreground: var(--illinois-white);
+
+  --destructive: var(--illinois-berry);
+  --destructive-foreground: var(--illinois-white);
+
+  --border: var(--illinois-storm-dark);
+  --input: var(--illinois-storm-dark);
+  --ring: var(--illinois-orange);
+}
+
+/* Force light mode for all users!! */
 @media (prefers-color-scheme: dark) {
   html {
-    color-scheme: dark;
+    color-scheme: light;
   }
 }
 
 @media (prefers-color-scheme: light) {
   html {
-    color-scheme: dark;
+    color-scheme: light;
   }
 }
 
@@ -52,7 +181,8 @@
 }
 
 html {
-  background: #202123;
+  /*  background: var(--illinois-background-dark);*/
+  background: var(--illinois-white);
 }
 
 @media (max-width: 720px) {
@@ -86,6 +216,24 @@ pre:has(div.codeblock) {
   padding: 10px;
   box-sizing: border-box;
   /* border: 1px solid #ccc; */
+}
+
+/* Make the purple background fade out  */
+.course-page-main2 {
+  /* height: 400px;     */
+  background: -webkit-gradient(
+    linear,
+    left top,
+    left bottom,
+    from(var(--illinois-purple)),
+    to(var(--illinois-background-darker)),
+    color-stop(0.75, var(--illinois-purple-dark))
+  );
+  background-color: var(--illinois-background-darker);
+  background-size:
+    100% 45%,
+    0%;
+  background-repeat: no-repeat;
 }
 
 /* Make the purple background fade out  */
@@ -132,7 +280,11 @@ pre:has(div.codeblock) {
   right: 0;
   width: 40%;
   height: 1.2em;
-  background: linear-gradient(to right, rgba(255, 255, 255, 0), #0e1116 90%);
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0),
+    var(--illinois-background-darker) 90%
+  );
 }
 
 .fade-3-lines::after {
@@ -143,7 +295,11 @@ pre:has(div.codeblock) {
   right: 0;
   width: 40%;
   height: 1.2em;
-  background: linear-gradient(to right, rgba(255, 255, 255, 0), #0e1116 90%);
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0),
+    var(--illinois-background-darker) 90%
+  );
 }
 
 /* Standard list properties. Didn't work before manually adding this. */
@@ -163,7 +319,7 @@ li {
 
 .kas-gradient-text {
   background-color: #f3ec78;
-  background-image: linear-gradient(45deg, #f3ec78, #af4261);
+  background-image: var(--illinois-warm-gradient);
   background-size: 100%;
   -webkit-background-clip: text;
   -moz-background-clip: text;
@@ -189,7 +345,7 @@ li {
 }
 
 .tag-item {
-  background-color: #020307;
+  background-color: var(--illinois-background-darker);
   display: inline-block;
   font-size: 16px;
   border-radius: 30px;
@@ -201,7 +357,7 @@ li {
 }
 
 .tag-item button {
-  background-color: blueviolet;
+  background-color: var(--illinois-blueviolet);
   width: 22px;
   height: 22px;
   border-radius: 50%;
@@ -222,7 +378,7 @@ li {
 
 .goldUnderline {
   text-decoration: underline;
-  text-decoration-color: gold;
+  text-decoration-color: var(--illinois-gold);
   color: inherit;
 }
 
@@ -252,7 +408,7 @@ li {
   position: relative;
   overflow: hidden;
   /* background-color: #020307; */
-  background-color: #070712;
+  background-color: var(--illinois-blue);
 }
 
 .skeleton-box::after {
@@ -264,10 +420,10 @@ li {
   transform: translateX(-100%);
   background-image: linear-gradient(
     90deg,
-    rgba(99, 39, 175, 0) 0,
-    rgba(75, 85, 72, 0.2) 20%,
-    rgba(30, 64, 175, 0.5) 60%,
-    rgba(66, 1, 95, 0)
+    rgba(19, 41, 75, 0),
+    /* illinois-blue */ rgba(112, 115, 114, 0.2),
+    /* illinois-storm-dark */ rgba(29, 88, 167, 0.5),
+    /* illinois-industrial */ rgba(92, 14, 65, 0) /* illinois-berry */
   );
   /* Changed the primary color to purple-900 */
   animation: shimmer 5s infinite;
@@ -282,13 +438,37 @@ li {
 
 /* END NOMIC LOADING BOX */
 
+/* This will apply to all scrollbars EXCEPT Firefox*/
+::-webkit-scrollbar {
+  width: 6px;
+  /* For vertical scrollbars */
+  height: 6px;
+  /* For horizontal scrollbars */
+  background-color: var(--illinois-storm-dark);
+}
+
+::-webkit-scrollbar-corner {
+  background-color: var(--illinois-blue);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--illinois-storm-medium);
+  border-radius: 10px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--illinois-scrollbar-hover);
+  border-radius: 4px;
+}
+
 @keyframes pulsate {
   0% {
-    color: #ffffff;
+    color: var(--illinois-white);
   }
 
   100% {
-    color: #9d4edd;
+    color: var(--illinois-purple-light);
   }
 }
 
@@ -300,12 +480,28 @@ a[data-footnote-backref] {
   visibility: hidden;
 }
 
+/* Improve paragraph styling to allow better citation wrapping */
+.supMarkDown p {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: normal;
+  hyphens: auto;
+}
+
+/* Citation wrapper to help with natural wrapping */
+.citation-wrapper {
+  display: inline;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
 /* Styling for citation links */
 .supMarkDown a {
   display: inline;
   font-size: 100%;
-  line-height: inherit;
-  color: rgba(255, 255, 255, 0.95);
+  line-height: 1.5;
+  color: rgb(175, 180, 184);
   text-decoration: none;
   white-space: normal;
   font-weight: 400;
@@ -314,15 +510,29 @@ a[data-footnote-backref] {
   background-color: rgba(157, 78, 221, 0.15);
   border: 1px solid rgba(157, 78, 221, 0.3);
   border-radius: 4px;
-  padding: 0 4px;
+  padding: 0 0px;
   margin: 0;
-  overflow-wrap: break-word;
+  overflow-wrap: anywhere;
   word-wrap: break-word;
-  word-break: break-word;
+  word-break: normal;
   hyphens: auto;
   vertical-align: baseline;
   position: relative;
   top: 0;
+  overflow: visible;
+  z-index: 1;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Simple, consistent hover state for all citation links */
+.supMarkDown a:hover,
+.supMarkDown a:focus {
+  background-color: rgba(157, 78, 221, 0.3);
+  color: rgb(180, 185, 190);
+  /* Slightly lighter version of the base color */
+  cursor: pointer;
+  border-color: rgba(157, 78, 221, 0.4);
 }
 
 /* Add responsive adjustments for small screens */
@@ -330,23 +540,102 @@ a[data-footnote-backref] {
   .supMarkDown a {
     padding: 1px 4px;
     line-height: 1.6;
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
   }
 }
 
-/* Styling for visited citation links */
-.supMarkDown a:visited {
-  color: rgba(255, 255, 255, 0.8);
-  background-color: rgba(157, 78, 221, 0.12);
-  border-color: rgba(157, 78, 221, 0.25);
+/* Custom tooltip for citation links */
+.supMarkDown a {
+  position: relative;
 }
 
-/* Simple, consistent hover state for all citation links */
-.supMarkDown a:hover,
-.supMarkDown a:focus {
-  background-color: rgba(157, 78, 221, 0.3);
-  color: rgba(255, 255, 255, 0.95);
-  cursor: pointer;
-  border-color: rgba(157, 78, 221, 0.4);
+/* Tooltip container - positioned relative to the citation link */
+.citation-tooltip-container {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  /* Increased z-index to ensure it appears above other elements */
+  pointer-events: none;
+  margin-bottom: 5px;
+  visibility: hidden;
+  opacity: 0;
+  /* Remove transition during streaming to prevent flickering */
+  width: max-content;
+  max-width: 300px;
+  overflow: visible;
+  /* Ensure the tooltip is not clipped */
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.2));
+  /* Add shadow for better visibility */
+}
+
+/* Show tooltip on hover - apply transition only when not streaming */
+.supMarkDown a:hover .citation-tooltip-container {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 0.1s ease-in;
+}
+
+/* Add a special class for tooltips during streaming */
+.streaming-tooltip {
+  /* No transitions during streaming to prevent flickering */
+  transition: none !important;
+}
+
+/* More specific selector for streaming tooltips to ensure it takes precedence */
+.supMarkDown a:hover .streaming-tooltip {
+  transition: none !important;
+}
+
+/* Tooltip content */
+.citation-tooltip {
+  background-color: rgba(30, 30, 50, 0.95);
+  color: white;
+  text-align: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+/* Tooltip arrow */
+.citation-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: rgba(30, 30, 50, 0.95) transparent transparent transparent;
+}
+
+/* Ensure tooltip stays within viewport */
+.citation-tooltip-container.left-align {
+  left: 0;
+  transform: translateX(0);
+}
+
+.citation-tooltip-container.left-align .citation-tooltip::after {
+  left: 10px;
+  transform: translateX(0);
+}
+
+.citation-tooltip-container.right-align {
+  left: auto;
+  right: 0;
+  transform: translateX(0);
+}
+
+.citation-tooltip-container.right-align .citation-tooltip::after {
+  left: auto;
+  right: 10px;
+  transform: translateX(0);
 }
 
 /* Styling for document buttons */
@@ -360,8 +649,8 @@ a[data-footnote-backref] {
   align-items: center;
   font-size: 1rem;
   padding: 10px 10px;
-  color: #4a4ae8;
-  background-color: #15162c;
+  color: var(--illinois-link);
+  background-color: var(--illinois-purple-dark);
   border-radius: 5px;
   border: none;
   text-decoration: none;
@@ -375,15 +664,15 @@ a[data-footnote-backref] {
 /* Simple, consistent hover state for all document buttons */
 .linkMarkDown button:not(.codeblock-button):hover,
 .linkMarkDown button:not(.codeblock-button):focus {
-  background-color: blueviolet;
-  color: #ffffff;
+  background-color: var(--illinois-blueviolet);
+  color: var(--illinois-white);
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 /* Visited state for document buttons */
 .linkMarkDown button:not(.codeblock-button):visited {
-  color: rgb(173, 92, 227);
+  color: var(--illinois-berry);
 }
 
 .linkMarkDown ol:has(> li > button) {
@@ -396,7 +685,7 @@ a[data-footnote-backref] {
   /* Padding inside the card */
   margin: 20px 0;
   /* Margin around the card */
-  background-color: #1e1e2f;
+  background-color: var(--illinois-purple-dark);
   /* Slightly lighter than the button background for contrast */
   border-radius: 10px;
   /* Rounded corners for the card */
@@ -419,7 +708,7 @@ a[data-footnote-backref] {
 }
 
 .codeBlock pre:has(> code) {
-  background-color: #101122 !important;
+  background-color: var(--illinois-purple-dark) !important;
 }
 
 /* Style for individual list items */
@@ -440,15 +729,15 @@ a[data-footnote-backref] {
 /* For styling MagicBell. We hide the logo, but keep the CTA button.  */
 /* `EnablePushNotificationsButton` works on localhost, `css-s37qmw` works on production. */
 body button[class$='EnablePushNotificationsButton'] {
-  background-color: #f8fafc !important;
-  color: #15162c !important;
+  background-color: var(--illinois-storm-95) !important;
+  color: var(--illinois-purple-dark) !important;
 }
 
 /* padding: 10px !important; */
 /* border-radius: 4px !important; */
 button.css-s37qmw {
-  background: #f8fafc !important;
-  color: #15162c !important;
+  background: var(--illinois-storm-95) !important;
+  color: var(--illinois-purple-dark) !important;
 }
 
 /* Remove branded footer from MagicBell (only works on prod w/ compiled css) */
@@ -466,6 +755,7 @@ button.css-s37qmw {
   from {
     --r: 0deg;
   }
+
   to {
     --r: 360deg;
   }
@@ -507,7 +797,7 @@ button.css-s37qmw {
   transform-origin: top;
   transform: translateY(-4px);
   will-change: transform, opacity, max-height;
-  transition: 
+  transition:
     max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
     opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
@@ -523,15 +813,27 @@ button.css-s37qmw {
   border-top: 1px solid;
   @apply border-gray-100 dark:border-gray-700/50;
   line-height: 1.6;
+  background-color: inherit;
+  /* Ensure it inherits the background color */
 }
 
 .think-tag-content.expanded {
   position: relative;
   visibility: visible;
-  max-height: 1000px;
+  max-height: 500px;
+  /* Reduced from 1000px to a more reasonable height */
   opacity: 1;
   transform: translateY(0);
-  cursor: pointer;
+  cursor: default;
+  /* Changed from pointer to default to allow text selection */
+  overflow-y: auto;
+  /* Add scrolling for overflow content */
+  -webkit-overflow-scrolling: touch;
+  /* Smooth scrolling on iOS */
+  scrollbar-width: thin;
+  /* For Firefox */
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  /* For Firefox - thumb and track colors */
   transition:
     max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
     opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
@@ -539,8 +841,46 @@ button.css-s37qmw {
     visibility 0s linear;
 }
 
+/* Custom scrollbar for the expanded content */
+.think-tag-content.expanded::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+  background-color: transparent;
+}
+
+.think-tag-content.expanded::-webkit-scrollbar-track {
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+}
+
+.think-tag-content.expanded::-webkit-scrollbar-track:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.think-tag-content.expanded::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.think-tag-content.expanded::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.think-tag-content.expanded::-webkit-scrollbar-corner {
+  background-color: transparent;
+}
+
+/* Remove hover background effect on the content area */
 .think-tag-content.expanded:hover {
-  @apply bg-purple-50/30 dark:bg-purple-900/10;
+  @apply bg-white/80 dark:bg-black/20;
+  /* Match the default background instead of transparent */
+}
+
+/* Add subtle highlight to the container on hover instead */
+.think-tag-dropdown:hover {
+  @apply border-purple-300 dark:border-purple-500/40;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .think-tag-content.expanded:focus {
@@ -549,6 +889,25 @@ button.css-s37qmw {
 
 .think-tag-content.expanded > div {
   position: relative;
+  max-height: none;
+  /* Remove any height restriction on the inner content */
+  height: auto;
+  cursor: text;
+  /* Add text selection cursor to make it clear text can be selected */
+  background-color: inherit;
+  /* Ensure it inherits the background color */
+}
+
+/* Add a specific rule to prevent hover highlighting */
+.think-tag-content.expanded > div:hover {
+  background-color: inherit;
+  /* Ensure no background change on hover */
+}
+
+/* Style text selection in the thought process content */
+.think-tag-content.expanded > div::selection,
+.think-tag-content.expanded > div *::selection {
+  @apply bg-purple-100 text-gray-900 dark:bg-purple-900/30 dark:text-gray-100;
 }
 
 .think-tag-header:focus {
@@ -556,7 +915,7 @@ button.css-s37qmw {
 }
 
 .think-tag-icon {
-  @apply text-gray-400 transform transition-all duration-300 dark:text-gray-500;
+  @apply transform text-gray-400 transition-all duration-300 dark:text-gray-500;
 }
 
 .think-tag-header:hover .think-tag-icon {
@@ -573,7 +932,8 @@ button.css-s37qmw {
 .supMarkDown a {
   cursor: pointer !important;
   position: relative;
-  z-index: 0;  /* Changed from 1 to 0 to match surrounding text */
+  z-index: 0;
+  /* Changed from 1 to 0 to match surrounding text */
   pointer-events: all !important;
   user-select: all !important;
   -webkit-user-drag: element;
@@ -589,5 +949,6 @@ button.css-s37qmw {
 .markdown a {
   pointer-events: all !important;
   position: relative;
-  z-index: 0;  /* Changed from 1 to 0 to match surrounding text */
+  z-index: 0;
+  /* Changed from 1 to 0 to match surrounding text */
 }
