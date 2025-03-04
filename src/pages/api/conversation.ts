@@ -185,6 +185,13 @@ export function convertChatToDBMessage(
       .map((content) => content.image_url?.url || '')
   }
 
+  // Ensure contexts is an array before calling map
+  const contextsArray = Array.isArray(chatMessage.contexts)
+    ? chatMessage.contexts
+    : chatMessage.contexts
+      ? [chatMessage.contexts]
+      : []
+
   return {
     id: chatMessage.id || uuidv4(),
     role: chatMessage.role,
@@ -192,7 +199,7 @@ export function convertChatToDBMessage(
     content_image_url: content_image_urls,
     image_description: image_description,
     contexts:
-      chatMessage.contexts?.map((context, index) => {
+      contextsArray.map((context, index) => {
         const baseContext = {
           readable_filename: context.readable_filename,
           pagenumber: context.pagenumber,
