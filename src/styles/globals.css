@@ -321,7 +321,7 @@ a[data-footnote-backref] {
   display: inline;
   font-size: 100%;
   line-height: 1.5;
-  color: rgba(255, 255, 255, 0.95);
+  color: rgba(215, 215, 215, 0.95); /* Brighter, more readable text color */
   text-decoration: none;
   white-space: normal;
   font-weight: 400;
@@ -330,18 +330,18 @@ a[data-footnote-backref] {
   background-color: rgba(157, 78, 221, 0.15);
   border: 1px solid rgba(157, 78, 221, 0.3);
   border-radius: 4px;
-  padding: 0 0px; /* Slightly reduced padding */
+  padding: 0 0px;
   margin: 0;
   overflow-wrap: anywhere;
   word-wrap: break-word;
   word-break: normal;
   hyphens: auto;
-  vertical-align: baseline; /* Ensure alignment with text baseline */
+  vertical-align: baseline;
   position: relative;
   top: 0;
-  overflow: visible; /* Ensure tooltips aren't clipped */
-  z-index: 1; /* Ensure proper stacking context */
-  max-width: 100%; /* Ensure citations don't overflow their container */
+  overflow: visible;
+  z-index: 1;
+  max-width: 100%;
   box-sizing: border-box;
 }
 
@@ -356,18 +356,12 @@ a[data-footnote-backref] {
   }
 }
 
-/* Styling for visited citation links */
-.supMarkDown a:visited {
-  color: rgba(255, 255, 255, 0.8);
-  background-color: rgba(157, 78, 221, 0.12);
-  border-color: rgba(157, 78, 221, 0.25);
-}
 
 /* Simple, consistent hover state for all citation links */
 .supMarkDown a:hover,
 .supMarkDown a:focus {
   background-color: rgba(157, 78, 221, 0.3);
-  color: rgba(255, 255, 255, 0.95);
+  color: rgba(255, 255, 255, 0.95); /* Brightest on hover */
   cursor: pointer;
   border-color: rgba(157, 78, 221, 0.4);
 }
