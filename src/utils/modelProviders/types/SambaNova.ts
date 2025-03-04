@@ -20,6 +20,33 @@ export enum SambaNovaModelID {
   Qwen2_Audio_7B_Instruct = 'Qwen2-Audio-7B-Instruct',
 }
 
+// Define preferred order of models based on quality (best first)
+export const SambanovaPreferredModelIDs: SambaNovaModelID[] = [
+  // Advanced large models
+  SambaNovaModelID.DeepSeek_R1,
+  SambaNovaModelID.DeepSeek_R1_Distill_Llama_70B,
+
+  SambaNovaModelID.Llama_3_2_90B_Vision_Instruct,
+  SambaNovaModelID.Meta_Llama_3_3_70B_Instruct,
+  SambaNovaModelID.Meta_Llama_3_1_405B_Instruct,
+  SambaNovaModelID.Llama_3_1_Tulu_3_405B,
+
+  // High quality general purpose models
+  SambaNovaModelID.Qwen2_5_72B_Instruct,
+  SambaNovaModelID.Qwen2_5_Coder_32B_Instruct,
+  SambaNovaModelID.QwQ_32B_Preview,
+  SambaNovaModelID.Meta_Llama_3_1_70B_Instruct,
+
+  // Medium models
+  SambaNovaModelID.Llama_3_2_11B_Vision_Instruct,
+  SambaNovaModelID.Meta_Llama_3_1_8B_Instruct,
+
+  // Specialized or smaller models
+  SambaNovaModelID.Qwen2_Audio_7B_Instruct,
+  SambaNovaModelID.Meta_Llama_3_2_3B_Instruct,
+  SambaNovaModelID.Meta_Llama_3_2_1B_Instruct,
+]
+
 export interface SambaNovaModel extends GenericSupportedModel {
   id: SambaNovaModelID
   name: string
@@ -104,7 +131,7 @@ export const SambaNovaModels: Record<SambaNovaModelID, SambaNovaModel> = {
     id: SambaNovaModelID.Llama_3_2_11B_Vision_Instruct,
     name: 'Llama 3.2 11B Vision',
     tokenLimit: 4_000,
-    enabled: true,
+    enabled: false, // disabled by default, small model
   },
   [SambaNovaModelID.Llama_3_2_90B_Vision_Instruct]: {
     id: SambaNovaModelID.Llama_3_2_90B_Vision_Instruct,
