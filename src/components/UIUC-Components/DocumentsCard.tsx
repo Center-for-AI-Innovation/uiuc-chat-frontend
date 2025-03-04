@@ -1,23 +1,30 @@
 import {
   Card,
   Title,
-  Tabs,
-  Indicator,
-  Tooltip,
   Button,
   Modal,
   Text,
   createStyles,
+  Select,
 } from '@mantine/core'
 import { ProjectFilesTable } from './ProjectFilesTable'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { type CourseMetadata } from '~/types/courseMetadata'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useMediaQuery } from '@mantine/hooks'
-import { IconFileExport } from '@tabler/icons-react'
+import {
+  IconFileExport,
+  IconRefresh,
+  IconChevronDown,
+  IconChevronLeft,
+} from '@tabler/icons-react'
 import { useRouter } from 'next/router'
 import { handleExport } from '~/pages/api/UIUC-api/exportAllDocuments'
 import { showToastOnUpdate } from './MakeQueryAnalysisPage'
+import { useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
+import axios from 'axios'
+import UploadNotification, { type FileUpload } from './UploadNotification'
 
 const useStyles = createStyles(() => ({
   tabsList: {
@@ -69,8 +76,340 @@ function DocumentsCard({
   const [failedCount, setFailedCount] = useState<number>(0)
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const [exportModalOpened, setExportModalOpened] = useState(false)
+  const [rescrapeModalOpened, setRescrapeModalOpened] = useState(false)
+  const [hasBaseUrls, setHasBaseUrls] = useState(false)
+  const [selectedBaseUrl, setSelectedBaseUrl] = useState<string | null>(null)
+  const [availableBaseUrls, setAvailableBaseUrls] = useState<
+    { value: string; label: string }[]
+  >([])
+  const [baseUrlsData, setBaseUrlsData] = useState<Record<string, any>>({})
   const router = useRouter()
   const { classes, theme } = useStyles()
+  const queryClient = useQueryClient()
+  const [uploadFiles, setUploadFiles] = useState<FileUpload[]>([])
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isRescraping, setIsRescraping] = useState(false)
+
+  useEffect(() => {
+    const checkIngestStatus = async () => {
+      const response = await fetch(
+        `/api/materialsTable/docsInProgress?course_name=${course_name}`,
+      )
+      const data = await response.json()
+      const docsResponse = await fetch(
+        `/api/materialsTable/docs?course_name=${course_name}`,
+      )
+      const docsData = await docsResponse.json()
+
+      // Helper function to organize docs by base URL
+      const organizeDocsByBaseUrl = (
+        docs: Array<{ base_url: string; url: string }>,
+      ) => {
+        const baseUrlMap = new Map<string, Set<string>>()
+
+        docs.forEach((doc) => {
+          if (!baseUrlMap.has(doc.base_url)) {
+            baseUrlMap.set(doc.base_url, new Set())
+          }
+          baseUrlMap.get(doc.base_url)?.add(doc.url)
+        })
+
+        return baseUrlMap
+      }
+
+      // Helper function to update status of existing files
+      const updateExistingFiles = (
+        currentFiles: FileUpload[],
+        docsInProgress: Array<{ base_url: string }>,
+      ) => {
+        return currentFiles.map((file) => {
+          if (file.type !== 'webscrape') return file
+
+          const isStillIngesting = docsInProgress.some(
+            (doc) => doc.base_url === file.name,
+          )
+
+          if (file.status === 'uploading' && isStillIngesting) {
+            return { ...file, status: 'ingesting' as const }
+          } else if (file.status === 'ingesting') {
+            if (!isStillIngesting) {
+              const isInCompletedDocs = docsData?.documents?.some(
+                (doc: { url: string }) => doc.url === file.url,
+              )
+
+              if (isInCompletedDocs) {
+                return { ...file, status: 'complete' as const }
+              }
+
+              // If not in completed docs, keep as 'ingesting'
+              // The crawling might still be in progress even if not in docsInProgress
+              return file
+            }
+          }
+          return file
+        })
+      }
+
+      // Helper function to create new file entries for additional URLs
+      const createAdditionalFileEntries = (
+        baseUrlMap: Map<string, Set<string>>,
+        currentFiles: FileUpload[],
+        docsInProgress: Array<{ base_url: string; readable_filename: string }>,
+      ) => {
+        const newFiles: FileUpload[] = []
+
+        baseUrlMap.forEach((urls, baseUrl) => {
+          // Only process if we have this base URL in our current files
+          if (currentFiles.some((file) => file.name === baseUrl)) {
+            const matchingDoc = docsInProgress.find(
+              (doc) => doc.base_url === baseUrl,
+            )
+
+            const isStillIngesting = matchingDoc !== undefined
+
+            urls.forEach((url) => {
+              if (
+                !currentFiles.some((file) => file.url === url) &&
+                matchingDoc
+              ) {
+                newFiles.push({
+                  name: url,
+                  status: isStillIngesting ? 'ingesting' : 'complete',
+                  type: 'webscrape',
+                  url: url,
+                })
+              }
+            })
+          }
+        })
+
+        return newFiles
+      }
+
+      setUploadFiles((prev) => {
+        const matchingDocsInProgress =
+          data?.documents?.filter((doc: { base_url: string }) =>
+            prev.some((file) => file.name === doc.base_url),
+          ) || []
+
+        const baseUrlMap = organizeDocsByBaseUrl(matchingDocsInProgress)
+
+        const additionalFiles = createAdditionalFileEntries(
+          baseUrlMap,
+          prev,
+          matchingDocsInProgress,
+        )
+
+        const updatedFiles = updateExistingFiles(prev, matchingDocsInProgress)
+
+        return [...updatedFiles, ...additionalFiles]
+      })
+
+      await queryClient.invalidateQueries({
+        queryKey: ['documents', course_name],
+      })
+    }
+
+    const interval = setInterval(checkIngestStatus, 3000)
+    return () => {
+      clearInterval(interval)
+    }
+  }, [course_name, queryClient])
+
+  // Add query to check for documents with base URLs
+  const { data: documentsWithBaseUrls } = useQuery({
+    queryKey: ['documentsWithBaseUrls', course_name],
+    queryFn: async () => {
+      const response = await fetch(
+        `/api/materialsTable/docs?course_name=${course_name}`,
+      )
+      if (!response.ok) {
+        throw new Error('Failed to fetch documents')
+      }
+      const data = await response.json()
+      const hasBaseUrl = data.documents?.some((doc: any) => doc.base_url)
+      setHasBaseUrls(hasBaseUrl)
+      return data
+    },
+  })
+
+  // Function to fetch base URLs when modal opens
+  const fetchBaseUrls = async () => {
+    try {
+      const response = await fetch(
+        `/api/materialsTable/getBaseUrlsWithGroups?course_name=${course_name}`,
+      )
+      if (!response.ok) {
+        throw new Error('Failed to fetch base URLs')
+      }
+
+      const { data: baseUrls } = await response.json()
+
+      if (baseUrls && Object.keys(baseUrls).length > 0) {
+        setBaseUrlsData(baseUrls) // Store the full base URLs data
+        const urlOptions = Object.keys(baseUrls).map((url) => ({
+          value: url,
+          label: url,
+        }))
+        // Add "All URLs" option at the beginning
+        urlOptions.unshift({ value: 'all', label: 'All URLs' })
+        setAvailableBaseUrls(urlOptions)
+        setSelectedBaseUrl('all') // Default to "All URLs"
+      } else {
+        showToastOnUpdate(theme, true, false, 'No documents found to rescrape')
+      }
+    } catch (error) {
+      showToastOnUpdate(theme, true, false, 'Failed to fetch base URLs')
+    }
+  }
+
+  const handleRescrape = async () => {
+    setRescrapeModalOpened(false)
+    setIsRescraping(true)
+
+    try {
+      if (!baseUrlsData || Object.keys(baseUrlsData).length === 0) {
+        showToastOnUpdate(theme, true, false, 'No documents found to rescrape')
+        setIsRescraping(false)
+        return
+      }
+
+      // Filter base URLs if a specific one is selected
+      const urlsToProcess =
+        selectedBaseUrl === 'all'
+          ? baseUrlsData
+          : {
+              [selectedBaseUrl as string]:
+                baseUrlsData[selectedBaseUrl as string],
+            }
+
+      // Create a Map to store normalized URLs and their original forms
+      const normalizedToOriginal = new Map<
+        string,
+        { url: string; groups: any }
+      >()
+
+      // Helper function to normalize URLs
+      const normalizeUrl = (url: string): string => {
+        try {
+          const urlObj = new URL(url)
+          // Remove protocol, www, trailing slashes, and normalize domain case
+          const hostname = urlObj.hostname.toLowerCase().replace(/^www\./, '')
+          const pathname = urlObj.pathname.toLowerCase().replace(/\/+$/, '')
+          const search = urlObj.search.toLowerCase()
+
+          // Combine and ensure no double slashes
+          let normalizedUrl = hostname
+          if (pathname !== '/') {
+            normalizedUrl += pathname
+          }
+          if (search) {
+            normalizedUrl += search
+          }
+          return normalizedUrl
+        } catch (error) {
+          console.warn('Error normalizing URL:', url, error)
+          return url.toLowerCase()
+        }
+      }
+
+      // First pass: Collect all normalized forms and detect duplicates
+      Object.entries(urlsToProcess).forEach(([baseUrl, groups]) => {
+        try {
+          const normalizedUrl = normalizeUrl(baseUrl)
+          if (!normalizedToOriginal.has(normalizedUrl)) {
+            normalizedToOriginal.set(normalizedUrl, { url: baseUrl, groups })
+          }
+        } catch (error) {
+          // Skip invalid URLs silently
+        }
+      })
+
+      // Convert back to object with only unique URLs
+      const uniqueBaseUrls: Record<string, any> = {}
+      normalizedToOriginal.forEach(({ url, groups }, normalizedUrl) => {
+        uniqueBaseUrls[url] = groups
+      })
+
+      for (const baseUrl of Object.keys(uniqueBaseUrls)) {
+        const newFile: FileUpload = {
+          name: baseUrl,
+          status: 'uploading',
+          type: 'webscrape',
+          url: baseUrl,
+          isBaseUrl: true,
+        }
+
+        setUploadFiles((prevFiles) => {
+          // Check if we already have this base URL in progress
+          const normalizedNewUrl = normalizeUrl(baseUrl)
+
+          const exists = prevFiles.some((file) => {
+            if (!file.isBaseUrl || !file.url) return false
+            try {
+              const normalizedExistingUrl = normalizeUrl(file.url)
+              return normalizedNewUrl === normalizedExistingUrl
+            } catch (error) {
+              return false
+            }
+          })
+
+          if (exists) {
+            return prevFiles
+          }
+          return [...prevFiles, newFile]
+        })
+
+        const postParams = {
+          url: baseUrl,
+          courseName: course_name,
+          maxPagesToCrawl: 50,
+          scrapeStrategy: 'equal-and-below',
+          match: `http?(s)://${new URL(baseUrl).hostname}/**`,
+          maxTokens: 2000000,
+          documentGroups: uniqueBaseUrls[baseUrl],
+        }
+
+        try {
+          const response = await axios.post(
+            'https://crawlee-production.up.railway.app/crawl',
+            {
+              params: postParams,
+            },
+          )
+        } catch (error: any) {
+          setUploadFiles((prevFiles) =>
+            prevFiles.map((file) =>
+              file.name === baseUrl
+                ? {
+                    ...file,
+                    status: 'error',
+                    error:
+                      error.response?.data?.message ||
+                      error.message ||
+                      'Failed to scrape website',
+                  }
+                : file,
+            ),
+          )
+          showToastOnUpdate(
+            theme,
+            true,
+            false,
+            `Failed to scrape ${baseUrl}: ${error.response?.data?.message || error.message || 'Unknown error'}`,
+          )
+        }
+      }
+    } catch (error: any) {
+      showToastOnUpdate(
+        theme,
+        true,
+        false,
+        `Failed to rescrape documents: ${error.message || 'Unknown error'}`,
+      )
+    }
+    setIsRescraping(false)
+  }
 
   const getCurrentPageName = () => {
     return router.asPath.slice(1).split('/')[0] as string
@@ -114,6 +453,197 @@ function DocumentsCard({
           </div>
         </Modal>
 
+        <Modal
+          opened={rescrapeModalOpened}
+          onClose={() => {
+            setRescrapeModalOpened(false)
+            setSelectedBaseUrl(null)
+          }}
+          title="Please confirm your action"
+          centered
+          size={'lg'}
+          closeOnEscape={true}
+          transitionProps={{ transition: 'fade', duration: 200 }}
+          radius={'lg'}
+          overlayProps={{ blur: 3, opacity: 0.55 }}
+          styles={{
+            header: {
+              backgroundColor: '#15162c',
+              borderBottom: '2px solid',
+              borderColor: theme.colors.dark[3],
+              padding: '1.25rem',
+            },
+            body: {
+              backgroundColor: '#15162c',
+              padding: '1.5rem',
+              fontFamily: `var(${montserrat_paragraph.variable})`,
+            },
+            title: {
+              color: 'white',
+              fontFamily: `var(${montserrat_heading.variable})`,
+              fontWeight: 'bold',
+              fontSize: '1.25rem',
+            },
+            close: {
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'rgba(147, 112, 219, 0.2)',
+              },
+            },
+            inner: {
+              padding: '0.5rem',
+            },
+          }}
+        >
+          <div className="flex flex-col gap-6">
+            <div className="py-4">
+              <Text
+                size="sm"
+                style={{
+                  color: 'white',
+                  lineHeight: 1.5,
+                  opacity: 0.9,
+                }}
+                className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+              >
+                Select which website content you want to rescrape. This will
+                refresh the previously downloaded web content.
+              </Text>
+
+              <div className="py-2">
+                <Select
+                  label="Select Website to Rescrape"
+                  placeholder="Choose a website to rescrape"
+                  value={selectedBaseUrl}
+                  onChange={(value) => {
+                    setSelectedBaseUrl(value)
+                    setIsDropdownOpen(false) // Close dropdown immediately on selection
+                  }}
+                  data={availableBaseUrls}
+                  searchable
+                  clearable={false}
+                  onDropdownOpen={() => setIsDropdownOpen(true)}
+                  onDropdownClose={() => setIsDropdownOpen(false)}
+                  transitionProps={{
+                    transition: 'pop',
+                    duration: 200,
+                    timingFunction: 'spring',
+                    exitDuration: 200,
+                  }}
+                  rightSection={
+                    <div>
+                      {isDropdownOpen ? (
+                        <IconChevronLeft
+                          size={16}
+                          color="rgba(255, 255, 255, 0.6)"
+                        />
+                      ) : (
+                        <IconChevronDown
+                          size={16}
+                          color="rgba(255, 255, 255, 0.6)"
+                        />
+                      )}
+                    </div>
+                  }
+                  styles={{
+                    label: {
+                      color: 'white',
+                      marginBottom: '0.5rem',
+                      fontFamily: `var(${montserrat_heading.variable})`,
+                      fontSize: '0.9rem',
+                    },
+                    input: {
+                      backgroundColor: '#1A1B1E',
+                      color: 'white',
+                      borderColor: '#2C2E33',
+                      paddingTop: '12px',
+                      paddingBottom: '12px',
+                      fontFamily: `var(${montserrat_paragraph.variable})`,
+                      cursor: 'pointer',
+                      transition: 'border-color 200ms ease',
+                      '&:hover': {
+                        borderColor: '#9370DB',
+                      },
+                      '&:focus': {
+                        borderColor: '#9370DB',
+                      },
+                    },
+                    dropdown: {
+                      backgroundColor: '#1A1B1E',
+                      borderColor: '#9370DB',
+                      boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.7)',
+                      marginTop: '4px',
+                      zIndex: 1000,
+                      fontFamily: `var(${montserrat_paragraph.variable})`,
+                      transformOrigin: 'top',
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      animation: 'scaleIn 200ms ease',
+                      '@keyframes scaleIn': {
+                        from: {
+                          opacity: 0,
+                          transform: 'scale(0.9)',
+                        },
+                        to: {
+                          opacity: 1,
+                          transform: 'scale(1)',
+                        },
+                      },
+                    },
+                    item: {
+                      color: 'white',
+                      fontFamily: `var(${montserrat_paragraph.variable})`,
+                      cursor: 'pointer',
+                      transition: 'background-color 200ms ease',
+                      '&[data-selected]': {
+                        backgroundColor: '#9370DB',
+                        color: 'white',
+                      },
+                      '&[data-hovered]': {
+                        backgroundColor: 'rgba(147, 112, 219, 0.2)',
+                        color: 'white',
+                      },
+                    },
+                    rightSection: {
+                      pointerEvents: 'none',
+                      transition: 'transform 200ms ease',
+                    },
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <Button
+                className={`
+                  rounded-md bg-transparent text-white hover:bg-indigo-600
+                  ${montserrat_paragraph.variable} px-6
+                  py-2 font-montserratParagraph transition-colors duration-150
+                `}
+                onClick={() => {
+                  setRescrapeModalOpened(false)
+                  setSelectedBaseUrl(null)
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                className={`
+                  rounded-md bg-purple-800 text-white hover:bg-indigo-600
+                  ${montserrat_paragraph.variable} px-6
+                  py-2 font-montserratParagraph transition-colors duration-150
+                `}
+                onClick={handleRescrape}
+                disabled={!selectedBaseUrl}
+              >
+                Rescrape Websites
+              </Button>
+            </div>
+          </div>
+        </Modal>
+
         <div className="w-full border-b border-white/10 bg-black/20 px-4 py-3 sm:px-6 sm:py-4 md:px-8">
           <div className="flex items-center justify-between gap-2">
             <Title
@@ -123,22 +653,53 @@ function DocumentsCard({
               Project Files
             </Title>
 
-            <Button
-              variant="subtle"
-              leftIcon={<IconFileExport size={20} />}
-              onClick={() => setExportModalOpened(true)}
-              className={`
-                ${montserrat_paragraph.variable} 
-                rounded-3xl bg-purple-800 px-4 font-montserratParagraph
-                text-sm text-white transition-colors hover:bg-indigo-600 
-                sm:text-base
-              `}
-            >
-              <span className="hidden sm:inline">
-                Export All Documents & Embeddings
-              </span>
-              <span className="inline sm:hidden">Export All</span>
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="subtle"
+                leftIcon={
+                  <IconRefresh
+                    size={20}
+                    className={isRescraping ? 'animate-spin' : ''}
+                  />
+                }
+                onClick={async () => {
+                  await fetchBaseUrls()
+                  setRescrapeModalOpened(true)
+                }}
+                disabled={!hasBaseUrls || isRescraping}
+                className={`
+                  ${montserrat_paragraph.variable} 
+                  rounded-3xl bg-purple-800 px-4 font-montserratParagraph
+                  text-sm text-white transition-colors hover:bg-indigo-600 
+                  disabled:cursor-not-allowed disabled:opacity-50
+                  sm:text-base
+                `}
+              >
+                <span className="hidden sm:inline">
+                  {isRescraping ? 'Rescraping...' : 'Rescrape Websites'}
+                </span>
+                <span className="inline sm:hidden">
+                  {isRescraping ? 'Updating...' : 'Update'}
+                </span>
+              </Button>
+
+              <Button
+                variant="subtle"
+                leftIcon={<IconFileExport size={20} />}
+                onClick={() => setExportModalOpened(true)}
+                className={`
+                  ${montserrat_paragraph.variable} 
+                  rounded-3xl bg-purple-800 px-4 font-montserratParagraph
+                  text-sm text-white transition-colors hover:bg-indigo-600 
+                  sm:text-base
+                `}
+              >
+                <span className="hidden sm:inline">
+                  Export All Documents & Embeddings
+                </span>
+                <span className="inline sm:hidden">Export All</span>
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -156,6 +717,13 @@ function DocumentsCard({
           )}
         </div>
       </div>
+      {uploadFiles.length > 0 && (
+        <UploadNotification
+          files={uploadFiles}
+          onClose={() => setUploadFiles([])}
+          projectName={course_name}
+        />
+      )}
     </Card>
   )
 }

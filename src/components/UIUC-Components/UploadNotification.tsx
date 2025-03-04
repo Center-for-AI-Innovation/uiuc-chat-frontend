@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { Card, Text, Button, Tooltip } from '@mantine/core'
+import React, { useState, useEffect, useRef } from 'react'
+import { Card, Text, Button, Tooltip, ActionIcon } from '@mantine/core'
 import {
   IconCheck,
   IconChevronDown,
@@ -17,11 +17,13 @@ import {
   IconPhoto,
   IconMusic,
   IconWorld,
+  IconCopy,
 } from '@tabler/icons-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { LoadingSpinner } from './LoadingSpinner'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useQuery } from '@tanstack/react-query'
+import { showNotification } from '@mantine/notifications'
 
 export interface FileUpload {
   name: string
@@ -61,11 +63,29 @@ function UploadNotificationContent({
 }: UploadNotificationProps) {
   const [isMinimized, setIsMinimized] = useState(false)
   const [currentFiles, setCurrentFiles] = useState<FileUpload[]>([])
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const prevFilesLengthRef = useRef(currentFiles.length)
   const { data: failedDocuments } = useQuery<FailedDocumentsResponse>({
     queryKey: ['failedDocuments', projectName, 1, '', '', 'created_at', 'desc'],
     staleTime: 10000,
     enabled: !!projectName,
   })
+
+  // Separate useEffect for scrolling
+  useEffect(() => {
+    // Only scroll if we have more files than before and not minimized
+    if (currentFiles.length > prevFilesLengthRef.current && !isMinimized) {
+      const scrollContainer = scrollContainerRef.current
+      if (scrollContainer) {
+        scrollContainer.scrollTo({
+          top: scrollContainer.scrollHeight,
+          behavior: 'smooth',
+        })
+      }
+    }
+    prevFilesLengthRef.current = currentFiles.length
+  }, [currentFiles.length, isMinimized])
+
   useEffect(() => {
     if (files && Array.isArray(files)) {
       setCurrentFiles((prevFiles) => {
@@ -102,6 +122,7 @@ function UploadNotificationContent({
             return file
           })
         }
+
         return updatedFiles
       })
     }
@@ -263,9 +284,12 @@ function UploadNotificationContent({
       </div>
 
       {!isMinimized && (
-        <div className="max-h-[300px] overflow-y-auto px-5 py-4">
+        <div
+          ref={scrollContainerRef}
+          className="max-h-[300px] overflow-y-auto scroll-smooth px-5 py-4"
+        >
           <AnimatePresence>
-            {currentFiles.map((file) => (
+            {currentFiles.map((file, index) => (
               <motion.div
                 key={file.name}
                 initial={{ opacity: 0, y: 20 }}
@@ -292,18 +316,54 @@ function UploadNotificationContent({
                     >
                       {file.name ? truncateText(file.name, 30) : file.name}
                     </Text>
-                    <Text
-                      size="xs"
-                      className={`truncate text-[#8e8eb2] ${montserrat_paragraph.variable} font-montserratParagraph`}
-                      title={getStatusMessage(file.status)}
-                    >
-                      {getStatusMessage(
-                        file.status,
-                        file.url,
-                        file.type,
-                        file.isBaseUrl,
+                    <div className="flex items-center gap-2">
+                      <Text
+                        size="xs"
+                        className={`truncate text-[#8e8eb2] ${montserrat_paragraph.variable} font-montserratParagraph`}
+                        title={getStatusMessage(file.status)}
+                      >
+                        {getStatusMessage(
+                          file.status,
+                          file.url,
+                          file.type,
+                          file.isBaseUrl,
+                        )}
+                      </Text>
+                      {file.status === 'error' && file.url && (
+                        <Tooltip label="Copy URL" position="right">
+                          <ActionIcon
+                            size="xs"
+                            variant="subtle"
+                            onClick={() => {
+                              navigator.clipboard.writeText(file.url || '')
+                              showNotification({
+                                title: 'URL Copied',
+                                message: 'URL has been copied to clipboard',
+                                color: 'teal',
+                                icon: <IconCheck size={16} />,
+                                styles: (theme) => ({
+                                  root: {
+                                    backgroundColor: '#1a1b3b',
+                                    borderColor: theme.colors.teal[6],
+                                  },
+                                  title: { color: 'white' },
+                                  description: { color: 'white' },
+                                  closeButton: {
+                                    color: 'white',
+                                    '&:hover': {
+                                      backgroundColor: theme.colors.teal[7],
+                                    },
+                                  },
+                                }),
+                              })
+                            }}
+                            className="hover:bg-[#2a2c4c] hover:text-white"
+                          >
+                            <IconCopy size={12} className="text-[#8e8eb2]" />
+                          </ActionIcon>
+                        </Tooltip>
                       )}
-                    </Text>
+                    </div>
                   </div>
                   <div className="ml-2 flex items-center">
                     {(file.status === 'uploading' ||
@@ -318,7 +378,9 @@ function UploadNotificationContent({
                           tooltip: `${montserrat_paragraph.variable} font-montserratParagraph`,
                         }}
                       >
-                        <LoadingSpinner size="xs" />
+                        <div className="flex items-center justify-center">
+                          <LoadingSpinner size="xs" />
+                        </div>
                       </Tooltip>
                     )}
                     {file.status === 'complete' && (
