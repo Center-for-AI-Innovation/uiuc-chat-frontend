@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Text, Card, Button, Input, Checkbox } from '@mantine/core'
-import { IconArrowRight } from '@tabler/icons-react'
+import { Text, Card, Button, Input, Checkbox, Alert } from '@mantine/core'
+import { IconArrowRight, IconAlertTriangle } from '@tabler/icons-react'
 import { motion } from 'framer-motion'
 import {
   Dialog,
@@ -178,11 +178,44 @@ export default function CanvasIngestForm({
               Ingest Canvas Course
             </DialogTitle>
           </DialogHeader>
+
+          <Alert
+            icon={<IconAlertTriangle size={18} />}
+            color="red"
+            title="IMPORTANT: Canvas Permission Required"
+            className="mb-4 border border-red-500/50 bg-red-900/20"
+          >
+            <span className="font-semibold">
+              Before proceeding, you MUST add the UIUC Chatbot as a student to
+              your Canvas course at{' '}
+              <NextLink
+                href="https://canvas.illinois.edu/"
+                target="_blank"
+                rel="noreferrer"
+                className="text-blue-400 hover:underline"
+              >
+                https://canvas.illinois.edu
+              </NextLink>
+            </span>
+            <div className="mt-1">
+              • Bot email:{' '}
+              <span className="font-mono text-yellow-300">
+                uiuc.chat@ad.uillinois.edu
+              </span>
+              <br />• Bot name:{' '}
+              <span className="font-mono text-yellow-300">UIUC Course AI</span>
+            </div>
+            <div className="mt-1 text-xs italic">
+              This is required for access to any of your Canvas content. The AI
+              can only see what students/TAs have access to.
+            </div>
+          </Alert>
+
           <div className="border-t border-gray-800 pt-4">
             <div className="space-y-4">
               <div>
                 <div className="break-words text-sm sm:text-base">
-                  <strong>For Canvas</strong>, just enter a URL like{' '}
+                  Just enter a URL like{' '}
                   <code className="inline-flex items-center rounded-md bg-[#020307] px-2 py-1 font-mono text-xs sm:text-sm">
                     canvas.illinois.edu/courses/COURSE_CODE
                   </code>
@@ -275,12 +308,6 @@ export default function CanvasIngestForm({
                     </div>
                   ))}
                 </div>
-              </div>
-              <div className="text-sm text-red-400">
-                Please ensure that you have added the UIUC Chatbot as a student
-                to your course on Canvas before you begin ingesting the course
-                content. The bot email address is uiuc.chat@ad.uillinois.edu and
-                the bot name is UIUC Course AI.
               </div>
             </div>
           </div>
