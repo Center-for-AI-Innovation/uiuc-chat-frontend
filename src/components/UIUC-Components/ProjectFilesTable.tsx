@@ -71,7 +71,7 @@ const PAGE_SIZE = 100
 
 export function ProjectFilesTable({
   course_name,
-  setFailedCount = (count: number) => { },
+  setFailedCount = (count: number) => {},
   tabValue,
   onTabChange,
   failedCount = 0,
@@ -148,7 +148,7 @@ export function ProjectFilesTable({
     error: documentsError,
     refetch: refetchDocuments,
   } = useQuery({
-    refetchInterval: 10_000,
+    refetchInterval: 3_000,
     queryKey: [
       'documents',
       course_name,
@@ -516,10 +516,11 @@ export function ProjectFilesTable({
           <div className="flex items-center md:space-x-4">
             <button
               onClick={() => onTabChange('success')}
-              className={`rounded-t-lg px-4 py-3 font-medium transition-colors duration-200 ${tabValue === 'success'
+              className={`rounded-t-lg px-4 py-3 font-medium transition-colors duration-200 ${
+                tabValue === 'success'
                   ? 'border-b-2 border-purple-500 bg-purple-600/20 text-white'
                   : 'text-gray-400 hover:bg-purple-600/10 hover:text-white'
-                } ${montserrat_heading.variable} font-montserratHeading`}
+              } ${montserrat_heading.variable} font-montserratHeading`}
             >
               Success
             </button>
@@ -533,10 +534,11 @@ export function ProjectFilesTable({
             >
               <button
                 onClick={() => onTabChange('failed')}
-                className={`rounded-t-lg px-4 py-3 font-medium transition-colors duration-200 ${tabValue === 'failed'
+                className={`rounded-t-lg px-4 py-3 font-medium transition-colors duration-200 ${
+                  tabValue === 'failed'
                     ? 'border-b-2 border-purple-500 bg-purple-600/20 text-white'
                     : 'text-gray-400 hover:bg-purple-600/10 hover:text-white'
-                  } ${montserrat_heading.variable} font-montserratHeading`}
+                } ${montserrat_heading.variable} font-montserratHeading`}
               >
                 Failed
               </button>
@@ -544,7 +546,7 @@ export function ProjectFilesTable({
           </div>
 
           <div className="flex flex-wrap items-center gap-2 px-2 md:gap-4">
-            {selectedRecords.length > 0 && (
+            {tabValue !== 'failed' && selectedRecords.length > 0 && (
               <Paper className="w-full bg-transparent sm:w-auto">
                 <div className="relative flex w-full flex-col items-start sm:flex-row sm:items-center">
                   <Tooltip
@@ -574,9 +576,9 @@ export function ProjectFilesTable({
                         data={
                           documentGroups
                             ? documentGroups.map((doc_group) => ({
-                              value: doc_group.name || '',
-                              label: doc_group.name || '',
-                            }))
+                                value: doc_group.name || '',
+                                label: doc_group.name || '',
+                              }))
                             : []
                         }
                         value={selectedDocGroups}
@@ -660,20 +662,22 @@ export function ProjectFilesTable({
                           setModalOpened(true)
                         }
                       }}
-                      className={`mb-2 w-full border-0 px-4 py-2 text-sm focus:outline-none focus:ring-0 sm:mb-0 sm:w-auto sm:px-6 sm:py-3 sm:text-base ${selectedCount
+                      className={`mb-2 w-full border-0 px-4 py-2 text-sm focus:outline-none focus:ring-0 sm:mb-0 sm:w-auto sm:px-6 sm:py-3 sm:text-base ${
+                        selectedCount
                           ? 'bg-red-900 hover:bg-red-800'
                           : 'bg-transparent'
-                        } transition-colors duration-300 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                      } transition-colors duration-300 ${montserrat_paragraph.variable} font-montserratParagraph`}
                     >
                       <span className="block sm:hidden">
                         Delete {selectedCount}
                       </span>
                       <span className="hidden sm:block">
                         {selectedCount
-                          ? `Delete ${selectedCount === 1
-                            ? '1 selected record'
-                            : `${selectedCount} selected records`
-                          }`
+                          ? `Delete ${
+                              selectedCount === 1
+                                ? '1 selected record'
+                                : `${selectedCount} selected records`
+                            }`
                           : 'Select records to delete'}
                       </span>
                     </Button>
@@ -903,162 +907,163 @@ export function ProjectFilesTable({
             },
             ...(tabValue === 'failed'
               ? [
-                {
-                  accessor: 'error',
-                  title: 'Error',
-                  width: 200,
-                  render: ({ error }: { error: string }, index: number) => {
-                    // Ensure a ref exists for this row
-                    if (!textRefs.current[index]) {
-                      textRefs.current[index] = createRef()
-                    }
+                  {
+                    accessor: 'error',
+                    title: 'Error',
+                    width: 200,
+                    render: ({ error }: { error: string }, index: number) => {
+                      // Ensure a ref exists for this row
+                      if (!textRefs.current[index]) {
+                        textRefs.current[index] = createRef()
+                      }
 
-                    return (
-                      <div>
-                        <Text
-                          ref={textRefs.current[index]}
-                          size="sm"
-                          style={{
-                            display: '-webkit-box',
-                            WebkitLineClamp: 3,
-                            WebkitBoxOrient: 'vertical',
-                            overflow: 'hidden',
-                            maxWidth: '100%',
-                          }}
-                        >
-                          {error}
-                        </Text>
-                        {overflowStates[index] && (
+                      return (
+                        <div>
                           <Text
+                            ref={textRefs.current[index]}
                             size="sm"
-                            color="grape"
-                            onClick={() => openModel(true, error)}
-                            className="rounded-md hover:underline"
                             style={{
-                              cursor: 'pointer',
-                              bottom: 0,
-                              textAlign: 'right',
+                              display: '-webkit-box',
+                              WebkitLineClamp: 3,
+                              WebkitBoxOrient: 'vertical',
+                              overflow: 'hidden',
+                              maxWidth: '100%',
                             }}
                           >
-                            Read more
+                            {error}
                           </Text>
-                        )}
-                      </div>
-                    )
+                          {overflowStates[index] && (
+                            <Text
+                              size="sm"
+                              color="grape"
+                              onClick={() => openModel(true, error)}
+                              className="rounded-md hover:underline"
+                              style={{
+                                cursor: 'pointer',
+                                bottom: 0,
+                                textAlign: 'right',
+                              }}
+                            >
+                              Read more
+                            </Text>
+                          )}
+                        </div>
+                      )
+                    },
                   },
-                },
-              ]
+                ]
               : [
-                {
-                  accessor: 'doc_group',
-                  title: 'Document Groups',
-                  width: 200, // Increase this value to make the column wider
-                  render: (record: CourseDocument) => (
-                    <Group position="apart" spacing="xs">
-                      <MultiSelect
-                        data={
-                          documentGroups
-                            ? [...documentGroups].map((doc_group) => ({
-                              value: doc_group.name || '',
-                              label: doc_group.name || '',
-                            }))
-                            : []
-                        }
-                        value={record.doc_groups ? record.doc_groups : []}
-                        placeholder={
-                          isLoadingDocumentGroups
-                            ? 'Loading...'
-                            : 'Select Group'
-                        }
-                        searchable={!isLoadingDocumentGroups}
-                        nothingFound={
-                          isLoadingDocumentGroups
-                            ? 'Loading...'
-                            : 'No groups... Start typing to create a new one ✨'
-                        }
-                        creatable
-                        getCreateLabel={(query) => `+ Create "${query}"`}
-                        onCreate={(doc_group_name) => {
-                          // createDocumentGroup.mutate({ record, doc_group_name })
-                          return {
-                            value: doc_group_name,
-                            label: doc_group_name,
+                  {
+                    accessor: 'doc_group',
+                    title: 'Document Groups',
+                    width: 200, // Increase this value to make the column wider
+                    render: (record: CourseDocument) => (
+                      <Group position="apart" spacing="xs">
+                        <MultiSelect
+                          data={
+                            documentGroups
+                              ? [...documentGroups].map((doc_group) => ({
+                                  value: doc_group.name || '',
+                                  label: doc_group.name || '',
+                                }))
+                              : []
                           }
-                        }}
-                        onChange={(newSelectedGroups) => {
-                          handleDocumentGroupsChange(
-                            record,
-                            newSelectedGroups,
-                          )
-                        }}
-                        disabled={isLoadingDocumentGroups}
-                        sx={{ flex: 1, width: '100%' }}
-                        classNames={{
-                          value: 'tag-item self-center',
-                        }}
-                        styles={{
-                          input: {
-                            paddingTop: '12px',
-                            paddingBottom: '12px',
-                          },
-                          value: {
-                            marginTop: '2px',
-                          },
-                        }}
-                      />
-                    </Group>
-                  ),
-                },
-              ]),
+                          value={record.doc_groups ? record.doc_groups : []}
+                          placeholder={
+                            isLoadingDocumentGroups
+                              ? 'Loading...'
+                              : 'Select Group'
+                          }
+                          searchable={!isLoadingDocumentGroups}
+                          nothingFound={
+                            isLoadingDocumentGroups
+                              ? 'Loading...'
+                              : 'No groups... Start typing to create a new one ✨'
+                          }
+                          creatable
+                          getCreateLabel={(query) => `+ Create "${query}"`}
+                          onCreate={(doc_group_name) => {
+                            // createDocumentGroup.mutate({ record, doc_group_name })
+                            return {
+                              value: doc_group_name,
+                              label: doc_group_name,
+                            }
+                          }}
+                          onChange={(newSelectedGroups) => {
+                            handleDocumentGroupsChange(
+                              record,
+                              newSelectedGroups,
+                            )
+                          }}
+                          disabled={isLoadingDocumentGroups}
+                          sx={{ flex: 1, width: '100%' }}
+                          classNames={{
+                            value: 'tag-item self-center',
+                          }}
+                          styles={{
+                            input: {
+                              paddingTop: '12px',
+                              paddingBottom: '12px',
+                            },
+                            value: {
+                              marginTop: '2px',
+                            },
+                          }}
+                        />
+                      </Group>
+                    ),
+                  },
+                ]),
             ...(tabValue === 'failed'
               ? []
               : [
-                {
-                  accessor: 'actions',
-                  title: <Box mr={6}>Actions</Box>,
-                  width: 75,
-                  render: (materials: any, index: number) => {
-                    const openModal = async (action: string) => {
-                      let urlToOpen = materials.url
-                      if (!materials.url && materials.s3_path) {
-                        const presignedUrl = await fetchPresignedUrl(
-                          materials.s3_path,
-                        )
-                        urlToOpen = presignedUrl
+                  {
+                    accessor: 'actions',
+                    title: <Box mr={6}>Actions</Box>,
+                    width: 75,
+                    render: (materials: any, index: number) => {
+                      const openModal = async (action: string) => {
+                        let urlToOpen = materials.url
+                        if (!materials.url && materials.s3_path) {
+                          const presignedUrl = await fetchPresignedUrl(
+                            materials.s3_path,
+                          )
+                          urlToOpen = presignedUrl
+                        }
+                        if (action === 'view' && urlToOpen) {
+                          window.open(urlToOpen, '_blank')
+                        } else if (action === 'delete') {
+                          setRecordsToDelete([materials])
+                          setModalOpened(true)
+                        }
                       }
-                      if (action === 'view' && urlToOpen) {
-                        window.open(urlToOpen, '_blank')
-                      } else if (action === 'delete') {
-                        setRecordsToDelete([materials])
-                        setModalOpened(true)
-                      }
-                    }
 
-                    return (
-                      <Group spacing="xs">
-                        <ActionIcon
-                          size="sm"
-                          variant="subtle"
-                          color="green"
-                          onClick={() => openModal('view')}
-                        >
-                          <IconEye size={16} />
-                        </ActionIcon>
-                        <ActionIcon
-                          size="sm"
-                          variant="subtle"
-                          color="red"
-                          onClick={() => openModal('delete')}
-                        >
-                          <IconTrash size={16} />
-                        </ActionIcon>
-                      </Group>
-                    )
+                      return (
+                        <Group spacing="xs">
+                          <ActionIcon
+                            size="sm"
+                            variant="subtle"
+                            color="green"
+                            onClick={() => openModal('view')}
+                          >
+                            <IconEye size={16} />
+                          </ActionIcon>
+                          <ActionIcon
+                            size="sm"
+                            variant="subtle"
+                            color="red"
+                            onClick={() => openModal('delete')}
+                          >
+                            <IconTrash size={16} />
+                          </ActionIcon>
+                        </Group>
+                      )
+                    },
                   },
-                },
-              ]),
+                ]),
           ]}
-          selectedRecords={selectedRecords}
+          isRecordSelectable={(record) => tabValue !== 'failed'}
+          selectedRecords={tabValue === 'failed' ? [] : selectedRecords}
           onSelectedRecordsChange={(newSelectedRecords) => {
             if (newSelectedRecords.length > 0) {
               setSelectedRecords(newSelectedRecords)
@@ -1069,11 +1074,12 @@ export function ProjectFilesTable({
               // Use reduce to find the common document groups among all selected records
               const commonDocGroups = newSelectedRecords.reduce(
                 (commonGroups, record) => {
+                  const recordGroups = record.doc_groups || []
                   return commonGroups.filter((group) =>
-                    record.doc_groups.includes(group),
+                    recordGroups.includes(group),
                   )
                 },
-                (newSelectedRecords[0] as CourseDocument).doc_groups,
+                newSelectedRecords[0]?.doc_groups || [],
               )
 
               setSelectedDocGroups(commonDocGroups)
@@ -1085,8 +1091,8 @@ export function ProjectFilesTable({
               setSelectedCount(0)
             }
           }}
-        // Accessor not necessary when documents have an `id` property
-        // idAccessor={(row: any) => (row.url ? row.url : row.s3_path)}
+          // Accessor not necessary when documents have an `id` property
+          // idAccessor={(row: any) => (row.url ? row.url : row.s3_path)}
         />{' '}
         {/* End DataTable */}
         <Modal
@@ -1271,7 +1277,7 @@ function errorStateForProjectFilesTable() {
             radius="lg"
             src="https://assets.kastan.ai/this-is-fine.jpg"
             alt="No data found"
-          // style={{ filter: 'grayscale(1)' }}
+            // style={{ filter: 'grayscale(1)' }}
           />
           <Text c="dimmed" size="md">
             So.. please try again later.

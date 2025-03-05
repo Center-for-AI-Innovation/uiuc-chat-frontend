@@ -4,9 +4,6 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post'
 
 const region = process.env.AWS_REGION
-// const accessKey = process.env.MINIO_KEY || process.env.AWS_KEY
-// const secretKey = process.env.MINIO_SECRET || process.env.AWS_SECRET
-// const bucketName = process.env.MINIO_BUCKET_NAME || process.env.S3_BUCKET_NAME
 
 // S3 Client configuration
 let s3Client: S3Client | null = null
@@ -22,7 +19,11 @@ if (region && process.env.AWS_KEY && process.env.AWS_SECRET) {
 
 // MinIO Client configuration
 let vyriadMinioClient: S3Client | null = null
-if (process.env.MINIO_KEY && process.env.MINIO_SECRET && process.env.MINIO_ENDPOINT) {
+if (
+  process.env.MINIO_KEY &&
+  process.env.MINIO_SECRET &&
+  process.env.MINIO_ENDPOINT
+) {
   vyriadMinioClient = new S3Client({
     region: process.env.MINIO_REGION || 'us-east-1', // MinIO requires a region, but it can be arbitrary
     credentials: {
@@ -44,19 +45,22 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     const s3_filepath = `courses/${courseName}/${uniqueFileName}`
 
     let post
-    if (courseName == "vyriad") {
+    if (courseName === 'vyriad') {
       if (!vyriadMinioClient) {
-        throw new Error('MinIO client not configured - missing required environment variables')
+        throw new Error(
+          'MinIO client not configured - missing required environment variables',
+        )
       }
       post = await createPresignedPost(vyriadMinioClient, {
         Bucket: process.env.S3_BUCKET_NAME!,
         Key: s3_filepath,
         Expires: 60 * 60, // 1 hour
       })
-
     } else {
       if (!s3Client) {
-        throw new Error('S3 client not configured - missing required environment variables')
+        throw new Error(
+          'S3 client not configured - missing required environment variables',
+        )
       }
       post = await createPresignedPost(s3Client, {
         Bucket: process.env.S3_BUCKET_NAME!,

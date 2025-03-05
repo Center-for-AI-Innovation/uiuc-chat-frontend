@@ -106,6 +106,7 @@ export interface ContextWithMetadata {
   'course_name ': string
   s3_path: string
   pagenumber: string
+  pagenumber_or_timestamp?: string
   url: string
   base_url: string
 }
@@ -124,10 +125,9 @@ export interface ChatBody {
   stream: boolean
   isImage?: boolean
   courseMetadata?: CourseMetadata
-  // provider?: BaseLLMProvider // TODO: make mandatory
   llmProviders?: AllLLMProviders
   skipQueryRewrite?: boolean
-  // NO FOLDER ID
+  mode: 'chat' | 'optimize_prompt'
 }
 
 export interface ImageBody {

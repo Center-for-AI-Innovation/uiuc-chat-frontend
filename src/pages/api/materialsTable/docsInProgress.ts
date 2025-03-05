@@ -11,7 +11,7 @@ type DocsInProgressResponse = {
 
 export default async function docsInProgress(
   req: NextApiRequest,
-  res: NextApiResponse<DocsInProgressResponse>
+  res: NextApiResponse<DocsInProgressResponse>,
 ) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -24,11 +24,10 @@ export default async function docsInProgress(
   if (!currUserId) {
     return res.status(401).json({ error: 'User ID is required' })
   }
-
   try {
     const { data, error } = await supabase
       .from('documents_in_progress')
-      .select('readable_filename')
+      .select('readable_filename, base_url, url')
       .eq('course_name', course_name)
 
     if (error) {
@@ -45,7 +44,7 @@ export default async function docsInProgress(
   } catch (error) {
     console.error('Failed to fetch documents:', error)
     return res.status(500).json({
-      error: (error as Error).message
+      error: (error as Error).message,
     })
   }
 }

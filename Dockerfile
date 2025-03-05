@@ -27,8 +27,9 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/next.config.mjs ./
 COPY --from=builder /app/next-i18next.config.mjs ./
-COPY --from=builder /app/src/ ./src
-COPY --from=builder /app/.env ./
+COPY --from=builder /app/src ./
+COPY --from=builder /app/.env ./ 
+# ^ the .env file is created by the self-hostable-backend repo, in init.sh
 
 ENV NODE_ENV=production
 
