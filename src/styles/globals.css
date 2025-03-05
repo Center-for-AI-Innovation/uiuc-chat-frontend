@@ -37,14 +37,14 @@
   --illinois-storm-10: #252525;
 
   /* Existing variables mapped to UIUC colors */
-  --background: var(--illinois-white);
   --foreground: var(--illinois-blue);
+  --background: var(--illinois-white);
 
   --primary: var(--illinois-orange);
-  --primary-foreground: var(--illinois-white);
+  --primary-foreground: var(--background);
 
-  --secondary: var(--illinois-blue);
-  --secondary-foreground: var(--illinois-white);
+  --secondary: var(--foreground);
+  --secondary-foreground: var(--background);
 
   --muted: var(--illinois-storm-95);
   --muted-foreground: var(--illinois-storm-dark);
@@ -59,6 +59,13 @@
   --input: var(--illinois-storm-light);
   --ring: var(--illinois-blue);
 
+  --padding: 1rem;
+  --padding-xs: calc(var(--padding) * 0.1);
+  --padding-sm: calc(var(--padding) * 0.25);
+  --padding-md: calc(var(--padding) * 0.5);
+  --padding-lg: calc(var(--padding) * 1.25);
+  --padding-xl: calc(var(--padding) * 1.5);
+
   --radius: 0.5rem;
   --radius-sm: calc(var(--radius) * 0.5);
   --radius-md: calc(var(--radius) * 0.75);
@@ -67,10 +74,12 @@
 
   --button-color: var(--foreground);
   --button-text-color: var(--background);
-  --button-hover: color-mix(in srgb, var(--secondary) 100%, #fff);
+  --button-hover: color-mix(in srgb, var(--secondary), white 20%);
+  --button-hover-text-color: var(--button-text-color);
+  --button-active: var(--button-hover);
 
-  --navbar-background: #03193b;
-  --navbar-shadow: var(--primary);
+  --navbar-background: color-mix(in srgb, var(--background), black 0%);
+  --navbar-shadow: color-mix(in srgb, var(--background), black 30%);
 
   /* Additional UI Colors */
   --illinois-background-dark: #202123;
@@ -125,10 +134,13 @@
 }
 
 .dark {
-  --background: var(--illinois-blue);
   --foreground: var(--illinois-white);
+  --background: var(--illinois-blue);
+  /*
+  --foreground: var(--illinois-white);
+  --background: var(--illinois-blue);
 
-  /* border: 20px solid #f00; */
+  --primary: var(--illinois-orange);
 
   --primary: var(--illinois-orange);
   --primary-foreground: var(--illinois-blue);
@@ -148,6 +160,7 @@
   --border: var(--illinois-storm-dark);
   --input: var(--illinois-storm-dark);
   --ring: var(--illinois-orange);
+*/
 }
 
 /* Scrollbar Styles - Clean gray theme with hover effects */
