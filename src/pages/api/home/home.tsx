@@ -10,7 +10,6 @@ import useErrorService from '@/services/errorService'
 
 import { cleanSelectedConversation } from '@/utils/app/clean'
 import { DEFAULT_SYSTEM_PROMPT, DEFAULT_TEMPERATURE } from '@/utils/app/const'
-import { getSettings } from '@/utils/app/settings'
 
 import { type Conversation } from '@/types/chat'
 import { type KeyValuePair } from '@/types/data'
@@ -570,16 +569,7 @@ const Home = ({
 
   useEffect(() => {
     const initialSetup = async () => {
-      // console.log('current_email: ', current_email)
-      console.log('isInitialSetupDone: ', isInitialSetupDone)
       if (isInitialSetupDone) return
-      const settings = getSettings()
-      if (settings.theme) {
-        dispatch({
-          field: 'lightMode',
-          value: settings.theme,
-        })
-      }
 
       if (window.innerWidth < 640) {
         dispatch({ field: 'showChatbar', value: false })

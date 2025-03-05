@@ -1,31 +1,50 @@
-import { IconMoon, IconSun } from '@tabler/icons-react'
+import { IconDeviceLaptop, IconMoon, IconSun } from '@tabler/icons-react'
 import { useTheme } from '~/contexts/ThemeContext'
-import { Tooltip } from '@mantine/core'
 
 export function ThemeToggle() {
-  const { theme, toggleTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
 
   return (
-    <Tooltip
-      label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
-      position="bottom"
-      withArrow
-      arrowSize={6}
-      transitionProps={{
-        transition: 'fade',
-        duration: 200,
-      }}
-      classNames={{
-        tooltip: 'bg-gray-700 text-white text-sm py-1 px-2',
-        arrow: 'border-gray-700',
-      }}
-    >
+    <div className="flex items-center gap-1 rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
       <button
-        onClick={toggleTheme}
-        className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+        onClick={() => setTheme('system')}
+        className={`rounded-md p-1.5 ${
+          theme === 'system'
+            ? 'bg-white shadow-sm dark:bg-gray-700'
+            : 'hover:bg-gray-200 dark:hover:bg-gray-700'
+        }`}
+        aria-label="Use system theme"
+        title="Set to system theme"
       >
-        {theme === 'light' ? <IconMoon size={20} /> : <IconSun size={20} />}
+        <IconDeviceLaptop
+          size={18}
+          className="text-gray-600 dark:text-gray-400"
+        />
       </button>
-    </Tooltip>
+      <button
+        onClick={() => setTheme('light')}
+        className={`rounded-md p-1.5 ${
+          theme === 'light'
+            ? 'bg-white shadow-sm dark:bg-gray-700'
+            : 'hover:bg-gray-200 dark:hover:bg-gray-700'
+        }`}
+        aria-label="Use light theme"
+        title="Set to light theme"
+      >
+        <IconSun size={18} className="text-gray-600 dark:text-gray-400" />
+      </button>
+      <button
+        onClick={() => setTheme('dark')}
+        className={`rounded-md p-1.5 ${
+          theme === 'dark'
+            ? 'bg-white shadow-sm dark:bg-gray-700'
+            : 'hover:bg-gray-200 dark:hover:bg-gray-700'
+        }`}
+        aria-label="Use dark theme"
+        title="Set to dark theme"
+      >
+        <IconMoon size={18} className="text-gray-600 dark:text-gray-400" />
+      </button>
+    </div>
   )
 }

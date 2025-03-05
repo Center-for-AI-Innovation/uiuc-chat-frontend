@@ -5,14 +5,10 @@ import { useTranslation } from 'next-i18next'
 
 import HomeContext from '~/pages/api/home/home.context'
 
-import { SettingDialog } from '@/components/Settings/SettingDialog'
-
-import { Import } from '../../Settings/Import'
 import { Key } from '../../Settings/Key'
 import { SidebarButton } from '../../Sidebar/SidebarButton'
 import ChatbarContext from '../Chatbar.context'
 import { ClearConversations } from './ClearConversations'
-// import { PluginKeys } from './PluginKeys'
 
 export const ChatbarSettings = () => {
   const { t } = useTranslation('sidebar')
@@ -21,7 +17,6 @@ export const ChatbarSettings = () => {
   const {
     state: {
       apiKey,
-      lightMode,
       serverSideApiKeyIsSet,
       serverSidePluginKeysSet,
       conversations,
@@ -52,21 +47,6 @@ export const ChatbarSettings = () => {
       {!serverSideApiKeyIsSet ? (
         <Key apiKey={apiKey} onApiKeyChange={handleApiKeyChange} />
       ) : null}
-
-      {/* {!serverSidePluginKeysSet ? <PluginKeys /> : null} */}
-
-      {/* Deprecate settings button for now... */}
-      {/* <SidebarButton
-        text={t('Settings')}
-        icon={<IconSettings size={18} />}
-        onClick={() => setIsSettingDialog(true)}
-      /> */}
-      {/* <SettingDialog
-        open={isSettingDialogOpen}
-        onClose={() => {
-          setIsSettingDialog(false)
-        }}
-      /> */}
     </div>
   )
 }
