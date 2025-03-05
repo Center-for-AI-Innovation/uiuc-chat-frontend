@@ -133,13 +133,11 @@ export default function WebsiteIngestForm({
         name: url,
         status: 'uploading',
         type: 'webscrape',
+        url: url,
+        isBaseUrl: true,
       }
       setUploadFiles((prevFiles) => [...prevFiles, newFile])
-      setUploadFiles((prevFiles) =>
-        prevFiles.map((file) =>
-          file.name === url ? { ...file, status: 'ingesting' } : file,
-        ),
-      )
+
       try {
         const response = await scrapeWeb(
           url,
@@ -147,29 +145,6 @@ export default function WebsiteIngestForm({
           maxUrls.trim() !== '' ? parseInt(maxUrls) : 50,
           scrapeStrategy,
         )
-
-        if (
-          response &&
-          typeof response === 'string' &&
-          response.includes('Crawl completed successfully')
-        ) {
-          setUploadFiles((prevFiles) =>
-            prevFiles.map((file) =>
-              file.name === url ? { ...file, status: 'complete' } : file,
-            ),
-          )
-          await queryClient.invalidateQueries({
-            queryKey: ['documents', project_name],
-          })
-        } else {
-          // Handle unsuccessful crawl
-          setUploadFiles((prevFiles) =>
-            prevFiles.map((file) =>
-              file.name === url ? { ...file, status: 'error' } : file,
-            ),
-          )
-          throw new Error('Crawl was not successful')
-        }
       } catch (error: unknown) {
         console.error('Error while scraping web:', error)
         setUploadFiles((prevFiles) =>
@@ -207,6 +182,7 @@ export default function WebsiteIngestForm({
       matchRegex: matchRegex,
     }
   }
+
   useEffect(() => {
     if (url && url.length > 0 && validateUrl(url)) {
       setIsUrlUpdated(true)
@@ -215,9 +191,131 @@ export default function WebsiteIngestForm({
     }
   }, [url])
 
-  // if (isLoading) {
-  //   return <Skeleton height={200} width={330} radius={'lg'} />
-  // }
+  useEffect(() => {
+    const checkIngestStatus = async () => {
+      const response = await fetch(
+        `/api/materialsTable/docsInProgress?course_name=${project_name}`,
+      )
+      const data = await response.json()
+      const docsResponse = await fetch(
+        `/api/materialsTable/docs?course_name=${project_name}`,
+      )
+      const docsData = await docsResponse.json()
+      // Helper function to organize docs by base URL
+      const organizeDocsByBaseUrl = (
+        docs: Array<{ base_url: string; url: string }>,
+      ) => {
+        const baseUrlMap = new Map<string, Set<string>>()
+
+        docs.forEach((doc) => {
+          if (!baseUrlMap.has(doc.base_url)) {
+            baseUrlMap.set(doc.base_url, new Set())
+          }
+          baseUrlMap.get(doc.base_url)?.add(doc.url)
+        })
+
+        return baseUrlMap
+      }
+
+      // Helper function to update status of existing files
+      const updateExistingFiles = (
+        currentFiles: FileUpload[],
+        docsInProgress: Array<{ base_url: string }>,
+      ) => {
+        return currentFiles.map((file) => {
+          if (file.type !== 'webscrape') return file
+
+          const isStillIngesting = docsInProgress.some(
+            (doc) => doc.base_url === file.name,
+          )
+
+          if (file.status === 'uploading' && isStillIngesting) {
+            return { ...file, status: 'ingesting' as const }
+          } else if (file.status === 'ingesting') {
+            if (!isStillIngesting) {
+              const isInCompletedDocs = docsData?.documents?.some(
+                (doc: { url: string }) => doc.url === file.url,
+              )
+
+              if (isInCompletedDocs) {
+                return { ...file, status: 'complete' as const }
+              }
+
+              // If not in completed docs, keep as 'ingesting'
+              // The crawling might still be in progress even if not in docsInProgress
+              return file
+            }
+          }
+          return file
+        })
+      }
+
+      // Helper function to create new file entries for additional URLs
+      const createAdditionalFileEntries = (
+        baseUrlMap: Map<string, Set<string>>,
+        currentFiles: FileUpload[],
+        docsInProgress: Array<{ base_url: string; readable_filename: string }>,
+      ) => {
+        const newFiles: FileUpload[] = []
+
+        baseUrlMap.forEach((urls, baseUrl) => {
+          // Only process if we have this base URL in our current files
+          if (currentFiles.some((file) => file.name === baseUrl)) {
+            const matchingDoc = docsInProgress.find(
+              (doc) => doc.base_url === baseUrl,
+            )
+
+            const isStillIngesting = matchingDoc !== undefined
+
+            urls.forEach((url) => {
+              if (
+                !currentFiles.some((file) => file.url === url) &&
+                matchingDoc
+              ) {
+                newFiles.push({
+                  name: url,
+                  status: isStillIngesting ? 'ingesting' : 'complete',
+                  type: 'webscrape',
+                  url: url,
+                })
+              }
+            })
+          }
+        })
+
+        return newFiles
+      }
+
+      setUploadFiles((prev) => {
+        const matchingDocsInProgress =
+          data?.documents?.filter((doc: { base_url: string }) =>
+            prev.some((file) => file.name === doc.base_url),
+          ) || []
+
+        const baseUrlMap = organizeDocsByBaseUrl(matchingDocsInProgress)
+
+        const additionalFiles = createAdditionalFileEntries(
+          baseUrlMap,
+          prev,
+          matchingDocsInProgress,
+        )
+
+        const updatedFiles = updateExistingFiles(prev, matchingDocsInProgress)
+
+        return [...updatedFiles, ...additionalFiles]
+      })
+
+      await queryClient.invalidateQueries({
+        queryKey: ['documents', project_name],
+      })
+    }
+
+    const interval = setInterval(checkIngestStatus, 3000)
+    return () => {
+      clearInterval(interval)
+    }
+  }, [project_name])
+
   const scrapeWeb = async (
     url: string | null,
     courseName: string | null,

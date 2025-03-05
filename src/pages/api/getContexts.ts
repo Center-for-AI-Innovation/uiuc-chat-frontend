@@ -64,5 +64,4 @@ export const fetchContexts = async (
     return []
   }
 }
-
 export default fetchContexts

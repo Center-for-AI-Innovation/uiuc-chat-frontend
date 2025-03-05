@@ -12,6 +12,13 @@ export const ContextCards = ({
 }: {
   contexts: ContextWithMetadata[]
 }) => {
+  console.log('ContextCards received contexts:', contexts.map(c => ({
+    readable_filename: c.readable_filename,
+    pagenumber: c.pagenumber,
+    hasS3Path: !!c.s3_path,
+    hasUrl: !!c.url
+  })));
+
   if (!Array.isArray(contexts)) {
     console.error('contexts is not an array:', contexts)
     return null // or return a loading state or error state
@@ -19,16 +26,14 @@ export const ContextCards = ({
 
   return (
     <>
-      {contexts ? (
-        <>
-          <Group variant="row" spacing="xs">
-            {contexts
-              .slice(0, 4) // only show first 4 cards
-              .map((context: ContextWithMetadata, index: number) => (
-                <DynamicMaterialsCard key={index} {...context} />
-              ))}
-          </Group>
-        </>
+      {contexts && contexts.length > 0 ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {contexts.map((context, index) => (
+            <div key={index}>
+              <DynamicMaterialsCard {...context} />
+            </div>
+          ))}
+        </div>
       ) : (
         // Loading state...
 
@@ -60,21 +65,37 @@ export const ContextCards = ({
   )
 }
 
+// Helper function to get the effective page number
+const getEffectivePageNumber = (context: ContextWithMetadata): string => {
+  if (context.pagenumber_or_timestamp) return context.pagenumber_or_timestamp;
+  if (context.pagenumber) return context.pagenumber;
+  return '';
+};
+
 function DynamicMaterialsCard(context: ContextWithMetadata) {
+  console.log('DynamicMaterialsCard rendering context:', {
+    readable_filename: context.readable_filename,
+    pagenumber: context.pagenumber,
+    pagenumber_or_timestamp: context.pagenumber_or_timestamp,
+    hasS3Path: !!context.s3_path,
+    hasUrl: !!context.url
+  });
+
   const [presignedUrl, setPresignedUrl] = useState<string | null>(null)
   const [presignedUrlPng, setPresignedUrlPng] = useState<string | null>(null)
 
   useEffect(() => {
     if (context.url != '' && context.url != null) {
       setPresignedUrl(context.url)
-    } else {
+    } else if (context.s3_path) {
+      const effectivePageNumber = getEffectivePageNumber(context);
       fetchPresignedUrl(context.s3_path).then((url) => {
-        setPresignedUrl(url + '#page=' + context.pagenumber)
+        setPresignedUrl(url + (effectivePageNumber ? `#page=${effectivePageNumber}` : ''))
       })
     }
 
     // ONLY PDFs have thumbnail images
-    if (context.s3_path.endsWith('.pdf')) {
+    if (context.s3_path && context.s3_path.endsWith('.pdf')) {
       const s3_thumbnail_path = context.s3_path.replace(
         '.pdf',
         '-pg1-thumb.png',
@@ -86,8 +107,10 @@ function DynamicMaterialsCard(context: ContextWithMetadata) {
       // No thumbnail for non-PDFs
       setPresignedUrlPng(null)
     }
-  }, [])
+  }, [context])
 
+  const effectivePageNumber = getEffectivePageNumber(context);
+  
   return (
     <div className="box-sizing: border-box; border: 100px solid #ccc;">
       <Link
@@ -150,7 +173,7 @@ function DynamicMaterialsCard(context: ContextWithMetadata) {
               AI summary
             </Text>
             <Text size="sm" variant="dimmed" weight={4300}>
-              {context.pagenumber !== '' ? (
+              {effectivePageNumber ? (
                 <Text
                   pb="0"
                   className="justify-end"
@@ -158,7 +181,7 @@ function DynamicMaterialsCard(context: ContextWithMetadata) {
                   variant="dimmed"
                   weight={400}
                 >
-                  Page {context.pagenumber}
+                  Page {effectivePageNumber}
                 </Text>
               ) : (
                 <>{/* NO PAGE NUMBER sorry :( */}</>
