@@ -3,6 +3,11 @@ import { NextResponse } from 'next/server'
 import { createOpenAI } from '@ai-sdk/openai'
 import { convertConversationToCoreMessagesWithoutSystem } from '~/utils/apiUtils'
 
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+export const revalidate = 0
+
 export async function POST(req: Request) {
   try {
     const { conversation, stream } = await req.json()
@@ -22,18 +27,19 @@ export async function POST(req: Request) {
 
     if (stream) {
       const result = await streamText({
-        model: openai(conversation.model.id),
+        model: openai(conversation.model.id) as any,
         temperature: conversation.temperature,
         messages,
       })
       return result.toTextStreamResponse()
     } else {
       const result = await generateText({
-        model: openai(conversation.model.id),
+        model: openai(conversation.model.id) as any,
         temperature: conversation.temperature,
         messages,
       })
-      return NextResponse.json({ text: result.text })
+      const choices = [{ message: { content: result.text } }]
+      return NextResponse.json({ choices })
     }
   } catch (error) {
     console.error('Error in POST request:', error)

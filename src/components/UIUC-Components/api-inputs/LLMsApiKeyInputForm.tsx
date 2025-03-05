@@ -32,6 +32,10 @@ import {
   type ProviderNames,
   type WebLLMProvider,
   type NCSAHostedVLMProvider,
+  type BedrockProvider,
+  type GeminiProvider,
+  type SambaNovaProvider,
+  LLM_PROVIDER_ORDER,
 } from '~/utils/modelProviders/LLMProvider'
 import { notifications } from '@mantine/notifications'
 import {
@@ -54,6 +58,9 @@ import NCSAHostedLLmsProviderInput from './providers/NCSAHostedProviderInput'
 import { getModelLogo } from '~/components/Chat/ModelSelect'
 import NCSAHostedVLMProviderInput from './providers/NCSAHostedVLMProviderInput'
 import { t } from 'i18next'
+import BedrockProviderInput from './providers/BedrockProviderInput'
+import GeminiProviderInput from './providers/GeminiProviderInput'
+import SambaNovaProviderInput from './providers/SambaNovaProviderInput'
 
 const isSmallScreen = false
 
@@ -209,7 +216,7 @@ const NewModelDropdown: React.FC<{
         className="menu z-[50] w-full"
         size="md"
         placeholder="Select a model"
-        searchable
+        // searchable
         value={value?.id || ''}
         onChange={async (modelId) => {
           const selectedModel = allModels.find((model) => model.id === modelId)
@@ -217,25 +224,39 @@ const NewModelDropdown: React.FC<{
             await onChange(selectedModel)
           }
         }}
-        data={Object.values(enabledProvidersAndModels).flatMap(
-          (provider: LLMProvider) =>
-            provider.models?.map((model) => ({
-              value: model.id,
-              label: model.name,
-              // @ts-ignore -- this being missing is fine
-              downloadSize: model?.downloadSize,
-              modelId: model.id,
-              selectedModelId: value,
-              modelType: provider.provider,
-              group: provider.provider,
-              // @ts-ignore -- this being missing is fine
-              vram_required_MB: model.vram_required_MB,
-            })) || [],
-        )}
+        data={Object.entries(enabledProvidersAndModels)
+          // Sort by LLM_PROVIDER_ORDER
+          .sort(([providerA], [providerB]) => {
+            const indexA = LLM_PROVIDER_ORDER.indexOf(
+              providerA as ProviderNames,
+            )
+            const indexB = LLM_PROVIDER_ORDER.indexOf(
+              providerB as ProviderNames,
+            )
+            // Providers not in the order list will be placed at the end
+            if (indexA === -1) return 1
+            if (indexB === -1) return -1
+            return indexA - indexB
+          })
+          .flatMap(
+            ([_, provider]) =>
+              provider.models?.map((model) => ({
+                value: model.id,
+                label: model.name,
+                // @ts-ignore -- this being missing is fine
+                downloadSize: model?.downloadSize,
+                modelId: model.id,
+                selectedModelId: value,
+                modelType: provider.provider,
+                group: provider.provider,
+                // @ts-ignore -- this being missing is fine
+                vram_required_MB: model.vram_required_MB,
+              })) || [],
+          )}
         itemComponent={(props) => (
           <ModelItem {...props} setLoadingModelId={() => {}} />
         )}
-        maxDropdownHeight={480}
+        maxDropdownHeight={520}
         rightSectionWidth="auto"
         icon={
           selectedModel ? (
@@ -250,7 +271,7 @@ const NewModelDropdown: React.FC<{
             />
           ) : null
         }
-        rightSection={<IconChevronDown size="1rem" className="mr-2" />}
+        // rightSection={<IconChevronDown size="1rem" className="mr-2" />}
         classNames={{
           root: 'w-full',
           wrapper: 'w-full',
@@ -370,7 +391,6 @@ export const ModelItem = forwardRef<
 export function findDefaultModel(
   providers: AllLLMProviders,
 ): (AnySupportedModel & { provider: ProviderNames }) | undefined {
-  // console.log('providers inside', providers)
   for (const providerKey in providers) {
     const provider = providers[providerKey as keyof typeof providers]
     if (provider && provider.models) {
@@ -444,10 +464,11 @@ export default function APIKeyInputForm() {
         })
 
         // Set the new default model
-        const provider = updatedProviders[newDefaultModel.provider]
+        const provider =
+          updatedProviders[newDefaultModel.provider as keyof AllLLMProviders]
         if (provider && provider.models) {
           const modelIndex = provider.models.findIndex(
-            (model) => model.id === newDefaultModel.id,
+            (model: AnySupportedModel) => model.id === newDefaultModel.id,
           )
           if (modelIndex !== -1) {
             ;(provider.models as any[])[modelIndex] = {
@@ -480,10 +501,11 @@ export default function APIKeyInputForm() {
         const updatedProviders = { ...prevProviders }
 
         // Update the temperature for the default model
-        const provider = updatedProviders[currdefaultModel.provider]
+        const provider =
+          updatedProviders[currdefaultModel.provider as keyof AllLLMProviders]
         if (provider?.models) {
           const modelIndex = provider.models.findIndex(
-            (model) => model.default === true,
+            (model: AnySupportedModel) => model.default === true,
           )
           if (modelIndex !== -1) {
             const currentModel = provider.models[modelIndex]
@@ -658,7 +680,7 @@ export default function APIKeyInputForm() {
                             <Flex
                               direction={{ base: 'column', '75rem': 'row' }}
                               wrap="wrap"
-                              justify="space-between"
+                              justify="flex-start"
                               align="flex-start"
                               className="gap-4"
                               w={'100%'}
@@ -680,6 +702,27 @@ export default function APIKeyInputForm() {
                               />
                               <AzureProviderInput
                                 provider={llmProviders?.Azure as AzureProvider}
+                                form={form}
+                                isLoading={isLoadingLLMProviders}
+                              />
+                              <BedrockProviderInput
+                                provider={
+                                  llmProviders?.Bedrock as BedrockProvider
+                                }
+                                form={form}
+                                isLoading={isLoadingLLMProviders}
+                              />
+                              <GeminiProviderInput
+                                provider={
+                                  llmProviders?.Gemini as GeminiProvider
+                                }
+                                form={form}
+                                isLoading={isLoadingLLMProviders}
+                              />
+                              <SambaNovaProviderInput
+                                provider={
+                                  llmProviders?.SambaNova as SambaNovaProvider
+                                }
                                 form={form}
                                 isLoading={isLoadingLLMProviders}
                               />
@@ -705,7 +748,7 @@ export default function APIKeyInputForm() {
                             <Flex
                               direction={{ base: 'column', '75rem': 'row' }}
                               wrap="wrap"
-                              justify="space-between"
+                              justify="flex-start"
                               align="flex-start"
                               className="gap-4"
                               w={'100%'}
@@ -812,7 +855,7 @@ export default function APIKeyInputForm() {
                           )}
                         </div>
                         <div className="pt-6"></div>
-                        <div>
+                        {/* <div>
                           {llmProviders && (
                             // @ts-ignore - we don't really need this named functionality... gonna skip fixing this.
                             <form.Field name="defaultTemperature">
@@ -875,7 +918,7 @@ export default function APIKeyInputForm() {
                               )}
                             </form.Field>
                           )}
-                        </div>
+                        </div> */}
                         <div className="pt-2" />
                       </div>
                     </div>

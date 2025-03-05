@@ -33,15 +33,17 @@ export async function runVLLM(
     maxTokens: 8192,
   }
 
-  console.log('commonParams', commonParams)
-
   if (stream) {
-    const result = await streamText(commonParams)
+    const result = await streamText(commonParams as any)
     return result.toTextStreamResponse()
   } else {
-    const result = await generateText(commonParams)
-    const choices = [{ message: { content: result.text } }]
-    return { choices }
+    const result = await generateText(commonParams as any)
+    return new Response(
+      JSON.stringify({ choices: [{ message: { content: result.text } }] }),
+      {
+        headers: { 'Content-Type': 'application/json' },
+      },
+    )
   }
 }
 
@@ -66,8 +68,6 @@ function convertConversationToVercelAISDKv3(
     let content: string
     if (index === conversation.messages.length - 1 && message.role === 'user') {
       content = message.finalPromtEngineeredMessage || ''
-      content +=
-        '\n\nIf you use the <Potentially Relevant Documents> in your response, please remember cite your sources using the required formatting, e.g. "The grass is green. [29, page: 11]'
     } else if (Array.isArray(message.content)) {
       content = message.content
         .filter((c) => c.type === 'text')
