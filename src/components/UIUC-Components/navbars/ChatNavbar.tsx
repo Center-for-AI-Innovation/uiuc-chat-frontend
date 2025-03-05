@@ -50,35 +50,38 @@ const useStyles = createStyles((theme, { isAdmin }: { isAdmin: boolean }) => ({
     justifyContent: 'space-between',
   },
   link: {
-    fontSize: rem(12),
-    textAlign: 'center',
-    padding: `3px ${theme.spacing.xs}`,
-    margin: '0.2rem 0.1rem',
+    color: 'var(--secondary)',
+    fontSize: rem(12), //change to css variables --font-size or tailwindcss
     fontWeight: 700,
+    textAlign: 'center',
+    //should transition to using css variables...because this had overrides in the layout, so it wasn't clear if this should be changed here. something like this padding: 'var(--padding-xs) var(--padding-md)'
+    padding: `3px ${theme.spacing.xs}`,
+    //    margin: '0.2rem 0.1rem', //no reason to pad between. if you need more space, use padding. this way, the UX when mouse rollover doesn't blink weirdly (smoothly changes from one button to the next). --safe to remove this margin
+    textDecoration: 'none',
     transition:
       'border-color 100ms ease, color 100ms ease, background-color 100ms ease',
     borderRadius: 'var(--radius-sm)',
+
     '&:hover': {
-      color: 'var(--color-hover)', //hsl(280,100%,70%)
-      //      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-      backgroundColor: 'var(--button-hover)',
-      textDecoration: 'none',
+      color: 'var(--button-hover-text-color)', //hsl(280,100%,70%)
+      backgroundColor: 'var(--button-hover)', //'rgba(255, 255, 255, 0.1)',
     },
+
     '&[data-active="true"]': {
-      color: 'hsl(280,100%,70%)',
-      borderBottom: '2px solid hsl(280,100%,70%)',
-      textDecoration: 'none',
+      //      color: 'hsl(280,100%,70%)',
+      borderBottom: '2px solid var(--button-active)', // hsl(280,100%,70%)',
       //      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-      backgroundColor: 'var(--button-hover)',
+      backgroundColor: 'var(--button-active)',
       textAlign: 'right',
     },
+
     [theme.fn.smallerThan(isAdmin ? 825 : 500)]: {
       display: 'list-item',
       textAlign: 'center',
-      borderRadius: '0rem',
+      //      borderRadius: '0rem',
       padding: theme.spacing.sm,
-      margin: '0.2rem 0 0.2rem 0',
-      //      margin: '(var(--padding) * .2) 0rem 0rem (var(--padding) * .2)'
+      //      margin: '0.2rem 0 0.2rem 0',
+      //      margin: 'calc(var(--padding) * .2) 0rem calc(var(--padding) * .2) 0rem'
     },
   },
   burger: {
@@ -222,10 +225,11 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
           className="navbar rounded-badge bg-[--navbar-background] shadow-lg shadow-[--navbar-shadow]"
         >
           <Link href="/" style={{ flex: 'none', flexWrap: 'nowrap' }}>
-            <h2 className="cursor-pointer font-extrabold tracking-tight text-white sm:ms-3 sm:text-[2rem] sm:text-[2rem] md:text-3xl">
-              Illinois <span className="text-[--primary]">Chat</span>
+            <h2 className="cursor-pointer font-extrabold tracking-tight text-[--primary] sm:ms-3 sm:text-[2rem] sm:text-[2rem] md:text-3xl">
+              Illinois <span className="text-[--foreground]">Chat</span>
             </h2>
           </Link>
+
           <div className="pl-2">
             <ThemeToggle />
           </div>
@@ -617,10 +621,10 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                       className={`${montserrat_heading.variable} font-montserratHeading`}
                       style={{ fontSize: '12px' }}
                     >
-                      <span style={{ whiteSpace: 'nowrap' }}>Sign in / </span>
+                      <span className="whitespace-nowrap">Sign in / </span>
                       <span> </span>
-                      {/* ^^ THIS SPAN IS REQUIRED !!! TO have nice multiline behavior */}
-                      <span style={{ whiteSpace: 'nowrap' }}>Sign up</span>
+                      {/* ^^ THIS SPAN IS REQUIRED !!! TO have nice multiline behavior - replace with flex and tailwindcss in the future */}
+                      <span className="whitespace-nowrap">Sign up</span>
                     </div>
                   </button>
                 </SignInButton>
