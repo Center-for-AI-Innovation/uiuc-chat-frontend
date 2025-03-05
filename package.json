@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "next build",
+    "build": "node scripts/update-keycloak-urls.js && next build",
     "bd": "infisical run --env=dev -- next build",
     "dev": "infisical run --env=dev -- next dev",
     "lint": "next lint",
@@ -94,6 +94,7 @@
     "react-grid-heatmap": "^1.3.0",
     "react-i18next": "^12.3.1",
     "react-markdown": "^8.0.7",
+    "react-oidc-context": "^3.2.0",
     "react-s3": "^1.3.1",
     "react-syntax-highlighter": "^15.5.0",
     "recharts": "^2.14.1",

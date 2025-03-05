@@ -10,9 +10,9 @@ import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { validateApiKeyAndRetrieveData } from './keys/validate'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import posthog from 'posthog-js'
-import { type User } from '@clerk/nextjs/server'
-import { type NextApiRequest, type NextApiResponse } from 'next'
-import { type CourseMetadata } from '~/types/courseMetadata'
+// import { User } from '@clerk/nextjs/server'
+import { NextApiRequest, NextApiResponse } from 'next'
+import { CourseMetadata } from '~/types/courseMetadata'
 import {
   attachContextsToLastMessage,
   constructSearchQuery,
@@ -27,7 +27,7 @@ import {
 import { DEFAULT_SYSTEM_PROMPT } from '~/utils/app/const'
 import { v4 as uuidv4 } from 'uuid'
 import { getBaseUrl } from '~/utils/apiUtils'
-import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
+// import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
 import {
   fetchTools,
   handleToolsServer,
@@ -38,6 +38,7 @@ import {
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { buildPrompt } from '~/app/utils/buildPromptUtils'
+import { AuthContextProps } from 'react-oidc-context'
 import { selectBestTemperature } from '~/components/Chat/Temperature'
 
 export const maxDuration = 60
@@ -104,13 +105,20 @@ export default async function chat(
   } = body
 
   // Validate the API key and retrieve user data
+  // const {
+  //   isValidApiKey,
+  //   userObject,
+  // }: { isValidApiKey: boolean; userObject: User | null } =
+  //   await validateApiKeyAndRetrieveData(api_key, course_name)
   const {
     isValidApiKey,
-    userObject,
-  }: { isValidApiKey: boolean; userObject: User | null } =
+    authContext,
+  }: { isValidApiKey: boolean; authContext: AuthContextProps } =
     await validateApiKeyAndRetrieveData(api_key, course_name)
 
-  const email = extractEmailsFromClerk(userObject as User)[0]
+
+  // const email = extractEmailsFromClerk(userObject as User)[0]
+  const email = authContext.user?.profile.email
 
   console.debug('Received /chat request for: ', email)
 
@@ -145,14 +153,18 @@ export default async function chat(
   }
 
   // Check user permissions
+  // const permission = get_user_permission(
+  //   courseMetadata,
+  //   {
+  //     isLoaded: true,
+  //     isSignedIn: true,
+  //     user: userObject,
+  //   },
+  //   req,
+  // )
   const permission = get_user_permission(
     courseMetadata,
-    {
-      isLoaded: true,
-      isSignedIn: true,
-      user: userObject,
-    },
-    req,
+    authContext,
   )
 
   if (permission !== 'edit') {
@@ -217,7 +229,7 @@ export default async function chat(
     prompt:
       messages.filter((message) => message.role === 'system').length > 0
         ? ((messages.filter((message) => message.role === 'system')[0]
-            ?.content as string) ??
+          ?.content as string) ??
           (messages.filter((message) => message.role === 'system')[0]
             ?.content as string))
         : DEFAULT_SYSTEM_PROMPT,
@@ -230,8 +242,8 @@ export default async function chat(
   // Check if the content is an array and filter out image content
   const imageContent = Array.isArray(lastMessage.content)
     ? (lastMessage.content as Content[]).filter(
-        (content) => content.type === 'image_url',
-      )
+      (content) => content.type === 'image_url',
+    )
     : []
 
   const imageUrls = imageContent.map(

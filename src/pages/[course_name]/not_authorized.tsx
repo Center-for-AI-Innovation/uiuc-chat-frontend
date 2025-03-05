@@ -1,4 +1,5 @@
-import { useUser } from '@clerk/nextjs'
+// import { useUser } from '@clerk/nextjs'
+import { useAuth } from 'react-oidc-context'
 import { NextPage } from 'next'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
@@ -8,10 +9,12 @@ import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import { CourseMetadata } from '~/types/courseMetadata'
+import { initiateSignIn } from '~/utils/authHelpers'
 
 const NotAuthorizedPage: NextPage = () => {
   const router = useRouter()
-  const clerk_user = useUser()
+  const auth = useAuth()
+  // const clerk_user = useUser()
   const [componentToRender, setComponentToRender] =
     useState<React.ReactNode | null>(null)
 
@@ -20,7 +23,8 @@ const NotAuthorizedPage: NextPage = () => {
   }
 
   useEffect(() => {
-    if (!clerk_user.isLoaded || !router.isReady) {
+    // if (!clerk_user.isLoaded || !router.isReady) {
+    if (auth.isLoading || !router.isReady) {
       return
     }
     const course_name = getCurrentPageName()
@@ -58,26 +62,33 @@ const NotAuthorizedPage: NextPage = () => {
         return
       }
 
-      if (courseMetadata.is_private && !clerk_user.isSignedIn) {
-        console.log(
-          'User not logged in',
-          clerk_user.isSignedIn,
-          clerk_user.isLoaded,
-          course_name,
-        )
-        router.replace(`/sign-in?${course_name}`)
+      // if (courseMetadata.is_private && !clerk_user.isSignedIn) {
+      // if (courseMetadata.is_private && !auth.isAuthenticated) {
+      //   console.log(
+      //     'User not logged in',
+      //     // clerk_user.isSignedIn,
+      //     // clerk_user.isLoaded,
+      //     auth.isAuthenticated,
+      //     !auth.isLoading,
+      //     course_name,
+      //   )
+      //   router.replace(`/sign-in?${course_name}`)
+      //   return
+      // }
+      if (courseMetadata.is_private && !auth.isAuthenticated) {
+        void initiateSignIn(auth, `/${course_name}`)
         return
       }
 
-      if (clerk_user.isLoaded) {
+      // if (clerk_user.isLoaded) {
+      if (auth.isLoading) {
         console.log(
           'in [course_name]/index.tsx -- clerk_user loaded and working :)',
         )
         if (courseMetadata != null) {
           const permission_str = get_user_permission(
             courseMetadata,
-            clerk_user,
-            router,
+            auth
           )
 
           console.log(
@@ -110,9 +121,11 @@ const NotAuthorizedPage: NextPage = () => {
         )
       }
     })
-  }, [clerk_user.isLoaded, router.isReady])
+  }, [!auth.isLoading, router.isReady])
+  // }, [clerk_user.isLoaded, router.isReady])
 
-  if (!clerk_user.isLoaded || !componentToRender) {
+  // if (!clerk_user.isLoaded || !componentToRender) {
+    if (auth.isLoading || !componentToRender) {
     console.debug('not_authorized.tsx -- Loading spinner')
     return (
       <MainPageBackground>

@@ -16,9 +16,16 @@ import {
   Flex,
 } from '@mantine/core'
 import { SignInButton } from '@clerk/nextjs'
+import { useAuth } from 'react-oidc-context'
 import { montserrat_heading } from 'fonts'
+import { initiateSignIn } from '~/utils/authHelpers'
 
 export const AuthComponent = ({ course_name }: { course_name: string }) => {
+  const auth = useAuth()
+
+  const handleSignIn = () => {
+    void initiateSignIn(auth, course_name === 'new' ? '/new' : `/${course_name}/dashboard`)
+  }
   return (
     <>
       <main className="justify-center; course-page-main flex min-h-screen flex-col items-center">
@@ -46,7 +53,7 @@ export const AuthComponent = ({ course_name }: { course_name: string }) => {
               You must sign in to create or edit content.
             </Title>
             {/* Wrapping a button makes it easy to style the sign-in link. */}
-            <SignInButton
+            {/* <SignInButton
               mode="modal"
 <<<<<<< HEAD
               forceRedirectUrl={
@@ -68,7 +75,16 @@ export const AuthComponent = ({ course_name }: { course_name: string }) => {
               >
                 Sign in →
               </Button>
-            </SignInButton>
+            </SignInButton> */}
+            <Link href="/sign-in">
+            <Button
+              className="kas-gradient-text btn"
+              style={{ fontSize: '24px' }}
+              onClick={handleSignIn}
+            >
+              Sign in →
+            </Button>
+          </Link>
           </Flex>
         </div>
       </main>

@@ -2,7 +2,8 @@ import { type NextPage } from 'next'
 import MakeNomicVisualizationPage from '~/components/UIUC-Components/MakeQueryAnalysisPage'
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-import { useUser } from '@clerk/nextjs'
+// import { useUser } from '@clerk/nextjs'
+import { useAuth } from 'react-oidc-context'
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import {
@@ -31,9 +32,13 @@ import { CannotEditCourse } from '~/components/UIUC-Components/CannotEditCourse'
 const CourseMain: NextPage = () => {
   const router = useRouter()
   const [projectName, setProjectName] = useState<string | null>(null)
-  const { user, isLoaded, isSignedIn } = useUser()
+  // const { user, isLoaded, isSignedIn } = useUser()
   const [isFetchingCourseMetadata, setIsFetchingCourseMetadata] = useState(true)
-  const user_emails = extractEmailsFromClerk(user)
+  // const user_emails = extractEmailsFromClerk(user)
+  const auth = useAuth()
+  const isLoaded = !auth.isLoading
+  const isSignedIn = auth.isAuthenticated
+  const user_email = auth.user?.profile.email
   const [metadata, setProjectMetadata] = useState<CourseMetadata | null>()
   const getCurrentPageName = () => {
     return router.query.course_name as string
@@ -60,7 +65,8 @@ const CourseMain: NextPage = () => {
 
   if (
     metadata &&
-    user_emails[0] !== (metadata.course_owner as string) &&
+    // user_emails[0] !== (metadata.course_owner as string) &&
+    user_email !== (metadata.course_owner as string) &&
     metadata.course_admins.indexOf(getCurrentPageName()) === -1
   ) {
     router.replace(`/${getCurrentPageName()}/not_authorized`)
