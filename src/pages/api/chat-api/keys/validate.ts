@@ -27,17 +27,13 @@ export async function validateApiKeyAndRetrieveData(
     error: undefined,
   } as AuthContextProps;
   // console.log('Validating apiKey', apiKey, ' for course_name', course_name)
-  // Attempt to retrieve the user ID associated with the API key from the database.
-  const idColumn = apiKey.startsWith('user_') ? 'user_id' : 'keycloak_id';
-
-  const { data, error } = (await supabase
+  // Attempt to retrieve the email associated with the API key from the database
+  const { data, error } = await supabase
     .from('api_keys')
-    // .select('user_id')
-    .select(`${idColumn}`)
+    .select('email')
     .eq('key', apiKey)
     .eq('is_active', true)
-    // .single()) as { data: { user_id: string } | null; error: Error | null }
-    .single()) as { data: { user_id?: string, keycloak_id?: string } | null; error: Error | null }
+    .single()
 
   console.log('data', data)
 
@@ -49,43 +45,28 @@ export async function validateApiKeyAndRetrieveData(
 
   console.log('isValidApiKey', isValidApiKey)
   try {
-    // Retrieve the full Clerk user object using the user ID.
-    // userObject = await clerkClient.users.getUser(data.user_id)
-    const userId = idColumn === 'user_id' ? data.user_id : data.keycloak_id;
+    const email = data.email;
 
+    // Get user data from the email
     const { data: userData, error: userError } = await supabase
       .from('user_entity')
       .select('*')
-      .eq('id', userId)
+      .eq('email', email)
+      .single()
 
     if (userError) throw userError
-
-    const userRecord = Array.isArray(userData) 
-      ? userData.find(user => !user.id.startsWith('user-')) || userData[0]
-      : userData;
 
     // Construct auth context
     authContext = {
       isAuthenticated: true,
       user: {
         profile: {
-          sub: userRecord.id,
-          email: userRecord.email,
+          sub: userData.id,
+          email: userData.email,
         }
       }
     } as AuthContextProps;
 
-    // Todo: Create a procedure to increment the API call count for the user.
-    /**
-     * create function increment (usage int, apikey string)
-      returns void as
-      $$
-        update api_keys 
-        set usage_count = usage_count + usage
-        where api_key = apiKey
-      $$ 
-      language sql volatile;
-     */
     // Increment the API call count for the user.
     const { error: updateError } = await supabase.rpc('increment', {
       usage: 1,
@@ -96,13 +77,9 @@ export async function validateApiKeyAndRetrieveData(
       console.error('Error updating API call count:', updateError)
       throw updateError
     }
-    // Track the event in PostHog
-    // posthog.capture('api_key_validated', {
-    //   userId: userObject.id,
-    //   apiKey: apiKey,
-    // })
+
     posthog.capture('api_key_validated', {
-      userId: userId,
+      email: email,
       apiKey: apiKey,
     })
 
