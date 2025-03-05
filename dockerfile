@@ -26,12 +26,14 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/next.config.mjs ./
-COPY --from=builder /app/.env.production ./
+COPY --from=builder /app/next-i18next.config.mjs ./
+COPY --from=builder /app/src/ ./src
+COPY --from=builder /app/.env ./
 
 ENV NODE_ENV=production
 
-# Next.js defaults to port 3001
-EXPOSE 3001
+# Next.js defaults to port 3000
+EXPOSE 3000
 
 # Start Next.js in production mode
 CMD ["npm", "run", "start"]
