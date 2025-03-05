@@ -39,26 +39,23 @@ export default async function generateKey(
   }
 
   try {
-    // Get user ID from Keycloak token
+    // Get user email from token
     const token = authHeader.replace('Bearer ', '')
     const [, payload = ''] = token.split('.')
     const decodedPayload = JSON.parse(Buffer.from(payload, 'base64').toString())
 
-    const keycloak_id = decodedPayload.sub
-    const clerk_id = decodedPayload.clerk_id
-    const preferred_id = clerk_id || keycloak_id
-
-    if (!preferred_id) {
-      throw new Error('No user identifier found in token')
+    const email = decodedPayload.email
+    if (!email) {
+      throw new Error('No email found in token')
     }
 
-    console.log('Generating API key for user:', preferred_id)
+    console.log('Generating API key for user email:', email)
 
     // Check if the user already has an API key
     const { data: keys, error: existingKeyError } = await supabase
       .from('api_keys')
       .select('key, is_active')
-      .eq(preferred_id.startsWith('user_') ? 'user_id' : 'keycloak_id', preferred_id)
+      .eq('email', email)
       .eq('is_active', true)
 
     if (existingKeyError) {
@@ -80,12 +77,12 @@ export default async function generateKey(
 
     if (keys.length === 0) {
       console.log('Inserting new API key record')
-      console.log('Inserting new API key record with:', { clerk_id, keycloak_id })
       const { error: insertError } = await supabase
         .from('api_keys')
         .insert([{ 
-          user_id: clerk_id,  // Use keycloak_id as fallback for user_id
-          keycloak_id: keycloak_id,
+          email: email,
+          user_id: decodedPayload.sub || decodedPayload.user_id,
+          clerk_id: decodedPayload.clerk_id || null,
           key: apiKey, 
           is_active: true 
         }])
@@ -95,8 +92,13 @@ export default async function generateKey(
       console.log('Updating existing API key record')
       const { error: updateError } = await supabase
         .from('api_keys')
-        .update({ key: apiKey, is_active: true })
-        .match({ [preferred_id.startsWith('user_') ? 'user_id' : 'keycloak_id']: preferred_id })
+        .update({ 
+          key: apiKey, 
+          is_active: true,
+          user_id: decodedPayload.sub || decodedPayload.user_id,
+          clerk_id: decodedPayload.clerk_id || null
+        })
+        .eq('email', email)
 
       if (updateError) throw updateError
     }
@@ -104,7 +106,7 @@ export default async function generateKey(
     console.log('Successfully stored API key in database')
 
     posthog.capture('api_key_generated', {
-      keycloak_id,
+      email,
       apiKey,
     })
 

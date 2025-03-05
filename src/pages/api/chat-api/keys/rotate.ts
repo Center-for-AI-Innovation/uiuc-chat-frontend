@@ -32,20 +32,23 @@ export default async function rotateKey(
   }
 
   try {
-    // Get user ID from Keycloak token
+    // Get user email from token
     const token = authHeader.replace('Bearer ', '')
     const [, payload = ''] = token.split('.')
     const decodedPayload = JSON.parse(Buffer.from(payload, 'base64').toString())
-    const subId = decodedPayload.sub
-    const userId = decodedPayload.user_id || subId // Fallback to sub if user_id not present
+    const email = decodedPayload.email
+    
+    if (!email) {
+      return res.status(400).json({ error: 'No email found in token' })
+    }
 
-    console.log('Rotating api key for:', subId)
+    console.log('Rotating API key for email:', email)
 
     // Retrieve existing API key
     const { data: existingKey, error: existingKeyError } = await supabase
       .from('api_keys')
       .select('key')
-      .eq(userId.startsWith('user_') ? 'user_id' : 'keycloak_id', userId)
+      .eq('email', email)
       .eq('is_active', true)
 
     if (existingKeyError) {
@@ -67,7 +70,7 @@ export default async function rotateKey(
     const { error } = await supabase
       .from('api_keys')
       .update({ key: newApiKey, is_active: true, modified_at: new Date() })
-      .match({ [userId.startsWith('user_') ? 'user_id' : 'keycloak_id']: userId })
+      .eq('email', email)
 
     if (error) {
       console.error('Error updating API key:', error)
