@@ -222,7 +222,7 @@ export default function GitHubIngestForm({
       )
       const data = await response.json()
       const docsResponse = await fetch(
-        `/api/materialsTable/docs?course_name=${project_name}`,
+        `/api/materialsTable/successDocs?course_name=${project_name}`,
       )
       const docsData = await docsResponse.json()
 

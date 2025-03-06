@@ -1,6 +1,7 @@
-// src/pages/api/materialsTable/docsInProgress.ts
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '@/utils/supabaseClient'
+
+// This is for "Documents in Progress" table, docs that are still being ingested.
 
 type DocsInProgressResponse = {
   documents?: { readable_filename: string }[]
