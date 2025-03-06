@@ -1,8 +1,6 @@
 import { useAuth } from 'react-oidc-context'
 import { Table, Title, Text } from '@mantine/core'
 import { useEffect, useState } from 'react'
-// import { useUser } from '@clerk/nextjs'
-// import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { useRouter } from 'next/router'
 import { DataTable } from 'mantine-datatable'
@@ -70,7 +68,7 @@ type SortDirection = 'asc' | 'desc' | null
 type SortableColumn = 'name' | 'privacy' | 'owner' | 'admins'
 
 const ListProjectTable: React.FC = () => {
-  // const clerk_user = useUser()
+  
   const auth = useAuth()
   const [courses, setProjects] = useState<{ [key: string]: CourseMetadata }[] | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -194,16 +192,16 @@ const ListProjectTable: React.FC = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       console.log('Fetching projects')
-      // if (!clerk_user.isLoaded) {
+      
         if (auth.isLoading) {
         return
       }
 
-      // if (clerk_user.isSignedIn) {
+      
       if (auth.isAuthenticated && auth.user?.profile.email) {
         console.log('Signed')
-        // const emails = extractEmailsFromClerk(clerk_user.user)
-        // const currUserEmail = emails[0]
+        
+        
         const currUserEmail = auth.user.profile.email
         console.log(currUserEmail)
         if (!currUserEmail) {
@@ -227,16 +225,16 @@ const ListProjectTable: React.FC = () => {
       }
     }
     fetchCourses()
-  // }, [clerk_user.isLoaded, clerk_user.isSignedIn])
+  
 }, [auth.isLoading, auth.isAuthenticated])
 
-  // if (!clerk_user.isLoaded || !isFullyLoaded) {
+  
   if (auth.isLoading || !isFullyLoaded) {
     // Loading screen is actually NOT worth it :/ just return null
     // return <Skeleton animate={true} height={40} width="70%" radius="xl" />
     return null
   } else {
-    // if (!clerk_user.isSignedIn) {
+    
     if (!auth.isAuthenticated) {
       return (
         <>

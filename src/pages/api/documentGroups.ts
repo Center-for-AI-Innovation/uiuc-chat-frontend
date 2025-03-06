@@ -2,7 +2,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import posthog from 'posthog-js'
 import { CourseDocument } from 'src/types/courseMaterials'
-// import { getAuth } from '@clerk/nextjs/server'
 import {
   addDocumentsToDocGroup,
   fetchDocumentGroups,
@@ -43,7 +42,6 @@ export default async function handler(
         posthog.capture('add_doc_group', {
           distinct_id:
             req.headers['x-forwarded-for'] || req.socket.remoteAddress,
-          // curr_user_id: await getAuth(req).userId,
           curr_user_id: userId, 
           course_name: courseName,
           doc_readable_filename: doc.readable_filename,
@@ -75,7 +73,6 @@ export default async function handler(
         posthog.capture('append_doc_group', {
           distinct_id:
             req.headers['x-forwarded-for'] || req.socket.remoteAddress,
-          // curr_user_id: await getAuth(req).userId,
           curr_user_id: userId, 
           course_name: courseName,
           doc_readable_filename: doc.readable_filename,
@@ -115,7 +112,6 @@ export default async function handler(
         posthog.capture('remove_doc_group', {
           distinct_id:
             req.headers['x-forwarded-for'] || req.socket.remoteAddress,
-          // curr_user_id: await getAuth(req).userId,
           curr_user_id: userId, 
           course_name: courseName,
           doc_readable_filename: doc.readable_filename,

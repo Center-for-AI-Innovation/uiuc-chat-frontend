@@ -1,4 +1,4 @@
-// import { useUser } from '@clerk/nextjs'
+
 import { useAuth } from 'react-oidc-context'
 import { NextPage } from 'next'
 import { useRouter } from 'next/router'
@@ -14,7 +14,7 @@ import { initiateSignIn } from '~/utils/authHelpers'
 const NotAuthorizedPage: NextPage = () => {
   const router = useRouter()
   const auth = useAuth()
-  // const clerk_user = useUser()
+  
   const [componentToRender, setComponentToRender] =
     useState<React.ReactNode | null>(null)
 
@@ -23,7 +23,6 @@ const NotAuthorizedPage: NextPage = () => {
   }
 
   useEffect(() => {
-    // if (!clerk_user.isLoaded || !router.isReady) {
     if (auth.isLoading || !router.isReady) {
       return
     }
@@ -62,25 +61,11 @@ const NotAuthorizedPage: NextPage = () => {
         return
       }
 
-      // if (courseMetadata.is_private && !clerk_user.isSignedIn) {
-      // if (courseMetadata.is_private && !auth.isAuthenticated) {
-      //   console.log(
-      //     'User not logged in',
-      //     // clerk_user.isSignedIn,
-      //     // clerk_user.isLoaded,
-      //     auth.isAuthenticated,
-      //     !auth.isLoading,
-      //     course_name,
-      //   )
-      //   router.replace(`/sign-in?${course_name}`)
-      //   return
-      // }
       if (courseMetadata.is_private && !auth.isAuthenticated) {
         void initiateSignIn(auth, `/${course_name}`)
         return
       }
 
-      // if (clerk_user.isLoaded) {
       if (auth.isLoading) {
         console.log(
           'in [course_name]/index.tsx -- clerk_user loaded and working :)',
@@ -122,9 +107,7 @@ const NotAuthorizedPage: NextPage = () => {
       }
     })
   }, [!auth.isLoading, router.isReady])
-  // }, [clerk_user.isLoaded, router.isReady])
 
-  // if (!clerk_user.isLoaded || !componentToRender) {
     if (auth.isLoading || !componentToRender) {
     console.debug('not_authorized.tsx -- Loading spinner')
     return (

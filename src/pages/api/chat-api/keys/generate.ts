@@ -4,7 +4,6 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '@/utils/supabaseClient'
 import { v4 as uuidv4 } from 'uuid'
 import posthog from 'posthog-js'
-// import { getAuth } from '@clerk/nextjs/server'
 
 type ApiResponse = {
   message?: string
