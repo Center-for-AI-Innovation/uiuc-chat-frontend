@@ -256,7 +256,7 @@ export function LargeDropzone({
       const data = await response.json()
 
       const docsResponse = await fetch(
-        `/api/materialsTable/docs?course_name=${courseName}`,
+        `/api/materialsTable/successDocs?course_name=${courseName}`,
       )
       const docsData = await docsResponse.json()
       // Adjust polling interval based on activity
