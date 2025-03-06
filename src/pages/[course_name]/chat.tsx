@@ -53,24 +53,18 @@ const ChatPage: NextPage = () => {
       setIsLoading(true)
       setIsCourseMetadataLoading(true)
 
-      // Handle /gpt4 page (special non-course page)
-      let curr_course_name = courseName
-      if (courseName == '/gpt4') {
-        curr_course_name = 'gpt4'
-      }
-
-      // Special case, cropwizard redirect
+      // Special case: Cropwizard redirect
       if (
         ['cropwizard', 'cropwizard-1.0', 'cropwizard-1'].includes(
           courseName.toLowerCase(),
         )
       ) {
-        await router.replace(`/cropwizard-1.5/chat`)
+        await router.push(`/cropwizard-1.5/chat`)
       }
 
       // Fetch course metadata
       const metadataResponse = await fetch(
-        `/api/UIUC-api/getCourseMetadata?course_name=${curr_course_name}`,
+        `/api/UIUC-api/getCourseMetadata?course_name=${courseName}`,
       )
       const metadataData = await metadataResponse.json()
 
@@ -96,9 +90,8 @@ const ChatPage: NextPage = () => {
     if (!courseName) return
     const fetchDocumentCount = async () => {
       try {
-        const curr_course_name = courseName === '/gpt4' ? 'gpt4' : courseName
         const documentsResponse = await fetch(
-          `/api/materialsTable/fetchProjectMaterials?from=0&to=0&course_name=${curr_course_name}`,
+          `/api/materialsTable/fetchProjectMaterials?from=0&to=0&course_name=${courseName}`,
         )
         const documentsData = await documentsResponse.json()
         setDocumentCount(documentsData.total_count || 0)
