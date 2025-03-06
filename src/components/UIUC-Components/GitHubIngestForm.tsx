@@ -350,7 +350,6 @@ export default function GitHubIngestForm({
   ) => {
     try {
       if (!url || !courseName) return null
-      console.log('SCRAPING', url)
 
       const fullUrl = formatUrl(url)
 
@@ -362,10 +361,6 @@ export default function GitHubIngestForm({
         match: formatUrlAndMatchRegex(fullUrl).matchRegex,
         maxTokens: 2000000, // basically inf.
       }
-      console.log(
-        'About to post to the web scraping endpoint, with params:',
-        postParams,
-      )
 
       const response = await axios.post(
         `https://crawlee-production.up.railway.app/crawl`,
@@ -373,7 +368,7 @@ export default function GitHubIngestForm({
           params: postParams,
         },
       )
-      console.log('Response from web scraping endpoint:', response.data)
+      // console.log('Response from web scraping endpoint:', response.data)
       return response.data
     } catch (error: any) {
       console.error('Error during web scraping:', error)
