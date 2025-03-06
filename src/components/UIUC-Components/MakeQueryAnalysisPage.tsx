@@ -45,6 +45,7 @@ import {
   IconMessageCircle2,
   IconInfoCircle,
   IconUsers,
+  IconMinus,
 } from '@tabler/icons-react'
 import { getWeeklyTrends } from '../../pages/api/UIUC-api/getWeeklyTrends'
 import ModelUsageChart from './ModelUsageChart'
@@ -115,7 +116,6 @@ interface CourseStats {
   avg_messages_per_conversation: number
 }
 
-// Update the WeeklyTrends interface to match the new data structure
 interface WeeklyTrend {
   current_week_value: number
   metric_name: string
@@ -244,11 +244,16 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     }
   }
 
-  // Effect for fetching filtered conversation stats
   useEffect(() => {
     const fetchFilteredConversationStats = async () => {
       try {
         const { from_date, to_date } = getDateRange()
+
+        if (dateRangeType === 'custom' && (!dateRange[0] || !dateRange[1])) {
+          setHasConversationData(false)
+          return
+        }
+
         const response = await getConversationStats(
           course_name,
           from_date,
@@ -271,7 +276,6 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     fetchFilteredConversationStats()
   }, [course_name, dateRangeType, dateRange])
 
-  // Effect for fetching all-time conversation stats
   useEffect(() => {
     const fetchAllTimeConversationStats = async () => {
       try {
@@ -323,7 +327,6 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     fetchCourseStats()
   }, [course_name])
 
-  // Update the useEffect to handle the new data structure
   useEffect(() => {
     const fetchWeeklyTrends = async () => {
       setTrendsLoading(true)
@@ -522,7 +525,9 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                               className={`flex items-center gap-2 rounded-md px-2 py-1 ${
                                 trend.percentage_change > 0
                                   ? 'bg-green-400/10'
-                                  : 'bg-red-400/10'
+                                  : trend.percentage_change < 0
+                                    ? 'bg-red-400/10'
+                                    : 'bg-gray-400/10'
                               }`}
                             >
                               {trend.percentage_change > 0 ? (
@@ -530,10 +535,15 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                                   size={18}
                                   className="text-green-400"
                                 />
-                              ) : (
+                              ) : trend.percentage_change < 0 ? (
                                 <IconTrendingDown
                                   size={18}
                                   className="text-red-400"
+                                />
+                              ) : (
+                                <IconMinus
+                                  size={18}
+                                  className="text-gray-400"
                                 />
                               )}
                               <Text
@@ -542,7 +552,9 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                                 className={
                                   trend.percentage_change > 0
                                     ? 'text-green-400'
-                                    : 'text-red-400'
+                                    : trend.percentage_change < 0
+                                      ? 'text-red-400'
+                                      : 'text-gray-400'
                                 }
                               >
                                 {trend.percentage_change > 0 ? '+' : ''}
@@ -593,7 +605,9 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                               className={`flex items-center gap-2 rounded-md px-2 py-1 ${
                                 trend.percentage_change > 0
                                   ? 'bg-green-400/10'
-                                  : 'bg-red-400/10'
+                                  : trend.percentage_change < 0
+                                    ? 'bg-red-400/10'
+                                    : 'bg-gray-400/10'
                               }`}
                             >
                               {trend.percentage_change > 0 ? (
@@ -601,10 +615,15 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                                   size={18}
                                   className="text-green-400"
                                 />
-                              ) : (
+                              ) : trend.percentage_change < 0 ? (
                                 <IconTrendingDown
                                   size={18}
                                   className="text-red-400"
+                                />
+                              ) : (
+                                <IconMinus
+                                  size={18}
+                                  className="text-gray-400"
                                 />
                               )}
                               <Text
@@ -613,7 +632,9 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                                 className={
                                   trend.percentage_change > 0
                                     ? 'text-green-400'
-                                    : 'text-red-400'
+                                    : trend.percentage_change < 0
+                                      ? 'text-red-400'
+                                      : 'text-gray-400'
                                 }
                               >
                                 {trend.percentage_change > 0 ? '+' : ''}
@@ -664,7 +685,9 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                               className={`flex items-center gap-2 rounded-md px-2 py-1 ${
                                 trend.percentage_change > 0
                                   ? 'bg-green-400/10'
-                                  : 'bg-red-400/10'
+                                  : trend.percentage_change < 0
+                                    ? 'bg-red-400/10'
+                                    : 'bg-gray-400/10'
                               }`}
                             >
                               {trend.percentage_change > 0 ? (
@@ -672,10 +695,15 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                                   size={18}
                                   className="text-green-400"
                                 />
-                              ) : (
+                              ) : trend.percentage_change < 0 ? (
                                 <IconTrendingDown
                                   size={18}
                                   className="text-red-400"
+                                />
+                              ) : (
+                                <IconMinus
+                                  size={18}
+                                  className="text-gray-400"
                                 />
                               )}
                               <Text
@@ -684,7 +712,9 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                                 className={
                                   trend.percentage_change > 0
                                     ? 'text-green-400'
-                                    : 'text-red-400'
+                                    : trend.percentage_change < 0
+                                      ? 'text-red-400'
+                                      : 'text-gray-400'
                                 }
                               >
                                 {trend.percentage_change > 0 ? '+' : ''}
