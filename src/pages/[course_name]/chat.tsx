@@ -1,6 +1,5 @@
 // export { default } from '~/pages/api/home'
 
-
 import { useAuth } from 'react-oidc-context'
 import { NextPage } from 'next'
 import { useEffect, useState } from 'react'
@@ -109,7 +108,7 @@ const ChatPage: NextPage = () => {
     const checkAuthorization = async () => {
       if (!auth.isLoading && router.isReady) {
         const courseName = router.query.course_name as string
-        
+
         try {
           // Fetch course metadata
           const metadata = await fetchCourseMetadata(courseName)
@@ -135,7 +134,7 @@ const ChatPage: NextPage = () => {
           }
 
           const permission = get_user_permission(metadata, auth)
-          
+
           if (permission === 'no_permission') {
             router.replace(`/${courseName}/not_authorized`)
             return
@@ -145,7 +144,6 @@ const ChatPage: NextPage = () => {
           if (auth.user?.profile.email) {
             setCurrentEmail(auth.user.profile.email)
           }
-          
         } catch (error) {
           console.error('Authorization check failed:', error)
           setIsAuthorized(false)
@@ -158,19 +156,21 @@ const ChatPage: NextPage = () => {
 
   return (
     <>
-      {!isLoading && (currentEmail || !courseMetadata?.is_private) && courseMetadata && (
-        <Home
-          current_email={currentEmail || ''}
-          course_metadata={courseMetadata}
-          course_name={courseName}
-          document_count={documentCount}
-          link_parameters={{
-            guidedLearning: urlGuidedLearning,
-            documentsOnly: urlDocumentsOnly,
-            systemPromptOnly: urlSystemPromptOnly,
-          }}
-        />
-      )}
+      {!isLoading &&
+        (currentEmail || !courseMetadata?.is_private) &&
+        courseMetadata && (
+          <Home
+            current_email={currentEmail || ''}
+            course_metadata={courseMetadata}
+            course_name={courseName}
+            document_count={documentCount}
+            link_parameters={{
+              guidedLearning: urlGuidedLearning,
+              documentsOnly: urlDocumentsOnly,
+              systemPromptOnly: urlSystemPromptOnly,
+            }}
+          />
+        )}
       {isLoading && !currentEmail && (
         <MainPageBackground>
           <div

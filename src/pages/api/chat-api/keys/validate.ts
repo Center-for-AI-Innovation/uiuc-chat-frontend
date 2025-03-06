@@ -5,7 +5,6 @@ import posthog from 'posthog-js'
 import { NextRequest, NextResponse } from 'next/server'
 import type { AuthContextProps } from 'react-oidc-context'
 
-
 /**
  * Validates the provided API key and retrieves the associated user data.
  *
@@ -23,7 +22,7 @@ export async function validateApiKeyAndRetrieveData(
     user: null,
     isLoading: false,
     error: undefined,
-  } as AuthContextProps;
+  } as AuthContextProps
   // console.log('Validating apiKey', apiKey, ' for course_name', course_name)
   // Attempt to retrieve the email associated with the API key from the database
   const { data, error } = await supabase
@@ -36,14 +35,14 @@ export async function validateApiKeyAndRetrieveData(
   console.log('data', data)
 
   // Determine if the API key is valid based on the absence of errors and presence of data.
-  const isValidApiKey = !error && data !== null;
+  const isValidApiKey = !error && data !== null
   if (!isValidApiKey) {
-    return { isValidApiKey, authContext };
+    return { isValidApiKey, authContext }
   }
 
   console.log('isValidApiKey', isValidApiKey)
   try {
-    const email = data.email;
+    const email = data.email
 
     // Get user data from the email
     const { data: userData, error: userError } = await supabase
@@ -61,9 +60,9 @@ export async function validateApiKeyAndRetrieveData(
         profile: {
           sub: userData.id,
           email: userData.email,
-        }
-      }
-    } as AuthContextProps;
+        },
+      },
+    } as AuthContextProps
 
     // Increment the API call count for the user.
     const { error: updateError } = await supabase.rpc('increment', {
@@ -81,7 +80,7 @@ export async function validateApiKeyAndRetrieveData(
       apiKey: apiKey,
     })
 
-    return { isValidApiKey, authContext };
+    return { isValidApiKey, authContext }
   } catch (userError) {
     // Log the error if there's an issue retrieving the user object.
     console.error('Error retrieving user object:', userError)
@@ -110,7 +109,7 @@ export default async function handler(req: NextRequest, res: NextResponse) {
     const { isValidApiKey, authContext } = await validateApiKeyAndRetrieveData(
       api_key,
       course_name,
-    );
+    )
 
     if (!isValidApiKey) {
       // Respond with a 403 Forbidden status if the API key is invalid.

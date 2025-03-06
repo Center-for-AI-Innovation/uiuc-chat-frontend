@@ -1,9 +1,5 @@
 import Link from 'next/link'
-import {
-  Text,
-  Title,
-  Flex,
-} from '@mantine/core'
+import { Text, Title, Flex } from '@mantine/core'
 import GlobalHeader from './navbars/GlobalHeader'
 import { CourseMetadata } from '~/types/courseMetadata'
 import React, { useState, useEffect } from 'react'
@@ -71,8 +67,9 @@ export const CannotViewCourse = ({
   }
 
   if (
-    curr_user_email && (courseMetadata.course_owner === curr_user_email ||
-    courseMetadata.course_admins.includes(curr_user_email))
+    curr_user_email &&
+    (courseMetadata.course_owner === curr_user_email ||
+      courseMetadata.course_admins.includes(curr_user_email))
   ) {
     // CAN view course
     // Cannot edit course

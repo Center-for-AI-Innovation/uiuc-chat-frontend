@@ -30,7 +30,9 @@ const isPreviewDeployment = () => {
 // Helper to check if this is an auth-related path
 const isAuthPath = (pathname: string, search: string) => {
   // Check if this is the initial auth request (not the callback)
-  return pathname === '/' && !search.includes('code=') && !search.includes('state=');
+  return (
+    pathname === '/' && !search.includes('code=') && !search.includes('state=')
+  )
 }
 
 // Create a middleware handler that runs before auth
@@ -59,29 +61,35 @@ export default async function middleware(request: NextRequest) {
   if (isPreviewDeployment() && isAuthPath(pathname, search)) {
     const stateData = {
       redirect: origin,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     }
-    const encodedState = Buffer.from(JSON.stringify(stateData)).toString('base64')
+    const encodedState = Buffer.from(JSON.stringify(stateData))
+      .toString('base64')
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
       .replace(/=+$/, '')
 
     // Redirect to Keycloak auth URL directly
-    const keycloakUrl = `${process.env.NEXT_PUBLIC_KEYCLOAK_URL}realms/${process.env.NEXT_PUBLIC_KEYCLOAK_REALM}/protocol/openid-connect/auth`;
-    const authUrl = new URL(keycloakUrl);
-    authUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'uiucchat');
-    authUrl.searchParams.set('redirect_uri', origin);
-    authUrl.searchParams.set('state', encodedState);
-    authUrl.searchParams.set('response_type', 'code');
-    authUrl.searchParams.set('scope', 'openid profile email');
+    const keycloakUrl = `${process.env.NEXT_PUBLIC_KEYCLOAK_URL}realms/${process.env.NEXT_PUBLIC_KEYCLOAK_REALM}/protocol/openid-connect/auth`
+    const authUrl = new URL(keycloakUrl)
+    authUrl.searchParams.set(
+      'client_id',
+      process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'uiucchat',
+    )
+    authUrl.searchParams.set('redirect_uri', origin)
+    authUrl.searchParams.set('state', encodedState)
+    authUrl.searchParams.set('response_type', 'code')
+    authUrl.searchParams.set('scope', 'openid profile email')
 
-    return NextResponse.redirect(authUrl);
+    return NextResponse.redirect(authUrl)
   }
 
   // Allow auth callbacks to proceed without interference
-  if (request.nextUrl.searchParams.has('state') && 
-      request.nextUrl.searchParams.has('session_state') && 
-      request.nextUrl.searchParams.has('code')) {
+  if (
+    request.nextUrl.searchParams.has('state') &&
+    request.nextUrl.searchParams.has('session_state') &&
+    request.nextUrl.searchParams.has('code')
+  ) {
     return NextResponse.next()
   }
 
@@ -95,13 +103,15 @@ export default async function middleware(request: NextRequest) {
   }
 
   // Allow public routes
-  if (PUBLIC_ROUTES.some(route => {
-    if (route.endsWith('(.*)')) {
-      const baseRoute = route.replace('(.*)', '')
-      return pathname.startsWith(baseRoute)
-    }
-    return pathname === route
-  })) {
+  if (
+    PUBLIC_ROUTES.some((route) => {
+      if (route.endsWith('(.*)')) {
+        const baseRoute = route.replace('(.*)', '')
+        return pathname.startsWith(baseRoute)
+      }
+      return pathname === route
+    })
+  ) {
     return NextResponse.next()
   }
 
