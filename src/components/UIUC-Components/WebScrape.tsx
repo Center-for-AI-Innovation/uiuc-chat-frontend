@@ -516,9 +516,11 @@ export const WebScrape = ({
                 }}
                 size="md"
                 radius={'xl'}
-                className={`rounded-s-md ${isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
-                  } overflow-ellipsis text-ellipsis p-2 ${isUrlUpdated ? 'text-white' : 'text-gray-500'
-                  } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
+                className={`rounded-s-md ${
+                  isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
+                } overflow-ellipsis text-ellipsis p-2 ${
+                  isUrlUpdated ? 'text-white' : 'text-gray-500'
+                } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
                 w={`${isSmallScreen ? 'auto' : 'auto'}`}
                 disabled={isDisabled}
               >
@@ -626,9 +628,11 @@ export const WebScrape = ({
                 }}
                 size="md"
                 radius={'xl'}
-                className={`rounded-s-md ${isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
-                  } overflow-ellipsis text-ellipsis p-2 ${isUrlUpdated ? 'text-white' : 'text-gray-500'
-                  } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
+                className={`rounded-s-md ${
+                  isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
+                } overflow-ellipsis text-ellipsis p-2 ${
+                  isUrlUpdated ? 'text-white' : 'text-gray-500'
+                } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
                 w={`${isSmallScreen ? 'auto' : 'auto'}`}
                 disabled={isDisabled}
               >
@@ -768,10 +772,10 @@ export const WebScrape = ({
                 </div>
               </div>
               <Text className="mt-4 text-lg font-bold text-red-600 underline">
-                Please ensure that you have added the UIUC Chatbot as a student
-                to your course on Canvas before you begin ingesting the course
-                content. The bot email address is uiuc.chat@ad.uillinois.edu and
-                the bot name is UIUC Course AI.
+                TEST Please ensure that you have added the UIUC Chatbot as a
+                student to your course on Canvas before you begin ingesting the
+                course content. The bot email address is
+                uiuc.chat@ad.uillinois.edu and the bot name is UIUC Course AI.
               </Text>
             </form>
           )}
