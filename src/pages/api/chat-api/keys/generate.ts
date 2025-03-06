@@ -81,8 +81,7 @@ export default async function generateKey(
         .from('api_keys')
         .insert([{ 
           email: email,
-          user_id: decodedPayload.sub || decodedPayload.user_id,
-          clerk_id: decodedPayload.clerk_id || null,
+          user_id: decodedPayload.sub,
           key: apiKey, 
           is_active: true 
         }])
@@ -95,8 +94,7 @@ export default async function generateKey(
         .update({ 
           key: apiKey, 
           is_active: true,
-          user_id: decodedPayload.sub || decodedPayload.user_id,
-          clerk_id: decodedPayload.clerk_id || null
+          user_id: decodedPayload.sub ,
         })
         .eq('email', email)
 

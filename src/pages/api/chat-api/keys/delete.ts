@@ -35,10 +35,9 @@ export default async function deleteKey(
     const token = authHeader.replace('Bearer ', '')
     const [, payload = ''] = token.split('.')
     const decodedPayload = JSON.parse(Buffer.from(payload, 'base64').toString())
-    const subId = decodedPayload.sub
-    const userId = decodedPayload.user_id || subId // Fallback to sub if user_id not present
+    const userEmail = decodedPayload.email
 
-    console.log('Deleting api key for:', userId)
+    console.log('Deleting api key for:', userEmail)
 
     // const { data, error } = await supabase
     //   .from('api_keys')
@@ -47,7 +46,7 @@ export default async function deleteKey(
     const { data, error } = await supabase
       .from('api_keys')
       .update({ is_active: false })
-      .match({ [userId.startsWith('user_') ? 'user_id' : 'keycloak_id']: userId })
+      .match({ email: userEmail })
 
     if (error) {
       console.error('Error deleting API key:', error)
@@ -55,7 +54,7 @@ export default async function deleteKey(
     }
 
     posthog.capture('api_key_deleted', {
-      subId,
+      userEmail,
     })
 
     return res.status(200).json({
