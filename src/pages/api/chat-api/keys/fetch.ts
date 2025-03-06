@@ -39,7 +39,6 @@ export default async function fetchKey(
       userId: decodedPayload.user_id,
       preferred_username: decodedPayload.preferred_username,
       email: decodedPayload.email,
-      clerk_id: decodedPayload.clerk_id,
       // Log all claims to see what's available
       allClaims: decodedPayload
     })
