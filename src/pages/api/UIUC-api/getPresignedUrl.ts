@@ -19,7 +19,11 @@ if (region && process.env.AWS_KEY && process.env.AWS_SECRET) {
 
 // MinIO Client configuration
 let vyriadMinioClient: S3Client | null = null
-if (process.env.MINIO_KEY && process.env.MINIO_SECRET && process.env.MINIO_ENDPOINT) {
+if (
+  process.env.MINIO_KEY &&
+  process.env.MINIO_SECRET &&
+  process.env.MINIO_ENDPOINT
+) {
   vyriadMinioClient = new S3Client({
     region: process.env.MINIO_REGION || 'us-east-1', // MinIO requires a region, but it can be arbitrary
     credentials: {
@@ -43,20 +47,24 @@ export default async function handler(
       Key: s3_path as string,
     })
 
-    console.log("In the presigned URL block")
+    console.log('In the presigned URL block')
     try {
       let presignedUrl
-      if (course_name === "vyriad") {
-        console.log("In the vyriad if statement")
+      if (course_name === 'vyriad' || course_name === 'pubmed') {
+        console.log('In the vyriad if statement')
         if (!vyriadMinioClient) {
-          throw new Error('MinIO client not configured - missing required environment variables')
+          throw new Error(
+            'MinIO client not configured - missing required environment variables',
+          )
         }
         presignedUrl = await getSignedUrl(vyriadMinioClient, command, {
           expiresIn: 3600,
         })
       } else {
         if (!s3Client) {
-          throw new Error('S3 client not configured - missing required environment variables')
+          throw new Error(
+            'S3 client not configured - missing required environment variables',
+          )
         }
         presignedUrl = await getSignedUrl(s3Client, command, {
           expiresIn: 3600,
