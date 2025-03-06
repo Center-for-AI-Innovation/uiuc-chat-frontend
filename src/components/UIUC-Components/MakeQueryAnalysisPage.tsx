@@ -24,6 +24,7 @@ import {
   Select,
   Group,
 } from '@mantine/core'
+import { DatePickerInput, type DateValue } from '@mantine/dates'
 // const rubik_puddles = Rubik_Puddles({ weight: '400', subsets: ['latin'] })
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
@@ -44,12 +45,10 @@ import {
   IconMessageCircle2,
   IconInfoCircle,
   IconUsers,
-  IconMinus,
 } from '@tabler/icons-react'
 import { getWeeklyTrends } from '../../pages/api/UIUC-api/getWeeklyTrends'
 import ModelUsageChart from './ModelUsageChart'
 import { getModelUsageCounts } from '../../pages/api/UIUC-api/getModelUsageCounts'
-import { DatePickerInput } from '@mantine/dates'
 
 const useStyles = createStyles((theme: MantineTheme) => ({
   downloadButton: {
@@ -129,34 +128,6 @@ const formatPercentageChange = (value: number | null | undefined) => {
   return value.toFixed(1)
 }
 
-interface DateRange {
-  startDate: Date | null
-  endDate: Date | null
-}
-
-const dateRangeOptions = [
-  { value: '1d', label: 'Last Day' },
-  { value: '7d', label: 'Last Week' },
-  { value: '30d', label: 'Last Month' },
-  { value: '1y', label: 'Last Year' },
-  { value: 'all', label: 'All Time' },
-  { value: 'custom', label: 'Custom Range' },
-]
-
-const getAvailableDates = (data: { [date: string]: number } | undefined) => {
-  if (!data)
-    return { minDate: null, maxDate: null, availableDates: new Set<string>() }
-
-  const dates = Object.keys(data).sort()
-  const availableDates = new Set(dates.map((date) => date.split('T')[0]))
-
-  return {
-    minDate: dates.length ? new Date(dates[0]) : null,
-    maxDate: dates.length ? new Date(dates[dates.length - 1]) : null,
-    availableDates,
-  }
-}
-
 const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
   const { classes, theme } = useStyles()
@@ -183,6 +154,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   const [courseStats, setCourseStats] = useState<CourseStats | null>(null)
   const [courseStatsError, setCourseStatsError] = useState<string | null>(null)
 
+  // Update the state to use an array of WeeklyTrend
   const [weeklyTrends, setWeeklyTrends] = useState<WeeklyTrend[]>([])
   const [trendsLoading, setTrendsLoading] = useState(true)
   const [trendsError, setTrendsError] = useState<string | null>(null)
@@ -191,243 +163,20 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   const [modelUsageLoading, setModelUsageLoading] = useState(true)
   const [modelUsageError, setModelUsageError] = useState<string | null>(null)
 
-  const [dateRangeType, setDateRangeType] = useState('30d')
-  const [customDateRange, setCustomDateRange] = useState<DateRange>({
-    startDate: null,
-    endDate: null,
-  })
+  const [dateRangeType, setDateRangeType] = useState<string>('all')
+  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
+    null,
+    null,
+  ])
+  const [totalCount, setTotalCount] = useState<number>(0)
 
-  // Add new state for tracking the first conversation date
-  const [firstConversationDate, setFirstConversationDate] =
-    useState<Date | null>(null)
-
-  const getDateRangeFromType = (type: string): DateRange => {
-    const now = new Date()
-    let startDate, endDate
-
-    switch (type) {
-      case '1d':
-        // Set to previous day
-        startDate = new Date(
-          now.getFullYear(),
-          now.getMonth(),
-          now.getDate() - 1,
-        )
-        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)
-        break
-      case '7d':
-        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-        startDate = new Date(endDate)
-        startDate.setDate(startDate.getDate() - 7)
-        break
-      case '30d':
-        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-        startDate = new Date(endDate)
-        startDate.setDate(startDate.getDate() - 30)
-        break
-      case '1y':
-        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-        startDate = new Date(endDate)
-        startDate.setFullYear(startDate.getFullYear() - 1)
-        break
-      case 'all':
-        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-        startDate = firstConversationDate || new Date(endDate)
-        break
-      case 'custom':
-        return customDateRange
-      default:
-        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-        startDate = new Date(endDate)
-        startDate.setDate(startDate.getDate() - 30)
-    }
-
-    return { startDate, endDate }
-  }
-
-  const filterDataByDateRange = (
-    data: ConversationStats,
-    range: DateRange,
-  ): ConversationStats => {
-    if (!data || !range.startDate || !range.endDate) return data
-
-    const startDate = new Date(range.startDate)
-    const endDate = new Date(range.endDate)
-
-    const startDateStr = startDate.toISOString().split('T')[0]
-    const endDateStr = endDate.toISOString().split('T')[0]
-
-    const result: ConversationStats = {
-      per_day: { ...data.per_day },
-      per_hour: { ...data.per_hour },
-      per_weekday: { ...data.per_weekday },
-      heatmap: JSON.parse(JSON.stringify(data.heatmap)),
-    }
-
-    // Filter per_day data
-    const filteredPerDay: { [key: string]: number } = {}
-    Object.entries(result.per_day).forEach(([date, count]) => {
-      // Compare dates in YYYY-MM-DD format
-      const currentDateStr = date.split('T')[0]
-      if (currentDateStr >= startDateStr && currentDateStr <= endDateStr) {
-        filteredPerDay[date] = count
-      }
-    })
-    result.per_day = filteredPerDay
-
-    // Filter per_hour data
-    const filteredPerHour: { [hour: string]: number } = {}
-    for (let hour = 0; hour < 24; hour++) {
-      filteredPerHour[hour.toString()] = 0
-    }
-
-    Object.entries(result.per_day).forEach(([date]) => {
-      const currentDateStr = date.split('T')[0]
-      if (currentDateStr >= startDateStr && currentDateStr <= endDateStr) {
-        const hourOfDay = new Date(date).getHours().toString()
-        const hourCount = result.per_hour[hourOfDay]
-        if (typeof hourCount === 'number') {
-          filteredPerHour[hourOfDay] =
-            (filteredPerHour[hourOfDay] || 0) + hourCount
-        }
-      }
-    })
-    result.per_hour = filteredPerHour
-
-    // Filter per_weekday data
-    const filteredPerWeekday: { [day: string]: number } = {
-      Sunday: 0,
-      Monday: 0,
-      Tuesday: 0,
-      Wednesday: 0,
-      Thursday: 0,
-      Friday: 0,
-      Saturday: 0,
-    }
-
-    Object.entries(result.per_day).forEach(([date, count]) => {
-      const currentDateStr = date.split('T')[0]
-      if (currentDateStr >= startDateStr && currentDateStr <= endDateStr) {
-        const dayOfWeek = new Date(date).toLocaleString('en-US', {
-          weekday: 'long',
-        })
-        filteredPerWeekday[dayOfWeek] =
-          (filteredPerWeekday[dayOfWeek] || 0) + count
-      }
-    })
-    result.per_weekday = filteredPerWeekday
-
-    // Filter heatmap data
-    const filteredHeatmap: { [day: string]: { [hour: string]: number } } = {
-      Sunday: {},
-      Monday: {},
-      Tuesday: {},
-      Wednesday: {},
-      Thursday: {},
-      Friday: {},
-      Saturday: {},
-    }
-
-    // Initialize all hours to 0
-    Object.keys(filteredHeatmap).forEach((day) => {
-      for (let hour = 0; hour < 24; hour++) {
-        filteredHeatmap[day][hour.toString()] = 0
-      }
-    })
-
-    Object.entries(result.per_day).forEach(([date]) => {
-      const currentDateStr = date.split('T')[0]
-      if (currentDateStr >= startDateStr && currentDateStr <= endDateStr) {
-        const dayOfWeek = new Date(date).toLocaleString('en-US', {
-          weekday: 'long',
-        })
-        const hourOfDay = new Date(date).getHours().toString()
-        const dayData = result.heatmap[dayOfWeek]
-        if (dayData && typeof dayData[hourOfDay] === 'number') {
-          filteredHeatmap[dayOfWeek][hourOfDay] += dayData[hourOfDay]
-        }
-      }
-    })
-    result.heatmap = filteredHeatmap
-
-    return result
-  }
-
-  const handleDateRangeChange = (value: string) => {
-    setDateRangeType(value)
-  }
-
-  // Update the useEffect to store original data and filter from it
-  const [originalConversationStats, setOriginalConversationStats] =
+  // Separate state for filtered conversation stats
+  const [filteredConversationStats, setFilteredConversationStats] =
     useState<ConversationStats | null>(null)
-
-  useEffect(() => {
-    const fetchConversationStats = async () => {
-      try {
-        const response = await getConversationStats(course_name)
-        if (response.status === 200) {
-          setOriginalConversationStats(response.data)
-          setConversationStats(response.data)
-          setHasConversationData(Object.keys(response.data.per_day).length > 0)
-
-          // Find the earliest conversation date
-          if (
-            response.data.per_day &&
-            Object.keys(response.data.per_day).length > 0
-          ) {
-            const firstDate = new Date(
-              Math.min(
-                ...Object.keys(response.data.per_day).map((date) =>
-                  new Date(date).getTime(),
-                ),
-              ),
-            )
-            setFirstConversationDate(firstDate)
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching conversation stats:', error)
-        setStatsError('Failed to fetch conversation statistics')
-        setHasConversationData(false)
-      } finally {
-        setStatsLoading(false)
-      }
-    }
-
-    fetchConversationStats()
-  }, [course_name])
-
-  // Update filtering effect to only filter per_day data
-  useEffect(() => {
-    if (originalConversationStats) {
-      const range = getDateRangeFromType(dateRangeType)
-      if (range.startDate && range.endDate) {
-        // Create a new object with all original data
-        const filteredStats = {
-          ...originalConversationStats,
-          // Only filter the per_day data
-          per_day: Object.entries(originalConversationStats.per_day).reduce(
-            (filtered, [date, count]) => {
-              const currentDateStr = date.split('T')[0]
-              const startDateStr = range.startDate!.toISOString().split('T')[0]
-              const endDateStr = range.endDate!.toISOString().split('T')[0]
-
-              if (
-                currentDateStr >= startDateStr &&
-                currentDateStr <= endDateStr
-              ) {
-                filtered[date] = count
-              }
-              return filtered
-            },
-            {} as { [key: string]: number },
-          ),
-        }
-
-        setConversationStats(filteredStats)
-      }
-    }
-  }, [dateRangeType, customDateRange, originalConversationStats])
+  const [filteredStatsLoading, setFilteredStatsLoading] = useState(true)
+  const [filteredStatsError, setFilteredStatsError] = useState<string | null>(
+    null,
+  )
 
   // TODO: remove this hook... we should already have this from the /materials props???
   useEffect(() => {
@@ -456,6 +205,90 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   }, [currentPageName, clerk_user.isLoaded, clerk_user.user])
 
   const [hasConversationData, setHasConversationData] = useState<boolean>(true)
+
+  const getDateRange = () => {
+    const today = new Date()
+    switch (dateRangeType) {
+      case 'last_week':
+        const lastWeek = new Date(today)
+        lastWeek.setDate(today.getDate() - 7)
+        return {
+          from_date: lastWeek.toISOString().split('T')[0],
+          to_date: today.toISOString().split('T')[0],
+        }
+      case 'last_month':
+        const lastMonth = new Date(today)
+        lastMonth.setMonth(today.getMonth() - 1)
+        return {
+          from_date: lastMonth.toISOString().split('T')[0],
+          to_date: today.toISOString().split('T')[0],
+        }
+      case 'last_year':
+        const lastYear = new Date(today)
+        lastYear.setFullYear(today.getFullYear() - 1)
+        return {
+          from_date: lastYear.toISOString().split('T')[0],
+          to_date: today.toISOString().split('T')[0],
+        }
+      case 'custom':
+        return {
+          from_date: dateRange[0]
+            ? dateRange[0].toISOString().split('T')[0]
+            : undefined,
+          to_date: dateRange[1]
+            ? dateRange[1].toISOString().split('T')[0]
+            : undefined,
+        }
+      default:
+        return { from_date: undefined, to_date: undefined }
+    }
+  }
+
+  // Effect for fetching filtered conversation stats
+  useEffect(() => {
+    const fetchFilteredConversationStats = async () => {
+      try {
+        const { from_date, to_date } = getDateRange()
+        const response = await getConversationStats(
+          course_name,
+          from_date,
+          to_date,
+        )
+        if (response.status === 200) {
+          setFilteredConversationStats(response.data)
+          setTotalCount(response.data.total_count || 0)
+          setHasConversationData(Object.keys(response.data.per_day).length > 0)
+        }
+      } catch (error) {
+        console.error('Error fetching filtered conversation stats:', error)
+        setFilteredStatsError('Failed to fetch conversation statistics')
+        setHasConversationData(false)
+      } finally {
+        setFilteredStatsLoading(false)
+      }
+    }
+
+    fetchFilteredConversationStats()
+  }, [course_name, dateRangeType, dateRange])
+
+  // Effect for fetching all-time conversation stats
+  useEffect(() => {
+    const fetchAllTimeConversationStats = async () => {
+      try {
+        const response = await getConversationStats(course_name)
+        if (response.status === 200) {
+          setConversationStats(response.data)
+        }
+      } catch (error) {
+        console.error('Error fetching all-time conversation stats:', error)
+        setStatsError('Failed to fetch conversation statistics')
+      } finally {
+        setStatsLoading(false)
+      }
+    }
+
+    fetchAllTimeConversationStats()
+  }, [course_name])
 
   useEffect(() => {
     const fetchCourseStats = async () => {
@@ -614,29 +447,27 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                 >
                   Usage Overview
                 </Title>
-                <div className="flex flex-row items-center gap-4">
-                  <Button
-                    className={`${montserrat_paragraph.variable} font-montserratParagraph ${classes.downloadButton} w-full px-2 text-sm sm:w-auto sm:px-4 sm:text-base`}
-                    rightIcon={
-                      isLoading ? (
-                        <LoadingSpinner size="sm" />
-                      ) : (
-                        <IconCloudDownload className="hidden sm:block" />
-                      )
-                    }
-                    onClick={() => handleDownload(course_name)}
-                  >
-                    <span className="hidden sm:inline">
-                      Download Conversation History
-                    </span>
-                    <span className="sm:hidden">Download History</span>
-                  </Button>
-                </div>
+                <Button
+                  className={`${montserrat_paragraph.variable} font-montserratParagraph ${classes.downloadButton} w-full px-2 text-sm sm:w-auto sm:px-4 sm:text-base`}
+                  rightIcon={
+                    isLoading ? (
+                      <LoadingSpinner size="sm" />
+                    ) : (
+                      <IconCloudDownload className="hidden sm:block" />
+                    )
+                  }
+                  onClick={() => handleDownload(course_name)}
+                >
+                  <span className="hidden sm:inline">
+                    Download Conversation History
+                  </span>
+                  <span className="sm:hidden">Download History</span>
+                </Button>
               </div>
 
               <Divider className="w-full" color="gray.4" size="sm" />
 
-              {/* Project Analytics Dashboard */}
+              {/* Project Analytics Dashboard - Using all-time stats */}
               <div className="my-6 w-[95%] rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
                 <div className="mb-6">
                   <Title
@@ -686,50 +517,32 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           )
                           if (!trend) return null
 
-                          const isZeroChange = trend.percentage_change === 0
-
                           return (
                             <div
                               className={`flex items-center gap-2 rounded-md px-2 py-1 ${
-                                isZeroChange
-                                  ? 'bg-gray-400/10'
-                                  : trend.percentage_change > 0
-                                    ? 'bg-green-400/10'
-                                    : 'bg-red-400/10'
+                                trend.percentage_change > 0
+                                  ? 'bg-green-400/10'
+                                  : 'bg-red-400/10'
                               }`}
                             >
-                              {isZeroChange ? (
-                                <IconMinus
-                                  size={18}
-                                  className="text-gray-400"
-                                />
-                              ) : trend.percentage_change > 0 ? (
+                              {trend.percentage_change > 0 ? (
                                 <IconTrendingUp
                                   size={18}
                                   className="text-green-400"
                                 />
-                              ) : trend.percentage_change < 0 ? (
+                              ) : (
                                 <IconTrendingDown
                                   size={18}
                                   className="text-red-400"
-                                />
-                              ) : (
-                                <IconMinus
-                                  size={18}
-                                  className="text-gray-400"
                                 />
                               )}
                               <Text
                                 size="sm"
                                 weight={500}
                                 className={
-                                  isZeroChange
-                                    ? 'text-gray-400'
-                                    : trend.percentage_change > 0
-                                      ? 'text-green-400'
-                                      : trend.percentage_change < 0
-                                        ? 'text-red-400'
-                                        : 'text-gray-400'
+                                  trend.percentage_change > 0
+                                    ? 'text-green-400'
+                                    : 'text-red-400'
                                 }
                               >
                                 {trend.percentage_change > 0 ? '+' : ''}
@@ -775,50 +588,32 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           )
                           if (!trend) return null
 
-                          const isZeroChange = trend.percentage_change === 0
-
                           return (
                             <div
                               className={`flex items-center gap-2 rounded-md px-2 py-1 ${
-                                isZeroChange
-                                  ? 'bg-gray-400/10'
-                                  : trend.percentage_change > 0
-                                    ? 'bg-green-400/10'
-                                    : 'bg-red-400/10'
+                                trend.percentage_change > 0
+                                  ? 'bg-green-400/10'
+                                  : 'bg-red-400/10'
                               }`}
                             >
-                              {isZeroChange ? (
-                                <IconMinus
-                                  size={18}
-                                  className="text-gray-400"
-                                />
-                              ) : trend.percentage_change > 0 ? (
+                              {trend.percentage_change > 0 ? (
                                 <IconTrendingUp
                                   size={18}
                                   className="text-green-400"
                                 />
-                              ) : trend.percentage_change < 0 ? (
+                              ) : (
                                 <IconTrendingDown
                                   size={18}
                                   className="text-red-400"
-                                />
-                              ) : (
-                                <IconMinus
-                                  size={18}
-                                  className="text-gray-400"
                                 />
                               )}
                               <Text
                                 size="sm"
                                 weight={500}
                                 className={
-                                  isZeroChange
-                                    ? 'text-gray-400'
-                                    : trend.percentage_change > 0
-                                      ? 'text-green-400'
-                                      : trend.percentage_change < 0
-                                        ? 'text-red-400'
-                                        : 'text-gray-400'
+                                  trend.percentage_change > 0
+                                    ? 'text-green-400'
+                                    : 'text-red-400'
                                 }
                               >
                                 {trend.percentage_change > 0 ? '+' : ''}
@@ -864,50 +659,32 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           )
                           if (!trend) return null
 
-                          const isZeroChange = trend.percentage_change === 0
-
                           return (
                             <div
                               className={`flex items-center gap-2 rounded-md px-2 py-1 ${
-                                isZeroChange
-                                  ? 'bg-gray-400/10'
-                                  : trend.percentage_change > 0
-                                    ? 'bg-green-400/10'
-                                    : 'bg-red-400/10'
+                                trend.percentage_change > 0
+                                  ? 'bg-green-400/10'
+                                  : 'bg-red-400/10'
                               }`}
                             >
-                              {isZeroChange ? (
-                                <IconMinus
-                                  size={18}
-                                  className="text-gray-400"
-                                />
-                              ) : trend.percentage_change > 0 ? (
+                              {trend.percentage_change > 0 ? (
                                 <IconTrendingUp
                                   size={18}
                                   className="text-green-400"
                                 />
-                              ) : trend.percentage_change < 0 ? (
+                              ) : (
                                 <IconTrendingDown
                                   size={18}
                                   className="text-red-400"
-                                />
-                              ) : (
-                                <IconMinus
-                                  size={18}
-                                  className="text-gray-400"
                                 />
                               )}
                               <Text
                                 size="sm"
                                 weight={500}
                                 className={
-                                  isZeroChange
-                                    ? 'text-gray-400'
-                                    : trend.percentage_change > 0
-                                      ? 'text-green-400'
-                                      : trend.percentage_change < 0
-                                        ? 'text-red-400'
-                                        : 'text-gray-400'
+                                  trend.percentage_change > 0
+                                    ? 'text-green-400'
+                                    : 'text-red-400'
                                 }
                               >
                                 {trend.percentage_change > 0 ? '+' : ''}
@@ -1038,173 +815,56 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     </div>
                   </div>
                 </div>
-                {/* Date Range Selection */}
-                <div className="mb-4 mt-8">
-                  <div className="flex flex-col gap-4">
-                    <div>
-                      <Text
-                        size="lg"
-                        weight={600}
-                        className={`${montserrat_heading.variable} font-montserratHeading`}
-                      >
-                        Conversation Analytics
-                      </Text>
-                      <Text size="sm" color="dimmed" mt={1}>
-                        Visualize conversation patterns across different time
-                        periods
-                      </Text>
-                    </div>
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                      <Select
-                        value={dateRangeType}
-                        onChange={handleDateRangeChange}
-                        data={dateRangeOptions}
-                        className={`${montserrat_paragraph.variable} w-full font-montserratParagraph sm:w-[200px]`}
-                        styles={(theme) => ({
-                          input: {
-                            backgroundColor: '#232438',
-                            borderColor: theme.colors.grape[8],
-                            color: theme.white,
-                            '&:hover': {
-                              borderColor: theme.colors.grape[7],
-                            },
-                          },
-                          item: {
-                            backgroundColor: '#232438',
-                            color: theme.white,
-                            '&:hover': {
-                              backgroundColor: theme.colors.grape[8],
-                            },
-                          },
-                          dropdown: {
-                            backgroundColor: '#232438',
-                            borderColor: theme.colors.grape[8],
-                          },
-                        })}
-                      />
-                      {dateRangeType === 'custom' && (
-                        <DatePickerInput
-                          type="range"
-                          value={[
-                            customDateRange.startDate,
-                            customDateRange.endDate,
-                          ]}
-                          onChange={(value) => {
-                            setCustomDateRange({
-                              startDate: value[0],
-                              endDate: value[1],
-                            })
-                          }}
-                          minDate={firstConversationDate || undefined}
-                          maxDate={new Date()}
-                          className={`${montserrat_paragraph.variable} w-full font-montserratParagraph sm:w-auto`}
-                          styles={(theme) => ({
-                            input: {
-                              backgroundColor: '#232438',
-                              borderColor: theme.colors.grape[8],
-                              color: theme.white,
-                              '&:hover': {
-                                borderColor: theme.colors.grape[7],
-                              },
-                            },
-                            dropdown: {
-                              backgroundColor: '#232438',
-                              borderColor: theme.colors.grape[8],
-                            },
-                            day: {
-                              '&[data-selected]': {
-                                backgroundColor: theme.colors.grape[8],
-                              },
-                            },
-                          })}
-                          clearable={false}
-                          placeholder="Pick date range"
-                        />
-                      )}
-                    </div>
+              </div>
+
+              {/* Charts Section - Using filtered stats */}
+              <div className="grid w-[95%] grid-cols-1 gap-6 pb-10 lg:grid-cols-2">
+                {!hasConversationData ? (
+                  <div className="rounded-xl bg-[#1a1b30] p-6 text-center shadow-lg shadow-purple-900/20 lg:col-span-2">
+                    <Title
+                      order={4}
+                      className={`${montserrat_heading.variable} font-montserratHeading`}
+                    >
+                      No conversation data available yet
+                    </Title>
+                    <Text size="lg" color="dimmed" mt="md">
+                      Start some conversations to see analytics and
+                      visualizations!
+                    </Text>
                   </div>
-                </div>
-
-                <div className="grid w-[95%] grid-cols-1 gap-6 pb-10 lg:grid-cols-2">
-                  {!hasConversationData ? (
-                    <div className="rounded-xl bg-[#1a1b30] p-6 text-center shadow-lg shadow-purple-900/20 lg:col-span-2">
-                      <Title
-                        order={4}
-                        className={`${montserrat_heading.variable} font-montserratHeading`}
-                      >
-                        No conversation data available yet
-                      </Title>
-                      <Text size="lg" color="dimmed" mt="md">
-                        Start some conversations to see analytics and
-                        visualizations!
-                      </Text>
-                    </div>
-                  ) : (
-                    <>
-                      {/* Model Usage Chart*/}
-                      <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
-                        <Title
-                          order={4}
-                          mb="md"
-                          align="left"
-                          className="text-white"
-                        >
-                          Model Usage Distribution
-                        </Title>
-                        <Text size="sm" color="dimmed" mb="xl">
-                          Distribution of AI models used across all
-                          conversations
-                        </Text>
-                        <ModelUsageChart
-                          data={modelUsageData}
-                          isLoading={modelUsageLoading}
-                          error={modelUsageError}
-                        />
-                      </div>
-
-                      {/* Conversations Per Day Chart */}
-                      <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
-                        <Title
-                          order={4}
-                          mb="md"
-                          align="left"
-                          className="text-white"
-                        >
-                          Conversations Per Day
-                        </Title>
-                        <Text size="sm" color="dimmed" mb="xl">
-                          Shows the total number of conversations that occurred
-                          on each calendar day
-                        </Text>
-                        <ConversationsPerDayChart
-                          data={conversationStats?.per_day}
-                          isLoading={statsLoading}
-                          error={statsError}
-                          dateRange={getDateRangeFromType(dateRangeType)}
-                        />
-                      </div>
-
-                      {/* Combined Hour/Weekday Chart */}
-                      <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
-                        <div className="mb-2 flex items-center justify-between">
-                          <div>
-                            <Title order={4} className="text-white">
-                              Aggregated Conversation Breakdown
-                            </Title>
-                            <Text size="sm" color="dimmed" mt={1}>
-                              View conversation patterns by hour of day or day
-                              of week
-                            </Text>
-                          </div>
+                ) : (
+                  <>
+                    {/* Date Range Selector */}
+                    <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20 lg:col-span-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Title order={4} className="text-white">
+                            Conversation Visualizations
+                          </Title>
+                          <Text size="sm" color="dimmed" mt={1}>
+                            Select a time range to filter the visualizations
+                            below
+                          </Text>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
                           <Select
-                            value={view}
-                            onChange={(value) => setView(value || 'hour')}
+                            size="sm"
+                            w={200}
+                            value={dateRangeType}
+                            onChange={(value) => {
+                              setDateRangeType(value || 'all')
+                              if (value !== 'custom') {
+                                setDateRange([null, null])
+                              }
+                            }}
                             data={[
-                              { value: 'hour', label: 'By Hour' },
-                              { value: 'weekday', label: 'By Day of Week' },
+                              { value: 'all', label: 'All Time' },
+                              { value: 'last_week', label: 'Last Week' },
+                              { value: 'last_month', label: 'Last Month' },
+                              { value: 'last_year', label: 'Last Year' },
+                              { value: 'custom', label: 'Custom Range' },
                             ]}
-                            className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                            styles={(theme) => ({
+                            styles={(theme: MantineTheme) => ({
                               input: {
                                 backgroundColor: '#232438',
                                 borderColor: theme.colors.grape[8],
@@ -1225,49 +885,203 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                                 borderColor: theme.colors.grape[8],
                               },
                             })}
-                            size="xs"
-                            w={150}
                           />
+                          {dateRangeType === 'custom' && (
+                            <DatePickerInput
+                              type="range"
+                              size="sm"
+                              w={200}
+                              value={dateRange}
+                              onChange={setDateRange}
+                              placeholder="Pick date range"
+                              styles={(theme: MantineTheme) => ({
+                                input: {
+                                  backgroundColor: '#232438',
+                                  borderColor: theme.colors.grape[8],
+                                  color: theme.white,
+                                  '&:hover': {
+                                    borderColor: theme.colors.grape[7],
+                                  },
+                                },
+                                calendarHeader: {
+                                  backgroundColor: '#232438',
+                                  color: theme.white,
+                                },
+                                calendarHeaderControl: {
+                                  color: theme.white,
+                                  '&:hover': {
+                                    backgroundColor: theme.colors.grape[8],
+                                  },
+                                },
+                                monthPickerControl: {
+                                  color: theme.white,
+                                  '&:hover': {
+                                    backgroundColor: theme.colors.grape[8],
+                                  },
+                                },
+                                yearPickerControl: {
+                                  color: theme.white,
+                                  '&:hover': {
+                                    backgroundColor: theme.colors.grape[8],
+                                  },
+                                },
+                                day: {
+                                  color: theme.white,
+                                  '&:hover': {
+                                    backgroundColor: theme.colors.grape[8],
+                                  },
+                                },
+                                weekend: {
+                                  color: theme.colors.gray[5],
+                                },
+                                selected: {
+                                  backgroundColor: theme.colors.grape[8],
+                                  '&:hover': {
+                                    backgroundColor: theme.colors.grape[7],
+                                  },
+                                },
+                                inRange: {
+                                  backgroundColor: theme.colors.grape[8],
+                                  '&:hover': {
+                                    backgroundColor: theme.colors.grape[7],
+                                  },
+                                },
+                              })}
+                            />
+                          )}
+                          {totalCount > 0 && (
+                            <Text size="sm" color="dimmed">
+                              {totalCount} conversations in selected range
+                            </Text>
+                          )}
                         </div>
-
-                        {view === 'hour' ? (
-                          <ConversationsPerHourChart
-                            data={conversationStats?.per_hour}
-                            isLoading={statsLoading}
-                            error={statsError}
-                          />
-                        ) : (
-                          <ConversationsPerDayOfWeekChart
-                            data={conversationStats?.per_weekday}
-                            isLoading={statsLoading}
-                            error={statsError}
-                          />
-                        )}
                       </div>
+                    </div>
 
-                      {/* Heatmap Chart */}
-                      <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
-                        <Title
-                          order={4}
-                          mb="md"
-                          align="left"
-                          className="text-white"
-                        >
-                          Conversations Per Day and Hour
-                        </Title>
-                        <Text size="sm" color="dimmed" mb="xl">
-                          A heatmap showing conversation density across both
-                          days and hours
-                        </Text>
-                        <ConversationsHeatmapByHourChart
-                          data={conversationStats?.heatmap}
-                          isLoading={statsLoading}
-                          error={statsError}
+                    {/* Model Usage Chart */}
+                    <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
+                      <Title
+                        order={4}
+                        mb="md"
+                        align="left"
+                        className="text-white"
+                      >
+                        Model Usage Distribution
+                      </Title>
+                      <Text size="sm" color="dimmed" mb="xl">
+                        Distribution of AI models used across all conversations
+                      </Text>
+                      <ModelUsageChart
+                        data={modelUsageData}
+                        isLoading={modelUsageLoading}
+                        error={modelUsageError}
+                      />
+                    </div>
+
+                    {/* Conversations Per Day Chart */}
+                    <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
+                      <Title
+                        order={4}
+                        mb="md"
+                        align="left"
+                        className="text-white"
+                      >
+                        Conversations Per Day
+                      </Title>
+                      <Text size="sm" color="dimmed" mb="xl">
+                        Shows the total number of conversations that occurred on
+                        each calendar day
+                      </Text>
+                      <ConversationsPerDayChart
+                        data={filteredConversationStats?.per_day}
+                        isLoading={filteredStatsLoading}
+                        error={filteredStatsError}
+                      />
+                    </div>
+
+                    {/* Combined Hour/Weekday Chart */}
+                    <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
+                      <div className="mb-4 flex items-center justify-between">
+                        <div>
+                          <Title order={4} className="text-white">
+                            Aggregated Conversation Breakdown
+                          </Title>
+                          <Text size="sm" color="dimmed" mt={1}>
+                            View conversation patterns by hour of day or day of
+                            week
+                          </Text>
+                        </div>
+                        <Select
+                          value={view}
+                          onChange={(value) => setView(value || 'hour')}
+                          data={[
+                            { value: 'hour', label: 'By Hour' },
+                            { value: 'weekday', label: 'By Day of Week' },
+                          ]}
+                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                          styles={(theme) => ({
+                            input: {
+                              backgroundColor: '#232438',
+                              borderColor: theme.colors.grape[8],
+                              color: theme.white,
+                              '&:hover': {
+                                borderColor: theme.colors.grape[7],
+                              },
+                            },
+                            item: {
+                              backgroundColor: '#232438',
+                              color: theme.white,
+                              '&:hover': {
+                                backgroundColor: theme.colors.grape[8],
+                              },
+                            },
+                            dropdown: {
+                              backgroundColor: '#232438',
+                              borderColor: theme.colors.grape[8],
+                            },
+                          })}
+                          size="xs"
+                          w={150}
                         />
                       </div>
-                    </>
-                  )}
-                </div>
+
+                      {view === 'hour' ? (
+                        <ConversationsPerHourChart
+                          data={filteredConversationStats?.per_hour}
+                          isLoading={filteredStatsLoading}
+                          error={filteredStatsError}
+                        />
+                      ) : (
+                        <ConversationsPerDayOfWeekChart
+                          data={filteredConversationStats?.per_weekday}
+                          isLoading={filteredStatsLoading}
+                          error={filteredStatsError}
+                        />
+                      )}
+                    </div>
+
+                    {/* Heatmap Chart */}
+                    <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
+                      <Title
+                        order={4}
+                        mb="md"
+                        align="left"
+                        className="text-white"
+                      >
+                        Conversations Per Day and Hour
+                      </Title>
+                      <Text size="sm" color="dimmed" mb="xl">
+                        A heatmap showing conversation density across both days
+                        and hours
+                      </Text>
+                      <ConversationsHeatmapByHourChart
+                        data={filteredConversationStats?.heatmap}
+                        isLoading={filteredStatsLoading}
+                        error={filteredStatsError}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </Flex>
