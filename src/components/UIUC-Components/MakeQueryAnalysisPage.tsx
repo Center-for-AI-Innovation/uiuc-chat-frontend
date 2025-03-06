@@ -819,145 +819,144 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
               {/* Charts Section - Using filtered stats */}
               <div className="grid w-[95%] grid-cols-1 gap-6 pb-10 lg:grid-cols-2">
+                {/* Date Range Selector - Always visible */}
+                <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20 lg:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Title order={4} className="text-white">
+                        Conversation Visualizations
+                      </Title>
+                      <Text size="sm" color="dimmed" mt={1}>
+                        Select a time range to filter the visualizations below
+                      </Text>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <Select
+                        size="sm"
+                        w={200}
+                        value={dateRangeType}
+                        onChange={(value) => {
+                          setDateRangeType(value || 'all')
+                          if (value !== 'custom') {
+                            setDateRange([null, null])
+                          }
+                        }}
+                        data={[
+                          { value: 'all', label: 'All Time' },
+                          { value: 'last_week', label: 'Last Week' },
+                          { value: 'last_month', label: 'Last Month' },
+                          { value: 'last_year', label: 'Last Year' },
+                          { value: 'custom', label: 'Custom Range' },
+                        ]}
+                        styles={(theme: MantineTheme) => ({
+                          input: {
+                            backgroundColor: '#232438',
+                            borderColor: theme.colors.grape[8],
+                            color: theme.white,
+                            '&:hover': {
+                              borderColor: theme.colors.grape[7],
+                            },
+                          },
+                          item: {
+                            backgroundColor: '#232438',
+                            color: theme.white,
+                            '&:hover': {
+                              backgroundColor: theme.colors.grape[8],
+                            },
+                          },
+                          dropdown: {
+                            backgroundColor: '#232438',
+                            borderColor: theme.colors.grape[8],
+                          },
+                        })}
+                      />
+                      {dateRangeType === 'custom' && (
+                        <DatePickerInput
+                          type="range"
+                          size="sm"
+                          w={200}
+                          value={dateRange}
+                          onChange={setDateRange}
+                          placeholder="Pick date range"
+                          styles={(theme: MantineTheme) => ({
+                            input: {
+                              backgroundColor: '#232438',
+                              borderColor: theme.colors.grape[8],
+                              color: theme.white,
+                              '&:hover': {
+                                borderColor: theme.colors.grape[7],
+                              },
+                            },
+                            calendarHeader: {
+                              backgroundColor: '#232438',
+                              color: theme.white,
+                            },
+                            calendarHeaderControl: {
+                              color: theme.white,
+                              '&:hover': {
+                                backgroundColor: theme.colors.grape[8],
+                              },
+                            },
+                            monthPickerControl: {
+                              color: theme.white,
+                              '&:hover': {
+                                backgroundColor: theme.colors.grape[8],
+                              },
+                            },
+                            yearPickerControl: {
+                              color: theme.white,
+                              '&:hover': {
+                                backgroundColor: theme.colors.grape[8],
+                              },
+                            },
+                            day: {
+                              color: theme.white,
+                              '&:hover': {
+                                backgroundColor: theme.colors.grape[8],
+                              },
+                            },
+                            weekend: {
+                              color: theme.colors.gray[5],
+                            },
+                            selected: {
+                              backgroundColor: theme.colors.grape[8],
+                              '&:hover': {
+                                backgroundColor: theme.colors.grape[7],
+                              },
+                            },
+                            inRange: {
+                              backgroundColor: theme.colors.grape[8],
+                              '&:hover': {
+                                backgroundColor: theme.colors.grape[7],
+                              },
+                            },
+                          })}
+                        />
+                      )}
+                      {totalCount > 0 && (
+                        <Text size="sm" color="dimmed">
+                          {totalCount} conversations in selected range
+                        </Text>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
                 {!hasConversationData ? (
                   <div className="rounded-xl bg-[#1a1b30] p-6 text-center shadow-lg shadow-purple-900/20 lg:col-span-2">
                     <Title
                       order={4}
                       className={`${montserrat_heading.variable} font-montserratHeading`}
                     >
-                      No conversation data available yet
+                      No conversation data available for selected time range
                     </Title>
                     <Text size="lg" color="dimmed" mt="md">
-                      Start some conversations to see analytics and
-                      visualizations!
+                      Try selecting a different time range to view the
+                      visualizations
                     </Text>
                   </div>
                 ) : (
                   <>
-                    {/* Date Range Selector */}
-                    <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20 lg:col-span-2">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Title order={4} className="text-white">
-                            Conversation Visualizations
-                          </Title>
-                          <Text size="sm" color="dimmed" mt={1}>
-                            Select a time range to filter the visualizations
-                            below
-                          </Text>
-                        </div>
-                        <div className="flex flex-col items-end gap-2">
-                          <Select
-                            size="sm"
-                            w={200}
-                            value={dateRangeType}
-                            onChange={(value) => {
-                              setDateRangeType(value || 'all')
-                              if (value !== 'custom') {
-                                setDateRange([null, null])
-                              }
-                            }}
-                            data={[
-                              { value: 'all', label: 'All Time' },
-                              { value: 'last_week', label: 'Last Week' },
-                              { value: 'last_month', label: 'Last Month' },
-                              { value: 'last_year', label: 'Last Year' },
-                              { value: 'custom', label: 'Custom Range' },
-                            ]}
-                            styles={(theme: MantineTheme) => ({
-                              input: {
-                                backgroundColor: '#232438',
-                                borderColor: theme.colors.grape[8],
-                                color: theme.white,
-                                '&:hover': {
-                                  borderColor: theme.colors.grape[7],
-                                },
-                              },
-                              item: {
-                                backgroundColor: '#232438',
-                                color: theme.white,
-                                '&:hover': {
-                                  backgroundColor: theme.colors.grape[8],
-                                },
-                              },
-                              dropdown: {
-                                backgroundColor: '#232438',
-                                borderColor: theme.colors.grape[8],
-                              },
-                            })}
-                          />
-                          {dateRangeType === 'custom' && (
-                            <DatePickerInput
-                              type="range"
-                              size="sm"
-                              w={200}
-                              value={dateRange}
-                              onChange={setDateRange}
-                              placeholder="Pick date range"
-                              styles={(theme: MantineTheme) => ({
-                                input: {
-                                  backgroundColor: '#232438',
-                                  borderColor: theme.colors.grape[8],
-                                  color: theme.white,
-                                  '&:hover': {
-                                    borderColor: theme.colors.grape[7],
-                                  },
-                                },
-                                calendarHeader: {
-                                  backgroundColor: '#232438',
-                                  color: theme.white,
-                                },
-                                calendarHeaderControl: {
-                                  color: theme.white,
-                                  '&:hover': {
-                                    backgroundColor: theme.colors.grape[8],
-                                  },
-                                },
-                                monthPickerControl: {
-                                  color: theme.white,
-                                  '&:hover': {
-                                    backgroundColor: theme.colors.grape[8],
-                                  },
-                                },
-                                yearPickerControl: {
-                                  color: theme.white,
-                                  '&:hover': {
-                                    backgroundColor: theme.colors.grape[8],
-                                  },
-                                },
-                                day: {
-                                  color: theme.white,
-                                  '&:hover': {
-                                    backgroundColor: theme.colors.grape[8],
-                                  },
-                                },
-                                weekend: {
-                                  color: theme.colors.gray[5],
-                                },
-                                selected: {
-                                  backgroundColor: theme.colors.grape[8],
-                                  '&:hover': {
-                                    backgroundColor: theme.colors.grape[7],
-                                  },
-                                },
-                                inRange: {
-                                  backgroundColor: theme.colors.grape[8],
-                                  '&:hover': {
-                                    backgroundColor: theme.colors.grape[7],
-                                  },
-                                },
-                              })}
-                            />
-                          )}
-                          {totalCount > 0 && (
-                            <Text size="sm" color="dimmed">
-                              {totalCount} conversations in selected range
-                            </Text>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
                     {/* Model Usage Chart */}
                     <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
                       <Title
@@ -1044,7 +1043,6 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           w={150}
                         />
                       </div>
-
                       {view === 'hour' ? (
                         <ConversationsPerHourChart
                           data={filteredConversationStats?.per_hour}
