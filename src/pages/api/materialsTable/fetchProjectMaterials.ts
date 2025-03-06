@@ -1,5 +1,4 @@
 import { supabase } from '@/utils/supabaseClient'
-import { getAuth } from '@clerk/nextjs/server'
 import posthog from 'posthog-js'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { PostgrestError } from '@supabase/supabase-js'

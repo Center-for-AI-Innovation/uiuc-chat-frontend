@@ -68,7 +68,6 @@ const CourseMain: NextPage = () => {
     setIsLoading(false)
 }, [router.isReady, !auth.isLoading, metadata])
 
-  // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
   if (isLoading) {
     return <LoadingPlaceholderForAdminPages />
   }

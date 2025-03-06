@@ -36,7 +36,6 @@ const MakeOldCoursePage = ({
   metadata: CourseMetadata
   current_email: string
 }) => {
-  // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
   const [bannerUrl, setBannerUrl] = useState<string>('')
 
   const router = useRouter()

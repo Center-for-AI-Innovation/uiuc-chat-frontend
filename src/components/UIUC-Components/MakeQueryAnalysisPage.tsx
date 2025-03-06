@@ -910,7 +910,6 @@ interface CourseFilesListProps {
 }
 import { IconTrash } from '@tabler/icons-react'
 import { MainPageBackground } from './MainPageBackground'
-import { extractEmailsFromClerk } from './clerkHelpers'
 import { notifications } from '@mantine/notifications'
 import GlobalFooter from './GlobalFooter'
 import Navbar from './navbars/Navbar'

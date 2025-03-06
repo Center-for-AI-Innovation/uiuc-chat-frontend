@@ -68,7 +68,7 @@ const NotAuthorizedPage: NextPage = () => {
 
       if (auth.isLoading) {
         console.log(
-          'in [course_name]/index.tsx -- clerk_user loaded and working :)',
+          'in [course_name]/index.tsx -- keycloak_user loaded and working :)',
         )
         if (courseMetadata != null) {
           const permission_str = get_user_permission(
@@ -102,7 +102,7 @@ const NotAuthorizedPage: NextPage = () => {
         }
       } else {
         console.log(
-          'in [course_name]/index.tsx -- clerk_user NOT LOADED yet...',
+          'in [course_name]/index.tsx -- keycloak_user NOT LOADED yet...',
         )
       }
     })

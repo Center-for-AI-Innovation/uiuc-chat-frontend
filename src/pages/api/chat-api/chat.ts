@@ -10,7 +10,6 @@ import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { validateApiKeyAndRetrieveData } from './keys/validate'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import posthog from 'posthog-js'
-// import { User } from '@clerk/nextjs/server'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { CourseMetadata } from '~/types/courseMetadata'
 import {
