@@ -59,13 +59,10 @@ async function updateKeycloakRedirectURIs() {
     const currentWebOrigins = new Set(client.webOrigins || []);
 
     // Add to redirect URIs
-    // currentRedirectUris.add(vercelBaseUrl); // Add deployment-specific URL
-    // currentRedirectUris.add(`${vercelBaseUrl}/*`);
     currentRedirectUris.add(branchUrl); // Add branch URL
     currentRedirectUris.add(`${branchUrl}/*`);
 
     // Add to web origins
-    // currentWebOrigins.add(vercelBaseUrl);
     currentWebOrigins.add(branchUrl);
 
     // Update client
@@ -87,8 +84,6 @@ async function updateKeycloakRedirectURIs() {
 
     console.log('Successfully updated Keycloak client configuration:', {
       redirectUris: {
-        // deploymentUrl: vercelBaseUrl,
-        // deploymentUrlWildcard: `${vercelBaseUrl}/*`,
         branchUrl,
         branchUrlWildcard: `${branchUrl}/*`
       },
