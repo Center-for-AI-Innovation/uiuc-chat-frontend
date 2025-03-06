@@ -1,3 +1,4 @@
+import { ChatBody } from '~/types/chat'
 import {
   OllamaProvider,
   ProviderNames,
@@ -87,7 +88,7 @@ export const OllamaModels: Record<OllamaModelIDs, OllamaModel> = {
   //   name: 'Llama 3.1 7B',
   //   parameterSize: '70B',
   //   tokenLimit: 128000,
-  //   usableTokenLimit: 2000, // NOT SURE OF TRUE VALUE! 
+  //   usableTokenLimit: 2000, // NOT SURE OF TRUE VALUE!
   //   enabled: true,
   // },
   // [OllamaModelIDs.LLAMA31_8b]: {
@@ -95,7 +96,7 @@ export const OllamaModels: Record<OllamaModelIDs, OllamaModel> = {
   //   name: 'Llama 3.1 8B (quantized)',
   //   parameterSize: '8B',
   //   tokenLimit: 128000,
-  //   usableTokenLimit: 12_000, // NOT SURE OF TRUE VALUE! 
+  //   usableTokenLimit: 12_000, // NOT SURE OF TRUE VALUE!
   //   enabled: true,
   // },
   // [OllamaModelIDs.LLAMA31_latest]: {

@@ -11,6 +11,7 @@ import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { Flex } from '@mantine/core'
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 import { GetStaticPaths, GetStaticProps } from 'next'
+import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 
 const ApiPage: NextPage = () => {
   const router = useRouter()
@@ -83,6 +84,16 @@ const ApiPage: NextPage = () => {
     return <></>
   }
 
+  // const styles = {
+  //   container: {
+  //     backgroundColor: 'var(--illinois-background-dark)',
+  //     color: 'var(--illinois-white)',
+  //   },
+  //   header: {
+  //     borderBottom: '1px solid var(--illinois-storm-light)',
+  //   },
+  // };
+
   return (
     <>
       <Navbar course_name={router.query.course_name as string} />
@@ -95,6 +106,7 @@ const ApiPage: NextPage = () => {
             />
           </Flex>
         </div>
+        <GlobalFooter />
       </main>
     </>
   )

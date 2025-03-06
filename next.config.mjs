@@ -3,7 +3,6 @@
  * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially useful
  * for Docker builds.
  */
-await import('./src/env.mjs')
 import nextI18NextConfig from './next-i18next.config.mjs'
 import withBundleAnalyzer from '@next/bundle-analyzer'
 
@@ -14,6 +13,11 @@ const bundleAnalyzerConfig = {
 /** @type {import("next").NextConfig} */
 const config = {
   i18n: nextI18NextConfig.i18n,
+  serverRuntimeConfig: {
+    bodyParser: {
+      sizeLimit: '100mb',
+    },
+  },
   webpack(config) {
     // Merge existing experiments with the required ones
     config.experiments = {

@@ -34,6 +34,8 @@ import { fetchPresignedUrl } from '~/utils/apiUtils'
 
 import { type CourseMetadata } from '~/types/courseMetadata'
 
+import { SourcesSidebarProvider } from './ChatMessage'
+
 interface Props {
   stopConversationRef: MutableRefObject<boolean>
   courseMetadata: CourseMetadata
@@ -54,7 +56,6 @@ import {
   getOpenAIKey,
   handleContextSearch,
   processChunkWithStateMachine,
-  routeModelRequest,
 } from '~/utils/streamProcessing'
 import {
   handleFunctionCall,
@@ -74,7 +75,6 @@ import { useUpdateConversation } from '~/hooks/conversationQueries'
 import { motion } from 'framer-motion'
 import { useDeleteMessages } from '~/hooks/messageQueries'
 import { AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
-import util from 'util'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -106,12 +106,7 @@ export const Chat = memo(
       return router.asPath.slice(1).split('/')[0] as string
     }
     const user_email = extractEmailsFromClerk(clerk_obj.user)[0]
-    // const [user_email, setUserEmail] = useState<string | undefined>(undefined)
 
-    // const updateConversationMutation = useUpdateConversation(
-    //   user_email as string,
-    //   queryClient,
-    // )
     const [chat_ui] = useState(new ChatUI(new MLCEngine()))
 
     const [inputContent, setInputContent] = useState<string>('')
@@ -133,7 +128,6 @@ export const Chat = memo(
       isLoading: isLoadingTools,
       isError: isErrorTools,
       error: toolLoadingError,
-      // refetch: refetchTools,
     } = useFetchAllWorkflows(getCurrentPageName())
 
     useEffect(() => {
@@ -155,20 +149,14 @@ export const Chat = memo(
         conversations,
         apiKey,
         pluginKeys,
-        serverSideApiKeyIsSet,
         messageIsStreaming,
         modelError,
         loading,
-        prompts,
         showModelSettings,
-        isImg2TextLoading,
-        isRouting,
-        isRunningTool, // TODO change to isFunctionCallLoading
-        isRetrievalLoading,
         documentGroups,
         tools,
-        webLLMModelIdLoading,
         llmProviders,
+        selectedModel,
       },
       handleUpdateConversation,
       handleFeedbackUpdate,
@@ -202,14 +190,12 @@ export const Chat = memo(
 
     const [currentMessage, setCurrentMessage] = useState<Message>()
     const [autoScrollEnabled, setAutoScrollEnabled] = useState<boolean>(true)
-    // const [showSettings, setShowSettings] = useState<boolean>(false)
     const [showScrollDownButton, setShowScrollDownButton] =
       useState<boolean>(false)
 
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const chatContainerRef = useRef<HTMLDivElement>(null)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
-    // const createConversationMutation = useCreateConversation(queryClient)
     const updateConversationMutation = useUpdateConversation(
       currentEmail,
       queryClient,
@@ -531,9 +517,17 @@ export const Chat = memo(
 
                   Remember: This query optimization is for vector database retrieval only, not for the final LLM prompt.`
 
-                // Get conversation context (last 6 messages or fewer)
+                // Get the last user message and some context
+                const lastUserMessageIndex =
+                  selectedConversation?.messages?.findLastIndex(
+                    (msg) => msg.role === 'user',
+                  )
+                const contextStartIndex = Math.max(0, lastUserMessageIndex - 5) // Get up to 5 messages before the last user message
                 const contextMessages =
-                  selectedConversation?.messages?.slice(-6) || []
+                  selectedConversation?.messages?.slice(
+                    contextStartIndex,
+                    lastUserMessageIndex,
+                  ) || [] // Removed +1 to exclude last user message
 
                 const queryRewriteConversation: Conversation = {
                   id: uuidv4(),
@@ -615,7 +609,10 @@ export const Chat = memo(
                   courseMetadata: courseMetadata,
                   llmProviders: llmProviders,
                   model: selectedConversation.model,
+                  mode: 'chat',
                 }
+
+                console.log('queryRewriteBody:', queryRewriteBody)
 
                 if (!queryRewriteBody.model || !queryRewriteBody.model.id) {
                   queryRewriteBody.model = selectedConversation.model
@@ -817,6 +814,7 @@ export const Chat = memo(
             llmProviders: llmProviders,
             model: selectedConversation.model,
             skipQueryRewrite: documentCount === 0,
+            mode: 'chat',
           }
           updatedConversation = finalChatBody.conversation!
 
@@ -870,19 +868,37 @@ export const Chat = memo(
             }
           } else {
             try {
-              // Route to the specific model provider
-              // response = await routeModelRequest(chatBody, controller)
-
               // CALL OUR NEW ENDPOINT... /api/chat
               startOfCallToLLM = performance.now()
-              response = await fetch('/api/allNewRoutingChat', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(finalChatBody),
-              })
-              console.log('response from /api/chat', response)
+              try {
+                response = await fetch('/api/allNewRoutingChat', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(finalChatBody),
+                })
+                console.log('response from /api/chat', response)
+
+                // Check if response is ok before proceeding
+                if (!response.ok) {
+                  const errorData = await response.json()
+                  throw new Error(
+                    errorData.error || 'Failed to get response from the server',
+                  )
+                }
+              } catch (error) {
+                // TODO: Improve error messages here...
+                console.error('Error routing to model provider:', error)
+                errorToast({
+                  title: 'Error routing to model provider',
+                  message:
+                    (error as Error).message || 'An unexpected error occurred',
+                })
+                homeDispatch({ field: 'loading', value: false })
+                homeDispatch({ field: 'messageIsStreaming', value: false })
+                return
+              }
             } catch (error) {
               // TODO: Improve error messages here...
               console.error('Error routing to model provider:', error)
@@ -891,6 +907,9 @@ export const Chat = memo(
                 message:
                   (error as Error).message || 'An unexpected error occurred',
               })
+              homeDispatch({ field: 'loading', value: false })
+              homeDispatch({ field: 'messageIsStreaming', value: false })
+              return
             }
           }
 
@@ -1102,7 +1121,6 @@ export const Chat = memo(
 
             try {
               // This is after the response is done streaming
-              // saveConversation(updatedConversation)
               console.debug(
                 'updatedConversation after streaming:',
                 updatedConversation,
@@ -1197,12 +1215,10 @@ export const Chat = memo(
               // Do we need this?
               // saveConversation(updatedConversation)
               const updatedConversations: Conversation[] = conversations.map(
-                (conversation) => {
-                  if (conversation.id === selectedConversation.id) {
-                    return updatedConversation
-                  }
-                  return conversation
-                },
+                (conversation) =>
+                  conversation.id === selectedConversation.id
+                    ? updatedConversation
+                    : conversation,
               )
               if (updatedConversations.length === 0) {
                 updatedConversations.push(updatedConversation)
@@ -1228,46 +1244,172 @@ export const Chat = memo(
       ],
     )
 
-    const handleRegenerate = useCallback(() => {
-      if (currentMessage && Array.isArray(currentMessage.content)) {
-        // Find the index of the existing image description
-        const imgDescIndex = (currentMessage.content as Content[]).findIndex(
-          (content) =>
-            content.type === 'text' &&
-            (content.text as string).startsWith('Image description: '),
-        )
+    const handleRegenerate = useCallback(
+      async (messageIndex?: number) => {
+        try {
+          if (!selectedConversation) {
+            return
+          }
 
-        if (imgDescIndex !== -1) {
-          // Remove the existing image description
-          ;(currentMessage.content as Content[]).splice(imgDescIndex, 1)
-        }
-        if (
-          selectedConversation?.messages[
-            selectedConversation?.messages?.length - 1
-          ]?.role === 'user'
-        ) {
-          // console.log('user')
+          // If no messageIndex is provided, regenerate the last message
+          const targetIndex =
+            messageIndex !== undefined
+              ? messageIndex
+              : selectedConversation.messages.length - 1
+
+          // Get the message to regenerate
+          const messageToRegenerate = selectedConversation.messages[targetIndex]
+          if (!messageToRegenerate) {
+            return
+          }
+
+          // Create a temporary conversation with messages up to the target message
+          const tempConversation = {
+            ...selectedConversation,
+            messages: selectedConversation.messages.slice(0, targetIndex + 1),
+          }
+
+          // If there's a model selected in the context, use that instead of the conversation's model
+          if (selectedModel) {
+            tempConversation.model = selectedModel
+          }
+
+          // Determine if we need to delete one or two messages
+          // If the target message is from the user, we delete one message (just the user message)
+          // If the target message is from the assistant, we delete two messages (the assistant message and the user message before it)
+          let deleteCount = 1
+          let userMessageToRegenerate: Message
+
+          if (messageToRegenerate.role === 'assistant' && targetIndex > 0) {
+            deleteCount = 2
+            // If regenerating an assistant message, use the user message before it
+            const prevUserMessage =
+              selectedConversation.messages[targetIndex - 1]
+
+            // Ensure prevUserMessage exists
+            if (!prevUserMessage) {
+              throw new Error('Previous user message not found')
+            }
+
+            // Clear contexts from both the assistant message and the user message
+            messageToRegenerate.contexts = []
+            messageToRegenerate.wasQueryRewritten = undefined
+            messageToRegenerate.queryRewriteText = undefined
+
+            userMessageToRegenerate = {
+              ...prevUserMessage,
+              id: prevUserMessage.id || uuidv4(), // Ensure ID is always defined
+              role: 'user', // Ensure role is always defined
+              content: prevUserMessage.content, // Ensure content is always defined
+              contexts: [], // Clear contexts for fresh search
+              wasQueryRewritten: undefined, // Clear previous query rewrite information
+              queryRewriteText: undefined, // Clear previous query rewrite text
+            } as Message
+          } else {
+            // If regenerating a user message
+            userMessageToRegenerate = {
+              ...messageToRegenerate,
+              id: messageToRegenerate.id || uuidv4(), // Ensure ID is always defined
+              role: 'user', // Ensure role is always defined
+              content: messageToRegenerate.content, // Ensure content is always defined
+              contexts: [], // Clear contexts for fresh search
+              wasQueryRewritten: undefined, // Clear previous query rewrite information
+              queryRewriteText: undefined, // Clear previous query rewrite text
+            } as Message
+          }
+
+          // Calculate how many messages to delete from the end of the conversation
+          const messagesToDeleteCount =
+            selectedConversation.messages.length -
+            (targetIndex + 1 - deleteCount)
+
+          // Get the messages that will be deleted
+          const messagesToDelete = selectedConversation.messages.slice(
+            targetIndex + 1 - deleteCount,
+          )
+
+          // Create a modified conversation for query rewriting that doesn't include the messages being regenerated
+          const modifiedConversation = {
+            ...tempConversation,
+            messages: tempConversation.messages.slice(
+              0,
+              tempConversation.messages.length - deleteCount,
+            ),
+          }
+
+          // CRITICAL: Ensure the modified conversation ends with the user message we want to regenerate
+          // This ensures buildPrompt can find the last user input
+          modifiedConversation.messages.push(userMessageToRegenerate)
+
+          // Reset query rewriting state in the global context
+          homeDispatch({ field: 'wasQueryRewritten', value: undefined })
+          homeDispatch({ field: 'queryRewriteText', value: undefined })
+
+          // IMPORTANT: Update the selected conversation with the modified one BEFORE proceeding with handleSend
+          // This ensures that the query rewriting process uses the correct conversation state
+          homeDispatch({
+            field: 'selectedConversation',
+            value: modifiedConversation,
+          })
+
+          // Wait for state update to propagate before proceeding
+          await new Promise((resolve) => setTimeout(resolve, 0))
+
+          // Ensure we have a valid API key before proceeding
+          // This is crucial after page refresh when the key might not be in memory
+          let currentApiKey = apiKey
+
+          // If we don't have an API key in the state, try to get it from localStorage
+          if (!currentApiKey && !courseMetadata?.openai_api_key) {
+            const storedApiKey = localStorage.getItem('apiKey')
+            if (storedApiKey) {
+              // Update the API key in the state
+              homeDispatch({ field: 'apiKey', value: storedApiKey })
+              currentApiKey = storedApiKey
+            }
+          }
+
+          // Call handleSend with the prepared message and delete count
           handleSend(
-            currentMessage,
-            1,
+            userMessageToRegenerate,
+            messagesToDeleteCount,
             null,
             tools,
             enabledDocumentGroups,
             llmProviders,
           )
-        } else {
-          // console.log('assistant')
-          handleSend(
-            currentMessage,
-            2,
-            null,
-            tools,
-            enabledDocumentGroups,
-            llmProviders,
-          )
+
+          // Ensure the messages are deleted from the database
+          if (messagesToDelete.length > 0) {
+            await deleteMessagesMutation.mutate({
+              convoId: selectedConversation.id,
+              deletedMessages: messagesToDelete,
+            })
+          }
+        } catch (error) {
+          console.error('Error in handleRegenerate:', error)
+          errorToast({
+            title: 'Regeneration Error',
+            message:
+              error instanceof Error
+                ? error.message
+                : 'An unexpected error occurred while regenerating the message.',
+          })
         }
-      }
-    }, [currentMessage, handleSend])
+      },
+      [
+        selectedConversation,
+        handleSend,
+        llmProviders,
+        tools,
+        enabledDocumentGroups,
+        selectedModel,
+        homeDispatch,
+        deleteMessagesMutation,
+        apiKey,
+        courseMetadata,
+      ],
+    )
 
     const scrollToBottom = useCallback(() => {
       if (autoScrollEnabled) {
@@ -1276,83 +1418,151 @@ export const Chat = memo(
       }
     }, [autoScrollEnabled])
 
+    // Add a state to track if user has manually scrolled
+    const [userHasScrolled, setUserHasScrolled] = useState<boolean>(false)
+
+    // Add a more aggressive scroll to bottom function that doesn't depend on autoScrollEnabled
+    const forceScrollToBottom = useCallback(() => {
+      // Only force scroll if user hasn't manually scrolled
+      if (!userHasScrolled && chatContainerRef.current) {
+        // Use scrollTo with behavior: 'instant' for immediate scrolling
+        chatContainerRef.current.scrollTo({
+          top: chatContainerRef.current.scrollHeight,
+          behavior: 'instant',
+        })
+
+        if (messagesEndRef.current) {
+          // Use scrollIntoView with block: 'end' to ensure we're at the bottom
+          messagesEndRef.current.scrollIntoView({
+            behavior: 'auto',
+            block: 'end',
+          })
+        }
+      }
+    }, [userHasScrolled])
+
+    // Add a useEffect to handle conversation selection with multiple scroll attempts
+    useEffect(() => {
+      if (selectedConversation?.id) {
+        // Reset scroll state for new conversation
+        setUserHasScrolled(false)
+        setAutoScrollEnabled(true)
+        setShowScrollDownButton(false)
+
+        // Initial scroll
+        forceScrollToBottom()
+
+        // Handle any dynamic content adjustments with a short delay
+        const timeoutId = setTimeout(() => {
+          if (!userHasScrolled) {
+            forceScrollToBottom()
+          }
+        }, 100)
+
+        return () => clearTimeout(timeoutId)
+      }
+    }, [selectedConversation?.id, forceScrollToBottom])
+
+    // Add a ResizeObserver to detect content size changes and maintain scroll position
+    useEffect(() => {
+      if (!chatContainerRef.current) return
+
+      let initialRender = true
+      let lastScrollHeight = chatContainerRef.current.scrollHeight
+      let lastScrollTop = chatContainerRef.current.scrollTop
+
+      const resizeObserver = new ResizeObserver(() => {
+        if (!chatContainerRef.current) return
+
+        // On initial render, allow scrolling to bottom
+        if (initialRender) {
+          forceScrollToBottom()
+          initialRender = false
+          return
+        }
+
+        // Calculate how close to bottom we were before resize
+        const wasAtBottom =
+          lastScrollTop + chatContainerRef.current.clientHeight >=
+          lastScrollHeight - 30
+
+        // If user was at bottom before resize, keep them at bottom
+        if (wasAtBottom && !userHasScrolled) {
+          forceScrollToBottom()
+        } else {
+          // Otherwise maintain relative scroll position
+          const scrollHeightDiff =
+            chatContainerRef.current.scrollHeight - lastScrollHeight
+          chatContainerRef.current.scrollTop = lastScrollTop + scrollHeightDiff
+        }
+
+        // Update last known dimensions
+        lastScrollHeight = chatContainerRef.current.scrollHeight
+        lastScrollTop = chatContainerRef.current.scrollTop
+      })
+
+      // Start observing the chat container
+      resizeObserver.observe(chatContainerRef.current)
+
+      // Clean up the observer when component unmounts
+      return () => {
+        initialRender = false
+        resizeObserver.disconnect()
+      }
+    }, [autoScrollEnabled, forceScrollToBottom, userHasScrolled])
+
     const handleScroll = () => {
       if (chatContainerRef.current) {
         const { scrollTop, scrollHeight, clientHeight } =
           chatContainerRef.current
         const bottomTolerance = 30
 
-        if (scrollTop + clientHeight < scrollHeight - bottomTolerance) {
+        const isAtBottom =
+          scrollTop + clientHeight >= scrollHeight - bottomTolerance
+
+        // Update scroll button visibility
+        setShowScrollDownButton(!isAtBottom)
+
+        // Only update scroll states when there's a significant change
+        if (!isAtBottom && !userHasScrolled) {
+          setUserHasScrolled(true)
           setAutoScrollEnabled(false)
-          setShowScrollDownButton(true)
         }
-        // else {
-        //   setAutoScrollEnabled(true)
-        //   setShowScrollDownButton(false)
-        // }
       }
     }
 
     const handleScrollDown = () => {
-      chatContainerRef.current?.scrollTo({
-        top: chatContainerRef.current.scrollHeight,
-        behavior: 'smooth',
-      })
-    }
-
-    const handleSettings = () => {
-      homeDispatch({ field: 'showModelSettings', value: !showModelSettings })
-    }
-
-    const onClearAll = () => {
-      if (
-        confirm(t<string>('Are you sure you want to clear all messages?')) &&
-        selectedConversation
-      ) {
-        // Clear all messages, not used
-        handleUpdateConversation(selectedConversation, {
-          key: 'messages',
-          value: [],
+      if (chatContainerRef.current) {
+        chatContainerRef.current.scrollTo({
+          top: chatContainerRef.current.scrollHeight,
+          behavior: 'auto',
         })
+
+        messagesEndRef.current?.scrollIntoView({
+          behavior: 'auto',
+          block: 'end',
+        })
+
+        // Only update necessary states for scroll button
+        setShowScrollDownButton(false)
+        setAutoScrollEnabled(true)
       }
     }
-
-    const scrollDown = () => {
-      if (autoScrollEnabled) {
-        messagesEndRef.current?.scrollIntoView(true)
-      }
-    }
-    const throttledScrollDown = throttle(scrollDown, 250)
-
-    useEffect(() => {
-      if (messageIsStreaming) throttledScrollDown()
-      if (selectedConversation) {
-        const messages = selectedConversation.messages
-        if (messages?.length > 1) {
-          if (messages[messages?.length - 1]?.role === 'assistant') {
-            setCurrentMessage(messages[messages?.length - 2])
-          } else {
-            setCurrentMessage(messages[messages?.length - 1])
-          }
-        } else if (messages?.length === 1) {
-          setCurrentMessage(messages[0])
-        } else {
-          setCurrentMessage(undefined)
-        }
-      }
-    }, [selectedConversation, throttledScrollDown])
 
     useEffect(() => {
       const observer = new IntersectionObserver(
         ([entry]) => {
-          setAutoScrollEnabled(entry?.isIntersecting || false)
-          if (entry?.isIntersecting) {
-            textareaRef.current?.focus()
+          // Only enable auto-scroll if user explicitly scrolls to bottom
+          if (entry?.isIntersecting && userHasScrolled) {
+            setAutoScrollEnabled(true)
+            setUserHasScrolled(false)
           }
+          setShowScrollDownButton(!entry?.isIntersecting)
         },
         {
           root: null,
-          threshold: 0.5,
+          threshold: 0.9, // Increase threshold to require more visibility
+          rootMargin: '-10px', // Add small margin to make threshold more precise
         },
       )
       const messagesEndElement = messagesEndRef.current
@@ -1364,7 +1574,7 @@ export const Chat = memo(
           observer.unobserve(messagesEndElement)
         }
       }
-    }, [messagesEndRef])
+    }, [messagesEndRef, userHasScrolled])
 
     const statements =
       courseMetadata?.example_questions &&
@@ -1384,9 +1594,19 @@ export const Chat = memo(
             <Text
               className={`mb-2 text-lg text-white ${montserrat_heading.variable} font-montserratHeading`}
               style={{ whiteSpace: 'pre-wrap' }}
-            >
-              {courseMetadata?.course_intro_message}
-            </Text>
+              dangerouslySetInnerHTML={{
+                __html:
+                  courseMetadata?.course_intro_message
+                    ?.replace(
+                      /(https?:\/\/([^\s]+))/g,
+                      '<a href="https://$1" target="_blank" rel="noopener noreferrer" class="text-purple-400 hover:underline">$2</a>',
+                    )
+                    ?.replace(
+                      /href="https:\/\/(https?:\/\/)/g,
+                      'href="https://',
+                    ) || '',
+              }}
+            />
 
             <h4
               className={`text-md mb-2 text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
@@ -1394,31 +1614,35 @@ export const Chat = memo(
               {getCurrentPageName() === 'cropwizard-1.5' && (
                 <CropwizardLicenseDisclaimer />
               )}
-              Start a conversation below or try the following examples
+              {getCurrentPageName() !== 'chat' && (
+                <p>Start a conversation below or try these examples</p>
+              )}
             </h4>
             <div className="mt-4 flex flex-col items-start space-y-2 overflow-hidden">
-              {statements.map((statement, index) => (
-                <div
-                  key={index}
-                  className="w-full rounded-lg border-b-2 border-[rgba(42,42,64,0.4)] hover:cursor-pointer hover:bg-[rgba(42,42,64,0.9)]"
-                  onClick={() => {
-                    setInputContent('') // First clear the input
-                    setTimeout(() => {
-                      // Then set it with a small delay
-                      setInputContent(statement)
-                      textareaRef.current?.focus()
-                    }, 0)
-                  }}
-                >
-                  <Button
-                    variant="link"
-                    className={`text-md h-auto p-2 font-bold leading-relaxed text-white hover:underline ${montserrat_paragraph.variable} font-montserratParagraph `}
+              {/* if getCurrentPageName is 'chat' then don't show any example questions */}
+              {getCurrentPageName() !== 'chat' &&
+                statements.map((statement, index) => (
+                  <div
+                    key={index}
+                    className="w-full rounded-lg border-b-2 border-[rgba(42,42,64,0.4)] hover:cursor-pointer hover:bg-[rgba(42,42,64,0.9)]"
+                    onClick={() => {
+                      setInputContent('') // First clear the input
+                      setTimeout(() => {
+                        // Then set it with a small delay
+                        setInputContent(statement)
+                        textareaRef.current?.focus()
+                      }, 0)
+                    }}
                   >
-                    <IconArrowRight size={25} className="mr-2 min-w-[40px]" />
-                    <p className="whitespace-break-spaces">{statement}</p>
-                  </Button>
-                </div>
-              ))}
+                    <Button
+                      variant="link"
+                      className={`text-md h-auto p-2 font-bold leading-relaxed text-white hover:underline ${montserrat_paragraph.variable} font-montserratParagraph `}
+                    >
+                      <IconArrowRight size={25} className="mr-2 min-w-[40px]" />
+                      <p className="whitespace-break-spaces">{statement}</p>
+                    </Button>
+                  </div>
+                ))}
             </div>
           </div>
           <div
@@ -1504,7 +1728,7 @@ export const Chat = memo(
     const handleFeedback = useCallback(
       async (
         message: Message,
-        isPositive: boolean,
+        isPositive: boolean | null,
         category?: string,
         details?: string,
       ) => {
@@ -1548,10 +1772,58 @@ export const Chat = memo(
 
         try {
           // Update localStorage
-          localStorage.setItem(
-            'selectedConversation',
-            JSON.stringify(updatedConversation),
-          )
+          try {
+            localStorage.setItem(
+              'selectedConversation',
+              JSON.stringify(updatedConversation),
+            )
+          } catch (storageError) {
+            // Handle localStorage quota exceeded error
+            if (
+              storageError instanceof DOMException &&
+              (storageError.name === 'QuotaExceededError' ||
+                storageError.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+                storageError.code === 22 ||
+                storageError.code === 1014)
+            ) {
+              console.warn(
+                'localStorage quota exceeded in handleFeedback, saving minimal conversation data instead',
+              )
+
+              // Create a minimal version of the conversation with just essential data
+              const minimalConversation = {
+                id: updatedConversation.id,
+                name: updatedConversation.name,
+                model: updatedConversation.model,
+                temperature: updatedConversation.temperature,
+                folderId: updatedConversation.folderId,
+                userEmail: updatedConversation.userEmail,
+                projectName: updatedConversation.projectName,
+                createdAt: updatedConversation.createdAt,
+                updatedAt: updatedConversation.updatedAt,
+              }
+
+              try {
+                // Try to save the minimal version
+                localStorage.setItem(
+                  'selectedConversation',
+                  JSON.stringify(minimalConversation),
+                )
+              } catch (minimalError) {
+                // If even minimal version fails, just log the error
+                console.error(
+                  'Failed to save even minimal conversation data to localStorage',
+                  minimalError,
+                )
+              }
+            } else {
+              // Some other error occurred
+              console.error(
+                'Error saving conversation to localStorage:',
+                storageError,
+              )
+            }
+          }
 
           // Update the conversation using handleUpdateConversation
           handleFeedbackUpdate(updatedConversation, {
@@ -1599,98 +1871,102 @@ export const Chat = memo(
     return (
       <>
         <Head>
-          <title>{getCurrentPageName()} - UIUC.chat</title>
+          <title>{getCurrentPageName()} - Illinois Chat</title>
           <meta
             name="description"
-            content="The AI teaching assistant built for students at UIUC."
+            content="The easiest way to train your own AI model and share it like a Google doc."
           />
           <link rel="icon" href="/favicon.ico" />
         </Head>
-        <div className="overflow-wrap relative flex h-screen w-full flex-col overflow-hidden bg-white dark:bg-[#15162c]">
-          <div className="justify-center" style={{ height: '40px' }}>
-            <ChatNavbar bannerUrl={bannerUrl as string} isgpt4={true} />
-          </div>
-          <div className="mt-10 max-w-full flex-grow overflow-y-auto overflow-x-hidden">
-            {modelError ? (
-              <ErrorMessageDiv error={modelError} />
-            ) : (
-              <>
-                <motion.div
-                  key={selectedConversation?.id}
-                  className="mt-4 max-h-full"
-                  ref={chatContainerRef}
-                  onScroll={handleScroll}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.25, ease: 'easeInOut' }}
-                >
-                  {selectedConversation &&
-                  selectedConversation.messages &&
-                  selectedConversation.messages?.length === 0 ? (
-                    <>
-                      <div className="mt-16">
-                        {renderIntroductoryStatements()}
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      {selectedConversation?.messages?.map((message, index) => (
-                        <MemoizedChatMessage
-                          key={index}
-                          message={message}
-                          contentRenderer={renderMessageContent}
-                          messageIndex={index}
-                          onEdit={(editedMessage) => {
-                            handleSend(
-                              editedMessage,
-                              selectedConversation?.messages?.length - index,
-                              null,
-                              tools,
-                              enabledDocumentGroups,
-                              llmProviders,
-                            )
-                          }}
-                          onFeedback={handleFeedback}
-                          onImageUrlsUpdate={onImageUrlsUpdate}
-                          courseName={courseName}
+        <SourcesSidebarProvider>
+          <div className="overflow-wrap relative flex h-screen w-full flex-col overflow-hidden bg-white dark:bg-[#15162c]">
+            <div className="justify-center" style={{ height: '40px' }}>
+              <ChatNavbar bannerUrl={bannerUrl as string} isgpt4={true} />
+            </div>
+            <div className="mt-10 max-w-full flex-grow overflow-y-auto overflow-x-hidden">
+              {modelError ? (
+                <ErrorMessageDiv error={modelError} />
+              ) : (
+                <>
+                  <motion.div
+                    key={selectedConversation?.id}
+                    className="mt-4 max-h-full"
+                    ref={chatContainerRef}
+                    onScroll={handleScroll}
+                    initial={{ opacity: 1, scale: 1 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.1 }}
+                  >
+                    {selectedConversation &&
+                    selectedConversation.messages &&
+                    selectedConversation.messages?.length === 0 ? (
+                      <>
+                        <div className="mt-16">
+                          {renderIntroductoryStatements()}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {selectedConversation?.messages?.map(
+                          (message, index) => (
+                            <MemoizedChatMessage
+                              key={index}
+                              message={message}
+                              messageIndex={index}
+                              onEdit={(editedMessage) => {
+                                handleSend(
+                                  editedMessage,
+                                  selectedConversation?.messages?.length -
+                                    index,
+                                  null,
+                                  tools,
+                                  enabledDocumentGroups,
+                                  llmProviders,
+                                )
+                              }}
+                              onRegenerate={() => handleRegenerate(index)}
+                              onFeedback={handleFeedback}
+                              onImageUrlsUpdate={onImageUrlsUpdate}
+                              courseName={courseName}
+                            />
+                          ),
+                        )}
+                        {loading && <ChatLoader />}
+                        <div
+                          className="h-[162px] bg-gradient-to-t from-transparent to-[rgba(14,14,21,0.4)]"
+                          ref={messagesEndRef}
                         />
-                      ))}
-                      {loading && <ChatLoader />}
-                      <div
-                        className="h-[162px] bg-gradient-to-t from-transparent to-[rgba(14,14,21,0.4)]"
-                        ref={messagesEndRef}
-                      />
-                    </>
-                  )}
-                </motion.div>
-                {/* <div className="w-full max-w-[calc(100% - var(--sidebar-width))] mx-auto flex justify-center"> */}
-                <ChatInput
-                  stopConversationRef={stopConversationRef}
-                  textareaRef={textareaRef}
-                  onSend={(message, plugin) => {
-                    // setCurrentMessage(message)
-                    handleSend(
-                      message,
-                      0,
-                      plugin,
-                      tools,
-                      enabledDocumentGroups,
-                      llmProviders,
-                    )
-                  }}
-                  onScrollDownClick={handleScrollDown}
-                  onRegenerate={handleRegenerate}
-                  showScrollDownButton={showScrollDownButton}
-                  inputContent={inputContent}
-                  setInputContent={setInputContent}
-                  courseName={getCurrentPageName()}
-                  chat_ui={chat_ui}
-                />
-              </>
-            )}
+                      </>
+                    )}
+                  </motion.div>
+                  {/* <div className="w-full max-w-[calc(100% - var(--sidebar-width))] mx-auto flex justify-center"> */}
+                  <ChatInput
+                    stopConversationRef={stopConversationRef}
+                    textareaRef={textareaRef}
+                    onSend={(message, plugin) => {
+                      handleSend(
+                        message,
+                        0,
+                        plugin,
+                        tools,
+                        enabledDocumentGroups,
+                        llmProviders,
+                      )
+                    }}
+                    onScrollDownClick={handleScrollDown}
+                    showScrollDownButton={showScrollDownButton}
+                    onRegenerate={() => handleRegenerate()}
+                    inputContent={inputContent}
+                    setInputContent={setInputContent}
+                    courseName={getCurrentPageName()}
+                    chat_ui={chat_ui}
+                  />
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        </SourcesSidebarProvider>
       </>
     )
     Chat.displayName = 'Chat'
