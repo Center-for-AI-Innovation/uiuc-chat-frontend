@@ -175,7 +175,7 @@ export default function CanvasIngestForm({
         <DialogContent className="mx-auto h-auto max-h-[85vh] w-[95%] max-w-2xl overflow-y-auto !rounded-2xl border-0 bg-[#1c1c2e] px-4 py-6 text-white sm:px-6">
           <DialogHeader>
             <DialogTitle className="mb-1 text-left text-xl font-bold">
-              Ingest Canvas Course
+              Import Canvas Content
             </DialogTitle>
           </DialogHeader>
 
@@ -212,7 +212,7 @@ export default function CanvasIngestForm({
           </Alert>
 
           <div className="mb-4 overflow-hidden rounded-md">
-            <div className="relative h-0 pb-[40%]">
+            <div className="relative h-0 pb-[58.5%]">
               <iframe
                 className="absolute left-0 top-0 h-full w-full rounded-md"
                 src="https://www.youtube.com/embed/OOy0JD0Gf9g"
@@ -283,7 +283,7 @@ export default function CanvasIngestForm({
             </div>
             <div className="space-y-2">
               <Label className="mb-2 block text-white">
-                Select Content to Ingest
+                Select Content to Import
               </Label>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {[
@@ -325,7 +325,7 @@ export default function CanvasIngestForm({
             disabled={!isUrlValid}
             className="h-11 w-full rounded-xl bg-purple-600 text-white transition-colors hover:bg-purple-700"
           >
-            Ingest Canvas Course
+            Import Canvas Content
           </Button>
         </DialogContent>
       </Dialog>
