@@ -17,7 +17,7 @@ type ApiResponse = {
  */
 export default async function deleteKey(
   req: NextApiRequest,
-  res: NextApiResponse<ApiResponse>
+  res: NextApiResponse<ApiResponse>,
 ) {
   if (req.method !== 'DELETE') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -25,7 +25,9 @@ export default async function deleteKey(
 
   const authHeader = req.headers.authorization
   if (!authHeader?.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Missing or invalid authorization header' })
+    return res
+      .status(401)
+      .json({ error: 'Missing or invalid authorization header' })
   }
 
   try {

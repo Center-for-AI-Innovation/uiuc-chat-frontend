@@ -47,7 +47,7 @@ const ApiPage: NextPage = () => {
 
   // Second useEffect to handle permissions and other dependent data
   useEffect(() => {
-if (auth.isLoading || !auth.isAuthenticated || courseName == null) {
+    if (auth.isLoading || !auth.isAuthenticated || courseName == null) {
       // Do not proceed if we are still loading or if the user data is not loaded yet.
       return
     }
@@ -80,7 +80,7 @@ if (auth.isLoading || !auth.isAuthenticated || courseName == null) {
   }
 
   if (!auth.user || !auth.isAuthenticated) {
-    void initiateSignIn(auth, router.asPath)  
+    void initiateSignIn(auth, router.asPath)
     return null
   }
 

@@ -23,7 +23,9 @@ export default async function fetchKey(
 
   if (!authHeader?.startsWith('Bearer ')) {
     console.log('Missing or invalid auth header')
-    return res.status(401).json({ error: 'Missing or invalid authorization header' })
+    return res
+      .status(401)
+      .json({ error: 'Missing or invalid authorization header' })
   }
 
   try {
@@ -37,7 +39,7 @@ export default async function fetchKey(
       preferred_username: decodedPayload.preferred_username,
       email: decodedPayload.email,
       // Log all claims to see what's available
-      allClaims: decodedPayload
+      allClaims: decodedPayload,
     })
 
     const email = decodedPayload.email
@@ -45,7 +47,7 @@ export default async function fetchKey(
       console.error('No email found in token')
       return res.status(400).json({ error: 'No email found in token' })
     }
-    console.log("User email:", email)
+    console.log('User email:', email)
 
     // First delete any inactive keys for this user
     const { error: deleteError } = await supabase
@@ -55,7 +57,7 @@ export default async function fetchKey(
       .eq('is_active', false)
 
     if (deleteError) {
-      console.error("Error deleting inactive keys:", deleteError)
+      console.error('Error deleting inactive keys:', deleteError)
     }
 
     // Then fetch the remaining (active) key
@@ -69,7 +71,7 @@ export default async function fetchKey(
       data: data,
       recordCount: Array.isArray(data) ? data.length : 0,
       hasError: !!error,
-      error
+      error,
     })
 
     if (error) {

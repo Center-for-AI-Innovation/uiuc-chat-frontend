@@ -19,19 +19,29 @@ type FetchDocumentsResponse = {
  */
 export default async function fetchDocuments(
   req: NextApiRequest,
-  res: NextApiResponse<FetchDocumentsResponse>
+  res: NextApiResponse<FetchDocumentsResponse>,
 ) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { from: fromStr, to: toStr, course_name, filter_key: search_key, filter_value: search_value, sort_column: rawSortColumn, sort_direction } = req.query
+  const {
+    from: fromStr,
+    to: toStr,
+    course_name,
+    filter_key: search_key,
+    filter_value: search_value,
+    sort_column: rawSortColumn,
+    sort_direction,
+  } = req.query
 
   let sort_column = rawSortColumn as string
   let sort_dir = sort_direction === 'asc' // Convert 'asc' to true, 'desc' to false
 
   if (typeof fromStr !== 'string' || typeof toStr !== 'string') {
-    return res.status(400).json({ error: 'Missing required query parameters: from and to' })
+    return res
+      .status(400)
+      .json({ error: 'Missing required query parameters: from and to' })
   }
 
   if (sort_column == null || sort_dir == null) {

@@ -19,7 +19,9 @@ const IfCourseExists: NextPage = () => {
   const { course_name } = router.query
   const [courseName, setCourseName] = useState<string | null>(null)
   const [courseMetadataIsLoaded, setCourseMetadataIsLoaded] = useState(false)
-  const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(null)
+  const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
+    null,
+  )
 
   const getCurrentPageName = () => {
     return router.query.course_name as string
@@ -47,7 +49,7 @@ const IfCourseExists: NextPage = () => {
       setCourseMetadata(metadata)
       setCourseMetadataIsLoaded(true)
     }
-    
+
     if (typeof course_name === 'string' && !AUTH_ROUTES.includes(course_name)) {
       fetchMetadata()
     }
@@ -57,10 +59,7 @@ const IfCourseExists: NextPage = () => {
     const checkAuth = async () => {
       // AUTH
       if (courseMetadata && !auth.isLoading) {
-        const permission_str = get_user_permission(
-          courseMetadata,
-          auth
-        )
+        const permission_str = get_user_permission(courseMetadata, auth)
 
         if (permission_str === 'edit' || permission_str === 'view') {
           console.debug('Can view or edit')
@@ -77,8 +76,12 @@ const IfCourseExists: NextPage = () => {
       }
     }
     checkAuth()
-  }, [auth.isLoading, auth.isAuthenticated, courseMetadata, courseMetadataIsLoaded])
-
+  }, [
+    auth.isLoading,
+    auth.isAuthenticated,
+    courseMetadata,
+    courseMetadataIsLoaded,
+  ])
 
   return (
     <MainPageBackground>

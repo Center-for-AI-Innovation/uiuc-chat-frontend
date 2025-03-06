@@ -35,7 +35,11 @@ import {
   Image,
 } from '@mantine/core'
 
-import { DEFAULT_SYSTEM_PROMPT, GUIDED_LEARNING_PROMPT, DOCUMENT_FOCUS_PROMPT } from '~/utils/app/const'
+import {
+  DEFAULT_SYSTEM_PROMPT,
+  GUIDED_LEARNING_PROMPT,
+  DOCUMENT_FOCUS_PROMPT,
+} from '~/utils/app/const'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
@@ -138,7 +142,7 @@ const CourseMain: NextPage = () => {
   }
   const isSmallScreen = useMediaQuery('(max-width: 1280px)')
   const course_name = GetCurrentPageName() as string
-  
+
   const auth = useAuth()
   const isLoaded = !auth.isLoading
   const isSignedIn = auth.isAuthenticated

@@ -1,10 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
-import {
-  Button,
-  Title,
-  Flex,
-} from '@mantine/core'
+import { Button, Title, Flex } from '@mantine/core'
 import { useAuth } from 'react-oidc-context'
 import { montserrat_heading } from 'fonts'
 import { initiateSignIn } from '~/utils/authHelpers'
@@ -13,7 +9,10 @@ export const AuthComponent = ({ course_name }: { course_name: string }) => {
   const auth = useAuth()
 
   const handleSignIn = () => {
-    void initiateSignIn(auth, course_name === 'new' ? '/new' : `/${course_name}/dashboard`)
+    void initiateSignIn(
+      auth,
+      course_name === 'new' ? '/new' : `/${course_name}/dashboard`,
+    )
   }
   return (
     <>
@@ -42,14 +41,14 @@ export const AuthComponent = ({ course_name }: { course_name: string }) => {
               You must sign in to create or edit content.
             </Title>
             <Link href="/sign-in">
-            <Button
-              className="kas-gradient-text btn"
-              style={{ fontSize: '24px' }}
-              onClick={handleSignIn}
-            >
-              Sign in →
-            </Button>
-          </Link>
+              <Button
+                className="kas-gradient-text btn"
+                style={{ fontSize: '24px' }}
+                onClick={handleSignIn}
+              >
+                Sign in →
+              </Button>
+            </Link>
           </Flex>
         </div>
       </main>

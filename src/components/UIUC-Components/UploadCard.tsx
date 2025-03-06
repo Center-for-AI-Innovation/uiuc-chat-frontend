@@ -27,7 +27,7 @@ import { IconShare } from '@tabler/icons-react'
 import ShareSettingsModal from './ShareSettingsModal'
 import UploadNotification, { type FileUpload } from './UploadNotification'
 import { useQueryClient } from '@tanstack/react-query'
-import { useAuth } from "react-oidc-context"
+import { useAuth } from 'react-oidc-context'
 
 const montserrat_light = Montserrat({
   weight: '400',

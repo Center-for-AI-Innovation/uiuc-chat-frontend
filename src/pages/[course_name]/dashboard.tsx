@@ -25,7 +25,7 @@ const CourseMain: NextPage = () => {
   }
 
   const courseName = getCurrentPageName() as string
-  
+
   const auth = useAuth()
   const [currentEmail, setCurrentEmail] = useState('')
   const [metadata, setMetadata] = useState<CourseMetadata | null>()
@@ -66,14 +66,18 @@ const CourseMain: NextPage = () => {
 
     // Everything is loaded
     setIsLoading(false)
-}, [router.isReady, !auth.isLoading, metadata])
+  }, [router.isReady, !auth.isLoading, metadata])
 
   if (isLoading) {
     return <LoadingPlaceholderForAdminPages />
   }
 
-    if (!auth.isAuthenticated && courseName) {
-    return <button onClick={() => void initiateSignIn(auth, router.asPath)}>Log in</button>
+  if (!auth.isAuthenticated && courseName) {
+    return (
+      <button onClick={() => void initiateSignIn(auth, router.asPath)}>
+        Log in
+      </button>
+    )
   }
 
   if (

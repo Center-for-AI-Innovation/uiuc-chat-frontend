@@ -221,7 +221,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
     }
 
     fetchData()
-}, [currentPageName, !auth.isLoading])
+  }, [currentPageName, !auth.isLoading])
 
   const errorFetchingWorkflowsToast = () => {
     notifications.show({

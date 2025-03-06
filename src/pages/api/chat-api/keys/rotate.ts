@@ -19,7 +19,7 @@ type ApiResponse = {
  */
 export default async function rotateKey(
   req: NextApiRequest,
-  res: NextApiResponse<ApiResponse>
+  res: NextApiResponse<ApiResponse>,
 ) {
   if (req.method !== 'PUT') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -27,7 +27,9 @@ export default async function rotateKey(
 
   const authHeader = req.headers.authorization
   if (!authHeader?.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Missing or invalid authorization header' })
+    return res
+      .status(401)
+      .json({ error: 'Missing or invalid authorization header' })
   }
 
   try {
@@ -36,7 +38,7 @@ export default async function rotateKey(
     const [, payload = ''] = token.split('.')
     const decodedPayload = JSON.parse(Buffer.from(payload, 'base64').toString())
     const email = decodedPayload.email
-    
+
     if (!email) {
       return res.status(400).json({ error: 'No email found in token' })
     }
@@ -57,7 +59,7 @@ export default async function rotateKey(
 
     if (!existingKey || existingKey.length === 0) {
       return res.status(404).json({
-        error: 'API key not found for user, please generate one!'
+        error: 'API key not found for user, please generate one!',
       })
     }
 
@@ -78,12 +80,12 @@ export default async function rotateKey(
 
     return res.status(200).json({
       message: 'API key rotated successfully',
-      newApiKey
+      newApiKey,
     })
   } catch (error) {
     console.error('Failed to rotate API key:', error)
     return res.status(500).json({
-      error: (error as Error).message
+      error: (error as Error).message,
     })
   }
 }

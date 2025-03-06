@@ -33,7 +33,7 @@ const ToolsPage: NextPage = () => {
   const auth = useAuth()
 
   const course_name = GetCurrentPageName() as string
-  
+
   const [courseData, setCourseData] = useState(null)
   const [courseExists, setCourseExists] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -70,21 +70,24 @@ const ToolsPage: NextPage = () => {
   }
 
   if (!auth.isAuthenticated) {
-    return <ProtectedRoute><AuthComponent course_name={course_name} /></ProtectedRoute>
+    return (
+      <ProtectedRoute>
+        <AuthComponent course_name={course_name} />
+      </ProtectedRoute>
+    )
   }
 
   const user_emails = auth.user?.profile?.email ? [auth.user.profile.email] : []
 
-
   // if their account is somehow broken (with no email address)
 
   // Don't edit certain special pages (no context allowed)
-  console.log("course name", course_name)
-  if  (
-    course_name && (course_name.toLowerCase() == 'gpt4' ||
-    course_name.toLowerCase() == 'global' ||
-    course_name.toLowerCase() == 'extreme')
-    
+  console.log('course name', course_name)
+  if (
+    course_name &&
+    (course_name.toLowerCase() == 'gpt4' ||
+      course_name.toLowerCase() == 'global' ||
+      course_name.toLowerCase() == 'extreme')
   ) {
     return <CannotEditGPT4Page course_name={course_name as string} />
   }

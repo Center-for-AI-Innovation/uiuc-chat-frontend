@@ -3,7 +3,7 @@ import type { AuthContextProps } from 'react-oidc-context'
 
 export const get_user_permission = (
   course_metadata: CourseMetadata,
-  auth: AuthContextProps
+  auth: AuthContextProps,
 ) => {
   // const router = useRouter()
 
@@ -19,7 +19,7 @@ export const get_user_permission = (
     }
 
     // if private && not signed in, redirect
-      if (course_metadata.is_private && !auth.isAuthenticated) {
+    if (course_metadata.is_private && !auth.isAuthenticated) {
       console.log('private && not signed in, redirect ', auth.user)
       return 'no_permission'
     }
@@ -29,16 +29,15 @@ export const get_user_permission = (
 
     if (!course_metadata.is_private) {
       // Course is public
-      
+
       if (!auth.isAuthenticated) {
         return 'view'
       }
 
       if (
-        userEmail && (
-          userEmail === course_metadata.course_owner ||
-          course_metadata.course_admins.includes(userEmail)
-        )
+        userEmail &&
+        (userEmail === course_metadata.course_owner ||
+          course_metadata.course_admins.includes(userEmail))
       ) {
         // owner or admin
         return 'edit'
@@ -48,7 +47,7 @@ export const get_user_permission = (
       }
     } else {
       // Course is Private
-      
+
       if (!auth.isAuthenticated) {
         console.log(
           'User is not signed in. Course is private. Auth: no_permission.',
@@ -56,16 +55,18 @@ export const get_user_permission = (
         return 'no_permission'
       }
 
-        if (
-          userEmail && (
-          userEmail === course_metadata.course_owner ||
-          course_metadata.course_admins.includes(userEmail)
-          )
-        ) {
+      if (
+        userEmail &&
+        (userEmail === course_metadata.course_owner ||
+          course_metadata.course_admins.includes(userEmail))
+      ) {
         // You are the course owner or an admin
         // Can edit and view.
         return 'edit'
-      } else if ( userEmail && course_metadata.approved_emails_list.includes(userEmail)) {
+      } else if (
+        userEmail &&
+        course_metadata.approved_emails_list.includes(userEmail)
+      ) {
         // Not owner or admin, can't edit. But is USER so CAN VIEW
         return 'view'
       } else {

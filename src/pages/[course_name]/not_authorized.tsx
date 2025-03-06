@@ -1,4 +1,3 @@
-
 import { useAuth } from 'react-oidc-context'
 import { NextPage } from 'next'
 import { useRouter } from 'next/router'
@@ -14,7 +13,7 @@ import { initiateSignIn } from '~/utils/authHelpers'
 const NotAuthorizedPage: NextPage = () => {
   const router = useRouter()
   const auth = useAuth()
-  
+
   const [componentToRender, setComponentToRender] =
     useState<React.ReactNode | null>(null)
 
@@ -71,10 +70,7 @@ const NotAuthorizedPage: NextPage = () => {
           'in [course_name]/index.tsx -- keycloak_user loaded and working :)',
         )
         if (courseMetadata != null) {
-          const permission_str = get_user_permission(
-            courseMetadata,
-            auth
-          )
+          const permission_str = get_user_permission(courseMetadata, auth)
 
           console.log(
             'in [course_name]/index.tsx -- permission_str',
@@ -108,7 +104,7 @@ const NotAuthorizedPage: NextPage = () => {
     })
   }, [!auth.isLoading, router.isReady])
 
-    if (auth.isLoading || !componentToRender) {
+  if (auth.isLoading || !componentToRender) {
     console.debug('not_authorized.tsx -- Loading spinner')
     return (
       <MainPageBackground>

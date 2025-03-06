@@ -13,12 +13,12 @@ import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { CourseMetadata } from '~/types/courseMetadata'
 import NomicDocumentMap from '~/components/UIUC-Components/NomicDocumentsMap'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
-import {useAuth} from 'react-oidc-context'
+import { useAuth } from 'react-oidc-context'
 
 const CourseMain: NextPage = () => {
   const router = useRouter()
   const [courseName, setCourseName] = useState<string | null>(null)
-  const auth = useAuth() 
+  const auth = useAuth()
   const [isLoading, setIsLoading] = useState(true)
 
   const getCurrentPageName = () => {
@@ -48,7 +48,12 @@ const CourseMain: NextPage = () => {
   }
 
   if (!auth.isAuthenticated) {
-    console.log('User not logged in', auth.isAuthenticated, !auth.isLoading, courseName)
+    console.log(
+      'User not logged in',
+      auth.isAuthenticated,
+      !auth.isLoading,
+      courseName,
+    )
     return <AuthComponent course_name={courseName as string} />
   }
 
