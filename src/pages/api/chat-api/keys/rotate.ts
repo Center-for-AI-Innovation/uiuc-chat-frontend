@@ -3,7 +3,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '@/utils/supabaseClient'
 import { v4 as uuidv4 } from 'uuid'
-// import { getAuth } from '@clerk/nextjs/server'
 
 type ApiResponse = {
   message?: string
@@ -20,7 +19,7 @@ type ApiResponse = {
  */
 export default async function rotateKey(
   req: NextApiRequest,
-  res: NextApiResponse<ApiResponse>
+  res: NextApiResponse<ApiResponse>,
 ) {
   if (req.method !== 'PUT') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -28,24 +27,29 @@ export default async function rotateKey(
 
   const authHeader = req.headers.authorization
   if (!authHeader?.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Missing or invalid authorization header' })
+    return res
+      .status(401)
+      .json({ error: 'Missing or invalid authorization header' })
   }
 
   try {
-    // Get user ID from Keycloak token
+    // Get user email from token
     const token = authHeader.replace('Bearer ', '')
     const [, payload = ''] = token.split('.')
     const decodedPayload = JSON.parse(Buffer.from(payload, 'base64').toString())
-    const subId = decodedPayload.sub
-    const userId = decodedPayload.user_id || subId // Fallback to sub if user_id not present
+    const email = decodedPayload.email
 
-    console.log('Rotating api key for:', subId)
+    if (!email) {
+      return res.status(400).json({ error: 'No email found in token' })
+    }
+
+    console.log('Rotating API key for email:', email)
 
     // Retrieve existing API key
     const { data: existingKey, error: existingKeyError } = await supabase
       .from('api_keys')
       .select('key')
-      .eq(userId.startsWith('user_') ? 'user_id' : 'keycloak_id', userId)
+      .eq('email', email)
       .eq('is_active', true)
 
     if (existingKeyError) {
@@ -55,7 +59,7 @@ export default async function rotateKey(
 
     if (!existingKey || existingKey.length === 0) {
       return res.status(404).json({
-        error: 'API key not found for user, please generate one!'
+        error: 'API key not found for user, please generate one!',
       })
     }
 
@@ -67,7 +71,7 @@ export default async function rotateKey(
     const { error } = await supabase
       .from('api_keys')
       .update({ key: newApiKey, is_active: true, modified_at: new Date() })
-      .match({ [userId.startsWith('user_') ? 'user_id' : 'keycloak_id']: userId })
+      .eq('email', email)
 
     if (error) {
       console.error('Error updating API key:', error)
@@ -76,12 +80,12 @@ export default async function rotateKey(
 
     return res.status(200).json({
       message: 'API key rotated successfully',
-      newApiKey
+      newApiKey,
     })
   } catch (error) {
     console.error('Failed to rotate API key:', error)
     return res.status(500).json({
-      error: (error as Error).message
+      error: (error as Error).message,
     })
   }
 }

@@ -1,4 +1,3 @@
-// src/components/UIUC-Components/ApiKeyManagement.tsx
 import React, { useEffect, useState } from 'react'
 import {
   Card,
@@ -17,7 +16,6 @@ import {
 } from '@mantine/core'
 import { useClipboard, useMediaQuery } from '@mantine/hooks'
 import { showNotification } from '@mantine/notifications'
-// import { type UserResource } from '@clerk/types'
 import { AuthContextProps } from 'react-oidc-context'
 import {
   IconCheck,
@@ -31,18 +29,11 @@ import style from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark'
 import APIRequestBuilder from './APIRequestBuilder'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 
-// NOTE: will need to map userID from clerk to id from KeyCloak
 const ApiKeyManagement = ({
   course_name,
-  // clerk_user,
   auth,
 }: {
   course_name: string
-  // clerk_user: {
-  //   isLoaded: boolean
-  //   isSignedIn: boolean
-  //   user: UserResource | undefined
-  // }
   auth: AuthContextProps
 }) => {
   const theme = useMantineTheme()
@@ -66,25 +57,19 @@ const ApiKeyManagement = ({
 
     getMetadata()
   }, [course_name])
-  // Define a type for the keys of codeSnippets
   type Language = 'curl' | 'python' | 'node'
 
-  // Ensure selectedLanguage is of type Language
   const [selectedLanguage, setSelectedLanguage] = useState<Language>('curl')
 
-  // State to track whether code snippet has been copied
   const [copiedCodeSnippet, setCopiedCodeSnippet] = useState(false)
-  // State to track whether API key has been copied
   const [copiedApiKey, setCopiedApiKey] = useState(false)
 
-  // Function to handle copying of code snippet
   const handleCopyCodeSnippet = (text: string) => {
     copy(text)
     setCopiedCodeSnippet(true)
     setTimeout(() => setCopiedCodeSnippet(false), 2000) // Reset after 2 seconds
   }
 
-  // Function to handle copying of API key
   const handleCopyApiKey = (text: string) => {
     copy(text)
     setCopiedApiKey(true)
@@ -204,7 +189,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
       const response = await fetch(`/api/chat-api/keys/fetch`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${auth.user?.access_token}`,
+          Authorization: `Bearer ${auth.user?.access_token}`,
           'Content-Type': 'application/json',
         },
       })
@@ -224,13 +209,12 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
 
     fetchApiKey()
   }, [auth.isAuthenticated])
-  // }, [clerk_user.isLoaded])
 
   const handleGenerate = async () => {
     const response = await fetch(`/api/chat-api/keys/generate`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${auth.user?.access_token}`,
+        Authorization: `Bearer ${auth.user?.access_token}`,
         'Content-Type': 'application/json',
       },
     })
@@ -255,7 +239,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
     const response = await fetch(`/api/chat-api/keys/rotate`, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${auth.user?.access_token}`,
+        Authorization: `Bearer ${auth.user?.access_token}`,
         'Content-Type': 'application/json',
       },
     })
@@ -280,7 +264,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
     const response = await fetch(`/api/chat-api/keys/delete`, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${auth.user?.access_token}`,
+        Authorization: `Bearer ${auth.user?.access_token}`,
         'Content-Type': 'application/json',
       },
     })
@@ -320,7 +304,6 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
       shadow="xs"
       padding="none"
       radius="xl"
-      // style={{ maxWidth: '85%', width: '100%', marginTop: '2%' }}
       className="mt-[2%] w-[96%] md:w-[90%] 2xl:w-[90%]"
     >
       <Flex

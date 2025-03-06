@@ -1,8 +1,5 @@
-// src/pages/api/chat-api/keys/fetch.ts
-
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '@/utils/supabaseClient'
-// import { getAuth } from '@clerk/nextjs/server'
 
 type ApiResponse = {
   apiKey?: string | null
@@ -26,7 +23,9 @@ export default async function fetchKey(
 
   if (!authHeader?.startsWith('Bearer ')) {
     console.log('Missing or invalid auth header')
-    return res.status(401).json({ error: 'Missing or invalid authorization header' })
+    return res
+      .status(401)
+      .json({ error: 'Missing or invalid authorization header' })
   }
 
   try {
@@ -39,44 +38,40 @@ export default async function fetchKey(
       userId: decodedPayload.user_id,
       preferred_username: decodedPayload.preferred_username,
       email: decodedPayload.email,
-      clerk_id: decodedPayload.clerk_id,
       // Log all claims to see what's available
-      allClaims: decodedPayload
+      allClaims: decodedPayload,
     })
 
-    const keycloak_id = decodedPayload.sub
-    const clerk_id = decodedPayload.clerk_id // Fallback to sub if user_id not present
-    console.log("Keycloak ID:", keycloak_id, "Clerk ID:", clerk_id)
-
-    // const { data, error } = await supabase
-    //   .from('api_keys')
-    //   .select('key')
-    //   .eq('user_id', subId)
-    //   .eq('is_active', true)
+    const email = decodedPayload.email
+    if (!email) {
+      console.error('No email found in token')
+      return res.status(400).json({ error: 'No email found in token' })
+    }
+    console.log('User email:', email)
 
     // First delete any inactive keys for this user
     const { error: deleteError } = await supabase
       .from('api_keys')
       .delete()
-      .or(`user_id.eq."${clerk_id}",keycloak_id.eq."${keycloak_id}"`)
+      .eq('email', email)
       .eq('is_active', false)
 
     if (deleteError) {
-      console.error("Error deleting inactive keys:", deleteError)
+      console.error('Error deleting inactive keys:', deleteError)
     }
 
     // Then fetch the remaining (active) key
     const { data, error } = await supabase
       .from('api_keys')
       .select('key')
-      .or(`user_id.eq."${clerk_id}",keycloak_id.eq."${keycloak_id}"`)
+      .eq('email', email)
+      .eq('is_active', true)
 
     console.log('Supabase query result:', {
-      // hasData: Array.isArray(data) && data.length > 0,
       data: data,
       recordCount: Array.isArray(data) ? data.length : 0,
       hasError: !!error,
-      error
+      error,
     })
 
     if (error) {

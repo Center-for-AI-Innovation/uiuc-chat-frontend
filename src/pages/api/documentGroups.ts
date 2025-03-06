@@ -2,7 +2,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import posthog from 'posthog-js'
 import { CourseDocument } from 'src/types/courseMaterials'
-// import { getAuth } from '@clerk/nextjs/server'
 import {
   addDocumentsToDocGroup,
   fetchDocumentGroups,
@@ -25,7 +24,7 @@ interface RequestBody {
   doc?: CourseDocument
   docGroup?: string
   enabled?: boolean
-  userId?: string 
+  userId?: string
 }
 
 export default async function handler(
@@ -43,8 +42,7 @@ export default async function handler(
         posthog.capture('add_doc_group', {
           distinct_id:
             req.headers['x-forwarded-for'] || req.socket.remoteAddress,
-          // curr_user_id: await getAuth(req).userId,
-          curr_user_id: userId, 
+          curr_user_id: userId,
           course_name: courseName,
           doc_readable_filename: doc.readable_filename,
           doc_unique_identifier:
@@ -58,16 +56,25 @@ export default async function handler(
 
         const sqlResponse = await addDocumentsToDocGroup(courseName, doc)
         if (sqlResponse) {
-          const qdrantResponse = await addDocumentsToDocGroupQdrant(courseName, doc)
+          const qdrantResponse = await addDocumentsToDocGroupQdrant(
+            courseName,
+            doc,
+          )
           if (qdrantResponse && qdrantResponse.status === 'completed') {
             res.status(200).json({ success: true })
           } else {
             // rollback the SQL operation
             await removeDocGroup(courseName, doc, docGroup as string)
-            res.status(500).json({ success: false, error: 'An error occurred during Qdrant update' })
+            res.status(500).json({
+              success: false,
+              error: 'An error occurred during Qdrant update',
+            })
           }
         } else {
-          res.status(500).json({ success: false, error: 'An error occurred during database update' })
+          res.status(500).json({
+            success: false,
+            error: 'An error occurred during database update',
+          })
         }
       } else if (action === 'appendDocGroup' && doc && docGroup) {
         console.log('Appending doc group:', docGroup, 'to doc:', doc)
@@ -75,8 +82,7 @@ export default async function handler(
         posthog.capture('append_doc_group', {
           distinct_id:
             req.headers['x-forwarded-for'] || req.socket.remoteAddress,
-          // curr_user_id: await getAuth(req).userId,
-          curr_user_id: userId, 
+          curr_user_id: userId,
           course_name: courseName,
           doc_readable_filename: doc.readable_filename,
           doc_unique_identifier:
@@ -88,26 +94,36 @@ export default async function handler(
           doc_groups: doc.doc_groups,
           doc_group: docGroup,
         })
-        
+
         if (!doc.doc_groups) {
           doc.doc_groups = []
         }
         if (!doc.doc_groups.includes(docGroup)) {
           doc.doc_groups.push(docGroup)
         }
-        
+
         const sqlResponse = await addDocumentsToDocGroup(courseName, doc)
         if (sqlResponse) {
-          const qdrantResponse = await addDocumentsToDocGroupQdrant(courseName, doc)
+          const qdrantResponse = await addDocumentsToDocGroupQdrant(
+            courseName,
+            doc,
+          )
           if (qdrantResponse && qdrantResponse.status === 'completed') {
             res.status(200).json({ success: true })
           } else {
             // rollback the SQL operation
             await removeDocGroup(courseName, doc, docGroup as string)
-            res.status(500).json({ success: false, error: 'An error occurred during Qdrant update, rolled back SQL changes' })
+            res.status(500).json({
+              success: false,
+              error:
+                'An error occurred during Qdrant update, rolled back SQL changes',
+            })
           }
         } else {
-          res.status(500).json({ success: false, error: 'An error occurred during SQL database update' })
+          res.status(500).json({
+            success: false,
+            error: 'An error occurred during SQL database update',
+          })
         }
       } else if (action === 'removeDocGroup' && doc && docGroup) {
         console.log('Removing doc group: ', docGroup, 'from doc: ', doc)
@@ -115,8 +131,7 @@ export default async function handler(
         posthog.capture('remove_doc_group', {
           distinct_id:
             req.headers['x-forwarded-for'] || req.socket.remoteAddress,
-          // curr_user_id: await getAuth(req).userId,
-          curr_user_id: userId, 
+          curr_user_id: userId,
           course_name: courseName,
           doc_readable_filename: doc.readable_filename,
           doc_unique_identifier:

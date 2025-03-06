@@ -1,8 +1,7 @@
 import { useRouter } from 'next/router'
 import React, { useEffect } from 'react'
 import MakeNewCoursePage from '~/components/UIUC-Components/MakeNewCoursePage'
-// import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
-// import { useUser } from '@clerk/nextjs'
+
 import { useAuth } from 'react-oidc-context'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'

@@ -4,7 +4,6 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '@/utils/supabaseClient'
 import { v4 as uuidv4 } from 'uuid'
 import posthog from 'posthog-js'
-// import { getAuth } from '@clerk/nextjs/server'
 
 type ApiResponse = {
   message?: string
@@ -23,7 +22,7 @@ type ApiResponse = {
  */
 export default async function generateKey(
   req: NextApiRequest,
-  res: NextApiResponse<ApiResponse>
+  res: NextApiResponse<ApiResponse>,
 ) {
   console.log('Received request to generate API key')
 
@@ -35,30 +34,29 @@ export default async function generateKey(
   const authHeader = req.headers.authorization
   if (!authHeader?.startsWith('Bearer ')) {
     console.log('Missing or invalid authorization header')
-    return res.status(401).json({ error: 'Missing or invalid authorization header' })
+    return res
+      .status(401)
+      .json({ error: 'Missing or invalid authorization header' })
   }
 
   try {
-    // Get user ID from Keycloak token
+    // Get user email from token
     const token = authHeader.replace('Bearer ', '')
     const [, payload = ''] = token.split('.')
     const decodedPayload = JSON.parse(Buffer.from(payload, 'base64').toString())
 
-    const keycloak_id = decodedPayload.sub
-    const clerk_id = decodedPayload.clerk_id
-    const preferred_id = clerk_id || keycloak_id
-
-    if (!preferred_id) {
-      throw new Error('No user identifier found in token')
+    const email = decodedPayload.email
+    if (!email) {
+      throw new Error('No email found in token')
     }
 
-    console.log('Generating API key for user:', preferred_id)
+    console.log('Generating API key for user email:', email)
 
     // Check if the user already has an API key
     const { data: keys, error: existingKeyError } = await supabase
       .from('api_keys')
       .select('key, is_active')
-      .eq(preferred_id.startsWith('user_') ? 'user_id' : 'keycloak_id', preferred_id)
+      .eq('email', email)
       .eq('is_active', true)
 
     if (existingKeyError) {
@@ -80,23 +78,26 @@ export default async function generateKey(
 
     if (keys.length === 0) {
       console.log('Inserting new API key record')
-      console.log('Inserting new API key record with:', { clerk_id, keycloak_id })
-      const { error: insertError } = await supabase
-        .from('api_keys')
-        .insert([{ 
-          user_id: clerk_id,  // Use keycloak_id as fallback for user_id
-          keycloak_id: keycloak_id,
-          key: apiKey, 
-          is_active: true 
-        }])
+      const { error: insertError } = await supabase.from('api_keys').insert([
+        {
+          email: email,
+          user_id: decodedPayload.sub,
+          key: apiKey,
+          is_active: true,
+        },
+      ])
 
       if (insertError) throw insertError
     } else {
       console.log('Updating existing API key record')
       const { error: updateError } = await supabase
         .from('api_keys')
-        .update({ key: apiKey, is_active: true })
-        .match({ [preferred_id.startsWith('user_') ? 'user_id' : 'keycloak_id']: preferred_id })
+        .update({
+          key: apiKey,
+          is_active: true,
+          user_id: decodedPayload.sub,
+        })
+        .eq('email', email)
 
       if (updateError) throw updateError
     }
@@ -104,7 +105,7 @@ export default async function generateKey(
     console.log('Successfully stored API key in database')
 
     posthog.capture('api_key_generated', {
-      keycloak_id,
+      email,
       apiKey,
     })
 
@@ -116,7 +117,7 @@ export default async function generateKey(
   } catch (error) {
     console.error('Error generating API key:', error)
     posthog.capture('api_key_generation_failed', {
-      error: (error as Error).message
+      error: (error as Error).message,
     })
     return res.status(500).json({ error: 'Internal server error' })
   }

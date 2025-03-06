@@ -1,21 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
-import {
-  // Card,
-  // Image,
-  // Text,
-  // Badge,
-  // MantineProvider,
-  Button,
-  // Group,
-  // Stack,
-  // createStyles,
-  // FileInput,
-  // rem,
-  Title,
-  Flex,
-} from '@mantine/core'
-import { SignInButton } from '@clerk/nextjs'
+import { Button, Title, Flex } from '@mantine/core'
 import { useAuth } from 'react-oidc-context'
 import { montserrat_heading } from 'fonts'
 import { initiateSignIn } from '~/utils/authHelpers'
@@ -24,7 +9,10 @@ export const AuthComponent = ({ course_name }: { course_name: string }) => {
   const auth = useAuth()
 
   const handleSignIn = () => {
-    void initiateSignIn(auth, course_name === 'new' ? '/new' : `/${course_name}/dashboard`)
+    void initiateSignIn(
+      auth,
+      course_name === 'new' ? '/new' : `/${course_name}/dashboard`,
+    )
   }
   return (
     <>
@@ -52,39 +40,15 @@ export const AuthComponent = ({ course_name }: { course_name: string }) => {
               {' '}
               You must sign in to create or edit content.
             </Title>
-            {/* Wrapping a button makes it easy to style the sign-in link. */}
-            {/* <SignInButton
-              mode="modal"
-<<<<<<< HEAD
-              forceRedirectUrl={
-                course_name === 'new'
-                  ? 'https://chat.illinois.edu/new'
-                  : `https://chat.illinois.edu/${course_name}/materials`
-=======
-              fallbackRedirectUrl={
-                course_name === 'new' ? '/new' : `/${course_name}/dashboard`
->>>>>>> main
-              }
-              // redirectUrl={
-              //   course_name === 'new' ? '/new' : `/${course_name}/dashboard`
-              // }
-            >
+            <Link href="/sign-in">
               <Button
                 className="kas-gradient-text btn"
                 style={{ fontSize: '24px' }}
+                onClick={handleSignIn}
               >
                 Sign in →
               </Button>
-            </SignInButton> */}
-            <Link href="/sign-in">
-            <Button
-              className="kas-gradient-text btn"
-              style={{ fontSize: '24px' }}
-              onClick={handleSignIn}
-            >
-              Sign in →
-            </Button>
-          </Link>
+            </Link>
           </Flex>
         </div>
       </main>

@@ -1,5 +1,3 @@
-// import { supabase } from '@/utils/supabaseClient'
-// import { getAuth } from '@clerk/nextjs/server'
 import posthog from 'posthog-js'
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '~/utils/supabaseClient'
@@ -19,7 +17,7 @@ type ApiResponse = {
  */
 export default async function deleteKey(
   req: NextApiRequest,
-  res: NextApiResponse<ApiResponse>
+  res: NextApiResponse<ApiResponse>,
 ) {
   if (req.method !== 'DELETE') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -27,7 +25,9 @@ export default async function deleteKey(
 
   const authHeader = req.headers.authorization
   if (!authHeader?.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Missing or invalid authorization header' })
+    return res
+      .status(401)
+      .json({ error: 'Missing or invalid authorization header' })
   }
 
   try {
@@ -35,19 +35,14 @@ export default async function deleteKey(
     const token = authHeader.replace('Bearer ', '')
     const [, payload = ''] = token.split('.')
     const decodedPayload = JSON.parse(Buffer.from(payload, 'base64').toString())
-    const subId = decodedPayload.sub
-    const userId = decodedPayload.user_id || subId // Fallback to sub if user_id not present
+    const userEmail = decodedPayload.email
 
-    console.log('Deleting api key for:', userId)
+    console.log('Deleting api key for:', userEmail)
 
-    // const { data, error } = await supabase
-    //   .from('api_keys')
-    //   .update({ is_active: false })
-    //   .match({ user_id: subId })
     const { data, error } = await supabase
       .from('api_keys')
       .update({ is_active: false })
-      .match({ [userId.startsWith('user_') ? 'user_id' : 'keycloak_id']: userId })
+      .match({ email: userEmail })
 
     if (error) {
       console.error('Error deleting API key:', error)
@@ -55,7 +50,7 @@ export default async function deleteKey(
     }
 
     posthog.capture('api_key_deleted', {
-      subId,
+      userEmail,
     })
 
     return res.status(200).json({

@@ -16,7 +16,7 @@ export default function Document(props: Props) {
       try {
         const response = await fetch('/api/UIUC-api/getMaintenanceModeFast')
         const data = await response.json()
-        setIsMaintenanceMode(false)
+        setIsMaintenanceMode(data.isMaintenanceMode)
       } catch (error) {
         console.error('Failed to check maintenance mode:', error)
         setIsMaintenanceMode(false)

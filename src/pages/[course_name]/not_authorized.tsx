@@ -1,4 +1,3 @@
-// import { useUser } from '@clerk/nextjs'
 import { useAuth } from 'react-oidc-context'
 import { NextPage } from 'next'
 import { useRouter } from 'next/router'
@@ -14,7 +13,7 @@ import { initiateSignIn } from '~/utils/authHelpers'
 const NotAuthorizedPage: NextPage = () => {
   const router = useRouter()
   const auth = useAuth()
-  // const clerk_user = useUser()
+
   const [componentToRender, setComponentToRender] =
     useState<React.ReactNode | null>(null)
 
@@ -23,7 +22,6 @@ const NotAuthorizedPage: NextPage = () => {
   }
 
   useEffect(() => {
-    // if (!clerk_user.isLoaded || !router.isReady) {
     if (auth.isLoading || !router.isReady) {
       return
     }
@@ -62,34 +60,17 @@ const NotAuthorizedPage: NextPage = () => {
         return
       }
 
-      // if (courseMetadata.is_private && !clerk_user.isSignedIn) {
-      // if (courseMetadata.is_private && !auth.isAuthenticated) {
-      //   console.log(
-      //     'User not logged in',
-      //     // clerk_user.isSignedIn,
-      //     // clerk_user.isLoaded,
-      //     auth.isAuthenticated,
-      //     !auth.isLoading,
-      //     course_name,
-      //   )
-      //   router.replace(`/sign-in?${course_name}`)
-      //   return
-      // }
       if (courseMetadata.is_private && !auth.isAuthenticated) {
         void initiateSignIn(auth, `/${course_name}`)
         return
       }
 
-      // if (clerk_user.isLoaded) {
       if (auth.isLoading) {
         console.log(
-          'in [course_name]/index.tsx -- clerk_user loaded and working :)',
+          'in [course_name]/index.tsx -- keycloak_user loaded and working :)',
         )
         if (courseMetadata != null) {
-          const permission_str = get_user_permission(
-            courseMetadata,
-            auth
-          )
+          const permission_str = get_user_permission(courseMetadata, auth)
 
           console.log(
             'in [course_name]/index.tsx -- permission_str',
@@ -117,15 +98,13 @@ const NotAuthorizedPage: NextPage = () => {
         }
       } else {
         console.log(
-          'in [course_name]/index.tsx -- clerk_user NOT LOADED yet...',
+          'in [course_name]/index.tsx -- keycloak_user NOT LOADED yet...',
         )
       }
     })
   }, [!auth.isLoading, router.isReady])
-  // }, [clerk_user.isLoaded, router.isReady])
 
-  // if (!clerk_user.isLoaded || !componentToRender) {
-    if (auth.isLoading || !componentToRender) {
+  if (auth.isLoading || !componentToRender) {
     console.debug('not_authorized.tsx -- Loading spinner')
     return (
       <MainPageBackground>

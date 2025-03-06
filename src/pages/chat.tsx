@@ -12,15 +12,14 @@ import {
 import Home from '~/pages/api/home/home'
 import { CourseMetadata } from '~/types/courseMetadata'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
-import { useUser } from '@clerk/nextjs'
-import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
+import { useAuth } from 'react-oidc-context'
 
 const ChatPage: NextPage = () => {
   const [metadata, setMetadata] = useState<CourseMetadata | null>()
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
-  const clerk_user_outer = useUser()
-  const { user, isLoaded, isSignedIn } = clerk_user_outer
+  const auth = useAuth()
+  const email = auth.user?.profile.email
   const [currentEmail, setCurrentEmail] = useState('')
 
   useEffect(() => {
@@ -54,8 +53,7 @@ const ChatPage: NextPage = () => {
   }, [router.isReady, metadata])
 
   useEffect(() => {
-    if (!isLoaded) return
-    const email = extractEmailsFromClerk(user)[0]
+    if (auth.isLoading) return
     if (email) {
       setCurrentEmail(email)
     } else {
@@ -66,7 +64,7 @@ const ChatPage: NextPage = () => {
         setCurrentEmail(postHogUser.distinct_id)
       }
     }
-  }, [isLoaded, user])
+  }, [auth.isLoading, email])
 
   if (isLoading) {
     return <LoadingPlaceholderForAdminPages />
