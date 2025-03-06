@@ -283,11 +283,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   const [view, setView] = useState('hour')
 
   if (auth.isLoading || !courseMetadata) {
-    return (
-      <MainPageBackground>
-        <LoadingSpinner />
-      </MainPageBackground>
-    )
+    return <LoadingSpinner />
   }
 
   if (
