@@ -13,7 +13,6 @@ import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { CourseMetadata } from '~/types/courseMetadata'
 import NomicDocumentMap from '~/components/UIUC-Components/NomicDocumentsMap'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
-// import { useAuth } from 'node_modules/@clerk/nextjs/dist/types/client-boundary/hooks'
 import {useAuth} from 'react-oidc-context'
 
 const CourseMain: NextPage = () => {

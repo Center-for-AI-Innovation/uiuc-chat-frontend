@@ -22,8 +22,6 @@ const PUBLIC_ROUTES = [
   '/:singleLevel([^/]+)/chat',
 ]
 
-const MAIN_DOMAIN = 'https://uiuc.chat'
-
 // Helper to check if this is a preview deployment
 const isPreviewDeployment = () => {
   return process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview'
@@ -35,7 +33,7 @@ const isAuthPath = (pathname: string, search: string) => {
   return pathname === '/' && !search.includes('code=') && !search.includes('state=');
 }
 
-// Create a middleware handler that runs before Clerk
+// Create a middleware handler that runs before auth
 function materialsRedirectMiddleware(request: NextRequest) {
   const url = request.nextUrl
   // Check if the URL matches the pattern /{project_name}/materials
