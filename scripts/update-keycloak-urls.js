@@ -1,3 +1,8 @@
+/* 
+ * This file makes Preview deploys on Vercel work with Keycloak auth. 
+ * We will have an ever growing list of redirectURIs and WebOrigins to enable keycloak on each unique preview deploy URI.
+*/
+
 const fetch = require('node-fetch');
 
 async function updateKeycloakRedirectURIs() {
