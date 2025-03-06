@@ -50,8 +50,7 @@ export async function handleFunctionCall(
     }
 
     const openaiResponse: ChatCompletionMessageToolCall[] =
-      openaiFunctionCallResponse
-
+      openaiFunctionCallResponse.choices?.[0]?.message?.tool_calls || []
     console.log('OpenAI tools to run: ', openaiResponse)
 
     // Map tool into UIUCTool, parse arguments
@@ -342,32 +341,32 @@ export function getOpenAIToolFromUIUCTool(
         description: tool.description,
         parameters: tool.inputParameters
           ? {
-            type: 'object',
-            properties: Object.keys(tool.inputParameters.properties).reduce(
-              (acc, key) => {
-                const param = tool.inputParameters?.properties[key]
-                acc[key] = {
-                  type:
-                    param?.type === 'number'
-                      ? 'number'
-                      : param?.type === 'Boolean'
-                        ? 'Boolean'
-                        : 'string',
-                  description: param?.description,
-                  enum: param?.enum,
-                }
-                return acc
-              },
-              {} as {
-                [key: string]: {
-                  type: 'string' | 'number' | 'Boolean'
-                  description?: string
-                  enum?: string[]
-                }
-              },
-            ),
-            required: tool.inputParameters.required,
-          }
+              type: 'object',
+              properties: Object.keys(tool.inputParameters.properties).reduce(
+                (acc, key) => {
+                  const param = tool.inputParameters?.properties[key]
+                  acc[key] = {
+                    type:
+                      param?.type === 'number'
+                        ? 'number'
+                        : param?.type === 'Boolean'
+                          ? 'Boolean'
+                          : 'string',
+                    description: param?.description,
+                    enum: param?.enum,
+                  }
+                  return acc
+                },
+                {} as {
+                  [key: string]: {
+                    type: 'string' | 'number' | 'Boolean'
+                    description?: string
+                    enum?: string[]
+                  }
+                },
+              ),
+              required: tool.inputParameters.required,
+            }
           : undefined,
       },
     }
