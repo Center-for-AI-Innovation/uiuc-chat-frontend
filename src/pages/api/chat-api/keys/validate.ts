@@ -46,6 +46,7 @@ export async function validateApiKeyAndRetrieveData(
 
     // Get user data from the email
     const { data: userData, error: userError } = await supabase
+      .schema('keycloak')
       .from('user_entity')
       .select('*')
       .eq('email', email)
