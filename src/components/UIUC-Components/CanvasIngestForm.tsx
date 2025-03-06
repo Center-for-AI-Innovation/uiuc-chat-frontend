@@ -172,9 +172,9 @@ export default function CanvasIngestForm({
           </Card>
         </DialogTrigger>
 
-        <DialogContent className="mx-auto h-auto w-[95%] max-w-2xl !rounded-2xl border-0 bg-[#1c1c2e] px-4 py-6 text-white sm:px-6">
+        <DialogContent className="mx-auto h-auto max-h-[85vh] w-[95%] max-w-2xl overflow-y-auto !rounded-2xl border-0 bg-[#1c1c2e] px-4 py-6 text-white sm:px-6">
           <DialogHeader>
-            <DialogTitle className="mb-4 text-left text-xl font-bold">
+            <DialogTitle className="mb-1 text-left text-xl font-bold">
               Ingest Canvas Course
             </DialogTitle>
           </DialogHeader>
@@ -211,115 +211,122 @@ export default function CanvasIngestForm({
             </div>
           </Alert>
 
-          <div className="border-t border-gray-800 pt-4">
-            <div className="space-y-4">
-              <div>
-                <div className="break-words text-sm sm:text-base">
-                  Just enter a URL like{' '}
-                  <code className="inline-flex items-center rounded-md bg-[#020307] px-2 py-1 font-mono text-xs sm:text-sm">
-                    canvas.illinois.edu/courses/COURSE_CODE
-                  </code>
-                  , for example:{' '}
-                  <span className="break-all text-purple-600">
-                    <NextLink
-                      target="_blank"
-                      rel="noreferrer"
-                      href={'https://canvas.illinois.edu/courses/37348'}
-                      onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                    >
-                      https://canvas.illinois.edu/courses/37348
-                    </NextLink>
-                  </span>
-                  .
-                </div>
-                <div className="py-3"></div>
-                <Input
-                  id="canvas-url"
-                  icon={
-                    <Image
-                      src="/media/canvas_logo.png"
-                      alt="Canvas Logo"
-                      width={24}
-                      height={24}
-                      className="object-contain"
-                    />
-                  }
-                  className="w-full rounded-full"
-                  styles={{
-                    input: {
-                      backgroundColor: '#1A1B1E',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      '&:focus': {
-                        borderColor: '#9370DB',
-                      },
-                    },
-                    wrapper: {
-                      width: '100%',
-                    },
-                  }}
-                  placeholder="https://canvas.illinois.edu/courses/12345"
-                  radius="xl"
-                  type="url"
-                  value={url}
-                  size="lg"
-                  onChange={(e) => {
-                    handleUrlChange(e)
-                  }}
-                />
+          <div className="mb-4 overflow-hidden rounded-md">
+            <div className="relative h-0 pb-[40%]">
+              <iframe
+                className="absolute left-0 top-0 h-full w-full rounded-md"
+                src="https://www.youtube.com/embed/OOy0JD0Gf9g"
+                title="Canvas Connection Tutorial"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <div className="text-md break-words">
+                Enter your Canvas course URL, it should look like{' '}
+                <code className="inline-flex items-center rounded-md bg-[#020307] px-2 py-1 font-mono text-xs sm:text-sm">
+                  canvas.illinois.edu/courses/COURSE_CODE
+                </code>
+                , for example:{' '}
+                <span className="break-all text-purple-600">
+                  <NextLink
+                    target="_blank"
+                    rel="noreferrer"
+                    href={'https://canvas.illinois.edu/courses/37348'}
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                  >
+                    https://canvas.illinois.edu/courses/37348
+                  </NextLink>
+                </span>
+                .
               </div>
-              <div className="space-y-2">
-                <Label className="mb-2 block text-white">
-                  Select Content to Ingest
-                </Label>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {[
-                    'Files',
-                    'Pages',
-                    'Modules',
-                    'Syllabus',
-                    'Assignments',
-                    'Discussions',
-                  ].map((option) => (
-                    <div
-                      key={option}
-                      className="flex items-center space-x-2 rounded-lg bg-[#1A1B1E] p-2"
-                    >
-                      <Checkbox
-                        id={option.toLowerCase()}
-                        color="violet"
-                        checked={selectedOptions.includes(option.toLowerCase())}
-                        onChange={() =>
-                          handleOptionChange(option.toLowerCase())
-                        }
-                        label={option}
-                        styles={{
-                          input: {
-                            backgroundColor: '#1A1B1E',
+              <div className="py-3"></div>
+              <Input
+                id="canvas-url"
+                icon={
+                  <Image
+                    src="/media/canvas_logo.png"
+                    alt="Canvas Logo"
+                    width={24}
+                    height={24}
+                    className="object-contain"
+                  />
+                }
+                className="w-full rounded-full"
+                styles={{
+                  input: {
+                    backgroundColor: '#1A1B1E',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    '&:focus': {
+                      borderColor: '#9370DB',
+                    },
+                  },
+                  wrapper: {
+                    width: '100%',
+                  },
+                }}
+                placeholder="https://canvas.illinois.edu/courses/12345"
+                radius="xl"
+                type="url"
+                value={url}
+                size="lg"
+                onChange={(e) => {
+                  handleUrlChange(e)
+                }}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="mb-2 block text-white">
+                Select Content to Ingest
+              </Label>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {[
+                  'Files',
+                  'Pages',
+                  'Modules',
+                  'Syllabus',
+                  'Assignments',
+                  'Discussions',
+                ].map((option) => (
+                  <div
+                    key={option}
+                    className="flex items-center space-x-2 rounded-lg bg-[#1A1B1E] p-2"
+                  >
+                    <Checkbox
+                      id={option.toLowerCase()}
+                      color="violet"
+                      checked={selectedOptions.includes(option.toLowerCase())}
+                      onChange={() => handleOptionChange(option.toLowerCase())}
+                      label={option}
+                      styles={{
+                        input: {
+                          backgroundColor: '#1A1B1E',
+                          borderColor: '#9370DB',
+                          '&:checked': {
+                            backgroundColor: '#9370DB',
                             borderColor: '#9370DB',
-                            '&:checked': {
-                              backgroundColor: '#9370DB',
-                              borderColor: '#9370DB',
-                            },
                           },
-                        }}
-                      />
-                    </div>
-                  ))}
-                </div>
+                        },
+                      }}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           </div>
-          <div className="mt-4 border-t border-gray-800 pt-2">
-            <Button
-              onClick={handleIngest}
-              disabled={!isUrlValid}
-              className="h-11 w-full rounded-xl bg-purple-600 text-white transition-colors hover:bg-purple-700"
-            >
-              Ingest Canvas Course
-            </Button>
-          </div>
+          <Button
+            onClick={handleIngest}
+            disabled={!isUrlValid}
+            className="h-11 w-full rounded-xl bg-purple-600 text-white transition-colors hover:bg-purple-700"
+          >
+            Ingest Canvas Course
+          </Button>
         </DialogContent>
       </Dialog>
     </motion.div>
