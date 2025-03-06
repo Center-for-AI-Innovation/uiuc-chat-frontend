@@ -274,15 +274,15 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
       />
     )
   }
-  console.log('n8n api key:', n8nApiKey)
-  console.log(
-    'setup instructions default value:',
-    n8nApiKey ? undefined : 'setup-instructions',
-  )
-  console.log(
-    'usage instructions default value:',
-    n8nApiKey && !isEmptyWorkflowTable ? 'usage-instruction' : undefined,
-  )
+  // console.log('n8n api key:', n8nApiKey)
+  // console.log(
+  //   'setup instructions default value:',
+  //   n8nApiKey ? undefined : 'setup-instructions',
+  // )
+  // console.log(
+  //   'usage instructions default value:',
+  //   n8nApiKey && !isEmptyWorkflowTable ? 'usage-instruction' : undefined,
+  // )
 
   return (
     <>
