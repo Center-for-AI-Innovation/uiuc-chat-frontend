@@ -1,17 +1,17 @@
-// src/pages/api/materialsTable/docsInProgress.ts
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '@/utils/supabaseClient'
-import { getAuth } from '@clerk/nextjs/server'
 
-type DocsInProgressResponse = {
+// This is for "Documents" table, completed docs.
+
+type SuccessDocsResponse = {
   documents?: { readable_filename: string }[]
   apiKey?: null
   error?: string
 }
 
-export default async function docsInProgress(
+export default async function successDocs(
   req: NextApiRequest,
-  res: NextApiResponse<DocsInProgressResponse>,
+  res: NextApiResponse<SuccessDocsResponse>,
 ) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -19,11 +19,11 @@ export default async function docsInProgress(
 
   const course_name = req.query.course_name as string
 
-  const auth = getAuth(req)
-  const currUserId = auth.userId
-  if (!currUserId) {
-    return res.status(401).json({ error: 'User ID is required' })
+  const authHeader = req.headers.authorization
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Valid Bearer token is required' })
   }
+
   try {
     const { data, error } = await supabase
       .from('documents')
