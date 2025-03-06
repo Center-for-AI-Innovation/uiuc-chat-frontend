@@ -110,7 +110,6 @@ export default async function chat(
   }: { isValidApiKey: boolean; authContext: AuthContextProps } =
     await validateApiKeyAndRetrieveData(api_key, course_name)
 
-
   const email = authContext.user?.profile.email
 
   console.debug('Received /chat request for: ', email)
@@ -146,10 +145,7 @@ export default async function chat(
   }
 
   // Check user permissions
-  const permission = get_user_permission(
-    courseMetadata,
-    authContext,
-  )
+  const permission = get_user_permission(courseMetadata, authContext)
 
   if (permission !== 'edit') {
     posthog.capture('stream_api_permission_denied', {
@@ -213,7 +209,7 @@ export default async function chat(
     prompt:
       messages.filter((message) => message.role === 'system').length > 0
         ? ((messages.filter((message) => message.role === 'system')[0]
-          ?.content as string) ??
+            ?.content as string) ??
           (messages.filter((message) => message.role === 'system')[0]
             ?.content as string))
         : DEFAULT_SYSTEM_PROMPT,
@@ -226,8 +222,8 @@ export default async function chat(
   // Check if the content is an array and filter out image content
   const imageContent = Array.isArray(lastMessage.content)
     ? (lastMessage.content as Content[]).filter(
-      (content) => content.type === 'image_url',
-    )
+        (content) => content.type === 'image_url',
+      )
     : []
 
   const imageUrls = imageContent.map(

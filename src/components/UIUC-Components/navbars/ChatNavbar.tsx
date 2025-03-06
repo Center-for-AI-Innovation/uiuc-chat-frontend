@@ -11,13 +11,12 @@ import {
   Paper,
   rem,
   Transition,
-  Avatar, 
+  Avatar,
   Menu,
 } from '@mantine/core'
 import { IconHome, IconSettings, IconPlus } from '@tabler/icons-react'
 import { useRouter } from 'next/router'
 import { montserrat_heading } from 'fonts'
-
 
 import { useAuth } from 'react-oidc-context'
 import { type CourseMetadata } from '~/types/courseMetadata'
@@ -111,7 +110,7 @@ const useStyles = createStyles((theme, { isAdmin }: { isAdmin: boolean }) => ({
       display: 'none',
     },
     backgroundColor: '#15162c',
-    color: "white"
+    color: 'white',
   },
   adminDashboard: {
     [theme.fn.smallerThan(825)]: {
@@ -152,7 +151,7 @@ const useStyles = createStyles((theme, { isAdmin }: { isAdmin: boolean }) => ({
   userMenu: {
     backgroundColor: '#15162c',
     border: '1px solid hsl(280,100%,70%)',
-    
+
     '.mantine-Menu-item': {
       color: 'white',
       '&:hover': {
@@ -173,7 +172,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
   const [show, setShow] = useState(true)
   const [isAdminOrOwner, setIsAdminOrOwner] = useState(false)
   const auth = useAuth()
-  
+
   const { classes, theme } = useStyles({ isAdmin: isAdminOrOwner })
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== 'undefined' ? window.innerWidth : 825,
@@ -192,7 +191,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
 
   useEffect(() => {
     const fetchCourses = async () => {
-        if (auth.isAuthenticated) {
+      if (auth.isAuthenticated) {
         const userEmail = auth.user?.profile.email
         const currUserEmails = userEmail ? [userEmail] : []
         posthog?.identify(auth.user?.profile.sub, {

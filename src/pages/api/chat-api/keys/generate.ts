@@ -22,7 +22,7 @@ type ApiResponse = {
  */
 export default async function generateKey(
   req: NextApiRequest,
-  res: NextApiResponse<ApiResponse>
+  res: NextApiResponse<ApiResponse>,
 ) {
   console.log('Received request to generate API key')
 
@@ -34,7 +34,9 @@ export default async function generateKey(
   const authHeader = req.headers.authorization
   if (!authHeader?.startsWith('Bearer ')) {
     console.log('Missing or invalid authorization header')
-    return res.status(401).json({ error: 'Missing or invalid authorization header' })
+    return res
+      .status(401)
+      .json({ error: 'Missing or invalid authorization header' })
   }
 
   try {
@@ -76,24 +78,24 @@ export default async function generateKey(
 
     if (keys.length === 0) {
       console.log('Inserting new API key record')
-      const { error: insertError } = await supabase
-        .from('api_keys')
-        .insert([{ 
+      const { error: insertError } = await supabase.from('api_keys').insert([
+        {
           email: email,
           user_id: decodedPayload.sub,
-          key: apiKey, 
-          is_active: true 
-        }])
+          key: apiKey,
+          is_active: true,
+        },
+      ])
 
       if (insertError) throw insertError
     } else {
       console.log('Updating existing API key record')
       const { error: updateError } = await supabase
         .from('api_keys')
-        .update({ 
-          key: apiKey, 
+        .update({
+          key: apiKey,
           is_active: true,
-          user_id: decodedPayload.sub ,
+          user_id: decodedPayload.sub,
         })
         .eq('email', email)
 
@@ -115,7 +117,7 @@ export default async function generateKey(
   } catch (error) {
     console.error('Error generating API key:', error)
     posthog.capture('api_key_generation_failed', {
-      error: (error as Error).message
+      error: (error as Error).message,
     })
     return res.status(500).json({ error: 'Internal server error' })
   }

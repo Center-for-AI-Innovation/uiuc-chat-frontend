@@ -11,7 +11,6 @@ import { Menu2 } from 'tabler-icons-react'
 import { useAuth } from 'react-oidc-context'
 import { AuthMenu } from './AuthMenu'
 
-
 export default function Header({ isNavbar = false }: { isNavbar?: boolean }) {
   const headerStyle = isNavbar
     ? {
@@ -738,14 +737,14 @@ const useStyles = createStyles((theme) => ({
 
     '&:hover': {
       backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    }
+    },
   },
   userMenu: {
     backgroundColor: '#15162c',
     border: '1px solid hsl(280,100%,70%)',
     color: '#f1f5f9',
     padding: rem(4),
-    
+
     '.mantine-Menu-item': {
       padding: `${rem(8)} ${rem(12)}`,
       '&:hover': {

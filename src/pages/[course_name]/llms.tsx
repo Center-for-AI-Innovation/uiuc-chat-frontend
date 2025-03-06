@@ -13,7 +13,7 @@ import APIKeyInputForm from '~/components/UIUC-Components/api-inputs/LLMsApiKeyI
 const CourseMain: NextPage = () => {
   const router = useRouter()
   const [courseName, setCourseName] = useState<string | null>(null)
-  
+
   const auth = useAuth()
   const [isFetchingCourseMetadata, setIsFetchingCourseMetadata] = useState(true)
 
@@ -43,7 +43,12 @@ const CourseMain: NextPage = () => {
   }
 
   if (!auth.isAuthenticated) {
-    console.log('User not logged in', auth.isAuthenticated, auth.isLoading, courseName)
+    console.log(
+      'User not logged in',
+      auth.isAuthenticated,
+      auth.isLoading,
+      courseName,
+    )
     return <AuthComponent course_name={courseName as string} />
   }
 

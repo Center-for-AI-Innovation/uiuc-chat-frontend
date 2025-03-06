@@ -15,13 +15,11 @@ import {
   IconSelector,
 } from '@tabler/icons-react'
 
-
-
 const StyledRow = styled.tr`
   &:hover {
     background-color: rgba(255, 95, 5, 0.6);
   }
-    color: #C1C2C5;
+  color: #c1c2c5;
 `
 
 const StyledTable = styled(Table)`
@@ -68,9 +66,10 @@ type SortDirection = 'asc' | 'desc' | null
 type SortableColumn = 'name' | 'privacy' | 'owner' | 'admins'
 
 const ListProjectTable: React.FC = () => {
-  
   const auth = useAuth()
-  const [courses, setProjects] = useState<{ [key: string]: CourseMetadata }[] | null>(null)
+  const [courses, setProjects] = useState<
+    { [key: string]: CourseMetadata }[] | null
+  >(null)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const [rows, setRows] = useState<JSX.Element[]>([])
@@ -78,8 +77,10 @@ const ListProjectTable: React.FC = () => {
   const isMobile = useMediaQuery('(max-width: 768px)')
   const [sortColumn, setSortColumn] = useState<SortableColumn>('name')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
-  const [rawData, setRawData] = useState<{ [key: string]: CourseMetadata }[]>([])
-  
+  const [rawData, setRawData] = useState<{ [key: string]: CourseMetadata }[]>(
+    [],
+  )
+
   const handleSort = (column: SortableColumn) => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
@@ -192,16 +193,14 @@ const ListProjectTable: React.FC = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       console.log('Fetching projects')
-      
-        if (auth.isLoading) {
+
+      if (auth.isLoading) {
         return
       }
 
-      
       if (auth.isAuthenticated && auth.user?.profile.email) {
         console.log('Signed')
-        
-        
+
         const currUserEmail = auth.user.profile.email
         console.log(currUserEmail)
         if (!currUserEmail) {
@@ -225,16 +224,13 @@ const ListProjectTable: React.FC = () => {
       }
     }
     fetchCourses()
-  
-}, [auth.isLoading, auth.isAuthenticated])
+  }, [auth.isLoading, auth.isAuthenticated])
 
-  
   if (auth.isLoading || !isFullyLoaded) {
     // Loading screen is actually NOT worth it :/ just return null
     // return <Skeleton animate={true} height={40} width="70%" radius="xl" />
     return null
   } else {
-    
     if (!auth.isAuthenticated) {
       return (
         <>

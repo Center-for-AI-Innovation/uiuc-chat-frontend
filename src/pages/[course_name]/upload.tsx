@@ -31,7 +31,7 @@ import { CannotEditCourse } from '~/components/UIUC-Components/CannotEditCourse'
 const CourseMain: NextPage = () => {
   const router = useRouter()
   const [projectName, setProjectName] = useState<string | null>(null)
-  
+
   const [isFetchingCourseMetadata, setIsFetchingCourseMetadata] = useState(true)
   const auth = useAuth()
   const isLoaded = !auth.isLoading

@@ -44,7 +44,6 @@ async function fetchEnabledDocGroups(
   course_name: string,
   userId?: string,
 ): Promise<DocumentGroup[]> {
-
   const response = await fetch('/api/documentGroups', {
     method: 'POST',
     headers: {
