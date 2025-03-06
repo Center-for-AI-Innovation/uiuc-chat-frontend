@@ -163,7 +163,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   const [modelUsageLoading, setModelUsageLoading] = useState(true)
   const [modelUsageError, setModelUsageError] = useState<string | null>(null)
 
-  const [dateRangeType, setDateRangeType] = useState<string>('all')
+  const [dateRangeType, setDateRangeType] = useState<string>('last_month')
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
     null,
     null,
