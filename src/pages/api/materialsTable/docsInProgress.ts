@@ -1,7 +1,6 @@
 // src/pages/api/materialsTable/docsInProgress.ts
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '@/utils/supabaseClient'
-// import { getAuth } from '@clerk/nextjs/server'
 
 type DocsInProgressResponse = {
   documents?: { readable_filename: string }[]

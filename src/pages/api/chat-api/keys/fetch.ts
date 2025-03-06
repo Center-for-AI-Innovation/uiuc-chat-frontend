@@ -1,8 +1,5 @@
-// src/pages/api/chat-api/keys/fetch.ts
-
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '@/utils/supabaseClient'
-// import { getAuth } from '@clerk/nextjs/server'
 
 type ApiResponse = {
   apiKey?: string | null

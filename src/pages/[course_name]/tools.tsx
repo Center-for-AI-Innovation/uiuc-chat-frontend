@@ -3,7 +3,7 @@ import MakeNewCoursePage from '~/components/UIUC-Components/MakeNewCoursePage'
 import React, { useEffect, useState } from 'react'
 import { Montserrat } from 'next/font/google'
 import { useRouter } from 'next/router'
-// import { useUser } from '@clerk/nextjs'
+
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
 import {
   LoadingPlaceholderForAdminPages,
@@ -11,7 +11,7 @@ import {
 } from '~/components/UIUC-Components/MainPageBackground'
 import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 import { Title } from '@mantine/core'
-// import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
+
 import MakeToolsPage from '~/components/UIUC-Components/N8NPage'
 import posthog from 'posthog-js'
 import { useAuth } from 'react-oidc-context'
@@ -33,7 +33,7 @@ const ToolsPage: NextPage = () => {
   const auth = useAuth()
 
   const course_name = GetCurrentPageName() as string
-  // const { user, isLoaded, isSignedIn } = useUser()
+  
   const [courseData, setCourseData] = useState(null)
   const [courseExists, setCourseExists] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -65,16 +65,6 @@ const ToolsPage: NextPage = () => {
     fetchCourseData()
   }, [router.isReady])
 
-  // // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
-  // if (!isLoaded || isLoading || courseExists === null) {
-  //   return <LoadingPlaceholderForAdminPages />
-  // }
-
-  // if (!isSignedIn) {
-  //   console.log('User not logged in', isSignedIn, isLoaded, course_name)
-  //   return <AuthComponent course_name={course_name} />
-  // }
-
   if (auth.isLoading) {
     return <LoadingPlaceholderForAdminPages />
   }
@@ -83,7 +73,6 @@ const ToolsPage: NextPage = () => {
     return <ProtectedRoute><AuthComponent course_name={course_name} /></ProtectedRoute>
   }
 
-  // const user_emails = extractEmailsFromClerk(user)
   const user_emails = auth.user?.profile?.email ? [auth.user.profile.email] : []
 
 

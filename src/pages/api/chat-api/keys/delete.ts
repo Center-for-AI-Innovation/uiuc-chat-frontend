@@ -1,5 +1,3 @@
-// import { supabase } from '@/utils/supabaseClient'
-// import { getAuth } from '@clerk/nextjs/server'
 import posthog from 'posthog-js'
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '~/utils/supabaseClient'
@@ -39,10 +37,6 @@ export default async function deleteKey(
 
     console.log('Deleting api key for:', userEmail)
 
-    // const { data, error } = await supabase
-    //   .from('api_keys')
-    //   .update({ is_active: false })
-    //   .match({ user_id: subId })
     const { data, error } = await supabase
       .from('api_keys')
       .update({ is_active: false })

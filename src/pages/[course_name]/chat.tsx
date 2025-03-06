@@ -1,12 +1,12 @@
 // export { default } from '~/pages/api/home'
 
-// import { useUser } from '@clerk/nextjs'
+
 import { useAuth } from 'react-oidc-context'
 import { NextPage } from 'next'
 import { useEffect, useState } from 'react'
 import Home from '../api/home/home'
 import { useRouter } from 'next/router'
-// import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
+
 import { CourseMetadata } from '~/types/courseMetadata'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
@@ -17,14 +17,8 @@ import { GUIDED_LEARNING_PROMPT } from '~/utils/app/const'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 
 const ChatPage: NextPage = () => {
-  // const clerk_user_outer = useUser()
-  // const { user, isLoaded, isSignedIn } = clerk_user_outer
   const auth = useAuth()
-  const user = auth.user
-  const isLoaded = !auth.isLoading
-  const isSignedIn = auth.isAuthenticated
   const router = useRouter()
-  const curr_route_path = router.asPath as string
   const getCurrentPageName = () => {
     return router.query.course_name as string
   }
@@ -112,43 +106,6 @@ const ChatPage: NextPage = () => {
 
   // UseEffect to check user permissions and fetch user email
   useEffect(() => {
-    // const checkAuthorization = async () => {
-    //   if (!auth.isLoading && router.isReady) {
-    //     const courseName = router.query.course_name as string
-        
-    //     // Redirect to login if not authenticated
-    //     if (!auth.isAuthenticated) {
-    //       const currentPath = encodeURIComponent(router.asPath)
-    //       router.push(`/sign-in?redirect=${currentPath}`)
-    //       return
-    //     }
-
-    //     try {
-    //       // Fetch course metadata
-    //       const metadata = await fetchCourseMetadata(courseName)
-          
-    //       if (!metadata) {
-    //         router.replace(`/new?course_name=${courseName}`)
-    //         return
-    //       }
-
-    //       const permission = get_user_permission(metadata, auth)
-          
-    //       if (permission === 'no_permission') {
-    //         router.replace(`/${courseName}/not_authorized`)
-    //         return
-    //       }
-
-    //       setIsAuthorized(true)
-          
-    //     } catch (error) {
-    //       console.error('Authorization check failed:', error)
-    //       setIsAuthorized(false)
-    //     }
-    //   }
-    // }
-
-    // checkAuthorization()
     const checkAuthorization = async () => {
       if (!auth.isLoading && router.isReady) {
         const courseName = router.query.course_name as string
@@ -198,69 +155,9 @@ const ChatPage: NextPage = () => {
 
     checkAuthorization()
   }, [auth.isLoading, auth.isAuthenticated, router.isReady])
-  //   console.log('Checking user permissions. Auth loaded:', !auth.isLoading, 'Metadata loading:', isCourseMetadataLoading)
-  //   if (!isLoaded || isCourseMetadataLoading) {
-  //     return
-  //   }
-  //   // if (clerk_user_outer.isLoaded || isCourseMetadataLoading) {
-  //     if (courseMetadata != null) {
-  //       // const permission_str = get_user_permission(
-  //       //   courseMetadata,
-  //       //   clerk_user_outer,
-  //       //   router,
-  //       // )
-  //       const permission_str = get_user_permission(
-  //         courseMetadata,
-  //         auth,
-  //       )
-  //       console.log('User permission:', permission_str)
-  //       if (auth.user?.profile.email) {
-  //         setCurrentEmail(auth.user.profile.email)
-  //       }
-  //       if (permission_str == 'edit' || permission_str == 'view') {
-  //       } else {
-  //         console.log('User not authorized, redirecting')
-  //         router.replace(`/${courseName}/not_authorized`)
-  //       }
-  //     } else {
-  //       // 🆕 MAKE A NEW COURSE
-  //       console.log('Course does not exist, redirecting to materials page')
-  //       router.push(`/${courseName}/dashboard`)
-  //     }
-  //     // console.log(
-  //     //   'Changing user email to: ',
-  //     //   extractEmailsFromClerk(clerk_user_outer.user)[0],
-  //     // )
-  //     // This will not work because setUserEmail is async
-  //     // setUserEmail(extractEmailsFromClerk(clerk_user_outer.user)[0] as string)
-  //     // const email = extractEmailsFromClerk(user)[0]
-  //     // if (email) {
-  //     //   setCurrentEmail(email)
-  //     //   // console.log('setting user email: ', user)
-  //     //   // console.log('type of user: ', typeof user)
-  //     // } else {
-  //     //   const key = process.env.NEXT_PUBLIC_POSTHOG_KEY as string
-  //     //   // console.log('key: ', key)
-  //     //   const postHogUserObj = localStorage.getItem('ph_' + key + '_posthog')
-  //     //   // console.log('posthog user obj: ', postHogUserObj)
-  //     //   if (postHogUserObj) {
-  //     //     const postHogUser = JSON.parse(postHogUserObj)
-  //     //     setCurrentEmail(postHogUser.distinct_id)
-  //     //     console.log(
-  //     //       'setting user email as posthog user: ',
-  //     //       postHogUser.distinct_id,
-  //     //     )
-  //     //   } else {
-  //     //     // When user is not logged in and posthog user is not found, what to do?
-  //     //     // This is where page will not load
-  //     //   }
-  //     //}
-  //   //}
-  // }, [auth.isLoading, isCourseMetadataLoading, auth.user, auth.isAuthenticated])
 
   return (
     <>
-      {/* {!isLoading && currentEmail && courseMetadata && ( */}
       {!isLoading && (currentEmail || !courseMetadata?.is_private) && courseMetadata && (
         <Home
           current_email={currentEmail || ''}

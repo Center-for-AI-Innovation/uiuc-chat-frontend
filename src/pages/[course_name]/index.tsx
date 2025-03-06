@@ -4,7 +4,7 @@ import { useAuth } from 'react-oidc-context'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { type CourseMetadata } from '~/types/courseMetadata'
-// import { useUser } from '@clerk/nextjs'
+
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
@@ -14,7 +14,7 @@ const AUTH_ROUTES = ['sign-in', 'sign-up']
 
 const IfCourseExists: NextPage = () => {
   const router = useRouter()
-  // const user = useUser()
+
   const auth = useAuth()
   const { course_name } = router.query
   const [courseName, setCourseName] = useState<string | null>(null)
@@ -56,9 +56,7 @@ const IfCourseExists: NextPage = () => {
   useEffect(() => {
     const checkAuth = async () => {
       // AUTH
-      // if (courseMetadata && user.isLoaded) {
       if (courseMetadata && !auth.isLoading) {
-        // const permission_str = get_user_permission(courseMetadata, user, router)
         const permission_str = get_user_permission(
           courseMetadata,
           auth
@@ -79,7 +77,6 @@ const IfCourseExists: NextPage = () => {
       }
     }
     checkAuth()
-      // }, [user.isLoaded, courseMetadata, courseMetadataIsLoaded])
   }, [auth.isLoading, auth.isAuthenticated, courseMetadata, courseMetadataIsLoaded])
 
 

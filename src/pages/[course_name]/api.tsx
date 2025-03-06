@@ -2,7 +2,6 @@
 import { NextPage } from 'next'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
-// import { useUser } from '@clerk/nextjs'
 import { useAuth } from 'react-oidc-context'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import { LoadingPlaceholderForAdminPages } from '~/components/UIUC-Components/MainPageBackground'
@@ -16,7 +15,6 @@ import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 
 const ApiPage: NextPage = () => {
   const router = useRouter()
-  // const user = useUser()
   const auth = useAuth()
   const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
     null,
@@ -49,8 +47,7 @@ const ApiPage: NextPage = () => {
 
   // Second useEffect to handle permissions and other dependent data
   useEffect(() => {
-    // if (isLoading || !user.isLoaded || courseName == null) {
-      if (auth.isLoading || !auth.isAuthenticated || courseName == null) {
+if (auth.isLoading || !auth.isAuthenticated || courseName == null) {
       // Do not proceed if we are still loading or if the user data is not loaded yet.
       return
     }
@@ -82,24 +79,10 @@ const ApiPage: NextPage = () => {
     return <LoadingPlaceholderForAdminPages />
   }
 
-  // if (!auth.user || !auth.isAuthenticated) {
-  //   router.replace('/sign-in')
-  //   return <></>
-  // }
   if (!auth.user || !auth.isAuthenticated) {
     void initiateSignIn(auth, router.asPath)  
     return null
   }
-
-  // const styles = {
-  //   container: {
-  //     backgroundColor: 'var(--illinois-background-dark)',
-  //     color: 'var(--illinois-white)',
-  //   },
-  //   header: {
-  //     borderBottom: '1px solid var(--illinois-storm-light)',
-  //   },
-  // };
 
   return (
     <>

@@ -1,8 +1,6 @@
 // src/pages/api/chat-api/keys/validate.ts
 
-import { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '~/utils/supabaseClient'
-// import { clerkClient } from '@clerk/nextjs/server'
 import posthog from 'posthog-js'
 import { NextRequest, NextResponse } from 'next/server'
 import type { AuthContextProps } from 'react-oidc-context'
@@ -87,17 +85,11 @@ export async function validateApiKeyAndRetrieveData(
   } catch (userError) {
     // Log the error if there's an issue retrieving the user object.
     console.error('Error retrieving user object:', userError)
-    // posthog.capture('api_key_validation_failed', {
-    //   userId: userObject?.id,
-    //   error: (userError as Error).message,
-    // })
     posthog.capture('api_key_validation_failed', {
       error: (userError as Error).message,
     })
     throw userError
   }
-  // console.log('userObject', userObject, 'isValidApiKey', isValidApiKey)
-  // return { isValidApiKey, userObject }
 }
 
 /**
@@ -115,13 +107,6 @@ export default async function handler(req: NextRequest, res: NextResponse) {
       course_name: string
     }
 
-    // console.log('api_key', api_key, 'course_name', course_name)
-
-    // Validate the API key and retrieve the user object.
-    // const { isValidApiKey, userObject } = await validateApiKeyAndRetrieveData(
-    //   api_key,
-    //   course_name,
-    // )
     const { isValidApiKey, authContext } = await validateApiKeyAndRetrieveData(
       api_key,
       course_name,
@@ -134,7 +119,6 @@ export default async function handler(req: NextRequest, res: NextResponse) {
     }
 
     // Respond with the user object if the API key is valid.
-    // return NextResponse.json({ userObject }, { status: 200 })
     return NextResponse.json({ authContext }, { status: 200 })
   } catch (error) {
     // Respond with a 500 Internal Server Error status if an exception occurs.

@@ -2,8 +2,6 @@ import { type AppType } from 'next/app'
 import { MantineProvider } from '@mantine/core'
 import { Notifications } from '@mantine/notifications'
 import { appWithTranslation } from 'next-i18next'
-// import { ClerkLoaded, ClerkProvider, GoogleOneTap } from '@clerk/nextjs'
-// import { dark } from '@clerk/themes'
 
 import '~/styles/globals.css'
 import '~/styles/citation-tooltips.css'
@@ -20,7 +18,6 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { Analytics } from '@vercel/analytics/next'
 
 import { KeycloakProvider } from '../providers/KeycloakProvider';
-import { AuthProvider } from 'react-oidc-context'
 
 // Check that PostHog is client-side (used to handle Next.js SSR)
 if (typeof window !== 'undefined') {
@@ -58,13 +55,8 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
     }
   }, [])
   
-  const BYPASS_MAINTENANCE = ['/sign-in', '/sign-up']
   useEffect(() => {
     const checkMaintenanceMode = async () => {
-      if (BYPASS_MAINTENANCE.includes(router.pathname)) {
-        setIsMaintenanceMode(false)
-        return
-      }
       
       if (effectRan.current) return
 
@@ -82,7 +74,7 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
     effectRan.current = true
   }, [])
 
-  if (false) {
+  if (isMaintenanceMode) {
     return <Maintenance />
   } else {
     return (
