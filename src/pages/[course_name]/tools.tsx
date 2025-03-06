@@ -28,14 +28,13 @@ const ToolsPage: NextPage = () => {
   const GetCurrentPageName = () => {
     // return router.asPath.slice(1).split('/')[0]
     // Possible improvement.
-    return router.query.course_name as string // Change this line
+    return router.query.course_name as string
   }
   const auth = useAuth()
 
   const course_name = GetCurrentPageName() as string
 
   const [courseData, setCourseData] = useState(null)
-  const [courseExists, setCourseExists] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -47,7 +46,6 @@ const ToolsPage: NextPage = () => {
         `/api/UIUC-api/getCourseExists?course_name=${course_name}`,
       )
       const data = await response.json()
-      setCourseExists(data)
       if (data) {
         const response = await fetch(
           `https://flask-production-751b.up.railway.app/getAll?course_name=${course_name}`,
@@ -77,12 +75,15 @@ const ToolsPage: NextPage = () => {
     )
   }
 
+  if (isLoading) {
+    return <LoadingPlaceholderForAdminPages />
+  }
+
   const user_emails = auth.user?.profile?.email ? [auth.user.profile.email] : []
 
   // if their account is somehow broken (with no email address)
 
   // Don't edit certain special pages (no context allowed)
-  console.log('course name', course_name)
   if (
     course_name &&
     (course_name.toLowerCase() == 'gpt4' ||

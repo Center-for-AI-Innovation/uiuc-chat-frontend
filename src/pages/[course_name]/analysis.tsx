@@ -14,6 +14,7 @@ import { CourseMetadata } from '~/types/courseMetadata'
 import NomicDocumentMap from '~/components/UIUC-Components/NomicDocumentsMap'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 import { useAuth } from 'react-oidc-context'
+import { initiateSignIn } from '~/utils/authHelpers'
 
 const CourseMain: NextPage = () => {
   const router = useRouter()
@@ -43,18 +44,18 @@ const CourseMain: NextPage = () => {
     fetchCourseData()
   }, [router.isReady])
 
-  if (auth.isLoading || isLoading || courseName == null) {
+  if (
+    auth.isLoading ||
+    isLoading ||
+    !auth.isAuthenticated ||
+    courseName == null
+  ) {
     return <LoadingPlaceholderForAdminPages />
   }
 
-  if (!auth.isAuthenticated) {
-    console.log(
-      'User not logged in',
-      auth.isAuthenticated,
-      !auth.isLoading,
-      courseName,
-    )
-    return <AuthComponent course_name={courseName as string} />
+  if (!auth.user || !auth.isAuthenticated) {
+    void initiateSignIn(auth, router.asPath)
+    return null
   }
 
   // Don't edit certain special pages (no context allowed)
