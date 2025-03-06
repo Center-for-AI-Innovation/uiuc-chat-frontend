@@ -19,11 +19,6 @@ export default async function successDocs(
 
   const course_name = req.query.course_name as string
 
-  const authHeader = req.headers.authorization
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Valid Bearer token is required' })
-  }
-
   try {
     const { data, error } = await supabase
       .from('documents')
