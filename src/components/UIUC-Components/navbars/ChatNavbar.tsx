@@ -18,8 +18,8 @@ import {
 import { IconHome, IconSettings, IconPlus } from '@tabler/icons-react'
 import { useRouter } from 'next/router'
 import { montserrat_heading } from 'fonts'
-// import { useUser } from '@clerk/nextjs'
-// import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
+
+
 import { useAuth } from 'react-oidc-context'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import HomeContext from '~/pages/api/home/home.context'
@@ -174,7 +174,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
   const [show, setShow] = useState(true)
   const [isAdminOrOwner, setIsAdminOrOwner] = useState(false)
   const auth = useAuth()
-  // const clerk_user = useUser()
+  
   const { classes, theme } = useStyles({ isAdmin: isAdminOrOwner })
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== 'undefined' ? window.innerWidth : 825,
@@ -193,15 +193,9 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
 
   useEffect(() => {
     const fetchCourses = async () => {
-      // if (clerk_user.isLoaded && clerk_user.isSignedIn) {
         if (auth.isAuthenticated) {
-        // const currUserEmails = extractEmailsFromClerk(clerk_user.user)
         const userEmail = auth.user?.profile.email
         const currUserEmails = userEmail ? [userEmail] : []
-        // Posthog identify
-        // posthog?.identify(clerk_user.user.id, {
-        //   email: currUserEmails[0] || 'no_email',
-        // })
         posthog?.identify(auth.user?.profile.sub, {
           email: currUserEmails[0] || 'no_email',
         })
@@ -645,26 +639,6 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                 justifyContent: 'flex-center',
               }}
             >
-              {/* <SignedIn>
-                <Group grow spacing={'xs'}>
-                  <UserButton afterSignOutUrl="/" />
-                </Group>
-              </SignedIn>
-              <SignedOut>
-                <SignInButton>
-                  <button className={classes.link}>
-                    <div
-                      className={`${montserrat_heading.variable} font-montserratHeading`}
-                      style={{ fontSize: '12px' }}
-                    >
-                      <span style={{ whiteSpace: 'nowrap' }}>Sign in / </span>
-                      <span> </span>
-                      ^^ THIS SPAN IS REQUIRED !!! TO have nice multiline behavior
-                      <span style={{ whiteSpace: 'nowrap' }}>Sign up</span>
-                    </div>
-                  </button>
-                </SignInButton>
-              </SignedOut> */}
               <AuthMenu />
             </div>
           </Group>

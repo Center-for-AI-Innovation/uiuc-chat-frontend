@@ -84,7 +84,6 @@ const useStyles = createStyles((theme: MantineTheme) => ({
   },
 }))
 
-// import { useAuth, useUser } from '@clerk/nextjs'
 import { useAuth } from 'react-oidc-context'
 
 export const GetCurrentPageName = () => {
@@ -128,12 +127,8 @@ const formatPercentageChange = (value: number | null | undefined) => {
 }
 
 const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
-  // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
   const { classes, theme } = useStyles()
-  // const { isLoaded, userId, sessionId, getToken } = useAuth() // Clerk Auth
   const auth = useAuth()
-  // const { isSignedIn, user } = useUser()
-  // const clerk_user = useUser()
   const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
     null,
   )
@@ -166,8 +161,6 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   // TODO: remove this hook... we should already have this from the /materials props???
   useEffect(() => {
     const fetchData = async () => {
-      // const userEmail = extractEmailsFromClerk(clerk_user.user)
-      // setCurrentEmail(userEmail[0] as string)
       setCurrentEmail(auth.user?.profile.email as string)
 
       try {
@@ -183,12 +176,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
         setCourseMetadata(metadata)
       } catch (error) {
         console.error(error)
-        // alert('An error occurred while fetching course metadata. Please try again later.')
       }
     }
 
     fetchData()
-  // }, [currentPageName, clerk_user.isLoaded, clerk_user.user])
   }, [currentPageName, !auth.isLoading, auth.user])
 
   const [hasConversationData, setHasConversationData] = useState<boolean>(true)
@@ -291,7 +282,6 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
   const [view, setView] = useState('hour')
 
-  // if (!isLoaded || !courseMetadata) {
   if (auth.isLoading || !courseMetadata) {
     return (
       <MainPageBackground>

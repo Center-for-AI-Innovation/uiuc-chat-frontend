@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
-// import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import type { NextRequest } from 'next/server'
-// import { type NextFetchEvent } from 'next/server'
 
 // // Private by default, public routes are defined below (regex)
 // const isPublicRoute = createRouteMatcher([
@@ -82,20 +80,6 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.redirect(authUrl);
   }
 
-  // // First check for materials redirect
-  // const redirectResponse = materialsRedirectMiddleware(request)
-  // if (redirectResponse) return redirectResponse
-
-  // // Then proceed with Clerk middleware
-  // const authMiddleware = clerkMiddleware((auth) => {
-  //   if (!isPublicRoute(request)) {
-  //     auth().protect()
-  //   }
-  // })
-
-  // // Pass both request and event arguments
-  // return authMiddleware(request, {} as NextFetchEvent)
-
   // Allow auth callbacks to proceed without interference
   if (request.nextUrl.searchParams.has('state') && 
       request.nextUrl.searchParams.has('session_state') && 
@@ -131,26 +115,8 @@ export default async function middleware(request: NextRequest) {
     return response
   }
 
-  // For all other routes, treat as protected course routes
-  // const course_name = pathname.split('/')[1]
-  // if (course_name === 'sign-in' || course_name === 'sign-up') {
-  //   // Redirect auth routes to proper auth pages
-  //   return NextResponse.redirect(new URL(`/${course_name}`, request.url))
-  // }
-
   return NextResponse.next()
 }
-
-// // Update the matcher to include the materials routes
-// export const config = {
-//   matcher: [
-//     '/((?!.*\\..*|_next).*)',
-//     '/',
-//     '/(api|trpc)/(.*)',
-//     '/\\[course_name\\]/gpt4',
-//     '/:path*/materials', // Add this line to match materials routes
-//   ],
-// }
 
 export const config = {
   matcher: [
