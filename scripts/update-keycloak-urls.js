@@ -55,7 +55,8 @@ async function updateKeycloakRedirectURIs() {
       ? `https://${projectName}-git-${branchName}-${teamSlug}.vercel.app`
       : vercelBaseUrl
 
-    const currentRedirectUris = new Set(client.redirectUris)
+    // Ensure redirectUris and webOrigins are arrays before creating Sets
+    const currentRedirectUris = new Set(client.redirectUris || [])
     const currentWebOrigins = new Set(client.webOrigins || [])
 
     // Add to redirect URIs
