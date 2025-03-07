@@ -50,6 +50,7 @@ const logConversationToSupabase = async (req: any, res: any) => {
         body: JSON.stringify({
           messages: sanitizedConversation.messages,
           course_name: course_name,
+          conversation_id: conversation.id,
         }),
       },
     )

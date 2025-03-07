@@ -4,7 +4,8 @@ import Image from 'next/image'
 export default function Footer({ isNavbar = false }: { isNavbar?: boolean }) {
   return (
     <footer className="footer footer-center rounded p-10 text-base-content">
-      <div className="grid grid-flow-col gap-4">
+      {/*       <div className="grid grid-flow-col gap-4"> */}
+      <div className="flex flex-col flex-wrap items-center justify-center gap-4 sm:flex-row">
         <Link
           href="/disclaimer"
           className="link-hover link text-blue-500"

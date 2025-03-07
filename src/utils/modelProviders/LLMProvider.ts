@@ -34,6 +34,11 @@ import {
   GeminiModelID,
   GeminiModels,
 } from '~/utils/modelProviders/types/gemini'
+import {
+  type SambaNovaModel,
+  SambaNovaModelID,
+  SambaNovaModels,
+} from '~/utils/modelProviders/types/SambaNova'
 
 export enum ProviderNames {
   Ollama = 'Ollama',
@@ -45,6 +50,7 @@ export enum ProviderNames {
   NCSAHostedVLM = 'NCSAHostedVLM',
   Bedrock = 'Bedrock',
   Gemini = 'Gemini',
+  SambaNova = 'SambaNova',
 }
 
 // Define the preferred order of providers, like in modelSelect dropdown
@@ -56,6 +62,7 @@ export const LLM_PROVIDER_ORDER: ProviderNames[] = [
   ProviderNames.Azure,
   ProviderNames.Gemini,
   ProviderNames.Bedrock,
+  ProviderNames.SambaNova,
   ProviderNames.Ollama,
   ProviderNames.WebLLM,
 ]
@@ -69,6 +76,7 @@ export type AnySupportedModel =
   | NCSAHostedVLMModel
   | BedrockModel
   | GeminiModel
+  | SambaNovaModel
 // Add other vision capable models as needed
 export const VisionCapableModels: Set<
   | OpenAIModelID
@@ -77,6 +85,7 @@ export const VisionCapableModels: Set<
   | NCSAHostedVLMModelID
   | GeminiModelID
   | BedrockModelID
+  | SambaNovaModelID
 > = new Set([
   OpenAIModelID.GPT_4_Turbo,
   OpenAIModelID.GPT_4o,
@@ -108,6 +117,10 @@ export const VisionCapableModels: Set<
   BedrockModelID.Nova_Lite,
   BedrockModelID.Llama3_2_11B_Instruct,
   BedrockModelID.Llama3_2_90B_Instruct,
+
+  // SambaNova
+  SambaNovaModelID.Llama_3_2_11B_Vision_Instruct,
+  SambaNovaModelID.Llama_3_2_90B_Vision_Instruct,
 ])
 
 /**
@@ -131,6 +144,7 @@ export const AllSupportedModels: Set<GenericSupportedModel> = new Set([
   ...Object.values(NCSAHostedVLMModels),
   ...Object.values(BedrockModels),
   ...Object.values(GeminiModels),
+  ...Object.values(SambaNovaModels),
   // ...webLLMModels,
 ])
 // e.g. Easily validate ALL POSSIBLE models that we support. They may be offline or disabled, but they are supported.
@@ -221,6 +235,11 @@ export interface GeminiProvider extends BaseLLMProvider {
   models?: GeminiModel[]
 }
 
+export interface SambaNovaProvider extends BaseLLMProvider {
+  provider: ProviderNames.SambaNova
+  models?: SambaNovaModel[]
+}
+
 export type LLMProvider =
   | OllamaProvider
   | OpenAIProvider
@@ -231,6 +250,7 @@ export type LLMProvider =
   | NCSAHostedVLMProvider
   | BedrockProvider
   | GeminiProvider
+  | SambaNovaProvider
 
 // export type AllLLMProviders = {
 //   [P in ProviderNames]?: LLMProvider & { provider: P }

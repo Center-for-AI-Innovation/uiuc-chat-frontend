@@ -23,8 +23,6 @@ export async function POST(req: Request) {
       chatBody: ChatBody
     } = await req.json()
 
-    console.log('chatBody: ', chatBody)
-
     const conversation = chatBody.conversation
     if (!conversation) {
       throw new Error('Conversation is missing from the chat body')

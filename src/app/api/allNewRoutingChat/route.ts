@@ -16,9 +16,8 @@ export async function POST(req: NextRequest, res: NextResponse) {
   const { searchParams } = new URL(req.url)
   const summary = searchParams.get('summary') === 'true'
 
-  const body = await req.json()
-
   try {
+    const body = await req.json()
     const { conversation, course_name, courseMetadata, mode } = body as ChatBody
 
     const buildPromptStartTime = Date.now()

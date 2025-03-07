@@ -6,7 +6,6 @@ import {
   Title,
   useMantineTheme,
   Tooltip,
-  Checkbox,
   TextInput,
   Text,
   SegmentedControl,
@@ -28,7 +27,6 @@ import { useRouter } from 'next/router'
 import { useMediaQuery } from '@mantine/hooks'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { useRef } from 'react'
 import { LoadingSpinner } from './LoadingSpinner'
 import { Montserrat } from 'next/font/google'
 
@@ -114,9 +112,6 @@ export const WebScrape = ({
   const [maxUrls, setMaxUrls] = useState('50')
   const [scrapeStrategy, setScrapeStrategy] =
     useState<string>('equal-and-below')
-  const [courseID, setCourseID] = useState<string>('')
-  const [showContentOptions, setShowContentOptions] = useState<boolean>(false)
-  const logoRef = useRef(null)
   const [selectedCanvasOptions, setSelectedCanvasOptions] = useState<string[]>([
     'files',
     'pages',
@@ -141,9 +136,6 @@ export const WebScrape = ({
     const value = e.target.value
     if (variable === 'maxUrls') {
       setMaxUrls(value)
-    } else if (variable === 'maxDepth') {
-      // TODO: implement depth again.
-      // setMaxDepth(value)
     }
   }
 
@@ -236,13 +228,11 @@ export const WebScrape = ({
 
   const [inputErrors, setInputErrors] = useState({
     maxUrls: { error: false, message: '' },
-    maxDepth: { error: false, message: '' },
   })
 
   const validateInputs = () => {
     const errors = {
       maxUrls: { error: false, message: '' },
-      maxDepth: { error: false, message: '' },
     }
     // Check for maxUrls
     if (!maxUrls) {
@@ -370,8 +360,6 @@ export const WebScrape = ({
         withBorder: true,
         loading: false,
       })
-      // return error
-      // throw error
     }
   }
 
@@ -399,20 +387,6 @@ export const WebScrape = ({
       return null
     }
   }
-
-  const checkboxStyle = {
-    borderColor: theme.colors.gray[4] as string,
-  }
-
-  useEffect(() => {
-    if (logoRef.current) {
-      const logoElement = logoRef.current as HTMLImageElement
-      logoElement.style.width = '60%'
-      logoElement.style.height = '60%'
-      logoElement.style.position = 'relative'
-      logoElement.style.top = '2px'
-    }
-  }, [logoRef.current])
 
   useEffect(() => {
     if (url && url.length > 0 && validateUrl(url)) {
@@ -462,9 +436,6 @@ export const WebScrape = ({
             disabled={isDisabled}
             onChange={(e) => {
               setUrl(e.target.value)
-              setShowContentOptions(
-                e.target.value.includes('canvas.illinois.edu'),
-              )
               if (e.target.value.includes('coursera.org')) {
                 setIcon(
                   <img
@@ -574,9 +545,6 @@ export const WebScrape = ({
             disabled={isDisabled}
             onChange={(e) => {
               setUrl(e.target.value)
-              setShowContentOptions(
-                e.target.value.includes('canvas.illinois.edu'),
-              )
               if (e.target.value.includes('coursera.org')) {
                 setIcon(
                   <img
@@ -641,298 +609,153 @@ export const WebScrape = ({
             }
             rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
           />
-          {/* Canvas ingest form */}
-          {showContentOptions && (
-            <form
-              className="mt-3 w-[70%] min-w-[20rem] lg:w-[70%]"
-              onSubmit={(event) => {
-                event.preventDefault()
-              }}
-            >
-              <div>
-                <div className="mb-2 flex items-center">
-                  <Tooltip
-                    multiline
-                    color="#15162b"
-                    arrowPosition="side"
-                    position="bottom-start"
-                    arrowSize={8}
-                    withArrow
-                    label="Select this option to ingest all files from the Canvas course."
-                  >
-                    <Checkbox
-                      value="files"
-                      label="Files"
-                      size="md"
-                      style={checkboxStyle}
-                      checked={selectedCanvasOptions.includes('files')}
-                      onChange={() => handleCanvasOptionChange('files')}
-                    />
-                  </Tooltip>
-                </div>
-                <div className="mb-2 flex items-center">
-                  <Tooltip
-                    multiline
-                    color="#15162b"
-                    arrowPosition="side"
-                    position="bottom-start"
-                    arrowSize={8}
-                    withArrow
-                    label="Select this option to ingest all pages from the Canvas course."
-                  >
-                    <Checkbox
-                      value="pages"
-                      label="Pages"
-                      size="md"
-                      style={checkboxStyle}
-                      checked={selectedCanvasOptions.includes('pages')}
-                      onChange={() => handleCanvasOptionChange('pages')}
-                    />
-                  </Tooltip>
-                </div>
-                <div className="mb-2 flex items-center">
-                  <Tooltip
-                    multiline
-                    color="#15162b"
-                    arrowPosition="side"
-                    position="bottom-start"
-                    arrowSize={8}
-                    withArrow
-                    label="Select this option to ingest all modules from the Canvas course."
-                  >
-                    <Checkbox
-                      value="modules"
-                      label="Modules"
-                      size="md"
-                      style={checkboxStyle}
-                      checked={selectedCanvasOptions.includes('modules')}
-                      onChange={() => handleCanvasOptionChange('modules')}
-                    />
-                  </Tooltip>
-                </div>
-                <div className="mb-2 flex items-center">
-                  <Tooltip
-                    multiline
-                    color="#15162b"
-                    arrowPosition="side"
-                    position="bottom-start"
-                    arrowSize={8}
-                    withArrow
-                    label="Select this option to ingest the course syllabus from Canvas."
-                  >
-                    <Checkbox
-                      value="syllabus"
-                      label="Syllabus"
-                      size="md"
-                      style={checkboxStyle}
-                      checked={selectedCanvasOptions.includes('syllabus')}
-                      onChange={() => handleCanvasOptionChange('syllabus')}
-                    />
-                  </Tooltip>
-                </div>
-                <div className="mb-2 flex items-center">
-                  <Tooltip
-                    multiline
-                    color="#15162b"
-                    arrowPosition="side"
-                    position="bottom-start"
-                    arrowSize={8}
-                    withArrow
-                    label="Select this option to ingest all assignments from the Canvas course."
-                  >
-                    <Checkbox
-                      value="assignments"
-                      label="Assignments"
-                      size="md"
-                      style={checkboxStyle}
-                      checked={selectedCanvasOptions.includes('assignments')}
-                      onChange={() => handleCanvasOptionChange('assignments')}
-                    />
-                  </Tooltip>
-                </div>
-                <div className="flex items-center">
-                  <Tooltip
-                    multiline
-                    color="#15162b"
-                    arrowPosition="side"
-                    position="bottom-start"
-                    arrowSize={8}
-                    withArrow
-                    label="Select this option to ingest all discussions from the Canvas course."
-                  >
-                    <Checkbox
-                      value="discussions"
-                      label="Discussions"
-                      size="md"
-                      style={checkboxStyle}
-                      checked={selectedCanvasOptions.includes('discussions')}
-                      onChange={() => handleCanvasOptionChange('discussions')}
-                    />
-                  </Tooltip>
-                </div>
-              </div>
-              <Text className="mt-4 text-lg font-bold text-red-600 underline">
-                Please ensure that you have added the UIUC Chatbot as a student
-                to your course on Canvas before you begin ingesting the course
-                content. The bot email address is uiuc.chat@ad.uillinois.edu and
-                the bot name is UIUC Course AI.
-              </Text>
-            </form>
-          )}
 
           {/* Detailed web ingest form */}
-          {isUrlUpdated && shouldShowFields(url) && (
-            <form
-              className="w-[80%] min-w-[20rem] lg:w-[75%]"
-              onSubmit={(event) => {
-                event.preventDefault()
-              }}
-            >
-              <div className="pb-2 pt-2">
-                <Tooltip
-                  multiline
-                  w={400}
-                  color="#15162b"
-                  arrowPosition="side"
-                  arrowSize={8}
-                  withArrow
-                  position="bottom-start"
-                  label="We will attempt to visit this number of pages, but not all will be scraped if they're duplicates, broken or otherwise inaccessible."
-                >
-                  <div>
-                    <Text
-                      style={{ color: '#C1C2C5', fontSize: '16px' }}
-                      className={`${montserrat_heading.variable} font-montserratHeading`}
-                    >
-                      Max URLs (1 to 500)
-                    </Text>
-                    <TextInput
-                      styles={{ input: { backgroundColor: '#1A1B1E' } }}
-                      name="maximumUrls"
-                      radius="md"
-                      placeholder="Default 50"
-                      value={maxUrls}
-                      onChange={(e) => {
-                        handleInputChange(e, 'maxUrls')
-                      }}
-                      error={inputErrors.maxUrls.error}
-                    />
-                  </div>
-                </Tooltip>
-              </div>
-              {inputErrors.maxUrls.error && (
-                <p style={{ color: 'red' }}>{inputErrors.maxUrls.message}</p>
-              )}
-              {inputErrors.maxDepth.error && (
-                <p style={{ color: 'red' }}>{inputErrors.maxDepth.message}</p>
-              )}
 
-              <Text
-                style={{ color: '#C1C2C5', fontSize: '16px' }}
-                className={`${montserrat_heading.variable} font-montserratHeading`}
+          <form
+            className="w-[80%] min-w-[20rem] lg:w-[75%]"
+            onSubmit={(event) => {
+              event.preventDefault()
+            }}
+          >
+            <div className="pb-2 pt-2">
+              <Tooltip
+                multiline
+                w={400}
+                color="#15162b"
+                arrowPosition="side"
+                arrowSize={8}
+                withArrow
+                position="bottom-start"
+                label="We will attempt to visit this number of pages, but not all will be scraped if they're duplicates, broken or otherwise inaccessible."
               >
-                Limit web crawl
-              </Text>
-              {/* <Text style={{ color: '#C1C2C5', fontSize: '16px' }} className={`${montserrat_paragraph.variable} font-montserratParagraph`}>Limit web crawl (from least to most inclusive)</Text> */}
-              <div className="pl-3">
-                <List>
-                  <List.Item>
-                    <strong>Equal and Below:</strong> Only scrape content that
-                    starts will the given URL. E.g. nasa.gov/blogs will scrape
-                    all blogs like nasa.gov/blogs/new-rocket but never go to
-                    nasa.gov/events.
-                  </List.Item>
-                  <List.Item>
-                    <strong>Same subdomain:</strong> Crawl the entire subdomain.
-                    E.g. docs.nasa.gov will grab that entire subdomain, but not
-                    nasa.gov or api.nasa.gov.
-                  </List.Item>
-                  <List.Item>
-                    <strong>Entire domain:</strong> Crawl as much of this entire
-                    website as possible. E.g. nasa.gov also includes
-                    docs.nasa.gov
-                  </List.Item>
-                  <List.Item>
-                    <span>
-                      <strong>All:</strong> Start on the given URL and wander
-                      the web...{' '}
-                      <Text style={{ color: '#C1C2C5' }}>
-                        For more detail{' '}
-                        <a
-                          className={'text-purple-600'}
-                          href="https://docs.uiuc.chat/features/web-crawling-details"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          read the docs
-                        </a>
-                        .
-                      </Text>
-                    </span>
-                  </List.Item>
-                </List>
-              </div>
+                <div>
+                  <Text
+                    style={{ color: '#C1C2C5', fontSize: '16px' }}
+                    className={`${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    Max URLs (1 to 500)
+                  </Text>
+                  <TextInput
+                    styles={{ input: { backgroundColor: '#1A1B1E' } }}
+                    name="maximumUrls"
+                    radius="md"
+                    placeholder="Default 50"
+                    value={maxUrls}
+                    onChange={(e) => {
+                      handleInputChange(e, 'maxUrls')
+                    }}
+                    error={inputErrors.maxUrls.error}
+                  />
+                </div>
+              </Tooltip>
+            </div>
+            {inputErrors.maxUrls.error && (
+              <p style={{ color: 'red' }}>{inputErrors.maxUrls.message}</p>
+            )}
 
-              <Text style={{ color: '#C1C2C5' }}>
-                <strong>I suggest starting with Equal and Below</strong>, then
-                just re-run this if you need more later.
-              </Text>
-              <div className="pt-2"></div>
-              <SegmentedControl
-                fullWidth
-                orientation="vertical"
-                size="sm"
-                radius="md"
-                value={scrapeStrategy}
-                onChange={(strat) => setScrapeStrategy(strat)}
-                data={[
-                  {
-                    // Maybe use IconArrowBarDown ??
-                    value: 'equal-and-below',
-                    label: (
-                      <Center style={{ gap: 10 }}>
-                        <IconSitemap
-                          style={{ width: rem(16), height: rem(16) }}
-                        />
-                        <span>Equal and Below</span>
-                      </Center>
-                    ),
-                  },
-                  {
-                    value: 'same-hostname',
-                    label: (
-                      <Center style={{ gap: 10 }}>
-                        <IconSubtask
-                          style={{ width: rem(16), height: rem(16) }}
-                        />
-                        <span>Subdomain</span>
-                      </Center>
-                    ),
-                  },
-                  {
-                    value: 'same-domain',
-                    label: (
-                      <Center style={{ gap: 10 }}>
-                        <IconHome style={{ width: rem(16), height: rem(16) }} />
-                        <span>Entire domain</span>
-                      </Center>
-                    ),
-                  },
-                  {
-                    value: 'all',
-                    label: (
-                      <Center style={{ gap: 10 }}>
-                        <IconWorld
-                          style={{ width: rem(16), height: rem(16) }}
-                        />
-                        <span>All</span>
-                      </Center>
-                    ),
-                  },
-                ]}
-              />
-            </form>
-          )}
+            <Text
+              style={{ color: '#C1C2C5', fontSize: '16px' }}
+              className={`${montserrat_heading.variable} font-montserratHeading`}
+            >
+              Limit web crawl
+            </Text>
+            {/* <Text style={{ color: '#C1C2C5', fontSize: '16px' }} className={`${montserrat_paragraph.variable} font-montserratParagraph`}>Limit web crawl (from least to most inclusive)</Text> */}
+            <div className="pl-3">
+              <List>
+                <List.Item>
+                  <strong>Equal and Below:</strong> Only scrape content that
+                  starts will the given URL. E.g. nasa.gov/blogs will scrape all
+                  blogs like nasa.gov/blogs/new-rocket but never go to
+                  nasa.gov/events.
+                </List.Item>
+                <List.Item>
+                  <strong>Same subdomain:</strong> Crawl the entire subdomain.
+                  E.g. docs.nasa.gov will grab that entire subdomain, but not
+                  nasa.gov or api.nasa.gov.
+                </List.Item>
+                <List.Item>
+                  <strong>Entire domain:</strong> Crawl as much of this entire
+                  website as possible. E.g. nasa.gov also includes docs.nasa.gov
+                </List.Item>
+                <List.Item>
+                  <span>
+                    <strong>All:</strong> Start on the given URL and wander the
+                    web...{' '}
+                    <Text style={{ color: '#C1C2C5' }}>
+                      For more detail{' '}
+                      <a
+                        className={'text-purple-600'}
+                        href="https://docs.uiuc.chat/features/web-crawling-details"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        read the docs
+                      </a>
+                      .
+                    </Text>
+                  </span>
+                </List.Item>
+              </List>
+            </div>
+
+            <Text style={{ color: '#C1C2C5' }}>
+              <strong>I suggest starting with Equal and Below</strong>, then
+              just re-run this if you need more later.
+            </Text>
+            <div className="pt-2"></div>
+            <SegmentedControl
+              fullWidth
+              orientation="vertical"
+              size="sm"
+              radius="md"
+              value={scrapeStrategy}
+              onChange={(strat) => setScrapeStrategy(strat)}
+              data={[
+                {
+                  // Maybe use IconArrowBarDown ??
+                  value: 'equal-and-below',
+                  label: (
+                    <Center style={{ gap: 10 }}>
+                      <IconSitemap
+                        style={{ width: rem(16), height: rem(16) }}
+                      />
+                      <span>Equal and Below</span>
+                    </Center>
+                  ),
+                },
+                {
+                  value: 'same-hostname',
+                  label: (
+                    <Center style={{ gap: 10 }}>
+                      <IconSubtask
+                        style={{ width: rem(16), height: rem(16) }}
+                      />
+                      <span>Subdomain</span>
+                    </Center>
+                  ),
+                },
+                {
+                  value: 'same-domain',
+                  label: (
+                    <Center style={{ gap: 10 }}>
+                      <IconHome style={{ width: rem(16), height: rem(16) }} />
+                      <span>Entire domain</span>
+                    </Center>
+                  ),
+                },
+                {
+                  value: 'all',
+                  label: (
+                    <Center style={{ gap: 10 }}>
+                      <IconWorld style={{ width: rem(16), height: rem(16) }} />
+                      <span>All</span>
+                    </Center>
+                  ),
+                },
+              ]}
+            />
+          </form>
         </>
       )}
     </>

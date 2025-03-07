@@ -50,8 +50,7 @@ export async function handleFunctionCall(
     }
 
     const openaiResponse: ChatCompletionMessageToolCall[] =
-      openaiFunctionCallResponse
-
+      openaiFunctionCallResponse.choices?.[0]?.message?.tool_calls || []
     console.log('OpenAI tools to run: ', openaiResponse)
 
     // Map tool into UIUCTool, parse arguments

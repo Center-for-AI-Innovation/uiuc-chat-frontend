@@ -144,8 +144,6 @@ export default class ChatUI {
     projectName: string,
     courseMetadata: CourseMetadata,
   ) {
-    console.log('chatBody (webllm)', chatBody)
-
     const buildPromptResponse = await fetch('/api/buildPrompt', {
       method: 'POST',
       headers: {
