@@ -52,18 +52,31 @@ export async function POST(req: NextRequest, res: NextResponse) {
     const duration = endTime - startTime
     console.log(`Total duration: ${duration}ms`)
     return result
-
   } catch (error) {
     console.error('Error in routeModelRequest:', error)
 
     let errorMessage = 'An unexpected error occurred'
     let statusCode = 500
+
     if (error instanceof OpenAIError) {
-      statusCode = parseInt(error.code || '500')
+      const parsedCode = parseInt(error.code || '500')
+      statusCode = parsedCode >= 200 && parsedCode <= 599 ? parsedCode : 500
       errorMessage = error.message
     } else if (error instanceof Error) {
       errorMessage = error.message
     }
-  }
 
+    return new Response(
+      JSON.stringify({
+        error: errorMessage,
+        code: statusCode,
+      }),
+      {
+        status: statusCode,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    )
+  }
 }
