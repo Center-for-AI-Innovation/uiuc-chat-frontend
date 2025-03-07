@@ -128,8 +128,7 @@ const ChatPage: NextPage = () => {
 
           // If course is not public, proceed with normal auth flow
           if (!auth.isAuthenticated) {
-            const currentPath = encodeURIComponent(router.asPath)
-            router.push(`/sign-in?redirect=${currentPath}`)
+            router.replace(`/${courseName}/not_authorized`)
             return
           }
 
@@ -184,5 +183,5 @@ const ChatPage: NextPage = () => {
     </>
   )
 }
-
+ 
 export default ChatPage
