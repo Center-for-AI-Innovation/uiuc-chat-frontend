@@ -230,7 +230,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
         >
           <Link href="/" style={{ flex: 'none', flexWrap: 'nowrap' }}>
             <h2 className="cursor-pointer font-extrabold tracking-tight text-white sm:ms-3 sm:text-[2rem] sm:text-[2rem] md:text-3xl">
-              UIUC.<span className="text-[hsl(280,100%,70%)]">chat</span>
+              mHealth<span className="text-[hsl(280,100%,70%)]">Chatbot</span>
             </h2>
           </Link>
 

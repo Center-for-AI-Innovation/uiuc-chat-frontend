@@ -24,10 +24,10 @@ const Home: NextPage = () => {
   return (
     <>
       <Head>
-        <title>UIUC.chat</title>
+        <title>mHealth Chatbot</title>
         <meta
           name="description"
-          content="Chat with your documents, with full support for any format and web scraping."
+          content="Chat with your personal trainer with knowledge of your health and fitness."
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -53,9 +53,11 @@ const Home: NextPage = () => {
               ta="center"
               mt="md"
             >
-              Chat with your personal trainer
+              Your Companion in Wellness
               <br></br>
-              <span className="home-header_text-underline">Be healthy</span>
+              <span className="home-header_text-underline">
+                Embrace Vitality with AI Support
+              </span>
             </Title>
 
             {/* <Text color="#57534e" c="dimmed" ta="center" mt="md">
@@ -73,70 +75,6 @@ const Home: NextPage = () => {
 
           {/* Main courses */}
           {/* <CourseCard /> */}
-
-          <h4 className="font-extrabold tracking-tight text-white sm:text-[3rem]">
-            <div>
-              Some background{' '}
-              <span className="text-[hsl(280,100%,70%)]">about us</span>
-            </div>
-          </h4>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-              href="https://github.com/kastanday/ai-ta-frontend"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">Read the code →</h3>
-              <div className="text-lg">
-                100% free<br></br>100% open source &#40;MIT License&#41;
-                <br></br>100% awesome
-              </div>
-            </Link>
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-              href="https://ai.ncsa.illinois.edu/"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">
-                Sponsored by the Center of AI Innovation
-              </h3>
-              <div className="text-lg">
-                Part of the National Center for Supercomputing Applications.
-              </div>
-            </Link>
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-              href="https://kastanday.com/"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">Bio 👋</h3>
-              <div className="text-lg">
-                Made by Kastan Day at the University of Illinois.
-              </div>
-              {/* <div className="text-lg">Sponsored by the </div> */}
-            </Link>
-
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-              href="https://status.uiuc.chat/"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">Status page 📊</h3>
-              {/* <div className="text-lg">Check service uptime.</div> */}
-              <Image
-                src="https://status.uiuc.chat/api/badge/1/uptime/24?label=Uptime%2024%20hours"
-                alt="Service Uptime Badge"
-                width={150}
-                height={50}
-              />
-              <Image
-                src="https://status.uiuc.chat/api/badge/1/uptime/720?label=Uptime%2030%20days"
-                alt="Service Uptime Badge"
-                width={150}
-                height={50}
-              />
-            </Link>
-          </div>
         </div>
 
         {/* search */}
