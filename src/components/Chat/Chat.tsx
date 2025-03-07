@@ -336,8 +336,8 @@ export const Chat = memo(
             message.contexts = []
             message.content = Array.isArray(message.content)
               ? message.content.filter(
-                  (content) => content.type !== 'tool_image_url',
-                )
+                (content) => content.type !== 'tool_image_url',
+              )
               : message.content
 
             const updatedMessages = [...(selectedConversation.messages || [])]
@@ -540,12 +540,12 @@ export const Chat = memo(
                         .map((msg) => {
                           const contentText = Array.isArray(msg.content)
                             ? msg.content
-                                .filter(
-                                  (content) =>
-                                    content.type === 'text' && content.text,
-                                )
-                                .map((content) => content.text!)
-                                .join(' ')
+                              .filter(
+                                (content) =>
+                                  content.type === 'text' && content.text,
+                              )
+                              .map((content) => content.text!)
+                              .join(' ')
                             : typeof msg.content === 'string'
                               ? msg.content
                               : ''
@@ -560,12 +560,12 @@ export const Chat = memo(
                         .map((msg) => {
                           const contentText = Array.isArray(msg.content)
                             ? msg.content
-                                .filter(
-                                  (content) =>
-                                    content.type === 'text' && content.text,
-                                )
-                                .map((content) => content.text!)
-                                .join(' ')
+                              .filter(
+                                (content) =>
+                                  content.type === 'text' && content.text,
+                              )
+                              .map((content) => content.text!)
+                              .join(' ')
                             : typeof msg.content === 'string'
                               ? msg.content
                               : ''
@@ -597,9 +597,9 @@ export const Chat = memo(
                           ? msg.content.trim()
                           : Array.isArray(msg.content)
                             ? msg.content
-                                .map((c) => c.text)
-                                .join(' ')
-                                .trim()
+                              .map((c) => c.text)
+                              .join(' ')
+                              .trim()
                             : '',
                     })),
                   },
@@ -721,7 +721,7 @@ export const Chat = memo(
                   // Check if the response is NO_REWRITE_REQUIRED or if we couldn't extract a valid query
                   if (
                     rewrittenQuery.trim().toUpperCase() ===
-                      'NO_REWRITE_REQUIRED' ||
+                    'NO_REWRITE_REQUIRED' ||
                     !extractedQuery
                   ) {
                     console.log(
@@ -868,7 +868,7 @@ export const Chat = memo(
             }
           } else {
             try {
-              // CALL OUR NEW ENDPOINT... /api/chat
+              // CALL OUR NEW ENDPOINT... /api/allNewRoutingChat
               startOfCallToLLM = performance.now()
               try {
                 response = await fetch('/api/allNewRoutingChat', {
@@ -878,89 +878,55 @@ export const Chat = memo(
                   },
                   body: JSON.stringify(finalChatBody),
                 })
-                console.log('response from /api/chat', response)
+                console.debug('response from /api/chat', response)
 
                 // Check if response is ok before proceeding
                 if (!response.ok) {
                   const errorData = await response.json()
-                  throw new Error(
-                    errorData.error || 'Failed to get response from the server',
-                  )
+                  // Create a custom error object with both title and message
+                  const customError = new Error(errorData.message || 'Failed to get response from the server')
+                    // Attach the title as a property to the error object
+                    ; (customError as any).title = errorData.title || 'Error'
+                  throw customError
                 }
               } catch (error) {
-                // TODO: Improve error messages here...
-                console.error('Error routing to model provider:', error)
-                errorToast({
-                  title: 'Error routing to model provider',
-                  message:
-                    (error as Error).message || 'An unexpected error occurred',
-                })
+                console.error('Error calling the LLM:', error)
                 homeDispatch({ field: 'loading', value: false })
                 homeDispatch({ field: 'messageIsStreaming', value: false })
+
+                errorToast({
+                  title: (error as any).title || 'Error',
+                  message: error instanceof Error ? error.message : 'An unexpected error occurred',
+                })
                 return
               }
             } catch (error) {
-              // TODO: Improve error messages here...
-              console.error('Error routing to model provider:', error)
-              errorToast({
-                title: 'Error routing to model provider',
-                message:
-                  (error as Error).message || 'An unexpected error occurred',
-              })
+              console.error('Error in chat handler:', error)
               homeDispatch({ field: 'loading', value: false })
               homeDispatch({ field: 'messageIsStreaming', value: false })
+
+              errorToast({
+                title: (error as any).title || 'Error',
+                message: error instanceof Error ? error.message : 'An unexpected error occurred',
+              })
               return
             }
           }
 
           if (response instanceof Response && !response.ok) {
-            let final_response
-            try {
-              final_response = await response.json()
-            } catch (error) {
-              console.error('Error parsing response:', error)
-              homeDispatch({ field: 'loading', value: false })
-              homeDispatch({ field: 'messageIsStreaming', value: false })
-              errorToast({
-                title: 'Error',
-                message:
-                  'Received an invalid response from the server. Please try again.',
-              })
-              return
-            }
-
             homeDispatch({ field: 'loading', value: false })
             homeDispatch({ field: 'messageIsStreaming', value: false })
-            console.error('Error calling the LLM:', final_response)
 
-            if (final_response.error) {
-              let errorMessage = final_response.error
-              let errorCode = final_response.code
-
-              // Handle case where error is a JSON string
-              if (typeof final_response.error === 'string') {
-                try {
-                  const parsed = JSON.parse(final_response.error)
-                  errorMessage = parsed.error || parsed.message
-                  errorCode = parsed.code
-                } catch (e) {
-                  // Keep original error message if not valid JSON
-                }
-              }
-
+            try {
+              const errorData = await response.json()
               errorToast({
-                title: `Error calling LLM`,
-                message:
-                  errorMessage ||
-                  `An unexpected error occurred. Try using a different model.${errorCode ? ` Error code: ${errorCode}` : ''}`,
+                title: errorData.title || 'Error',
+                message: errorData.message || 'There was an unexpected error calling the LLM. Try using a different model.',
               })
-              return
-            } else {
+            } catch (error) {
               errorToast({
-                title: final_response.name || 'Error',
-                message:
-                  final_response.message ||
-                  'There was an unexpected error calling the LLM. Try using a different model (via the Settings button in the header).',
+                title: 'Error',
+                message: 'There was an unexpected error calling the LLM. Try using a different model.',
               })
             }
             return
@@ -1578,13 +1544,13 @@ export const Chat = memo(
 
     const statements =
       courseMetadata?.example_questions &&
-      courseMetadata.example_questions.length > 0
+        courseMetadata.example_questions.length > 0
         ? courseMetadata.example_questions
         : [
-            'Make a bullet point list of key takeaways from this project.',
-            'What are the best practices for [Activity or Process] in [Context or Field]?',
-            'Can you explain the concept of [Specific Concept] in simple terms?',
-          ]
+          'Make a bullet point list of key takeaways from this project.',
+          'What are the best practices for [Activity or Process] in [Context or Field]?',
+          'Can you explain the concept of [Specific Concept] in simple terms?',
+        ]
 
     // Add this function to create dividers with statements
     const renderIntroductoryStatements = () => {
@@ -1899,8 +1865,8 @@ export const Chat = memo(
                     transition={{ duration: 0.1 }}
                   >
                     {selectedConversation &&
-                    selectedConversation.messages &&
-                    selectedConversation.messages?.length === 0 ? (
+                      selectedConversation.messages &&
+                      selectedConversation.messages?.length === 0 ? (
                       <>
                         <div className="mt-16">
                           {renderIntroductoryStatements()}
@@ -1918,7 +1884,7 @@ export const Chat = memo(
                                 handleSend(
                                   editedMessage,
                                   selectedConversation?.messages?.length -
-                                    index,
+                                  index,
                                   null,
                                   tools,
                                   enabledDocumentGroups,

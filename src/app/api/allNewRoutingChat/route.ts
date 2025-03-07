@@ -12,55 +12,74 @@ export const fetchCache = 'force-no-store'
 export const revalidate = 0
 
 export async function POST(req: NextRequest, res: NextResponse) {
-  const startTime = Date.now()
-
   try {
     const body = await req.json()
-
     const { conversation, course_name, courseMetadata, mode } = body as ChatBody
 
-    const buildPromptStartTime = Date.now()
+    // Build the prompt
     const newConversation = await buildPrompt({
       conversation,
       projectName: course_name,
       courseMetadata,
       mode,
     })
-    const buildPromptEndTime = Date.now()
-    const buildPromptDuration = buildPromptEndTime - buildPromptStartTime
-    console.log(`buildPrompt duration: ${buildPromptDuration}ms`)
 
     body.conversation = newConversation
     const result = await routeModelRequest(body as ChatBody)
-    const endTime = Date.now()
-    const duration = endTime - startTime
-    console.log(`Total duration: ${duration}ms`)
+
+    // Handle empty response case
+    if (result instanceof Response) {
+      const responseClone = result.clone()
+      try {
+        const responseText = await responseClone.text()
+
+        if (!responseText || responseText.trim() === '') {
+          return Response.json(
+            {
+              title: 'LLM Didn\'t Respond',
+              message: 'The LLM might be overloaded or misconfigured. Please check your API key, or use a different LLM.',
+            },
+            { status: 500 }
+          )
+        }
+
+        // Return a new response with the same content
+        return new Response(responseText, {
+          status: result.status,
+          statusText: result.statusText,
+          headers: result.headers
+        })
+      } catch (error) {
+        // If we can't read the response, return the original
+        return result
+      }
+    }
+
     return result
   } catch (error) {
-    console.error('Error in routeModelRequest:', error)
+    console.error('Error in route handler:', error)
 
-    let errorMessage = 'An unexpected error occurred'
-    let statusCode = 500
+    let title = 'Error'
+    let message = 'An unexpected error occurred'
 
     if (error instanceof OpenAIError) {
-      const parsedCode = parseInt(error.code || '500')
-      statusCode = parsedCode >= 200 && parsedCode <= 599 ? parsedCode : 500
-      errorMessage = error.message
+      title = 'LLM Error'
+      message = error.message || 'Error connecting to the language model'
     } else if (error instanceof Error) {
-      errorMessage = error.message
+      message = error.message
     }
 
     return new Response(
       JSON.stringify({
-        error: errorMessage,
-        code: statusCode,
+        title,
+        message,
       }),
       {
-        status: statusCode,
+        status: 500,
         headers: {
           'Content-Type': 'application/json',
         },
-      },
+      }
     )
   }
 }
