@@ -68,6 +68,7 @@ const ToolsPage: NextPage = () => {
   }
 
   if (!auth.isAuthenticated) {
+    void router.push(`/new?course_name=${course_name}`);
     return (
       <ProtectedRoute>
         <AuthComponent course_name={course_name} />
