@@ -59,7 +59,7 @@ function convertConversatonToVercelAISDKv3(
     (msg) => msg.latestSystemMessage !== undefined,
   )
   if (systemMessage) {
-    console.log(
+    console.debug(
       'Found system message in convertConversatonToVercelAISDKv3, latestSystemMessage: ',
       systemMessage.latestSystemMessage,
     )
@@ -77,7 +77,7 @@ function convertConversatonToVercelAISDKv3(
     if (index === conversation.messages.length - 1 && message.role === 'user') {
       // Use finalPromtEngineeredMessage for the most recent user message
       content = message.finalPromtEngineeredMessage || ''
-      console.log(
+      console.debug(
         'Found finalPromtEngineeredMessage in convertConversatonToVercelAISDKv3, finalPromtEngineeredMessage: ',
         content,
       )

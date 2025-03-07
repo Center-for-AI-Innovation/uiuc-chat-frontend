@@ -118,7 +118,7 @@ export const buildPrompt = async ({
     throw new Error('Encoding initialization failed.')
   }
 
-  console.log('conversation in BuildPromptUtils: ', conversation)
+  // console.log('conversation in BuildPromptUtils: ', conversation)
 
   let remainingTokenBudget = conversation.model.tokenLimit - 1500 // Save space for images, OpenAI's handling, etc.
 
@@ -286,9 +286,9 @@ export const buildPrompt = async ({
       if (latestUserMessage?.tools) {
         const toolsOutputResults = _buildToolsOutputResults({ conversation })
 
-      // Add Tool Instructions and outputs
-      const toolInstructions =
-        "<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool `tool name`...' or 'According to tool `tool name`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>"
+        // Add Tool Instructions and outputs
+        const toolInstructions =
+          "<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool `tool name`...' or 'According to tool `tool name`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>"
 
         // Add to user prompt sections
         userPromptSections.push(toolInstructions)
@@ -305,11 +305,11 @@ export const buildPrompt = async ({
     const userPrompt = userPromptSections.join('\n\n')
 
     if (summary) {
-      console.log('Summary userPrompt: ', userPrompt)
-      console.log('Summary finalSystemPrompt: ', finalSystemPrompt)
+      console.debug('Summary userPrompt: ', userPrompt)
+      console.debug('Summary finalSystemPrompt: ', finalSystemPrompt)
     } else {
-      console.log('Normal userPrompt: ', userPrompt)
-      console.log('Normal finalSystemPrompt: ', finalSystemPrompt)
+      console.debug('Normal userPrompt: ', userPrompt)
+      console.debug('Normal finalSystemPrompt: ', finalSystemPrompt)
     }
 
     // Set final system and user prompts in the conversation
