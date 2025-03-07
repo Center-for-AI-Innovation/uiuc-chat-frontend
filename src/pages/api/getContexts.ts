@@ -11,6 +11,7 @@ export const fetchContexts = async (
     search_query: search_query,
     token_limit: token_limit,
     doc_groups: doc_groups,
+    top_n: 20,
   }
 
   // UESFUL FOR TESTING -- SHORTEN CONTEXTS
