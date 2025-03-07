@@ -99,11 +99,11 @@ export const UserSettings = () => {
     <Modal.Root opened={opened} onClose={handleClose} centered size={'800px'}>
       <Modal.Overlay style={{ width: '100%', color: '#1d1f33' }} />
       <Modal.Content
-        className={`${classes.modalContent} ${isSmallScreen ? 'p-2' : 'p-4'} overflow-x-hidden md:rounded-lg`}
+        className={`${classes.modalContent} ${isSmallScreen ? 'p-2' : 'p-4'} overflow-x-hidden bg-[--modal] text-[--modal-text] md:rounded-lg`}
       >
         <Modal.Header className={classes.modalHeader}>
           <Modal.Title
-            className={`${classes.title} ${montserrat_heading.variable} font-montserratHeading text-white`}
+            className={`${classes.title} ${montserrat_heading.variable} font-montserratHeading`}
           >
             Settings
           </Modal.Title>
@@ -125,19 +125,19 @@ export const UserSettings = () => {
           >
             <Tabs.List mt={'xl'} ml="xs">
               <Tabs.Tab
-                className={`${classes.tab} ${isSmallScreen ? 'px-2 text-xs' : 'text-md'} ${montserrat_paragraph.variable} font-montserratParagraph`}
+                className={`${classes.tab} ${isSmallScreen ? 'px-2 text-xs' : 'text-md'} ${montserrat_paragraph.variable} font-montserratParagraph text-[--modal-text]`}
                 value="model"
               >
                 Model
               </Tabs.Tab>
               <Tabs.Tab
-                className={`${classes.tab} ${isSmallScreen ? 'px-2 text-xs' : 'text-md'} ${montserrat_paragraph.variable} font-montserratParagraph`}
+                className={`${classes.tab} ${isSmallScreen ? 'px-2 text-xs' : 'text-md'} ${montserrat_paragraph.variable} font-montserratParagraph text-[--modal-text]`}
                 value="documentGroups"
               >
                 Document Groups
               </Tabs.Tab>
               <Tabs.Tab
-                className={`${classes.tab} ${isSmallScreen ? 'px-2 text-xs' : 'text-md'} ${montserrat_paragraph.variable} font-montserratParagraph`}
+                className={`${classes.tab} ${isSmallScreen ? 'px-2 text-xs' : 'text-md'} ${montserrat_paragraph.variable} font-montserratParagraph text-[--modal-text]`}
                 value="tools"
               >
                 Tools

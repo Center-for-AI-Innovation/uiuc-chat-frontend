@@ -39,6 +39,12 @@
   /* Existing variables mapped to UIUC colors */
   --foreground: var(--illinois-blue);
   --background: var(--illinois-white);
+  
+  --foreground-dark: color-mix(in srgb, var(--foreground), black 25%);
+  --foreground-faded: color-mix(in srgb, var(--foreground), var(--background) 50%);
+  
+  --background-dark: color-mix(in srgb, var(--background), black 25%);
+  --background-faded: color-mix(in srgb, var(--background), var(--foreground) 10%);
 
   --primary: var(--illinois-orange);
   --primary-foreground: var(--background);
@@ -72,14 +78,49 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.25);
 
-  --button-color: var(--foreground);
+  --badge: #f00;
+  --badge-error: #f00;
+
+  --link: var(--primary);
+  --link-hover: color-mix(in srgb, var(--primary), white 20%);
+
+  --button: color-mix(in srgb, var(--foreground), var(--background) 20%);
   --button-text-color: var(--background);
-  --button-hover: color-mix(in srgb, var(--secondary), white 20%);
+  --button-hover: var(--foreground);
   --button-hover-text-color: var(--button-text-color);
   --button-active: var(--button-hover);
 
+  --message: white;
+  --message-faded: rgba(from var(--message-color) r g b / .5);
+  --message-background: rgba(from color-mix(in srgb, var(--illinois-blue), black 30%) r g b / .9); /* will always be a darker version of illinois-blue */
+/*
+  --message-color: var(--background);
+  --message-color-faded: rgba(from var(--background) r g b / .7);
+  --message-background: rgba(from var(--foreground) r g b / .9);
+*/
+  --modal: var(--background);
+  --modal-text: var(--foreground);
+
   --navbar-background: color-mix(in srgb, var(--background), black 0%);
   --navbar-shadow: color-mix(in srgb, var(--background), black 30%);
+
+  --notification: rgba(from color-mix(in srgb, var(--illinois-blue), black 30%) r g b / .8); /* background - similar to sidebar-background but darker since we have a bit of opacity */
+  --notification-title: white;
+  --notification-message: white);
+  --notification-border: rgba(255, 255, 255, 20%);
+  --notification-highlight: var(--primary);
+
+  --pulsate: var(--foreground); /* color-mix(in srgb, var(--foreground), var(--background) 75%); */
+  --pulsate-secondary: var(--primary);
+
+  --sidebar: white;
+  --sidebar-background: color-mix(in srgb, var(--illinois-blue), black 25%); /* sidebar is always the same color */
+  --sidebar-selected: var(--illinois-orange);
+
+  --spinner: var(--foreground-faded);
+
+  --tooltip: var(--background);
+  --tooltip-background: var(--foreground-dark);
 
   /* Additional UI Colors */
   --illinois-background-dark: #202123;
@@ -476,16 +517,28 @@ li {
 
 @keyframes pulsate {
   0% {
-    color: var(--illinois-white);
+    color: var(--pulsate);
+    text-shadow: none;
+  }
+
+  30% {
+    color: var(--pulsate);
+    text-shadow: none;
+  }
+
+  65% {
+    color: var(--pulsate-secondary);
+    text-shadow: 0 0 10px;
   }
 
   100% {
-    color: var(--illinois-purple-light);
+    color: var(--pulsate);
+    text-shadow: none;
   }
 }
 
 .pulsate {
-  animation: pulsate 1s infinite alternate;
+  animation: pulsate 2s ease-in-out infinite;
 }
 
 a[data-footnote-backref] {

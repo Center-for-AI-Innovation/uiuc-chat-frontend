@@ -1107,7 +1107,7 @@ export const ChatMessage: React.FC<Props> = memo(
           )}
           {contentToRender && (
             <MemoizedReactMarkdown
-              className="dark:prose-invert linkMarkDown supMarkDown codeBlock prose mb-2 flex-1 flex-col items-start space-y-2"
+              className="linkMarkDown supMarkDown codeBlock prose mb-2 flex-1 flex-col items-start space-y-2"
               remarkPlugins={[remarkGfm, remarkMath]}
               rehypePlugins={[rehypeMathjax]}
               components={{
@@ -1369,12 +1369,11 @@ export const ChatMessage: React.FC<Props> = memo(
       <>
         <div
           className={`group md:px-6 ${
-            message.role === 'assistant'
-              ? 'border-b border-black/10 bg-gray-50/50 text-gray-800 dark:border-[rgba(42,42,120,0.50)] dark:bg-[#202134] dark:text-gray-100'
-              : 'border-b border-black/10 bg-white/50 text-gray-800 dark:border-[rgba(42,42,120,0.50)] dark:bg-[#15162B] dark:text-gray-100'
+            message.role === 'assistant' ? '' : ''
           } max-w-[100%]`}
           style={{ overflowWrap: 'anywhere' }}
         >
+          {/* bg-[--background-dark] */}
           <div className="relative flex w-full px-2 py-4 text-base md:mx-[5%] md:max-w-[90%] md:gap-6 md:p-6 lg:mx-[10%]">
             <div className="min-w-[40px] text-left">
               {message.role === 'assistant' ? (
@@ -1387,14 +1386,14 @@ export const ChatMessage: React.FC<Props> = memo(
               )}
             </div>
 
-            <div className="dark:prose-invert prose mt-[-2px] flex w-full max-w-full flex-wrap lg:w-[90%]">
+            <div className="prose mt-[-2px] flex w-full max-w-full flex-wrap lg:w-[90%]">
               {message.role === 'user' ? (
                 <div className="flex w-[90%] flex-col">
                   {isEditing ? (
                     <div className="flex w-full flex-col">
                       <textarea
                         ref={textareaRef}
-                        className="w-full resize-none whitespace-pre-wrap rounded-md border border-gray-300 bg-transparent p-3 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:border-gray-600 dark:bg-[#1E1E3F] dark:focus:border-purple-400"
+                        className="w-full resize-none whitespace-pre-wrap rounded-md border border-[--foreground-faded] bg-[--background-dark] p-3 focus:border-[--primary] focus:outline-none"
                         value={messageContent}
                         onChange={handleInputChange}
                         onKeyDown={handlePressEnter}
@@ -1409,7 +1408,7 @@ export const ChatMessage: React.FC<Props> = memo(
                       />
                       <div className="mt-4 flex justify-end space-x-3">
                         <button
-                          className="flex items-center gap-2 rounded-md border border-gray-300 bg-transparent px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                          className="flex items-center gap-2 rounded-md border border-[--button] bg-transparent px-4 py-2 text-sm font-medium text-[--foreground] opacity-50 transition-colors hover:opacity-100"
                           onClick={() => {
                             setMessageContent(messageContent)
                             setIsEditing(false)
@@ -1419,7 +1418,7 @@ export const ChatMessage: React.FC<Props> = memo(
                           {t('Cancel')}
                         </button>
                         <button
-                          className="flex items-center gap-2 rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-purple-500 dark:hover:bg-purple-600"
+                          className="flex items-center gap-2 rounded-md bg-[--button] px-4 py-2 text-sm font-medium text-[--button-text-color] transition-colors hover:bg-[--button-hover] hover:text-[--button-hover-text-color] disabled:cursor-not-allowed disabled:opacity-50"
                           onClick={handleEditMessage}
                           disabled={messageContent.trim().length <= 0}
                         >
@@ -1430,10 +1429,10 @@ export const ChatMessage: React.FC<Props> = memo(
                     </div>
                   ) : (
                     <>
-                      <div className="dark:prose-invert prose w-full flex-1 whitespace-pre-wrap">
+                      <div className="prose w-full flex-1 whitespace-pre-wrap">
                         {Array.isArray(message.content) ? (
                           <>
-                            <div className="mb-2 flex w-full flex-col items-start space-y-2">
+                            <div className="mb-0 flex w-full flex-col items-start space-y-2">
                               {/* User message text for all messages */}
                               {message.content.map((content, index) => {
                                 if (content.type === 'text') {
@@ -1634,7 +1633,7 @@ export const ChatMessage: React.FC<Props> = memo(
                                       <>
                                         Routing the request to{' '}
                                         <Badge
-                                          color="grape"
+                                          color="var(--badge)"
                                           radius="md"
                                           size="sm"
                                         >
@@ -1719,7 +1718,11 @@ export const ChatMessage: React.FC<Props> = memo(
                                     <>
                                       Tool output from{' '}
                                       <Badge
-                                        color={response.error ? 'red' : 'grape'}
+                                        color={
+                                          response.error
+                                            ? 'var(--badge-error)'
+                                            : 'var(--badge)'
+                                        }
                                         radius="md"
                                         size="sm"
                                       >
@@ -1834,7 +1837,7 @@ export const ChatMessage: React.FC<Props> = memo(
                                     style={{
                                       marginRight: '10px',
                                       fontWeight: 'bold',
-                                      textShadow: '0 0 10px',
+                                      textShadow: '0 0 15px',
                                     }}
                                     className={`pulsate text-base ${montserrat_paragraph.variable} font-montserratParagraph`}
                                   >
@@ -1847,7 +1850,7 @@ export const ChatMessage: React.FC<Props> = memo(
                         </div>
                       </div>
                       {!isEditing && (
-                        <div className="mt-2 flex items-center justify-start gap-4">
+                        <div className="mt-0 flex items-center justify-start gap-4">
                           <Tooltip
                             label="Edit Message"
                             position="bottom"
@@ -1858,17 +1861,23 @@ export const ChatMessage: React.FC<Props> = memo(
                               duration: 200,
                             }}
                             classNames={{
-                              tooltip:
-                                'bg-gray-700 text-white text-sm py-1 px-2',
+                              tooltip: 'text-sm py-1 px-2',
                               arrow: 'border-gray-700',
+                            }}
+                            style={{
+                              color: 'var(--tooltip)',
+                              backgroundColor: 'var(--tooltip-background)',
                             }}
                           >
                             <button
-                              className={`invisible text-gray-500 hover:text-gray-700 focus:visible group-hover:visible dark:text-gray-400 dark:hover:text-gray-300 
+                              className={`invisible text-[--button-text-color] hover:text-gray-700 focus:visible group-hover:visible dark:text-gray-400 dark:hover:text-gray-300 
                                 ${Array.isArray(message.content) && message.content.some((content) => content.type === 'image_url') ? 'hidden' : ''}`}
                               onClick={toggleEditing}
                             >
-                              <IconEdit size={20} />
+                              <IconEdit
+                                size={20}
+                                className="text-[--button-faded] hover:text-[--button]"
+                              />
                             </button>
                           </Tooltip>
                         </div>
@@ -1963,9 +1972,12 @@ export const ChatMessage: React.FC<Props> = memo(
                               duration: 200,
                             }}
                             classNames={{
-                              tooltip:
-                                'bg-gray-700 text-white text-sm py-1 px-2',
+                              tooltip: 'text-sm py-1 px-2',
                               arrow: 'border-gray-700',
+                            }}
+                            style={{
+                              color: 'var(--tooltip)',
+                              backgroundColor: 'var(--tooltip-background)',
                             }}
                           >
                             <button
@@ -2001,9 +2013,12 @@ export const ChatMessage: React.FC<Props> = memo(
                               duration: 200,
                             }}
                             classNames={{
-                              tooltip:
-                                'bg-gray-700 text-white text-sm py-1 px-2',
+                              tooltip: 'text-sm py-1 px-2',
                               arrow: 'border-gray-700',
+                            }}
+                            style={{
+                              color: 'var(--tooltip)',
+                              backgroundColor: 'var(--tooltip-background)',
                             }}
                           >
                             <button
@@ -2046,9 +2061,12 @@ export const ChatMessage: React.FC<Props> = memo(
                               duration: 200,
                             }}
                             classNames={{
-                              tooltip:
-                                'bg-gray-700 text-white text-sm py-1 px-2',
+                              tooltip: 'text-sm py-1 px-2',
                               arrow: 'border-gray-700',
+                            }}
+                            style={{
+                              color: 'var(--tooltip)',
+                              backgroundColor: 'var(--tooltip-background)',
                             }}
                           >
                             <button
@@ -2077,9 +2095,12 @@ export const ChatMessage: React.FC<Props> = memo(
                               duration: 200,
                             }}
                             classNames={{
-                              tooltip:
-                                'bg-gray-700 text-white text-sm py-1 px-2',
+                              tooltip: 'text-sm py-1 px-2',
                               arrow: 'border-gray-700',
+                            }}
+                            style={{
+                              color: 'var(--tooltip)',
+                              backgroundColor: 'var(--tooltip-background)',
                             }}
                           >
                             <button

@@ -230,7 +230,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
             </h2>
           </Link>
 
-          <div className="pl-2">
+          <div className="pl-4">
             <ThemeToggle />
           </div>
 

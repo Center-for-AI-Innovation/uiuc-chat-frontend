@@ -1380,17 +1380,17 @@ export const Chat = memo(
     // Add this function to create dividers with statements
     const renderIntroductoryStatements = () => {
       return (
-        <div className="xs:mx-2 mt-4 max-w-3xl gap-3 px-4 last:mb-2 sm:mx-4 md:mx-auto lg:mx-auto ">
-          <div className="backdrop-filter-[blur(10px)] rounded-lg border-2 border-[rgba(42,42,120,0.55)] bg-[rgba(42,42,64,0.4)] p-6">
+        <div className="chat_welcome xs:mx-2 mt-4 max-w-3xl gap-3 px-4 last:mb-2 sm:mx-4 md:mx-auto lg:mx-auto ">
+          <div className="backdrop-filter-[blur(10px)] rounded-lg bg-[--background-faded] p-6">
             <Text
-              className={`mb-2 text-lg text-white ${montserrat_heading.variable} font-montserratHeading`}
+              className={`mb-2 text-lg ${montserrat_heading.variable} font-montserratHeading`}
               style={{ whiteSpace: 'pre-wrap' }}
               dangerouslySetInnerHTML={{
                 __html:
                   courseMetadata?.course_intro_message
                     ?.replace(
                       /(https?:\/\/([^\s]+))/g,
-                      '<a href="https://$1" target="_blank" rel="noopener noreferrer" class="text-purple-400 hover:underline">$2</a>',
+                      '<a href="https://$1" target="_blank" rel="noopener noreferrer" class="text-[--link] hover:underline hover:text-[--link-hover]">$2</a>',
                     )
                     ?.replace(
                       /href="https:\/\/(https?:\/\/)/g,
@@ -1622,7 +1622,7 @@ export const Chat = memo(
           <link rel="icon" href="/favicon.ico" />
         </Head>
         <SourcesSidebarProvider>
-          <div className="overflow-wrap relative flex h-screen w-full flex-col overflow-hidden bg-white dark:bg-[#15162c]">
+          <div className="overflow-wrap relative flex h-screen w-full flex-col overflow-hidden bg-[--background] text-[--foreground]">
             <div className="justify-center" style={{ height: '40px' }}>
               <ChatNavbar bannerUrl={bannerUrl as string} isgpt4={true} />
             </div>
@@ -1695,13 +1695,17 @@ export const Chat = memo(
                           ),
                         )}
                         {loading && <ChatLoader />}
+                        {/*                          className="h-[162px] bg-gradient-to-t from-transparent to-[rgba(14,14,14,0.4)]"
+//safe to remove in the future- left here in case we want the gradient in dark mode (in light mode, it really sticks
+ */}
                         <div
-                          className="h-[162px] bg-gradient-to-t from-transparent to-[rgba(14,14,21,0.4)]"
+                          className="h-[162px] bg-gradient-to-t from-transparent to-[var(--background-dark)]"
                           ref={messagesEndRef}
                         />
                       </>
                     )}
                   </motion.div>
+
                   {/* <div className="w-full max-w-[calc(100% - var(--sidebar-width))] mx-auto flex justify-center"> */}
                   <ChatInput
                     stopConversationRef={stopConversationRef}
@@ -1750,23 +1754,29 @@ export function errorToast({
     onOpen: () => console.log('error mounted'),
     autoClose: 12000,
     title: (
-      <Text size={'lg'} className={`${montserrat_med.className}`}>
+      <Text
+        size={'lg'}
+        className={`${montserrat_med.className} font-bold text-[--notification-title]`}
+      >
         {title}
       </Text>
     ),
     message: (
-      <Text className={`${montserrat_med.className} text-neutral-200`}>
+      <Text
+        className={`${montserrat_med.className} text-[--notification-message]`}
+      >
         {message}
       </Text>
     ),
-    color: 'red',
+    color: '',
     radius: 'lg',
-    icon: <IconAlertCircle />,
+    icon: <IconAlertCircle color="#fff" />,
     className: 'my-notification-class',
     style: {
-      backgroundColor: 'rgba(42,42,64,0.3)',
+      backgroundColor: 'var(--notification)',
       backdropFilter: 'blur(10px)',
-      borderLeft: '5px solid red',
+      borderColor: 'var(--notification-border)',
+      borderLeft: '5px solid var(--notification-highlight)',
     },
     withBorder: true,
     loading: false,
