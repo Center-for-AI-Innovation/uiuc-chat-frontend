@@ -1620,22 +1620,23 @@ export const Chat = memo(
       courseMetadata.example_questions.length > 0
         ? courseMetadata.example_questions
         : null
-    const statements =
-      courseMetadata?.example_questions &&
-      Array.isArray(courseMetadata.example_questions) &&
-      courseMetadata.example_questions.length > 0
-        ? useMemo(
-            () =>
-              courseMetadata?.example_questions
-                ?.sort(() => 0.5 - Math.random())
-                .slice(0, 5),
-            [courseMetadata?.example_questions],
-          )
-        : [
-            'Make a bullet point list of key takeaways from this project.',
-            'What are the best practices for [Activity or Process] in [Context or Field]?',
-            'Can you explain the concept of [Specific Concept] in simple terms?',
-          ]
+    const statements = useMemo(() => {
+      if (
+        courseMetadata?.example_questions &&
+        Array.isArray(courseMetadata.example_questions) &&
+        courseMetadata.example_questions.length > 0
+      ) {
+        return courseMetadata.example_questions
+          .sort(() => 0.5 - Math.random())
+          .slice(0, 5)
+      } else {
+        return [
+          'Make a bullet point list of key takeaways from this project.',
+          'What are the best practices for [Activity or Process] in [Context or Field]?',
+          'Can you explain the concept of [Specific Concept] in simple terms?',
+        ]
+      }
+    }, [courseMetadata?.example_questions])
 
     // Add this function to create dividers with statements
     const renderIntroductoryStatements = () => {
@@ -1672,7 +1673,7 @@ export const Chat = memo(
             <div className="mt-4 flex flex-col items-start space-y-2 overflow-hidden">
               {/* if getCurrentPageName is 'chat' then don't show any example questions */}
               {getCurrentPageName() !== 'chat' &&
-                statements!.map((statement, index) => (
+                statements.map((statement, index) => (
                   <div
                     key={index}
                     className="w-full rounded-lg border-b-2 border-[rgba(42,42,64,0.4)] hover:cursor-pointer hover:bg-[rgba(42,42,64,0.9)]"
@@ -1923,7 +1924,7 @@ export const Chat = memo(
     return (
       <>
         <Head>
-          <title>{getCurrentPageName()} - Illinois Chat</title>
+          <title>{getCurrentPageName()} - mHealth Chatbot</title>
           <meta
             name="description"
             content="mHealth is an AI-powered platform that helps you manage your health and wellness."
