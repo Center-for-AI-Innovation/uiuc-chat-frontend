@@ -11,7 +11,7 @@ interface Props {
 export const SidebarButton: FC<Props> = ({ text, icon, onClick, loading }) => {
   return (
     <button
-      className="relative flex w-full cursor-pointer select-none items-center gap-3 rounded-md px-3 py-3 text-[14px] leading-3 text-white transition-colors duration-200 hover:bg-gray-500/10"
+      className="relative flex w-full cursor-pointer select-none items-center gap-3 rounded-md px-3 py-3 text-[14px] leading-3 text-white transition-colors duration-200 hover:bg-white/10"
       onClick={onClick}
     >
       <div className="flex items-center gap-3">

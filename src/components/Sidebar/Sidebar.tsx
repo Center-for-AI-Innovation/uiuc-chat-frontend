@@ -63,20 +63,22 @@ const Sidebar = <T,>({
   return isOpen ? (
     <div>
       <div
-        className={`fixed top-0 ${side}-0 z-40 flex h-full w-[260px] flex-none flex-col space-y-2  bg-[#131426] p-2 text-[14px] transition-all sm:relative sm:top-0`}
+        className={`fixed top-0 ${side}-0 z-40 flex h-full w-[260px] flex-none flex-col space-y-2 border-r border-black/50 bg-[--sidebar-background] p-2 text-[14px] transition-all sm:relative sm:top-0`}
       >
         <div className="flex items-center">
           <button
-            className="text-sidebar flex w-[190px] flex-shrink-0 cursor-pointer select-none items-center gap-3 rounded-md border border-white/20 p-3 text-white transition-colors duration-200 hover:bg-gray-500/10"
+            className="text-sidebar flex w-[190px] flex-shrink-0 cursor-pointer select-none items-center gap-3 rounded-md border border-white/20 p-3 text-white transition-colors duration-200 hover:bg-white/10"
             onClick={() => {
               handleCreateItem()
               handleSearchTerm('')
               setTimeout(() => {
-                const chatInput = document.querySelector('textarea.chat-input') as HTMLTextAreaElement;
+                const chatInput = document.querySelector(
+                  'textarea.chat-input',
+                ) as HTMLTextAreaElement
                 if (chatInput) {
-                  chatInput.focus();
+                  chatInput.focus()
                 }
-              }, 100);
+              }, 100)
             }}
           >
             <IconPlus size={16} />
@@ -84,7 +86,7 @@ const Sidebar = <T,>({
           </button>
 
           <button
-            className="ml-2 flex flex-shrink-0 cursor-pointer items-center gap-3 rounded-md border border-white/20 p-3 text-sm text-white transition-colors duration-200 hover:bg-gray-500/10"
+            className="ml-2 flex flex-shrink-0 cursor-pointer items-center gap-3 rounded-md border border-white/20 p-3 text-sm text-white transition-colors duration-200 hover:bg-white/10"
             onClick={handleCreateFolder}
           >
             <IconFolderPlus size={16} />

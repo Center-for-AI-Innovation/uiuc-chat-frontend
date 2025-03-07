@@ -499,7 +499,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
 
     return (
       <div
-        className="flex h-full w-[100%] flex-col space-y-4 rounded-lg bg-[#1d1f33] p-3 dark:bg-[#1d1f33]"
+        className="flex h-full w-[100%] flex-col space-y-4 rounded-lg p-3"
         style={{ position: 'relative', zIndex: 100 }}
       >
         <div>

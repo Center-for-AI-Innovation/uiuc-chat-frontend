@@ -20,9 +20,7 @@ const CustomCopyButton: React.FC<CustomCopyButtonProps> = ({
     <div
       className="flex cursor-pointer items-center rounded-lg p-2 transition-all duration-200 ease-in-out"
       style={{
-        backgroundColor: isHovered
-          ? 'rgba(255, 255, 255, 0.1)'
-          : 'transparent',
+        backgroundColor: isHovered ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
         transform: isHovered ? 'translateY(-1px)' : 'none',
         boxShadow: isHovered ? '0 4px 6px rgba(255, 255, 255, 0.1)' : 'none',
       }}
@@ -85,8 +83,8 @@ const CustomCopyButton: React.FC<CustomCopyButtonProps> = ({
           withinPortal
           styles={(theme) => ({
             tooltip: {
-              backgroundColor: theme.colors.dark[7],
-              color: theme.colors.gray[2],
+              color: 'var(--tooltip)',
+              backgroundColor: 'var(--tooltip-background)',
               borderRadius: theme.radius.md,
               fontSize: theme.fontSizes.sm,
               padding: '8px 12px',
