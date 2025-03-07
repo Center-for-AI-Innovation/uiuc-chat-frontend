@@ -46,7 +46,6 @@ import { runGeminiChat } from '~/app/api/chat/gemini/route'
 import { runBedrockChat } from '~/app/api/chat/bedrock/route'
 import { runSambaNovaChat } from '~/app/api/chat/sambanova/route'
 
-export const maxDuration = 60
 
 /**
  * Enum representing the possible states of the state machine used in processing text chunks.
@@ -701,12 +700,12 @@ export async function handleImageContent(
     )
 
     if (imgDescIndex !== -1) {
-      ;(message.content as Content[])[imgDescIndex] = {
+      ; (message.content as Content[])[imgDescIndex] = {
         type: 'text',
         text: `Image description: ${imgDesc}`,
       }
     } else {
-      ;(message.content as Content[]).push({
+      ; (message.content as Content[]).push({
         type: 'text',
         text: `Image description: ${imgDesc}`,
       })
@@ -780,151 +779,184 @@ export const routeModelRequest = async (
   NOTE: WebLLM is handled separately, because it MUST be called from the Client browser itself. 
   */
 
-  console.log('In routeModelRequest: ', chatBody, baseUrl)
+  console.debug('In routeModelRequest: ', chatBody, baseUrl)
 
-  const selectedConversation = chatBody.conversation!
-  console.log('Selected conversation:', selectedConversation)
-  if (!selectedConversation.model || !selectedConversation.model.id) {
-    console.log('Invalid conversation:', selectedConversation)
-    throw new Error('Conversation model is undefined or missing "id" property.')
-  }
+  try {
+    const selectedConversation = chatBody.conversation!
+    console.debug('Selected conversation:', selectedConversation)
+    if (!selectedConversation.model || !selectedConversation.model.id) {
+      console.debug('Invalid conversation:', selectedConversation)
+      throw new Error('Conversation model is undefined or missing "id" property.')
+    }
 
-  posthog.capture('LLM Invoked', {
-    distinct_id: selectedConversation.userEmail
-      ? selectedConversation.userEmail
-      : 'anonymous',
-    user_id: selectedConversation.userEmail
-      ? selectedConversation.userEmail
-      : 'anonymous',
-    conversation_id: selectedConversation.id,
-    model_id: selectedConversation.model.id,
-  })
+    posthog.capture('LLM Invoked', {
+      distinct_id: selectedConversation.userEmail
+        ? selectedConversation.userEmail
+        : 'anonymous',
+      user_id: selectedConversation.userEmail
+        ? selectedConversation.userEmail
+        : 'anonymous',
+      conversation_id: selectedConversation.id,
+      model_id: selectedConversation.model.id,
+    })
 
-  if (
-    Object.values(NCSAHostedVLMModelID).includes(
-      selectedConversation.model.id as any,
-    )
-  ) {
-    // NCSA Hosted VLM
-    return await runVLLM(
-      selectedConversation,
-      chatBody?.llmProviders?.NCSAHostedVLM as NCSAHostedVLMProvider,
-      chatBody.stream,
-    )
-  } else if (
-    Object.values(OllamaModelIDs).includes(selectedConversation.model.id as any)
-  ) {
-    return await runOllamaChat(
-      selectedConversation,
-      chatBody!.llmProviders!.Ollama as OllamaProvider,
-      chatBody.stream,
-    )
-  } else if (
-    Object.values(AnthropicModelID).includes(
-      selectedConversation.model.id as any,
-    )
-  ) {
-    try {
-      return await runAnthropicChat(
+    if (
+      Object.values(NCSAHostedVLMModelID).includes(
+        selectedConversation.model.id as any,
+      )
+    ) {
+      // NCSA Hosted VLM - already has error handling internally
+      return await runVLLM(
         selectedConversation,
-        chatBody.llmProviders?.Anthropic as AnthropicProvider,
+        chatBody?.llmProviders?.NCSAHostedVLM as NCSAHostedVLMProvider,
         chatBody.stream,
       )
-    } catch (error) {
-      return new Response(
-        JSON.stringify({
-          error:
-            error instanceof Error
+    } else if (
+      Object.values(OllamaModelIDs).includes(selectedConversation.model.id as any)
+    ) {
+      // Ollama - already has error handling internally
+      return await runOllamaChat(
+        selectedConversation,
+        chatBody!.llmProviders!.Ollama as OllamaProvider,
+        chatBody.stream,
+      )
+    } else if (
+      Object.values(AnthropicModelID).includes(
+        selectedConversation.model.id as any,
+      )
+    ) {
+      try {
+        return await runAnthropicChat(
+          selectedConversation,
+          chatBody.llmProviders?.Anthropic as AnthropicProvider,
+          chatBody.stream,
+        )
+      } catch (error) {
+        return new Response(
+          JSON.stringify({
+            title: 'Anthropic Error',
+            message: error instanceof Error
               ? error.message
               : 'Unknown error occurred when streaming Anthropic LLMs.',
-        }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        },
-      )
-    }
-  } else if (
-    Object.values(OpenAIModelID).includes(
-      selectedConversation.model.id as any,
-    ) ||
-    Object.values(AzureModelID).includes(selectedConversation.model.id as any)
-  ) {
-    return await openAIAzureChat(chatBody, chatBody.stream)
-  } else if (
-    Object.values(BedrockModelID).includes(selectedConversation.model.id as any)
-  ) {
-    try {
-      return await runBedrockChat(
-        selectedConversation,
-        chatBody.llmProviders?.Bedrock as BedrockProvider,
-        chatBody.stream,
-      )
-    } catch (error) {
-      return new Response(
-        JSON.stringify({
-          error:
-            error instanceof Error
+          }),
+          {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+          },
+        )
+      }
+    } else if (
+      Object.values(OpenAIModelID).includes(
+        selectedConversation.model.id as any,
+      ) ||
+      Object.values(AzureModelID).includes(selectedConversation.model.id as any)
+    ) {
+      try {
+        return await openAIAzureChat(chatBody, chatBody.stream)
+      } catch (error) {
+        console.error('OpenAI/Azure API error:', error)
+        return new Response(
+          JSON.stringify({
+            title: 'OpenAI/Azure Error',
+            message: error instanceof Error
+              ? error.message
+              : 'Unknown error occurred when streaming OpenAI/Azure LLMs.',
+          }),
+          {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+          },
+        )
+      }
+    } else if (
+      Object.values(BedrockModelID).includes(selectedConversation.model.id as any)
+    ) {
+      try {
+        return await runBedrockChat(
+          selectedConversation,
+          chatBody.llmProviders?.Bedrock as BedrockProvider,
+          chatBody.stream,
+        )
+      } catch (error) {
+        return new Response(
+          JSON.stringify({
+            title: 'Bedrock Error',
+            message: error instanceof Error
               ? error.message
               : 'Unknown error occurred when streaming Bedrock LLMs.',
-        }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        },
-      )
-    }
-  } else if (
-    Object.values(GeminiModelID).includes(selectedConversation.model.id as any)
-  ) {
-    try {
-      return await runGeminiChat(
-        selectedConversation,
-        chatBody.llmProviders?.Gemini as GeminiProvider,
-        chatBody.stream,
-      )
-    } catch (error) {
-      return new Response(
-        JSON.stringify({
-          error:
-            error instanceof Error
+          }),
+          {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+          },
+        )
+      }
+    } else if (
+      Object.values(GeminiModelID).includes(selectedConversation.model.id as any)
+    ) {
+      try {
+        return await runGeminiChat(
+          selectedConversation,
+          chatBody.llmProviders?.Gemini as GeminiProvider,
+          chatBody.stream,
+        )
+      } catch (error) {
+        return new Response(
+          JSON.stringify({
+            title: 'Gemini Error',
+            message: error instanceof Error
               ? error.message
               : 'Unknown error occurred when streaming Gemini LLMs.',
-        }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        },
+          }),
+          {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+          },
+        )
+      }
+    } else if (
+      Object.values(SambaNovaModelID).includes(
+        selectedConversation.model.id as any,
       )
-    }
-  } else if (
-    Object.values(SambaNovaModelID).includes(
-      selectedConversation.model.id as any,
-    )
-  ) {
-    try {
-      return await runSambaNovaChat(
-        selectedConversation,
-        chatBody.llmProviders?.SambaNova as SambaNovaProvider,
-        chatBody.stream,
-      )
-    } catch (error) {
-      return new Response(
-        JSON.stringify({
-          error:
-            error instanceof Error
+    ) {
+      try {
+        return await runSambaNovaChat(
+          selectedConversation,
+          chatBody.llmProviders?.SambaNova as SambaNovaProvider,
+          chatBody.stream,
+        )
+      } catch (error) {
+        return new Response(
+          JSON.stringify({
+            title: 'SambaNova Error',
+            message: error instanceof Error
               ? error.message
               : 'Unknown error occurred when streaming SambaNova LLMs.',
-        }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        },
+          }),
+          {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+          },
+        )
+      }
+    } else {
+      throw new Error(
+        `Model '${selectedConversation.model.name}' is not supported.`,
       )
     }
-  } else {
-    throw new Error(
-      `Model '${selectedConversation.model.name}' is not supported.`,
+  } catch (error) {
+    console.error('General error in routeModelRequest:', error)
+    return new Response(
+      JSON.stringify({
+        title: 'Model Error',
+        message: error instanceof Error
+          ? error.message
+          : 'An unexpected error occurred in model routing',
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      },
     )
   }
 }
