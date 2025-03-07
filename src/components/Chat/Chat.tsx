@@ -687,6 +687,7 @@ export const Chat = memo(
                   courseMetadata: courseMetadata,
                   llmProviders: llmProviders,
                   model: selectedConversation.model,
+                  mode: 'chat',
                 }
 
                 if (!queryRewriteBody.model || !queryRewriteBody.model.id) {
@@ -889,6 +890,7 @@ export const Chat = memo(
             llmProviders: llmProviders,
             model: selectedConversation.model,
             skipQueryRewrite: documentCount === 0,
+            mode: 'chat',
           }
           updatedConversation = finalChatBody.conversation!
 
@@ -1699,7 +1701,6 @@ export const Chat = memo(
                             <MemoizedChatMessage
                               key={index}
                               message={message}
-                              contentRenderer={renderMessageContent}
                               messageIndex={index}
                               onEdit={(editedMessage) => {
                                 handleSend(
@@ -1711,6 +1712,26 @@ export const Chat = memo(
                                   enabledDocumentGroups,
                                   llmProviders,
                                 )
+                              }}
+                              onRegenerate={(message, index) => {
+                                // Find the user message that came before this assistant message
+                                const userMessage =
+                                  selectedConversation?.messages[index - 1]
+                                if (
+                                  userMessage &&
+                                  userMessage.role === 'user'
+                                ) {
+                                  handleSend(
+                                    userMessage,
+                                    selectedConversation?.messages?.length -
+                                      index +
+                                      1,
+                                    null,
+                                    tools,
+                                    enabledDocumentGroups,
+                                    llmProviders,
+                                  )
+                                }
                               }}
                               onFeedback={handleFeedback}
                               onImageUrlsUpdate={onImageUrlsUpdate}
@@ -1731,7 +1752,6 @@ export const Chat = memo(
                     stopConversationRef={stopConversationRef}
                     textareaRef={textareaRef}
                     onSend={(message, plugin) => {
-                      // setCurrentMessage(message)
                       handleSend(
                         message,
                         0,
@@ -1742,8 +1762,8 @@ export const Chat = memo(
                       )
                     }}
                     onScrollDownClick={handleScrollDown}
-                    onRegenerate={handleRegenerate}
                     showScrollDownButton={showScrollDownButton}
+                    onRegenerate={handleRegenerate}
                     inputContent={inputContent}
                     setInputContent={setInputContent}
                     courseName={getCurrentPageName()}

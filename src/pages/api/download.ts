@@ -19,7 +19,11 @@ if (region && process.env.AWS_KEY && process.env.AWS_SECRET) {
 
 // MinIO Client configuration
 let vyriadMinioClient: S3Client | null = null
-if (process.env.MINIO_KEY && process.env.MINIO_SECRET && process.env.MINIO_ENDPOINT) {
+if (
+  process.env.MINIO_KEY &&
+  process.env.MINIO_SECRET &&
+  process.env.MINIO_ENDPOINT
+) {
   vyriadMinioClient = new S3Client({
     region: process.env.MINIO_REGION || 'us-east-1', // MinIO requires a region, but it can be arbitrary
     credentials: {
@@ -48,12 +52,12 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       ResponseContentType = 'application/png'
     }
 
-
-
     let presignedUrl
-    if (courseName === "vyriad") {
+    if (courseName === 'vyriad' || courseName === 'pubmed') {
       if (!vyriadMinioClient) {
-        throw new Error('MinIO client not configured - missing required environment variables')
+        throw new Error(
+          'MinIO client not configured - missing required environment variables',
+        )
       }
 
       const command = new GetObjectCommand({
@@ -68,7 +72,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       })
     } else {
       if (!s3Client) {
-        throw new Error('S3 client not configured - missing required environment variables')
+        throw new Error(
+          'S3 client not configured - missing required environment variables',
+        )
       }
 
       const command = new GetObjectCommand({

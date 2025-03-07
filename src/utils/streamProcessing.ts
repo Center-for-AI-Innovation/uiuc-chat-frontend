@@ -644,9 +644,7 @@ export async function updateConversationInDatabase(
         }),
       },
     )
-    const data = await response.json()
-    console.log('Updated conversation in Supabase:', data)
-    // return data.success
+    // const data = await response.json()
   } catch (error) {
     console.error('Error setting course data:', error)
     // return false
@@ -754,8 +752,6 @@ function convertMessagesToVercelAISDKv3(
     let content: string
     if (index === conversation.messages.length - 1 && message.role === 'user') {
       content = message.finalPromtEngineeredMessage || ''
-      content +=
-        '\n\nIf you use the <Potentially Relevant Documents> in your response, please remember cite your sources using the required formatting, e.g. "The grass is green. [29, page: 11]'
     } else if (Array.isArray(message.content)) {
       content = message.content
         .filter((c) => c.type === 'text')
@@ -789,7 +785,9 @@ export const routeModelRequest = async (
   */
 
   const selectedConversation = chatBody.conversation!
+  console.log('Selected conversation:', selectedConversation)
   if (!selectedConversation.model || !selectedConversation.model.id) {
+    console.log('Invalid conversation:', selectedConversation)
     throw new Error('Conversation model is undefined or missing "id" property.')
   }
 

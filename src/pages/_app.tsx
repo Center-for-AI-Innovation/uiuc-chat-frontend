@@ -29,8 +29,8 @@ if (typeof window !== 'undefined') {
       maskInputOptions: {
         password: true,
         email: true,
-        creditCard: true
-      }
+        creditCard: true,
+      },
     },
     loaded: (posthog) => {
       if (process.env.NODE_ENV === 'development') posthog.debug()
@@ -61,7 +61,6 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
       try {
         const response = await fetch('/api/UIUC-api/getMaintenanceModeFast')
         const data = await response.json()
-        console.log('Maintenance mode', data)
         setIsMaintenanceMode(data.isMaintenanceMode)
       } catch (error) {
         console.error('Failed to check maintenance mode:', error)
