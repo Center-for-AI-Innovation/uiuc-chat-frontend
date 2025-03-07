@@ -73,11 +73,12 @@ const CourseMain: NextPage = () => {
   }
 
   if (!auth.isAuthenticated && courseName) {
+    void router.push(`/new?course_name=${courseName}`);
     return (
-      <button onClick={() => void initiateSignIn(auth, router.asPath)}>
-        Log in
-      </button>
-    )
+      <MainPageBackground>
+        <LoadingSpinner />
+      </MainPageBackground>
+    );
   }
 
   if (
