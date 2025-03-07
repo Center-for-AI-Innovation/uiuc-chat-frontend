@@ -44,14 +44,13 @@ export const ToolsItem = ({}) => {
   return (
     <>
       <div
-        className="flex h-full w-[100%] flex-col space-y-4 rounded-lg bg-[#1d1f33] p-4 dark:bg-[#1d1f33]"
+        className="flex h-full w-[100%] flex-col space-y-4 rounded-lg p-3 text-[--modal-text]"
         style={{ position: 'relative', zIndex: 100 }}
       >
         <div>
           <div className="flex flex-col"></div>
           <Title
             className={`px-4 pt-4 ${montserrat_heading.variable} rounded-lg bg-[#15162c] p-4 font-montserratHeading`}
-            color="white"
             order={isSmallScreen ? 5 : 3}
           >
             Tools

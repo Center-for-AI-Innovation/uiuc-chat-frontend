@@ -163,15 +163,18 @@ export const ChatInput = ({
     width: '24px',
     height: '24px',
     borderRadius: '50%',
-    backgroundColor: '#A9A9A9', // Changed to a darker gray
-    color: 'white', // White icon color
-    border: '2px solid white', // White border
+    backgroundColor: 'var(--message-background)', // Changed to a darker gray
+    color: 'rgba(from var(--message) r g b / .35)', // White icon color
+    //    border: '1px solid rgba(from var(--foreground) r g b / .5)', // White border
     cursor: 'pointer',
     zIndex: 2,
   }
 
   const removeButtonHoverStyle: CSSProperties = {
-    backgroundColor: '#505050', // Even darker gray for hover state
+    color: 'var(--message)',
+    backgroundColor: 'var(--message-background)',
+    borderColor: 'var(--foreground)',
+    //    backgroundColor: 'var(--background)', // Even darker gray for hover state
   }
 
   // Dynamically set the padding based on image previews presence
@@ -807,12 +810,12 @@ export const ChatInput = ({
 
   return (
     <div
-      className={`absolute bottom-0 left-0 w-full border-transparent bg-transparent pt-6 dark:border-white/20 md:pt-2`}
+      className={`absolute bottom-0 left-0 w-full border-transparent bg-transparent pt-6 md:pt-2`}
     >
       <div className="stretch mx-2 mt-4 flex flex-col gap-3 last:mb-2 md:mx-4 md:mt-[52px] md:last:mb-6 lg:mx-auto lg:max-w-3xl">
         {messageIsStreaming && (
           <button
-            className={`absolute ${isSmallScreen ? '-top-28' : '-top-20'} left-0 right-0 mx-auto mb-12 flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white px-4 py-2 text-black hover:opacity-50 dark:border-neutral-600 dark:bg-[#15162c] dark:text-white md:mb-0 md:mt-2`}
+            className={`absolute ${isSmallScreen ? '-top-28' : '-top-20'} left-0 right-0 mx-auto mb-12 flex w-fit items-center gap-3 rounded border border-[--foreground] px-4 py-2 text-[--foreground] opacity-50 hover:opacity-100 md:mb-0 md:mt-2`}
             onClick={handleStopConversation}
           >
             <IconPlayerStop size={16} /> {t('Stop Generating')}
@@ -827,7 +830,8 @@ export const ChatInput = ({
             selectedConversation.messages.length - 1
           ]?.role === 'user' && (
             <button
-              className={`absolute ${isSmallScreen ? '-top-28' : '-top-20'} left-0 right-0 mx-auto mb-12 flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white px-4 py-2 text-black hover:opacity-50 dark:border-neutral-600 dark:bg-[#343541] dark:text-white md:mb-0 md:mt-2`}
+              className={`absolute ${isSmallScreen ? '-top-28' : '-top-20'} left-0 right-0 mx-auto mb-12 flex w-fit items-center gap-3 rounded border border-[--foreground] bg-[--background] px-4 py-2 text-[--foreground] opacity-50 hover:opacity-100 md:mb-0 md:mt-2`}
+              style={{ backdropFilter: 'blur(4px)' }}
               onClick={onRegenerate}
             >
               <IconRepeat size={16} /> {t('Regenerate Response')}
@@ -836,15 +840,18 @@ export const ChatInput = ({
 
         <div
           ref={chatInputParentContainerRef}
-          className="absolute bottom-0 mx-4 flex w-[80%] flex-col self-center rounded-t-3xl border border-black/10 bg-[#070712] px-4 pb-8 pt-4 shadow-[0_0_10px_rgba(0,0,0,0.10)] dark:border-gray-900/50 dark:text-white dark:shadow-[0_0_15px_rgba(0,0,0,0.10)] md:mx-20 md:w-[70%]"
+          className="chat_input_container absolute bottom-0 mx-4 flex w-[80%] flex-col self-center rounded-t-3xl bg-[--message-background] px-4 pb-8 pt-4 text-[--message] md:mx-20 md:w-[70%]"
+          style={{ backdropFilter: 'blur(4px)' }}
         >
+          {/* FUTURE: rewrite to be flex instead of using absolute */}
+
           {/* BUTTON 2: Image Icon and Input */}
           {selectedConversation?.model?.id &&
             VisionCapableModels.has(
               selectedConversation.model?.id as OpenAIModelID,
             ) && (
               <button
-                className="absolute bottom-11 left-5 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
+                className="absolute bottom-[2.25rem] left-5 rounded-full bg-white/30 p-2 opacity-50 hover:opacity-100"
                 onClick={() => document.getElementById('imageUpload')?.click()}
               >
                 <div className="">
@@ -867,7 +874,7 @@ export const ChatInput = ({
           />
 
           {showPluginSelect && (
-            <div className="absolute bottom-14 left-0 rounded bg-white dark:bg-[#15162c]">
+            <div className="absolute bottom-14 left-0 rounded">
               <PluginSelect
                 plugin={plugin}
                 onKeyDown={(e: any) => {
@@ -891,7 +898,7 @@ export const ChatInput = ({
           {/* Chat input and preview container */}
           <div
             ref={chatInputContainerRef}
-            className="chat-input-container m-0 w-full resize-none bg-[#070712] p-0 text-black dark:bg-[#070712] dark:text-white"
+            className="chat-input-container rbg-[--message-background] m-0 w-full resize-none p-0"
             tabIndex={0}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
@@ -902,7 +909,7 @@ export const ChatInput = ({
           >
             {/* Image preview section */}
             <div
-              className="flex space-x-3"
+              className="ml-10 flex space-x-3"
               style={{ display: imagePreviewUrls.length > 0 ? 'flex' : 'none' }}
             >
               {imagePreviewUrls.map((src, index) => (
@@ -917,8 +924,8 @@ export const ChatInput = ({
                     position="top"
                     withArrow
                     style={{
-                      backgroundColor: '#2b2b2b',
-                      color: 'white',
+                      color: 'var(--tooltip)',
+                      backgroundColor: 'var(--tooltip-background)',
                     }}
                   >
                     <button
@@ -946,7 +953,7 @@ export const ChatInput = ({
                         current.style.color = removeButtonStyle.color!
                       }}
                     >
-                      <IconX size={16} />
+                      <IconX size={'.85rem'} />
                     </button>
                   </Tooltip>
                 </div>
@@ -967,8 +974,8 @@ export const ChatInput = ({
             >
               <textarea
                 ref={textareaRef}
-                className={`chat-input m-0 h-[24px] max-h-[400px] w-full resize-none bg-transparent py-2 pl-2 pr-8 text-white outline-none ${
-                  isFocused ? 'border-blue-500' : ''
+                className={`chat-input m-0 max-h-[400px] w-full resize-none bg-transparent py-2 pl-2 pr-12 outline-none ${
+                  isFocused ? 'border-white/50' : ''
                 }`}
                 style={{
                   resize: 'none',
@@ -987,47 +994,14 @@ export const ChatInput = ({
                 onFocus={handleFocus}
                 onBlur={handleBlur}
               />
-              {/* <textarea
-                ref={textareaRef}
-                className={`chat-input m-0 h-[24px] max-h-[400px] w-full resize-none bg-transparent py-2 pl-2 pr-8 text-white outline-none ${isFocused ? 'border-blue-500' : ''
-                  }`}
-                style={{
-                  resize: 'none',
-                  bottom: `${textareaRef?.current?.scrollHeight}px`,
-                  maxHeight: '400px',
-                  overflow: `${textareaRef.current &&
-                    textareaRef.current.scrollHeight > 400
-                    ? 'auto'
-                    : 'hidden'
-                    }`,
-                }}
-                placeholder={'Message UIUC.chat'}
-                value={content}
-                rows={1}
-                onInput={(e) => {
-                  const target = e.target as HTMLTextAreaElement;
-                  // Reset height to auto to get the correct scrollHeight
-                  target.style.height = 'auto';
-                  // Set actual height based on content
-                  target.style.height = `${target.scrollHeight}px`;
-                  // Add scrollbar if content exceeds max height
-                  target.style.overflow = target.scrollHeight > 400 ? 'auto' : 'hidden';
-                }}
-                onCompositionStart={() => setIsTyping(true)}
-                onCompositionEnd={() => setIsTyping(false)}
-                onChange={handleChange}
-                onKeyDown={handleKeyDown}
-                onFocus={handleFocus}
-                onBlur={handleBlur}
-              /> */}
             </div>
 
             <button
-              className="absolute bottom-11 right-5 rounded-full p-1 text-neutral-800 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
+              className="absolute bottom-[2.25rem] right-5 rounded-full bg-white/30 p-2 opacity-50 hover:opacity-100"
               onClick={handleSend}
             >
               {messageIsStreaming ? (
-                <div className="h-4 w-4 animate-spin rounded-full border-t-2 border-neutral-800 opacity-60 dark:border-neutral-100"></div>
+                <div className="h-4 w-4 animate-spin rounded-full border-t-2 border-neutral-800 opacity-60"></div>
               ) : (
                 <IconSend size={18} />
               )}
@@ -1068,7 +1042,7 @@ export const ChatInput = ({
 
           <Text
             size={isSmallScreen ? '10px' : 'xs'}
-            className={`font-montserratHeading ${montserrat_heading.variable} absolute bottom-2 left-5 break-words rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200`}
+            className={`font-montserratHeading ${montserrat_heading.variable} absolute bottom-[.35rem] left-5 -ml-2 flex items-center gap-1 break-words rounded-full px-3 py-1 text-[--message-faded] opacity-60 hover:bg-white/20 hover:text-[--message] hover:opacity-100`}
             onClick={handleTextClick}
             style={{ cursor: 'pointer' }}
           >
@@ -1079,14 +1053,7 @@ export const ChatInput = ({
               ) &&
               chat_ui?.isModelLoading() &&
               '  Please wait while the model is loading...'}
-            <IconChevronRight
-              size={isSmallScreen ? '10px' : '13px'}
-              style={{
-                marginLeft: '2px',
-                marginBottom: isSmallScreen ? '2px' : '4px',
-                display: 'inline-block',
-              }}
-            />
+            <IconChevronRight size={isSmallScreen ? '10px' : '13px'} />
           </Text>
           {showModelSettings && (
             <div

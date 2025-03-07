@@ -5,45 +5,42 @@ export function ThemeToggle() {
   const { theme, setTheme } = useTheme()
 
   return (
-    <div className="flex items-center gap-1 rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
+    <div className="flex items-center gap-1 rounded-lg bg-[--background-faded] p-1">
       <button
         onClick={() => setTheme('system')}
-        className={`rounded-md p-1.5 ${
+        className={`rounded-md p-1.5  ${
           theme === 'system'
-            ? 'bg-white shadow-sm dark:bg-gray-700'
-            : 'hover:bg-gray-200 dark:hover:bg-gray-700'
+            ? 'bg-[--background] shadow-sm'
+            : 'hover:bg-[--background]'
         }`}
         aria-label="Use system theme"
         title="Set to system theme"
       >
-        <IconDeviceLaptop
-          size={18}
-          className="text-gray-600 dark:text-gray-400"
-        />
+        <IconDeviceLaptop size={'1rem'} className="text-[--foreground-faded]" />
       </button>
       <button
         onClick={() => setTheme('light')}
         className={`rounded-md p-1.5 ${
           theme === 'light'
-            ? 'bg-white shadow-sm dark:bg-gray-700'
-            : 'hover:bg-gray-200 dark:hover:bg-gray-700'
+            ? 'bg-[--background] shadow-sm'
+            : 'hover:bg-[--background]'
         }`}
         aria-label="Use light theme"
         title="Set to light theme"
       >
-        <IconSun size={18} className="text-gray-600 dark:text-gray-400" />
+        <IconSun size={'1rem'} className="text-[--foreground-faded]" />
       </button>
       <button
         onClick={() => setTheme('dark')}
         className={`rounded-md p-1.5 ${
           theme === 'dark'
-            ? 'bg-white shadow-sm dark:bg-gray-700'
-            : 'hover:bg-gray-200 dark:hover:bg-gray-700'
+            ? 'bg-[--background] shadow-sm'
+            : 'hover:bg-[--background]'
         }`}
         aria-label="Use dark theme"
         title="Set to dark theme"
       >
-        <IconMoon size={18} className="text-gray-600 dark:text-gray-400" />
+        <IconMoon size={'1rem'} className="text-[--foreground-faded]" />
       </button>
     </div>
   )
