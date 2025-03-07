@@ -59,20 +59,13 @@ export async function POST(req: NextRequest, res: NextResponse) {
   } catch (error) {
     console.error('Error in route handler:', error)
 
-    let title = 'Error'
-    let message = 'An unexpected error occurred'
-
-    if (error instanceof OpenAIError) {
-      title = 'LLM Error'
-      message = error.message || 'Error connecting to the language model'
-    } else if (error instanceof Error) {
-      message = error.message
-    }
-
+    // For errors that occur before calling routeModelRequest
     return new Response(
       JSON.stringify({
-        title,
-        message,
+        title: 'LLM Error',
+        message: error instanceof Error
+          ? error.message
+          : 'An unexpected error occurred',
       }),
       {
         status: 500,

@@ -303,6 +303,40 @@ export const Chat = memo(
         setCurrentMessage(message)
         resetMessageStates()
 
+        // Check if llmProviders is null and fetch it if needed
+        // This happens when the user hits send before the LLM providers have loaded
+        if (!llmProviders || Object.keys(llmProviders).length === 0) {
+          try {
+            const response = await fetch('/api/models', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                projectName: courseName,
+              }),
+            });
+
+            if (!response.ok) {
+              throw new Error('Failed to fetch LLM providers');
+            }
+
+            const data = await response.json();
+            llmProviders = data;
+
+            if (!llmProviders) {
+              throw new Error('No LLM providers returned from API');
+            }
+          } catch (error) {
+            console.error('Error fetching LLM providers:', error);
+            errorToast({
+              title: 'Website Error - Please refresh the page',
+              message: 'Failed to fetch LLM providers. Please refresh the page and try again.',
+            });
+            return;
+          }
+        }
+
         let searchQuery = Array.isArray(message.content)
           ? message.content.map((content) => content.text).join(' ')
           : message.content
@@ -878,15 +912,14 @@ export const Chat = memo(
                   },
                   body: JSON.stringify(finalChatBody),
                 })
-                console.debug('response from /api/chat', response)
 
                 // Check if response is ok before proceeding
                 if (!response.ok) {
                   const errorData = await response.json()
-                  // Create a custom error object with both title and message
-                  const customError = new Error(errorData.message || 'Failed to get response from the server')
-                    // Attach the title as a property to the error object
-                    ; (customError as any).title = errorData.title || 'Error'
+                  console.log('Chat.txs --- errorData from /api/allNewRoutingChat', errorData)
+                  // Read our custom error object. But normal errors are captured too via errorData.error.
+                  const customError = new Error(errorData.message || errorData.error || 'The LLM might be overloaded or misconfigured. Please check your API key, or use a different LLM.')
+                    ; (customError as any).title = errorData.title || 'LLM Didn\'t Respond'
                   throw customError
                 }
               } catch (error) {

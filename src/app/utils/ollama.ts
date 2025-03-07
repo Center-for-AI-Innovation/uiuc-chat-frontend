@@ -20,7 +20,7 @@ export async function runOllamaChat(
 
     // Check if provider is properly configured
     if (!ollamaProvider.baseUrl) {
-      throw new Error('Ollama server URL is not configured')
+      throw new Error('Ollama server URL is not configured. Set it up in the Admin Dashboard, or use a different LLM.')
     }
 
     try {
@@ -72,11 +72,10 @@ export async function runOllamaChat(
     }
   } catch (error) {
     console.error('Error in runOllamaChat:', error)
+    // return error
     return new Response(
       JSON.stringify({
         error: error instanceof Error ? error.message : 'Unknown error occurred when running Ollama',
-        detailed_error: error instanceof Error ? error.toString() : 'Unknown error',
-        source: 'Ollama',
       }),
       {
         status: 500,
