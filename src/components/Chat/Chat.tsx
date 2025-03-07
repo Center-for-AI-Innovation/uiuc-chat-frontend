@@ -287,6 +287,7 @@ export const Chat = memo(
         courseMetadata: courseMetadata,
         model: selectedConversation?.model,
         llmProviders: llmProviders,
+        mode: 'chat',
       }
 
       try {
