@@ -76,6 +76,7 @@ const ApiPage: NextPage = () => {
   }, [courseMetadata, auth.isAuthenticated])
 
   if (isLoading || !auth.isAuthenticated || courseName == null) {
+    void router.push(`/new?course_name=${courseName}`);
     return <LoadingPlaceholderForAdminPages />
   }
 
