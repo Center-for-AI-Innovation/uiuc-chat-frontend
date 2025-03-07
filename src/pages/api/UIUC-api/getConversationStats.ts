@@ -16,7 +16,9 @@ export default async function handler(req: NextRequest, res: NextResponse) {
   }
 
   try {
-    const url = new URL('http://127.0.0.1:8000/getConversationStats')
+    const url = new URL(
+      'http://flask-pr-379.up.railway.app/getConversationStats',
+    )
     url.searchParams.append('course_name', course_name)
     if (from_date) url.searchParams.append('from_date', from_date)
     if (to_date) url.searchParams.append('to_date', to_date)
