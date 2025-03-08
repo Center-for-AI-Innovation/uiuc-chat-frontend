@@ -1,9 +1,6 @@
-import { initializeEncoding } from '@/utils/encoding'
 import { OpenAIError, OpenAIStream } from '@/utils/server'
 import { ChatBody, Message } from '@/types/chat'
-import { NextApiRequest, NextApiResponse } from 'next'
 
-export const maxDuration = 60
 
 export const openAIAzureChat = async (
   chatBody: ChatBody,

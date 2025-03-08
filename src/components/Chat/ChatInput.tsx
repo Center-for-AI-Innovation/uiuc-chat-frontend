@@ -193,10 +193,7 @@ export const ChatInput = ({
 
     if (maxLength && value.length > maxLength) {
       alert(
-        t(
-          `Message limit is {{maxLength}} characters. You have entered {{valueLength}} characters.`,
-          { maxLength, valueLength: value.length },
-        ),
+        `This LLM can only handle ${maxLength} characters, but you entered ${value.length} characters. Please switch to a model with a bigger input limit (like Gemini, Claude or GPT) or shorten your message.`,
       )
       return
     }
@@ -224,10 +221,10 @@ export const ChatInput = ({
           imageUrls.length > 0
             ? imageUrls
             : await Promise.all(
-                imageFiles.map((file) =>
-                  uploadImageAndGetUrl(file, courseName),
-                ),
-              )
+              imageFiles.map((file) =>
+                uploadImageAndGetUrl(file, courseName),
+              ),
+            )
 
         // Construct image content for the message
         imageContent = imageUrlsToUse
@@ -684,9 +681,8 @@ export const ChatInput = ({
     if (textareaRef && textareaRef.current) {
       textareaRef.current.style.height = 'inherit'
       textareaRef.current.style.height = `${textareaRef.current?.scrollHeight}px`
-      textareaRef.current.style.overflow = `${
-        textareaRef?.current?.scrollHeight > 400 ? 'auto' : 'hidden'
-      }`
+      textareaRef.current.style.overflow = `${textareaRef?.current?.scrollHeight > 400 ? 'auto' : 'hidden'
+        }`
     }
   }, [content])
 
@@ -968,20 +964,18 @@ export const ChatInput = ({
             {/* Button 3: main input text area  */}
             <div
               className={`
-                ${
-                  VisionCapableModels.has(
-                    selectedConversation?.model?.id as OpenAIModelID,
-                  )
-                    ? 'pl-8'
-                    : 'pl-1'
+                ${VisionCapableModels.has(
+                selectedConversation?.model?.id as OpenAIModelID,
+              )
+                  ? 'pl-8'
+                  : 'pl-1'
                 }
                   `}
             >
               <textarea
                 ref={textareaRef}
-                className={`chat-input m-0 h-[24px] max-h-[400px] w-full resize-none bg-transparent py-2 pl-2 pr-8 text-white outline-none ${
-                  isFocused ? 'border-blue-500' : ''
-                }`}
+                className={`chat-input m-0 h-[24px] max-h-[400px] w-full resize-none bg-transparent py-2 pl-2 pr-8 text-white outline-none ${isFocused ? 'border-blue-500' : ''
+                  }`}
                 style={{
                   resize: 'none',
                   minHeight: '24px',
