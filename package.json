@@ -13,11 +13,11 @@
     "analyze": "cross-env ANALYZE=true next build"
   },
   "dependencies": {
-    "@ai-sdk/amazon-bedrock": "1.0.7",
-    "@ai-sdk/anthropic": "^1.1.10",
-    "@ai-sdk/google": "1.0.7",
+    "@ai-sdk/amazon-bedrock": "^1.0.7",
+    "@ai-sdk/anthropic": "^1.1.15",
+    "@ai-sdk/google": "^1.0.7",
     "@ai-sdk/openai": "^0.0.34",
-    "@ai-sdk/provider": "1.0.7",
+    "@ai-sdk/provider": "^1.0.7",
     "@aws-sdk/client-bedrock-runtime": "^3.751.0",
     "@aws-sdk/client-s3": "3.338.0",
     "@aws-sdk/s3-presigned-post": "3.338.0",
