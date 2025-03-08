@@ -14,7 +14,7 @@ export async function getSambaNovaModels(
     delete provider.error // Clear any previous errors
 
     // If provider is disabled, return early with empty models
-    if (!provider.enabled) {
+    if (!provider.enabled || !provider.apiKey) {
       return {
         ...provider,
         models: [],
