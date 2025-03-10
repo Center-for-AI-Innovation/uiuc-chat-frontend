@@ -84,7 +84,7 @@ const useStyles = createStyles((theme: MantineTheme) => ({
   },
 }))
 
-import { useAuth, useUser } from '@clerk/nextjs'
+import { useAuth } from 'react-oidc-context'
 
 export const GetCurrentPageName = () => {
   // /CS-125/dashboard --> CS-125
@@ -127,11 +127,8 @@ const formatPercentageChange = (value: number | null | undefined) => {
 }
 
 const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
-  // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
   const { classes, theme } = useStyles()
-  const { isLoaded, userId, sessionId, getToken } = useAuth() // Clerk Auth
-  // const { isSignedIn, user } = useUser()
-  const clerk_user = useUser()
+  const auth = useAuth()
   const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
     null,
   )
@@ -164,8 +161,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   // TODO: remove this hook... we should already have this from the /materials props???
   useEffect(() => {
     const fetchData = async () => {
-      const userEmail = extractEmailsFromClerk(clerk_user.user)
-      setCurrentEmail(userEmail[0] as string)
+      setCurrentEmail(auth.user?.profile.email as string)
 
       try {
         const metadata: CourseMetadata = (await fetchCourseMetadata(
@@ -180,12 +176,11 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
         setCourseMetadata(metadata)
       } catch (error) {
         console.error(error)
-        // alert('An error occurred while fetching course metadata. Please try again later.')
       }
     }
 
     fetchData()
-  }, [currentPageName, clerk_user.isLoaded, clerk_user.user])
+  }, [currentPageName, !auth.isLoading, auth.user])
 
   const [hasConversationData, setHasConversationData] = useState<boolean>(true)
 
@@ -287,12 +282,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
   const [view, setView] = useState('hour')
 
-  if (!isLoaded || !courseMetadata) {
-    return (
-      <MainPageBackground>
-        <LoadingSpinner />
-      </MainPageBackground>
-    )
+  if (auth.isLoading || !courseMetadata) {
+    return <LoadingSpinner />
   }
 
   if (
@@ -305,7 +296,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     return (
       <CannotEditCourse
         course_name={currentPageName as string}
-      // current_email={currentEmail as string}
+        // current_email={currentEmail as string}
       />
     )
   }
@@ -441,10 +432,11 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
                           return (
                             <div
-                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${trend.percentage_change > 0
-                                ? 'bg-green-400/10'
-                                : 'bg-red-400/10'
-                                }`}
+                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
+                                trend.percentage_change > 0
+                                  ? 'bg-green-400/10'
+                                  : 'bg-red-400/10'
+                              }`}
                             >
                               {trend.percentage_change > 0 ? (
                                 <IconTrendingUp
@@ -511,10 +503,11 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
                           return (
                             <div
-                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${trend.percentage_change > 0
-                                ? 'bg-green-400/10'
-                                : 'bg-red-400/10'
-                                }`}
+                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
+                                trend.percentage_change > 0
+                                  ? 'bg-green-400/10'
+                                  : 'bg-red-400/10'
+                              }`}
                             >
                               {trend.percentage_change > 0 ? (
                                 <IconTrendingUp
@@ -581,10 +574,11 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
                           return (
                             <div
-                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${trend.percentage_change > 0
-                                ? 'bg-green-400/10'
-                                : 'bg-red-400/10'
-                                }`}
+                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
+                                trend.percentage_change > 0
+                                  ? 'bg-green-400/10'
+                                  : 'bg-red-400/10'
+                              }`}
                             >
                               {trend.percentage_change > 0 ? (
                                 <IconTrendingUp
@@ -915,7 +909,6 @@ interface CourseFilesListProps {
 }
 import { IconTrash } from '@tabler/icons-react'
 import { MainPageBackground } from './MainPageBackground'
-import { extractEmailsFromClerk } from './clerkHelpers'
 import { notifications } from '@mantine/notifications'
 import GlobalFooter from './GlobalFooter'
 import Navbar from './navbars/Navbar'
@@ -1008,23 +1001,25 @@ const CourseFilesList = ({ files }: CourseFilesListProps) => {
               {/* Download button */}
               <button
                 onClick={() =>
-                  fetchPresignedUrl(file.s3_path, GetCurrentPageName()).then((url) => {
-                    window.open(url as string, '_blank')
-                  })
+                  fetchPresignedUrl(file.s3_path, GetCurrentPageName()).then(
+                    (url) => {
+                      window.open(url as string, '_blank')
+                    },
+                  )
                 }
                 className="btn-circle btn cursor-pointer items-center justify-center border-0 bg-transparent transition duration-200 ease-in-out"
                 // style={{ outline: 'solid 1px', outlineColor: 'white' }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = theme.colors.grape[8]
-                    ; (e.currentTarget.children[0] as HTMLElement).style.color =
-                      theme.colorScheme === 'dark'
-                        ? theme.colors.gray[2]
-                        : theme.colors.gray[1]
+                  ;(e.currentTarget.children[0] as HTMLElement).style.color =
+                    theme.colorScheme === 'dark'
+                      ? theme.colors.gray[2]
+                      : theme.colors.gray[1]
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = 'transparent'
-                    ; (e.currentTarget.children[0] as HTMLElement).style.color =
-                      theme.colors.gray[8]
+                  ;(e.currentTarget.children[0] as HTMLElement).style.color =
+                    theme.colors.gray[8]
                 }}
               >
                 <IconDownload className="h-5 w-5 text-gray-800" />
@@ -1041,15 +1036,15 @@ const CourseFilesList = ({ files }: CourseFilesListProps) => {
                 // style={{ outline: 'solid 1px', outlineColor: theme.white }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = theme.colors.grape[8]
-                    ; (e.currentTarget.children[0] as HTMLElement).style.color =
-                      theme.colorScheme === 'dark'
-                        ? theme.colors.gray[2]
-                        : theme.colors.gray[1]
+                  ;(e.currentTarget.children[0] as HTMLElement).style.color =
+                    theme.colorScheme === 'dark'
+                      ? theme.colors.gray[2]
+                      : theme.colors.gray[1]
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = 'transparent'
-                    ; (e.currentTarget.children[0] as HTMLElement).style.color =
-                      theme.colors.red[6]
+                  ;(e.currentTarget.children[0] as HTMLElement).style.color =
+                    theme.colors.red[6]
                 }}
               >
                 <IconTrash className="h-5 w-5 text-red-600" />
@@ -1085,7 +1080,8 @@ async function fetchCourseMetadata(course_name: string) {
       return data.course_metadata
     } else {
       throw new Error(
-        `Error fetching course metadata: ${response.statusText || response.status
+        `Error fetching course metadata: ${
+          response.statusText || response.status
         }`,
       )
     }

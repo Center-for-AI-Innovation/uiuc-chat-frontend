@@ -45,8 +45,7 @@ interface Props {
 }
 
 import { useRouter } from 'next/router'
-import { useUser } from '@clerk/nextjs'
-import { extractEmailsFromClerk } from '../UIUC-Components/clerkHelpers'
+import { useAuth } from 'react-oidc-context'
 import ChatNavbar from '../UIUC-Components/navbars/ChatNavbar'
 import { notifications } from '@mantine/notifications'
 import { Montserrat } from 'next/font/google'
@@ -96,7 +95,7 @@ export const Chat = memo(
     documentCount,
   }: Props) => {
     const { t } = useTranslation('chat')
-    const clerk_obj = useUser()
+    const auth = useAuth()
     const router = useRouter()
     const queryClient = useQueryClient()
     // const
@@ -105,8 +104,6 @@ export const Chat = memo(
       // /CS-125/dashboard --> CS-125
       return router.asPath.slice(1).split('/')[0] as string
     }
-    const user_email = extractEmailsFromClerk(clerk_obj.user)[0]
-
     const [chat_ui] = useState(new ChatUI(new MLCEngine()))
 
     const [inputContent, setInputContent] = useState<string>('')
