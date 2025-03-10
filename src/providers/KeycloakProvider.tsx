@@ -1,5 +1,6 @@
 import { AuthProvider } from 'react-oidc-context'
 import { ReactNode, useEffect, useState } from 'react'
+import { WebStorageStateStore } from 'oidc-client-ts'
 
 interface AuthProviderProps {
   children: ReactNode
@@ -26,8 +27,7 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
     scope: 'openid profile email',
     response_type: 'code',
     loadUserInfo: true,
-    userStore: 'local',
-    automaticSilentRenew: true,
+    // Remove automaticSilentRenew from initial config
     onSigninCallback: async () => {
       if (typeof window !== 'undefined') {
         // First clean up the URL by removing query parameters
@@ -51,6 +51,10 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
         redirect_uri: baseUrl,
         silent_redirect_uri: `${baseUrl}/silent-renew`,
         post_logout_redirect_uri: baseUrl,
+        userStore: new WebStorageStateStore({
+          store: window.localStorage
+        }),
+        automaticSilentRenew: true,
       }))
     }
   }, [])
