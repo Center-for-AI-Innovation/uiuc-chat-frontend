@@ -13,7 +13,7 @@ RUN npm install
 COPY . .
 
 # Build Next.js production assets
-RUN npm run build
+RUN npm run build:self-hosted
 
 # ---- 2) Runner Stage ----
 FROM node:18-alpine AS runner
