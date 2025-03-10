@@ -50,7 +50,6 @@ const CourseMain: NextPage = () => {
     !auth.isAuthenticated ||
     courseName == null
   ) {
-    void router.push(`/new?course_name=${courseName}`);
     return <LoadingPlaceholderForAdminPages />
   }
 
