@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "build": "node scripts/update-keycloak-urls.js && next build",
+    "build:self-hosted": "next build",
     "bd": "infisical run --env=dev -- next build",
     "dev": "infisical run --env=dev -- next dev",
     "lint": "next lint",
