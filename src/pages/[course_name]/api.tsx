@@ -75,12 +75,12 @@ const ApiPage: NextPage = () => {
     handlePermissionsAndData()
   }, [courseMetadata, auth.isAuthenticated])
 
-  if (isLoading || !auth.isAuthenticated || courseName == null) {
-    void router.push(`/new?course_name=${courseName}`);
+  if (isLoading || courseName == null) {
     return <LoadingPlaceholderForAdminPages />
   }
 
   if (!auth.user || !auth.isAuthenticated) {
+    void router.push(`/new?course_name=${courseName}`);
     void initiateSignIn(auth, router.asPath)
     return null
   }
