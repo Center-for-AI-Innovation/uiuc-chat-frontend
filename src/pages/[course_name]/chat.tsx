@@ -108,7 +108,6 @@ const ChatPage: NextPage = () => {
     const checkAuthorization = async () => {
       if (!auth.isLoading && router.isReady) {
         const courseName = router.query.course_name as string
-
         try {
           // Fetch course metadata
           const metadata = await fetchCourseMetadata(courseName)
@@ -121,8 +120,26 @@ const ChatPage: NextPage = () => {
           // Check if course is public
           if (!metadata.is_private) {
             setIsAuthorized(true)
-            // Set a default email for public access
-            setCurrentEmail('')
+            // Set email for public access
+            if (auth.user?.profile.email) {
+              setCurrentEmail(auth.user?.profile.email)
+            } else {
+              // Use PostHog ID when user is not logged in for public courses
+              const key = process.env.NEXT_PUBLIC_POSTHOG_KEY as string
+              const postHogUserObj = localStorage.getItem('ph_' + key + '_posthog')
+              if (postHogUserObj) {
+                const postHogUser = JSON.parse(postHogUserObj)
+                setCurrentEmail(postHogUser.distinct_id)
+                console.log(
+                  'setting user email as posthog user: ',
+                  postHogUser.distinct_id,
+                )
+              } else {
+                // When user is not logged in and posthog user is not found
+                setCurrentEmail('')
+                console.log('No PostHog ID found, setting empty email')
+              }
+            }
             return
           }
 
@@ -140,9 +157,6 @@ const ChatPage: NextPage = () => {
           }
 
           setIsAuthorized(true)
-          if (auth.user?.profile.email) {
-            setCurrentEmail(auth.user.profile.email)
-          }
         } catch (error) {
           console.error('Authorization check failed:', error)
           setIsAuthorized(false)
@@ -183,5 +197,5 @@ const ChatPage: NextPage = () => {
     </>
   )
 }
- 
+
 export default ChatPage
