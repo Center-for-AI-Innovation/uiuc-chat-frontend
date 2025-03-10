@@ -15,7 +15,7 @@ const useStyles = createStyles((theme) => ({
     width: 'auto',
     padding: '0 0.75rem',
     color: 'var(--illinois-orange)',
-    backgroundColor: 'white',
+    backgroundColor: 'transparent',
     fontSize: rem(14),
     fontWeight: 500,
     border: `1px solid var(--illinois-orange)`,
