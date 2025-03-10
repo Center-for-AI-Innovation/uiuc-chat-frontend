@@ -22,7 +22,6 @@ import { CannotEditCourse } from './CannotEditCourse'
 import { type CourseMetadata } from '~/types/courseMetadata'
 
 import { LoadingPlaceholderForAdminPages } from './MainPageBackground'
-import { extractEmailsFromClerk } from './clerkHelpers'
 import { notifications } from '@mantine/notifications'
 import GlobalFooter from './GlobalFooter'
 import Navbar from './navbars/Navbar'
@@ -33,10 +32,10 @@ import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-import { useAuth, useUser } from '@clerk/nextjs'
 import { Montserrat } from 'next/font/google'
 import { useFetchAllWorkflows } from '~/utils/functionCalling/handleFunctionCalling'
 import { IntermediateStateAccordion } from './IntermediateStateAccordion'
+import { useAuth } from 'react-oidc-context'
 
 export const GetCurrentPageName = () => {
   // /CS-125/dashboard --> CS-125
@@ -49,12 +48,9 @@ const montserrat_med = Montserrat({
 })
 
 const MakeToolsPage = ({ course_name }: { course_name: string }) => {
-  // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
-  const { isLoaded, userId, sessionId, getToken } = useAuth() // Clerk Auth
-  // const { isSignedIn, user } = useUser()
   const router = useRouter()
   const currentPageName = GetCurrentPageName()
-  const clerk_user = useUser()
+  const auth = useAuth()
   const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
     null,
   )
@@ -202,11 +198,10 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
     getApiFromSupabase()
   }, [course_name])
 
-  // TODO: use react query hook?
   useEffect(() => {
     const fetchData = async () => {
-      const userEmail = extractEmailsFromClerk(clerk_user.user)
-      setCurrentEmail(userEmail[0] as string)
+      const userEmail = auth.user?.profile.email
+      setCurrentEmail(userEmail as string)
 
       try {
         const metadata: CourseMetadata = (await fetchCourseMetadata(
@@ -226,7 +221,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
     }
 
     fetchData()
-  }, [currentPageName, clerk_user.isLoaded])
+  }, [currentPageName, !auth.isLoading])
 
   const errorFetchingWorkflowsToast = () => {
     notifications.show({
@@ -260,7 +255,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
     })
   }
 
-  if (!isLoaded || !courseMetadata) {
+  if (auth.isLoading || !courseMetadata) {
     return <LoadingPlaceholderForAdminPages />
   }
 
@@ -279,15 +274,15 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
       />
     )
   }
-  console.log('n8n api key:', n8nApiKey)
-  console.log(
-    'setup instructions default value:',
-    n8nApiKey ? undefined : 'setup-instructions',
-  )
-  console.log(
-    'usage instructions default value:',
-    n8nApiKey && !isEmptyWorkflowTable ? 'usage-instruction' : undefined,
-  )
+  // console.log('n8n api key:', n8nApiKey)
+  // console.log(
+  //   'setup instructions default value:',
+  //   n8nApiKey ? undefined : 'setup-instructions',
+  // )
+  // console.log(
+  //   'usage instructions default value:',
+  //   n8nApiKey && !isEmptyWorkflowTable ? 'usage-instruction' : undefined,
+  // )
 
   return (
     <>
