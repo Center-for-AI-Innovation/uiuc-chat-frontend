@@ -45,7 +45,6 @@ async function updateKeycloakRedirectURIs() {
     const [client] = await clientResponse.json()
 
     // Get Vercel deployment URLs
-    const vercelBaseUrl = `https://${process.env.VERCEL_URL}`
     const branchName = process.env.VERCEL_GIT_COMMIT_REF // Gets the branch name
     const teamSlug = 'caiis-projects' // Your team slug
     
@@ -75,21 +74,11 @@ async function updateKeycloakRedirectURIs() {
     const currentRedirectUris = new Set(client.redirectUris || [])
     const currentWebOrigins = new Set(client.webOrigins || [])
     
-    // Add the base Vercel URL
-    currentRedirectUris.add(vercelBaseUrl)
-    currentRedirectUris.add(`${vercelBaseUrl}/*`)
-    currentWebOrigins.add(vercelBaseUrl)
-    
     // Track all URLs we're adding for logging
     const addedUrls = {
       redirectUris: {},
       webOrigins: {}
     }
-    
-    // Add base URL to tracking
-    addedUrls.redirectUris.vercelBaseUrl = vercelBaseUrl
-    addedUrls.redirectUris.vercelBaseUrlWildcard = `${vercelBaseUrl}/*`
-    addedUrls.webOrigins.vercelBaseUrl = vercelBaseUrl
 
     // If we have a branch name, add branch-specific URLs for the current project
     if (branchName && currentProject) {
@@ -106,6 +95,10 @@ async function updateKeycloakRedirectURIs() {
       addedUrls.redirectUris.branchUrl = branchUrl
       addedUrls.redirectUris.branchUrlWildcard = `${branchUrl}/*`
       addedUrls.webOrigins.branchUrl = branchUrl
+      
+      console.log(`Adding branch URL: ${branchUrl}`)
+    } else {
+      console.log('No branch URL to add - missing branch name or project name')
     }
 
     // Update client
