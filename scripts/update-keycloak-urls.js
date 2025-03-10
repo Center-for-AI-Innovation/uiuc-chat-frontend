@@ -53,20 +53,26 @@ async function updateKeycloakRedirectURIs() {
     
     // Determine which project we're currently deploying
     let currentProject = null
-    if (process.env.VERCEL_PROJECT_NAME) {
+    
+    // Check if this is HPC-GPT based on environment variable
+    if (process.env.IS_HPC_GPT === 'true') {
+      currentProject = 'hpc-gpt'
+      console.log('Detected HPC-GPT project from IS_HPC_GPT environment variable')
+    } else if (process.env.VERCEL_PROJECT_NAME) {
       currentProject = process.env.VERCEL_PROJECT_NAME
+      console.log(`Detected project from VERCEL_PROJECT_NAME: ${currentProject}`)
     } else {
       // Try to determine from VERCEL_URL if project name not available
       for (const project of projects) {
         if (process.env.VERCEL_URL && process.env.VERCEL_URL.includes(project)) {
           currentProject = project
+          console.log(`Detected project from VERCEL_URL: ${currentProject}`)
           break
         }
       }
       
-      // Default to the vercel base URL if we can't determine the project
       if (!currentProject) {
-        console.log('Could not determine project name, using vercelBaseUrl only')
+        console.log('Could not determine project name from environment variables')
       }
     }
 
@@ -80,7 +86,7 @@ async function updateKeycloakRedirectURIs() {
       webOrigins: {}
     }
 
-    // If we have a branch name, add branch-specific URLs for the current project
+    // If we have a branch name and project name, add branch-specific URLs
     if (branchName && currentProject) {
       const branchUrl = `https://${currentProject}-git-${branchName}-${teamSlug}.vercel.app`
       
@@ -97,8 +103,26 @@ async function updateKeycloakRedirectURIs() {
       addedUrls.webOrigins.branchUrl = branchUrl
       
       console.log(`Adding branch URL: ${branchUrl}`)
+    } 
+    // If we have the project but no branch name, try to use VERCEL_URL
+    else if (currentProject && process.env.VERCEL_URL) {
+      const vercelUrl = `https://${process.env.VERCEL_URL}`
+      
+      // Add to redirect URIs
+      currentRedirectUris.add(vercelUrl)
+      currentRedirectUris.add(`${vercelUrl}/*`)
+      
+      // Add to web origins
+      currentWebOrigins.add(vercelUrl)
+      
+      // Add to tracking
+      addedUrls.redirectUris.vercelUrl = vercelUrl
+      addedUrls.redirectUris.vercelUrlWildcard = `${vercelUrl}/*`
+      addedUrls.webOrigins.vercelUrl = vercelUrl
+      
+      console.log(`No branch name available, adding Vercel URL: ${vercelUrl}`)
     } else {
-      console.log('No branch URL to add - missing branch name or project name')
+      console.log('No URLs to add - missing required information')
     }
 
     // Update client
@@ -117,6 +141,8 @@ async function updateKeycloakRedirectURIs() {
 
     console.log('Successfully updated Keycloak client configuration:', {
       project: currentProject || 'unknown',
+      branchName: branchName || 'unknown',
+      vercelUrl: process.env.VERCEL_URL || 'unknown',
       addedUrls
     })
   } catch (error) {

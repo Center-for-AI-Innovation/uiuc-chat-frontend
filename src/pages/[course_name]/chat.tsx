@@ -108,7 +108,6 @@ const ChatPage: NextPage = () => {
     const checkAuthorization = async () => {
       if (!auth.isLoading && router.isReady) {
         const courseName = router.query.course_name as string
-
         try {
           // Fetch course metadata
           const metadata = await fetchCourseMetadata(courseName)
@@ -121,8 +120,12 @@ const ChatPage: NextPage = () => {
           // Check if course is public
           if (!metadata.is_private) {
             setIsAuthorized(true)
-            // Set a default email for public access
-            setCurrentEmail('')
+            // Set an empty email for public access
+            if (auth.user?.profile.email) {
+              setCurrentEmail(auth.user?.profile.email)
+            } else {
+              setCurrentEmail('')
+            }
             return
           }
 
@@ -140,9 +143,6 @@ const ChatPage: NextPage = () => {
           }
 
           setIsAuthorized(true)
-          if (auth.user?.profile.email) {
-            setCurrentEmail(auth.user.profile.email)
-          }
         } catch (error) {
           console.error('Authorization check failed:', error)
           setIsAuthorized(false)
