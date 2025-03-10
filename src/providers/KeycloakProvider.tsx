@@ -26,6 +26,8 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
     scope: 'openid profile email',
     response_type: 'code',
     loadUserInfo: true,
+    userStore: 'local',
+    automaticSilentRenew: true,
     onSigninCallback: async () => {
       if (typeof window !== 'undefined') {
         // First clean up the URL by removing query parameters
