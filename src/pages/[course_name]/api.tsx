@@ -2,7 +2,7 @@
 import { NextPage } from 'next'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
-import { useUser } from '@clerk/nextjs'
+import { useAuth } from 'react-oidc-context'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import { LoadingPlaceholderForAdminPages } from '~/components/UIUC-Components/MainPageBackground'
 import ApiKeyManagement from '~/components/UIUC-Components/ApiKeyManagament'
@@ -10,12 +10,12 @@ import { CourseMetadata } from '~/types/courseMetadata'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { Flex } from '@mantine/core'
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
-import { GetStaticPaths, GetStaticProps } from 'next'
+import { initiateSignIn } from '~/utils/authHelpers'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 
 const ApiPage: NextPage = () => {
   const router = useRouter()
-  const user = useUser()
+  const auth = useAuth()
   const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
     null,
   )
@@ -47,18 +47,18 @@ const ApiPage: NextPage = () => {
 
   // Second useEffect to handle permissions and other dependent data
   useEffect(() => {
-    if (isLoading || !user.isLoaded || courseName == null) {
+    if (auth.isLoading || !auth.isAuthenticated || courseName == null) {
       // Do not proceed if we are still loading or if the user data is not loaded yet.
       return
     }
 
     const handlePermissionsAndData = async () => {
       try {
-        if (!courseMetadata || !user.isLoaded) {
+        if (!courseMetadata || !auth.isAuthenticated) {
           return
         }
 
-        const permission_str = get_user_permission(courseMetadata, user, router)
+        const permission_str = get_user_permission(courseMetadata, auth)
 
         if (permission_str !== 'edit') {
           console.debug(
@@ -73,26 +73,17 @@ const ApiPage: NextPage = () => {
       }
     }
     handlePermissionsAndData()
-  }, [courseMetadata, user.isLoaded])
+  }, [courseMetadata, auth.isAuthenticated])
 
-  if (isLoading || !user.isLoaded || courseName == null) {
+  if (isLoading || !auth.isAuthenticated || courseName == null) {
+    void router.push(`/new?course_name=${courseName}`);
     return <LoadingPlaceholderForAdminPages />
   }
 
-  if (!user || !user.isSignedIn) {
-    router.replace('/sign-in')
-    return <></>
+  if (!auth.user || !auth.isAuthenticated) {
+    void initiateSignIn(auth, router.asPath)
+    return null
   }
-
-  // const styles = {
-  //   container: {
-  //     backgroundColor: 'var(--illinois-background-dark)',
-  //     color: 'var(--illinois-white)',
-  //   },
-  //   header: {
-  //     borderBottom: '1px solid var(--illinois-storm-light)',
-  //   },
-  // };
 
   return (
     <>
@@ -102,7 +93,7 @@ const ApiPage: NextPage = () => {
           <Flex direction="column" align="center" w="100%">
             <ApiKeyManagement
               course_name={router.query.course_name as string}
-              clerk_user={user}
+              auth={auth}
             />
           </Flex>
         </div>
