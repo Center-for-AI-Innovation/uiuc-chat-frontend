@@ -39,7 +39,6 @@ const CourseMain: NextPage = () => {
   }, [router.isReady])
 
   if (auth.isLoading || isFetchingCourseMetadata || courseName == null) {
-    void router.push(`/new?course_name=${courseName}`);
     return <LoadingPlaceholderForAdminPages />
   }
 
