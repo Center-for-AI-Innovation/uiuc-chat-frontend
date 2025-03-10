@@ -6,29 +6,23 @@ import { initiateSignIn } from '~/utils/authHelpers'
 
 const useStyles = createStyles((theme) => ({
   link: {
-    fontSize: rem(13),
-    color: 'var(--foreground)',
-    padding: `${theme.spacing.sm} ${theme.spacing.xs}`,
-    fontWeight: 700,
-    transition:
-      'border-color 100ms ease, color 100ms ease, background-color 100ms ease',
-    borderRadius: theme.radius.sm,
     cursor: 'pointer',
-    border: 'none',
-    backgroundColor: 'transparent',
-
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '2.2rem',
+    minWidth: '100px',
+    width: 'auto',
+    padding: '0 0.75rem',
+    color: 'var(--illinois-orange)',
+    backgroundColor: 'white',
+    fontSize: rem(14),
+    fontWeight: 500,
+    border: `1px solid var(--illinois-orange)`,
+    borderRadius: '0.375rem',
+    transition: 'background-color 100ms ease',
     '&:hover': {
-      color: 'var(--illinois-orange)',
-      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-      textDecoration: 'none',
-      borderRadius: '10px',
-    },
-    '&[data-active="true"]': {
-      color: 'var(--illinois-orange)',
-      borderBottom: '2px solid var(--illinois-orange)',
-      textDecoration: 'none',
-      borderRadius: '10px',
-      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      backgroundColor: 'rgba(255, 95, 5, 0.05)',
     },
   },
   userAvatar: {
