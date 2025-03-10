@@ -97,10 +97,6 @@ export default async function middleware(request: NextRequest) {
   const redirectResponse = materialsRedirectMiddleware(request)
   if (redirectResponse) return redirectResponse
 
-  // Add specific handling for maintenance mode API endpoint
-  if (pathname === '/api/UIUC-api/getMaintenanceModeFast') {
-    return NextResponse.redirect(new URL('/', request.url))
-  }
 
   // Allow public routes
   if (
