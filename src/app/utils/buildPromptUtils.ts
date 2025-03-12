@@ -76,6 +76,81 @@ const shouldAppendDocumentsOnlyPrompt = (
   )
 }
 
+const googleFitData = {
+  '1': {
+    timeCreated: '2024-01-01T00:00:00Z',
+    timeDuration: '24 hours',
+    avgHeartRate: 70,
+    maxHeartRate: 100,
+    restingHeartRate: 60,
+    stepCount: 1000,
+    calories: 2000,
+    distance: 10,
+    floors: 2,
+    activeMinutes: 30,
+    caloriesBurned: 1500,
+    sleepDuration: 8,
+    sleepQuality: 0.8,
+    sleepStages: {
+      deep: 2,
+      light: 3,
+      rem: 1,
+    },
+    workoutDurationHours: 0.5,
+    workoutType: 'run',
+    workoutDistance: 5,
+    workoutCalories: 1000,
+    workoutSteps: 5000,
+    workoutFloors: 2,
+    workoutActiveMinutes: 30,
+    workoutAvgHeartRate: 100,
+    workoutMaxHeartRate: 120,
+    workoutRestingHeartRate: 60,
+    workoutAvgSpeed: 10,
+    workoutMaxSpeed: 15,
+    workoutAvgPace: 1,
+    workoutMaxPace: 1.5,
+    workoutAvgStrideLength: 1,
+    workoutMaxStrideLength: 1.5,
+    workoutAvgStrideTime: 1,
+    workoutMaxStrideTime: 1.5,
+    workoutAvgStrideSpeed: 10,
+    workoutMaxStrideSpeed: 15,
+  },
+  '2': {
+    timeCreated: '2024-01-02T00:00:00Z',
+    timeDuration: '48 hours',
+    avgHeartRate: 70,
+    maxHeartRate: 100,
+    restingHeartRate: 60,
+    stepCount: 5000,
+    calories: 5000,
+    distance: 20,
+    floors: 2,
+    activeMinutes: 30,
+    caloriesBurned: 1500,
+    sleepDuration: 6,
+    sleepQuality: 0.6,
+    sleepStages: {
+      deep: 1,
+      light: 2,
+      rem: 1,
+    },
+    workoutDurationHours: 1,
+    workoutType: 'swim',
+    workoutDistance: 10,
+    workoutCalories: 1500,
+    workoutActiveMinutes: 30,
+    workoutAvgHeartRate: 100,
+    workoutMaxHeartRate: 120,
+    workoutRestingHeartRate: 60,
+  },
+}
+
+const getUserGoogleFitData = (userID: string) => {
+  return googleFitData[userID as keyof typeof googleFitData]
+}
+
 const encoding = encodingForModel('gpt-4o')
 
 export type BuildPromptMode = 'chat' | 'optimize_prompt'
@@ -227,10 +302,17 @@ export const buildPrompt = async ({
       const tokenCount = encoding.encode(finalSystemPrompt).length
       remainingTokenBudget -= tokenCount
 
-      // P1: Most recent user text input
+      // P1.1: Most recent user text input
       const userQuery = `\n<User Query>\n${lastUserTextInput}\n</User Query>`
       remainingTokenBudget -= encoding.encode(userQuery).length
       userPromptSections.push(userQuery)
+
+      // P1.2: User GoogleFit Data
+      const user_data = getUserGoogleFitData('1')
+      const user_data_str = JSON.stringify(user_data)
+      const userData = `\nBelow is the user's GoogleFit data. Use this data to answer the user's question.\n<User Data>\n${user_data_str}\n</User Data>`
+      remainingTokenBudget -= encoding.encode(userData).length
+      userPromptSections.push(userData)
 
       // P2.1 : get the previous conversation summary, if it exists
       if (conversation.summary) {
