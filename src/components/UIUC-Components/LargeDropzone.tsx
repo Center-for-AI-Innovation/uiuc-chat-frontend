@@ -244,9 +244,9 @@ export function LargeDropzone({
     }
   }
   useEffect(() => {
-    let pollInterval = 3000 // Start with a slower interval
+    let pollInterval = 9000 // Start with a slower interval
     const MIN_INTERVAL = 1000 // Fast polling when active
-    const MAX_INTERVAL = 5000 // Slow polling when inactive
+    const MAX_INTERVAL = 20000 // Slow polling when inactive
     let consecutiveEmptyPolls = 0
 
     const checkIngestStatus = async () => {
