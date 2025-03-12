@@ -74,6 +74,12 @@
   /* Gradients */
   --illinois-blue-gradient: linear-gradient(135deg, #1d58a7, #13294b);
   --illinois-orange-gradient: linear-gradient(-135deg, #fcb316, #ff5f05);
+
+  /* Scrollbar Colors */
+  --illinois-scrollbar-track: transparent;
+  --illinois-scrollbar-track-hover: rgba(255, 255, 255, 0.06);
+  --illinois-scrollbar-thumb: rgba(156, 154, 157, 0.5); /* Using storm-medium with opacity */
+  --illinois-scrollbar-thumb-hover: var(--illinois-storm-dark); /* Changed from orange to storm-dark for a more neutral look */
 }
 
 .illinois-blue-gradient-bg {
@@ -158,22 +164,23 @@
 }
 
 ::-webkit-scrollbar-track {
-  background-color: transparent;
+  background-color: var(--illinois-scrollbar-track);
   transition: background-color 0.2s ease;
 }
 
 ::-webkit-scrollbar-track:hover {
-  background-color: rgba(255, 255, 255, 0.06);
+  background-color: var(--illinois-scrollbar-track-hover);
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: var(--illinois-scrollbar-thumb);
   border-radius: 6px;
   transition: background-color 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: var(--illinois-scrollbar-thumb-hover);
+  border-radius: 6px;
 }
 
 ::-webkit-scrollbar-corner {
@@ -438,29 +445,6 @@ li {
 
 /* END NOMIC LOADING BOX */
 
-/* This will apply to all scrollbars EXCEPT Firefox*/
-::-webkit-scrollbar {
-  width: 6px;
-  /* For vertical scrollbars */
-  height: 6px;
-  /* For horizontal scrollbars */
-  background-color: var(--illinois-storm-dark);
-}
-
-::-webkit-scrollbar-corner {
-  background-color: var(--illinois-blue);
-}
-
-::-webkit-scrollbar-thumb {
-  background-color: var(--illinois-storm-medium);
-  border-radius: 10px;
-}
-
-/* Handle on hover */
-::-webkit-scrollbar-thumb:hover {
-  background-color: var(--illinois-scrollbar-hover);
-  border-radius: 4px;
-}
 
 @keyframes pulsate {
   0% {
