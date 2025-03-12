@@ -78,8 +78,8 @@
   /* Scrollbar Colors */
   --illinois-scrollbar-track: transparent;
   --illinois-scrollbar-track-hover: rgba(255, 255, 255, 0.06);
-  --illinois-scrollbar-thumb: rgba(156, 154, 157, 0.5); /* Using storm-medium with opacity */
-  --illinois-scrollbar-thumb-hover: var(--illinois-storm-dark); /* Changed from orange to storm-dark for a more neutral look */
+  --illinois-scrollbar-thumb: rgba(156, 154, 157, 0.5);
+  --illinois-scrollbar-thumb-hover: var(--illinois-storm-dark);
 }
 
 .illinois-blue-gradient-bg {
