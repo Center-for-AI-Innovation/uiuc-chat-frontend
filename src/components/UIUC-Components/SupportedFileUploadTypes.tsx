@@ -1,37 +1,9 @@
-import Image from 'next/image'
 import {
-  Text,
-  Title,
-  Flex,
   createStyles,
-  Accordion,
-  Card,
-  // rem,
-  // Group,
-  // Card,
-  // Badge,
-  // MantineProvider,
-  // Button,
-  // Group,
-  // Stack,
-  // createStyles,
-  // FileInput,
-  // Group,
-  // Divider,
-  // TextInput,
-  // Tooltip,
 } from '@mantine/core'
-// const rubik_puddles = Rubik_Puddles({ weight: '400', subsets: ['latin'] })
 
-// import Link from 'next/link'
 import React from 'react'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import Link from 'next/link'
 import {
-  IconFileText,
-  IconFileDescription,
-  IconPresentation,
-  IconFileSpreadsheet,
   IconFileTypePdf,
   IconFileTypeDocx,
   IconFileTypePpt,
@@ -41,10 +13,6 @@ import {
   IconMusic,
   IconCode,
   IconFileTypeTxt,
-  IconUpload,
-  IconWorld,
-  IconSchool,
-  IconBook,
   TablerIconsProps
 } from '@tabler/icons-react'
 import {
