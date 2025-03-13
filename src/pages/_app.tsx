@@ -112,6 +112,20 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
                   withNormalizeCSS
                   theme={{
                     defaultRadius: 'md',
+                    colors: {
+                      orange: [
+                        'var(--primary)',
+                        'var(--primary)',
+                        'var(--primary)',
+                        'var(--primary)',
+                        'var(--primary)',
+                        'var(--primary)',
+                        'var(--primary)',
+                        'var(--primary)',
+                        'var(--primary)',
+                        'var(--primary)',
+                      ], //should really be different shades of --primary instead of the same orange
+                    },
                     headings: {
                       fontFamily: 'Montserrat, Roboto, sans-serif',
                       sizes: {

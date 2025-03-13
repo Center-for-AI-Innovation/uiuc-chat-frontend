@@ -16,7 +16,7 @@ export function ThemeToggle() {
         aria-label="Use system theme"
         title="Set to system theme"
       >
-        <IconDeviceLaptop size={'1rem'} className="text-[--foreground-faded]" />
+        <IconDeviceLaptop size={16} className="text-[--foreground-faded]" />
       </button>
       <button
         onClick={() => setTheme('light')}
@@ -28,7 +28,7 @@ export function ThemeToggle() {
         aria-label="Use light theme"
         title="Set to light theme"
       >
-        <IconSun size={'1rem'} className="text-[--foreground-faded]" />
+        <IconSun size={16} className="text-[--foreground-faded]" />
       </button>
       <button
         onClick={() => setTheme('dark')}
@@ -40,7 +40,7 @@ export function ThemeToggle() {
         aria-label="Use dark theme"
         title="Set to dark theme"
       >
-        <IconMoon size={'1rem'} className="text-[--foreground-faded]" />
+        <IconMoon size={16} className="text-[--foreground-faded]" />
       </button>
     </div>
   )

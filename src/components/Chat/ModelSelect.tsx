@@ -174,6 +174,7 @@ export const ModelItem = forwardRef<
                   display: 'flex',
                   alignItems: 'center',
                   marginTop: '4px',
+                  paddingLeft: '36px', //line up with image and text better. needs to be a different layout in the future
                 }}
               >
                 <Text size="xs" opacity={0.65}>
@@ -206,7 +207,7 @@ export const ModelItem = forwardRef<
                         <IconCircleCheck
                           size="1rem"
                           style={{ marginLeft: '8px' }}
-                          className="text-purple-400"
+                          className=""
                         />
                         {/* {isLoading && setLoadingModelId(null)} */}
                       </>
@@ -216,13 +217,12 @@ export const ModelItem = forwardRef<
                     <Text
                       size="xs"
                       opacity={isModelCached ? 1 : 0.65}
-                      style={{ marginLeft: '4px' }}
                       className={
                         isModelCached ||
                         (state.webLLMModelIdLoading.id == modelId &&
                           !state.webLLMModelIdLoading.isLoading)
-                          ? 'text-purple-400'
-                          : ''
+                          ? 'ml-[3px] italic'
+                          : 'ml-1'
                       }
                     >
                       {isModelCached ||
@@ -329,7 +329,7 @@ const ModelDropdown: React.FC<
   return (
     <>
       <Title
-        className={`px-4 pt-4 ${montserrat_heading.variable} rounded-lg bg-[#15162c] p-4 font-montserratHeading md:rounded-lg`}
+        className={`px-4 pt-4 ${montserrat_heading.variable} rounded-lg bg-[--modal-dark] p-4 font-montserratHeading text-[--modal-text] md:rounded-lg`}
         color="white"
         order={isSmallScreen ? 5 : 4}
       >
@@ -408,7 +408,12 @@ const ModelDropdown: React.FC<
               />
             ) : null
           }
-          rightSection={<IconChevronDown size="1rem" className="mr-2" />}
+          rightSection={
+            <IconChevronDown
+              size="1rem"
+              className="mr-2 text-[--modal-button-text]"
+            />
+          }
           classNames={{
             root: 'w-full',
             wrapper: 'w-full',
@@ -418,7 +423,9 @@ const ModelDropdown: React.FC<
           }}
           styles={(theme) => ({
             input: {
-              backgroundColor: 'rgb(107, 33, 168)',
+              cursor: 'pointer',
+              color: 'var(--modal-button-text)',
+              backgroundColor: 'var(--modal-button)',
               border: 'none',
               // color: theme.white,
               // borderRadius: theme.radius.md,
@@ -426,33 +433,40 @@ const ModelDropdown: React.FC<
               // [`@media (max-width: 960px)`]: {
               //   width: '17rem', // Smaller width for small screens
               // },
+              '&:hover': {
+                color: 'var(--modal-button-text-hover)',
+                backgroundColor: 'var(--modal-button-hover)',
+              },
             },
             dropdown: {
-              backgroundColor: '#1d1f33',
-              border: '1px solid rgba(42,42,120,1)',
+              color: 'var(--background)',
+              backgroundColor: 'var(--foreground-light)',
+              border: '0px',
               borderRadius: theme.radius.md,
               marginTop: '2px',
-              boxShadow: theme.shadows.xs,
+              boxShadow: theme.shadows.lg,
               width: '100%',
               maxWidth: '100%',
               position: 'absolute',
             },
             item: {
-              backgroundColor: '#1d1f33',
+              color: 'var(--modal-button-text)',
+              backgroundColor: '',
               borderRadius: theme.radius.md,
               margin: '2px',
               '&[data-selected]': {
                 '&': {
+                  color: 'var(--primary)',
                   backgroundColor: 'transparent',
                 },
                 '&:hover': {
-                  backgroundColor: 'rgb(107, 33, 168)',
-                  color: theme.white,
+                  color: 'var(--modal-button-text-hover)',
+                  backgroundColor: 'var(--modal-button-hover)',
                 },
               },
               '&[data-hovered]': {
-                backgroundColor: 'rgb(107, 33, 168)',
-                color: theme.white,
+                color: 'var(--modal-button-text-hover)',
+                backgroundColor: 'var(--modal-button-hover)',
               },
             },
           })}
@@ -519,23 +533,15 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
             <div className="px-5">
               <button
                 onClick={() => setIsAccordionOpen(!isAccordionOpen)}
-                className="w-full transition-colors duration-200 hover:bg-white/5"
+                className="w-full opacity-60 transition-colors duration-200 hover:opacity-100"
               >
                 <div className="flex items-center justify-between rounded-md p-2">
-                  <Title
-                    className={`pb-1 pl-4 pt-2 ${montserrat_heading.variable} font-montserratHeading`}
-                    variant="gradient"
-                    gradient={{
-                      from: 'hsl(280,100%,70%)',
-                      to: 'white',
-                      deg: 185,
-                    }}
-                    order={5}
-                  >
+                  <Title className={`pb-1 pl-3 text-sm`} order={5}>
                     More details about the AI models
                   </Title>
                   <IconChevronDown
-                    className={`text-white/60 transition-transform duration-200 ${
+                    size={'1em'}
+                    className={`transition-transform duration-200 ${
                       isAccordionOpen ? 'rotate-180' : ''
                     }`}
                   />
@@ -550,8 +556,8 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                     transition={{ duration: 0.2, ease: 'easeInOut' }}
                     className="mb-6 overflow-hidden"
                   >
-                    <div className="flex bg-[#1e1f3a]/80 backdrop-blur-sm">
-                      <div className="w-1 bg-violet-500/50" />
+                    <div className="flex">
+                      <div className="w-1" />
                       <div
                         className={`${montserrat_paragraph.variable} flex-1 p-4 font-montserratParagraph`}
                       >
@@ -560,13 +566,13 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                           <div>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold`}
                             >
                               NCSA Hosted Models (100% free)
                             </Text>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                             >
                               The best free option is the Qwen 2 72B model,
                               hosted by NCSA.
@@ -577,20 +583,20 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                           <div>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold`}
                             >
                               OpenAI
                             </Text>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                             >
                               OpenAI{' '}
                               <Link
                                 href="https://platform.openai.com/docs/models"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-blue-500 visited:text-purple-600 hover:text-blue-700 hover:underline"
+                                className="text-[--link] hover:text-[--link-hover] hover:underline"
                               >
                                 model details and pricing.{' '}
                                 <IconExternalLink
@@ -609,13 +615,13 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                           <div>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold`}
                             >
                               Azure OpenAI
                             </Text>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                             >
                               Azure OpenAI Service provides enterprise-grade
                               security and regional availability. Check out{' '}
@@ -623,7 +629,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                                 href="https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-blue-500 visited:text-purple-600 hover:text-blue-700 hover:underline"
+                                className="text-[--link] hover:text-[--link-hover] hover:underline"
                               >
                                 Azure OpenAI models{' '}
                                 <IconExternalLink
@@ -640,20 +646,20 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                           <div>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold`}
                             >
                               Anthropic
                             </Text>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                             >
                               Access Claude models through{' '}
                               <Link
                                 href="https://www.anthropic.com/api"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-blue-500 visited:text-purple-600 hover:text-blue-700 hover:underline"
+                                className="text-[--link] hover:text-[--link-hover] hover:underline"
                               >
                                 Anthropic&apos;s API{' '}
                                 <IconExternalLink
@@ -671,20 +677,20 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                           <div>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold`}
                             >
                               OpenAI Compatible via Ollama
                             </Text>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                             >
                               Run various open-source models locally through{' '}
                               <Link
                                 href="https://ollama.ai"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-blue-500 visited:text-purple-600 hover:text-blue-700 hover:underline"
+                                className="text-[--link] hover:text-[--link-hover] hover:underline"
                               >
                                 Ollama{' '}
                                 <IconExternalLink
@@ -702,20 +708,20 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                           <div>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold`}
                             >
                               On-device AI with WebLLM
                             </Text>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                             >
                               We support running some models in your web browser
                               on your device. That&apos;s 100% local, on-device
                               AI. It even uses your GPU. For this, your browser{' '}
                               <Link
                                 href={'https://webgpureport.org/'}
-                                className="text-blue-500 visited:text-purple-600 hover:text-blue-700 hover:underline"
+                                className="text-[--link] hover:text-[--link-hover] hover:underline"
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
@@ -737,20 +743,20 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                           <div>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold`}
                             >
                               Google Gemini
                             </Text>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                             >
                               We support{' '}
                               <Link
                                 href="https://ai.google.dev/gemini-api/docs/models/gemini"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-blue-500 visited:text-purple-600 hover:text-blue-700 hover:underline"
+                                className="text-[--link] hover:text-[--link-hover] hover:underline"
                               >
                                 Gemini&apos;s full suite{' '}
                                 <IconExternalLink
@@ -765,18 +771,18 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                           <div>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold`}
                             >
                               AWS Bedrock
                             </Text>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                             >
                               We support{' '}
                               <Link
                                 href="https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html"
-                                className="text-blue-500 visited:text-purple-600 hover:text-blue-700 hover:underline"
+                                className="text-[--link] hover:text-[--link-hover] hover:underline"
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
