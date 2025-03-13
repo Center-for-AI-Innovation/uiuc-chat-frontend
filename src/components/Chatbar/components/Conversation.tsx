@@ -114,7 +114,7 @@ export const ConversationComponent = ({ conversation }: Props) => {
           }
         `}
         >
-          <IconMessage size={'1rem'} className="text-[--sidebar]" />
+          <IconMessage size={16} className="text-[--sidebar]" />
           <input
             className="mr-12 flex-1 overflow-hidden overflow-ellipsis border-0 bg-transparent text-left text-[.75rem] leading-3 text-[--sidebar] outline-none"
             type="text"
@@ -138,7 +138,7 @@ export const ConversationComponent = ({ conversation }: Props) => {
           draggable="true"
           onDragStart={(e) => handleDragStart(e, conversation)}
         >
-          <IconMessage size={'1rem'} className="text-[--sidebar]" />
+          <IconMessage size={16} className="text-[--sidebar]" />
           {/* <div
             className={`relative max-h-5 flex-1 overflow-hidden text-ellipsis whitespace-nowrap break-all text-left text-[12.5px] leading-3 ${selectedConversation?.id === conversation.id ? 'pr-12' : 'pr-1'
               }`}
@@ -162,13 +162,13 @@ export const ConversationComponent = ({ conversation }: Props) => {
           <div className="absolute right-1 top-[.5rem] z-10 flex">
             <SidebarActionButton handleClick={handleConfirm}>
               <IconCheck
-                size={'1rem'}
+                size={16}
                 className="text-[--sidebar] opacity-50 hover:opacity-100"
               />
             </SidebarActionButton>
             <SidebarActionButton handleClick={handleCancel}>
               <IconX
-                size={'1rem'}
+                size={16}
                 className="text-[--sidebar] opacity-50 hover:opacity-100"
               />
             </SidebarActionButton>
@@ -181,13 +181,13 @@ export const ConversationComponent = ({ conversation }: Props) => {
           <div className="absolute right-1 top-[.5rem] z-10 flex">
             <SidebarActionButton handleClick={handleOpenRenameModal}>
               <IconPencil
-                size={'1rem'}
+                size={16}
                 className="text-[--sidebar] opacity-50 hover:opacity-100"
               />
             </SidebarActionButton>
             <SidebarActionButton handleClick={handleOpenDeleteModal}>
               <IconTrash
-                size={'1rem'}
+                size={16}
                 className="text-[--sidebar] opacity-50 hover:opacity-100"
               />
             </SidebarActionButton>

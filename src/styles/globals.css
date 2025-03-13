@@ -36,10 +36,25 @@
   --illinois-storm-95: #f4f4f4;
   --illinois-storm-10: #252525;
 
+  /* Additional UI Colors */
+  --illinois-background-dark: #0d1d36; /* #202123; */
+  --illinois-background-darker: #0b182b; /* #0e1116; */
+  --illinois-purple: #2e026d;
+  --illinois-purple-dark: #15162c;
+  --illinois-link: #4a4ae8;
+  --illinois-scrollbar-hover: #807f7f;
+  --illinois-gold: #ffd700;
+  --illinois-purple-light: #9d4edd;
+
+  /* Gradients */
+  --illinois-blue-gradient: linear-gradient(135deg, #1d58a7, #13294b);
+  --illinois-orange-gradient: linear-gradient(-135deg, #fcb316, #ff5f05);
+
   /* Existing variables mapped to UIUC colors */
   --foreground: var(--illinois-blue);
   --background: var(--illinois-white);
   
+  --foreground-light: color-mix(in srgb, var(--foreground), var(--background) 10%);
   --foreground-dark: color-mix(in srgb, var(--foreground), black 25%);
   --foreground-faded: color-mix(in srgb, var(--foreground), var(--background) 50%);
   
@@ -90,6 +105,10 @@
   --button-hover-text-color: var(--button-text-color);
   --button-active: var(--button-hover);
 
+  --chat-background: color-mix(in srgb, var(--background), black 3%);
+  --chat-background-user: var(--chat-background); /* color-mix(in srgb, var(--background), black 10%); */
+  --chat-user: var(--primary); /* var(--primary); */
+
   --message: white;
   --message-faded: rgba(from var(--message-color) r g b / .5);
   --message-background: rgba(from color-mix(in srgb, var(--illinois-blue), black 30%) r g b / .9); /* will always be a darker version of illinois-blue */
@@ -99,9 +118,16 @@
   --message-background: rgba(from var(--foreground) r g b / .9);
 */
   --modal: var(--background);
+  --modal-dark: color-mix(in srgb, var(--modal), black 15%);
+  --modal-active: var(--primary);
   --modal-text: var(--foreground);
+  --modal-button: var(--foreground-light);
+  --modal-button-text: var(--background);
+  --modal-button-text-hover: white;
+  --modal-button-hover: var(--primary); /* color-mix(in srgb, var(--modal-button), black 15%); */
 
-  --navbar-background: color-mix(in srgb, var(--background), black 0%);
+  --navbar-background: var(--background);
+  --navbar-text: var(--foreground);
   --navbar-shadow: color-mix(in srgb, var(--background), black 30%);
 
   --notification: rgba(from color-mix(in srgb, var(--illinois-blue), black 30%) r g b / .8); /* background - similar to sidebar-background but darker since we have a bit of opacity */
@@ -122,19 +148,8 @@
   --tooltip: var(--background);
   --tooltip-background: var(--foreground-dark);
 
-  /* Additional UI Colors */
-  --illinois-background-dark: #202123;
-  --illinois-background-darker: #0e1116;
-  --illinois-purple: #2e026d;
-  --illinois-purple-dark: #15162c;
-  --illinois-link: #4a4ae8;
-  --illinois-scrollbar-hover: #807f7f;
-  --illinois-gold: #ffd700;
-  --illinois-purple-light: #9d4edd;
-
-  /* Gradients */
-  --illinois-blue-gradient: linear-gradient(135deg, #1d58a7, #13294b);
-  --illinois-orange-gradient: linear-gradient(-135deg, #fcb316, #ff5f05);
+  --welcome-background: color-mix(in srgb, var(--illinois-blue), black 0%);
+  --welcome-button-hover: color-mix(in srgb, var(--illinois-blue), white 20%);;
 }
 
 .illinois-blue-gradient-bg {
@@ -174,35 +189,15 @@
   animation: icon_scrolling 20s linear 0s infinite;
 }
 
+/* use existing formulas dark/light as described above as much as possible and only change the primary colors as needed */
 .dark {
   --foreground: var(--illinois-white);
   --background: var(--illinois-blue);
-  /*
-  --foreground: var(--illinois-white);
-  --background: var(--illinois-blue);
 
-  --primary: var(--illinois-orange);
-
-  --primary: var(--illinois-orange);
-  --primary-foreground: var(--illinois-blue);
-
-  --secondary: var(--illinois-storm-dark);
-  --secondary-foreground: var(--illinois-white);
-
-  --muted: var(--illinois-storm-10);
-  --muted-foreground: var(--illinois-storm-light);
-
-  --accent: var(--illinois-industrial);
-  --accent-foreground: var(--illinois-white);
-
-  --destructive: var(--illinois-berry);
-  --destructive-foreground: var(--illinois-white);
-
-  --border: var(--illinois-storm-dark);
-  --input: var(--illinois-storm-dark);
-  --ring: var(--illinois-orange);
-*/
+  --chat-background: color-mix(in srgb, var(--background), black 40%);
 }
+
+
 
 /* Scrollbar Styles - Clean gray theme with hover effects */
 ::-webkit-scrollbar {
@@ -278,9 +273,9 @@ pre:has(div.codeblock) {
     linear,
     left top,
     left bottom,
-    from(var(--illinois-purple)),
+    from(var(--illinois-blue)),
     to(var(--illinois-background-darker)),
-    color-stop(0.75, var(--illinois-purple-dark))
+    color-stop(0.75, var(--illinois-background-dark))
   );
   background-color: var(--illinois-background-darker);
   background-size:
@@ -296,11 +291,11 @@ pre:has(div.codeblock) {
     linear,
     left top,
     left bottom,
-    from(#2e026d),
-    to(#020307),
-    color-stop(0.75, #15162c)
+    from(var(--illinois-blue)),
+    to(var(--illinois-background-darker)),
+    color-stop(0.75, var(--illinois-background-dark))
   );
-  background-color: #020307;
+  background-color: var(--illinois-background-darker);
   background-size:
     100% 45%,
     0%;

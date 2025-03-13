@@ -18,13 +18,14 @@ const useStyles = createStyles((theme) => ({
   modalContent: {
     height: '95%',
     width: '90%',
-    borderRadius: '10px',
-    backgroundColor: '#1d1f33',
+    borderRadius: '.25rem',
+    color: 'var(--modal-text)',
+    backgroundColor: 'var(--modal)',
   },
   modalHeader: {
     width: '100%',
-    borderRadius: '10px',
-    backgroundColor: '#15162c',
+    borderRadius: '.5rem',
+    backgroundColor: 'var(--modal-dark)',
   },
   title: {
     fontFamily: montserrat_heading.variable,
@@ -33,10 +34,12 @@ const useStyles = createStyles((theme) => ({
   tab: {
     fontFamily: montserrat_paragraph.variable,
     '&:hover': {
-      background: '#15162c',
+      color: 'white',
+      background: 'var(--modal-active)',
     },
     '&[data-active="true"]': {
-      background: 'linear-gradient(to right, #6d28d9, #4f46e5, #2563eb)',
+      background:
+        'linear-gradient(to right, var(--modal-active), var(--modal))',
     },
     whiteSpace: 'normal',
   },
@@ -164,27 +167,15 @@ export const UserSettings = () => {
                   w={isSmallScreen ? '70%' : '90%'}
                 />
                 <FancyRetrieval />
-                <Divider
-                  className={classes.divider}
-                  w={isSmallScreen ? '70%' : '90%'}
-                />
               </Flex>
             </Tabs.Panel>
 
             <Tabs.Panel value="documentGroups" pt="xs">
               <DocumentGroupsItem />
-              <Divider
-                className={classes.divider}
-                w={isSmallScreen ? '70%' : '90%'}
-              />
             </Tabs.Panel>
 
             <Tabs.Panel value="tools" pt="xs">
               <ToolsItem />
-              <Divider
-                className={classes.divider}
-                w={isSmallScreen ? '70%' : '90%'}
-              />
             </Tabs.Panel>
           </Tabs>
         </Modal.Body>

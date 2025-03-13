@@ -18,9 +18,9 @@ export const MainPageBackground: React.FC<MainPageBackgroundProps> = ({
       <main className="items-left justify-left course-page-main flex min-h-screen flex-col">
         <div className="container flex flex-col items-center justify-center gap-8 px-4 py-5 pt-20">
           <Link href="/">
-            <h2 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
-              Illinois{' '}
-              <span className="${inter.style.fontFamily} text-[hsl(280,100%,70%)]">
+            <h2 className="text-5xl font-extrabold tracking-tight text-[--primary] sm:text-[5rem]">
+              Illinois
+              <span className="${inter.style.fontFamily} ml-2 text-white">
                 Chat
               </span>
             </h2>

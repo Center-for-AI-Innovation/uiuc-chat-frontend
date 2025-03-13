@@ -1381,7 +1381,7 @@ export const Chat = memo(
     const renderIntroductoryStatements = () => {
       return (
         <div className="chat_welcome xs:mx-2 mt-4 max-w-3xl gap-3 px-4 last:mb-2 sm:mx-4 md:mx-auto lg:mx-auto ">
-          <div className="backdrop-filter-[blur(10px)] rounded-lg bg-[--background-faded] p-6">
+          <div className="backdrop-filter-[blur(10px)] rounded-lg bg-[--welcome-background] p-6">
             <Text
               className={`mb-2 text-lg ${montserrat_heading.variable} font-montserratHeading`}
               style={{ whiteSpace: 'pre-wrap' }}
@@ -1415,7 +1415,7 @@ export const Chat = memo(
                 statements.map((statement, index) => (
                   <div
                     key={index}
-                    className="w-full rounded-lg border-b-2 border-[rgba(42,42,64,0.4)] hover:cursor-pointer hover:bg-[rgba(42,42,64,0.9)]"
+                    className="w-full rounded-lg hover:cursor-pointer hover:bg-[--welcome-button-hover]"
                     onClick={() => {
                       setInputContent('') // First clear the input
                       setTimeout(() => {
@@ -1699,7 +1699,7 @@ export const Chat = memo(
 //safe to remove in the future- left here in case we want the gradient in dark mode (in light mode, it really sticks
  */}
                         <div
-                          className="h-[162px] bg-gradient-to-t from-transparent to-[var(--background-dark)]"
+                          className="h-[162px] bg-gradient-to-t from-transparent to-[var(--chat-background)]"
                           ref={messagesEndRef}
                         />
                       </>

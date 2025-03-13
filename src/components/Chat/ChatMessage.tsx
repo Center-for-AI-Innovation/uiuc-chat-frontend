@@ -1369,12 +1369,14 @@ export const ChatMessage: React.FC<Props> = memo(
       <>
         <div
           className={`group md:px-6 ${
-            message.role === 'assistant' ? '' : ''
+            message.role === 'assistant'
+              ? 'bg-[--chat-background]'
+              : 'bg-[--chat-background-user] pt-4'
           } max-w-[100%]`}
           style={{ overflowWrap: 'anywhere' }}
         >
           {/* bg-[--background-dark] */}
-          <div className="relative flex w-full px-2 py-4 text-base md:mx-[5%] md:max-w-[90%] md:gap-6 md:p-6 lg:mx-[10%]">
+          <div className="relative flex w-full px-2 py-2 pt-4 text-base md:mx-[5%] md:max-w-[90%] md:gap-6  lg:mx-[10%]">
             <div className="min-w-[40px] text-left">
               {message.role === 'assistant' ? (
                 <>
@@ -1382,7 +1384,7 @@ export const ChatMessage: React.FC<Props> = memo(
                   <Timer timerVisible={timerVisible} />
                 </>
               ) : (
-                <IconUser size={30} />
+                <IconUser size={30} color="var(--chat-user)" />
               )}
             </div>
 
@@ -1393,7 +1395,7 @@ export const ChatMessage: React.FC<Props> = memo(
                     <div className="flex w-full flex-col">
                       <textarea
                         ref={textareaRef}
-                        className="w-full resize-none whitespace-pre-wrap rounded-md border border-[--foreground-faded] bg-[--background-dark] p-3 focus:border-[--primary] focus:outline-none"
+                        className="w-full resize-none whitespace-pre-wrap rounded-md border border-[--foreground-faded] bg-[--background-faded] p-3 focus:border-[--primary] focus:outline-none"
                         value={messageContent}
                         onChange={handleInputChange}
                         onKeyDown={handlePressEnter}
@@ -1444,7 +1446,7 @@ export const ChatMessage: React.FC<Props> = memo(
                                     return (
                                       <p
                                         key={index}
-                                        className={`self-start text-base font-normal ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                        className={`self-start text-lg font-black text-[--chat-user] ${montserrat_heading.variable} font-montserratHeading`}
                                       >
                                         {content.text}
                                       </p>
@@ -1870,7 +1872,7 @@ export const ChatMessage: React.FC<Props> = memo(
                             }}
                           >
                             <button
-                              className={`invisible text-[--button-text-color] hover:text-gray-700 focus:visible group-hover:visible dark:text-gray-400 dark:hover:text-gray-300 
+                              className={`invisible text-[--foreground-faded] hover:text-[--foreground] focus:visible group-hover:visible
                                 ${Array.isArray(message.content) && message.content.some((content) => content.type === 'image_url') ? 'hidden' : ''}`}
                               onClick={toggleEditing}
                             >
