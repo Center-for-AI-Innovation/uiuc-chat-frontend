@@ -46,6 +46,7 @@ import {
   IconInfoCircle,
   IconUsers,
   IconMinus,
+  IconCalendar,
 } from '@tabler/icons-react'
 import { getWeeklyTrends } from '../../pages/api/UIUC-api/getWeeklyTrends'
 import ModelUsageChart from './ModelUsageChart'
@@ -380,7 +381,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     return (
       <CannotEditCourse
         course_name={currentPageName as string}
-        // current_email={currentEmail as string}
+      // current_email={currentEmail as string}
       />
     )
   }
@@ -513,14 +514,13 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
                           return (
                             <div
-                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
-                                trend.percentage_change > 0
-                                  ? 'bg-green-400/10'
-                                  : trend.percentage_change < 0
-                                    ? 'bg-red-400/10'
-                                    : 'bg-gray-400/10'
+                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${trend.percentage_change > 0
+                                ? 'bg-green-400/10'
+                                : trend.percentage_change < 0
+                                  ? 'bg-red-400/10'
+                                  : 'bg-gray-400/10'
 
-                              }`}
+                                }`}
                             >
                               {trend.percentage_change > 0 ? (
                                 <IconTrendingUp
@@ -594,13 +594,12 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
                           return (
                             <div
-                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
-                                trend.percentage_change > 0
-                                  ? 'bg-green-400/10'
-                                  : trend.percentage_change < 0
-                                    ? 'bg-red-400/10'
-                                    : 'bg-gray-400/10'
-                              }`}
+                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${trend.percentage_change > 0
+                                ? 'bg-green-400/10'
+                                : trend.percentage_change < 0
+                                  ? 'bg-red-400/10'
+                                  : 'bg-gray-400/10'
+                                }`}
                             >
                               {trend.percentage_change > 0 ? (
                                 <IconTrendingUp
@@ -674,14 +673,13 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
                           return (
                             <div
-                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
-                                trend.percentage_change > 0
-                                  ? 'bg-green-400/10'
-                                  : trend.percentage_change < 0
-                                    ? 'bg-red-400/10'
-                                    : 'bg-gray-400/10'
+                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${trend.percentage_change > 0
+                                ? 'bg-green-400/10'
+                                : trend.percentage_change < 0
+                                  ? 'bg-red-400/10'
+                                  : 'bg-gray-400/10'
 
-                              }`}
+                                }`}
                             >
                               {trend.percentage_change > 0 ? (
                                 <IconTrendingUp
@@ -895,6 +893,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                       />
                       {dateRangeType === 'custom' && (
                         <DatePickerInput
+                          firstDayOfWeek={0}
+                          icon={<IconCalendar size="1.1rem" stroke={1.5} />}
                           type="range"
                           size="sm"
                           w={200}
@@ -902,16 +902,24 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           onChange={setDateRange}
                           placeholder="Pick date range"
                           styles={(theme: MantineTheme) => ({
+
                             input: {
                               backgroundColor: '#232438',
                               borderColor: theme.colors.grape[8],
                               color: theme.white,
+                              '&:selected': {
+                                backgroundColor: theme.colors.grape[8],
+                                borderColor: theme.colors.grape[8],
+                              },
                               '&:hover': {
                                 borderColor: theme.colors.grape[7],
                               },
+                              '&:focus': {
+                                borderColor: theme.colors.grape[8],
+                              },
                             },
                             calendarHeader: {
-                              backgroundColor: '#232438',
+                              borderColor: theme.colors.grape[8],
                               color: theme.white,
                             },
                             calendarHeaderControl: {
@@ -934,24 +942,9 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                             },
                             day: {
                               color: theme.white,
-                              '&:hover': {
-                                backgroundColor: theme.colors.grape[8],
-                              },
-                            },
-                            weekend: {
-                              color: theme.colors.gray[5],
-                            },
-                            selected: {
-                              backgroundColor: theme.colors.grape[8],
-                              '&:hover': {
-                                backgroundColor: theme.colors.grape[7],
-                              },
-                            },
-                            inRange: {
-                              backgroundColor: theme.colors.grape[8],
-                              '&:hover': {
-                                backgroundColor: theme.colors.grape[7],
-                              },
+                              // '&:hover': {
+                              //   backgroundColor: theme.colors.grape[8],
+                              // },
                             },
                           })}
                         />
@@ -1244,15 +1237,15 @@ const CourseFilesList = ({ files }: CourseFilesListProps) => {
                 // style={{ outline: 'solid 1px', outlineColor: 'white' }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = theme.colors.grape[8]
-                  ;(e.currentTarget.children[0] as HTMLElement).style.color =
-                    theme.colorScheme === 'dark'
-                      ? theme.colors.gray[2]
-                      : theme.colors.gray[1]
+                    ; (e.currentTarget.children[0] as HTMLElement).style.color =
+                      theme.colorScheme === 'dark'
+                        ? theme.colors.gray[2]
+                        : theme.colors.gray[1]
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = 'transparent'
-                  ;(e.currentTarget.children[0] as HTMLElement).style.color =
-                    theme.colors.gray[8]
+                    ; (e.currentTarget.children[0] as HTMLElement).style.color =
+                      theme.colors.gray[8]
                 }}
               >
                 <IconDownload className="h-5 w-5 text-gray-800" />
@@ -1269,15 +1262,15 @@ const CourseFilesList = ({ files }: CourseFilesListProps) => {
                 // style={{ outline: 'solid 1px', outlineColor: theme.white }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = theme.colors.grape[8]
-                  ;(e.currentTarget.children[0] as HTMLElement).style.color =
-                    theme.colorScheme === 'dark'
-                      ? theme.colors.gray[2]
-                      : theme.colors.gray[1]
+                    ; (e.currentTarget.children[0] as HTMLElement).style.color =
+                      theme.colorScheme === 'dark'
+                        ? theme.colors.gray[2]
+                        : theme.colors.gray[1]
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = 'transparent'
-                  ;(e.currentTarget.children[0] as HTMLElement).style.color =
-                    theme.colors.red[6]
+                    ; (e.currentTarget.children[0] as HTMLElement).style.color =
+                      theme.colors.red[6]
                 }}
               >
                 <IconTrash className="h-5 w-5 text-red-600" />
@@ -1313,8 +1306,7 @@ async function fetchCourseMetadata(course_name: string) {
       return data.course_metadata
     } else {
       throw new Error(
-        `Error fetching course metadata: ${
-          response.statusText || response.status
+        `Error fetching course metadata: ${response.statusText || response.status
         }`,
       )
     }
