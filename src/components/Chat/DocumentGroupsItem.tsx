@@ -60,8 +60,7 @@ export const DocumentGroupsItem = ({}) => {
         <div>
           <div className="flex flex-col"></div>
           <Title
-            className={`px-4 pt-4 ${montserrat_heading.variable} rounded-lg bg-[#15162c] p-4 font-montserratHeading md:rounded-lg`}
-            color="white"
+            className={`px-4 pt-4 ${montserrat_heading.variable} rounded-lg bg-[--modal-dark] p-4 font-montserratHeading md:rounded-lg`}
             order={isSmallScreen ? 5 : 3}
           >
             Document Groups
@@ -79,12 +78,13 @@ export const DocumentGroupsItem = ({}) => {
               size={isSmallScreen ? 'xs' : 'sm'}
             />
 
+            {/* unable to use this until v7 of mantine since we can't control the hover color              highlightOnHover */}
             <Table
               variant="striped"
+              className="text-[--modal-text]"
               style={{
                 width: '90%',
               }}
-              highlightOnHover
             >
               <thead>
                 <tr
@@ -126,8 +126,8 @@ export const DocumentGroupsItem = ({}) => {
                       <Switch
                         checked={doc_group_obj.checked}
                         onChange={() => handleToggleChecked(doc_group_obj.id)}
-                        color="grape"
                         size={isSmallScreen ? 'sm' : 'lg'}
+                        color="orange"
                       />
                     </td>
                   </tr>

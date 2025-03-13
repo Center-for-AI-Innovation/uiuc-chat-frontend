@@ -41,19 +41,19 @@ export const FancyRetrieval = () => {
         <Tooltip
           multiline
           // color="#15162b"
-          color="grape"
+          color=""
           arrowPosition="side"
           position="top-start"
           arrowSize={8}
           withArrow
           label="Multi-Query Retrieval is disabled for performance reasons, I'm working to bring it back ASAP."
           classNames={{
-            tooltip: `${isSmallScreen ? 'text-xs' : 'text-sm'} ${montserrat_paragraph.variable} font-montserratParagraph`,
+            tooltip: `${isSmallScreen ? 'text-xs' : 'text-sm'} text-[--tooltip] bg-[--tooltip-background] ${montserrat_paragraph.variable} font-montserratParagraph`,
           }}
         >
           <div>
             <Title
-              className={`px-4 pt-4 ${montserrat_heading.variable} rounded-lg bg-[#15162c] p-4 font-montserratHeading md:rounded-lg`}
+              className={`${montserrat_heading.variable} rounded-lg bg-[--modal-dark] p-4 font-montserratHeading text-[--modal-text]`}
               color="white"
               order={isSmallScreen ? 5 : 4}
             >
@@ -63,6 +63,7 @@ export const FancyRetrieval = () => {
               disabled={true}
               // checked={useMQRetrieval}
               checked={false}
+              color="orange"
               className="mx-4 pl-2 pt-2"
               classNames={{
                 label: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : ''}`,
@@ -75,7 +76,6 @@ export const FancyRetrieval = () => {
               description={t(
                 'A LLM generates multiple queries based on your original for improved semantic search. Then every retrieved context is filtered by a smaller LLM (Mistral 7b) so that only high quality and relevant documents are included in the final GPT-4 call.',
               )}
-              color="violet.7"
             />
           </div>
         </Tooltip>

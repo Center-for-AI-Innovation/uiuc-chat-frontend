@@ -5,7 +5,10 @@ import HomeContext from '~/pages/api/home/home.context'
 import { Title, Slider } from '@mantine/core' // Import Slider from @mantine/core
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useMediaQuery } from '@mantine/hooks'
-import { AllLLMProviders, GenericSupportedModel } from '~/utils/modelProviders/LLMProvider'
+import {
+  AllLLMProviders,
+  GenericSupportedModel,
+} from '~/utils/modelProviders/LLMProvider'
 
 export const selectBestTemperature = (
   lastConversation: { temperature?: number } | undefined,
@@ -51,7 +54,11 @@ export const TemperatureSlider: FC<Props> = ({
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const lastConversation = conversations[conversations.length - 1]
   const [temperature, setTemperature] = useState(
-    selectBestTemperature(lastConversation, selectedConversation?.model, llmProviders)
+    selectBestTemperature(
+      lastConversation,
+      selectedConversation?.model,
+      llmProviders,
+    ),
   )
   const { t } = useTranslation('chat')
   const handleChange = (value: number) => {
@@ -59,21 +66,22 @@ export const TemperatureSlider: FC<Props> = ({
     onChangeTemperature(value)
   }
 
+  const sliderClasses = {}
+
   return (
     <div className="flex flex-col">
       <Title
-        className={`px-4 pt-4 ${montserrat_heading.variable} rounded-lg bg-[#15162c] p-4 font-montserratHeading md:rounded-lg`}
-        color="white"
+        className={`px-4 pt-4 ${montserrat_heading.variable} rounded-lg bg-[--modal-dark] p-4 font-montserratHeading text-[--modal-text] md:rounded-lg`}
         order={isSmallScreen ? 5 : 4}
       >
         {label}
       </Title>
       <div className="mx-6 my-4 flex flex-col">
-        <span
-          className={`mb-1 mt-2 text-center font-bold text-neutral-100 ${isSmallScreen ? 'text-xs' : ''}`}
-        >
-          {temperature.toFixed(1)}
-        </span>
+        <div className={`mb-1 mt-2 text-center`}>
+          <div className="${isSmallScreen ? 'text-xs' : ''} inline-block rounded-lg bg-[--primary] p-2 text-2xl font-bold text-white">
+            {temperature.toFixed(1)}
+          </div>
+        </div>
         <Slider // Replace the native input with Mantine Slider
           value={temperature}
           onChange={handleChange}
@@ -86,11 +94,11 @@ export const TemperatureSlider: FC<Props> = ({
             { value: 1, label: t('Creative') },
           ]}
           showLabelOnHover
-          color="grape"
           className="m-2"
           size={isSmallScreen ? 'xs' : 'md'}
+          color="orange"
           classNames={{
-            markLabel: `mx-2 text-neutral-300 ${montserrat_paragraph.variable} font-montserratParagraph mt-2 ${isSmallScreen ? 'text-xs' : ''}`,
+            markLabel: `mx-2 text-[--foreground-faded] ${montserrat_paragraph.variable} font-montserratParagraph mt-2 ${isSmallScreen ? 'text-xs' : ''}`,
           }}
         />
         <span

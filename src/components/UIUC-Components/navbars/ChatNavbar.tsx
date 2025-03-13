@@ -50,7 +50,7 @@ const useStyles = createStyles((theme, { isAdmin }: { isAdmin: boolean }) => ({
     justifyContent: 'space-between',
   },
   link: {
-    color: 'var(--secondary)',
+    color: 'var(--navbar-text)',
     fontSize: rem(12), //change to css variables --font-size or tailwindcss
     fontWeight: 700,
     textAlign: 'center',
@@ -207,7 +207,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
 
   return (
     <div
-      className={`-mr-0 bg-[--background] px-12 pb-16 pl-5`}
+      className={`-mr-0 bg-[--navbar-background] px-12 pb-16 pl-5`}
       style={{ display: show ? 'block' : 'none' }}
     >
       <div
@@ -218,15 +218,16 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
           paddingLeft: '17px',
         }}
       >
+        {/* can remove in future. navbar had rounded-badge bg-[--navbar-background] shadow-lg shadow-[--navbar-shadow] */}
         <Flex
           justify="flex-start"
           direction="row"
           styles={{ height: '10px', flexWrap: 'nowrap', gap: '0rem' }}
-          className="navbar rounded-badge bg-[--navbar-background] shadow-lg shadow-[--navbar-shadow]"
+          className="navbar"
         >
           <Link href="/" style={{ flex: 'none', flexWrap: 'nowrap' }}>
             <h2 className="cursor-pointer font-extrabold tracking-tight text-[--primary] sm:ms-3 sm:text-[2rem] sm:text-[2rem] md:text-3xl">
-              Illinois <span className="text-[--foreground]">Chat</span>
+              Illinois <span className="text-[--navbar-text]">Chat</span>
             </h2>
           </Link>
 
