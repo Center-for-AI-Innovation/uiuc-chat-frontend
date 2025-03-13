@@ -17,7 +17,7 @@ export default async function handler(req: NextRequest, res: NextResponse) {
 
   try {
     const url = new URL(
-      'http://flask-pr-379.up.railway.app/getConversationStats',
+      'https://flask-production-751b.up.railway.app/getConversationStats',
     )
     url.searchParams.append('course_name', course_name)
     if (from_date) url.searchParams.append('from_date', from_date)
