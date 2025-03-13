@@ -141,12 +141,21 @@ const ChatPage: NextPage = () => {
               }
             }
             return
-          }
-
-          // If course is not public, proceed with normal auth flow
-          if (!auth.isAuthenticated) {
-            router.replace(`/${courseName}/not_authorized`)
-            return
+          } else {
+            // For private courses, user must be authenticated
+            if (!auth.isAuthenticated) {
+              router.replace(`/${courseName}/not_authorized`)
+              return
+            }
+            
+            // Set email for authenticated users
+            if (auth.user?.profile.email) {
+              setCurrentEmail(auth.user.profile.email)
+            } else {
+              console.error('Authenticated user has no email')
+              router.replace(`/${courseName}/not_authorized`)
+              return
+            }
           }
 
           const permission = get_user_permission(metadata, auth)
