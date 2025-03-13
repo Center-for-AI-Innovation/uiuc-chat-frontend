@@ -25,7 +25,7 @@ export async function runBedrockChat(
 ) {
   try {
     if (!conversation) {
-      throw new Error('Conversation is missing')
+      throw new Error('Conversation is missing - please refresh the page')
     }
 
     if (
@@ -33,7 +33,7 @@ export async function runBedrockChat(
       !bedrockProvider.secretAccessKey ||
       !bedrockProvider.region
     ) {
-      throw new Error('AWS credentials are missing')
+      throw new Error('AWS credentials are missing - please refresh the page, or add credentials in the Admin Dashboard')
     }
 
     const bedrock = createAmazonBedrock({

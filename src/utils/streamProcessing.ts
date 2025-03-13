@@ -46,7 +46,6 @@ import { runGeminiChat } from '~/app/api/chat/gemini/route'
 import { runBedrockChat } from '~/app/api/chat/bedrock/route'
 import { runSambaNovaChat } from '~/app/api/chat/sambanova/route'
 
-export const maxDuration = 60
 
 /**
  * Enum representing the possible states of the state machine used in processing text chunks.
@@ -701,12 +700,12 @@ export async function handleImageContent(
     )
 
     if (imgDescIndex !== -1) {
-      ;(message.content as Content[])[imgDescIndex] = {
+      ; (message.content as Content[])[imgDescIndex] = {
         type: 'text',
         text: `Image description: ${imgDesc}`,
       }
     } else {
-      ;(message.content as Content[]).push({
+      ; (message.content as Content[]).push({
         type: 'text',
         text: `Image description: ${imgDesc}`,
       })
@@ -780,12 +779,12 @@ export const routeModelRequest = async (
   NOTE: WebLLM is handled separately, because it MUST be called from the Client browser itself. 
   */
 
-  console.log('In routeModelRequest: ', chatBody, baseUrl)
+  console.debug('In routeModelRequest: ', chatBody, baseUrl)
 
   const selectedConversation = chatBody.conversation!
-  console.log('Selected conversation:', selectedConversation)
+  console.debug('Selected conversation:', selectedConversation)
   if (!selectedConversation.model || !selectedConversation.model.id) {
-    console.log('Invalid conversation:', selectedConversation)
+    console.debug('Invalid conversation:', selectedConversation)
     throw new Error('Conversation model is undefined or missing "id" property.')
   }
 
@@ -814,6 +813,7 @@ export const routeModelRequest = async (
   } else if (
     Object.values(OllamaModelIDs).includes(selectedConversation.model.id as any)
   ) {
+    // Ollama
     return await runOllamaChat(
       selectedConversation,
       chatBody!.llmProviders!.Ollama as OllamaProvider,
@@ -824,26 +824,11 @@ export const routeModelRequest = async (
       selectedConversation.model.id as any,
     )
   ) {
-    try {
-      return await runAnthropicChat(
-        selectedConversation,
-        chatBody.llmProviders?.Anthropic as AnthropicProvider,
-        chatBody.stream,
-      )
-    } catch (error) {
-      return new Response(
-        JSON.stringify({
-          error:
-            error instanceof Error
-              ? error.message
-              : 'Unknown error occurred when streaming Anthropic LLMs.',
-        }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        },
-      )
-    }
+    return await runAnthropicChat(
+      selectedConversation,
+      chatBody.llmProviders?.Anthropic as AnthropicProvider,
+      chatBody.stream,
+    )
   } else if (
     Object.values(OpenAIModelID).includes(
       selectedConversation.model.id as any,
@@ -854,74 +839,29 @@ export const routeModelRequest = async (
   } else if (
     Object.values(BedrockModelID).includes(selectedConversation.model.id as any)
   ) {
-    try {
-      return await runBedrockChat(
-        selectedConversation,
-        chatBody.llmProviders?.Bedrock as BedrockProvider,
-        chatBody.stream,
-      )
-    } catch (error) {
-      return new Response(
-        JSON.stringify({
-          error:
-            error instanceof Error
-              ? error.message
-              : 'Unknown error occurred when streaming Bedrock LLMs.',
-        }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        },
-      )
-    }
+    return await runBedrockChat(
+      selectedConversation,
+      chatBody.llmProviders?.Bedrock as BedrockProvider,
+      chatBody.stream,
+    )
   } else if (
     Object.values(GeminiModelID).includes(selectedConversation.model.id as any)
   ) {
-    try {
-      return await runGeminiChat(
-        selectedConversation,
-        chatBody.llmProviders?.Gemini as GeminiProvider,
-        chatBody.stream,
-      )
-    } catch (error) {
-      return new Response(
-        JSON.stringify({
-          error:
-            error instanceof Error
-              ? error.message
-              : 'Unknown error occurred when streaming Gemini LLMs.',
-        }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        },
-      )
-    }
+    return await runGeminiChat(
+      selectedConversation,
+      chatBody.llmProviders?.Gemini as GeminiProvider,
+      chatBody.stream,
+    )
   } else if (
     Object.values(SambaNovaModelID).includes(
       selectedConversation.model.id as any,
     )
   ) {
-    try {
-      return await runSambaNovaChat(
-        selectedConversation,
-        chatBody.llmProviders?.SambaNova as SambaNovaProvider,
-        chatBody.stream,
-      )
-    } catch (error) {
-      return new Response(
-        JSON.stringify({
-          error:
-            error instanceof Error
-              ? error.message
-              : 'Unknown error occurred when streaming SambaNova LLMs.',
-        }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        },
-      )
-    }
+    return await runSambaNovaChat(
+      selectedConversation,
+      chatBody.llmProviders?.SambaNova as SambaNovaProvider,
+      chatBody.stream,
+    )
   } else {
     throw new Error(
       `Model '${selectedConversation.model.name}' is not supported.`,
