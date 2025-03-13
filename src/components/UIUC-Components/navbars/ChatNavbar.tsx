@@ -1,4 +1,3 @@
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
 import { useDisclosure } from '@mantine/hooks'
 import Image from 'next/image'
@@ -12,15 +11,19 @@ import {
   Paper,
   rem,
   Transition,
+  Avatar,
+  Menu,
 } from '@mantine/core'
 import { IconHome, IconSettings, IconPlus } from '@tabler/icons-react'
 import { useRouter } from 'next/router'
 import { montserrat_heading } from 'fonts'
-import { useUser } from '@clerk/nextjs'
-import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
+
+import { useAuth } from 'react-oidc-context'
+import { type CourseMetadata } from '~/types/courseMetadata'
 import HomeContext from '~/pages/api/home/home.context'
 import { UserSettings } from '../../Chat/UserSettings'
 import { usePostHog } from 'posthog-js/react'
+import { AuthMenu } from './AuthMenu'
 
 const styles: Record<string, React.CSSProperties> = {
   logoContainerBox: {
@@ -106,6 +109,8 @@ const useStyles = createStyles((theme, { isAdmin }: { isAdmin: boolean }) => ({
     [theme.fn.largerThan(isAdmin ? 825 : 500)]: {
       display: 'none',
     },
+    backgroundColor: '#15162c',
+    color: 'white',
   },
   adminDashboard: {
     [theme.fn.smallerThan(825)]: {
@@ -135,6 +140,25 @@ const useStyles = createStyles((theme, { isAdmin }: { isAdmin: boolean }) => ({
     position: 'relative',
     top: '100%',
   },
+  userAvatar: {
+    cursor: 'pointer',
+    backgroundColor: 'hsl(280,100%,70%)',
+    color: 'white',
+    '&:hover': {
+      backgroundColor: 'hsl(280,100%,60%)',
+    },
+  },
+  userMenu: {
+    backgroundColor: '#15162c',
+    border: '1px solid hsl(280,100%,70%)',
+
+    '.mantine-Menu-item': {
+      color: 'white',
+      '&:hover': {
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      },
+    },
+  },
 }))
 
 interface ChatNavbarProps {
@@ -147,11 +171,12 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
   const [opened, { toggle }] = useDisclosure(false)
   const [show, setShow] = useState(true)
   const [isAdminOrOwner, setIsAdminOrOwner] = useState(false)
+  const auth = useAuth()
+
   const { classes, theme } = useStyles({ isAdmin: isAdminOrOwner })
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== 'undefined' ? window.innerWidth : 825,
   )
-  const clerk_user = useUser()
   const posthog = usePostHog()
   const {
     state: { showModelSettings, selectedConversation },
@@ -166,10 +191,10 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
 
   useEffect(() => {
     const fetchCourses = async () => {
-      if (clerk_user.isLoaded && clerk_user.isSignedIn) {
-        const currUserEmails = extractEmailsFromClerk(clerk_user.user)
-        // Posthog identify
-        posthog?.identify(clerk_user.user.id, {
+      if (auth.isAuthenticated) {
+        const userEmail = auth.user?.profile.email
+        const currUserEmails = userEmail ? [userEmail] : []
+        posthog?.identify(auth.user?.profile.sub, {
           email: currUserEmails[0] || 'no_email',
         })
 
@@ -193,7 +218,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
       }
     }
     fetchCourses()
-  }, [clerk_user.isLoaded, clerk_user.isSignedIn])
+  }, [auth.isAuthenticated])
 
   useEffect(() => {
     const handleResize = () => {
@@ -612,26 +637,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                 justifyContent: 'flex-center',
               }}
             >
-              <SignedIn>
-                <Group grow spacing={'xs'}>
-                  <UserButton afterSignOutUrl="/" />
-                </Group>
-              </SignedIn>
-              <SignedOut>
-                <SignInButton>
-                  <button className={classes.link}>
-                    <div
-                      className={`${montserrat_heading.variable} font-montserratHeading`}
-                      style={{ fontSize: '12px' }}
-                    >
-                      <span style={{ whiteSpace: 'nowrap' }}>Sign in / </span>
-                      <span> </span>
-                      {/* ^^ THIS SPAN IS REQUIRED !!! TO have nice multiline behavior */}
-                      <span style={{ whiteSpace: 'nowrap' }}>Sign up</span>
-                    </div>
-                  </button>
-                </SignInButton>
-              </SignedOut>
+              <AuthMenu />
             </div>
           </Group>
         </Flex>

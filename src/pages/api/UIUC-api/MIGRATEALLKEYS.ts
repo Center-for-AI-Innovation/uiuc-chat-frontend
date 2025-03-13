@@ -11,7 +11,6 @@ import { encryptKeyIfNeeded } from '~/utils/crypto'
 import { redisClient } from '~/utils/redisClient'
 
 export const runtime = 'edge'
-export const maxDuration = 60
 
 export default async function handler(
   req: NextRequest,

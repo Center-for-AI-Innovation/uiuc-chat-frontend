@@ -36,7 +36,6 @@ const MakeOldCoursePage = ({
   metadata: CourseMetadata
   current_email: string
 }) => {
-  // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
   const [bannerUrl, setBannerUrl] = useState<string>('')
 
   const router = useRouter()
@@ -51,7 +50,10 @@ const MakeOldCoursePage = ({
         if (metadata?.banner_image_s3 && metadata.banner_image_s3 !== '') {
           console.log('Getting banner image: ', metadata.banner_image_s3)
           try {
-            const url = await fetchPresignedUrl(metadata.banner_image_s3, course_name)
+            const url = await fetchPresignedUrl(
+              metadata.banner_image_s3,
+              course_name,
+            )
             setBannerUrl(url as string)
             console.log('Got banner image: ', url)
           } catch (error) {
