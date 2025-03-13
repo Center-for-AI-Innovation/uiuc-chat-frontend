@@ -165,7 +165,7 @@ Artificial Intelligence:
 OpenAI
 
 Authentication:
-Clerk
+Keycloak
 
 5. DO WE USE COOKIES AND OTHER TRACKING TECHNOLOGIES?
 In Short: We may use cookies and other tracking technologies to collect and store your information.

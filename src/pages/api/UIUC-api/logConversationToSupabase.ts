@@ -47,9 +47,11 @@ const logConversationToSupabase = async (req: any, res: any) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          messages: sanitizedConversation.messages,
+          // messages: sanitizedConversation.messages, // we get these from Supabase on the backend.
           course_name: course_name,
           conversation_id: conversation.id,
+          model_name: conversation.model.name,
+          user_email: sanitizedConversation.userEmail,
         }),
       },
     )
