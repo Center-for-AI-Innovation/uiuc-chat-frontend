@@ -13,7 +13,6 @@ export interface DocumentStatus {
 export interface MetadataDocument {
   id: number
   readable_filename: string
-  metadata_status: 'completed' | 'failed' | 'running' | null
 }
 
 export interface MetadataField {

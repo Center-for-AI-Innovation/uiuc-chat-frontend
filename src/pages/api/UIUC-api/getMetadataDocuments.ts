@@ -16,10 +16,10 @@ export default async function handler(
       return res.status(400).json({ error: 'Invalid course_name parameter' })
     }
 
-    // Get documents that are ready for metadata generation
+    // Get documents for the course
     const { data, error } = await supabase
       .from('cedar_documents')
-      .select('id, readable_filename, metadata_status')
+      .select('id, readable_filename')
       .eq('course_name', course_name)
       .order('created_at', { ascending: false })
 
