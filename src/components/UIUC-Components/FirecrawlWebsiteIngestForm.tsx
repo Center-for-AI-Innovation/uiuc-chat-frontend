@@ -79,21 +79,23 @@ export default function FirecrawlWebsiteIngestForm({
       setUploadFiles((prevFiles) => [...prevFiles, newFile])
 
       try {
+        if (!process.env.NEXT_PUBLIC_FIRECRAWL_API_URL) {
+          throw new Error(
+            'NEXT_PUBLIC_FIRECRAWL_API_URL environment variable is not defined',
+          )
+        }
+
         const requestBody = {
           url: formatUrl(url),
           limit: parseInt(maxUrls) || 50,
           maxDepth: parseInt(depth) || 2,
           project_name: project_name,
         }
-        // const baseUrl = 'http://localhost:3003' // Development URL
+
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_FIRECRAWL_API_URL}/crawl`,
           requestBody,
         )
-        // const response = await axios.post(
-        //   `${baseUrl}/crawl`,
-        //   requestBody
-        // )
         console.log('Response from firecrawl:', response.data)
 
         if (response.data.crawlId) {
