@@ -28,8 +28,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/next.config.mjs ./
 COPY --from=builder /app/next-i18next.config.mjs ./
 COPY --from=builder /app/src ./
-COPY --from=builder /app/.env ./ 
-# ^ the .env file is created by the self-hostable-backend repo, in init.sh
+# the .env file is handled by docker-compose in the self-hostable repo: https://github.com/Center-for-AI-Innovation/self-hostable-uiuc-chat
 
 ENV NODE_ENV=production
 
