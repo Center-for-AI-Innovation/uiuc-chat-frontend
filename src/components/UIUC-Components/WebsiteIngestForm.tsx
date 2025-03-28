@@ -198,7 +198,7 @@ export default function WebsiteIngestForm({
       )
       const data = await response.json()
       const docsResponse = await fetch(
-        `/api/materialsTable/docs?course_name=${project_name}`,
+        `/api/materialsTable/successDocs?course_name=${project_name}`,
       )
       const docsData = await docsResponse.json()
       // Helper function to organize docs by base URL

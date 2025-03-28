@@ -22,7 +22,9 @@ import {
   // TextInput,
   // Tooltip,
   Select,
+  Group,
 } from '@mantine/core'
+import { DatePickerInput, type DateValue } from '@mantine/dates'
 // const rubik_puddles = Rubik_Puddles({ weight: '400', subsets: ['latin'] })
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
@@ -43,6 +45,8 @@ import {
   IconMessageCircle2,
   IconInfoCircle,
   IconUsers,
+  IconMinus,
+  IconCalendar,
 } from '@tabler/icons-react'
 import { getWeeklyTrends } from '../../pages/api/UIUC-api/getWeeklyTrends'
 import ModelUsageChart from './ModelUsageChart'
@@ -84,7 +88,7 @@ const useStyles = createStyles((theme: MantineTheme) => ({
   },
 }))
 
-import { useAuth, useUser } from '@clerk/nextjs'
+import { useAuth } from 'react-oidc-context'
 
 export const GetCurrentPageName = () => {
   // /CS-125/dashboard --> CS-125
@@ -113,7 +117,6 @@ interface CourseStats {
   avg_messages_per_conversation: number
 }
 
-// Update the WeeklyTrends interface to match the new data structure
 interface WeeklyTrend {
   current_week_value: number
   metric_name: string
@@ -127,11 +130,8 @@ const formatPercentageChange = (value: number | null | undefined) => {
 }
 
 const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
-  // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
   const { classes, theme } = useStyles()
-  const { isLoaded, userId, sessionId, getToken } = useAuth() // Clerk Auth
-  // const { isSignedIn, user } = useUser()
-  const clerk_user = useUser()
+  const auth = useAuth()
   const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
     null,
   )
@@ -161,11 +161,25 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   const [modelUsageLoading, setModelUsageLoading] = useState(true)
   const [modelUsageError, setModelUsageError] = useState<string | null>(null)
 
+  const [dateRangeType, setDateRangeType] = useState<string>('last_month')
+  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
+    null,
+    null,
+  ])
+  const [totalCount, setTotalCount] = useState<number>(0)
+
+  // Separate state for filtered conversation stats
+  const [filteredConversationStats, setFilteredConversationStats] =
+    useState<ConversationStats | null>(null)
+  const [filteredStatsLoading, setFilteredStatsLoading] = useState(true)
+  const [filteredStatsError, setFilteredStatsError] = useState<string | null>(
+    null,
+  )
+
   // TODO: remove this hook... we should already have this from the /materials props???
   useEffect(() => {
     const fetchData = async () => {
-      const userEmail = extractEmailsFromClerk(clerk_user.user)
-      setCurrentEmail(userEmail[0] as string)
+      setCurrentEmail(auth.user?.profile.email as string)
 
       try {
         const metadata: CourseMetadata = (await fetchCourseMetadata(
@@ -180,33 +194,100 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
         setCourseMetadata(metadata)
       } catch (error) {
         console.error(error)
-        // alert('An error occurred while fetching course metadata. Please try again later.')
       }
     }
 
     fetchData()
-  }, [currentPageName, clerk_user.isLoaded, clerk_user.user])
+  }, [currentPageName, !auth.isLoading, auth.user])
 
   const [hasConversationData, setHasConversationData] = useState<boolean>(true)
 
+  const getDateRange = () => {
+    const today = new Date()
+    switch (dateRangeType) {
+      case 'last_week':
+        const lastWeek = new Date(today)
+        lastWeek.setDate(today.getDate() - 7)
+        return {
+          from_date: lastWeek.toISOString().split('T')[0],
+          to_date: today.toISOString().split('T')[0],
+        }
+      case 'last_month':
+        const lastMonth = new Date(today)
+        lastMonth.setMonth(today.getMonth() - 1)
+        return {
+          from_date: lastMonth.toISOString().split('T')[0],
+          to_date: today.toISOString().split('T')[0],
+        }
+      case 'last_year':
+        const lastYear = new Date(today)
+        lastYear.setFullYear(today.getFullYear() - 1)
+        return {
+          from_date: lastYear.toISOString().split('T')[0],
+          to_date: today.toISOString().split('T')[0],
+        }
+      case 'custom':
+        return {
+          from_date: dateRange[0]
+            ? dateRange[0].toISOString().split('T')[0]
+            : undefined,
+          to_date: dateRange[1]
+            ? dateRange[1].toISOString().split('T')[0]
+            : undefined,
+        }
+      default:
+        return { from_date: undefined, to_date: undefined }
+    }
+  }
+
   useEffect(() => {
-    const fetchConversationStats = async () => {
+    const fetchFilteredConversationStats = async () => {
+      try {
+        const { from_date, to_date } = getDateRange()
+
+        if (dateRangeType === 'custom' && (!dateRange[0] || !dateRange[1])) {
+          setHasConversationData(false)
+          return
+        }
+
+        const response = await getConversationStats(
+          course_name,
+          from_date,
+          to_date,
+        )
+        if (response.status === 200) {
+          setFilteredConversationStats(response.data)
+          setTotalCount(response.data.total_count || 0)
+          setHasConversationData(Object.keys(response.data.per_day).length > 0)
+        }
+      } catch (error) {
+        console.error('Error fetching filtered conversation stats:', error)
+        setFilteredStatsError('Failed to fetch conversation statistics')
+        setHasConversationData(false)
+      } finally {
+        setFilteredStatsLoading(false)
+      }
+    }
+
+    fetchFilteredConversationStats()
+  }, [course_name, dateRangeType, dateRange])
+
+  useEffect(() => {
+    const fetchAllTimeConversationStats = async () => {
       try {
         const response = await getConversationStats(course_name)
         if (response.status === 200) {
           setConversationStats(response.data)
-          setHasConversationData(Object.keys(response.data.per_day).length > 0)
         }
       } catch (error) {
-        console.error('Error fetching conversation stats:', error)
+        console.error('Error fetching all-time conversation stats:', error)
         setStatsError('Failed to fetch conversation statistics')
-        setHasConversationData(false)
       } finally {
         setStatsLoading(false)
       }
     }
 
-    fetchConversationStats()
+    fetchAllTimeConversationStats()
   }, [course_name])
 
   useEffect(() => {
@@ -242,7 +323,6 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     fetchCourseStats()
   }, [course_name])
 
-  // Update the useEffect to handle the new data structure
   useEffect(() => {
     const fetchWeeklyTrends = async () => {
       setTrendsLoading(true)
@@ -287,12 +367,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
   const [view, setView] = useState('hour')
 
-  if (!isLoaded || !courseMetadata) {
-    return (
-      <MainPageBackground>
-        <LoadingSpinner />
-      </MainPageBackground>
-    )
+  if (auth.isLoading || !courseMetadata) {
+    return <LoadingSpinner />
   }
 
   if (
@@ -366,30 +442,27 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                 >
                   Usage Overview
                 </Title>
-                <div className="flex flex-row items-center justify-end">
-                  {/* Can add more buttons here */}
-                  <Button
-                    className={`${montserrat_paragraph.variable} font-montserratParagraph ${classes.downloadButton} w-full px-2 text-sm sm:w-auto sm:px-4 sm:text-base`}
-                    rightIcon={
-                      isLoading ? (
-                        <LoadingSpinner size="sm" />
-                      ) : (
-                        <IconCloudDownload className="hidden sm:block" />
-                      )
-                    }
-                    onClick={() => handleDownload(course_name)}
-                  >
-                    <span className="hidden sm:inline">
-                      Download Conversation History
-                    </span>
-                    <span className="sm:hidden">Download History</span>
-                  </Button>
-                </div>
+                <Button
+                  className={`${montserrat_paragraph.variable} font-montserratParagraph ${classes.downloadButton} w-full px-2 text-sm sm:w-auto sm:px-4 sm:text-base`}
+                  rightIcon={
+                    isLoading ? (
+                      <LoadingSpinner size="sm" />
+                    ) : (
+                      <IconCloudDownload className="hidden sm:block" />
+                    )
+                  }
+                  onClick={() => handleDownload(course_name)}
+                >
+                  <span className="hidden sm:inline">
+                    Download Conversation History
+                  </span>
+                  <span className="sm:hidden">Download History</span>
+                </Button>
               </div>
 
               <Divider className="w-full" color="gray.4" size="sm" />
 
-              {/* Project Analytics Dashboard */}
+              {/* Project Analytics Dashboard - Using all-time stats */}
               <div className="my-6 w-[95%] rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
                 <div className="mb-6">
                   <Title
@@ -441,21 +514,28 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
                           return (
                             <div
-                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
-                                trend.percentage_change > 0
-                                  ? 'bg-green-400/10'
-                                  : 'bg-red-400/10'
-                              }`}
+                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${trend.percentage_change > 0
+                                ? 'bg-green-400/10'
+                                : trend.percentage_change < 0
+                                  ? 'bg-red-400/10'
+                                  : 'bg-gray-400/10'
+
+                                }`}
                             >
                               {trend.percentage_change > 0 ? (
                                 <IconTrendingUp
                                   size={18}
                                   className="text-green-400"
                                 />
-                              ) : (
+                              ) : trend.percentage_change < 0 ? (
                                 <IconTrendingDown
                                   size={18}
                                   className="text-red-400"
+                                />
+                              ) : (
+                                <IconMinus
+                                  size={18}
+                                  className="text-gray-400"
                                 />
                               )}
                               <Text
@@ -464,7 +544,9 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                                 className={
                                   trend.percentage_change > 0
                                     ? 'text-green-400'
-                                    : 'text-red-400'
+                                    : trend.percentage_change < 0
+                                      ? 'text-red-400'
+                                      : 'text-gray-400'
                                 }
                               >
                                 {trend.percentage_change > 0 ? '+' : ''}
@@ -512,21 +594,27 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
                           return (
                             <div
-                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
-                                trend.percentage_change > 0
-                                  ? 'bg-green-400/10'
-                                  : 'bg-red-400/10'
-                              }`}
+                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${trend.percentage_change > 0
+                                ? 'bg-green-400/10'
+                                : trend.percentage_change < 0
+                                  ? 'bg-red-400/10'
+                                  : 'bg-gray-400/10'
+                                }`}
                             >
                               {trend.percentage_change > 0 ? (
                                 <IconTrendingUp
                                   size={18}
                                   className="text-green-400"
                                 />
-                              ) : (
+                              ) : trend.percentage_change < 0 ? (
                                 <IconTrendingDown
                                   size={18}
                                   className="text-red-400"
+                                />
+                              ) : (
+                                <IconMinus
+                                  size={18}
+                                  className="text-gray-400"
                                 />
                               )}
                               <Text
@@ -535,7 +623,9 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                                 className={
                                   trend.percentage_change > 0
                                     ? 'text-green-400'
-                                    : 'text-red-400'
+                                    : trend.percentage_change < 0
+                                      ? 'text-red-400'
+                                      : 'text-gray-400'
                                 }
                               >
                                 {trend.percentage_change > 0 ? '+' : ''}
@@ -583,21 +673,28 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
                           return (
                             <div
-                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
-                                trend.percentage_change > 0
-                                  ? 'bg-green-400/10'
-                                  : 'bg-red-400/10'
-                              }`}
+                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${trend.percentage_change > 0
+                                ? 'bg-green-400/10'
+                                : trend.percentage_change < 0
+                                  ? 'bg-red-400/10'
+                                  : 'bg-gray-400/10'
+
+                                }`}
                             >
                               {trend.percentage_change > 0 ? (
                                 <IconTrendingUp
                                   size={18}
                                   className="text-green-400"
                                 />
-                              ) : (
+                              ) : trend.percentage_change < 0 ? (
                                 <IconTrendingDown
                                   size={18}
                                   className="text-red-400"
+                                />
+                              ) : (
+                                <IconMinus
+                                  size={18}
+                                  className="text-gray-400"
                                 />
                               )}
                               <Text
@@ -606,7 +703,9 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                                 className={
                                   trend.percentage_change > 0
                                     ? 'text-green-400'
-                                    : 'text-red-400'
+                                    : trend.percentage_change < 0
+                                      ? 'text-red-400'
+                                      : 'text-gray-400'
                                 }
                               >
                                 {trend.percentage_change > 0 ? '+' : ''}
@@ -739,23 +838,142 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                 </div>
               </div>
 
+              {/* Charts Section - Using filtered stats */}
               <div className="grid w-[95%] grid-cols-1 gap-6 pb-10 lg:grid-cols-2">
+                {/* Date Range Selector - Always visible */}
+                <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20 lg:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Title order={4} className="text-white">
+                        Conversation Visualizations
+                      </Title>
+                      <Text size="sm" color="dimmed" mt={1}>
+                        Select a time range to filter the visualizations below
+                      </Text>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <Select
+                        size="sm"
+                        w={200}
+                        value={dateRangeType}
+                        onChange={(value) => {
+                          setDateRangeType(value || 'all')
+                          if (value !== 'custom') {
+                            setDateRange([null, null])
+                          }
+                        }}
+                        data={[
+                          { value: 'all', label: 'All Time' },
+                          { value: 'last_week', label: 'Last Week' },
+                          { value: 'last_month', label: 'Last Month' },
+                          { value: 'last_year', label: 'Last Year' },
+                          { value: 'custom', label: 'Custom Range' },
+                        ]}
+                        styles={(theme: MantineTheme) => ({
+                          input: {
+                            backgroundColor: '#232438',
+                            borderColor: theme.colors.grape[8],
+                            color: theme.white,
+                            '&:hover': {
+                              borderColor: theme.colors.grape[7],
+                            },
+                          },
+                          item: {
+                            backgroundColor: '#232438',
+                            color: theme.white,
+                            '&:hover': {
+                              backgroundColor: theme.colors.grape[8],
+                            },
+                          },
+                          dropdown: {
+                            backgroundColor: '#232438',
+                            borderColor: theme.colors.grape[8],
+                          },
+                        })}
+                      />
+                      {dateRangeType === 'custom' && (
+                        <DatePickerInput
+                          firstDayOfWeek={0}
+                          icon={<IconCalendar size="1.1rem" stroke={1.5} />}
+                          type="range"
+                          size="sm"
+                          w={200}
+                          value={dateRange}
+                          onChange={setDateRange}
+                          placeholder="Pick date range"
+                          styles={(theme: MantineTheme) => ({
+
+                            input: {
+                              backgroundColor: '#232438',
+                              borderColor: theme.colors.grape[8],
+                              color: theme.white,
+                              '&:selected': {
+                                backgroundColor: theme.colors.grape[8],
+                                borderColor: theme.colors.grape[8],
+                              },
+                              '&:hover': {
+                                borderColor: theme.colors.grape[7],
+                              },
+                              '&:focus': {
+                                borderColor: theme.colors.grape[8],
+                              },
+                            },
+                            calendarHeader: {
+                              borderColor: theme.colors.grape[8],
+                              color: theme.white,
+                            },
+                            calendarHeaderControl: {
+                              color: theme.white,
+                              '&:hover': {
+                                backgroundColor: theme.colors.grape[8],
+                              },
+                            },
+                            monthPickerControl: {
+                              color: theme.white,
+                              '&:hover': {
+                                backgroundColor: theme.colors.grape[8],
+                              },
+                            },
+                            yearPickerControl: {
+                              color: theme.white,
+                              '&:hover': {
+                                backgroundColor: theme.colors.grape[8],
+                              },
+                            },
+                            day: {
+                              color: theme.white,
+                              // '&:hover': {
+                              //   backgroundColor: theme.colors.grape[8],
+                              // },
+                            },
+                          })}
+                        />
+                      )}
+                      {totalCount > 0 && (
+                        <Text size="sm" color="dimmed">
+                          {totalCount} conversations in selected range
+                        </Text>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
                 {!hasConversationData ? (
                   <div className="rounded-xl bg-[#1a1b30] p-6 text-center shadow-lg shadow-purple-900/20 lg:col-span-2">
                     <Title
                       order={4}
                       className={`${montserrat_heading.variable} font-montserratHeading`}
                     >
-                      No conversation data available yet
+                      No conversation data available for selected time range
                     </Title>
                     <Text size="lg" color="dimmed" mt="md">
-                      Start some conversations to see analytics and
-                      visualizations!
+                      Try selecting a different time range to view the
+                      visualizations
                     </Text>
                   </div>
                 ) : (
                   <>
-                    {/* Model Usage Chart - Moved to top */}
+                    {/* Model Usage Chart */}
                     <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
                       <Title
                         order={4}
@@ -790,9 +1008,9 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         each calendar day
                       </Text>
                       <ConversationsPerDayChart
-                        data={conversationStats?.per_day}
-                        isLoading={statsLoading}
-                        error={statsError}
+                        data={filteredConversationStats?.per_day}
+                        isLoading={filteredStatsLoading}
+                        error={filteredStatsError}
                       />
                     </div>
 
@@ -841,18 +1059,17 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           w={150}
                         />
                       </div>
-
                       {view === 'hour' ? (
                         <ConversationsPerHourChart
-                          data={conversationStats?.per_hour}
-                          isLoading={statsLoading}
-                          error={statsError}
+                          data={filteredConversationStats?.per_hour}
+                          isLoading={filteredStatsLoading}
+                          error={filteredStatsError}
                         />
                       ) : (
                         <ConversationsPerDayOfWeekChart
-                          data={conversationStats?.per_weekday}
-                          isLoading={statsLoading}
-                          error={statsError}
+                          data={filteredConversationStats?.per_weekday}
+                          isLoading={filteredStatsLoading}
+                          error={filteredStatsError}
                         />
                       )}
                     </div>
@@ -872,9 +1089,9 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         and hours
                       </Text>
                       <ConversationsHeatmapByHourChart
-                        data={conversationStats?.heatmap}
-                        isLoading={statsLoading}
-                        error={statsError}
+                        data={filteredConversationStats?.heatmap}
+                        isLoading={filteredStatsLoading}
+                        error={filteredStatsError}
                       />
                     </div>
                   </>
@@ -918,7 +1135,6 @@ interface CourseFilesListProps {
 }
 import { IconTrash } from '@tabler/icons-react'
 import { MainPageBackground } from './MainPageBackground'
-import { extractEmailsFromClerk } from './clerkHelpers'
 import { notifications } from '@mantine/notifications'
 import GlobalFooter from './GlobalFooter'
 import Navbar from './navbars/Navbar'

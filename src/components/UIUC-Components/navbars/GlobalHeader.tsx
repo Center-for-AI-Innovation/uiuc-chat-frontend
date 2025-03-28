@@ -783,16 +783,17 @@
 // OLD Navbar
 
 import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  UserButton,
-  useUser,
-} from '@clerk/nextjs'
-import { IconClipboardText, IconFile } from '@tabler/icons-react'
-// import MagicBell, {
-//   FloatingNotificationInbox,
-// } from '@magicbell/magicbell-react'
+  IconCirclePlus,
+  IconClipboardText,
+  IconFile,
+  IconNews,
+  IconPlus,
+  IconSquareRoundedPlus,
+} from '@tabler/icons-react'
+import { Menu2 } from 'tabler-icons-react'
+
+import { useAuth } from 'react-oidc-context'
+import { AuthMenu } from './AuthMenu'
 
 export default function Header({ isNavbar = false }: { isNavbar?: boolean }) {
   const headerStyle = isNavbar
@@ -810,27 +811,20 @@ export default function Header({ isNavbar = false }: { isNavbar?: boolean }) {
         padding: '1em',
       }
 
-  const clerk_obj = useUser()
+  const auth = useAuth()
   const posthog = usePostHog()
-  const [userEmail, setUserEmail] = useState('no_email')
   const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
-    if (clerk_obj.isLoaded) {
-      if (clerk_obj.isSignedIn) {
-        const emails = extractEmailsFromClerk(clerk_obj.user)
-        setUserEmail(emails[0] || 'no_email')
-
-        // Posthog identify
-        posthog?.identify(clerk_obj.user.id, {
-          email: emails[0] || 'no_email',
+    if (!auth.isLoading) {
+      if (auth.isAuthenticated) {
+        posthog?.identify(auth.user?.profile.sub || 'unknown', {
+          email: auth.user?.profile.email || 'no_email',
         })
       }
       setIsLoaded(true)
-    } else {
-      // console.debug('NOT LOADED OR SIGNED IN')
     }
-  }, [clerk_obj.isLoaded])
+  }, [auth.isLoading])
 
   if (!isLoaded) {
     return (
@@ -853,40 +847,15 @@ export default function Header({ isNavbar = false }: { isNavbar?: boolean }) {
 
   return (
     <header style={headerStyle} className="py-16">
-      <SignedIn>
-        {/* Docs: https://www.magicbell.com/docs/libraries/react#custom-themes */}
-        {/* <MagicBell
-          apiKey={process.env.NEXT_PUBLIC_MAGIC_BELL_API as string}
-          userEmail={userEmail}
-          theme={magicBellTheme}
-          locale="en"
-          images={{
-            emptyInboxUrl:
-              'https://assets.kastan.ai/minified_empty_chat_art.png',
-          }}
-        > */}
-        {/* {(props) => (
-            <FloatingNotificationInbox width={400} height={500} {...props} />
-          )}
-        </MagicBell> */}
-        {/* Add some padding for separation */}
-        <div style={{ paddingLeft: '0px', paddingRight: '10px' }}></div>
-        {/* Mount the UserButton component */}
-        <UserButton />
-      </SignedIn>
-      <SignedOut>
-        {/* Signed out users get sign in button */}
-        <SignInButton />
-      </SignedOut>
+      <AuthMenu />
     </header>
   )
 }
 
 import Link from 'next/link'
 import { montserrat_heading } from 'fonts'
-import { createStyles, Group, rem } from '@mantine/core'
-import { extractEmailsFromClerk } from '../clerkHelpers'
-import { useEffect, useState } from 'react'
+import { createStyles, rem } from '@mantine/core'
+import { useEffect, useState, useRef } from 'react'
 import { usePostHog } from 'posthog-js/react'
 import { IconFilePlus } from '@tabler/icons-react'
 
@@ -910,27 +879,48 @@ export function LandingPageHeader({
         padding: '1em',
       }
 
-  const clerk_obj = useUser()
-  const [userEmail, setUserEmail] = useState('no_email')
+  const headerRef = useRef<HTMLElement>(null)
+  const auth = useAuth()
   const [isLoaded, setIsLoaded] = useState(false)
   const posthog = usePostHog()
+  const [menuVisible, setMenuVisible] = useState(false)
+  const menuButtonRef = useRef<HTMLDivElement>(null)
+  const [menuPosition, setMenuPosition] = useState({ right: '20px' })
+
+  // Determine which elements should be visible based on screen width
+  const showDocsInNav = windowWidth >= 640 // Changed from 768 to 568 (subtract 200px)
+  const showNewsInNav = windowWidth >= 700 // Changed from 900 to 700 (subtract 200px)
+  const showNewProjectInNav = windowWidth >= 824 // Changed from 1024 to 824 (subtract 200px)
+
+  // Fix for hamburger menu logic to ensure menu is shown until all items are visible in nav
+  const showHamburgerMenu =
+    (!showDocsInNav || !showNewsInNav || !showNewProjectInNav) &&
+    forGeneralPurposeNotLandingpage === false
+
+  // Update window width on resize
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth)
+    }
+
+    // Initial width
+    handleResize()
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
-    if (clerk_obj.isLoaded) {
-      if (clerk_obj.isSignedIn) {
-        const emails = extractEmailsFromClerk(clerk_obj.user)
-        setUserEmail(emails[0] || 'no_email')
-
+    if (!auth.isLoading) {
+      if (auth.isAuthenticated) {
         // Posthog identify
-        posthog?.identify(clerk_obj.user.id, {
-          email: emails[0] || 'no_email',
+        posthog?.identify(auth.user?.profile.sub || 'unknown', {
+          email: auth.user?.profile.email || 'no_email',
         })
       }
       setIsLoaded(true)
-    } else {
-      // console.debug('NOT LOADED OR SIGNED IN')
     }
-  }, [clerk_obj.isLoaded])
+  }, [auth.isLoading])
 
   if (!isLoaded) {
     return (
@@ -991,15 +981,62 @@ export function LandingPageHeader({
                 <span
                   className={`${montserrat_heading.variable} font-montserratHeading`}
                 >
-                  New project
-                </span>
-              </span>
-            </Link>
-            <Link
-              href="https://docs.uiuc.chat/"
-              className={classes.link}
-              target="_blank"
-              rel="noopener noreferrer"
+                  <span className="flex items-center">
+                    <IconNews
+                      size={18}
+                      strokeWidth={2}
+                      style={{
+                        marginRight: '8px',
+                        color: 'var(--illinois-orange)',
+                      }}
+                    />
+                    <span
+                      className={`${montserrat_heading.variable} font-montserratHeading`}
+                      style={{ color: 'var(--illinois-orange)' }}
+                    >
+                      News
+                    </span>
+                  </span>
+                </Link>
+              )}
+
+              {showNewProjectInNav && (
+                <Link href="/new" className={classes.link}>
+                  <span className="flex items-center">
+                    <IconPlus
+                      size={18}
+                      strokeWidth={2}
+                      style={{
+                        marginRight: '8px',
+                        color: 'var(--illinois-orange)',
+                      }}
+                    />
+                    <span
+                      className={`${montserrat_heading.variable} font-montserratHeading`}
+                      style={{ color: 'var(--illinois-orange)' }}
+                    >
+                      New Project
+                    </span>
+                  </span>
+                </Link>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Login/User button and hamburger menu on mobile */}
+        <div className="flex items-center gap-3">
+          {/* Login/User button - always visible */}
+          <div className="order-1">
+            <AuthMenu />
+          </div>
+
+          {/* Hamburger menu for small screens */}
+          {showHamburgerMenu && (
+            <div
+              className={`${classes.menuIcon} order-2 ${!showDocsInNav ? 'highlight-button' : ''}`}
+              onClick={(e) => toggleMenu(e)}
+              ref={menuButtonRef}
             >
               <span style={{ display: 'flex', alignItems: 'center' }}>
                 <IconClipboardTexts />
@@ -1112,6 +1149,37 @@ const useStyles = createStyles((theme) => ({
       borderRadius: '10px', // added to make the square edges round when hovered
       backgroundColor: 'rgba(255, 255, 255, 0.1)', // add a background color when the link is active
       textAlign: 'right', // align the text to the right
+    },
+  },
+  userAvatar: {
+    cursor: 'pointer',
+    backgroundColor: 'hsl(280,100%,70%)',
+    color: 'white',
+    '&:hover': {
+      backgroundColor: 'hsl(280,100%,60%)',
+    },
+  },
+  avatarButton: {
+    cursor: 'pointer',
+    borderRadius: theme.radius.xl,
+    transition: 'background-color 100ms ease',
+    padding: rem(2),
+
+    '&:hover': {
+      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    },
+  },
+  userMenu: {
+    backgroundColor: '#15162c',
+    border: '1px solid hsl(280,100%,70%)',
+    color: '#f1f5f9',
+    padding: rem(4),
+
+    '.mantine-Menu-item': {
+      padding: `${rem(8)} ${rem(12)}`,
+      '&:hover': {
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      },
     },
   },
 }))

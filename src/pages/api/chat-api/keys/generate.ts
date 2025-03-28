@@ -4,7 +4,6 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '@/utils/supabaseClient'
 import { v4 as uuidv4 } from 'uuid'
 import posthog from 'posthog-js'
-import { getAuth } from '@clerk/nextjs/server'
 
 type ApiResponse = {
   message?: string
@@ -23,87 +22,103 @@ type ApiResponse = {
  */
 export default async function generateKey(
   req: NextApiRequest,
-  res: NextApiResponse<ApiResponse>
+  res: NextApiResponse<ApiResponse>,
 ) {
-  // Ensure the request is a POST request
+  console.log('Received request to generate API key')
+
   if (req.method !== 'POST') {
+    console.log('Invalid method:', req.method)
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  // Get the current user's email
-  const currUserId = getAuth(req).userId
-  console.log('Generating api key for: ', currUserId)
-
-  // Ensure the user email is present
-  if (!currUserId) {
-    return res.status(401).json({ error: 'User email is required' })
+  const authHeader = req.headers.authorization
+  if (!authHeader?.startsWith('Bearer ')) {
+    console.log('Missing or invalid authorization header')
+    return res
+      .status(401)
+      .json({ error: 'Missing or invalid authorization header' })
   }
 
   try {
+    // Get user email from token
+    const token = authHeader.replace('Bearer ', '')
+    const [, payload = ''] = token.split('.')
+    const decodedPayload = JSON.parse(Buffer.from(payload, 'base64').toString())
+
+    const email = decodedPayload.email
+    if (!email) {
+      throw new Error('No email found in token')
+    }
+
+    console.log('Generating API key for user email:', email)
+
     // Check if the user already has an API key
     const { data: keys, error: existingKeyError } = await supabase
       .from('api_keys')
       .select('key, is_active')
-      .eq('user_id', currUserId)
+      .eq('email', email)
+      .eq('is_active', true)
 
     if (existingKeyError) {
       console.error('Error retrieving existing API key:', existingKeyError)
       throw existingKeyError
     }
 
+    console.log('Existing keys found:', keys.length)
+
     if (keys.length > 0 && keys[0]?.is_active) {
+      console.log('User already has an active API key')
       return res.status(409).json({ error: 'User already has an API key' })
     }
 
-    // Generate a new API key
+    // Generate new API key
     const rawApiKey = uuidv4()
-
-    // Create a sanitized API key by removing dashes and adding a prefix
     const apiKey = `uc_${rawApiKey.replace(/-/g, '')}`
+    console.log('Generated new API key')
 
     if (keys.length === 0) {
-      // Insert the new API key into the database
-      const { error: insertError } = await supabase
-        .from('api_keys')
-        .insert([{ user_id: currUserId, key: apiKey, is_active: true }])
+      console.log('Inserting new API key record')
+      const { error: insertError } = await supabase.from('api_keys').insert([
+        {
+          email: email,
+          user_id: decodedPayload.sub,
+          key: apiKey,
+          is_active: true,
+        },
+      ])
 
-      if (insertError) {
-        throw insertError
-      }
+      if (insertError) throw insertError
     } else {
-      // Update the existing API key
+      console.log('Updating existing API key record')
       const { error: updateError } = await supabase
         .from('api_keys')
-        .update({ key: apiKey, is_active: true })
-        .match({ user_id: currUserId })
+        .update({
+          key: apiKey,
+          is_active: true,
+          user_id: decodedPayload.sub,
+        })
+        .eq('email', email)
 
-      if (updateError) {
-        throw updateError
-      }
+      if (updateError) throw updateError
     }
 
-    // Track the API key generation event
+    console.log('Successfully stored API key in database')
+
     posthog.capture('api_key_generated', {
-      currUserId,
+      email,
       apiKey,
     })
 
-    // Respond with the generated API key
+    console.log('API key generation successful')
     return res.status(200).json({
       message: 'API key generated successfully',
       apiKey,
     })
   } catch (error) {
-    // Log the error for debugging purposes
     console.error('Error generating API key:', error)
-
-    // Track the API key generation failure event
     posthog.capture('api_key_generation_failed', {
-      userId: currUserId,
       error: (error as Error).message,
     })
-
-    // Respond with a server error message
     return res.status(500).json({ error: 'Internal server error' })
   }
 }
