@@ -107,9 +107,11 @@ export const VisionCapableModels: Set<
   NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT,
 
   // Gemini
-  GeminiModelID.Gemini_2_0_Flash,
+  GeminiModelID.Gemini_2_5_Pro_Exp_03_25,
   GeminiModelID.Gemini_2_0_Pro_Exp_02_05,
-  GeminiModelID.Gemini_1_5_Pro,
+  GeminiModelID.Gemini_2_0_Flash,
+  GeminiModelID.Gemini_2_0_Flash_Lite,
+
   // Bedrock
   BedrockModelID.Claude_3_Opus,
   BedrockModelID.Claude_3_5_Sonnet_Latest,
