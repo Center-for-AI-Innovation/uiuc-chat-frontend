@@ -7,6 +7,7 @@ import {
 } from '~/utils/modelProviders/LLMProvider'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 import { AnthropicModel } from '~/utils/modelProviders/types/anthropic'
+import { convertConversationToVercelAISDKv3 } from '~/utils/apiUtils'
 export const dynamic = 'force-dynamic'
 
 /**
@@ -85,6 +86,11 @@ async function handleStreamingResponse(
   commonParams: any,
   isThinkingEnabled: boolean,
 ): Promise<Response> {
+  // Add comment to explain image description preservation
+  // NOTE: Image descriptions are generated separately and appended to message.content
+  // We need to ensure these descriptions appear in the final output stream
+  console.log('Using Anthropic streaming with image support');
+  
   const result = await streamText({
     ...commonParams,
     experimental_transform: [
@@ -299,46 +305,4 @@ async function handleNonStreamingResponse(
       headers: { 'Content-Type': 'application/json' },
     },
   )
-}
-
-/**
- * Converts our conversation format to the format expected by Vercel AI SDK v3
- */
-function convertConversationToVercelAISDKv3(
-  conversation: Conversation,
-): CoreMessage[] {
-  const coreMessages: CoreMessage[] = []
-
-  const systemMessage = conversation.messages.findLast(
-    (msg) => msg.latestSystemMessage !== undefined,
-  )
-  if (systemMessage) {
-    coreMessages.push({
-      role: 'system',
-      content: systemMessage.latestSystemMessage || '',
-    })
-  }
-
-  conversation.messages.forEach((message, index) => {
-    if (message.role === 'system') return
-
-    let content: string
-    if (index === conversation.messages.length - 1 && message.role === 'user') {
-      content = message.finalPromtEngineeredMessage || ''
-    } else if (Array.isArray(message.content)) {
-      content = message.content
-        .filter((c) => c.type === 'text')
-        .map((c) => c.text)
-        .join('\n')
-    } else {
-      content = message.content as string
-    }
-
-    coreMessages.push({
-      role: message.role as 'user' | 'assistant',
-      content: content,
-    })
-  })
-
-  return coreMessages
 }

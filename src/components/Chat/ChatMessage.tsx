@@ -1378,38 +1378,52 @@ export const ChatMessage = memo(
                                     isLoading={isImg2TextLoading}
                                     error={false}
                                     content={
-                                      message.content.find(
-                                        (content) =>
-                                          content.type === 'text' &&
-                                          content.text
-                                            ?.trim()
-                                            .startsWith('Image description:'),
-                                      )?.text ?? 'No image description found'
+                                      Array.isArray(message.content) 
+                                      ? message.content.find(
+                                          (content) =>
+                                            content.type === 'text' &&
+                                            (content.imageDescription === true ||
+                                            content.text
+                                              ?.trim()
+                                              .startsWith('Image description:')),
+                                        )?.text ?? 'No image description found'
+                                      : typeof message.content === 'string' && (message.content as string).includes('Image description:')
+                                        ? (message.content as string).substring((message.content as string).indexOf('Image description:'))
+                                        : 'No image description found'
                                     }
                                   />
                                 )}
 
                               {/* Image description for all messages */}
-                              {message.content.some(
-                                (content) =>
-                                  content.type === 'text' &&
-                                  content.text
-                                    ?.trim()
-                                    .startsWith('Image description:'),
+                              {!isImg2TextLoading && (
+                                (Array.isArray(message.content) && message.content.some(
+                                  (content) =>
+                                    content.type === 'text' &&
+                                    (content.imageDescription === true ||
+                                    content.text
+                                      ?.trim()
+                                      .startsWith('Image description:')),
+                                )) || (typeof message.content === 'string' && (message.content as string).includes('Image description:'))
                               ) && (
                                 <IntermediateStateAccordion
                                   accordionKey="imageDescription"
                                   title="Image Description"
                                   isLoading={false}
                                   error={false}
+                                  defaultValue="imageDescription"
                                   content={
-                                    message.content.find(
-                                      (content) =>
-                                        content.type === 'text' &&
-                                        content.text
-                                          ?.trim()
-                                          .startsWith('Image description:'),
-                                    )?.text ?? 'No image description found'
+                                    Array.isArray(message.content)
+                                      ? message.content.find(
+                                          (content) =>
+                                            content.type === 'text' &&
+                                            (content.imageDescription === true ||
+                                            content.text
+                                              ?.trim()
+                                              .startsWith('Image description:')),
+                                        )?.text ?? 'No image description found'
+                                      : typeof message.content === 'string' && (message.content as string).includes('Image description:')
+                                        ? (message.content as string).substring((message.content as string).indexOf('Image description:'))
+                                        : 'No image description found'
                                   }
                                 />
                               )}

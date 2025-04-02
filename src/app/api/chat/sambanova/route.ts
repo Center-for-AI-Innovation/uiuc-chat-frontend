@@ -11,6 +11,7 @@ import {
   SambaNovaModels,
   type SambaNovaModel,
 } from '~/utils/modelProviders/types/SambaNova'
+import { convertConversationToVercelAISDKv3 } from '~/utils/apiUtils'
 
 // Configure runtime
 export const runtime = 'nodejs'
@@ -115,45 +116,6 @@ export async function runSambaNovaChat(
     console.error('SambaNova API error:', error)
     throw error
   }
-}
-
-function convertConversationToVercelAISDKv3(
-  conversation: Conversation,
-): CoreMessage[] {
-  const coreMessages: CoreMessage[] = []
-
-  const systemMessage = conversation.messages.findLast(
-    (msg) => msg.latestSystemMessage !== undefined,
-  )
-  if (systemMessage) {
-    coreMessages.push({
-      role: 'system',
-      content: systemMessage.latestSystemMessage || '',
-    })
-  }
-
-  conversation.messages.forEach((message, index) => {
-    if (message.role === 'system') return
-
-    let content: string
-    if (index === conversation.messages.length - 1 && message.role === 'user') {
-      content = message.finalPromtEngineeredMessage || ''
-    } else if (Array.isArray(message.content)) {
-      content = message.content
-        .filter((c) => c.type === 'text')
-        .map((c) => c.text)
-        .join('\n')
-    } else {
-      content = message.content as string
-    }
-
-    coreMessages.push({
-      role: message.role as 'user' | 'assistant',
-      content: content,
-    })
-  })
-
-  return coreMessages
 }
 
 export async function GET() {

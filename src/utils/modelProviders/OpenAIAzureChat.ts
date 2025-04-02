@@ -29,6 +29,41 @@ export const openAIAzureChat = async (
       throw new Error('No system message found in the conversation.')
     }
 
+    // Log the exact messages being sent to OpenAI
+    console.log('============= OPENAI/AZURE CHAT FULL REQUEST PAYLOAD =============');
+    console.log(JSON.stringify({
+      model: conversation.model.id,
+      messages: messagesToSend,
+      temperature: conversation.temperature,
+      stream: stream,
+      imageContent: messagesToSend
+        .flatMap(msg => Array.isArray(msg.content) ? 
+          msg.content.filter(content => content.type === 'image_url') : 
+          []
+        )
+    }, null, 2));
+    console.log('===================================================================');
+
+    // Log specific image content if it exists
+    const hasImageContent = messagesToSend.some(msg => 
+      Array.isArray(msg.content) && 
+      msg.content.some(content => content.type === 'image_url')
+    );
+    
+    if (hasImageContent) {
+      console.log('============= IMAGE CONTENT DETAIL IN MESSAGES =============');
+      messagesToSend.forEach((msg, i) => {
+        if (Array.isArray(msg.content)) {
+          const imageContents = msg.content.filter(content => content.type === 'image_url');
+          if (imageContents.length > 0) {
+            console.log(`Message ${i} (${msg.role}) contains ${imageContents.length} images:`);
+            console.log(JSON.stringify(imageContents, null, 2));
+          }
+        }
+      });
+      console.log('===========================================================');
+    }
+
     const apiStream = await OpenAIStream(
       conversation.model,
       latestSystemMessage,
@@ -77,14 +112,38 @@ export const openAIAzureChat = async (
 const convertConversationToOpenAIMessages = (
   messages: Message[],
 ): Message[] => {
-  return messages.map((message, messageIndex) => {
+  // Log original messages before transformation
+  console.log('============= MESSAGES BEFORE TRANSFORMATION =============');
+  console.log(JSON.stringify(messages.map(msg => ({
+    role: msg.role,
+    contentType: Array.isArray(msg.content) ? 'array' : typeof msg.content,
+    imageCount: Array.isArray(msg.content) 
+      ? msg.content.filter(c => c.type === 'image_url' || c.type === 'tool_image_url').length 
+      : 0,
+    hasTools: !!msg.tools && msg.tools.length > 0,
+    hasFinalPrompt: !!msg.finalPromtEngineeredMessage
+  })), null, 2));
+  
+  const transformedMessages = messages.map((message, messageIndex) => {
     const strippedMessage = { ...message }
     // When content is an array
     if (Array.isArray(strippedMessage.content)) {
+      // Log details about image URLs in this message
+      const originalImageContent = strippedMessage.content
+        .filter(c => c.type === 'image_url' || c.type === 'tool_image_url');
+      
+      if (originalImageContent.length > 0) {
+        console.log(`Original message ${messageIndex} (${message.role}) contains images:`);
+        console.log(JSON.stringify(originalImageContent, null, 2));
+      }
+      
       strippedMessage.content.map((content, contentIndex) => {
         // Convert tool_image_url to image_url for OpenAI
         if (content.type === 'tool_image_url') {
+          console.log(`Converting tool_image_url to image_url in message ${messageIndex}, content ${contentIndex}`);
+          console.log(`Original: ${JSON.stringify(content)}`);
           content.type = 'image_url'
+          console.log(`Converted: ${JSON.stringify(content)}`);
         }
         // Add final prompt to last message
         if (
@@ -125,4 +184,31 @@ const convertConversationToOpenAIMessages = (
     delete strippedMessage.feedback
     return strippedMessage
   })
+  
+  // Log transformed messages
+  console.log('============= MESSAGES AFTER TRANSFORMATION =============');
+  console.log(JSON.stringify(transformedMessages.map(msg => ({
+    role: msg.role,
+    contentType: Array.isArray(msg.content) ? 'array' : typeof msg.content,
+    imageCount: Array.isArray(msg.content) 
+      ? msg.content.filter(c => c.type === 'image_url').length 
+      : 0,
+    sampleContent: Array.isArray(msg.content) 
+      ? msg.content.slice(0, 2).map(c => ({ type: c.type }))
+      : null
+  })), null, 2));
+  
+  // Add detailed log of any message containing images - show complete structure
+  const messagesWithImages = transformedMessages.filter(msg => 
+    Array.isArray(msg.content) && 
+    msg.content.some(c => c.type === 'image_url')
+  );
+  
+  if (messagesWithImages.length > 0) {
+    console.log('============= COMPLETE IMAGE-CONTAINING MESSAGES =============');
+    console.log(JSON.stringify(messagesWithImages, null, 2));
+    console.log('==============================================================');
+  }
+  
+  return transformedMessages
 }

@@ -32,6 +32,11 @@ export const fetchImageDescription = async (
         },
       ]
 
+  // Log the exact image content format being sent to the LLM
+  console.log('================ IMAGE CONTENT SENT TO API ================');
+  console.log(JSON.stringify(contentArray.filter(content => content.type === 'image_url'), null, 2));
+  console.log('===========================================================');
+
   // Construct the body for the chat API request
   const imageBody: ImageBody = {
     contentArray,

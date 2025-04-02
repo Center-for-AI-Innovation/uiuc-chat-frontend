@@ -1,6 +1,7 @@
 import { type CoreMessage, generateText, streamText } from 'ai'
 import { type Conversation } from '~/types/chat'
 import { type NCSAHostedVLMProvider } from '~/utils/modelProviders/LLMProvider'
+import { convertConversationToVercelAISDKv3 } from '~/utils/apiUtils'
 export const dynamic = 'force-dynamic'
 
 import { createOpenAI } from '@ai-sdk/openai'
@@ -70,43 +71,4 @@ export async function runVLLM(
       }
     )
   }
-}
-
-function convertConversationToVercelAISDKv3(
-  conversation: Conversation,
-): CoreMessage[] {
-  const coreMessages: CoreMessage[] = []
-
-  const systemMessage = conversation.messages.findLast(
-    (msg) => msg.latestSystemMessage !== undefined,
-  )
-  if (systemMessage) {
-    coreMessages.push({
-      role: 'system',
-      content: systemMessage.latestSystemMessage || '',
-    })
-  }
-
-  conversation.messages.forEach((message, index) => {
-    if (message.role === 'system') return
-
-    let content: string
-    if (index === conversation.messages.length - 1 && message.role === 'user') {
-      content = message.finalPromtEngineeredMessage || ''
-    } else if (Array.isArray(message.content)) {
-      content = message.content
-        .filter((c) => c.type === 'text')
-        .map((c) => c.text)
-        .join('\n')
-    } else {
-      content = message.content as string
-    }
-
-    coreMessages.push({
-      role: message.role as 'user' | 'assistant',
-      content: content,
-    })
-  })
-
-  return coreMessages
 }

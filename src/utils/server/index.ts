@@ -115,6 +115,11 @@ export const OpenAIStream = async (
     stream: stream,
   })
 
+  // IMPROVED LOGGING: Log the exact raw JSON payload as sent to OpenAI API
+  console.log('================ RAW OPENAI API REQUEST ================');
+  console.log(JSON.stringify(JSON.parse(body), null, 2));
+  console.log('======================================================');
+
   if (!url) {
     throw new Error('URL is undefined')
   }
