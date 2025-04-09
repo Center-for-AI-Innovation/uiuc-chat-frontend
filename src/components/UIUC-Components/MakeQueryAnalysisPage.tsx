@@ -1164,6 +1164,7 @@ const CourseFilesList = ({ files }: CourseFilesListProps) => {
       showToastOnFileDeleted(theme, true)
     }
   }
+  // hi
 
   return (
     <div
