@@ -17,6 +17,12 @@ if (region && process.env.AWS_KEY && process.env.AWS_SECRET) {
   })
 }
 
+console.log('S3 INFO: s3Client', s3Client)
+console.log('S3 INFO: process.env.AWS_KEY', process.env.AWS_KEY)
+console.log('S3 INFO: process.env.AWS_SECRET', process.env.AWS_SECRET)
+console.log('S3 INFO: process.env.AWS_REGION', process.env.AWS_REGION)
+console.log('S3 INFO: process.env.S3_BUCKET_NAME', process.env.S3_BUCKET_NAME)
+
 // MinIO Client configuration
 let vyriadMinioClient: S3Client | null = null
 if (
