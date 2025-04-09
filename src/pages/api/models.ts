@@ -72,6 +72,8 @@ export default async function handler(
     for (const providerName of Object.values(ProviderNames)) {
       const llmProvider = llmProviders[providerName]
 
+      // TODO make this parallel
+
       switch (providerName) {
         case ProviderNames.Ollama:
           allLLMProviders[providerName] = (await getOllamaModels(

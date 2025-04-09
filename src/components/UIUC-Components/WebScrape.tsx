@@ -372,7 +372,7 @@ export const WebScrape = ({
       if (!url || !courseName || !localDir) return null
       console.log('calling downloadMITCourse')
       const response = await axios.get(
-        `https://flask-production-751b.up.railway.app/mit-download`,
+        `https://flask-s3-migration.up.railway.app/mit-download`,
         {
           params: {
             url: url,
@@ -487,11 +487,9 @@ export const WebScrape = ({
                 }}
                 size="md"
                 radius={'xl'}
-                className={`rounded-s-md ${
-                  isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
-                } overflow-ellipsis text-ellipsis p-2 ${
-                  isUrlUpdated ? 'text-white' : 'text-gray-500'
-                } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
+                className={`rounded-s-md ${isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
+                  } overflow-ellipsis text-ellipsis p-2 ${isUrlUpdated ? 'text-white' : 'text-gray-500'
+                  } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
                 w={`${isSmallScreen ? 'auto' : 'auto'}`}
                 disabled={isDisabled}
               >
@@ -596,11 +594,9 @@ export const WebScrape = ({
                 }}
                 size="md"
                 radius={'xl'}
-                className={`rounded-s-md ${
-                  isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
-                } overflow-ellipsis text-ellipsis p-2 ${
-                  isUrlUpdated ? 'text-white' : 'text-gray-500'
-                } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
+                className={`rounded-s-md ${isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
+                  } overflow-ellipsis text-ellipsis p-2 ${isUrlUpdated ? 'text-white' : 'text-gray-500'
+                  } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
                 w={`${isSmallScreen ? 'auto' : 'auto'}`}
                 disabled={isDisabled}
               >

@@ -198,7 +198,7 @@ const callN8nFunction = async (
 
   const timeStart = Date.now()
   const response: Response = await fetch(
-    `https://flask-production-751b.up.railway.app/run_flow`,
+    `https://flask-s3-migration.up.railway.app/run_flow`,
     {
       method: 'POST',
       headers: {
@@ -341,32 +341,32 @@ export function getOpenAIToolFromUIUCTool(
         description: tool.description,
         parameters: tool.inputParameters
           ? {
-              type: 'object',
-              properties: Object.keys(tool.inputParameters.properties).reduce(
-                (acc, key) => {
-                  const param = tool.inputParameters?.properties[key]
-                  acc[key] = {
-                    type:
-                      param?.type === 'number'
-                        ? 'number'
-                        : param?.type === 'Boolean'
-                          ? 'Boolean'
-                          : 'string',
-                    description: param?.description,
-                    enum: param?.enum,
-                  }
-                  return acc
-                },
-                {} as {
-                  [key: string]: {
-                    type: 'string' | 'number' | 'Boolean'
-                    description?: string
-                    enum?: string[]
-                  }
-                },
-              ),
-              required: tool.inputParameters.required,
-            }
+            type: 'object',
+            properties: Object.keys(tool.inputParameters.properties).reduce(
+              (acc, key) => {
+                const param = tool.inputParameters?.properties[key]
+                acc[key] = {
+                  type:
+                    param?.type === 'number'
+                      ? 'number'
+                      : param?.type === 'Boolean'
+                        ? 'Boolean'
+                        : 'string',
+                  description: param?.description,
+                  enum: param?.enum,
+                }
+                return acc
+              },
+              {} as {
+                [key: string]: {
+                  type: 'string' | 'number' | 'Boolean'
+                  description?: string
+                  enum?: string[]
+                }
+              },
+            ),
+            required: tool.inputParameters.required,
+          }
           : undefined,
       },
     }
@@ -468,7 +468,7 @@ export async function fetchTools(
   const parsedPagination = pagination.toLowerCase() === 'true'
 
   const response = await fetch(
-    `https://flask-production-751b.up.railway.app/getworkflows?api_key=${api_key}&limit=${limit}&pagination=${parsedPagination}`,
+    `https://flask-s3-migration.up.railway.app/getworkflows?api_key=${api_key}&limit=${limit}&pagination=${parsedPagination}`,
   )
   if (!response.ok) {
     // return res.status(response.status).json({ error: response.statusText })

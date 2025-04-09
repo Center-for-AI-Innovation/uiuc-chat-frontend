@@ -13,7 +13,7 @@ export const downloadConversationHistoryUser = async (
   )
   try {
     const response = await axios.get(
-      `https://flask-production-751b.up.railway.app/export-convo-history-user?user_email=${userEmail}&project_name=${projectName}`,
+      `https://flask-s3-migration.up.railway.app/export-convo-history-user?user_email=${userEmail}&project_name=${projectName}`,
       { responseType: 'blob' },
     )
     console.log('Received response:', response)
