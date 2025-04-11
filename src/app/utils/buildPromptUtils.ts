@@ -98,7 +98,7 @@ const googleFitData = {
     },
     workoutDurationHours: 0.5,
     workoutType: 'run',
-    workoutDistance: 5,
+    workoutDistance: '5 miles',
     workoutCalories: 1000,
     workoutSteps: 5000,
     workoutFloors: 2,
@@ -106,16 +106,16 @@ const googleFitData = {
     workoutAvgHeartRate: 100,
     workoutMaxHeartRate: 120,
     workoutRestingHeartRate: 60,
-    workoutAvgSpeed: 10,
-    workoutMaxSpeed: 15,
-    workoutAvgPace: 1,
-    workoutMaxPace: 1.5,
-    workoutAvgStrideLength: 1,
-    workoutMaxStrideLength: 1.5,
-    workoutAvgStrideTime: 1,
-    workoutMaxStrideTime: 1.5,
-    workoutAvgStrideSpeed: 10,
-    workoutMaxStrideSpeed: 15,
+    workoutAvgSpeed: '10 mph',
+    workoutMaxSpeed: '15 mph',
+    workoutAvgPace: '1 min/mile',
+    workoutMaxPace: '1.5 min/mile',
+    workoutAvgStrideLength: '1 ft',
+    workoutMaxStrideLength: '1.5 ft',
+    workoutAvgStrideTime: '1 sec',
+    workoutMaxStrideTime: '1.5 sec',
+    workoutAvgStrideSpeed: '10 mph',
+    workoutMaxStrideSpeed: '15 mph',
   },
   '2': {
     timeCreated: '2024-01-02T00:00:00Z',
@@ -138,7 +138,7 @@ const googleFitData = {
     },
     workoutDurationHours: 1,
     workoutType: 'swim',
-    workoutDistance: 10,
+    workoutDistance: '10 miles',
     workoutCalories: 1500,
     workoutActiveMinutes: 30,
     workoutAvgHeartRate: 100,
@@ -147,8 +147,55 @@ const googleFitData = {
   },
 }
 
+const profile = {
+  '1': {
+    name: 'John Doe',
+    age: 30,
+    gender: 'male',
+    height: 180,
+    weight: 70,
+    bmi: 24.5,
+    bmr: 1800,
+    tdee: 2200,
+    medication: 'None',
+    allergies: 'None',
+    medicalHistory: [
+      'Diagnosed with mild hypertension (monitors blood pressure regularly)',
+      'Type 2 diabetes, managed through diet, exercise, and medication',
+      'Torn rotator cuff in the right shoulder (recovered after surgery 8 months ago, avoids heavy lifting)',
+      'Occasional lower back discomfort, aggravated by prolonged sitting',
+      'Focuses on maintaining cardiovascular health and managing weight',
+    ],
+    personality: {
+      likes: [
+        'Enjoys brisk walking and cycling on his stationary bike',
+        'Prefers structured routines with clear goals, such as daily step targets',
+        'Likes being outdoors, especially hiking on weekends',
+        'Enjoys morning exercise sessions and appreciates a daily reminder from the chatbot',
+        'Finds satisfaction in tracking progress, especially when he sees improvements in blood sugar levels',
+      ],
+      dislikes: [
+        'Dislikes heavy strength training and avoids exercises that strain his shoulder',
+        "Doesn't like late afternoon workouts; feels more sluggish and unmotivated later in the day",
+        'Avoids exercises that are too complex or require too much coordination (prefers simplicity)',
+      ],
+      preferences: [
+        'Prefers short, straightforward conversations with the chatbot, focusing on health tips and step count reminders',
+        'Motivated by seeing tangible health improvements, like lower blood pressure or stable blood sugar',
+        'Enjoys setting specific goals, such as increasing his step count gradually each week',
+        'Responds well to positive reinforcement, especially for consistency in routine',
+      ],
+      goals: 'Maintaining cardiovascular health and managing weight',
+    },
+  },
+}
+
 const getUserGoogleFitData = (userID: string) => {
   return googleFitData[userID as keyof typeof googleFitData]
+}
+
+const getUserProfile = (userID: string) => {
+  return profile[userID as keyof typeof profile]
 }
 
 const encoding = encodingForModel('gpt-4o')
@@ -313,6 +360,13 @@ export const buildPrompt = async ({
       const userData = `\nBelow is the user's GoogleFit health and workoutdata. Use this data to answer the user's question.\n<User Data>\n${user_data_str}\n</User Data>`
       remainingTokenBudget -= encoding.encode(userData).length
       userPromptSections.push(userData)
+
+      // P1.3: User Profile
+      const userProfile = getUserProfile('1')
+      const userProfileStr = JSON.stringify(userProfile)
+      const userProfileData = `\nBelow is the user's profile. Use this data to answer the user's question.\n<User Profile>\n${userProfileStr}\n</User Profile>`
+      remainingTokenBudget -= encoding.encode(userProfileData).length
+      userPromptSections.push(userProfileData)
 
       // P2.1 : get the previous conversation summary, if it exists
       if (conversation.summary) {
