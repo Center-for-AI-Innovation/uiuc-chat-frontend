@@ -344,7 +344,6 @@ export const Chat = memo(
         // return data.success
       } catch (error) {
         console.error('Error setting course data:', error)
-        // return false
       }
     }
 
@@ -408,7 +407,7 @@ export const Chat = memo(
           ? message.content.map((content) => content.text).join(' ')
           : message.content
 
-        console.log('searchQuery: ', searchQuery)
+        //console.log('searchQuery: ', searchQuery)
 
         if (selectedConversation) {
           // Add this type guard function
@@ -769,7 +768,7 @@ export const Chat = memo(
                   }
                 }
 
-                console.log('query rewriteResponse:', rewriteResponse)
+                //console.log('query rewriteResponse:', rewriteResponse)
 
                 // After processing the query rewrite response
                 if (rewriteResponse instanceof Response) {
@@ -838,7 +837,7 @@ export const Chat = memo(
                   } else {
                     // Use the extracted query
                     rewrittenQuery = extractedQuery
-                    console.log('Using rewritten query:', rewrittenQuery)
+                    // console.log('Using rewritten query:', rewrittenQuery)
                     homeDispatch({ field: 'wasQueryRewritten', value: true })
                     homeDispatch({
                       field: 'queryRewriteText',
@@ -1131,6 +1130,10 @@ export const Chat = memo(
                     ...updatedConversation,
                     messages: updatedMessages,
                   }
+                  homeDispatch({
+                    field: 'selectedConversation',
+                    value: updatedConversation,
+                  })
                 } else {
                   if (updatedConversation.messages?.length > 0) {
                     const lastMessageIndex =
@@ -1201,7 +1204,6 @@ export const Chat = memo(
               //   updatedConversation,
               //   summary,
               // )
-              onMessageReceived(updatedConversation) // kastan here, trying to save message AFTER done streaming. This only saves the user message...
 
               handleUpdateConversation(updatedConversation, {
                 key: 'messages',
@@ -1213,6 +1215,7 @@ export const Chat = memo(
                 updatedConversation,
               )
 
+              onMessageReceived(updatedConversation) // kastan here, trying to save message AFTER done streaming. This only saves the user message...
               homeDispatch({ field: 'messageIsStreaming', value: false })
             } catch (error) {
               console.error('An error occurred: ', error)
@@ -1238,17 +1241,17 @@ export const Chat = memo(
                 messages: updatedMessages,
               }
               // Call LLM for conversation summary
-              const summary =
-                await callLLMForMessageSummary(updatedConversation)
-              console.log('summary with plugin: ', summary)
-              updatedConversation = updateConversationWithSummary(
-                updatedConversation,
-                summary,
-              )
-              // homeDispatch({
-              //   field: 'selectedConversation',
-              //   value: updatedConversation,
-              // })
+              // const summary =
+              //   await callLLMForMessageSummary(updatedConversation)
+              // console.log('summary with plugin: ', summary)
+              // updatedConversation = updateConversationWithSummary(
+              //   updatedConversation,
+              //   summary,
+              // )
+              homeDispatch({
+                field: 'selectedConversation',
+                value: updatedConversation,
+              })
               // This is after the response is done streaming for plugins
 
               // handleUpdateConversation(updatedConversation, {

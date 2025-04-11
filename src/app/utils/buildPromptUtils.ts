@@ -284,7 +284,8 @@ export const buildPrompt = async ({
     // Initialize an array to collect sections of the user prompt
     const userPromptSections: string[] = []
 
-    if (summary) {
+    if (!true) {
+      // Hard-coding this to false for now
       console.log('Call for summarization')
       // build prompt for summarization
       finalSystemPrompt =
