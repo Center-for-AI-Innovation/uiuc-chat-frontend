@@ -90,10 +90,17 @@ export const VisionCapableModels: Set<
   OpenAIModelID.GPT_4_Turbo,
   OpenAIModelID.GPT_4o,
   OpenAIModelID.GPT_4o_mini,
+  OpenAIModelID.GPT_4_1,
+  OpenAIModelID.GPT_4_1_mini,
+  OpenAIModelID.GPT_4_1_nano,
 
   AzureModelID.GPT_4_Turbo,
   AzureModelID.GPT_4o,
   AzureModelID.GPT_4o_mini,
+  AzureModelID.GPT_4_1,
+  AzureModelID.GPT_4_1_mini,
+  AzureModelID.GPT_4_1_nano,
+  
   // claude-3.5....
   AnthropicModelID.Claude_3_7_Sonnet,
   AnthropicModelID.Claude_3_7_Sonnet_Thinking,
@@ -134,6 +141,7 @@ export const ReasoningCapableModels: Set<
 > = new Set([
   AnthropicModelID.Claude_3_7_Sonnet_Thinking,
   OpenAIModelID.O3_mini,
+  OpenAIModelID.GPT_4_1,
   OllamaModelIDs.DEEPSEEK_R1_14b_qwen_fp16,
   // Add other reasoning-capable models as they become available
 ])
@@ -269,9 +277,12 @@ export type AllLLMProviders = {
 // Ordered list of preferred model IDs -- the first available model will be used as default
 export const preferredModelIds = [
   AnthropicModelID.Claude_3_5_Sonnet,
+  OpenAIModelID.GPT_4_1,
+  OpenAIModelID.GPT_4_1_mini,
   OpenAIModelID.GPT_4o_mini,
   AzureModelID.GPT_4o_mini,
   AnthropicModelID.Claude_3_5_Haiku,
+  OpenAIModelID.GPT_4_1_nano,
   OpenAIModelID.GPT_4o,
   AzureModelID.GPT_4o,
   OpenAIModelID.GPT_4_Turbo,
