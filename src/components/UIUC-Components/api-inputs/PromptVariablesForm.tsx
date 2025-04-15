@@ -218,15 +218,15 @@ export const PromptVariablesForm: React.FC<PromptVariablesFormProps> = ({
         },
       }}
     >
-      <Paper p="md" mb="md" style={{ backgroundColor: '#1a1b34', border: '1px solid rgba(147, 51, 234, 0.3)' }}>
+      <Paper p="md" mb="md" style={{ backgroundColor: '#1a1b34', border: '1px solid rgba(147, 51, 234, 0.3)', marginTop: '16px' }}>
         <Flex align="center" mb="xs">
           <IconInfoCircle size={18} style={{ color: 'hsl(280,100%,70%)' }} />
           <Text ml="xs" className={`${montserrat_paragraph.variable} font-montserratParagraph`}>
-            Define variables that will be injected into your prompt. These can be used to dynamically customize your bot's behavior.
+            Define variables that will be injected into your prompt.
           </Text>
         </Flex>
         <Text size="sm" className={`${montserrat_paragraph.variable} font-montserratParagraph`} color="gray.4">
-          Variables will be added in a special section at the end of your prompt in the format: KEY: VALUE
+          Variables will be added in a special section at the end of your prompt in the format: KEY: VALUE <br /><br />Ex. FARM_NAME: "Farm Name"
         </Text>
       </Paper>
 
