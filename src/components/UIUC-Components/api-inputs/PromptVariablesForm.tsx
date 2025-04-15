@@ -3,9 +3,7 @@ import {
   Text,
   Button,
   TextInput,
-  Card,
   Flex,
-  Title,
   Group,
   Modal,
   ActionIcon,
@@ -13,14 +11,12 @@ import {
   Box,
   Paper,
 } from '@mantine/core'
-import { useDisclosure } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import {
   IconCheck,
   IconAlertTriangle,
   IconTrash,
   IconPlus,
-  IconVariable,
   IconInfoCircle,
 } from '@tabler/icons-react'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
