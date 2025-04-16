@@ -46,6 +46,7 @@ import { callSetCourseMetadata } from '~/utils/apiUtils'
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 import { useDisclosure, useMediaQuery } from '@mantine/hooks'
 import { LinkGeneratorModal } from '~/components/Modals/LinkGeneratorModal'
+import PromptVariablesForm from '~/components/UIUC-Components/api-inputs/PromptVariablesForm'
 import {
   IconAlertTriangle,
   IconCheck,
@@ -58,6 +59,7 @@ import {
   IconBook,
   IconLink,
   IconAlertTriangleFilled,
+  IconVariable,
 } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
@@ -158,6 +160,8 @@ const CourseMain: NextPage = () => {
   const [selectedModel, setSelectedModel] = useState<string>('')
   const [opened, { close, open }] = useDisclosure(false)
   const [resetModalOpened, { close: closeResetModal, open: openResetModal }] =
+    useDisclosure(false)
+  const [variablesModalOpened, { close: closeVariablesModal, open: openVariablesModal }] =
     useDisclosure(false)
   const [llmProviders, setLLMProviders] = useState<any>(null)
   const [
@@ -1476,6 +1480,34 @@ CRITICAL: The optimized prompt must:
                                   Update System Prompt
                                 </Button>
                                 <Button
+                                  onClick={openVariablesModal}
+                                  variant="filled"
+                                  radius="md"
+                                  leftIcon={<IconVariable stroke={1} />}
+                                  className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                  sx={(theme) => ({
+                                    backgroundColor: `${theme.colors.indigo[7]} !important`,
+                                    border: 'none',
+                                    color: '#fff',
+                                    padding: '10px 20px',
+                                    fontWeight: 600,
+                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    transition: 'all 0.2s ease',
+                                    '&:hover': {
+                                      backgroundColor: `${theme.colors.indigo[8]} !important`,
+                                      transform: 'translateY(-1px)',
+                                      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
+                                    },
+                                    '&:active': {
+                                      transform: 'translateY(0)',
+                                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    },
+                                  })}
+                                  style={{ minWidth: 'fit-content' }}
+                                >
+                                  Manage Variables
+                                </Button>
+                                <Button
                                   onClick={handleSubmitPromptOptimization}
                                   disabled={!llmProviders || isOptimizing}
                                   variant="filled"
@@ -1690,6 +1722,17 @@ CRITICAL: The optimized prompt must:
                                   </Group>
                                 </div>
                               </Modal>
+
+                              {/* Variables Modal */}
+                              <PromptVariablesForm
+                                systemPrompt={baseSystemPrompt}
+                                onUpdateSystemPrompt={async (newPrompt) => {
+                                  setBaseSystemPrompt(newPrompt)
+                                  await handleSystemPromptSubmit(newPrompt)
+                                }}
+                                isModalOpen={variablesModalOpened}
+                                closeModal={closeVariablesModal}
+                              />
                             </form>
                           </div>
                         </div>
