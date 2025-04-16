@@ -96,6 +96,8 @@ export const VisionCapableModels: Set<
   OpenAIModelID.GPT_4_1_mini,
   OpenAIModelID.GPT_4_1_nano,
 
+  AzureModelID.o3,
+  AzureModelID.o4_mini,
   AzureModelID.GPT_4_Turbo,
   AzureModelID.GPT_4o,
   AzureModelID.GPT_4o_mini,
@@ -280,11 +282,11 @@ export type AllLLMProviders = {
 
 // Ordered list of preferred model IDs -- the first available model will be used as default
 export const preferredModelIds = [
-  AnthropicModelID.Claude_3_5_Sonnet,
-  OpenAIModelID.o3,
-  OpenAIModelID.o4_mini,
   OpenAIModelID.GPT_4_1,
   OpenAIModelID.GPT_4_1_mini,
+  OpenAIModelID.o3,
+  OpenAIModelID.o4_mini,
+  AnthropicModelID.Claude_3_5_Sonnet,
   OpenAIModelID.GPT_4o_mini,
   AzureModelID.GPT_4o_mini,
   AnthropicModelID.Claude_3_5_Haiku,
