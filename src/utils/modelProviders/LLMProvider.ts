@@ -87,6 +87,8 @@ export const VisionCapableModels: Set<
   | BedrockModelID
   | SambaNovaModelID
 > = new Set([
+  OpenAIModelID.o3,
+  OpenAIModelID.o4_mini,
   OpenAIModelID.GPT_4_Turbo,
   OpenAIModelID.GPT_4o,
   OpenAIModelID.GPT_4o_mini,
@@ -140,7 +142,9 @@ export const ReasoningCapableModels: Set<
   AnthropicModelID | OpenAIModelID | OllamaModelIDs
 > = new Set([
   AnthropicModelID.Claude_3_7_Sonnet_Thinking,
-  OpenAIModelID.O3_mini,
+  OpenAIModelID.o3,
+  OpenAIModelID.o3_mini,
+  OpenAIModelID.o4_mini,
   OpenAIModelID.GPT_4_1,
   OllamaModelIDs.DEEPSEEK_R1_14b_qwen_fp16,
   // Add other reasoning-capable models as they become available
@@ -277,6 +281,8 @@ export type AllLLMProviders = {
 // Ordered list of preferred model IDs -- the first available model will be used as default
 export const preferredModelIds = [
   AnthropicModelID.Claude_3_5_Sonnet,
+  OpenAIModelID.o3,
+  OpenAIModelID.o4_mini,
   OpenAIModelID.GPT_4_1,
   OpenAIModelID.GPT_4_1_mini,
   OpenAIModelID.GPT_4o_mini,

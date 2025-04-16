@@ -23,6 +23,8 @@ export interface AzureModel {
 }
 
 export enum AzureModelID {
+  o3 = 'o3',
+  o4_mini = 'o4-mini',
   GPT_4o_mini = 'gpt-4o-mini-2024-07-18',
   GPT_4o = 'gpt-4o-2024-08-06',
   GPT_4 = 'gpt-4-0613',
@@ -34,6 +36,8 @@ export enum AzureModelID {
 }
 
 export enum AzureDeploymentModelName {
+  o3 = 'o3',
+  o4_mini = 'o4-mini',
   GPT_4o_mini = 'gpt-4o-mini',
   GPT_4o = 'gpt-4o',
   GPT_4 = 'gpt-4',
@@ -45,6 +49,20 @@ export enum AzureDeploymentModelName {
 }
 
 export const AzureModels: Record<AzureModelID, AzureModel> = {
+  [AzureModelID.o3]: {
+    id: AzureModelID.o3,
+    name: 'OpenAI o3',
+    azureDeploymentModelName: AzureDeploymentModelName.o3,
+    tokenLimit: 200000,
+    enabled: true,
+  },
+  [AzureModelID.o4_mini]: {
+    id: AzureModelID.o4_mini,
+    name: 'OpenAI o4-mini',
+    azureDeploymentModelName: AzureDeploymentModelName.o4_mini,
+    tokenLimit: 200000,
+    enabled: true,
+  },
   [AzureModelID.GPT_3_5]: {
     id: AzureModelID.GPT_3_5,
     name: 'GPT-3.5',
