@@ -71,7 +71,9 @@ export const PromptVariablesForm: React.FC<PromptVariablesFormProps> = ({
       .split('\n')
       .filter((line) => line.trim() && line.includes(':'))
       .map((line) => {
-        const [key, value] = line.split(':').map((part) => part.trim())
+        const parts = line.split(':')
+        const key = parts[0]?.trim() || ''
+        const value = parts[1]?.trim() || ''
         return {
           id: Math.random().toString(36).substr(2, 9),
           key,
