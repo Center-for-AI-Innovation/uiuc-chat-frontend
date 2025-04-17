@@ -49,3 +49,6 @@ yarn-error.log*
 .cursorrules
 
 tests_output/
+
+# IDE
+.idea
