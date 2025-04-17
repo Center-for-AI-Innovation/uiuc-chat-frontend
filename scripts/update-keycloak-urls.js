@@ -11,7 +11,10 @@ async function updateKeycloakRedirectURIs() {
   const clientId = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID
   const adminUser = process.env.KEYCLOAK_ADMIN_USERNAME
   const adminPass = process.env.KEYCLOAK_ADMIN_PASSWORD
+  const branchURL = process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL
 
+  // Log the branch URL for debugging purposes
+  console.log(`TEST Branch URL: ${branchURL}`)
   try {
     // Get access token
     const tokenResponse = await fetch(
