@@ -2188,6 +2188,7 @@ const PromptVariablesModal: React.FC<{
 }> = ({ systemPrompt, onUpdateSystemPrompt, isModalOpen, closeModal }) => {
   const [variables, setVariables] = useState<VariablePair[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const theme = useMantineTheme()
 
   useEffect(() => {
     if (systemPrompt) {
@@ -2239,12 +2240,7 @@ const PromptVariablesModal: React.FC<{
       closeModal()
     } catch (error) {
       console.error('Error updating variables:', error)
-      showToastNotification(
-        useMantineTheme(),
-        'Error',
-        'Failed to update variables',
-        true,
-      )
+      showToastNotification(theme, 'Error', 'Failed to update variables', true)
     } finally {
       setIsSubmitting(false)
     }
