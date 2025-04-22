@@ -1606,8 +1606,8 @@ export const Chat = memo(
             'Can you explain the concept of [Specific Concept] in simple terms?',
           ]
 
-    // Add this function to create dividers with statements
-    const renderIntroductoryStatements = () => {
+    // Convert to a proper React component
+    const IntroductoryStatements = () => {
       const isMobile = useMediaQuery('(max-width: 500px)')
       const [showExamples, setShowExamples] = useState(false)
 
@@ -1732,7 +1732,7 @@ export const Chat = memo(
         </div>
       )
     }
-    // Inside Chat function before the return statement
+
     const renderMessageContent = (message: Message) => {
       if (Array.isArray(message.content)) {
         return (
@@ -1979,7 +1979,7 @@ export const Chat = memo(
                     selectedConversation.messages?.length === 0 ? (
                       <>
                         <div className="mt-16">
-                          {renderIntroductoryStatements()}
+                          <IntroductoryStatements />
                         </div>
                       </>
                     ) : (
