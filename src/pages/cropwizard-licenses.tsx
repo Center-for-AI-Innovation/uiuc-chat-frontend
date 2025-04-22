@@ -1,9 +1,11 @@
-import { Group, List, Title, Text, Flex } from '@mantine/core'
-import { IconExternalLink } from '@tabler/icons-react'
+import { Group, List, Title, Text, Flex, Modal, Button } from '@mantine/core'
+import { IconExternalLink, IconInfoCircle } from '@tabler/icons-react'
 import { NextPage } from 'next'
 import Link from 'next/link'
+import { useState } from 'react'
 import { MainPageBackground } from '../components/UIUC-Components/MainPageBackground'
 import GlobalFooter from '../components/UIUC-Components/GlobalFooter'
+import { useMediaQuery } from '@mantine/hooks'
 
 const CropwizardLicenses: NextPage = () => {
   return (
@@ -104,7 +106,97 @@ const CropwizardLicenses: NextPage = () => {
   )
 }
 
+export const CropwizardLicensePopup = () => {
+  const [opened, setOpened] = useState(false)
+  const isMobile = useMediaQuery('(max-width: 500px)')
+
+  return (
+    <>
+      <Button
+        variant="subtle"
+        compact
+        leftIcon={<IconInfoCircle size={16} />}
+        onClick={() => setOpened(true)}
+        sx={(theme) => ({
+          padding: '2px 6px',
+          height: 'auto',
+          fontSize: isMobile ? '11px' : '14px',
+          color: theme.colors.grape[4],
+          '&:hover': {
+            backgroundColor: 'rgba(142, 36, 170, 0.1)',
+          },
+        })}
+      >
+        License Info
+      </Button>
+
+      <Modal
+        opened={opened}
+        onClose={() => setOpened(false)}
+        title="CropWizard License Information"
+        size="sm"
+        overlayOpacity={0.55}
+        overlayBlur={3}
+        centered
+      >
+        <Text size="sm">
+          CropWizard&apos;s document corpus is subject to{' '}
+          <Link
+            className="text-purple-600 hover:text-purple-800 active:text-purple-500"
+            href="/cropwizard-licenses"
+            style={{ transition: 'color 0.2s' }}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            licenses
+          </Link>
+          . Usage is subject to{' '}
+          <Link
+            className="text-purple-600 hover:text-purple-800 active:text-purple-500"
+            href="https://www.vpaa.uillinois.edu/resources/terms_of_use"
+            style={{ transition: 'color 0.2s' }}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            terms
+          </Link>
+          , a{' '}
+          <Link
+            className="text-purple-600 hover:text-purple-800 active:text-purple-500"
+            href="https://www.vpaa.uillinois.edu/resources/web_privacy"
+            style={{ transition: 'color 0.2s' }}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            privacy policy
+          </Link>
+          , and{' '}
+          <Link
+            className="text-purple-600 hover:text-purple-800 active:text-purple-500"
+            href="https://www.vpaa.uillinois.edu/digital_risk_management/generative_ai/"
+            style={{ transition: 'color 0.2s' }}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            generative AI policy
+          </Link>
+          .
+        </Text>
+        <Text size="xs" mt={10} italic color="dimmed">
+          Sorry, the legal team made us say that.
+        </Text>
+      </Modal>
+    </>
+  )
+}
+
 export const CropwizardLicenseDisclaimer = () => {
+  const isMobile = useMediaQuery('(max-width: 500px)')
+
+  if (isMobile) {
+    return <CropwizardLicensePopup />
+  }
+
   return (
     <>
       <span>

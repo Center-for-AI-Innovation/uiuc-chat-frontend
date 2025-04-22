@@ -1,5 +1,9 @@
 // src/components/Chat/Chat.tsx
-import { IconArrowRight, IconAlertCircle } from '@tabler/icons-react'
+import {
+  IconArrowRight,
+  IconAlertCircle,
+  IconChevronDown,
+} from '@tabler/icons-react'
 import {
   type MutableRefObject,
   memo,
@@ -11,6 +15,7 @@ import {
 } from 'react'
 import { Button, Text } from '@mantine/core'
 import { useTranslation } from 'next-i18next'
+import { useMediaQuery } from '@mantine/hooks'
 
 import posthog from 'posthog-js'
 import { throttle } from '@/utils/data/throttle'
@@ -35,14 +40,6 @@ import { fetchPresignedUrl } from '~/utils/apiUtils'
 import { type CourseMetadata } from '~/types/courseMetadata'
 
 import { SourcesSidebarProvider } from './ChatMessage'
-
-interface Props {
-  stopConversationRef: MutableRefObject<boolean>
-  courseMetadata: CourseMetadata
-  courseName: string
-  currentEmail: string
-  documentCount: number | null
-}
 
 import { useRouter } from 'next/router'
 import { useAuth } from 'react-oidc-context'
@@ -86,6 +83,15 @@ const DEFAULT_DOCUMENT_GROUP = {
   checked: true,
 }
 export const modelCached: WebllmModel[] = []
+
+interface Props {
+  stopConversationRef: MutableRefObject<boolean>
+  courseMetadata: CourseMetadata
+  courseName: string
+  currentEmail: string
+  documentCount: number | null
+}
+
 export const Chat = memo(
   ({
     stopConversationRef,
@@ -312,25 +318,26 @@ export const Chat = memo(
               body: JSON.stringify({
                 projectName: courseName,
               }),
-            });
+            })
 
             if (!response.ok) {
-              throw new Error('Failed to fetch LLM providers');
+              throw new Error('Failed to fetch LLM providers')
             }
 
-            const data = await response.json();
-            llmProviders = data;
+            const data = await response.json()
+            llmProviders = data
 
             if (!llmProviders) {
-              throw new Error('No LLM providers returned from API');
+              throw new Error('No LLM providers returned from API')
             }
           } catch (error) {
-            console.error('Error fetching LLM providers:', error);
+            console.error('Error fetching LLM providers:', error)
             errorToast({
               title: 'Website Error - Please refresh the page',
-              message: 'Failed to fetch LLM providers. Please refresh the page and try again.',
-            });
-            return;
+              message:
+                'Failed to fetch LLM providers. Please refresh the page and try again.',
+            })
+            return
           }
         }
 
@@ -367,8 +374,8 @@ export const Chat = memo(
             message.contexts = []
             message.content = Array.isArray(message.content)
               ? message.content.filter(
-                (content) => content.type !== 'tool_image_url',
-              )
+                  (content) => content.type !== 'tool_image_url',
+                )
               : message.content
 
             const updatedMessages = [...(selectedConversation.messages || [])]
@@ -571,12 +578,12 @@ export const Chat = memo(
                         .map((msg) => {
                           const contentText = Array.isArray(msg.content)
                             ? msg.content
-                              .filter(
-                                (content) =>
-                                  content.type === 'text' && content.text,
-                              )
-                              .map((content) => content.text!)
-                              .join(' ')
+                                .filter(
+                                  (content) =>
+                                    content.type === 'text' && content.text,
+                                )
+                                .map((content) => content.text!)
+                                .join(' ')
                             : typeof msg.content === 'string'
                               ? msg.content
                               : ''
@@ -591,12 +598,12 @@ export const Chat = memo(
                         .map((msg) => {
                           const contentText = Array.isArray(msg.content)
                             ? msg.content
-                              .filter(
-                                (content) =>
-                                  content.type === 'text' && content.text,
-                              )
-                              .map((content) => content.text!)
-                              .join(' ')
+                                .filter(
+                                  (content) =>
+                                    content.type === 'text' && content.text,
+                                )
+                                .map((content) => content.text!)
+                                .join(' ')
                             : typeof msg.content === 'string'
                               ? msg.content
                               : ''
@@ -628,9 +635,9 @@ export const Chat = memo(
                           ? msg.content.trim()
                           : Array.isArray(msg.content)
                             ? msg.content
-                              .map((c) => c.text)
-                              .join(' ')
-                              .trim()
+                                .map((c) => c.text)
+                                .join(' ')
+                                .trim()
                             : '',
                     })),
                   },
@@ -752,7 +759,7 @@ export const Chat = memo(
                   // Check if the response is NO_REWRITE_REQUIRED or if we couldn't extract a valid query
                   if (
                     rewrittenQuery.trim().toUpperCase() ===
-                    'NO_REWRITE_REQUIRED' ||
+                      'NO_REWRITE_REQUIRED' ||
                     !extractedQuery
                   ) {
                     console.log(
@@ -913,10 +920,18 @@ export const Chat = memo(
                 // Check if response is ok before proceeding
                 if (!response.ok) {
                   const errorData = await response.json()
-                  console.log('Chat.txs --- errorData from /api/allNewRoutingChat', errorData)
+                  console.log(
+                    'Chat.txs --- errorData from /api/allNewRoutingChat',
+                    errorData,
+                  )
                   // Read our custom error object. But normal errors are captured too via errorData.error.
-                  const customError = new Error(errorData.message || errorData.error || 'The LLM might be overloaded or misconfigured. Please check your API key, or use a different LLM.')
-                    ; (customError as any).title = errorData.title || 'LLM Didn\'t Respond'
+                  const customError = new Error(
+                    errorData.message ||
+                      errorData.error ||
+                      'The LLM might be overloaded or misconfigured. Please check your API key, or use a different LLM.',
+                  )
+                  ;(customError as any).title =
+                    errorData.title || "LLM Didn't Respond"
                   throw customError
                 }
               } catch (error) {
@@ -926,7 +941,10 @@ export const Chat = memo(
 
                 errorToast({
                   title: (error as any).title || 'Error',
-                  message: error instanceof Error ? error.message : 'An unexpected error occurred',
+                  message:
+                    error instanceof Error
+                      ? error.message
+                      : 'An unexpected error occurred',
                 })
                 return
               }
@@ -937,7 +955,10 @@ export const Chat = memo(
 
               errorToast({
                 title: (error as any).title || 'Error',
-                message: error instanceof Error ? error.message : 'An unexpected error occurred',
+                message:
+                  error instanceof Error
+                    ? error.message
+                    : 'An unexpected error occurred',
               })
               return
             }
@@ -951,12 +972,15 @@ export const Chat = memo(
               const errorData = await response.json()
               errorToast({
                 title: errorData.title || 'Error',
-                message: errorData.message || 'There was an unexpected error calling the LLM. Try using a different model.',
+                message:
+                  errorData.message ||
+                  'There was an unexpected error calling the LLM. Try using a different model.',
               })
             } catch (error) {
               errorToast({
                 title: 'Error',
-                message: 'There was an unexpected error calling the LLM. Try using a different model.',
+                message:
+                  'There was an unexpected error calling the LLM. Try using a different model.',
               })
             }
             return
@@ -1574,22 +1598,28 @@ export const Chat = memo(
 
     const statements =
       courseMetadata?.example_questions &&
-        courseMetadata.example_questions.length > 0
+      courseMetadata.example_questions.length > 0
         ? courseMetadata.example_questions
         : [
-          'Make a bullet point list of key takeaways from this project.',
-          'What are the best practices for [Activity or Process] in [Context or Field]?',
-          'Can you explain the concept of [Specific Concept] in simple terms?',
-        ]
+            'Make a bullet point list of key takeaways from this project.',
+            'What are the best practices for [Activity or Process] in [Context or Field]?',
+            'Can you explain the concept of [Specific Concept] in simple terms?',
+          ]
 
     // Add this function to create dividers with statements
     const renderIntroductoryStatements = () => {
+      const isMobile = useMediaQuery('(max-width: 500px)')
+      const [showExamples, setShowExamples] = useState(false)
+
       return (
         <div className="xs:mx-2 mt-4 max-w-3xl gap-3 px-4 last:mb-2 sm:mx-4 md:mx-auto lg:mx-auto ">
-          <div className="backdrop-filter-[blur(10px)] rounded-lg border-2 border-[rgba(42,42,120,0.55)] bg-[rgba(42,42,64,0.4)] p-6">
+          <div className="backdrop-filter-[blur(10px)] rounded-lg border-2 border-[rgba(42,42,120,0.55)] bg-[rgba(42,42,64,0.4)] p-4 sm:p-6">
             <Text
-              className={`mb-2 text-lg text-white ${montserrat_heading.variable} font-montserratHeading`}
-              style={{ whiteSpace: 'pre-wrap' }}
+              className={`mb-2 text-white ${montserrat_heading.variable} font-montserratHeading`}
+              style={{
+                whiteSpace: 'pre-wrap',
+                fontSize: isMobile ? '0.9rem' : '1.125rem',
+              }}
               dangerouslySetInnerHTML={{
                 __html:
                   courseMetadata?.course_intro_message
@@ -1605,47 +1635,97 @@ export const Chat = memo(
             />
 
             <h4
-              className={`text-md mb-2 text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
+              className={`mb-2 text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
+              style={{
+                fontSize: isMobile ? '0.85rem' : '1rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
             >
               {getCurrentPageName() === 'cropwizard-1.5' && (
                 <CropwizardLicenseDisclaimer />
               )}
               {getCurrentPageName() !== 'chat' && (
-                <p>Start a conversation below or try these examples</p>
-              )}
-            </h4>
-            <div className="mt-4 flex flex-col items-start space-y-2 overflow-hidden">
-              {/* if getCurrentPageName is 'chat' then don't show any example questions */}
-              {getCurrentPageName() !== 'chat' &&
-                statements.map((statement, index) => (
+                <div style={{ width: '100%' }}>
                   <div
-                    key={index}
-                    className="w-full rounded-lg border-b-2 border-[rgba(42,42,64,0.4)] hover:cursor-pointer hover:bg-[rgba(42,42,64,0.9)]"
-                    onClick={() => {
-                      setInputContent('') // First clear the input
-                      setTimeout(() => {
-                        // Then set it with a small delay
-                        setInputContent(statement)
-                        textareaRef.current?.focus()
-                      }, 0)
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
                     }}
                   >
+                    <p className={`${isMobile ? 'hidden opacity-0' : ''}`}>
+                      Start a conversation below
+                    </p>
                     <Button
-                      variant="link"
-                      className={`text-md h-auto p-2 font-bold leading-relaxed text-white hover:underline ${montserrat_paragraph.variable} font-montserratParagraph `}
+                      variant="subtle"
+                      size="xs"
+                      onClick={() => setShowExamples(!showExamples)}
+                      rightIcon={
+                        <IconChevronDown
+                          size={16}
+                          style={{
+                            transform: showExamples ? 'rotate(180deg)' : 'none',
+                            transition: 'transform 0.2s ease',
+                          }}
+                        />
+                      }
+                      sx={(theme) => ({
+                        color: theme.white,
+                        '&:hover': {
+                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        },
+                        transition: 'background-color 0.2s ease',
+                        padding: '0 10px',
+                      })}
                     >
-                      <IconArrowRight size={25} className="mr-2 min-w-[40px]" />
-                      <p className="whitespace-break-spaces">{statement}</p>
+                      {showExamples ? 'Hide Examples' : 'Show Examples'}
                     </Button>
                   </div>
-                ))}
-            </div>
+                </div>
+              )}
+            </h4>
+
+            {showExamples && (
+              <div className="mt-4 flex flex-col items-start space-y-2 overflow-hidden">
+                {getCurrentPageName() !== 'chat' &&
+                  statements.map((statement: string, index: number) => (
+                    <div
+                      key={index}
+                      className="w-full rounded-lg border-b-2 border-[rgba(42,42,64,0.4)] hover:cursor-pointer hover:bg-[rgba(42,42,64,0.9)]"
+                      onClick={() => {
+                        setInputContent('') // First clear the input
+                        setTimeout(() => {
+                          // Then set it with a small delay
+                          setInputContent(statement)
+                          textareaRef.current?.focus()
+                        }, 0)
+                        if (isMobile) {
+                          setShowExamples(false) // Close examples on mobile after selection
+                        }
+                      }}
+                    >
+                      <Button
+                        variant="link"
+                        className={`h-auto p-2 font-bold leading-relaxed text-white hover:underline ${montserrat_paragraph.variable} font-montserratParagraph`}
+                        style={{ fontSize: isMobile ? '0.8rem' : '1rem' }}
+                      >
+                        <IconArrowRight
+                          size={isMobile ? 18 : 25}
+                          className="mr-2 min-w-[25px]"
+                        />
+                        <p className="whitespace-break-spaces text-left">
+                          {statement}
+                        </p>
+                      </Button>
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
           <div
             // This is critical to keep the scrolling proper. We need padding below the messages for the chat bar to sit.
-            // className="h-[162px] bg-gradient-to-b from-[#1a1a2e] via-[#2A2A40] to-[#15162c]"
-            // className="h-[162px] bg-gradient-to-t from-transparent to-[rgba(14,14,21,0.4)]"
-            // className="h-[162px] bg-gradient-to-b dark:from-[#2e026d] dark:via-[#15162c] dark:to-[#15162c]"
             className="h-[162px]"
             ref={messagesEndRef}
           />
@@ -1895,8 +1975,8 @@ export const Chat = memo(
                     transition={{ duration: 0.1 }}
                   >
                     {selectedConversation &&
-                      selectedConversation.messages &&
-                      selectedConversation.messages?.length === 0 ? (
+                    selectedConversation.messages &&
+                    selectedConversation.messages?.length === 0 ? (
                       <>
                         <div className="mt-16">
                           {renderIntroductoryStatements()}
@@ -1914,7 +1994,7 @@ export const Chat = memo(
                                 handleSend(
                                   editedMessage,
                                   selectedConversation?.messages?.length -
-                                  index,
+                                    index,
                                   null,
                                   tools,
                                   enabledDocumentGroups,

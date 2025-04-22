@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { useDisclosure } from '@mantine/hooks'
+import { useDisclosure, useMediaQuery } from '@mantine/hooks'
 import Image from 'next/image'
 import { useEffect, useState, useContext, useRef } from 'react'
 import {
@@ -13,10 +13,17 @@ import {
   Transition,
   Avatar,
   Menu,
+  Text,
 } from '@mantine/core'
-import { IconHome, IconSettings, IconPlus } from '@tabler/icons-react'
+import {
+  IconHome,
+  IconSettings,
+  IconPlus,
+  IconUser,
+  IconChevronDown,
+} from '@tabler/icons-react'
 import { useRouter } from 'next/router'
-import { montserrat_heading } from 'fonts'
+import { montserrat_heading, montserrat_paragraph } from 'fonts'
 
 import { useAuth } from 'react-oidc-context'
 import { type CourseMetadata } from '~/types/courseMetadata'
@@ -24,6 +31,7 @@ import HomeContext from '~/pages/api/home/home.context'
 import { UserSettings } from '../../Chat/UserSettings'
 import { usePostHog } from 'posthog-js/react'
 import { AuthMenu } from './AuthMenu'
+import { initiateSignIn } from '~/utils/authHelpers'
 
 const styles: Record<string, React.CSSProperties> = {
   logoContainerBox: {
@@ -159,6 +167,22 @@ const useStyles = createStyles((theme, { isAdmin }: { isAdmin: boolean }) => ({
       },
     },
   },
+  pageIndicator: {
+    color: 'hsl(280,100%,70%)',
+    fontSize: rem(12),
+    fontWeight: 400,
+    marginLeft: '8px',
+    marginTop: '-12px',
+    display: 'block',
+    [theme.fn.largerThan(500)]: {
+      display: 'none',
+    },
+  },
+  logoContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '5px',
+  },
 }))
 
 interface ChatNavbarProps {
@@ -171,12 +195,14 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
   const [opened, { toggle }] = useDisclosure(false)
   const [show, setShow] = useState(true)
   const [isAdminOrOwner, setIsAdminOrOwner] = useState(false)
+  const [profileSubmenuOpen, setProfileSubmenuOpen] = useState(false)
   const auth = useAuth()
 
   const { classes, theme } = useStyles({ isAdmin: isAdminOrOwner })
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== 'undefined' ? window.innerWidth : 825,
   )
+  const isMobile = useMediaQuery('(max-width: 500px)')
   const posthog = usePostHog()
   const {
     state: { showModelSettings, selectedConversation },
@@ -234,6 +260,13 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
     return () => window.removeEventListener('resize', handleResize)
   }, [opened, toggle])
 
+  // Close submenu when main menu is closed
+  useEffect(() => {
+    if (!opened) {
+      setProfileSubmenuOpen(false)
+    }
+  }, [opened])
+
   return (
     <div
       className={`${isgpt4 ? 'bg-[#15162c]' : 'bg-[#2e026d]'} -mr-0 px-12 pb-16 pl-5`}
@@ -253,13 +286,18 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
           styles={{ height: '10px', flexWrap: 'nowrap', gap: '0rem' }}
           className="navbar rounded-badge bg-[#15162c] shadow-lg shadow-purple-800"
         >
-          <Link href="/" style={{ flex: 'none', flexWrap: 'nowrap' }}>
-            <h2 className="cursor-pointer font-extrabold tracking-tight text-white sm:ms-3 sm:text-[2rem] sm:text-[2rem] md:text-3xl">
-              Illinois <span className="text-[hsl(280,100%,70%)]">Chat</span>
-            </h2>
-          </Link>
+          <div className={classes.logoContainer}>
+            <Link href="/" style={{ flex: 'none', flexWrap: 'nowrap' }}>
+              <h2 className="cursor-pointer font-extrabold tracking-tight text-white sm:ms-3 sm:text-[2rem] md:text-3xl">
+                Illinois <span className="text-[hsl(280,100%,70%)]">Chat</span>
+              </h2>
+            </Link>
+            <Text className={classes.pageIndicator}>
+              {getCurrentCourseName()}
+            </Text>
+          </div>
 
-          {bannerUrl ? (
+          {bannerUrl && !isMobile ? (
             <div style={{ ...styles.logoContainerBox, flex: '1' }}>
               <Image
                 src={bannerUrl}
@@ -304,6 +342,130 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                     minWidth: '120px',
                   }}
                 >
+                  {/* User profile in hamburger menu */}
+                  {isMobile && (
+                    <div
+                      className={classes.link}
+                      style={{
+                        display: opened ? 'block' : 'none',
+                        padding: 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '100%',
+                          padding: '8px',
+                          height: '100%',
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                          }}
+                        >
+                          <div
+                            style={{ display: 'flex', alignItems: 'center' }}
+                            onClick={() => {
+                              setProfileSubmenuOpen(!profileSubmenuOpen)
+                            }}
+                          >
+                            <IconUser size={24} />
+                            <span
+                              className={`${montserrat_heading.variable} font-montserratHeading`}
+                              style={{ marginLeft: '8px' }}
+                            >
+                              Profile
+                            </span>
+                            <IconChevronDown
+                              size={16}
+                              style={{
+                                marginLeft: '4px',
+                                transform: profileSubmenuOpen
+                                  ? 'rotate(180deg)'
+                                  : 'none',
+                                transition: 'transform 0.2s ease',
+                              }}
+                            />
+                          </div>
+                          <div onClick={(e) => e.stopPropagation()}>
+                            {!isMobile && <AuthMenu size={28} />}
+                          </div>
+                        </div>
+
+                        <div
+                          id="profile-submenu"
+                          style={{
+                            display: profileSubmenuOpen ? 'block' : 'none',
+                            paddingLeft: '34px',
+                            marginTop: '8px',
+                          }}
+                        >
+                          {auth.isAuthenticated ? (
+                            <>
+                              <div
+                                className={classes.link}
+                                style={{
+                                  padding: '6px 0',
+                                  margin: 0,
+                                  fontSize: '13px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  cursor: 'pointer',
+                                }}
+                                onClick={() => {
+                                  window.open(
+                                    `https://login.uiuc.chat/realms/${process.env.NEXT_PUBLIC_KEYCLOAK_REALM}/account`,
+                                    '_blank',
+                                  )
+                                  toggle()
+                                }}
+                              >
+                                Manage Account
+                              </div>
+                              <div
+                                className={classes.link}
+                                style={{
+                                  padding: '6px 0',
+                                  margin: 0,
+                                  fontSize: '13px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  cursor: 'pointer',
+                                }}
+                                onClick={() => {
+                                  auth.signoutRedirect()
+                                  toggle()
+                                }}
+                              >
+                                Sign Out
+                              </div>
+                            </>
+                          ) : (
+                            <div
+                              className={classes.link}
+                              style={{
+                                padding: '6px 0',
+                                margin: 0,
+                                fontSize: '13px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                cursor: 'pointer',
+                              }}
+                              onClick={() => {
+                                initiateSignIn(auth, window.location.pathname)
+                                toggle()
+                              }}
+                            >
+                              Sign In
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* New Chat button in hamburger when screen is small */}
                   <div
                     className={classes.link}
@@ -627,18 +789,19 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
               />
             </Container>
 
-            {/* Sign in buttons */}
-            <div
-              className="pl-1 pr-2"
-              style={{
-                // marginLeft: '-5px',
-                position: 'relative',
-                top: '-2px',
-                justifyContent: 'flex-center',
-              }}
-            >
-              <AuthMenu />
-            </div>
+            {/* Sign in buttons - only show on desktop */}
+            {!isMobile && (
+              <div
+                className="pl-1 pr-2"
+                style={{
+                  position: 'relative',
+                  top: '-2px',
+                  justifyContent: 'flex-center',
+                }}
+              >
+                <AuthMenu />
+              </div>
+            )}
           </Group>
         </Flex>
       </div>
