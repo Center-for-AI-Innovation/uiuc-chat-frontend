@@ -135,8 +135,10 @@ export const CropwizardLicensePopup = () => {
         onClose={() => setOpened(false)}
         title="CropWizard License Information"
         size="sm"
-        overlayOpacity={0.55}
-        overlayBlur={3}
+        overlayProps={{
+          opacity: 0.55,
+          blur: 3,
+        }}
         centered
       >
         <Text size="sm">
