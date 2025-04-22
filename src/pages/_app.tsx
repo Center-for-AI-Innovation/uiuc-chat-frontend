@@ -83,11 +83,11 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
             {/* <SpeedInsights /> */}
             <Analytics />
             <Notifications position="bottom-center" zIndex={2077} />
-            {/* <ReactQueryDevtools
+            <ReactQueryDevtools
               initialIsOpen={false}
               position="left"
               buttonPosition="bottom-left"
-            /> */}
+            />
             <MantineProvider
               withGlobalStyles
               withNormalizeCSS
