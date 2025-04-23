@@ -41,7 +41,7 @@ interface Props {
   courseMetadata: CourseMetadata
   courseName: string
   currentEmail: string
-  documentCount: number | null
+  // documentCount: number | null
 }
 
 import { useRouter } from 'next/router'
