@@ -14,7 +14,7 @@ async function updateKeycloakRedirectURIs() {
   const branchURL = process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL}` : null
 
   // Log the branch URL for debugging purposes
-  console.log(`TEST Branch URL: ${branchURL}`)
+  // console.log(`TEST Branch URL: ${branchURL}`)
   try {
     // Get access token
     const tokenResponse = await fetch(
