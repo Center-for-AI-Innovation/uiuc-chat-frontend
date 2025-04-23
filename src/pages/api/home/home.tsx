@@ -43,13 +43,13 @@ const Home = ({
   current_email,
   course_metadata,
   course_name,
-  document_count,
+  // document_count,
   link_parameters,
 }: {
   current_email: string
   course_metadata: CourseMetadata | null
   course_name: string
-  document_count: number | null
+  // document_count: number | null
   link_parameters: {
     guidedLearning: boolean
     documentsOnly: boolean
@@ -788,7 +788,7 @@ const Home = ({
                   courseMetadata={course_metadata}
                   courseName={course_name}
                   currentEmail={current_email}
-                  documentCount={document_count}
+                  // documentCount={document_count}
                 />
               )}
             </div>
