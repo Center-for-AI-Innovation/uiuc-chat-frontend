@@ -23,22 +23,46 @@ export interface AzureModel {
 }
 
 export enum AzureModelID {
+  o3 = 'o3',
+  o4_mini = 'o4-mini',
   GPT_4o_mini = 'gpt-4o-mini-2024-07-18',
   GPT_4o = 'gpt-4o-2024-08-06',
   GPT_4 = 'gpt-4-0613',
   GPT_4_Turbo = 'gpt-4-turbo-2024-04-09',
   GPT_3_5 = 'gpt-35-turbo-0125',
+  GPT_4_1 = 'gpt-4.1',
+  GPT_4_1_mini = 'gpt-4.1-mini',
+  GPT_4_1_nano = 'gpt-4.1-nano',
 }
 
 export enum AzureDeploymentModelName {
+  o3 = 'o3',
+  o4_mini = 'o4-mini',
   GPT_4o_mini = 'gpt-4o-mini',
   GPT_4o = 'gpt-4o',
   GPT_4 = 'gpt-4',
   GPT_4_Turbo = 'gpt-4-turbo',
   GPT_3_5 = 'gpt-35-turbo',
+  GPT_4_1 = 'gpt-4.1',
+  GPT_4_1_mini = 'gpt-4.1-mini',
+  GPT_4_1_nano = 'gpt-4.1-nano',
 }
 
 export const AzureModels: Record<AzureModelID, AzureModel> = {
+  [AzureModelID.o3]: {
+    id: AzureModelID.o3,
+    name: 'o3 (Reasoning)',
+    azureDeploymentModelName: AzureDeploymentModelName.o3,
+    tokenLimit: 200000,
+    enabled: true,
+  },
+  [AzureModelID.o4_mini]: {
+    id: AzureModelID.o4_mini,
+    name: 'o4-mini (Reasoning)',
+    azureDeploymentModelName: AzureDeploymentModelName.o4_mini,
+    tokenLimit: 200000,
+    enabled: true,
+  },
   [AzureModelID.GPT_3_5]: {
     id: AzureModelID.GPT_3_5,
     name: 'GPT-3.5',
@@ -72,6 +96,27 @@ export const AzureModels: Record<AzureModelID, AzureModel> = {
     name: 'GPT-4o mini',
     azureDeploymentModelName: AzureDeploymentModelName.GPT_4o_mini,
     tokenLimit: 128000,
+    enabled: true,
+  },
+  [AzureModelID.GPT_4_1]: {
+    id: AzureModelID.GPT_4_1,
+    name: 'GPT-4.1',
+    azureDeploymentModelName: AzureDeploymentModelName.GPT_4_1,
+    tokenLimit: 1047576,
+    enabled: true,
+  },
+  [AzureModelID.GPT_4_1_mini]: {
+    id: AzureModelID.GPT_4_1_mini,
+    name: 'GPT-4.1 Mini',
+    azureDeploymentModelName: AzureDeploymentModelName.GPT_4_1_mini,
+    tokenLimit: 1047576,
+    enabled: true,
+  },
+  [AzureModelID.GPT_4_1_nano]: {
+    id: AzureModelID.GPT_4_1_nano,
+    name: 'GPT-4.1 Nano',
+    azureDeploymentModelName: AzureDeploymentModelName.GPT_4_1_nano,
+    tokenLimit: 1047576,
     enabled: true,
   },
 }
