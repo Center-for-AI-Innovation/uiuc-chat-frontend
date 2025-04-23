@@ -51,14 +51,14 @@ export enum AzureDeploymentModelName {
 export const AzureModels: Record<AzureModelID, AzureModel> = {
   [AzureModelID.o3]: {
     id: AzureModelID.o3,
-    name: 'OpenAI o3',
+    name: 'o3 (Reasoning)',
     azureDeploymentModelName: AzureDeploymentModelName.o3,
     tokenLimit: 200000,
     enabled: true,
   },
   [AzureModelID.o4_mini]: {
     id: AzureModelID.o4_mini,
-    name: 'OpenAI o4-mini',
+    name: 'o4-mini (Reasoning)',
     azureDeploymentModelName: AzureDeploymentModelName.o4_mini,
     tokenLimit: 200000,
     enabled: true,
