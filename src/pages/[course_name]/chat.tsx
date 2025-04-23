@@ -31,7 +31,7 @@ const ChatPage: NextPage = () => {
   const [urlGuidedLearning, setUrlGuidedLearning] = useState(false)
   const [urlDocumentsOnly, setUrlDocumentsOnly] = useState(false)
   const [urlSystemPromptOnly, setUrlSystemPromptOnly] = useState(false)
-  const [documentCount, setDocumentCount] = useState<number | null>(null)
+  // const [documentCount, setDocumentCount] = useState<number | null>(null)
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
 
   // UseEffect to check URL parameters
@@ -86,22 +86,22 @@ const ChatPage: NextPage = () => {
   }, [courseName, urlGuidedLearning, urlDocumentsOnly, urlSystemPromptOnly])
 
   // UseEffect to fetch document count in the background
-  useEffect(() => {
-    if (!courseName) return
-    const fetchDocumentCount = async () => {
-      try {
-        const documentsResponse = await fetch(
-          `/api/materialsTable/fetchProjectMaterials?from=0&to=0&course_name=${courseName}`,
-        )
-        const documentsData = await documentsResponse.json()
-        setDocumentCount(documentsData.total_count || 0)
-      } catch (error) {
-        console.error('Error fetching document count:', error)
-        setDocumentCount(0)
-      }
-    }
-    fetchDocumentCount()
-  }, [courseName])
+  // useEffect(() => {
+  //   if (!courseName) return
+  //   const fetchDocumentCount = async () => {
+  //     try {
+  //       const documentsResponse = await fetch(
+  //         `/api/materialsTable/fetchProjectMaterials?from=0&to=0&course_name=${courseName}`,
+  //       )
+  //       const documentsData = await documentsResponse.json()
+  //       setDocumentCount(documentsData.total_count || 0)
+  //     } catch (error) {
+  //       console.error('Error fetching document count:', error)
+  //       setDocumentCount(0)
+  //     }
+  //   }
+  //   fetchDocumentCount()
+  // }, [courseName])
 
   // UseEffect to check user permissions and fetch user email
   useEffect(() => {
@@ -126,7 +126,9 @@ const ChatPage: NextPage = () => {
             } else {
               // Use PostHog ID when user is not logged in for public courses
               const key = process.env.NEXT_PUBLIC_POSTHOG_KEY as string
-              const postHogUserObj = localStorage.getItem('ph_' + key + '_posthog')
+              const postHogUserObj = localStorage.getItem(
+                'ph_' + key + '_posthog',
+              )
               if (postHogUserObj) {
                 const postHogUser = JSON.parse(postHogUserObj)
                 setCurrentEmail(postHogUser.distinct_id)
@@ -147,7 +149,7 @@ const ChatPage: NextPage = () => {
               router.replace(`/${courseName}/not_authorized`)
               return
             }
-            
+
             // Set email for authenticated users
             if (auth.user?.profile.email) {
               setCurrentEmail(auth.user.profile.email)
@@ -185,7 +187,7 @@ const ChatPage: NextPage = () => {
             current_email={currentEmail || ''}
             course_metadata={courseMetadata}
             course_name={courseName}
-            document_count={documentCount}
+            // document_count={documentCount}
             link_parameters={{
               guidedLearning: urlGuidedLearning,
               documentsOnly: urlDocumentsOnly,
