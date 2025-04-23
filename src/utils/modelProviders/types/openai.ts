@@ -44,19 +44,19 @@ export const OpenAIModels: Record<OpenAIModelID, OpenAIModel> = {
 
   [OpenAIModelID.o3]: {
     id: OpenAIModelID.o3,
-    name: 'OpenAI o3',
+    name: 'o3 (Reasoning)',
     tokenLimit: 200000,
     enabled: true,
   },
   [OpenAIModelID.o3_mini]: {
     id: OpenAIModelID.o3_mini,
-    name: 'OpenAI o3-mini',
+    name: 'o3-mini (Reasoning)',
     tokenLimit: 200000,
     enabled: true,
   },
   [OpenAIModelID.o4_mini]: {
     id: OpenAIModelID.o4_mini,
-    name: 'OpenAI o4-mini',
+    name: 'o4-mini (Reasoning)',
     tokenLimit: 200000,
     enabled: true,
   },
