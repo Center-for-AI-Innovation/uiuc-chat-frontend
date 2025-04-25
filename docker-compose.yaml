@@ -1,0 +1,55 @@
+services:
+  traefik:
+    image: "traefik:v3.2"
+    container_name: "traefik"
+    command:
+      - --log.level=INFO
+      - --api=true
+      - --api.dashboard=true
+      - --api.insecure=true
+      # Entrypoints
+      - --entrypoints.http.address=:80
+      # Docker setup
+      - --providers.docker=true
+      - --providers.docker.endpoint=unix:///var/run/docker.sock
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.watch=true
+    restart: "unless-stopped"
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "80:80"
+#      - "443:443"
+    volumes:
+      - "traefik:/config"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`traefik.localhost`)"
+      - "traefik.http.routers.api.service=api@internal"
+
+  postgres:
+    image: postgres
+    restart: "unless-stopped"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - "postgres_data:/var/lib/postgresql/data"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.postgres.rule=Host(`postgres.localhost`)"
+      - "traefik.http.routers.postgres.service=postgres@internal"
+      - "traefik.http.services.postgres.loadbalancer.server.port=5432"
+
+volumes:
+  traefik:
+#    driver: local
+#    driver_opts:
+#      type: none
+#      device: /tmp/traefik
+#      o: bind
+  postgres_data:
