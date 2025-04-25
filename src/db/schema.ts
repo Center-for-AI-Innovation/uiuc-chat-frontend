@@ -1,5 +1,5 @@
-// This file will be populated by drizzle-kit introspect
-import { pgTable, serial, text, timestamp, uuid, varchar, integer, boolean, jsonb, bigint } from 'drizzle-orm/pg-core';
+// Generated schema.ts based on PostgreSQL database
+import { pgTable, serial, text, timestamp, uuid, varchar, integer, boolean, jsonb, bigint, date, foreignKey, primaryKey, uniqueIndex, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // API keys table
@@ -38,7 +38,6 @@ export const uiucCourseTable = pgTable('uiuc-course-table', {
   course_name: text('course_name'),
 });
 
-
 // documents_failed table
 export const documentsFailed = pgTable('documents_failed', {
   id: serial('id').primaryKey(),
@@ -54,7 +53,6 @@ export const documentsFailed = pgTable('documents_failed', {
 });
 
 // documents_in_progress table
-// documents_in_progress table
 export const documentsInProgress = pgTable('documents_in_progress', {
   id: serial('id').primaryKey(),
   created_at: timestamp('created_at').defaultNow().notNull(),
@@ -69,34 +67,11 @@ export const documentsInProgress = pgTable('documents_in_progress', {
   beam_task_id: text('beam_task_id'),
 });
 
-// publications table
-// export const publications = pgTable('publications', {
-//   id: serial('id').primaryKey(),
-//   created_at: timestamp('created_at').defaultNow().notNull(),
-//   pmid: varchar('pmid').notNull(),
-//   pmcid: varchar('pmcid'),
-//   doi: varchar('doi'),
-//   journal_title: varchar('journal_title'),
-//   article_title: varchar('article_title'),
-//   issn: varchar('issn'),
-//   published: Date,
-//   last_revised: Date,
-//   license: varchar('license'),
-//   modified_at: timestamp('modified_at').defaultNow(),
-//   full_text: boolean('full_text'),
-//   live: boolean('live'),
-//   release_date: Date,
-//   pubmed_ftp_link: text('pubmed_ftp_link'),
-//   filepath: text('filepath'),
-//   xml_filename: text('xml_filename'),
-// });
-
 // n8n_workflows table
 export const n8nWorkflows = pgTable('n8n_workflows', {
   latest_workflow_id: serial('latest_workflow_id').notNull(),
   is_locked: boolean('is_locked').notNull(),
 });
-
 
 // usage_metrics table
 export const usageMetrics = pgTable('usage_metrics', {
@@ -110,8 +85,6 @@ export const usageMetrics = pgTable('usage_metrics', {
   admin_name: text('admin_name'),
 });
 
-
-// llm-guided-contexts table
 // llm-guided-contexts table
 export const llmGuidedContexts = pgTable('llm-guided-contexts', {
   id: uuid('id').defaultRandom().notNull().primaryKey(),
@@ -133,24 +106,6 @@ export const llmGuidedSections = pgTable('llm-guided-sections', {
   doc_id: uuid('doc_id'),
 });
 
-// Define relationships for llm-guided-sections
-export const llmGuidedSectionsRelations = relations(llmGuidedSections, ({ many }) => ({
-  contexts: many(llmGuidedContexts, { relationName: 'section_contexts' }),
-}));
-
-// Define relationships for llm-guided-contexts
-export const llmGuidedContextsRelations = relations(llmGuidedContexts, ({ one }) => ({
-  section: one(llmGuidedSections, {
-    fields: [llmGuidedContexts.section_id],
-    references: [llmGuidedSections.id],
-    relationName: 'section_contexts',
-  }),
-}));
-
-
-////////////////////////////////////////////////////////////
-
-
 // Conversations table
 export const conversations = pgTable('conversations', {
   id: serial('id').primaryKey(),
@@ -160,11 +115,6 @@ export const conversations = pgTable('conversations', {
   created_at: timestamp('created_at').defaultNow(),
   updated_at: timestamp('updated_at').defaultNow(),
 });
-
-// Define relationships for conversations
-export const conversationsRelations = relations(conversations, ({ many }) => ({
-  messages: many(messages),
-}));
 
 // Documents table
 export const documents = pgTable('documents', {
@@ -194,14 +144,6 @@ export const messages = pgTable('messages', {
   total_tokens: integer('total_tokens'),
 });
 
-// Define relationships for messages
-export const messagesRelations = relations(messages, ({ one }) => ({
-  conversation: one(conversations, {
-    fields: [messages.conversation_id],
-    references: [conversations.id],
-  }),
-}));
-
 // Projects table
 export const projects = pgTable('projects', {
   id: serial('id').primaryKey(),
@@ -213,12 +155,6 @@ export const projects = pgTable('projects', {
   deleted: boolean('deleted').default(false),
   owner_id: text('owner_id'),
 });
-
-// Define relationships for projects
-export const projectsRelations = relations(projects, ({ many }) => ({
-  apiKeys: many(apiKeys),
-  conversations: many(conversations),
-}));
 
 // CourseNames table
 export const courseNames = pgTable('course_names', {
@@ -246,17 +182,211 @@ export const documentsDocGroups = pgTable('documents_doc_groups', {
   created_at: timestamp('created_at').defaultNow(),
 });
 
-// Define relationships for docGroups
-export const docGroupsRelations = relations(docGroups, ({ many }) => ({
-  documentsJunction: many(documentsDocGroups),
+// Doc Groups Sharing table (from schema.sql)
+export const docGroupsSharing = pgTable('doc_groups_sharing', {
+  id: serial('id').primaryKey(),
+  doc_group_id: integer('doc_group_id').notNull(),
+  shared_with_email: text('shared_with_email'),
+  permission_level: text('permission_level'),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
+// Cedar Documents (from schema.sql)
+export const cedarDocuments = pgTable('cedar_documents', {
+  id: serial('id').primaryKey(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  document_id: text('document_id'),
+  document_name: text('document_name'),
+  document_source: text('document_source'),
+  course_name: text('course_name'),
+  status: text('status'),
+  doc_groups: jsonb('doc_groups'),
+  metadata: jsonb('metadata'),
+});
+
+// Cedar Document Metadata (from schema.sql)
+export const cedarDocumentMetadata = pgTable('cedar_document_metadata', {
+  id: serial('id').primaryKey(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  document_id: text('document_id'),
+  metadata: jsonb('metadata'),
+});
+
+// Cedar Chunks (from schema.sql)
+export const cedarChunks = pgTable('cedar_chunks', {
+  id: serial('id').primaryKey(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  document_id: text('document_id'),
+  chunk_index: integer('chunk_index'),
+  chunk_text: text('chunk_text'),
+  embedding_id: text('embedding_id'),
+  metadata: jsonb('metadata'),
+});
+
+// Cedar Runs (from schema.sql)
+export const cedarRuns = pgTable('cedar_runs', {
+  id: serial('id').primaryKey(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  run_id: text('run_id'),
+  course_name: text('course_name'),
+  status: text('status'),
+  metadata: jsonb('metadata'),
+});
+
+// Email Newsletter (from schema.sql)
+export const emailNewsletter = pgTable('email-newsletter', {
+  id: serial('id').primaryKey(),
+  created_at: timestamp('created_at').defaultNow(),
+  email: text('email'),
+});
+
+// Folders (from schema.sql)
+export const folders = pgTable('folders', {
+  id: serial('id').primaryKey(),
+  name: text('name'),
+  user_email: text('user_email'),
+  created_at: timestamp('created_at').defaultNow(),
+});
+
+// Define enum for LLM Provider from schema.sql
+export const llmProviderEnum = pgTable('LLMProvider', {
+  value: text('value'),
+});
+
+// LLM-guided-docs table (from schema.sql)
+export const llmGuidedDocs = pgTable('llm-guided-docs', {
+  id: uuid('id').defaultRandom().notNull().primaryKey(),
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  doc_name: text('doc_name'),
+  num_tokens: bigint('num_tokens', { mode: 'number' }),
+  total_tokens: bigint('total_tokens', { mode: 'number' }),
+  course_name: text('course_name'),
+});
+
+// NAL Publications (from schema.sql)
+export const nalPublications = pgTable('nal_publications', {
+  id: serial('id').primaryKey(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  pmid: varchar('pmid'),
+  article_title: varchar('article_title'),
+  journal_title: varchar('journal_title'),
+  publication_date: date('publication_date'),
+  filepath: text('filepath'),
+});
+
+// Publications (from schema.sql)
+export const publications = pgTable('publications', {
+  id: serial('id').primaryKey(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  pmid: varchar('pmid').notNull(),
+  pmcid: varchar('pmcid'),
+  doi: varchar('doi'),
+  journal_title: varchar('journal_title'),
+  article_title: varchar('article_title'),
+  issn: varchar('issn'),
+  published: date('published'),
+  last_revised: date('last_revised'),
+  license: varchar('license'),
+  modified_at: timestamp('modified_at').defaultNow(),
+  full_text: boolean('full_text'),
+  live: boolean('live'),
+  release_date: date('release_date'),
+  pubmed_ftp_link: text('pubmed_ftp_link'),
+  filepath: text('filepath'),
+  xml_filename: text('xml_filename'),
+});
+
+// Pre-authorized API Keys (from schema.sql)
+export const preAuthorizedApiKeys = pgTable('pre_authorized_api_keys', {
+  id: serial('id').primaryKey(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  email: text('email'),
+  role: text('role'),
+  status: text('status'),
+  key: text('key'),
+  expiration_date: timestamp('expiration_date'),
+  max_daily_queries: integer('max_daily_queries'),
+  daily_queries_count: integer('daily_queries_count').default(0),
+  last_query_date: timestamp('last_query_date'),
+  course_name: text('course_name'),
+  keycloak_id: text('keycloak_id'),
+});
+
+// Project Stats (from schema.sql)
+export const projectStats = pgTable('project_stats', {
+  id: serial('id').primaryKey(),
+  project_id: integer('project_id').notNull(),
+  total_messages: integer('total_messages').default(0),
+  total_conversations: integer('total_conversations').default(0),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  updated_at: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// PubMed Daily Update (from schema.sql)
+export const pubmedDailyUpdate = pgTable('pubmed_daily_update', {
+  id: serial('id').primaryKey(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  pmid: varchar('pmid').notNull(),
+  pmcid: varchar('pmcid'),
+  doi: varchar('doi'),
+  journal_title: varchar('journal_title'),
+  article_title: varchar('article_title'),
+  issn: varchar('issn'),
+  published: date('published'),
+  last_revised: date('last_revised'),
+  license: varchar('license'),
+  modified_at: timestamp('modified_at').defaultNow(),
+  full_text: boolean('full_text'),
+  live: boolean('live'),
+  release_date: date('release_date'),
+  pubmed_ftp_link: text('pubmed_ftp_link'),
+  filepath: text('filepath'),
+  xml_filename: text('xml_filename'),
+});
+
+// Table relationships
+export const llmGuidedSectionsRelations = relations(llmGuidedSections, ({ many }) => ({
+  contexts: many(llmGuidedContexts, { relationName: 'section_contexts' }),
 }));
 
-// Define relationships for documents
+export const llmGuidedContextsRelations = relations(llmGuidedContexts, ({ one }) => ({
+  section: one(llmGuidedSections, {
+    fields: [llmGuidedContexts.section_id],
+    references: [llmGuidedSections.id],
+    relationName: 'section_contexts',
+  }),
+}));
+
+export const conversationsRelations = relations(conversations, ({ many }) => ({
+  messages: many(messages),
+}));
+
+export const messagesRelations = relations(messages, ({ one }) => ({
+  conversation: one(conversations, {
+    fields: [messages.conversation_id],
+    references: [conversations.id],
+  }),
+}));
+
+export const projectsRelations = relations(projects, ({ many, one }) => ({
+  apiKeys: many(apiKeys),
+  conversations: many(conversations),
+  stats: one(projectStats, {
+    fields: [projects.id],
+    references: [projectStats.project_id],
+  }),
+}));
+
+export const docGroupsRelations = relations(docGroups, ({ many }) => ({
+  documentsJunction: many(documentsDocGroups),
+  sharing: many(docGroupsSharing),
+}));
+
 export const documentsRelations = relations(documents, ({ many }) => ({
   docGroupsJunction: many(documentsDocGroups),
 }));
 
-// Define relationships for the junction table
 export const documentsDocGroupsRelations = relations(documentsDocGroups, ({ one }) => ({
   document: one(documents, {
     fields: [documentsDocGroups.document_id],

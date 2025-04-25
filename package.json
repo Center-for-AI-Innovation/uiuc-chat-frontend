@@ -12,11 +12,11 @@
     "format": "prettier --check --ignore-path .gitignore .",
     "format:fix": "prettier --write --ignore-path .gitignore .",
     "analyze": "cross-env ANALYZE=true next build",
-    "db:generate": "drizzle-kit generate",
-    "db:studio": "drizzle-kit studio",
-    "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push",
-    "db:pull": "drizzle-kit pull"
+    "db:generate": "npx drizzle-kit generate",
+    "db:studio": "npx drizzle-kit studio",
+    "db:migrate": "npx drizzle-kit migrate",
+    "db:push": "npx drizzle-kit push",
+    "db:pull": "npx drizzle-kit pull"
   },
   "dependencies": {
     "@ai-sdk/amazon-bedrock": "^1.0.7",
