@@ -43,7 +43,6 @@ export async function POST(req: Request) {
     }
 
     const messages = convertConversationToVercelAISDKv3(conversation)
-    console.log('Using converted conversation with image descriptions for Anthropic')
 
     if (chatBody.stream) {
       // Check if it's a Claude model that supports reasoning

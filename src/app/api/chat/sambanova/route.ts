@@ -54,7 +54,6 @@ export async function runSambaNovaChat(
     }
 
     const model = sambanova(conversation.model.id)
-    console.log('Using SambaNova model:', conversation.model.id)
 
     const messages = convertConversationToVercelAISDKv3(conversation)
     console.log('Converted messages:', JSON.stringify(messages, null, 2))

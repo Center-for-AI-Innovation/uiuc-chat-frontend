@@ -12,9 +12,6 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
     const { contentArray, llmProviders, model } = req.body as ImageBody
 
-    // Debug log the incoming content array
-    console.log('[imageDescription] Received content array:', JSON.stringify(contentArray, null, 2));
-
     // Validate and sanitize the content array
     const sanitizedContentArray = validateAndSanitizeContent(contentArray);
 
@@ -66,8 +63,6 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       llmProviders: llmProviders,
       mode: 'chat'
     };
-
-    console.log('[imageDescription] Conversation being sent to routeModelRequest:', JSON.stringify(conversation, null, 2));
 
     // Route to the appropriate model handler based on the selected model
     const response = await routeModelRequest(chatBody);
@@ -168,7 +163,6 @@ function validateAndSanitizeContent(contentArray: Content[]): Content[] {
     if (sanitizedContent.type === 'text') {
       // Ensure text is a string
       if (typeof sanitizedContent.text !== 'string') {
-        console.log('[imageDescription] Converting non-string text to string:', sanitizedContent.text);
         sanitizedContent.text = String(sanitizedContent.text || '');
       }
     } else if (sanitizedContent.type === 'image_url' || sanitizedContent.type === 'tool_image_url') {

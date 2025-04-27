@@ -93,7 +93,6 @@ const convertConversationToOpenAIMessages = (
         // Ensure text content has a string value
         if (cleanContent.type === 'text') {
           if (typeof cleanContent.text !== 'string') {
-            console.log('[OpenAIAzureChat] Converting non-string text to string:', cleanContent.text);
             cleanContent.text = String(cleanContent.text || '');
           }
           
