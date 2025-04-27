@@ -1,5 +1,5 @@
 import { type NextApiRequest, type NextApiResponse } from 'next'
-import { type ChatBody, type ImageBody, type OpenAIChatMessage, type Role } from '~/types/chat'
+import { type ChatBody, type ImageBody, type OpenAIChatMessage, type Role, type Content } from '~/types/chat'
 import { OpenAIError } from '@/utils/server'
 import { v4 as uuidv4 } from 'uuid'
 import { routeModelRequest } from '~/utils/streamProcessing'
@@ -11,6 +11,12 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
   try {
     const { contentArray, llmProviders, model } = req.body as ImageBody
+
+    // Debug log the incoming content array
+    console.log('[imageDescription] Received content array:', JSON.stringify(contentArray, null, 2));
+
+    // Validate and sanitize the content array
+    const sanitizedContentArray = validateAndSanitizeContent(contentArray);
 
     const systemPrompt = getImageDescriptionSystemPrompt()
 
@@ -24,7 +30,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           },
         ],
       },
-      { role: 'user', content: [...contentArray] },
+      { role: 'user', content: sanitizedContentArray },
     ]
 
     // Create a temporary conversation object for routeModelRequest
@@ -36,11 +42,13 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           id: uuidv4(),
           role: 'system' as Role,
           content: systemPrompt,
+          latestSystemMessage: systemPrompt,
         },
         {
           id: uuidv4(),
           role: 'user' as Role,
-          content: contentArray,
+          content: sanitizedContentArray,
+          latestSystemMessage: systemPrompt,
         }
       ],
       model: model,
@@ -58,6 +66,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       llmProviders: llmProviders,
       mode: 'chat'
     };
+
+    console.log('[imageDescription] Conversation being sent to routeModelRequest:', JSON.stringify(conversation, null, 2));
 
     // Route to the appropriate model handler based on the selected model
     const response = await routeModelRequest(chatBody);
@@ -137,9 +147,45 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       })
     } else {
       console.error('Unexpected Error', error)
-      return res.status(500).json({ name: 'Error' })
+      return res.status(500).json({ name: 'Error', message: error instanceof Error ? error.message : String(error) })
     }
   }
+}
+
+/**
+ * Validates and sanitizes the content array to ensure it's properly formatted for OpenAI API
+ */
+function validateAndSanitizeContent(contentArray: Content[]): Content[] {
+  if (!Array.isArray(contentArray)) {
+    console.error('[imageDescription] Content array is not an array:', contentArray);
+    throw new Error('Content array must be an array');
+  }
+
+  return contentArray.map(content => {
+    // Create a new object to avoid mutating the original
+    const sanitizedContent = { ...content };
+    
+    if (sanitizedContent.type === 'text') {
+      // Ensure text is a string
+      if (typeof sanitizedContent.text !== 'string') {
+        console.log('[imageDescription] Converting non-string text to string:', sanitizedContent.text);
+        sanitizedContent.text = String(sanitizedContent.text || '');
+      }
+    } else if (sanitizedContent.type === 'image_url' || sanitizedContent.type === 'tool_image_url') {
+      // Ensure image_url is properly formatted
+      if (typeof sanitizedContent.image_url !== 'object') {
+        console.error('[imageDescription] Invalid image_url format:', sanitizedContent.image_url);
+        throw new Error('Invalid image_url format');
+      }
+      
+      if (typeof sanitizedContent.image_url.url !== 'string') {
+        console.error('[imageDescription] Invalid image_url.url format:', sanitizedContent.image_url.url);
+        throw new Error('image_url.url must be a string');
+      }
+    }
+    
+    return sanitizedContent;
+  });
 }
 
 export default handler
