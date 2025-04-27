@@ -27,16 +27,6 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       { role: 'user', content: [...contentArray] },
     ]
 
-    // Log the exact message payload for image processing
-    console.log('================ IMAGE DESCRIPTION REQUEST ================');
-    console.log(JSON.stringify({
-      model: model.id,
-      messages: messages,
-      temperature: 0.1,
-      stream: false
-    }, null, 2));
-    console.log('===========================================================');
-
     // Create a temporary conversation object for routeModelRequest
     const conversation = {
       id: uuidv4(),
@@ -76,13 +66,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     let formattedResponse;
     let extractedContent = '';
     
-    try {
-      console.log('Raw image description response type:', typeof response);
-      
+    try {      
       // Check if response is a Response object
       if (response instanceof Response) {
         const responseData = await response.json();
-        console.log('Response data from image description:', JSON.stringify(responseData, null, 2));
         
         // Try to extract content from various possible response structures
         if (responseData.choices && responseData.choices[0] && responseData.choices[0].message) {
@@ -95,9 +82,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           extractedContent = JSON.stringify(responseData);
         }
       } else {
-        // Handle case where it's already a JSON object
-        console.log('JSON response from image description:', JSON.stringify(response, null, 2));
-        
+        // Handle case where it's already a JSON object        
         if (response.choices && response.choices[0] && response.choices[0].message) {
           extractedContent = response.choices[0].message.content;
         } else if (response.message) {
@@ -113,9 +98,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       if (typeof extractedContent !== 'string') {
         extractedContent = JSON.stringify(extractedContent);
       }
-      
-      console.log('Extracted content for image description:', extractedContent);
-      
+            
       // Format for compatibility with fetchImageDescription
       formattedResponse = {
         choices: [
@@ -127,7 +110,6 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         ]
       };
       
-      console.log('Image description response formatted successfully:', JSON.stringify(formattedResponse, null, 2));
     } catch (error) {
       console.error('Failed to format image description response:', error);
       // Provide a fallback format with descriptive error

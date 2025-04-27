@@ -178,10 +178,6 @@ export function convertConversationToVercelAISDKv3(
     (msg) => msg.latestSystemMessage !== undefined,
   )
   if (systemMessage) {
-    console.log(
-      'Found system message, latestSystemMessage: ',
-      systemMessage.latestSystemMessage,
-    )
     coreMessages.push({
       role: 'system',
       content: systemMessage.latestSystemMessage || '',
@@ -338,37 +334,6 @@ export function convertConversationToVercelAISDKv3(
     })
   })
 
-  // Log the transformed messages
-  console.log('============= MESSAGES AFTER TRANSFORMATION =============')
-  console.log(JSON.stringify(coreMessages.map(msg => ({
-    role: msg.role,
-    contentType: Array.isArray(msg.content) ? 'array' : typeof msg.content,
-    hasImages: Array.isArray(msg.content) 
-      ? msg.content.some(c => c.type === 'image')
-      : false,
-    imageDescriptions: Array.isArray(msg.content)
-      ? msg.content.filter(c => typeof c === 'object' && 'text' in c && 
-                              typeof c.text === 'string' && 
-                              c.text.startsWith('Image description:')).length
-      : 0
-  })), null, 2))
-  
-  // Additional logging for any message containing images + descriptions
-  const imageMessages = coreMessages.filter(msg => 
-    Array.isArray(msg.content) && (
-      msg.content.some(c => c.type === 'image') ||
-      msg.content.some(c => typeof c === 'object' && 'text' in c && 
-                        typeof c.text === 'string' && 
-                        c.text.startsWith('Image description:'))
-    )
-  );
-  
-  if (imageMessages.length > 0) {
-    console.log('============= MESSAGES WITH IMAGES & DESCRIPTIONS (DETAILED) =============');
-    console.log(JSON.stringify(imageMessages, null, 2));
-    console.log('=========================================================================');
-  }
-
   return coreMessages
 }
 
@@ -487,11 +452,6 @@ export function convertConversationToCoreMessagesWithoutSystem(
     .map((message, index) => {
       const isLastUserMessage =
         index === conversation.messages.length - 1 && message.role === 'user'
-      console.log(
-        'Processing message:',
-        message.role,
-        isLastUserMessage ? '(last user message)' : '',
-      )
 
       return {
         role: message.role as 'user' | 'assistant',

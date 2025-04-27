@@ -85,12 +85,7 @@ export async function runAnthropicChat(
 async function handleStreamingResponse(
   commonParams: any,
   isThinkingEnabled: boolean,
-): Promise<Response> {
-  // Add comment to explain image description preservation
-  // NOTE: Image descriptions are generated separately and appended to message.content
-  // We need to ensure these descriptions appear in the final output stream
-  console.log('Using Anthropic streaming with image support');
-  
+): Promise<Response> {  
   const result = await streamText({
     ...commonParams,
     experimental_transform: [

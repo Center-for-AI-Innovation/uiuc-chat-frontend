@@ -431,7 +431,6 @@ export const Chat = memo(
             if (imageContent.length > 0) {
               homeDispatch({ field: 'isImg2TextLoading', value: true })
               try {
-                // Always generate image descriptions regardless of model
                 const { searchQuery: newSearchQuery, imgDesc: newImgDesc } =
                   await handleImageContent(
                     message,
@@ -446,9 +445,6 @@ export const Chat = memo(
                 imageUrls = imageContent.map(
                   (content) => content.image_url?.url as string,
                 )
-                
-                // Mark images as processed to ensure that all models show the image description
-                console.log('Generated image description for all models:', imgDesc)
               } catch (error) {
                 console.error(
                   'Error in chat.tsx running handleImageContent():',

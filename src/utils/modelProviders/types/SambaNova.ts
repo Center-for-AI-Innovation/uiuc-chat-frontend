@@ -15,7 +15,7 @@ export enum SambaNovaModelID {
   Meta_Llama_3_1_405B_Instruct = 'Meta-Llama-3.1-405B-Instruct',
   Meta_Llama_3_1_8B_Instruct = 'Meta-Llama-3.1-8B-Instruct',
   Meta_Llama_Guard_3_8B = 'Meta-Llama-Guard-3-8B',
-  QwQ_32B = 'QwQ-32B', // Note: Renamed from QwQ-32B-Preview as it's now production
+  QwQ_32B = 'QwQ-32B',
   Llama_3_3_Swallow_70B_Instruct_v0_4 = 'Llama-3.3-Swallow-70B-Instruct-v0.4',
   E5_Mistral_7B_Instruct = 'E5-Mistral-7B-Instruct',
 }
@@ -56,19 +56,19 @@ export const SambaNovaModels: Record<SambaNovaModelID, SambaNovaModel> = {
     id: SambaNovaModelID.DeepSeek_V3_0324,
     name: 'DeepSeek V3 0324 Preview',
     tokenLimit: 8_000,
-    enabled: true, // Enabling Preview model
+    enabled: true,
   },
   [SambaNovaModelID.Llama_4_Scout_17B_16E_Instruct]: {
     id: SambaNovaModelID.Llama_4_Scout_17B_16E_Instruct,
     name: 'Llama 4 Scout 17B Preview',
     tokenLimit: 8_000,
-    enabled: true, // Enabling Preview model
+    enabled: true,
   },
   [SambaNovaModelID.Llama_4_Maverick_17B_128E_Instruct]: {
     id: SambaNovaModelID.Llama_4_Maverick_17B_128E_Instruct,
     name: 'Llama 4 Maverick 17B Preview',
     tokenLimit: 8_000,
-    enabled: true, // Enabling Preview model
+    enabled: true
   },
 
   // Production Models
@@ -94,13 +94,13 @@ export const SambaNovaModels: Record<SambaNovaModelID, SambaNovaModel> = {
     id: SambaNovaModelID.Meta_Llama_3_2_3B_Instruct,
     name: 'Meta Llama 3.2 3B Instruct',
     tokenLimit: 8_000,
-    enabled: false, // Disabling smaller production models
+    enabled: false, // Disabling smaller production models by default
   },
   [SambaNovaModelID.Meta_Llama_3_2_1B_Instruct]: {
     id: SambaNovaModelID.Meta_Llama_3_2_1B_Instruct,
     name: 'Meta Llama 3.2 1B Instruct',
     tokenLimit: 16_000,
-    enabled: false, // Disabling smaller production models
+    enabled: false, // Disabling smaller production models by default
   },
   [SambaNovaModelID.Meta_Llama_3_1_405B_Instruct]: {
     id: SambaNovaModelID.Meta_Llama_3_1_405B_Instruct,
@@ -112,7 +112,7 @@ export const SambaNovaModels: Record<SambaNovaModelID, SambaNovaModel> = {
     id: SambaNovaModelID.Meta_Llama_3_1_8B_Instruct,
     name: 'Meta Llama 3.1 8B Instruct',
     tokenLimit: 16_000,
-    enabled: true, // Re-enabled as it's listed under production
+    enabled: true,
   },
   [SambaNovaModelID.Meta_Llama_Guard_3_8B]: {
     id: SambaNovaModelID.Meta_Llama_Guard_3_8B,
@@ -122,7 +122,7 @@ export const SambaNovaModels: Record<SambaNovaModelID, SambaNovaModel> = {
   },
   [SambaNovaModelID.QwQ_32B]: {
     id: SambaNovaModelID.QwQ_32B,
-    name: 'QwQ 32B', // Renamed from Preview
+    name: 'QwQ 32B',
     tokenLimit: 16_000,
     enabled: true,
   },

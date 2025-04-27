@@ -120,8 +120,6 @@ export async function POST(req: Request) {
       ? convertConversationToVercelAISDKv3(conversation)
       : messages;
     
-    console.log('Using messages with image descriptions for OpenAI');
-
     const commonParams = {
       model: openAIModel,
       messages: processedMessages,

@@ -682,18 +682,6 @@ export async function handleImageContent(
   //   courseMetadata?.openai_api_key && courseMetadata?.openai_api_key != ''
   //     ? courseMetadata.openai_api_key
   //     : apiKey
-  
-  // ADDED LOGGING: Log the image content before processing
-  console.log('HANDLE_IMAGE_CONTENT - Before processing:', {
-    messageId: message.id,
-    originalImageContent: Array.isArray(message.content) 
-      ? message.content.filter(content => content.type === 'image_url')
-      : 'No image content',
-    numberOfImages: Array.isArray(message.content) 
-      ? message.content.filter(content => content.type === 'image_url').length 
-      : 0
-  });
-
   let imgDesc = ''
   try {
     imgDesc = await fetchImageDescription(
@@ -714,7 +702,6 @@ export async function handleImageContent(
           text: message.content as string
         }
       ];
-      console.log('Converted string content to array for image description:', message.content);
     }
 
     const imgDescIndex = (message.content as Content[]).findIndex(
@@ -736,24 +723,6 @@ export async function handleImageContent(
         imageDescription: true
       })
     }
-    
-    // ADDED LOGGING: Log the message content after image processing
-    console.log('HANDLE_IMAGE_CONTENT - After processing:', {
-      messageId: message.id,
-      imageDescription: imgDesc,
-      updatedContent: Array.isArray(message.content) 
-        ? message.content.map(c => ({ 
-            type: c.type, 
-            hasImageUrl: c.type === 'image_url' ? !!c.image_url : false,
-            isImageDesc: c.type === 'text' && (c as any).imageDescription === true
-          }))
-        : 'Content not an array',
-      // Still includes original image URLs
-      imageUrlsPreserved: Array.isArray(message.content) 
-        ? message.content.filter(content => content.type === 'image_url').length > 0 
-        : false
-    });
-    
   } catch (error) {
     console.error('Error in chat.tsx running handleImageContent():', error)
     controller.abort()
