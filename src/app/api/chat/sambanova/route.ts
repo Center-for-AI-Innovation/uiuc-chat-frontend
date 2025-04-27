@@ -1,5 +1,5 @@
 import { type CoreMessage, generateText, streamText } from 'ai'
-import { createOpenAI } from '@ai-sdk/openai'
+import { createSambaNova } from 'sambanova-ai-provider'
 import { NextResponse } from 'next/server'
 import { type Conversation } from '~/types/chat'
 import { decrypt } from '~/utils/crypto'
@@ -33,13 +33,11 @@ export async function runSambaNovaChat(
   }
 
   try {
-    const openai = createOpenAI({
-      baseURL: 'https://api.sambanova.ai/v1',
+    const sambanova = createSambaNova({
       apiKey: await decrypt(
         sambaNovaProvider.apiKey,
         process.env.NEXT_PUBLIC_SIGNING_KEY as string,
       ),
-      compatibility: 'compatible',
     })
 
     if (conversation.messages.length === 0) {
@@ -55,7 +53,7 @@ export async function runSambaNovaChat(
       throw new Error(`Invalid SambaNova model ID: ${conversation.model.id}`)
     }
 
-    const model = openai(conversation.model.id)
+    const model = sambanova(conversation.model.id)
     console.log('Using SambaNova model:', conversation.model.id)
 
     const messages = convertConversationToVercelAISDKv3(conversation)
