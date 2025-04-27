@@ -5,11 +5,19 @@ import { decrypt } from '~/utils/crypto'
 import { createOpenAI } from '@ai-sdk/openai'
 import { ChatBody, Conversation } from '~/types/chat'
 import { convertConversationToVercelAISDKv3 } from '~/utils/apiUtils'
+import { preferredModelIds } from '~/utils/modelProviders/LLMProvider'
+import { OpenAIModelID } from '~/utils/modelProviders/types/openai'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 export const revalidate = 0
+
+const firstPreferredOpenAIModel = preferredModelIds.find(id =>
+  Object.values(OpenAIModelID).includes(id as OpenAIModelID)
+) as OpenAIModelID | undefined;
+
+const defaultOpenAIModel = firstPreferredOpenAIModel || OpenAIModelID.GPT_4_1;
 
 export async function POST(req: Request) {
   try {
@@ -29,7 +37,7 @@ export async function POST(req: Request) {
     let apiKey = authHeader.substring(7)
     const { 
       messages, 
-      model = 'gpt-4', 
+      model = defaultOpenAIModel, 
       stream = true,
       conversation 
     }: { 
