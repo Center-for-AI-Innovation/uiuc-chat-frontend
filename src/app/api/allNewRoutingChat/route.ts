@@ -25,22 +25,6 @@ export async function POST(req: NextRequest, res: NextResponse) {
     })
 
     body.conversation = newConversation
-    
-    // ADDED LOGGING: Log the message format before sending to LLM
-    console.log('ALLNEWROUTINGCHAT - Full conversation being sent to LLM:', {
-      model: newConversation.model?.id,
-      lastUserMessage: newConversation.messages[newConversation.messages.length - 1],
-      containsImages: newConversation.messages.some(msg => 
-        Array.isArray(msg.content) && 
-        msg.content.some(content => content.type === 'image_url')
-      ),
-      imageContentSample: newConversation.messages
-        .filter(msg => Array.isArray(msg.content))
-        .flatMap(msg => Array.isArray(msg.content) ? 
-          msg.content.filter(content => content.type === 'image_url') : 
-          []
-        ).slice(0, 2) // Sample of first two images if any
-    });
 
     const result = await routeModelRequest(body as ChatBody)
 

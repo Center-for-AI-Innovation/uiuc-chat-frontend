@@ -42,7 +42,6 @@ export async function POST(req: Request) {
       throw new Error('Conversation messages array is empty')
     }
 
-    // Convert messages to correct format with image descriptions
     const messages = convertConversationToVercelAISDKv3(conversation)
     console.log('Using converted conversation with image descriptions for Anthropic')
 
