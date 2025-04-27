@@ -120,9 +120,9 @@ export const VisionCapableModels: Set<
   BedrockModelID.Llama3_2_11B_Instruct,
   BedrockModelID.Llama3_2_90B_Instruct,
 
-  // SambaNova
-  SambaNovaModelID.Llama_3_2_11B_Vision_Instruct,
-  SambaNovaModelID.Llama_3_2_90B_Vision_Instruct,
+  // SambaNova - Added Llama-4 vision models
+  SambaNovaModelID.Llama_4_Scout_17B_16E_Instruct,
+  SambaNovaModelID.Llama_4_Maverick_17B_128E_Instruct,
 ])
 
 /**
