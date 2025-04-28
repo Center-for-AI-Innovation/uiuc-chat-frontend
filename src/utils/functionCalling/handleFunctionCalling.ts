@@ -259,15 +259,18 @@ const callN8nFunction = async (
   })
 
   const timeStart = Date.now()
-  const response: Response = await fetch(`http://localhost:8000/run_flow`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'no-cache',
+  const response: Response = await fetch(
+    `https://flask-production-751b.up.railway.app/run_flow`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
+      },
+      body: body,
+      signal: controller.signal,
     },
-    body: body,
-    signal: controller.signal,
-  }).catch((error) => {
+  ).catch((error) => {
     if (error.name === 'AbortError') {
       throw new Error(
         'Request timed out after 30 seconds, try "Regenerate Response" button',
