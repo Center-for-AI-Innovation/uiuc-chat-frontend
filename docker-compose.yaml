@@ -21,7 +21,7 @@ services:
       - no-new-privileges:true
     ports:
       - "80:80"
-      - "5435:5432"
+      - "5435:5434"
     volumes:
       - "traefik:/config"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
@@ -38,14 +38,14 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
     ports:
-      - "5432:5432"
+      - "5434:5434"
     volumes:
       - "postgres_data:/var/lib/postgresql/data"
     labels:
       - "traefik.enable=true"
       - "traefik.tcp.routers.postgres.rule=HostSNI(`*`)"
       - "traefik.tcp.routers.postgres.entrypoints=postgres"
-      - "traefik.tcp.services.postgres.loadbalancer.server.port=5432"
+      - "traefik.tcp.services.postgres.loadbalancer.server.port=5434"
 
 volumes:
   traefik:
