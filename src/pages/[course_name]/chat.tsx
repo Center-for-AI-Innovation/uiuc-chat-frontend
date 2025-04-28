@@ -106,50 +106,79 @@ const ChatPage: NextPage = () => {
   // UseEffect to check user permissions and fetch user email
   useEffect(() => {
     const checkAuthorization = async () => {
+      console.log('Starting authorization check', {
+        isAuthLoading: auth.isLoading,
+        isRouterReady: router.isReady,
+        authUser: auth.user?.profile.email || 'No user email',
+      })
+
       if (!auth.isLoading && router.isReady) {
         const courseName = router.query.course_name as string
+        console.log(`Checking authorization for course: ${courseName}`)
+
         try {
           // Fetch course metadata
+          console.log('Fetching course metadata...')
           const metadata = await fetchCourseMetadata(courseName)
-          console.log(metadata)
+          console.log('Course metadata received:', metadata)
+
           if (!metadata) {
+            console.log('No metadata found, redirecting to new course page')
             router.replace(`/new?course_name=${courseName}`)
             return
           }
 
           // Check if course is public
+          console.log(
+            `Course privacy status: ${metadata.is_private ? 'private' : 'public'}`,
+          )
           if (!metadata.is_private) {
+            console.log('Course is public, setting authorized to true')
             setIsAuthorized(true)
+
             // Set email for public access
             if (auth.user?.profile.email) {
-              setCurrentEmail(auth.user?.profile.email)
+              console.log(
+                `Setting email for logged-in user: ${auth.user.profile.email}`,
+              )
+              setCurrentEmail(auth.user.profile.email)
             } else {
               // Use PostHog ID when user is not logged in for public courses
+              console.log('No user email, attempting to use PostHog ID')
               const key = process.env.NEXT_PUBLIC_POSTHOG_KEY as string
-              const postHogUserObj = localStorage.getItem('ph_' + key + '_posthog')
+              const postHogUserObj = localStorage.getItem(
+                'ph_' + key + '_posthog',
+              )
+
               if (postHogUserObj) {
                 const postHogUser = JSON.parse(postHogUserObj)
-                setCurrentEmail(postHogUser.distinct_id)
                 console.log(
-                  'setting user email as posthog user: ',
-                  postHogUser.distinct_id,
+                  `Using PostHog ID as email: ${postHogUser.distinct_id}`,
                 )
+                setCurrentEmail(postHogUser.distinct_id)
               } else {
                 // When user is not logged in and posthog user is not found
-                setCurrentEmail('')
                 console.log('No PostHog ID found, setting empty email')
+                setCurrentEmail('')
               }
             }
             return
           } else {
             // For private courses, user must be authenticated
+            console.log('Course is private, checking authentication')
             if (!auth.isAuthenticated) {
+              console.log(
+                'User not authenticated, redirecting to not authorized page',
+              )
               router.replace(`/${courseName}/not_authorized`)
               return
             }
-            
+
             // Set email for authenticated users
             if (auth.user?.profile.email) {
+              console.log(
+                `Setting email for authenticated user: ${auth.user.profile.email}`,
+              )
               setCurrentEmail(auth.user.profile.email)
             } else {
               console.error('Authenticated user has no email')
@@ -158,18 +187,26 @@ const ChatPage: NextPage = () => {
             }
           }
 
+          console.log('Checking user permission for private course')
           const permission = get_user_permission(metadata, auth)
+          console.log(`User permission result: ${permission}`)
 
           if (permission === 'no_permission') {
+            console.log(
+              'User has no permission, redirecting to not authorized page',
+            )
             router.replace(`/${courseName}/not_authorized`)
             return
           }
 
+          console.log('User is authorized to access this course')
           setIsAuthorized(true)
         } catch (error) {
           console.error('Authorization check failed:', error)
           setIsAuthorized(false)
         }
+      } else {
+        console.log('Waiting for auth loading or router to be ready')
       }
     }
 
@@ -179,6 +216,8 @@ const ChatPage: NextPage = () => {
   return (
     <>
       {!isLoading &&
+        !auth.isLoading &&
+        router.isReady &&
         (currentEmail || !courseMetadata?.is_private) &&
         courseMetadata && (
           <Home
