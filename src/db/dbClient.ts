@@ -4,7 +4,7 @@ import * as schema from './schema';
 
 // Create postgres client
 const connectionString = process.env.NODE_ENV === 'development' 
-  ? 'postgres://postgres:postgres@localhost:5432/postgres'
+  ? process.env.DEV_DATABASE_URL as string
   : process.env.DATABASE_URL as string;
 
 const client = postgres(connectionString, { 
