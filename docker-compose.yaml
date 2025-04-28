@@ -1,3 +1,4 @@
+# docker stack for postgres, traefik
 services:
   traefik:
     image: "traefik:v3.2"
@@ -9,6 +10,7 @@ services:
       - --api.insecure=true
       # Entrypoints
       - --entrypoints.http.address=:80
+      - --entrypoints.postgres.address=:5435
       # Docker setup
       - --providers.docker=true
       - --providers.docker.endpoint=unix:///var/run/docker.sock
@@ -19,7 +21,7 @@ services:
       - no-new-privileges:true
     ports:
       - "80:80"
-#      - "443:443"
+      - "5435:5432"
     volumes:
       - "traefik:/config"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
@@ -36,14 +38,14 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
     ports:
-      - "5432:5432"
+      - "5435:5432"
     volumes:
       - "postgres_data:/var/lib/postgresql/data"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.postgres.rule=Host(`postgres.localhost`)"
-      - "traefik.http.routers.postgres.service=postgres@internal"
-      - "traefik.http.services.postgres.loadbalancer.server.port=5432"
+      - "traefik.tcp.routers.postgres.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.postgres.entrypoints=postgres"
+      - "traefik.tcp.services.postgres.loadbalancer.server.port=5432"
 
 volumes:
   traefik:
