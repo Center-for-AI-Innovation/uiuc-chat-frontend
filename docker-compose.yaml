@@ -1,4 +1,16 @@
 # docker stack for postgres, traefik
+# docker compose up -d
+
+# Once services are running, copy the prod_clean.sql file to the postgres container
+# docker cp prod_clean.sql postgres_container:/tmp/schema.sql
+
+# Create the tables in the postgres container
+# docker exec -e PGPASSWORD=postgres uiuc-chat-frontend-postgres-1 psql -h postgres -p 5432 -U postgres -d postgres -f /tmp/schema_clean.sql
+
+# Check the tables in the postgres container
+# docker exec -e PGPASSWORD=postgres uiuc-chat-frontend-postgres-1 psql -h postgres -p 5432 -U postgres -d postgres -c "\dt"
+
+
 services:
   traefik:
     image: "traefik:v3.2"
@@ -41,7 +53,7 @@ services:
       - "5434:5432"
     volumes:
       - "postgres_data:/var/lib/postgresql/data"
-      - "./prod_clean.sql:/tmp/schema.sql"
+      - "./prod_clean.sql:/tmp/schema.sql" # pgdump from prod db
     labels:
       - "traefik.enable=true"
       - "traefik.tcp.routers.postgres.rule=HostSNI(`*`)"
