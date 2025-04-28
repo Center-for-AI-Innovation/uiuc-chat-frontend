@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # requires postgresql@15
 
 # MacOS
@@ -8,5 +10,9 @@
 # source ~/.bash_profile
 # brew services start postgresql@15
 
-PGPASSWORD=${process.env.SUPABASE_PASSWORD} pg_dump -h aws-0-us-east-1.pooler.supabase.com -U postgres.${process.env.SUPABASE_URL} -d postgres --schema-only > schema.sql
+# source .env file
+source .env
+
+# Use the environment variables directly
+PGPASSWORD=$SUPABASE_PASSWORD pg_dump -h aws-0-us-east-1.pooler.supabase.com -U postgres.$SUPABASE_URL -d postgres --schema-only > schema.sql
 
