@@ -31,16 +31,17 @@ services:
       - "traefik.http.routers.api.service=api@internal"
 
   postgres:
-    image: postgres
+    image: postgres:16
     restart: "unless-stopped"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
     ports:
-      - "5434:5434"
+      - "5434:5432"
     volumes:
       - "postgres_data:/var/lib/postgresql/data"
+      - "./prod_clean.sql:/tmp/schema.sql"
     labels:
       - "traefik.enable=true"
       - "traefik.tcp.routers.postgres.rule=HostSNI(`*`)"
