@@ -1,6 +1,8 @@
 // Generated schema.ts based on PostgreSQL database
 import { pgTable, serial, text, timestamp, uuid, varchar, integer, boolean, jsonb, bigint, date, foreignKey, primaryKey, uniqueIndex, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+import { db } from './dbClient';
+import { sql } from 'drizzle-orm';
 
 // API keys table
 export const apiKeys = pgTable('api_keys', {
@@ -397,3 +399,78 @@ export const documentsDocGroupsRelations = relations(documentsDocGroups, ({ one 
     references: [docGroups.id],
   }),
 })); 
+
+// Export types
+export type ApiKeys = typeof apiKeys.$inferSelect;
+export type NewApiKeys = typeof apiKeys.$inferInsert;
+
+export type LlmConvoMonitor = typeof llmConvoMonitor.$inferSelect;
+export type NewLlmConvoMonitor = typeof llmConvoMonitor.$inferInsert;
+
+export type LlmGuidedContexts = typeof llmGuidedContexts.$inferSelect;
+export type NewLlmGuidedContexts = typeof llmGuidedContexts.$inferInsert;
+
+export type LlmGuidedSections = typeof llmGuidedSections.$inferSelect;
+export type NewLlmGuidedSections = typeof llmGuidedSections.$inferInsert;
+
+export type Conversations = typeof conversations.$inferSelect;
+export type NewConversations = typeof conversations.$inferInsert;
+
+export type Messages = typeof messages.$inferSelect;
+export type NewMessages = typeof messages.$inferInsert;
+
+export type Projects = typeof projects.$inferSelect;
+export type NewProjects = typeof projects.$inferInsert;
+
+export type CourseNames = typeof courseNames.$inferSelect;
+export type NewCourseNames = typeof courseNames.$inferInsert;
+
+export type DocGroups = typeof docGroups.$inferSelect;
+export type NewDocGroups = typeof docGroups.$inferInsert;
+
+export type Documents = typeof documents.$inferSelect;
+export type NewDocuments = typeof documents.$inferInsert;
+
+export type DocumentsDocGroups = typeof documentsDocGroups.$inferSelect;
+export type NewDocumentsDocGroups = typeof documentsDocGroups.$inferInsert;
+
+export type DocGroupsSharing = typeof docGroupsSharing.$inferSelect;
+export type NewDocGroupsSharing = typeof docGroupsSharing.$inferInsert;
+
+export type CedarDocuments = typeof cedarDocuments.$inferSelect;
+export type NewCedarDocuments = typeof cedarDocuments.$inferInsert;
+
+export type CedarDocumentMetadata = typeof cedarDocumentMetadata.$inferSelect;
+export type NewCedarDocumentMetadata = typeof cedarDocumentMetadata.$inferInsert;
+
+export type CedarChunks = typeof cedarChunks.$inferSelect;
+export type NewCedarChunks = typeof cedarChunks.$inferInsert;
+
+export type CedarRuns = typeof cedarRuns.$inferSelect;
+export type NewCedarRuns = typeof cedarRuns.$inferInsert;
+
+export type EmailNewsletter = typeof emailNewsletter.$inferSelect;
+export type NewEmailNewsletter = typeof emailNewsletter.$inferInsert;
+
+export type Folders = typeof folders.$inferSelect;
+export type NewFolders = typeof folders.$inferInsert;
+
+export type LlmProviderEnum = typeof llmProviderEnum.$inferSelect;
+
+export type LlmGuidedDocs = typeof llmGuidedDocs.$inferSelect;
+export type NewLlmGuidedDocs = typeof llmGuidedDocs.$inferInsert;
+
+export type NalPublications = typeof nalPublications.$inferSelect;
+export type NewNalPublications = typeof nalPublications.$inferInsert;
+
+export type Publications = typeof publications.$inferSelect;
+export type NewPublications = typeof publications.$inferInsert;
+
+export type PreAuthorizedApiKeys = typeof preAuthorizedApiKeys.$inferSelect;
+export type NewPreAuthorizedApiKeys = typeof preAuthorizedApiKeys.$inferInsert;
+
+export type ProjectStats = typeof projectStats.$inferSelect;
+export type NewProjectStats = typeof projectStats.$inferInsert;
+
+export type PubmedDailyUpdate = typeof pubmedDailyUpdate.$inferSelect;
+export type NewPubmedDailyUpdate = typeof pubmedDailyUpdate.$inferInsert;

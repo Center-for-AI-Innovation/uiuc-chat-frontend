@@ -1,8 +1,94 @@
-import { apiKeys, conversations, documents, messages, projects, courseNames, docGroups, documentsDocGroups } from './schema';
-import { eq, and, like, desc, sql } from 'drizzle-orm';
+import { eq, and, like, desc, sql, asc } from 'drizzle-orm';
 import { db } from './dbClient';
+import { apiKeys, conversations, documents, messages, projects, courseNames, docGroups, documentsDocGroups } from './schema';
+import { CourseDocument } from '~/types/courseMaterials';
 
-// Query examples
+
+// Db queries
+
+export async function getEnabledDocGroups(courseName: string) {
+  try {
+    return await db.query.docGroups.findMany({
+      where: eq(docGroups.course_name, courseName),
+      with: {
+        documentsJunction: true,
+      },
+    });
+  } catch (error) {
+    console.error('Error in getEnabledDocGroups:', error);
+    throw new Error(`Failed to fetch enabled document groups: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+
+export async function fetchDocumentGroups(courseName: string) {
+  try {
+    const documentGroups = await db.query.docGroups.findMany({
+      orderBy: [asc(docGroups.name)],
+      where: eq(docGroups.course_name, courseName),
+      columns: {
+        id: true,
+        name: true,
+        enabled: true,
+        doc_count: true
+      }
+    });
+    return documentGroups;
+  } catch (error) {
+    console.error('Error in fetchDocumentGroups:', error)
+    throw error
+  }
+}
+
+
+export async function addDocumentsToDocGroup(
+  courseName: string,
+  doc: CourseDocument,
+) {
+  try {
+    // Call the Postgres function directly using db.execute and sql
+    const result = await db.execute(sql`
+      select add_document_to_group(
+        ${courseName},
+        ${doc.s3_path},
+        ${doc.url},
+        ${doc.readable_filename},
+        ${doc.doc_groups}
+      ) as success;
+    `);
+    // Ensure result is an array and not undefined
+    const rows = Array.isArray(result) ? result : [];
+    const success = rows.length > 0 && rows[0] && typeof rows[0].success !== 'undefined' ? rows[0].success : false;
+    if (!success) {
+      throw new Error('Failed to add documents to doc group');
+    }
+    return success;
+  } catch (error) {
+    console.error('Error in addDocumentsToDocGroup:', error);
+    throw error;
+  }
+}
+
+export async function removeDocGroup(
+  courseName: string,
+  doc: CourseDocument,
+  docGroup: string,
+) {
+  try {
+    await db.execute(sql`
+      select remove_document_from_group(
+        ${courseName},
+        ${doc.s3_path},
+        ${doc.url},
+        ${docGroup}
+      );
+    `);
+  } catch (error) {
+    console.error('Error in removeDocGroup:', error);
+    throw error;
+  }
+}
+
 
 // Get all conversations for a user
 export async function getUserConversations(userEmail: string) {
