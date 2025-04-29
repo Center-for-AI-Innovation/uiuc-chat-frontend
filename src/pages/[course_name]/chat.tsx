@@ -137,9 +137,6 @@ const ChatPage: NextPage = () => {
 
               if (postHogUserObj) {
                 const postHogUser = JSON.parse(postHogUserObj)
-                console.log(
-                  `Using PostHog ID as email: ${postHogUser.distinct_id}`,
-                )
                 setCurrentEmail(postHogUser.distinct_id)
               } else {
                 // When user is not logged in and posthog user is not found
