@@ -54,6 +54,7 @@ module.exports = {
       desiredCapabilities: {
         browserName: 'chrome',
         'goog:chromeOptions': {
+          binary: process.env.CHROME_BIN || undefined,
           args: [
             '--headless=new',
             '--no-sandbox',
