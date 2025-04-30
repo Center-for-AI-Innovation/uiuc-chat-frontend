@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - fix-e2e-test
   schedule:
     - cron: '7,37 * * * *' # Runs at 7 and 37 minutes past every hour
   workflow_dispatch:
