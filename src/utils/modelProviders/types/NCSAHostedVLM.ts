@@ -52,6 +52,11 @@ export const getNCSAHostedVLMModels = async (
   delete vlmProvider.error // Clear any previous errors
   vlmProvider.provider = ProviderNames.NCSAHostedVLM
 
+  if (!vlmProvider.enabled) {
+    vlmProvider.models = []
+    return vlmProvider
+  }
+
   // Store existing model states
   const existingModelStates = new Map<
     string,
