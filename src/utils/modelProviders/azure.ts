@@ -127,7 +127,11 @@ export const getAzureModels = async (
   delete azureProvider.error // Clear previous errors if any.
   azureProvider.provider = ProviderNames.Azure
   try {
-    if (!azureProvider.AzureEndpoint || !azureProvider.apiKey) {
+    if (
+      !azureProvider.AzureEndpoint ||
+      !azureProvider.apiKey ||
+      !azureProvider.enabled
+    ) {
       // azureProvider.error = `Azure OpenAI Endpoint or Deployment is not set. Endpoint: ${azureProvider.AzureEndpoint}, Deployment: ${azureProvider.AzureDeployment}`
       azureProvider.models = [] // clear any previous models.
       return azureProvider
@@ -137,6 +141,8 @@ export const getAzureModels = async (
       ? azureProvider.AzureEndpoint.slice(0, -1)
       : azureProvider.AzureEndpoint
     const url = `${baseUrl}/openai/deployments?api-version=${OPENAI_API_VERSION}`
+
+    // console.log('Fetching Azure models from:', url)
 
     const response = await fetch(url, {
       method: 'GET',
