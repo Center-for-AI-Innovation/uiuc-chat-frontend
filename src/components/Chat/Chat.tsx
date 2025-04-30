@@ -458,7 +458,7 @@ export const Chat = memo(
 
           // Skip vector search entirely if there are no documents
           if (documentCount === 0) {
-            console.log('Vector search skipped: no documents available')
+            // console.log('Vector search skipped: no documents available')
             homeDispatch({ field: 'wasQueryRewritten', value: false })
             homeDispatch({ field: 'queryRewriteText', value: null })
             message.wasQueryRewritten = undefined
