@@ -20,9 +20,12 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Set up Chrome
+        id: setup_chrome
         uses: browser-actions/setup-chrome@latest
         with:
           chrome-version: stable
           install-chromedriver: true
       - name: Run Nightwatch e2e tests on Prod
+        env:
+          CHROME_BIN: ${{ steps.setup_chrome.outputs.chrome-path }}
         run: npx nightwatch nightwatch/e2e-test-of-uiucchat-prod.js
