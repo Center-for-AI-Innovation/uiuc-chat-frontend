@@ -366,6 +366,11 @@ export const Chat = memo(
             // Remove tools from message to clear old tools
             message.tools = []
             message.contexts = []
+            tools.forEach((tool) => {
+              tool.aiGeneratedArgumentValues = undefined
+              tool.output = undefined
+              tool.error = undefined
+            })
             message.content = Array.isArray(message.content)
               ? message.content.filter(
                   (content) => content.type !== 'tool_image_url',
