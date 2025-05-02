@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import { Dispatch } from 'react'
-import { Conversation, Message } from '~/types/chat'
-import { ActionType } from '@/hooks/useCreateReducer'
-import { HomeInitialState } from '~/pages/api/home/home.state'
-import { ChatCompletionMessageToolCall } from 'openai/resources/chat/completions'
-import { N8NParameter, N8nWorkflow, OpenAICompatibleTool } from '~/types/tools'
-import { UIUCTool } from '~/types/chat'
+import { type Conversation, type Message } from '~/types/chat'
+import { type ChatCompletionMessageToolCall } from 'openai/resources/chat/completions'
+import {
+  type N8NParameter,
+  type N8nWorkflow,
+  type OpenAICompatibleTool,
+} from '~/types/tools'
+import { type UIUCTool } from '~/types/chat'
 import type { ToolOutput } from '~/types/chat'
 import posthog from 'posthog-js'
 
@@ -53,22 +54,54 @@ export async function handleFunctionCall(
       openaiFunctionCallResponse.choices?.[0]?.message?.tool_calls || []
     console.log('OpenAI tools to run: ', openaiResponse)
 
-    // Map tool into UIUCTool, parse arguments
-    const uiucToolsToRun = openaiResponse.map((openaiTool) => {
-      const uiucTool = availableTools.find(
+    // Map tool into UIUCTool, parse arguments, and add invocation ID
+    const uiucToolsToRun: UIUCTool[] = openaiResponse.map((openaiTool) => {
+      const baseTool = availableTools.find(
         (availableTool) => availableTool.name === openaiTool.function.name,
-      ) as UIUCTool
-      uiucTool.aiGeneratedArgumentValues = JSON.parse(
-        openaiTool.function.arguments,
       )
-      return uiucTool
+
+      if (!baseTool) {
+        // Handle case where the tool specified by OpenAI isn't available
+        // This shouldn't happen if availableTools is correctly populated
+        console.error(
+          `Tool ${openaiTool.function.name} not found in available tools.`,
+        )
+        // Return a placeholder or throw an error, depending on desired handling
+        // For now, returning a minimal object to avoid crashing the map
+        return {
+          id: 'error', // N8N workflow ID - invalid
+          invocationId: openaiTool.id, // OpenAI call ID
+          name: openaiTool.function.name,
+          readableName: `Error: ${openaiTool.function.name} not found`,
+          description: 'Tool definition not found',
+          aiGeneratedArgumentValues: JSON.parse(openaiTool.function.arguments),
+          error: 'Tool definition not found in available tools list.',
+        } as UIUCTool
+      }
+
+      // Create a new object for this specific invocation
+      return {
+        ...baseTool, // Copy properties from the base tool definition
+        invocationId: openaiTool.id, // Add the unique invocation ID from OpenAI
+        aiGeneratedArgumentValues: JSON.parse(openaiTool.function.arguments), // Add the specific arguments for this call
+      }
     })
-    message.tools = [...uiucToolsToRun]
+
+    // Filter out any tools that weren't found (if we didn't throw an error)
+    const validUiucToolsToRun = uiucToolsToRun.filter(
+      (tool) => tool.id !== 'error',
+    )
+
+    // Update the message object with the array of tool invocations
+    message.tools = [...validUiucToolsToRun]
     selectedConversation.messages[selectedConversation.messages.length - 1] =
       message
-    console.log('UIUC tools to run: ', uiucToolsToRun)
+    console.log(
+      'UIUC tools to run (with invocation IDs): ',
+      validUiucToolsToRun,
+    )
 
-    return uiucToolsToRun
+    return validUiucToolsToRun
   } catch (error) {
     console.error(
       'Error calling openaiFunctionCall from handleFunctionCall: ',
@@ -89,6 +122,36 @@ export async function handleToolCall(
       // Tool calling in Parallel here!!
       console.log('Running tools in parallel')
       const toolResultsPromises = uiucToolsToRun.map(async (tool) => {
+        // Ensure the tool has an invocationId before proceeding
+        if (!tool.invocationId) {
+          console.error(
+            `Tool ${tool.readableName} is missing an invocationId. Skipping.`,
+          )
+          return // Skip this tool if it lacks the necessary ID
+        }
+
+        const lastMessageIndex = selectedConversation.messages.length - 1
+        const lastMessage = selectedConversation.messages[lastMessageIndex]
+
+        if (!lastMessage || !lastMessage.tools) {
+          console.error(
+            'handleToolCall: Last message or its tools array is missing.',
+          )
+          return // Skip this tool if message structure is wrong
+        }
+
+        // Find the specific tool invocation in the message using invocationId
+        const targetToolInMessage = lastMessage.tools.find(
+          (t) => t.invocationId === tool.invocationId,
+        )
+
+        if (!targetToolInMessage) {
+          console.error(
+            `handleToolCall: Tool invocation with ID "${tool.invocationId}" (Name: ${tool.readableName}) not found in the last message's tools list.`,
+          )
+          return // Skip this tool if not found in message
+        }
+
         try {
           const toolOutput = await callN8nFunction(
             tool,
@@ -98,26 +161,25 @@ export async function handleToolCall(
           )
           // Add success output: update message with tool output, but don't add another tool.
           // ✅ TOOL SUCCEEDED
-          selectedConversation.messages[
-            selectedConversation.messages.length - 1
-          ]!.tools!.find((t) => t.readableName === tool.readableName)!.output =
-            toolOutput
+          targetToolInMessage.output = toolOutput
         } catch (error: unknown) {
           // ❌ TOOL ERRORED
-          console.error(`Error running tool: ${error}`)
+          console.error(`Error running tool ${tool.readableName}: ${error}`)
           // Add error output
-          selectedConversation.messages[
-            selectedConversation.messages.length - 1
-          ]!.tools!.find((t) => t.readableName === tool.readableName)!.error =
-            `Error running tool: ${error}`
+          targetToolInMessage.error = `Error running tool: ${error}`
         }
       })
       await Promise.all(toolResultsPromises)
     }
+    const lastMessage =
+      selectedConversation.messages.length > 0
+        ? selectedConversation.messages[
+            selectedConversation.messages.length - 1
+          ]
+        : null
     console.log(
       'tool outputs:',
-      selectedConversation.messages[selectedConversation.messages.length - 1]!
-        .tools,
+      lastMessage ? lastMessage.tools : 'No last message found',
     )
     // return selectedConversation
   } catch (error) {
