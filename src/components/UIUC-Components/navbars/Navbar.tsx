@@ -439,7 +439,7 @@ export default function Navbar({
   ]
 
   return (
-    <div className="bg-[--navbar-background]">
+    <div className="bg-[--navbar-background] ">
       <Flex direction="row" align="center" justify="center">
         <div className="w-full">
           <div className="navbar h-20 bg-[--navbar-background] shadow-lg shadow-[--illinois-background-dark]">
