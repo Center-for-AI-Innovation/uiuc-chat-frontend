@@ -136,7 +136,7 @@ const MakeNewCoursePage = ({
                 border: 'None',
                 color: 'white',
               }}
-              className="min-h-full bg-gradient-to-r from-purple-900 via-indigo-800 to-blue-800"
+              className="min-h-full bg-gradient-to-r from-[--illinois-background-darker] to-[--illinois-background-darker]"
             >
               <Group
                 m="3rem"
@@ -151,8 +151,6 @@ const MakeNewCoursePage = ({
                 >
                   <Title
                     order={isSmallScreen ? 3 : 2}
-                    variant="gradient"
-                    gradient={{ from: 'gold', to: 'white', deg: 50 }}
                     className={`${montserrat_heading.variable} text-left font-montserratHeading`}
                   >
                     {!is_new_course ? `${projectName}` : 'Create a new project'}
@@ -170,14 +168,15 @@ const MakeNewCoursePage = ({
                     data-form-type="other"
                     styles={{
                       input: {
-                        backgroundColor: '#1A1B1E',
+                        color: 'var(--text-white)',
+                        backgroundColor: 'var(--illinois-background-darker)',
                         paddingRight: '6rem',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         color:
                           isCourseAvailable && projectName != ''
-                            ? 'green'
+                            ? 'var(--text-white)'
                             : 'red',
                         '&:focus-within': {
                           borderColor:
@@ -196,7 +195,7 @@ const MakeNewCoursePage = ({
                       },
                     }}
                     placeholder="Project name"
-                    radius={'lg'}
+                    radius={'sm'}
                     type="text"
                     value={projectName}
                     label="What is the project name?"
@@ -225,19 +224,20 @@ const MakeNewCoursePage = ({
                   </Flex>
                   <Textarea
                     placeholder="Describe your project, goals, expected impact etc..."
-                    radius={'lg'}
+                    radius={'sm'}
                     value={projectDescription}
                     onChange={(e) => setProjectDescription(e.target.value)}
                     size={'lg'}
                     minRows={4}
                     styles={{
                       input: {
-                        backgroundColor: '#1A1B1E',
+                        color: 'var(--text-white)',
+                        backgroundColor: 'var(--illinois-background-darker)',
                         fontSize: isSmallScreen ? '12px' : '16px', // Added text styling
                         font: `${montserrat_paragraph.variable} font-montserratParagraph`,
                         // borderColor: '#8e44ad', // Grape color
                         '&:focus': {
-                          borderColor: '#8e44ad', // Grape color when focused/selected
+                          borderColor: 'var(--illinois-orange)', // Grape color when focused/selected
                         },
                       },
                       label: {
@@ -270,15 +270,18 @@ const MakeNewCoursePage = ({
                           }}
                           size="md"
                           radius={'md'}
-                          className={`${isCourseAvailable && projectName !== '' ? 'bg-purple-800' : 'border-purple-800'}
-                        overflow-ellipsis text-ellipsis p-2 ${isCourseAvailable && projectName !== '' ? 'text-white' : 'text-gray-500'}
-                        mt-2 min-w-[5-rem] transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none lg:min-w-[8rem]`}
+                          className={`${isCourseAvailable && projectName !== '' ? 'bg-[--illinois-orange] text-white hover:bg-[--illinois-orange] hover:text-white' : 'border-[--illinois-blue] bg-[--illinois-blue] text-white opacity-[20%] hover:bg-[--illinois-blue]'}
+                        mt-2 min-w-[5-rem] transform overflow-ellipsis text-ellipsis p-2 focus:shadow-none focus:outline-none lg:min-w-[8rem]`}
                           // w={`${isSmallScreen ? '5rem' : '50%'}`}
                           style={{
                             alignSelf: 'flex-end',
                           }}
                           disabled={projectName === '' || isLoading}
-                          leftIcon={isLoading ? <Loader size="xs" color="white" /> : null}
+                          leftIcon={
+                            isLoading ? (
+                              <Loader size="xs" color="white" />
+                            ) : null
+                          }
                         >
                           {isLoading ? 'Creating...' : 'Create'}
                         </Button>
