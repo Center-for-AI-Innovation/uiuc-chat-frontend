@@ -90,7 +90,13 @@ export const DocumentGroupsItem = ({}) => {
                 <tr
                   className={`${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`}
                 >
-                  <th style={{ width: '60%', wordWrap: 'break-word' }}>
+                  <th
+                    style={{
+                      width: '60%',
+                      wordWrap: 'break-word',
+                      color: 'var(--foreground)',
+                    }}
+                  >
                     Document Group
                   </th>
                   <th
@@ -98,6 +104,7 @@ export const DocumentGroupsItem = ({}) => {
                       width: '40%',
                       wordWrap: 'break-word',
                       textAlign: 'center',
+                      color: 'var(--foreground)',
                     }}
                   >
                     <span className="flex flex-col items-center justify-center">
