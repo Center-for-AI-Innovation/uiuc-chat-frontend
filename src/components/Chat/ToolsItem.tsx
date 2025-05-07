@@ -80,12 +80,21 @@ export const ToolsItem = ({}) => {
                 <tr
                   className={`${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`}
                 >
-                  <th style={{ width: '60%', wordWrap: 'break-word' }}>Tool</th>
+                  <th
+                    style={{
+                      width: '60%',
+                      wordWrap: 'break-word',
+                      color: 'var(--foreground)',
+                    }}
+                  >
+                    Tool
+                  </th>
                   <th
                     style={{
                       width: '40%',
                       wordWrap: 'break-word',
                       textAlign: 'center',
+                      color: 'var(--foreground)',
                     }}
                   >
                     <span className="flex flex-col items-center justify-center">

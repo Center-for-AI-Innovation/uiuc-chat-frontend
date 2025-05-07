@@ -107,7 +107,7 @@
 
   --chat-background: color-mix(in srgb, var(--background), black 3%);
   --chat-background-user: var(--chat-background); /* color-mix(in srgb, var(--background), black 10%); */
-  --chat-user: var(--primary); /* var(--primary); */
+  --chat-user: var(--primary); /* var(--foreground); */
 
   --message: white;
   --message-faded: rgba(from var(--message-color) r g b / .5);

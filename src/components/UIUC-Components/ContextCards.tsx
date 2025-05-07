@@ -12,12 +12,15 @@ export const ContextCards = ({
 }: {
   contexts: ContextWithMetadata[]
 }) => {
-  console.log('ContextCards received contexts:', contexts.map(c => ({
-    readable_filename: c.readable_filename,
-    pagenumber: c.pagenumber,
-    hasS3Path: !!c.s3_path,
-    hasUrl: !!c.url
-  })));
+  console.log(
+    'ContextCards received contexts:',
+    contexts.map((c) => ({
+      readable_filename: c.readable_filename,
+      pagenumber: c.pagenumber,
+      hasS3Path: !!c.s3_path,
+      hasUrl: !!c.url,
+    })),
+  )
 
   if (!Array.isArray(contexts)) {
     console.error('contexts is not an array:', contexts)
@@ -67,10 +70,10 @@ export const ContextCards = ({
 
 // Helper function to get the effective page number
 const getEffectivePageNumber = (context: ContextWithMetadata): string => {
-  if (context.pagenumber_or_timestamp) return context.pagenumber_or_timestamp;
-  if (context.pagenumber) return context.pagenumber;
-  return '';
-};
+  if (context.pagenumber_or_timestamp) return context.pagenumber_or_timestamp
+  if (context.pagenumber) return context.pagenumber
+  return ''
+}
 
 function DynamicMaterialsCard(context: ContextWithMetadata) {
   console.log('DynamicMaterialsCard rendering context:', {
@@ -78,8 +81,8 @@ function DynamicMaterialsCard(context: ContextWithMetadata) {
     pagenumber: context.pagenumber,
     pagenumber_or_timestamp: context.pagenumber_or_timestamp,
     hasS3Path: !!context.s3_path,
-    hasUrl: !!context.url
-  });
+    hasUrl: !!context.url,
+  })
 
   const [presignedUrl, setPresignedUrl] = useState<string | null>(null)
   const [presignedUrlPng, setPresignedUrlPng] = useState<string | null>(null)
@@ -88,9 +91,11 @@ function DynamicMaterialsCard(context: ContextWithMetadata) {
     if (context.url != '' && context.url != null) {
       setPresignedUrl(context.url)
     } else if (context.s3_path) {
-      const effectivePageNumber = getEffectivePageNumber(context);
+      const effectivePageNumber = getEffectivePageNumber(context)
       fetchPresignedUrl(context.s3_path).then((url) => {
-        setPresignedUrl(url + (effectivePageNumber ? `#page=${effectivePageNumber}` : ''))
+        setPresignedUrl(
+          url + (effectivePageNumber ? `#page=${effectivePageNumber}` : ''),
+        )
       })
     }
 
@@ -109,8 +114,8 @@ function DynamicMaterialsCard(context: ContextWithMetadata) {
     }
   }, [context])
 
-  const effectivePageNumber = getEffectivePageNumber(context);
-  
+  const effectivePageNumber = getEffectivePageNumber(context)
+
   return (
     <div className="box-sizing: border-box; border: 100px solid #ccc;">
       <Link
@@ -119,7 +124,7 @@ function DynamicMaterialsCard(context: ContextWithMetadata) {
         target="_blank"
       >
         <Card
-          bg="#0E1116"
+          bg="bg-[--background-dark]"
           style={{ maxWidth: '20rem' }} // maxHeight: '15rem'
           shadow="sm"
           padding="sm"

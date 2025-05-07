@@ -424,7 +424,7 @@ export default function Navbar({
   ]
 
   return (
-    <div className="bg-[#2e026d]">
+    <div className="bg-[--background]">
       <Flex direction="row" align="center" justify="center">
         <div className="mt-2 w-full max-w-[98%]">
           <div className="navbar rounded-badge h-20 bg-[#15162c] shadow-lg shadow-purple-800">
