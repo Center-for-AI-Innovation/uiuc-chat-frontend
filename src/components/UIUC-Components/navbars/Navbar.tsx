@@ -173,7 +173,8 @@ function Logo() {
     <div className="flex-1">
       <Link href="/">
         <h2 className="ms-4 cursor-pointer text-2xl font-extrabold tracking-tight text-white sm:text-[1.8rem]">
-          Illinois <span className="text-[hsl(280,100%,70%)]">Chat</span>
+          <span className="text-[--illinois-orange]">Illinois</span>{' '}
+          <span className="text-[--foreground]">Chat</span>
         </h2>
       </Link>
     </div>
@@ -358,11 +359,25 @@ export function ChartDots3Icon() {
 }
 
 export function FileIcon() {
-  return <IconFilePlus size={20} strokeWidth={2} style={{ margin: '0' }} />
+  return (
+    <IconFilePlus
+      color="var(--foreground)"
+      size={20}
+      strokeWidth={2}
+      style={{ margin: '0' }}
+    />
+  )
 }
 
 export function ClipboardIcon() {
-  return <IconClipboardText size={20} strokeWidth={2} style={{ margin: '0' }} />
+  return (
+    <IconClipboardText
+      color="var(--foreground)"
+      size={20}
+      strokeWidth={2}
+      style={{ margin: '0' }}
+    />
+  )
 }
 
 export default function Navbar({
@@ -424,10 +439,10 @@ export default function Navbar({
   ]
 
   return (
-    <div className="bg-[--background]">
+    <div className="bg-[--navbar-background]">
       <Flex direction="row" align="center" justify="center">
-        <div className="mt-2 w-full max-w-[98%]">
-          <div className="navbar rounded-badge h-20 bg-[#15162c] shadow-lg shadow-purple-800">
+        <div className="w-full">
+          <div className="navbar h-20 bg-[--navbar-background] shadow-lg shadow-[--illinois-background-dark]">
             <Logo />
             {bannerUrl && <BannerImage url={bannerUrl} />}
             {!isPlain && (
