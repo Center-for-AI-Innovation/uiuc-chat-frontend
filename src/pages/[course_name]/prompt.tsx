@@ -802,8 +802,8 @@ CRITICAL: The optimized prompt must:
         >
           You&apos;ve encountered a software bug!<br></br>Your account has no
           email address. Please shoot me an email so I can fix it for you:{' '}
-          <a className="goldUnderline" href="mailto:kvday2@illinois.edu">
-            kvday2@illinois.edu
+          <a className="goldUnderline" href="mailto:rohan13@illinois.edu">
+            rohan13@illinois.edu
           </a>
         </Title>
       </MainPageBackground>

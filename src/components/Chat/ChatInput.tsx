@@ -221,10 +221,10 @@ export const ChatInput = ({
           imageUrls.length > 0
             ? imageUrls
             : await Promise.all(
-              imageFiles.map((file) =>
-                uploadImageAndGetUrl(file, courseName),
-              ),
-            )
+                imageFiles.map((file) =>
+                  uploadImageAndGetUrl(file, courseName),
+                ),
+              )
 
         // Construct image content for the message
         imageContent = imageUrlsToUse
@@ -476,7 +476,7 @@ export const ChatInput = ({
       // TODO: FIX IMAGE UPLOADS ASAP
       // showConfirmationToast({
       //   title: `😢 We can't handle all these images...`,
-      //   message: `Image uploads are temporarily disabled. I'm really sorry, I'm working on getting them back. Email me if you want to complain: kvday2@illinois.edu`,
+      //   message: `Image uploads are temporarily disabled. I'm really sorry, I'm working on getting them back. Email me if you want to complain: rohan13@illinois.edu`,
       //   isError: true,
       //   autoClose: 10000,
       // })
@@ -681,8 +681,9 @@ export const ChatInput = ({
     if (textareaRef && textareaRef.current) {
       textareaRef.current.style.height = 'inherit'
       textareaRef.current.style.height = `${textareaRef.current?.scrollHeight}px`
-      textareaRef.current.style.overflow = `${textareaRef?.current?.scrollHeight > 400 ? 'auto' : 'hidden'
-        }`
+      textareaRef.current.style.overflow = `${
+        textareaRef?.current?.scrollHeight > 400 ? 'auto' : 'hidden'
+      }`
     }
   }, [content])
 
@@ -964,18 +965,20 @@ export const ChatInput = ({
             {/* Button 3: main input text area  */}
             <div
               className={`
-                ${VisionCapableModels.has(
-                selectedConversation?.model?.id as OpenAIModelID,
-              )
-                  ? 'pl-8'
-                  : 'pl-1'
+                ${
+                  VisionCapableModels.has(
+                    selectedConversation?.model?.id as OpenAIModelID,
+                  )
+                    ? 'pl-8'
+                    : 'pl-1'
                 }
                   `}
             >
               <textarea
                 ref={textareaRef}
-                className={`chat-input m-0 h-[24px] max-h-[400px] w-full resize-none bg-transparent py-2 pl-2 pr-8 text-white outline-none ${isFocused ? 'border-blue-500' : ''
-                  }`}
+                className={`chat-input m-0 h-[24px] max-h-[400px] w-full resize-none bg-transparent py-2 pl-2 pr-8 text-white outline-none ${
+                  isFocused ? 'border-blue-500' : ''
+                }`}
                 style={{
                   resize: 'none',
                   minHeight: '24px',
