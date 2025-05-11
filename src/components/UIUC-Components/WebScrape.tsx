@@ -173,7 +173,7 @@ export const WebScrape = ({
       if (url.includes('coursera.org')) {
         // TODO: coursera ingest
         alert(
-          'Coursera ingest is not yet automated (auth is hard). Please email kvday2@illinois.edu to do it for you',
+          'Coursera ingest is not yet automated (auth is hard). Please email rohan13@illinois.edu to do it for you',
         )
       } else if (url.includes('ocw.mit.edu')) {
         data = downloadMITCourse(url, courseName, 'local_dir') // no await -- do in background
@@ -270,7 +270,7 @@ export const WebScrape = ({
         // position="top-center",
         title: 'Web scraping started',
         message:
-          "It'll scrape in the background, just wait for the results to show up in your project (~3 minutes total).\nThis feature is stable but the web is a messy place. If you have trouble, I'd love to fix it. Just shoot me an email: kvday2@illinois.edu.",
+          "It'll scrape in the background, just wait for the results to show up in your project (~3 minutes total).\nThis feature is stable but the web is a messy place. If you have trouble, I'd love to fix it. Just shoot me an email: rohan13@illinois.edu.",
         icon: <IconWorldDownload />,
         styles: {
           root: {

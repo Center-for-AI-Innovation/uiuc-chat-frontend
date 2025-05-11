@@ -381,7 +381,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     return (
       <CannotEditCourse
         course_name={currentPageName as string}
-      // current_email={currentEmail as string}
+        // current_email={currentEmail as string}
       />
     )
   }
@@ -514,13 +514,13 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
                           return (
                             <div
-                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${trend.percentage_change > 0
-                                ? 'bg-green-400/10'
-                                : trend.percentage_change < 0
-                                  ? 'bg-red-400/10'
-                                  : 'bg-gray-400/10'
-
-                                }`}
+                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
+                                trend.percentage_change > 0
+                                  ? 'bg-green-400/10'
+                                  : trend.percentage_change < 0
+                                    ? 'bg-red-400/10'
+                                    : 'bg-gray-400/10'
+                              }`}
                             >
                               {trend.percentage_change > 0 ? (
                                 <IconTrendingUp
@@ -594,12 +594,13 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
                           return (
                             <div
-                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${trend.percentage_change > 0
-                                ? 'bg-green-400/10'
-                                : trend.percentage_change < 0
-                                  ? 'bg-red-400/10'
-                                  : 'bg-gray-400/10'
-                                }`}
+                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
+                                trend.percentage_change > 0
+                                  ? 'bg-green-400/10'
+                                  : trend.percentage_change < 0
+                                    ? 'bg-red-400/10'
+                                    : 'bg-gray-400/10'
+                              }`}
                             >
                               {trend.percentage_change > 0 ? (
                                 <IconTrendingUp
@@ -673,13 +674,13 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
                           return (
                             <div
-                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${trend.percentage_change > 0
-                                ? 'bg-green-400/10'
-                                : trend.percentage_change < 0
-                                  ? 'bg-red-400/10'
-                                  : 'bg-gray-400/10'
-
-                                }`}
+                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
+                                trend.percentage_change > 0
+                                  ? 'bg-green-400/10'
+                                  : trend.percentage_change < 0
+                                    ? 'bg-red-400/10'
+                                    : 'bg-gray-400/10'
+                              }`}
                             >
                               {trend.percentage_change > 0 ? (
                                 <IconTrendingUp
@@ -902,7 +903,6 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           onChange={setDateRange}
                           placeholder="Pick date range"
                           styles={(theme: MantineTheme) => ({
-
                             input: {
                               backgroundColor: '#232438',
                               borderColor: theme.colors.grape[8],
@@ -1237,15 +1237,15 @@ const CourseFilesList = ({ files }: CourseFilesListProps) => {
                 // style={{ outline: 'solid 1px', outlineColor: 'white' }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = theme.colors.grape[8]
-                    ; (e.currentTarget.children[0] as HTMLElement).style.color =
-                      theme.colorScheme === 'dark'
-                        ? theme.colors.gray[2]
-                        : theme.colors.gray[1]
+                  ;(e.currentTarget.children[0] as HTMLElement).style.color =
+                    theme.colorScheme === 'dark'
+                      ? theme.colors.gray[2]
+                      : theme.colors.gray[1]
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = 'transparent'
-                    ; (e.currentTarget.children[0] as HTMLElement).style.color =
-                      theme.colors.gray[8]
+                  ;(e.currentTarget.children[0] as HTMLElement).style.color =
+                    theme.colors.gray[8]
                 }}
               >
                 <IconDownload className="h-5 w-5 text-gray-800" />
@@ -1262,15 +1262,15 @@ const CourseFilesList = ({ files }: CourseFilesListProps) => {
                 // style={{ outline: 'solid 1px', outlineColor: theme.white }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = theme.colors.grape[8]
-                    ; (e.currentTarget.children[0] as HTMLElement).style.color =
-                      theme.colorScheme === 'dark'
-                        ? theme.colors.gray[2]
-                        : theme.colors.gray[1]
+                  ;(e.currentTarget.children[0] as HTMLElement).style.color =
+                    theme.colorScheme === 'dark'
+                      ? theme.colors.gray[2]
+                      : theme.colors.gray[1]
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = 'transparent'
-                    ; (e.currentTarget.children[0] as HTMLElement).style.color =
-                      theme.colors.red[6]
+                  ;(e.currentTarget.children[0] as HTMLElement).style.color =
+                    theme.colors.red[6]
                 }}
               >
                 <IconTrash className="h-5 w-5 text-red-600" />
@@ -1306,7 +1306,8 @@ async function fetchCourseMetadata(course_name: string) {
       return data.course_metadata
     } else {
       throw new Error(
-        `Error fetching course metadata: ${response.statusText || response.status
+        `Error fetching course metadata: ${
+          response.statusText || response.status
         }`,
       )
     }
@@ -1329,7 +1330,7 @@ const showToastOnFileDeleted = (theme: MantineTheme, was_error = false) => {
       // position="top-center",
       title: was_error ? 'Error deleting file' : 'Deleting file...',
       message: was_error
-        ? "An error occurred while deleting the file. Please try again and I'd be so grateful if you email kvday2@illinois.edu to report this bug."
+        ? "An error occurred while deleting the file. Please try again and I'd be so grateful if you email rohan13@illinois.edu to report this bug."
         : 'The file is being deleted in the background.',
       icon: <IconCheck />,
       // className: 'my-notification-class',
