@@ -16,7 +16,7 @@ import {
 } from '~/utils/modelProviders/LLMProvider'
 import { sanitizeText } from '@/utils/sanitization'
 import { inArray, eq, and, isNull, desc, sql, asc, gt } from 'drizzle-orm'
-import { NewConversations, NewMessages } from '~/db/publicSchema'
+import { NewConversations, NewMessages } from '~/db/schema'
 
 
 export const config = {

@@ -3,7 +3,7 @@ import posthog from 'posthog-js'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { CourseDocument } from '~/types/courseMaterials'
 import { and, eq, like, asc, desc, sql } from 'drizzle-orm'
-import { documents, documentsDocGroups, docGroups } from '~/db/publicSchema'
+import { documents, documentsDocGroups, docGroups } from '~/db/schema'
 import { PgColumn } from 'drizzle-orm/pg-core'
 
 type FetchDocumentsResponse = {

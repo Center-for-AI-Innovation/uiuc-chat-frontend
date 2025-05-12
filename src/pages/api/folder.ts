@@ -3,7 +3,7 @@ import { db, folders } from '~/db/dbClient'
 import { FolderInterface, FolderWithConversation } from '@/types/folder'
 import { Database } from 'database.types'
 import { convertDBToChatConversation, DBConversation } from './conversation'
-import { NewFolders, Folders } from '~/db/publicSchema'
+import { NewFolders, Folders } from '~/db/schema'
 import { eq, desc } from 'drizzle-orm'
 
 type Folder = Database['public']['Tables']['folders']['Row']
