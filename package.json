@@ -16,7 +16,8 @@
     "db:studio": "npx drizzle-kit studio",
     "db:migrate": "npx drizzle-kit migrate",
     "db:push": "npx drizzle-kit push",
-    "db:pull": "npx drizzle-kit pull"
+    "db:pull": "npx drizzle-kit pull",
+    "db:populate": "psql -U postgres -d postgres -f src/db/migrations/0001_test_test.sql"
   },
   "dependencies": {
     "@ai-sdk/amazon-bedrock": "^1.0.7",
