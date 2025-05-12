@@ -1,6 +1,7 @@
 import posthog from 'posthog-js'
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { supabase } from '~/utils/supabaseClient'
+import { db, apiKeys } from '~/db/dbClient'
+import { eq } from 'drizzle-orm'
 
 type ApiResponse = {
   message?: string
@@ -39,14 +40,14 @@ export default async function deleteKey(
 
     console.log('Deleting api key for:', userEmail)
 
-    const { data, error } = await supabase
-      .from('api_keys')
-      .update({ is_active: false })
-      .match({ email: userEmail })
+    const data = await db
+      .update(apiKeys)
+      .set({ is_active: false })
+      .where(eq(apiKeys.email, userEmail))
 
-    if (error) {
-      console.error('Error deleting API key:', error)
-      throw error
+    if (data.length === 0) {
+      console.error('No API key found for user email:', userEmail)
+      throw new Error('No API key found for user email')
     }
 
     posthog.capture('api_key_deleted', {
