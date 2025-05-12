@@ -1,17 +1,27 @@
 // Need to add schema from keycloakDB
-import { pgTable, serial, text, timestamp, boolean } from 'drizzle-orm/pg-core';   
+import { pgTable, text, boolean, bigint, integer } from 'drizzle-orm/pg-core';   
 
-// temporary table for users from keycloakDB
-export const keycloakUsers = pgTable('users', {
-  id: serial('id').primaryKey(),
-  email: text('email').notNull(),
-  realm_id: text('realm_id').notNull(),
-  username: text('username').notNull(),
-  enabled: boolean('enabled').notNull(),
-  created_at: timestamp('created_at').defaultNow().notNull()
+// Keycloak user_entity table schema
+export const keycloakUsers = pgTable('user_entity', {
+  id: text('id').primaryKey(),
+  email: text('email'),
+  email_constraint: text('email_constraint'),
+  email_verified: boolean('email_verified').notNull().default(false),
+  enabled: boolean('enabled').notNull().default(false),
+  federation_link: text('federation_link'),
+  first_name: text('first_name'),
+  last_name: text('last_name'),
+  realm_id: text('realm_id'),
+  username: text('username'),
+  created_timestamp: bigint('created_timestamp', { mode: 'number' }),
+  service_account_client_link: text('service_account_client_link'),
+  not_before: integer('not_before').notNull().default(0)
 });
 
 // export types for users
 export type KeycloakUsers = typeof keycloakUsers.$inferSelect;
 export type NewKeycloakUsers = typeof keycloakUsers.$inferInsert;
+
+// Export all schema objects
+export default { keycloakUsers };
 
