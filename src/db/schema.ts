@@ -1,8 +1,7 @@
 // Generated schema.ts based on PostgreSQL database
-import { pgTable, serial, text, timestamp, uuid, varchar, integer, boolean, jsonb, bigint, date, foreignKey, primaryKey, uniqueIndex, index } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, timestamp, uuid, varchar, integer, boolean, jsonb, bigint, date, foreignKey, primaryKey, uniqueIndex, index, doublePrecision } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { db } from './dbClient';
-import { sql } from 'drizzle-orm';
+
 
 // API keys table
 export const apiKeys = pgTable('api_keys', {
@@ -110,12 +109,16 @@ export const llmGuidedSections = pgTable('llm-guided-sections', {
 
 // Conversations table
 export const conversations = pgTable('conversations', {
-  id: serial('id').primaryKey(),
-  uuid: uuid('uuid').defaultRandom().notNull(),
-  user_email: text('user_email'),
-  project_name: text('project_name'),
-  created_at: timestamp('created_at').defaultNow(),
-  updated_at: timestamp('updated_at').defaultNow(),
+  id: uuid('id').defaultRandom().notNull().primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  model: varchar('model', { length: 100 }).notNull(),
+  prompt: text('prompt').notNull(),
+  temperature: doublePrecision('temperature').notNull(),
+  user_email: varchar('user_email', { length: 255 }),
+  project_name: text('project_name').default('').notNull(),
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  folder_id: uuid('folder_id'),
 });
 
 // Documents table
@@ -245,10 +248,12 @@ export const emailNewsletter = pgTable('email-newsletter', {
 
 // Folders (from schema.sql)
 export const folders = pgTable('folders', {
-  id: serial('id').primaryKey(),
-  name: text('name'),
-  user_email: text('user_email'),
-  created_at: timestamp('created_at').defaultNow(),
+  id: uuid('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  user_email: varchar('user_email', { length: 255 }).notNull(),
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  type: text('type'),
+  updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
 
 // Define enum for LLM Provider from schema.sql
