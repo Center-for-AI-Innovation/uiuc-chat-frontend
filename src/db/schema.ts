@@ -1,6 +1,6 @@
 // Generated schema.ts based on PostgreSQL database
-import { pgTable, serial, text, timestamp, uuid, varchar, integer, boolean, jsonb, bigint, date, foreignKey, primaryKey, uniqueIndex, index, doublePrecision } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { pgTable, serial, text, timestamp, uuid, varchar, integer, boolean, jsonb, bigint, date, foreignKey, primaryKey, uniqueIndex, index, doublePrecision, PgArray, bigserial } from 'drizzle-orm/pg-core';
+import { relations, sql } from 'drizzle-orm';
 
 
 // API keys table
@@ -135,28 +135,43 @@ export const documents = pgTable('documents', {
 
 // Messages table
 export const messages = pgTable('messages', {
-  id: serial('id').primaryKey(),
-  conversation_id: integer('conversation_id'),
-  message: text('message'),
-  role: text('role'),
-  created_at: timestamp('created_at').defaultNow(),
-  is_edited: boolean('is_edited').default(false),
-  message_tokens: integer('message_tokens'),
-  cached_suggestions: jsonb('cached_suggestions'),
-  model: varchar('model', { length: 255 }),
-  total_tokens: integer('total_tokens'),
+  id: uuid('id').primaryKey(),
+  conversation_id: uuid('conversation_id'),
+  role: varchar('role', { length: 50 }).notNull(),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull(),
+  content_text: text('content_text').notNull(),
+  contexts: jsonb('contexts'),
+  tools: jsonb('tools'),
+  latest_system_message: text('latest_system_message'),
+  final_prompt_engineered_message: text('final_prompt_engineered_message'),
+  response_time_sec: integer('response_time_sec'),
+  updated_at: timestamp('updated_at', { withTimezone: true }),
+  content_image_url: text('content_image_url').array(),
+  image_description: text('image_description'),
+  feedback_is_positive: boolean('feedback_is_positive'),
+  feedback_category: text('feedback_category'),
+  feedback_details: text('feedback_details'),
+  was_query_rewritten: boolean('was_query_rewritten'),
+  query_rewrite_text: text('query_rewrite_text'),
+  processed_content: text('processed_content'),
+  llm_monitor_tags: jsonb('llm-monitor-tags'),
 });
 
 // Projects table
 export const projects = pgTable('projects', {
-  id: serial('id').primaryKey(),
-  uuid: uuid('uuid').defaultRandom().notNull(),
-  name: text('name').notNull(),
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  course_name: varchar('course_name'),
+  doc_map_id: varchar('doc_map_id'),
+  convo_map_id: varchar('convo_map_id'),
+  n8n_api_key: text('n8n_api_key'),
+  last_uploaded_doc_id: bigint('last_uploaded_doc_id', { mode: 'number' }),
+  last_uploaded_convo_id: bigint('last_uploaded_convo_id', { mode: 'number' }),
+  subscribed: bigint('subscribed', { mode: 'number' }),
   description: text('description'),
-  created_at: timestamp('created_at').defaultNow(),
-  updated_at: timestamp('updated_at').defaultNow(),
-  deleted: boolean('deleted').default(false),
-  owner_id: text('owner_id'),
+  metadata_schema: jsonb('metadata_schema'),
+  conversation_map_index: text('conversation_map_index'),
+  document_map_index: text('document_map_index')
 });
 
 // CourseNames table
@@ -239,9 +254,10 @@ export const cedarRuns = pgTable('cedar_runs', {
 
 // Email Newsletter (from schema.sql)
 export const emailNewsletter = pgTable('email-newsletter', {
-  id: serial('id').primaryKey(),
-  created_at: timestamp('created_at').defaultNow(),
+  id: uuid('id').defaultRandom().notNull().primaryKey(),
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   email: text('email'),
+  unsubscribedFromNewsletter: boolean('unsubscribed-from-newsletter'),
 });
 
 // Folders (from schema.sql)
