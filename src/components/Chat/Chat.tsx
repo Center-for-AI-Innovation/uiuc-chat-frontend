@@ -312,25 +312,26 @@ export const Chat = memo(
               body: JSON.stringify({
                 projectName: courseName,
               }),
-            });
+            })
 
             if (!response.ok) {
-              throw new Error('Failed to fetch LLM providers');
+              throw new Error('Failed to fetch LLM providers')
             }
 
-            const data = await response.json();
-            llmProviders = data;
+            const data = await response.json()
+            llmProviders = data
 
             if (!llmProviders) {
-              throw new Error('No LLM providers returned from API');
+              throw new Error('No LLM providers returned from API')
             }
           } catch (error) {
-            console.error('Error fetching LLM providers:', error);
+            console.error('Error fetching LLM providers:', error)
             errorToast({
               title: 'Website Error - Please refresh the page',
-              message: 'Failed to fetch LLM providers. Please refresh the page and try again.',
-            });
-            return;
+              message:
+                'Failed to fetch LLM providers. Please refresh the page and try again.',
+            })
+            return
           }
         }
 
@@ -365,10 +366,15 @@ export const Chat = memo(
             // Remove tools from message to clear old tools
             message.tools = []
             message.contexts = []
+            tools.forEach((tool) => {
+              tool.aiGeneratedArgumentValues = undefined
+              tool.output = undefined
+              tool.error = undefined
+            })
             message.content = Array.isArray(message.content)
               ? message.content.filter(
-                (content) => content.type !== 'tool_image_url',
-              )
+                  (content) => content.type !== 'tool_image_url',
+                )
               : message.content
 
             const updatedMessages = [...(selectedConversation.messages || [])]
@@ -458,7 +464,7 @@ export const Chat = memo(
 
           // Skip vector search entirely if there are no documents
           if (documentCount === 0) {
-            console.log('Vector search skipped: no documents available')
+            // console.log('Vector search skipped: no documents available')
             homeDispatch({ field: 'wasQueryRewritten', value: false })
             homeDispatch({ field: 'queryRewriteText', value: null })
             message.wasQueryRewritten = undefined
@@ -571,12 +577,12 @@ export const Chat = memo(
                         .map((msg) => {
                           const contentText = Array.isArray(msg.content)
                             ? msg.content
-                              .filter(
-                                (content) =>
-                                  content.type === 'text' && content.text,
-                              )
-                              .map((content) => content.text!)
-                              .join(' ')
+                                .filter(
+                                  (content) =>
+                                    content.type === 'text' && content.text,
+                                )
+                                .map((content) => content.text!)
+                                .join(' ')
                             : typeof msg.content === 'string'
                               ? msg.content
                               : ''
@@ -591,12 +597,12 @@ export const Chat = memo(
                         .map((msg) => {
                           const contentText = Array.isArray(msg.content)
                             ? msg.content
-                              .filter(
-                                (content) =>
-                                  content.type === 'text' && content.text,
-                              )
-                              .map((content) => content.text!)
-                              .join(' ')
+                                .filter(
+                                  (content) =>
+                                    content.type === 'text' && content.text,
+                                )
+                                .map((content) => content.text!)
+                                .join(' ')
                             : typeof msg.content === 'string'
                               ? msg.content
                               : ''
@@ -628,13 +634,13 @@ export const Chat = memo(
                           ? msg.content.trim()
                           : Array.isArray(msg.content)
                             ? msg.content
-                              .map((c) => c.text)
-                              .join(' ')
-                              .trim()
+                                .map((c) => c.text)
+                                .join(' ')
+                                .trim()
                             : '',
                     })),
                   },
-                  key: getOpenAIKey(courseMetadata, apiKey),
+                  key: getOpenAIKey(llmProviders, courseMetadata, apiKey),
                   course_name: courseName,
                   stream: false,
                   courseMetadata: courseMetadata,
@@ -752,7 +758,7 @@ export const Chat = memo(
                   // Check if the response is NO_REWRITE_REQUIRED or if we couldn't extract a valid query
                   if (
                     rewrittenQuery.trim().toUpperCase() ===
-                    'NO_REWRITE_REQUIRED' ||
+                      'NO_REWRITE_REQUIRED' ||
                     !extractedQuery
                   ) {
                     console.log(
@@ -812,7 +818,7 @@ export const Chat = memo(
                 imageUrls,
                 imgDesc,
                 updatedConversation,
-                getOpenAIKey(courseMetadata, apiKey),
+                getOpenAIKey(llmProviders, courseMetadata, apiKey),
               )
               homeDispatch({ field: 'isRouting', value: false })
               if (uiucToolsToRun.length > 0) {
@@ -838,7 +844,7 @@ export const Chat = memo(
 
           const finalChatBody: ChatBody = {
             conversation: updatedConversation,
-            key: getOpenAIKey(courseMetadata, apiKey),
+            key: getOpenAIKey(llmProviders, courseMetadata, apiKey),
             course_name: courseName,
             stream: true,
             courseMetadata: courseMetadata,
@@ -913,10 +919,18 @@ export const Chat = memo(
                 // Check if response is ok before proceeding
                 if (!response.ok) {
                   const errorData = await response.json()
-                  console.log('Chat.txs --- errorData from /api/allNewRoutingChat', errorData)
+                  console.log(
+                    'Chat.txs --- errorData from /api/allNewRoutingChat',
+                    errorData,
+                  )
                   // Read our custom error object. But normal errors are captured too via errorData.error.
-                  const customError = new Error(errorData.message || errorData.error || 'The LLM might be overloaded or misconfigured. Please check your API key, or use a different LLM.')
-                    ; (customError as any).title = errorData.title || 'LLM Didn\'t Respond'
+                  const customError = new Error(
+                    errorData.message ||
+                      errorData.error ||
+                      'The LLM might be overloaded or misconfigured. Please check your API key, or use a different LLM.',
+                  )
+                  ;(customError as any).title =
+                    errorData.title || "LLM Didn't Respond"
                   throw customError
                 }
               } catch (error) {
@@ -926,7 +940,10 @@ export const Chat = memo(
 
                 errorToast({
                   title: (error as any).title || 'Error',
-                  message: error instanceof Error ? error.message : 'An unexpected error occurred',
+                  message:
+                    error instanceof Error
+                      ? error.message
+                      : 'An unexpected error occurred',
                 })
                 return
               }
@@ -937,7 +954,10 @@ export const Chat = memo(
 
               errorToast({
                 title: (error as any).title || 'Error',
-                message: error instanceof Error ? error.message : 'An unexpected error occurred',
+                message:
+                  error instanceof Error
+                    ? error.message
+                    : 'An unexpected error occurred',
               })
               return
             }
@@ -951,12 +971,15 @@ export const Chat = memo(
               const errorData = await response.json()
               errorToast({
                 title: errorData.title || 'Error',
-                message: errorData.message || 'There was an unexpected error calling the LLM. Try using a different model.',
+                message:
+                  errorData.message ||
+                  'There was an unexpected error calling the LLM. Try using a different model.',
               })
             } catch (error) {
               errorToast({
                 title: 'Error',
-                message: 'There was an unexpected error calling the LLM. Try using a different model.',
+                message:
+                  'There was an unexpected error calling the LLM. Try using a different model.',
               })
             }
             return
@@ -1574,13 +1597,13 @@ export const Chat = memo(
 
     const statements =
       courseMetadata?.example_questions &&
-        courseMetadata.example_questions.length > 0
+      courseMetadata.example_questions.length > 0
         ? courseMetadata.example_questions
         : [
-          'Make a bullet point list of key takeaways from this project.',
-          'What are the best practices for [Activity or Process] in [Context or Field]?',
-          'Can you explain the concept of [Specific Concept] in simple terms?',
-        ]
+            'Make a bullet point list of key takeaways from this project.',
+            'What are the best practices for [Activity or Process] in [Context or Field]?',
+            'Can you explain the concept of [Specific Concept] in simple terms?',
+          ]
 
     // Add this function to create dividers with statements
     const renderIntroductoryStatements = () => {
@@ -1895,8 +1918,8 @@ export const Chat = memo(
                     transition={{ duration: 0.1 }}
                   >
                     {selectedConversation &&
-                      selectedConversation.messages &&
-                      selectedConversation.messages?.length === 0 ? (
+                    selectedConversation.messages &&
+                    selectedConversation.messages?.length === 0 ? (
                       <>
                         <div className="mt-16">
                           {renderIntroductoryStatements()}
@@ -1914,7 +1937,7 @@ export const Chat = memo(
                                 handleSend(
                                   editedMessage,
                                   selectedConversation?.messages?.length -
-                                  index,
+                                    index,
                                   null,
                                   tools,
                                   enabledDocumentGroups,
