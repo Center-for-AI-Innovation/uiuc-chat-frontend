@@ -1,6 +1,6 @@
-import { supabase } from '@/utils/supabaseClient'
+import { db } from '~/db/dbClient'
 import { NextRequest, NextResponse } from 'next/server'
-
+import { projects } from '~/db/schema'
 
 
 export default async function handler(req: NextRequest, res: NextResponse) {
@@ -16,26 +16,26 @@ export default async function handler(req: NextRequest, res: NextResponse) {
       { status: 400 },
     )
   }
-  const { data, error } = await supabase
-    .from('projects')
-    .upsert(
-      {
+  try{
+    const result = await db
+      .insert(projects)
+      .values({
         n8n_api_key: n8n_api_key,
         course_name: course_name,
-      },
-      {
-        onConflict: 'course_name',
-      },
-    )
-    .eq('course_name', course_name)
-    .select()
-  // console.log('upsertN8nAPIKey data:', data)
-
-  if (error) {
+      })
+      .onConflictDoUpdate({
+        target: [projects.course_name],
+        set: {
+          n8n_api_key: n8n_api_key,
+        },
+      })
+    console.log('upsertN8nAPIKey result:', result)
+    return new NextResponse(JSON.stringify({ success: true }), { status: 200 })
+  } catch (error: any) {
     console.error('Error upserting N8n key to Supabase:', error)
     return new NextResponse(JSON.stringify({ success: false, error: error }), {
       status: 500,
     })
   }
-  return new NextResponse(JSON.stringify({ success: true }), { status: 200 })
+
 }

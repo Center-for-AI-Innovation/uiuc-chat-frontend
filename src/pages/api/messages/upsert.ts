@@ -1,6 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { supabase } from '@/utils/supabaseClient'
+import { db, messages } from '~/db/dbClient'
+import { NewMessages } from '~/db/schema'
 import { convertChatToDBMessage } from '@/pages/api/conversation'
+import { eq, desc, gt, asc, and, inArray } from 'drizzle-orm'
 
 export default async function handler(
   req: NextApiRequest,
@@ -14,79 +16,80 @@ export default async function handler(
     const { message, conversationId, user_email, course_name } = req.body
     
     // First check if the message exists
-    const { data: existingMessage } = await supabase
-      .from('messages')
-      .select('*')
-      .eq('id', message.id)
-      .single();
+    const existingMessage = await db
+      .select()
+      .from(messages)
+      .where(eq(messages.id, message.id))
+      .limit(1);
 
     // Get the latest message's timestamp for this conversation
-    const { data: latestMessage } = await supabase
-      .from('messages')
-      .select('created_at')
-      .eq('conversation_id', conversationId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+    const latestMessage = await db
+      .select({ created_at: messages.created_at })
+      .from(messages)
+      .where(eq(messages.conversation_id, conversationId))
+      .orderBy(desc(messages.created_at))
+      .limit(1);
 
     const dbMessage = convertChatToDBMessage(message, conversationId);
-    
+
     // If this is a new message, ensure its timestamp is after the latest message
-    if (!existingMessage && latestMessage) {
-      const latestTime = new Date(latestMessage.created_at).getTime();
+    if (!existingMessage && latestMessage?.[0]?.created_at) {
+      const latestTime = new Date(latestMessage[0].created_at).getTime();
       dbMessage.created_at = new Date(latestTime + 1000).toISOString();
       dbMessage.updated_at = dbMessage.created_at;
     }
 
-    // If message exists, update it. If not, insert it.
-    const { data, error } = await supabase
-      .from('messages')
-      .upsert([dbMessage], {
-        onConflict: 'id',
-        ignoreDuplicates: false
-      });
+    const dbNewMessage: NewMessages = {
+      ...dbMessage,
+      created_at: new Date(dbMessage.created_at),
+      updated_at: dbMessage.updated_at ? new Date(dbMessage.updated_at) : null
+    };
 
-    if (error) {
+    // If message exists, update it. If not, insert it.
+    try{
+      const result = await db
+      .insert(messages)
+      .values([dbNewMessage])
+      .onConflictDoUpdate({
+        target: [messages.id],
+        set: {
+          content_text: dbMessage.content_text,
+          role: dbMessage.role,
+          created_at: new Date(dbMessage.created_at),
+          updated_at: dbMessage.updated_at ? new Date(dbMessage.updated_at) : null
+        }
+      });
+    } catch (error: any) {
       console.error('Error in message upsert:', error);
       return res.status(500).json({ error: error.message });
     }
+    
 
     // If this was an edit of an existing message, we need to handle following messages
     if (existingMessage) {
-      const { data: followingMessages, error: followingError } = await supabase
-        .from('messages')
-        .select('id')
-        .eq('conversation_id', conversationId)
-        .gt('created_at', existingMessage.created_at)
-        .order('created_at', { ascending: true });
+      const followingMessages = await db
+        .select({ id: messages.id })
+        .from(messages)
+        .where(and(
+          eq(messages.conversation_id, conversationId),
+          gt(messages.created_at, existingMessage[0]?.created_at ?? new Date(0))
+        ))
+        .orderBy(asc(messages.created_at));
 
-      if (followingError) {
-        console.error('Error fetching following messages:', followingError);
-      } else if (followingMessages?.length > 0) {
-        // First mark messages as superseded
-        const { error: updateError } = await supabase
-          .from('messages')
-          .update({ superseded_by: message.id })
-          .in('id', followingMessages.map(m => m.id));
-
-        if (updateError) {
-          console.error('Error updating superseded messages:', updateError);
-        }
-
-        // Then delete the following messages
-        const { error: deleteError } = await supabase
-          .from('messages')
-          .delete()
-          .in('id', followingMessages.map(m => m.id));
-
-        if (deleteError) {
-          console.error('Error deleting superseded messages:', deleteError);
-          return res.status(500).json({ error: deleteError.message });
+      if (followingMessages?.length > 0) {
+        // Delete the following messages since we can't mark them as superseded
+        try{
+          await db
+            .delete(messages)
+            .where(inArray(messages.id, followingMessages.map(m => m.id)));
+        } catch (error: any) {
+          console.error('Error in deleting the following superseded messages:', error);
+          return res.status(500).json({ error: error.message });
         }
       }
     }
 
-    return res.status(200).json(data);
+    return res.status(200).json({ success: true });
   } catch (error: any) {
     console.error('Error in upsert handler:', error);
     return res.status(500).json({ error: error.message });
