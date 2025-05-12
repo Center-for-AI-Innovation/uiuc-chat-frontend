@@ -37,13 +37,10 @@ export default async function handler(
   }
 
   try {
-    // Convert string IDs to numbers since the messages.id is a number type
-    const numericMessageIds = messageIds.map(id => parseInt(id, 10));
-    
-    // Execute the delete operation with DrizzleORM
+    // Keep IDs as strings since they are UUIDs
     const result = await db
       .delete(messages)
-      .where(inArray(messages.id, numericMessageIds));
+      .where(inArray(messages.id, messageIds));
     
     // DrizzleORM doesn't return data/error objects like Supabase
     // Instead it returns the number of affected rows

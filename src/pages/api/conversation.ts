@@ -342,8 +342,8 @@ export default async function handler(
           
           const newDbMsg = convertChatToDBMessage(newMsg, conversation.id);
           return (
-            existingMsg.message !== newDbMsg.content_text ||
-            JSON.stringify(existingMsg.cached_suggestions) !==
+            existingMsg.content_text !== newDbMsg.content_text ||
+            JSON.stringify(existingMsg.contexts) !==
               JSON.stringify(newDbMsg.contexts)
           )
         })
