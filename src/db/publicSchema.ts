@@ -128,11 +128,9 @@ export const documents = pgTable('documents', {
   course_name: text('course_name'),
   url: text('url'),
   created_at: timestamp('created_at').defaultNow(),
-  updated_at: timestamp('updated_at').defaultNow(),
-  status: varchar('status', { length: 255 }),
   readable_filename: text('readable_filename'),
-  failed_reason: text('failed_reason'),
-  metadata: jsonb('metadata'),
+  base_url: text('base_url'),
+  contexts: jsonb('contexts'),
 });
 
 // Messages table
