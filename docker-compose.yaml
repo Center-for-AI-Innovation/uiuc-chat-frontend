@@ -2,13 +2,19 @@
 # docker compose up -d
 
 # You can connect to the postgres container using the following command:
+# PGPASSWORD=postgres psql -h localhost -p 5434 -U postgres -d postgres
+
+# Check the tables in the postgres container
 # PGPASSWORD=postgres psql -h localhost -p 5434 -U postgres -d postgres -c "\dt"
 
-# Once services are running, copy the prod_clean.sql file to the postgres container
-# docker cp prod_clean.sql postgres_container:/tmp/schema.sql
+# Check the functions in the postgres container
+# PGPASSWORD=postgres psql -h localhost -p 5434 -U postgres -d postgres -c "\df"
 
+## The below commands might be useful if the drizzleORM npm command fails
 # Create the tables in the postgres container
-# docker exec -e PGPASSWORD=postgres uiuc-chat-frontend-postgres-1 psql -h postgres -p 5432 -U postgres -d postgres -f /tmp/schema_clean.sql
+# copy the *.sql file to the postgres container
+# docker cp src/db/migrations/schema.sql uiuc-chat-frontend-postgres-1:/tmp/schema.sql
+# docker exec -e PGPASSWORD=postgres uiuc-chat-frontend-postgres-1 psql -h postgres -p 5432 -U postgres -d postgres -f /tmp/schema.sql
 
 # Check the tables in the postgres container
 # docker exec -e PGPASSWORD=postgres uiuc-chat-frontend-postgres-1 psql -h postgres -p 5432 -U postgres -d postgres -c "\dt"
