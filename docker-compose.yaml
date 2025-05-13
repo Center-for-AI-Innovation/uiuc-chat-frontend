@@ -1,6 +1,9 @@
 # docker stack for postgres, traefik
 # docker compose up -d
 
+# You can connect to the postgres container using the following command:
+# PGPASSWORD=postgres psql -h localhost -p 5434 -U postgres -d postgres -c "\dt"
+
 # Once services are running, copy the prod_clean.sql file to the postgres container
 # docker cp prod_clean.sql postgres_container:/tmp/schema.sql
 
@@ -53,7 +56,6 @@ services:
       - "5434:5432"
     volumes:
       - "postgres_data:/var/lib/postgresql/data"
-      - "./prod_clean.sql:/tmp/schema.sql" # pgdump from prod db
     labels:
       - "traefik.enable=true"
       - "traefik.tcp.routers.postgres.rule=HostSNI(`*`)"
