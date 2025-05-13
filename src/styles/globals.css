@@ -53,13 +53,27 @@
   /* Existing variables mapped to UIUC colors */
   --foreground: var(--illinois-blue);
   --background: var(--illinois-white);
-  
-  --foreground-light: color-mix(in srgb, var(--foreground), var(--background) 10%);
+
+  --error: #f00;
+
+  --foreground-light: color-mix(
+    in srgb,
+    var(--foreground),
+    var(--background) 10%
+  );
   --foreground-dark: color-mix(in srgb, var(--foreground), black 25%);
-  --foreground-faded: color-mix(in srgb, var(--foreground), var(--background) 50%);
-  
+  --foreground-faded: color-mix(
+    in srgb,
+    var(--foreground),
+    var(--background) 50%
+  );
+
   --background-dark: color-mix(in srgb, var(--background), black 25%);
-  --background-faded: color-mix(in srgb, var(--background), var(--foreground) 10%);
+  --background-faded: color-mix(
+    in srgb,
+    var(--background),
+    var(--foreground) 10%
+  );
 
   --primary: var(--illinois-orange);
   --primary-foreground: var(--background);
@@ -106,13 +120,17 @@
   --button-active: var(--button-hover);
 
   --chat-background: color-mix(in srgb, var(--background), black 3%);
-  --chat-background-user: var(--chat-background); /* color-mix(in srgb, var(--background), black 10%); */
+  --chat-background-user: var(
+    --chat-background
+  ); /* color-mix(in srgb, var(--background), black 10%); */
   --chat-user: var(--primary); /* var(--foreground); */
 
   --message: white;
-  --message-faded: rgba(from var(--message-color) r g b / .5);
-  --message-background: rgba(from color-mix(in srgb, var(--illinois-blue), black 30%) r g b / .9); /* will always be a darker version of illinois-blue */
-/*
+  --message-faded: rgba(from var(--message-color) r g b / 0.5);
+  --message-background: rgba(
+    from color-mix(in srgb, var(--illinois-blue), black 30%) r g b / 0.9
+  ); /* will always be a darker version of illinois-blue */
+  /*
   --message-color: var(--background);
   --message-color-faded: rgba(from var(--background) r g b / .7);
   --message-background: rgba(from var(--foreground) r g b / .9);
@@ -124,23 +142,59 @@
   --modal-button: var(--foreground-light);
   --modal-button-text: var(--background);
   --modal-button-text-hover: white;
-  --modal-button-hover: var(--primary); /* color-mix(in srgb, var(--modal-button), black 15%); */
+  --modal-button-hover: var(
+    --primary
+  ); /* color-mix(in srgb, var(--modal-button), black 15%); */
 
+  --navbar-foreground: var(--foreground);
   --navbar-background: var(--background);
   --navbar-text: var(--foreground);
   --navbar-shadow: color-mix(in srgb, var(--background), black 30%);
+  --navbar-hover: var(--illinois-orange);
 
-  --notification: rgba(from color-mix(in srgb, var(--illinois-blue), black 30%) r g b / .8); /* background - similar to sidebar-background but darker since we have a bit of opacity */
+  --notification: rgba(
+    from color-mix(in srgb, var(--illinois-blue), black 30%) r g b / 0.8
+  ); /* background - similar to sidebar-background but darker since we have a bit of opacity */
   --notification-title: white;
-  --notification-message: white);
+  --notification-message: white;
   --notification-border: rgba(255, 255, 255, 20%);
   --notification-highlight: var(--primary);
 
-  --pulsate: var(--foreground); /* color-mix(in srgb, var(--foreground), var(--background) 75%); */
+  --dashboard-foreground: var(--illinois-white);
+  --dashboard-foreground-faded: rgba(
+    from var(--dashboard-foreground) r g b / 0.7
+  );
+  --dashboard-background: var(--illinois-blue);
+  --dashboard-background-dark: var(--illinois-background-dark);
+  --dashboard-background-darker: color-mix(
+    in srgb,
+    var(--dashboard-background-dark),
+    black 20%
+  );
+  --dashboard-button-foreground: var(--illinois-white);
+  --dashboard-button: var(--illinois-orange);
+  --dashboard-button-hover: color-mix(
+    in srgb,
+    var(--dashboard-button),
+    black 20%
+  );
+  --dashboard-table-selected: color-mix(
+    in srgb,
+    var(--dashboard-button),
+    var(--illinois-white) 20%
+  );
+
+  --pulsate: var(
+    --foreground
+  ); /* color-mix(in srgb, var(--foreground), var(--background) 75%); */
   --pulsate-secondary: var(--primary);
 
   --sidebar: white;
-  --sidebar-background: color-mix(in srgb, var(--illinois-blue), black 25%); /* sidebar is always the same color */
+  --sidebar-background: color-mix(
+    in srgb,
+    var(--illinois-blue),
+    black 25%
+  ); /* sidebar is always the same color */
   --sidebar-selected: var(--illinois-orange);
 
   --spinner: var(--foreground-faded);
@@ -149,7 +203,7 @@
   --tooltip-background: var(--foreground-dark);
 
   --welcome-background: color-mix(in srgb, var(--illinois-blue), black 0%);
-  --welcome-button-hover: color-mix(in srgb, var(--illinois-blue), white 20%);;
+  --welcome-button-hover: color-mix(in srgb, var(--illinois-blue), white 20%);
 }
 
 .illinois-blue-gradient-bg {
@@ -196,8 +250,6 @@
 
   --chat-background: color-mix(in srgb, var(--background), black 40%);
 }
-
-
 
 /* Scrollbar Styles - Clean gray theme with hover effects */
 ::-webkit-scrollbar {

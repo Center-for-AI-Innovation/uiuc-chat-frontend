@@ -80,6 +80,7 @@ const useStyles = createStyles((theme) => ({
     padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
     margin: '0.1rem',
     fontWeight: 700,
+    color: 'var(--navbar-foreground)',
     transition:
       'border-color 100ms ease, color 100ms ease, background-color 100ms ease',
     borderRadius: theme.radius.sm,
@@ -88,15 +89,15 @@ const useStyles = createStyles((theme) => ({
     justifyContent: 'center',
 
     '&:hover': {
-      color: 'hsl(280,100%,70%)',
+      color: 'var(--navbar-hover)',
       backgroundColor: 'rgba(255, 255, 255, 0.1)',
       textDecoration: 'none',
       borderRadius: '8px',
     },
 
     '&[data-active="true"]': {
-      color: 'hsl(280,100%,70%)',
-      borderBottom: '2px solid hsl(280,100%,70%)',
+      color: 'var(--navbar-hover)',
+      borderBottom: '2px solid var(--navbar-hover)',
       textDecoration: 'none',
       borderRadius: '8px',
       backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -125,7 +126,7 @@ const useStyles = createStyles((theme) => ({
   },
 
   iconButton: {
-    color: '#f1f5f9',
+    color: 'var(--navbar-foreground)',
     width: '40px',
     height: '40px',
     display: 'flex',
@@ -135,7 +136,7 @@ const useStyles = createStyles((theme) => ({
     transition: 'all 0.2s ease',
 
     '&:hover': {
-      color: 'hsl(280,100%,70%)',
+      color: 'var(--navbar-hover)',
       backgroundColor: 'rgba(255, 255, 255, 0.1)',
     },
   },
@@ -411,7 +412,7 @@ export default function Navbar({
       name: (
         <Indicator
           label="New"
-          color="hsl(280,100%,70%)"
+          color="var(--illinois-orange)"
           size={13}
           styles={{ indicator: { top: '-4px !important' } }}
         >
