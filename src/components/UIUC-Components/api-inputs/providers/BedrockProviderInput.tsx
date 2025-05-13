@@ -44,7 +44,13 @@ const CredentialInput = ({
 }) => {
   return (
     <div style={{ position: 'relative', width: '100%', marginBottom: '1rem' }}>
-      <Input.Wrapper id="credential-input" label={placeholder}>
+      <Input.Wrapper
+        id="credential-input"
+        label={placeholder}
+        styles={{
+          label: { color: 'var(--dashboard-foreground-faded)' },
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
           <TextInput
             type="password"
@@ -56,8 +62,10 @@ const CredentialInput = ({
               root: {
                 flex: 1,
               },
+              label: { color: 'var(--dashboard-foreground-faded)' },
               input: {
-                color: 'white',
+                color: 'var(--foreground)',
+                backgroundColor: 'var(--background)',
                 padding: '8px',
                 borderRadius: '4px',
                 width: '100%',
@@ -74,6 +82,7 @@ const CredentialInput = ({
               e.preventDefault()
               field.handleChange('')
             }}
+            className="hover:bg-[red] hover:text-[white]"
             style={{ marginLeft: '8px' }}
           >
             <IconX size={12} />
@@ -115,7 +124,7 @@ export default function BedrockProviderInput({
         shadow="sm"
         p="lg"
         radius="lg"
-        className="max-w-[330px] bg-[#15162c] md:w-[330px]"
+        className="max-w-[330px] bg-[--dashboard-background-dark] text-[--dashboard-foreground] md:w-[330px]"
       >
         <div
           style={{
@@ -160,7 +169,11 @@ export default function BedrockProviderInput({
                 }}
                 thumbIcon={
                   field.state.value ? (
-                    <IconCheck size="0.8rem" color="purple" stroke={3} />
+                    <IconCheck
+                      size="0.8rem"
+                      color="var(--dashboard-button)"
+                      stroke={3}
+                    />
                   ) : (
                     <IconX size="0.8rem" color="grey" stroke={3} />
                   )
@@ -168,11 +181,11 @@ export default function BedrockProviderInput({
                 styles={{
                   track: {
                     backgroundColor: field.state.value
-                      ? '#6a29a4 !important'
-                      : '#25262b',
+                      ? 'var(--dashboard-button) !important'
+                      : 'var(--dashboard-background-faded)',
                     borderColor: field.state.value
-                      ? '#6a29a4 !important'
-                      : '#25262b',
+                      ? 'var(--dashboard-button) !important'
+                      : 'var(--dashboard-background-faded)',
                   },
                 }}
               />
@@ -247,7 +260,7 @@ export default function BedrockProviderInput({
                   <div className="mt-4 flex justify-start">
                     <Button
                       compact
-                      className="bg-purple-800 hover:border-indigo-600 hover:bg-indigo-600"
+                      className="bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover]"
                       onClick={handleSaveCredentials}
                       loading={isSaving}
                     >
