@@ -1,7 +1,8 @@
-import { supabase } from '@/utils/supabaseClient'
+import { db } from '~/db/dbClient'
 import { Content, Conversation } from '~/types/chat'
 import { RunTree } from 'langsmith'
 import { sanitizeForLogging } from '@/utils/sanitization'
+import { llmConvoMonitor } from '~/db/schema'
 
 export const config = {
   api: {
@@ -20,20 +21,22 @@ const logConversationToSupabase = async (req: any, res: any) => {
   // Sanitize the entire conversation object
   const sanitizedConversation = sanitizeForLogging(conversation)
 
-  const { data, error } = await supabase.from('llm-convo-monitor').upsert(
-    [
-      {
-        convo: sanitizedConversation,
-        convo_id: await sanitizedConversation.id.toString(),
-        course_name: course_name,
-        user_email: sanitizedConversation.userEmail,
-      },
-    ],
-    {
-      onConflict: 'convo_id',
-    },
-  )
-  if (error) {
+  try{
+    const result = await db.insert(llmConvoMonitor).values({
+      convo: sanitizedConversation,
+      convo_id: await sanitizedConversation.id.toString(),
+      course_name: course_name,
+      user_email: sanitizedConversation.userEmail,
+      }).onConflictDoUpdate({
+        target: [llmConvoMonitor.convo_id],
+        set: {
+          convo: sanitizedConversation,
+          convo_id: await sanitizedConversation.id.toString(),
+          course_name: course_name,
+          user_email: sanitizedConversation.userEmail,
+        },
+      })
+  } catch (error: any) {
     console.log('new error form supabase in logConversationToSupabase:', error)
   }
 

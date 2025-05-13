@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1745941947538,
+      "tag": "0000_cheerful_leo",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1745941947538,
+      "tag": "0001_test_test",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1747168735992,
+      "tag": "0002_absent_major_mapleleaf",
+      "breakpoints": true
+    }
+  ]
+}

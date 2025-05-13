@@ -1,8 +1,10 @@
-import { supabase } from '@/utils/supabaseClient'
+import { db } from '~/db/dbClient'
 import posthog from 'posthog-js'
 import { NextApiRequest, NextApiResponse } from 'next'
-import { PostgrestError } from '@supabase/supabase-js'
 import { CourseDocument } from '~/types/courseMaterials'
+import { and, eq, like, asc, desc, sql } from 'drizzle-orm'
+import { documents, documentsDocGroups, docGroups } from '~/db/schema'
+import { PgColumn } from 'drizzle-orm/pg-core'
 
 type FetchDocumentsResponse = {
   final_docs?: CourseDocument[]
@@ -53,102 +55,124 @@ export default async function fetchDocuments(
   const to = parseInt(toStr)
 
   try {
-    let documents
-    let finalError
-    if (search_key && search_value) {
-      const { data: someDocs, error } = await supabase
-        .from('documents')
-        .select(
-          `
-        id,
-        course_name,
-        readable_filename,
-        s3_path,
-        url,
-        base_url,
-        created_at,
-        doc_groups (
-          name
-          )
-          `,
-        )
-        .match({ course_name: course_name })
-        .ilike(search_key as string, '%' + search_value + '%') // e.g. readable_filename: 'some string'
-        .order(sort_column, { ascending: sort_dir })
-        .range(from, to)
-      documents = someDocs
-      finalError = error
+    let foundDocs: any[] = [];
+    let finalError = null;
+
+    // Helper function to get the sort column
+    const getSortColumn = () => {
+      if (typeof sort_column === 'string' && sort_column in documents) {
+        return documents[sort_column as keyof typeof documents] as PgColumn<any>;
+      }
+      return documents.id;
+    };
+
+    const baseQuery = {
+      id: documents.id,
+      course_name: documents.course_name,
+      readable_filename: documents.readable_filename,
+      s3_path: documents.s3_path,
+      url: documents.url,
+      created_at: documents.created_at,
+      doc_groups: sql<string[]>`array_remove(array_agg(${docGroups.name}), null)`
+    };
+
+    if (search_key && search_value && typeof search_key === 'string' && search_key in documents) {
+      const searchColumn = documents[search_key as keyof typeof documents] as PgColumn<any>;
+
+      try{
+        foundDocs = await db.select(baseQuery)
+        .from(documents)
+        .leftJoin(documentsDocGroups, eq(documents.id, documentsDocGroups.document_id))
+        .leftJoin(docGroups, eq(documentsDocGroups.doc_group_id, docGroups.id))
+        .where(and(
+          eq(documents.course_name, course_name as string),
+          sql`${searchColumn} ILIKE ${`%${search_value}%`}`
+        ))
+        .groupBy(documents.id)
+        .orderBy(sort_dir === true ? asc(getSortColumn()) : desc(getSortColumn()))
+        .limit(to - from + 1)
+        .offset(from);
+      } catch (error) {
+        finalError = error;
+      }
+      
     } else {
-      const { data: someDocs, error } = await supabase
-        .from('documents')
-        .select(
-          `
-      id,
-      course_name,
-      readable_filename,
-      s3_path,
-      url,
-      base_url,
-      created_at,
-      doc_groups (
-        name
-        )
-        `,
-        )
-        .match({ course_name: course_name })
-        // NO FILTER
-        .order(sort_column, { ascending: sort_dir })
-        .range(from, to)
-      documents = someDocs
-      finalError = error
+      try{
+        foundDocs = await db.select(baseQuery)
+        .from(documents)
+        .leftJoin(documentsDocGroups, eq(documents.id, documentsDocGroups.document_id))
+        .leftJoin(docGroups, eq(documentsDocGroups.doc_group_id, docGroups.id))
+        .where(eq(documents.course_name, course_name as string)) // No filter
+        .groupBy(documents.id)
+        .orderBy(sort_dir === true ? asc(getSortColumn()) : desc(getSortColumn()))
+        .limit(to - from + 1)
+        .offset(from);
+      } catch (error) {
+        finalError = error;
+      }
     }
 
     if (finalError) {
-      throw finalError
+      throw finalError;
     }
-
-    if (!documents) {
+    if (!foundDocs) {
       throw new Error('Failed to fetch documents')
     }
 
-    let count
-    let countError
-    if (search_key && search_value) {
+    let count;
+    let countError;
+
+    if (search_key && search_value && typeof search_key === 'string' && search_key in documents){
       // Fetch the total count of documents for the selected course
-      const { count: tmpCount, error: tmpCountError } = await supabase
-        .from('documents')
-        .select('id', { count: 'exact', head: true })
-        .match({ course_name: course_name })
-        .ilike(search_key as string, '%' + search_value + '%') // e.g. readable_filename: 'some string'
-      count = tmpCount
-      countError = tmpCountError
+      try{
+        const countQuery = await db
+        .select({count: sql<number>`count(distinct ${documents.id})`})
+        .from(documents)
+        .where(
+          and(
+            eq(documents.course_name, course_name as string),
+            sql`${documents[search_key as keyof typeof documents] as PgColumn<any>} ILIKE ${`%${search_value}%`}`
+          )
+        );
+  
+        count = countQuery[0]?.count ?? 0;
+        countError = null;
+      } catch (error) {
+        count = 0;
+        countError = error;
+      }
     } else {
       // Fetch the total count of documents for the selected course
-      const { count: tmpCount, error: tmpCountError } = await supabase
-        .from('documents')
-        .select('id', { count: 'exact', head: true })
-        .match({ course_name: course_name })
-      // NO FILTER
-      count = tmpCount
-      countError = tmpCountError
+      try{
+        const countQuery = await db
+        .select({count: sql<number>`count(distinct ${documents.id})`})
+        .from(documents)
+        .where(eq(documents.course_name, course_name as string)); // No filter
+
+        count = countQuery[0]?.count ?? 0;
+        countError = null;
+      } catch (error) {
+        count = 0;
+        countError = error;
+      }
     }
 
     if (countError) {
-      throw countError
+      throw countError;
     }
 
-    const final_docs = documents.map((doc) => ({
+    const final_docs = foundDocs.map((doc) => ({
       ...doc,
-      doc_groups: doc.doc_groups.map((group) => group.name),
-    })) as CourseDocument[]
+      doc_groups: doc.doc_groups || []
+    })) as CourseDocument[];
 
     return res.status(200).json({ final_docs, total_count: count ?? undefined })
   } catch (error) {
     console.error('Failed to fetch documents:', error)
     posthog.capture('fetch_materials_failed', {
-      error: (error as PostgrestError).message,
+      error: (error as any).message,
       course_name: course_name,
     })
-    return res.status(500).json({ error: (error as PostgrestError).message })
+    return res.status(500).json({ error: (error as any).message })
   }
 }

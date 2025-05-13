@@ -1,0 +1,78 @@
+# docker stack for postgres, traefik
+# docker compose up -d
+
+# You can connect to the postgres container using the following command:
+# PGPASSWORD=postgres psql -h localhost -p 5434 -U postgres -d postgres
+
+# Check the tables in the postgres container
+# PGPASSWORD=postgres psql -h localhost -p 5434 -U postgres -d postgres -c "\dt"
+
+# Check the functions in the postgres container
+# PGPASSWORD=postgres psql -h localhost -p 5434 -U postgres -d postgres -c "\df"
+
+## The below commands might be useful if the drizzleORM npm command fails
+# Create the tables in the postgres container
+# copy the *.sql file to the postgres container
+# docker cp src/db/migrations/schema.sql uiuc-chat-frontend-postgres-1:/tmp/schema.sql
+# docker exec -e PGPASSWORD=postgres uiuc-chat-frontend-postgres-1 psql -h postgres -p 5432 -U postgres -d postgres -f /tmp/schema.sql
+
+# Check the tables in the postgres container
+# docker exec -e PGPASSWORD=postgres uiuc-chat-frontend-postgres-1 psql -h postgres -p 5432 -U postgres -d postgres -c "\dt"
+
+
+services:
+  traefik:
+    image: "traefik:v3.2"
+    container_name: "traefik"
+    command:
+      - --log.level=INFO
+      - --api=true
+      - --api.dashboard=true
+      - --api.insecure=true
+      # Entrypoints
+      - --entrypoints.http.address=:80
+      - --entrypoints.postgres.address=:5435
+      # Docker setup
+      - --providers.docker=true
+      - --providers.docker.endpoint=unix:///var/run/docker.sock
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.watch=true
+    restart: "unless-stopped"
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "80:80"
+      - "5435:5434"
+    volumes:
+      - "traefik:/config"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`traefik.localhost`)"
+      - "traefik.http.routers.api.service=api@internal"
+
+  postgres:
+    image: postgres:16
+    restart: "unless-stopped"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - "postgres_data:/var/lib/postgresql/data"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.tcp.routers.postgres.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.postgres.entrypoints=postgres"
+      - "traefik.tcp.services.postgres.loadbalancer.server.port=5434"
+
+volumes:
+  traefik:
+#    driver: local
+#    driver_opts:
+#      type: none
+#      device: /tmp/traefik
+#      o: bind
+  postgres_data:

@@ -1,5 +1,6 @@
-import { supabase } from '@/utils/supabaseClient'
+import { db, documentsFailed } from '~/db/dbClient'
 import { NextRequest, NextResponse } from 'next/server'
+import { eq, sql, and, gte } from 'drizzle-orm'
 
 export const runtime = 'edge'
 
@@ -38,73 +39,121 @@ export default async function fetchFailedDocuments(
 
     let count
     let countError
+
+    let recentFailCount
+    let recentFailError
+
     if (search_key && search_value) {
-      const { data: someDocs, error } = await supabase
-        .from('documents_failed')
-        .select(
-          'id,course_name,readable_filename,s3_path,url,base_url,created_at,error',
-        )
-        .match({ course_name: course_name })
-        .ilike(search_key, '%' + search_value + '%')
-        .order(sort_column, { ascending: sort_direction })
-        .range(from, to)
+      try {
+        const data = await db
+          .select({
+            id: documentsFailed.id,
+            course_name: documentsFailed.course_name,
+            readable_filename: documentsFailed.readable_filename,
+            s3_path: documentsFailed.s3_path,
+            url: documentsFailed.url,
+            base_url: documentsFailed.base_url,
+            created_at: documentsFailed.created_at,
+            error: documentsFailed.error,
+          })
+          .from(documentsFailed)
+          .where(
+            and(
+              eq(documentsFailed.course_name, course_name as string),
+              sql`${sql.identifier(search_key)} ILIKE ${`%${search_value}%`}`
+            )
+          )
+          .orderBy(sql`${sql.identifier(sort_column)} ${sort_direction ? sql`ASC` : sql`DESC`}`)
+          .limit(to - from + 1)
+          .offset(from)
 
-      failedDocs = someDocs
-      finalError = error
+        failedDocs = data
+        finalError = null
+      } catch (err) {
+        failedDocs = null
+        finalError = err
+      }
     } else {
-      const { data: someDocs, error } = await supabase
-        .from('documents_failed')
-        .select(
-          'id,course_name,readable_filename,s3_path,url,base_url,created_at,error',
-        )
-        .match({ course_name: course_name })
-        .order(sort_column, { ascending: sort_direction })
-        .range(from, to)
+      try {
+        const data = await db
+          .select()
+          .from(documentsFailed)
+          .where(eq(documentsFailed.course_name, course_name as string))
+          .orderBy(sql`${sql.identifier(sort_column)} ${sort_direction ? sql`ASC` : sql`DESC`}`)
+          .limit(to - from + 1)
+          .offset(from)
 
-      failedDocs = someDocs
-      finalError = error
+        failedDocs = data
+        finalError = null
+      } catch (err) {
+        failedDocs = null
+        finalError = err
+      }
     }
 
     if (finalError) {
       throw finalError
     }
-
     if (!failedDocs) {
       throw new Error('Failed to fetch failed documents')
     }
 
     if (search_key && search_value) {
-      const { data: someDocs, error } = await supabase
-        .from('documents_failed')
-        .select('id', { count: 'exact', head: true })
-        .match({ course_name: course_name })
-        .ilike(search_key, '%' + search_value + '%')
-      count = someDocs
-      countError = error
+      try {
+        const countResult = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(documentsFailed)
+          .where(
+          and(
+            eq(documentsFailed.course_name, course_name as string),
+            sql`${sql.identifier(search_key)} ILIKE ${`%${search_value}%`}`
+          )
+        )
+        count = countResult[0]?.count ?? 0
+        countError = null
+      } catch (err) {
+        count = 0
+        countError = err
+      }
     } else {
       // Fetch the total count of documents for the selected course
-      const { count: tmpCount, error: tmpCountError } = await supabase
-        .from('documents_failed')
-        .select('id', { count: 'exact', head: true })
-        .match({ course_name: course_name })
-      // NO FILTER
-      count = tmpCount
-      countError = tmpCountError
-    }
+      try {
+        const countResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(documentsFailed)
+        .where(eq(documentsFailed.course_name, course_name as string))
 
+        count = countResult[0]?.count ?? 0
+        countError = null
+      } catch (err) {
+        count = 0
+        countError = err
+      }
+    }
     if (countError) {
       throw countError
     }
 
     // Fetch the count of failed documents from the last 24 hours
     const oneDayAgo = new Date(new Date().getTime() - 24 * 60 * 60 * 1000)
-    const { count: recentFailCount, error: recentFailError } = await supabase
-      .from('documents_failed')
-      .select('id', { count: 'exact', head: true })
-      .match({ course_name: course_name })
-      .gte('created_at', oneDayAgo.toISOString())
+    try {
+      const recentFailCountResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(documentsFailed)
+        .where(
+          and(
+            eq(documentsFailed.course_name, course_name as string),
+            gte(documentsFailed.created_at, oneDayAgo)
+          )
+        )
+        recentFailCount = recentFailCountResult[0]?.count ?? 0
+        recentFailError = null
+      } catch (err) {
+        recentFailCount = 0
+        recentFailError = err
+      }
 
-    if (recentFailError) throw recentFailError
+      if (recentFailError) throw recentFailError
 
     return NextResponse.json(
       {

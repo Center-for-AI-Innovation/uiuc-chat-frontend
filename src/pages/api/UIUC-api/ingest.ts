@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { supabase } from '~/utils/supabaseClient'
+import { db } from '~/db/dbClient'
 import posthog from 'posthog-js'
+import { documentsInProgress } from '~/db/schema'
 
 type IngestResponse = {
   task_id?: string
@@ -62,14 +63,14 @@ const handler = async (
     )
 
     // Send to ingest-in-progress table
-    const { error } = await supabase.from('documents_in_progress').insert({
-      s3_path: s3_filepath,
-      course_name: courseName,
-      readable_filename: readableFilename,
-      beam_task_id: responseBody.task_id,
-    })
-
-    if (error) {
+    try{
+      const result = await db.insert(documentsInProgress).values({
+        s3_path: s3_filepath,
+        course_name: courseName,
+        readable_filename: readableFilename,
+        beam_task_id: responseBody.task_id,
+      })
+    } catch (error: any) {
       console.error(
         '❌❌ Supabase failed to insert into `documents_in_progress`:',
         error,
@@ -78,7 +79,7 @@ const handler = async (
         s3_path: s3_filepath,
         course_name: courseName,
         readable_filename: readableFilename,
-        error: error.message,
+        error: error,
         beam_task_id: responseBody.task_id,
       })
     }
