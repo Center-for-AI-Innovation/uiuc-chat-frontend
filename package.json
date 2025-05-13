@@ -17,7 +17,7 @@
     "db:migrate": "npx drizzle-kit migrate",
     "db:push": "npx drizzle-kit push",
     "db:pull": "npx drizzle-kit pull",
-    "db:populate": "psql -U postgres -d postgres -f src/db/migrations/0001_test_test.sql"
+    "db:populate": "PGPASSWORD=postgres psql -h localhost -p 5434 -U postgres -d postgres -f src/db/migrations/0001_test_test.sql"
   },
   "dependencies": {
     "@ai-sdk/amazon-bedrock": "^1.0.7",
