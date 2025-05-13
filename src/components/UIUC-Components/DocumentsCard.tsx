@@ -83,7 +83,7 @@ function DocumentsCard({
       radius="xl"
       className="mt-[2%] w-[96%] md:w-[90%] 2xl:w-[90%]"
     >
-      <div className="min-h-full bg-gradient-to-r from-purple-900 via-indigo-800 to-blue-800">
+      <div className="min-h-full bg-[--background]">
         <Modal
           opened={exportModalOpened}
           onClose={() => setExportModalOpened(false)}
@@ -94,13 +94,13 @@ function DocumentsCard({
           </Text>
           <div className="mt-5 flex justify-end gap-2">
             <Button
-              className="rounded-md bg-transparent text-white hover:bg-indigo-600"
+              className="rounded-md bg-transparent text-white hover:bg-[--dashboard-button-hover]"
               onClick={() => setExportModalOpened(false)}
             >
               Cancel
             </Button>
             <Button
-              className="rounded-md bg-purple-800 text-white hover:bg-indigo-600"
+              className="rounded-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover]"
               onClick={async () => {
                 setExportModalOpened(false)
                 const result = await handleExport(getCurrentPageName())
@@ -118,7 +118,7 @@ function DocumentsCard({
           <div className="flex items-center justify-between gap-2">
             <Title
               order={3}
-              className={`${montserrat_heading.variable} font-montserratHeading text-lg text-white/90 sm:text-2xl`}
+              className={`${montserrat_heading.variable} font-montserratHeading text-lg text-[--foreground] sm:text-2xl`}
             >
               Project Files
             </Title>
@@ -129,9 +129,9 @@ function DocumentsCard({
               onClick={() => setExportModalOpened(true)}
               className={`
                 ${montserrat_paragraph.variable} 
-                rounded-3xl bg-purple-800 px-4 font-montserratParagraph
-                text-sm text-white transition-colors hover:bg-indigo-600 
-                sm:text-base
+                rounded-3xl bg-[--dashboard-button] px-4
+                font-montserratParagraph text-sm
+                text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] sm:text-base
               `}
             >
               <span className="hidden sm:inline">
@@ -142,7 +142,7 @@ function DocumentsCard({
           </div>
         </div>
 
-        <div className="bg-[#1e1f3a]/80">
+        <div className="bg-[--background] text-[--foreground]">
           {metadata && (
             <div className={classes.tableContainer}>
               <ProjectFilesTable

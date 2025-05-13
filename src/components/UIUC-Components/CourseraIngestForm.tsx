@@ -72,12 +72,12 @@ export default function CourseraIngestForm(): JSX.Element {
       >
         <DialogTrigger asChild>
           <Card
-            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-gradient-to-br from-[#1c1c2e] to-[#2a2a40] p-6 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
+            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-gradient-to-br from-[--dashboard-background-dark] to-[--dashboard-background] p-6 text-[--dashboard-foreground] shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
             style={{ height: '100%' }}
           >
             <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-900/30">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[--dashboard-background-darker]">
                   <Image
                     src="/media/coursera_logo_cutout.png"
                     alt="Coursera Logo"
@@ -86,16 +86,14 @@ export default function CourseraIngestForm(): JSX.Element {
                     className="h-8 w-8 object-contain"
                   />
                 </div>
-                <Text className="text-xl font-semibold text-gray-100">
-                  Coursera
-                </Text>
+                <Text className="text-xl font-semibold">Coursera</Text>
               </div>
             </div>
-            <Text className="mb-4 text-sm leading-relaxed text-gray-400">
+            <Text className="mb-4 text-sm leading-relaxed text-[--dashboard-foreground-faded]">
               Import content from Coursera courses, including lectures,
               assignments, and course materials.
             </Text>
-            <div className="mt-auto flex items-center text-sm text-purple-400">
+            <div className="mt-auto flex items-center text-sm text-[--dashboard-button]">
               <span>Configure import</span>
               <IconArrowRight
                 size={16}
