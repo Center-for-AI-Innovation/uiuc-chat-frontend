@@ -78,6 +78,15 @@ export default function SetExampleQuestions({
               label="Example question"
               name="question"
               placeholder="Contrast Shakespeare against Kierkegaard..."
+              styles={{
+                label: {
+                  color: 'var(--foreground-faded)',
+                },
+                input: {
+                  color: 'var(--foreground)',
+                  backgroundColor: 'var(--background)',
+                },
+              }}
               value={value}
               onChange={(e) => handleInputChange(e, i)}
               onFocus={() => handleInputFocus(i)}
@@ -87,7 +96,7 @@ export default function SetExampleQuestions({
         })}
         <Group position="right" mt="md">
           <Button
-            className="bg-purple-800 hover:border-indigo-600 hover:bg-indigo-600"
+            className="bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover]"
             type="submit"
           >
             Submit
