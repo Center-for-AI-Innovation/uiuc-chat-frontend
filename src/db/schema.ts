@@ -397,8 +397,12 @@ export const llmGuidedContextsRelations = relations(llmGuidedContexts, ({ one })
   }),
 }));
 
-export const conversationsRelations = relations(conversations, ({ many }) => ({
+export const conversationsRelations = relations(conversations, ({ many, one }) => ({
   messages: many(messages),
+  folder: one(folders, {
+    fields: [conversations.folder_id],
+    references: [folders.id],
+  }),
 }));
 
 export const messagesRelations = relations(messages, ({ one }) => ({
@@ -435,7 +439,11 @@ export const documentsDocGroupsRelations = relations(documentsDocGroups, ({ one 
     fields: [documentsDocGroups.doc_group_id],
     references: [docGroups.id],
   }),
-})); 
+}));
+
+export const foldersRelations = relations(folders, ({ many }) => ({
+  conversations: many(conversations),
+}));
 
 // Export types
 export type ApiKeys = typeof apiKeys.$inferSelect;
