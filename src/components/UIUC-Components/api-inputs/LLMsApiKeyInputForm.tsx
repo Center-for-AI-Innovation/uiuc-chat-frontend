@@ -316,13 +316,13 @@ const NewModelDropdown: React.FC<{
                 backgroundColor: 'transparent',
               },
               '&:hover': {
-                backgroundColor: 'var(--foreground-faded)',
                 color: 'var(--foreground)',
+                backgroundColor: 'var(--foreground-faded)',
               },
             },
             '&[data-hovered]': {
-              backgroundColor: 'var(--foreground-faded)',
               color: 'var(--foreground)',
+              backgroundColor: 'var(--foreground-faded)',
             },
           },
         })}
@@ -982,10 +982,29 @@ export const showConfirmationToast = ({
     className: 'my-notification-class',
     styles: {
       root: {
-        backgroundColor: 'var(--background)',
+        backgroundColor: 'var(--notification)', // Dark background to match the page
+        borderColor: isError ? '#E53935' : 'var(--notification-border)', // Red for errors,  for success
+        borderWidth: '1px',
+        borderStyle: 'solid',
+        borderRadius: '8px', // Added rounded corners
       },
       title: {
-        color: 'var(--foreground)',
+        color: 'var(--notification-title)', // White text for the title
+        fontWeight: 600,
+      },
+      description: {
+        color: 'var(--notification-message)', // Light gray text for the message
+      },
+      closeButton: {
+        color: 'var(--notification-title)', // White color for the close button
+        borderRadius: '4px', // Added rounded corners to close button
+        '&:hover': {
+          backgroundColor: 'rgba(255, 255, 255, 0.1)', // Subtle hover effect
+        },
+      },
+      icon: {
+        backgroundColor: 'transparent', // Transparent background for the icon
+        color: isError ? '#E53935' : 'var(--notification-title)', // Icon color matches the border
       },
     },
     loading: false,
