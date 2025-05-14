@@ -73,6 +73,36 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
     refetch: refetchWorkflows,
   } = useFetchAllWorkflows(GetCurrentPageName())
 
+  const notificationStyles = (isError = false) => {
+    return {
+      root: {
+        backgroundColor: 'var(--notification)', // Dark background to match the page
+        borderColor: isError ? '#E53935' : 'var(--notification-border)', // Red for errors,  for success
+        borderWidth: '1px',
+        borderStyle: 'solid',
+        borderRadius: '8px', // Added rounded corners
+      },
+      title: {
+        color: 'var(--notification-title)', // White text for the title
+        fontWeight: 600,
+      },
+      description: {
+        color: 'var(--notification-message)', // Light gray text for the message
+      },
+      closeButton: {
+        color: 'var(--notification-title)', // White color for the close button
+        borderRadius: '4px', // Added rounded corners to close button
+        '&:hover': {
+          backgroundColor: 'rgba(255, 255, 255, 0.1)', // Subtle hover effect
+        },
+      },
+      icon: {
+        backgroundColor: 'transparent', // Transparent background for the icon
+        color: isError ? '#E53935' : 'var(--notification-title)', // Icon color matches the border
+      },
+    }
+  }
+
   const handleSaveApiKey = async () => {
     console.log('IN handleSaveApiKey w/ key: ', n8nApiKeyTextbox)
 
@@ -100,7 +130,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
           radius: 'lg',
           icon: <IconAlertCircle />,
           className: 'my-notification-class',
-          style: { backgroundColor: '#15162c' },
+          styles: notificationStyles(true),
           loading: false,
         })
         // Key invalid - exit early
@@ -142,7 +172,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
         radius: 'lg',
         icon: <IconAlertCircle />,
         className: 'my-notification-class',
-        style: { backgroundColor: '#15162c' },
+        styles: notificationStyles(true),
         loading: false,
       })
       return
@@ -158,7 +188,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
         radius: 'lg',
         icon: <IconCheck />,
         className: 'my-notification-class',
-        style: { backgroundColor: '#15162c' },
+        styles: notificationStyles(false),
         loading: false,
       })
     } else {
@@ -171,7 +201,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
         radius: 'lg',
         icon: <IconAlertCircle />,
         className: 'my-notification-class',
-        style: { backgroundColor: '#15162c' },
+        styles: notificationStyles(true),
         loading: false,
       })
     }
@@ -250,11 +280,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
       radius: 'lg',
       icon: <IconAlertCircle />,
       className: 'my-notification-class',
-      style: {
-        backgroundColor: 'rgba(42,42,64,0.3)',
-        backdropFilter: 'blur(10px)',
-        borderLeft: '5px solid red',
-      },
+      styles: notificationStyles(true),
       withBorder: true,
       loading: false,
     })
@@ -317,9 +343,9 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                   style={{
                     // flex: isSmallScreen ? '1 1 100%' : '1 1 60%',
                     border: 'None',
-                    color: 'white',
+                    color: 'var(--foreground)',
                   }}
-                  className="min-h-full flex-[1_1_100%] bg-gradient-to-r from-purple-900 via-indigo-800 to-blue-800 md:flex-[1_1_60%]"
+                  className="min-h-full flex-[1_1_100%] bg-[--background] md:flex-[1_1_60%]"
                 >
                   <Group
                     spacing="lg"
@@ -329,10 +355,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                   >
                     <Title
                       order={2}
-                      variant="gradient"
-                      align="center"
-                      gradient={{ from: 'gold', to: 'white', deg: 50 }}
-                      className={`${montserrat_heading.variable} font-montserratHeading`}
+                      className={`${montserrat_heading.variable} ml-4 font-montserratHeading`}
                     >
                       LLM Tool Use &amp; Function Calling
                     </Title>
@@ -350,7 +373,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                             href="https://n8n.io"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`text-purple-500 hover:underline ${montserrat_heading.variable} font-montserratHeading`}
+                            className={`text-[--dashboard-button] hover:text-[--dashboard-button-hover] ${montserrat_heading.variable} font-montserratHeading`}
                           >
                             n8n.io&apos;s{' '}
                             <IconExternalLink
@@ -368,7 +391,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                               '_blank',
                             )
                           }
-                          className="mx-[8%] mt-2 max-w-[50%] rounded-lg bg-purple-700 hover:border-indigo-600 hover:bg-indigo-600 lg:flex-[1_1_50%] lg:self-center"
+                          className="mx-[8%] mt-2 max-w-[50%] rounded-lg bg-[--dashboard-button] hover:bg-[--dashboard-button-hover] lg:flex-[1_1_50%] lg:self-center"
                           type="submit"
                           disabled={!n8nApiKey}
                         >
@@ -402,7 +425,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                             w={'80%'}
                             type="ordered"
                             withPadding
-                            className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                            className={`${montserrat_paragraph.variable} font-montserratParagraph text-[--foreground]`}
                           >
                             <List.Item>
                               Tool use via LLMs is invite-only to prevent abuse.
@@ -416,8 +439,8 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                                   href="https://tools.uiuc.chat/setup"
                                   target="_blank"
                                   rel="noopener noreferrer"
+                                  className="text-[--dashboard-button] hover:text-[--dashboard-button-hover]"
                                   style={{
-                                    color: '#8B5CF6',
                                     textDecoration: 'underline',
                                   }}
                                 >
@@ -479,7 +502,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                                     href="https://tools.uiuc.chat/workflows"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-purple-500 hover:underline"
+                                    className="text-[--dashboard-button] hover:text-[--dashboard-button-hover] hover:underline"
                                   >
                                     N8N
                                   </a>
@@ -511,8 +534,8 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                                     href={`/${course_name}/chat`}
                                     // target="_blank"
                                     rel="noopener noreferrer"
+                                    className="text-[--dashboard-button] hover:text-[--dashboard-button-hover]"
                                     style={{
-                                      color: '#8B5CF6',
                                       textDecoration: 'underline',
                                     }}
                                   >
@@ -533,8 +556,8 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                   style={{
                     // flex: isSmallScreen ? '1 1 100%' : '1 1 40%',
                     padding: '1rem',
-                    backgroundColor: '#15162c',
-                    color: 'white',
+                    backgroundColor: 'var(--dashboard-background-dark)',
+                    color: 'var(--dashboard-foreground)',
                   }}
                 >
                   <div className="card flex h-full flex-col justify-center">
@@ -543,8 +566,6 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                         <Title
                           // className={`label ${montserrat.className}`}
                           className={`label ${montserrat_heading.variable} font-montserratHeading`}
-                          variant="gradient"
-                          gradient={{ from: 'gold', to: 'white', deg: 170 }}
                           order={3}
                         >
                           Your n8n API Key
@@ -563,7 +584,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                         <div className="pt-2" />
                         <Button
                           onClick={(event) => handleSaveApiKey()}
-                          className="rounded-lg bg-purple-700 hover:border-indigo-600 hover:bg-indigo-600"
+                          className="rounded-lg bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover]"
                           type="submit"
                           disabled={isLoading}
                         >
@@ -578,21 +599,15 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
 
             <div
               // Course files header/background
-              className="mx-auto mt-[2%] w-[90%] items-start rounded-2xl shadow-md shadow-purple-600"
-              style={{ zIndex: 1, background: '#15162c' }}
+              className="mx-auto mt-[2%] w-[90%] items-start rounded-2xl bg-[--background] text-[--foreground]"
+              style={{ zIndex: 1 }}
             >
               <Flex direction="row" justify="space-between">
                 <div className="flex flex-col items-start justify-start">
                   <Title
                     className={`${montserrat_heading.variable} font-montserratHeading`}
-                    variant="gradient"
-                    gradient={{
-                      from: 'hsl(280,100%,70%)',
-                      to: 'white',
-                      deg: 185,
-                    }}
                     order={3}
-                    p="xl"
+                    p="sm"
                     style={{
                       display: 'flex',
                       justifyContent: 'space-between',

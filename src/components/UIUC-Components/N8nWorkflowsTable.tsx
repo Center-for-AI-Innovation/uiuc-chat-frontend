@@ -36,6 +36,36 @@ const montserrat_med = Montserrat({
   subsets: ['latin'],
 })
 
+const notificationStyles = (isError = false) => {
+  return {
+    root: {
+      backgroundColor: 'var(--notification)', // Dark background to match the page
+      borderColor: isError ? '#E53935' : 'var(--notification-border)', // Red for errors,  for success
+      borderWidth: '1px',
+      borderStyle: 'solid',
+      borderRadius: '8px', // Added rounded corners
+    },
+    title: {
+      color: 'var(--notification-title)', // White text for the title
+      fontWeight: 600,
+    },
+    description: {
+      color: 'var(--notification-message)', // Light gray text for the message
+    },
+    closeButton: {
+      color: 'var(--notification-title)', // White color for the close button
+      borderRadius: '4px', // Added rounded corners to close button
+      '&:hover': {
+        backgroundColor: 'rgba(255, 255, 255, 0.1)', // Subtle hover effect
+      },
+    },
+    icon: {
+      backgroundColor: 'transparent', // Transparent background for the icon
+      color: isError ? '#E53935' : 'var(--notification-title)', // Icon color matches the border
+    },
+  }
+}
+
 export const N8nWorkflowsTable = ({
   n8nApiKey,
   course_name,
@@ -88,7 +118,7 @@ export const N8nWorkflowsTable = ({
           </Text>
         ),
         message: (
-          <Text className={`${montserrat_med.className} text-neutral-200`}>
+          <Text className={`${montserrat_med.className} text-[neutral-200]`}>
             {(error as Error).message}
           </Text>
         ),
@@ -96,11 +126,7 @@ export const N8nWorkflowsTable = ({
         radius: 'lg',
         icon: <IconAlertCircle />,
         className: 'my-notification-class',
-        style: {
-          backgroundColor: 'rgba(42,42,64,0.3)',
-          backdropFilter: 'blur(10px)',
-          borderLeft: '5px solid red',
-        },
+        styles: notificationStyles(true),
         withBorder: true,
         loading: false,
       })
@@ -162,15 +188,18 @@ export const N8nWorkflowsTable = ({
       >
         Your n8n tools
       </Title> */}
-      <Text w={isWideScreen ? '65%' : '92%'} className="pb-2">
+      <Text
+        w={isWideScreen ? '65%' : '92%'}
+        className="pb-2 text-[--dashboard-foreground]"
+      >
         These tools can be automatically invoked by the LLM to fetch additional
         data to answer user questions on the{' '}
         <a
           href={`/${course_name}/chat`}
           // target="_blank"
           rel="noopener noreferrer"
+          className="text-[--dashboard-button] hover:text-[--dashboard-button-hover]"
           style={{
-            color: '#8B5CF6',
             textDecoration: 'underline',
           }}
         >
@@ -178,9 +207,16 @@ export const N8nWorkflowsTable = ({
         </a>
         .
       </Text>
+      {/* dataTable styling options https://icflorescu.github.io/mantine-datatable/examples/overriding-the-default-styles/  */}
       <DataTable
         height={500}
         style={dataTableStyle}
+        className="bg-[--background] text-[--foreground]"
+        styles={{
+          root: {
+            color: 'var(--text-grey-500)',
+          },
+        }}
         // style={{
         //   width: '50%',
         // }}
@@ -189,6 +225,16 @@ export const N8nWorkflowsTable = ({
         customLoader={<LoadingSpinner />}
         // keyField="id"
         records={isEmptyWorkflowTable ? [] : (currentRecords as UIUCTool[])}
+        /* //just testing the output, safe to remove in the future
+        records={[{
+          "id": "1323addd-a4ac-4dd2-8de2-6f934969a0f1",
+          "name": "Feest, Bogan and Herzog",
+          "streetAddress": "21716 Ratke Drive",
+          "city": "Stromanport",
+          "state": "WY",
+          "missionStatement": "Innovate bricks-and-clicks metrics."
+        }]}
+*/
         columns={[
           // { accessor: 'id', width: 175 },
           { accessor: 'name' },
@@ -204,6 +250,17 @@ export const N8nWorkflowsTable = ({
                     id: record.id,
                     checked: event.target.checked,
                   })
+                }}
+                className="cursor-pointer"
+                styles={{
+                  track: {
+                    backgroundColor: record.active
+                      ? 'var(--dashboard-button) !important'
+                      : 'var(--dashboard-background-faded)',
+                    borderColor: record.active
+                      ? 'var(--dashboard-button) !important'
+                      : 'var(--dashboard-background-faded)',
+                  },
                 }}
               />
             ),
@@ -247,11 +304,11 @@ export const N8nWorkflowsTable = ({
         loadingText="Loading..."
         // 👇 uncomment the next line to display a custom text when no records were found
         noRecordsText="No records found"
-      // 👇 uncomment the next line to use a custom pagination text
-      // paginationText={({ from, to, totalRecords }) => `Records ${from} - ${to} of ${totalRecords}`}
-      // 👇 uncomment the next lines to use custom pagination colors
-      // paginationActiveBackgroundColor="green"
-      // paginationActiveTextColor="#e6e348"
+        // 👇 uncomment the next line to use a custom pagination text
+        // paginationText={({ from, to, totalRecords }) => `Records ${from} - ${to} of ${totalRecords}`}
+        // 👇 uncomment the next lines to use custom pagination colors
+        // paginationActiveBackgroundColor="green"
+        // paginationActiveTextColor="#e6e348"
       />
     </>
   )
