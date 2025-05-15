@@ -148,7 +148,7 @@ export const UploadCard = memo(function UploadCard({
           }}
           className="min-h-full bg-[--background]"
         >
-          <div className="w-full border-b border-white/10 bg-black/20 px-4 py-3 sm:px-6 sm:py-4 md:px-8">
+          <div className="w-full border-b border-white/10 bg-[--dashboard-background-dark] px-4 py-3 sm:px-6 sm:py-4 md:px-8">
             <div className="flex items-center justify-between gap-2">
               <div className="flex min-w-0 flex-wrap items-center gap-2">
                 <Title
@@ -312,7 +312,9 @@ export const UploadCard = memo(function UploadCard({
                 <label
                   className={`label ${montserrat_heading.variable} font-montserratHeading`}
                 >
-                  <span className="label-text text-lg">Set a greeting</span>
+                  <span className="label-text-unused text-lg">
+                    Set a greeting
+                  </span>
                 </label>
                 <Text
                   className={`label ${montserrat_light.className} pt-0`}
@@ -370,7 +372,7 @@ export const UploadCard = memo(function UploadCard({
               <label
                 className={`label ${montserrat_heading.variable} font-montserratHeading`}
               >
-                <span className="label-text text-lg">
+                <span className="label-text-unused text-lg">
                   Set example questions
                 </span>
               </label>
@@ -389,7 +391,9 @@ export const UploadCard = memo(function UploadCard({
                 <label
                   className={`label ${montserrat_heading.variable} font-montserratHeading`}
                 >
-                  <span className="label-text text-lg">Upload your logo</span>
+                  <span className="label-text-unused text-lg">
+                    Upload your logo
+                  </span>
                 </label>
                 <Text
                   size={'sm'}

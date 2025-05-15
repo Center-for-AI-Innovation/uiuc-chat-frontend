@@ -160,16 +160,16 @@
   --notification-border: rgba(255, 255, 255, 20%);
   --notification-highlight: var(--primary);
 
-  --dashboard-foreground: var(--illinois-white);
+  --dashboard-foreground: var(--foreground); /* var(--illinois-white); */
   --dashboard-foreground-faded: rgba(
     from var(--dashboard-foreground) r g b / 0.7
   );
-  --dashboard-background: var(--illinois-blue);
-  --dashboard-background-dark: var(--illinois-background-dark);
+  --dashboard-background: white; /* color-mix(in srgb, var(--illinois-blue), white 5%); */
+  --dashboard-background-dark: #ddd; /* color-mix(in srgb, var(--illinois-background-dark), white 5%); */
   --dashboard-background-darker: color-mix(
     in srgb,
     var(--dashboard-background-dark),
-    black 20%
+    black 10%
   );
   --dashboard-button-foreground: var(--illinois-white);
   --dashboard-button: var(--illinois-orange);
@@ -249,6 +249,14 @@
   --background: var(--illinois-blue);
 
   --chat-background: color-mix(in srgb, var(--background), black 40%);
+
+  --dashboard-background: var(--illinois-blue);
+  --dashboard-background-dark: var(--illinois-background-dark);
+  --dashboard-background-darker: color-mix(
+    in srgb,
+    var(--dashboard-background-dark),
+    black 20%
+  );
 }
 
 /* Scrollbar Styles - Clean gray theme with hover effects */

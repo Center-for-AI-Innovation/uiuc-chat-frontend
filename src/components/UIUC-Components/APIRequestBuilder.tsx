@@ -213,9 +213,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
     <div className="w-full px-4 sm:px-10">
       <Title
         order={3}
-        variant="gradient"
-        gradient={{ from: 'gold', to: 'white', deg: 50 }}
-        className={`text-left ${montserrat_heading.variable} font-montserratHeading`}
+        className={`text-left ${montserrat_heading.variable} font-montserratHeading text-[--dashboard-foreground]`}
       >
         Request Builder
       </Title>
@@ -223,7 +221,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
       <Divider
         my="lg"
         size="md"
-        className="-mx-4 border-t-2 border-gray-600 sm:-mx-10"
+        className="-mx-4 border-[--dashboard-background-darker] sm:-mx-10"
       />
 
       <div className="space-y-6">
@@ -239,24 +237,38 @@ fetch('${baseUrl}/api/chat-api/chat', {
             styles={(theme) => ({
               input: {
                 '&:focus': {
-                  borderColor: '#6e56cf',
+                  borderColor: 'var(--dashboard-button)',
                 },
-                backgroundColor: '#1a1b3e',
+                color: 'var(--foreground)',
+                backgroundColor: 'var(--background)',
                 fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
                 cursor: 'pointer',
+                minWidth: 0,
+                flex: '1 1 auto',
               },
               dropdown: {
-                backgroundColor: '#1a1b3e',
+                backgroundColor: 'var(--background)',
+                border: '1px solid var(--background-dark)',
               },
               item: {
+                color: 'var(--foreground)',
+                backgroundColor: 'var(--background)',
+                borderRadius: theme.radius.md,
+                margin: '2px',
                 '&[data-selected]': {
-                  backgroundColor: theme.colors.grape[9],
+                  '&': {
+                    color: 'var(--foreground)',
+                    backgroundColor: 'transparent',
+                  },
                   '&:hover': {
-                    backgroundColor: theme.colors.grape[8],
+                    color: 'var(--foreground)',
+                    backgroundColor: 'var(--foreground-faded)',
                   },
                 },
-                fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
-                cursor: 'pointer',
+                '&[data-hovered]': {
+                  color: 'var(--foreground)',
+                  backgroundColor: 'var(--foreground-faded)',
+                },
               },
               rightSection: {
                 pointerEvents: 'none',
@@ -278,28 +290,37 @@ fetch('${baseUrl}/api/chat-api/chat', {
               styles={(theme) => ({
                 input: {
                   '&:focus': {
-                    borderColor: '#6e56cf',
+                    borderColor: 'var(--dashboard-button)',
                   },
-                  backgroundColor: '#1a1b3e',
+                  color: 'var(--foreground)',
+                  backgroundColor: 'var(--background)',
                   fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
                   cursor: 'pointer',
                   minWidth: 0,
                   flex: '1 1 auto',
                 },
                 dropdown: {
-                  backgroundColor: '#1a1b3e',
+                  backgroundColor: 'var(--background)',
+                  border: '1px solid var(--background-dark)',
                 },
                 item: {
+                  color: 'var(--foreground)',
+                  backgroundColor: 'var(--background)',
+                  borderRadius: theme.radius.md,
+                  margin: '2px',
                   '&[data-selected]': {
-                    backgroundColor: theme.colors.grape[9],
+                    '&': {
+                      backgroundColor: 'transparent',
+                    },
                     '&:hover': {
-                      backgroundColor: theme.colors.grape[8],
+                      color: 'var(--foreground)',
+                      backgroundColor: 'var(--foreground-faded)',
                     },
                   },
-                  fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
-                  cursor: 'pointer',
-                  whiteSpace: 'normal',
-                  lineHeight: 1.2,
+                  '&[data-hovered]': {
+                    color: 'var(--foreground)',
+                    backgroundColor: 'var(--foreground-faded)',
+                  },
                 },
                 rightSection: {
                   pointerEvents: 'none',
@@ -315,7 +336,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
               }
               variant="subtle"
               size="xs"
-              className="h-[36px] w-[50px] flex-shrink-0 transform rounded-md bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none"
+              className="h-[36px] w-[50px] flex-shrink-0 transform rounded-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none"
             >
               {copiedCodeSnippet ? <IconCheck /> : <IconCopy />}
             </Button>
@@ -325,7 +346,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
         <div className="space-y-2">
           <Title
             order={4}
-            className={`font-medium text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
+            className={`font-medium ${montserrat_paragraph.variable} font-montserratParagraph text-[--dashboard-foreground]`}
           >
             System Prompt
           </Title>
@@ -335,13 +356,14 @@ fetch('${baseUrl}/api/chat-api/chat', {
             onChange={(e) => setSystemPrompt(e.currentTarget.value)}
             minRows={2}
             radius={'md'}
-            className={`border-gray-600 bg-[#1a1b3e] ${montserrat_paragraph.variable} font-montserratParagraph`}
+            className={`${montserrat_paragraph.variable} font-montserratParagraph`}
             styles={(theme) => ({
               input: {
-                backgroundColor: '#1a1b3e',
-                borderColor: '#4a4b6a',
+                color: 'var(--foreground)',
+                backgroundColor: 'var(--background)',
+                borderColor: 'var(--foreground-faded)',
                 '&:focus': {
-                  borderColor: '#6e56cf',
+                  borderColor: 'var(--dashboard-button)',
                 },
                 fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
               },
@@ -352,7 +374,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
         <div className="space-y-2">
           <Title
             order={4}
-            className={`font-medium text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
+            className={`font-medium ${montserrat_paragraph.variable} font-montserratParagraph text-[--dashboard-foreground]`}
           >
             User Query
           </Title>
@@ -362,13 +384,14 @@ fetch('${baseUrl}/api/chat-api/chat', {
             onChange={(e) => setUserQuery(e.currentTarget.value)}
             minRows={2}
             radius={'md'}
-            className={`border-gray-600 bg-[#1a1b3e] ${montserrat_paragraph.variable} font-montserratParagraph`}
+            className={`${montserrat_paragraph.variable} font-montserratParagraph`}
             styles={(theme) => ({
               input: {
-                backgroundColor: '#1a1b3e',
-                borderColor: '#4a4b6a',
+                color: 'var(--foreground)',
+                backgroundColor: 'var(--background)',
+                borderColor: 'var(--foreground-faded)',
                 '&:focus': {
-                  borderColor: '#6e56cf',
+                  borderColor: 'var(--dashboard-button)',
                 },
                 fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
               },
@@ -379,7 +402,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
         <div className="space-y-2">
           <Title
             order={4}
-            className={`font-medium text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
+            className={`font-medium ${montserrat_paragraph.variable} font-montserratParagraph text-[--dashboard-foreground]`}
           >
             Temperature
           </Title>
@@ -392,18 +415,20 @@ fetch('${baseUrl}/api/chat-api/chat', {
             label={(value) => value.toFixed(1)}
             styles={(theme) => ({
               track: {
-                backgroundColor: '#4a4b6a',
+                backgroundColor: 'var(--foreground-dark)',
               },
               bar: {
-                backgroundColor: theme.colors.grape[6],
+                backgroundColor: 'var(--dashboard-button)',
               },
               thumb: {
-                borderColor: theme.colors.grape[6],
-                backgroundColor: theme.colors.grape[6],
+                border: '1.5px solid var(--dashboard-background-dark)',
+                backgroundColor: 'var(--dashboard-button)',
               },
               label: {
-                backgroundColor: theme.colors.grape[6],
+                color: 'var(--dashboard-button-foreground)',
+                backgroundColor: 'var(--dashboard-button)',
                 fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+                fontWeight: 'bold',
               },
             })}
             className="mt-4"
@@ -419,13 +444,18 @@ fetch('${baseUrl}/api/chat-api/chat', {
               }
               label="Retrieval Only"
               size="md"
-              color="grape"
               className={`mt-4 ${montserrat_paragraph.variable} font-montserratParagraph`}
               styles={(theme) => ({
                 track: {
-                  backgroundColor: '#4a4b6a',
+                  backgroundColor: retrievalOnly
+                    ? 'var(--dashboard-button) !important'
+                    : 'transparent',
+                  borderColor: retrievalOnly
+                    ? 'var(--dashboard-button) !important'
+                    : 'var(--foreground-faded)',
                 },
                 label: {
+                  color: 'var(--dashboard-foreground)',
                   fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
                 },
               })}
@@ -438,8 +468,8 @@ fetch('${baseUrl}/api/chat-api/chat', {
               withArrow
               styles={(theme) => ({
                 tooltip: {
-                  backgroundColor: theme.colors.dark[7],
-                  color: theme.colors.gray[0],
+                  backgroundColor: 'var(--background)',
+                  color: 'var(--foreground)',
                   fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
                 },
               })}
@@ -459,13 +489,18 @@ fetch('${baseUrl}/api/chat-api/chat', {
               }
               label="Stream Response"
               size="md"
-              color="grape"
               className={`mt-4 ${montserrat_paragraph.variable} font-montserratParagraph`}
               styles={(theme) => ({
                 track: {
-                  backgroundColor: '#4a4b6a',
+                  backgroundColor: streamEnabled
+                    ? 'var(--dashboard-button) !important'
+                    : 'transparent',
+                  borderColor: streamEnabled
+                    ? 'var(--dashboard-button) !important'
+                    : 'var(--foreground-faded)',
                 },
                 label: {
+                  color: 'var(--dashboard-foreground)',
                   fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
                 },
               })}
@@ -478,7 +513,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
             href="https://docs.uiuc.chat/api/endpoints#image-input-example"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-400 hover:text-blue-300"
+            className="text-[--dashboard-button] hover:text-[--dashboard-button-hover]"
           >
             Using image inputs (docs) →
           </a>
@@ -489,9 +524,10 @@ fetch('${baseUrl}/api/chat-api/chat', {
           autosize
           variant="unstyled"
           readOnly
-          className="relative mt-4 w-full min-w-0 overflow-x-auto rounded-xl bg-[#0c0c27] pl-4 text-sm text-white sm:min-w-[20rem] sm:pl-8 sm:text-base"
+          className="relative mt-4 w-full min-w-0 overflow-x-auto rounded-xl bg-[--background] pl-4 text-sm sm:min-w-[20rem] sm:pl-8 sm:text-base"
           styles={{
             input: {
+              color: 'var(--foreground)',
               fontFamily: 'monospace',
             },
           }}

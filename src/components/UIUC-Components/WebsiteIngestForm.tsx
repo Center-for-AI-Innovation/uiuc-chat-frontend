@@ -414,7 +414,7 @@ export default function WebsiteIngestForm({
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[--dashboard-background-darker]">
                   <IconWorldDownload className="h-8 w-8" />
                 </div>
-                <Text className="text-xl font-semibold text-gray-100">
+                <Text className="text-xl font-semibold text-[--dashboard-foreground]">
                   Website
                 </Text>
               </div>
