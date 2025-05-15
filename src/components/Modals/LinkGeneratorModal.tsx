@@ -149,6 +149,7 @@ export const LinkGeneratorModal = ({
           onChange={(value) => setSelectedActivePrompt(value ?? '')}
           className={`${montserrat_paragraph.variable} font-montserratParagraph`}
           rightSection={<IconChevronDown size="1rem" />}
+          withinPortal
           styles={(theme) => ({
             input: {
               backgroundColor: theme.colors.dark[6],
@@ -165,7 +166,7 @@ export const LinkGeneratorModal = ({
             dropdown: {
               backgroundColor: theme.colors.dark[6],
               borderColor: theme.colors.dark[4],
-              maxHeight: '200px',
+              maxHeight: '250px',
               overflowY: 'auto',
             },
             item: {
