@@ -287,7 +287,8 @@ const NewModelDropdown: React.FC<{
         }}
         styles={(theme) => ({
           input: {
-            backgroundColor: 'var(--dashboard-button)',
+            color: 'var(--foreground)',
+            backgroundColor: 'var(--background)',
             border: 'none',
             // color: theme.white,
             // borderRadius: theme.radius.md,
@@ -313,6 +314,7 @@ const NewModelDropdown: React.FC<{
             margin: '2px',
             '&[data-selected]': {
               '&': {
+                color: 'var(--foreground)',
                 backgroundColor: 'transparent',
               },
               '&:hover': {
@@ -628,7 +630,7 @@ export default function APIKeyInputForm() {
                     <Title
                       order={2}
                       align="left"
-                      className={`pl-8 pt-8 ${montserrat_heading.variable} font-montserratHeading text-[--foreground]`}
+                      className={`pl-8 pr-2 pt-8 ${montserrat_heading.variable} font-montserratHeading text-[--foreground]`}
                     >
                       {/* API Keys: Add LLMs to your Chatbot */}
                       Configure LLM Providers for your Chatbot

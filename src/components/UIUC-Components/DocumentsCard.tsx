@@ -129,7 +129,7 @@ function DocumentsCard({
               onClick={() => setExportModalOpened(true)}
               className={`
                 ${montserrat_paragraph.variable} 
-                rounded-3xl bg-[--dashboard-button] px-4
+                rounded-md bg-[--dashboard-button] px-4
                 font-montserratParagraph text-sm
                 text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] sm:text-base
               `}

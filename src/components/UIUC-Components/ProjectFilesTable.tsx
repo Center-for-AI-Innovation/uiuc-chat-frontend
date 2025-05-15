@@ -512,14 +512,14 @@ export function ProjectFilesTable({
       <GlobalStyle />
       {/* Fixed Header Section */}
       <div className="flex-none">
-        <div className="mb-2 flex items-center justify-between border-b border-[--foreground] px-4 pt-4 sm:px-6 md:px-8 ">
+        <div className="mb-2 flex items-center justify-between border-b border-[--foreground-faded] px-4 pt-4 sm:px-6 md:px-8 ">
           <div className="flex items-center md:space-x-4">
             <button
               onClick={() => onTabChange('success')}
               className={`rounded-t-lg px-4 py-3 font-medium transition-colors duration-200 ${
                 tabValue === 'success'
-                  ? 'border-b-2 border-[--dashboard-button] bg-[--dashboard-button] text-[--dashboard-button-foreground]'
-                  : 'bg-[--dashboard-background] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button]'
+                  ? 'border-b-2 border-[--dashboard-background-darker] bg-[--dashboard-background-darker] text-[--dashboard-foreground]'
+                  : 'bg-[--dashboard-background] text-[--foreground-faded] hover:bg-[--dashboard-background-dark] hover:text-[--foreground]'
               } ${montserrat_heading.variable} font-montserratHeading`}
             >
               Success
@@ -537,8 +537,8 @@ export function ProjectFilesTable({
                 onClick={() => onTabChange('failed')}
                 className={`rounded-t-lg px-4 py-3 font-medium duration-200 ${
                   tabValue === 'failed'
-                    ? 'border-b-2 border-[--dashboard-button] bg-[--dashboard-button] text-[--dashboard-button-foreground]'
-                    : 'bg-[--dashboard-background] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button]'
+                    ? 'border-b-2 border-[--dashboard-background-darker] bg-[--dashboard-background-darker] text-[--dashboard-foreground]'
+                    : 'bg-[--dashboard-background] text-[--foreground-faded] hover:bg-[--dashboard-background-dark] hover:text-[--foreground]'
                 } ${montserrat_heading.variable} font-montserratHeading`}
               >
                 Failed

@@ -899,11 +899,10 @@ CRITICAL: The optimized prompt must:
                       >
                         {/* Prompt Engineering Guide */}
                         <Paper
-                          className="w-full rounded-xl px-4 sm:px-6 md:px-8"
+                          className="w-full rounded-xl bg-gradient-to-br from-[--dashboard-background-dark] to-[--dashboard-background] px-4 sm:px-6 md:px-8"
                           shadow="xs"
                           p="md"
                           sx={{
-                            backgroundColor: 'var(--dashboard-background-dark)',
                             border:
                               '1px solid var(--dashboard-background-dark)',
                             cursor: 'pointer',
@@ -1087,7 +1086,7 @@ CRITICAL: The optimized prompt must:
                             >
                               <Flex align="center" className="gap-2">
                                 <Title
-                                  className={`label ${montserrat_heading.variable} pl-1 pr-0 font-montserratHeading md:pl-0 md:pr-2`}
+                                  className={`label ${montserrat_heading.variable} pl-1 pr-0 font-montserratHeading text-[--dashboard-foreground] md:pl-0 md:pr-2`}
                                   order={4}
                                 >
                                   System Prompt
@@ -1225,10 +1224,9 @@ CRITICAL: The optimized prompt must:
                                       },
                                     },
                                     input: {
-                                      backgroundColor:
-                                        'var(--dashboard-button)',
+                                      color: 'var(--foreground)',
+                                      backgroundColor: 'var(--background)',
                                       border: 'none',
-                                      color: theme.white,
                                       '&:focus': {
                                         borderColor: '#6e56cf',
                                       },
