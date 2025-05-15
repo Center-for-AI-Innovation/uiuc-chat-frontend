@@ -162,7 +162,7 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
         <text
           x={x}
           y={y}
-          fill="#ffffff"
+          fill="var(--dashboard-foreground)"
           textAnchor={textAnchor}
           dominantBaseline="middle"
           style={{
@@ -177,7 +177,7 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
           d={`M${cx + (outerRadius + 2) * Math.cos(-midAngle * RADIAN)},${
             cy + (outerRadius + 2) * Math.sin(-midAngle * RADIAN)
           }L${x - (textAnchor === 'start' ? 5 : -5)},${y}`}
-          stroke="#ffffff"
+          stroke="var(--dashboard-foreground)"
           fill="none"
           strokeWidth={1}
           opacity={0.5}
@@ -201,7 +201,7 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
             labelLine={false}
             label={renderCustomizedLabel}
             outerRadius={windowWidth < 768 ? 60 : 80}
-            fill="#8884d8"
+            fill="var(--foreground)"
             dataKey="value"
             paddingAngle={2}
           >
@@ -209,7 +209,7 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
               <Cell
                 key={`cell-${index}`}
                 fill={COLORS[index % COLORS.length]}
-                stroke="#15162c"
+                stroke="var(--dashboard-foreground)"
                 strokeWidth={2}
                 role="graphics-symbol"
                 aria-label={`${entry.name}: ${entry.percentage}%`}
@@ -242,7 +242,7 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
               fontSize: windowWidth < 768 ? '10px' : '12px',
               paddingLeft: windowWidth < 768 ? '10px' : '20px',
               maxWidth: windowWidth < 768 ? '45%' : '35%',
-              color: '#ffffff',
+              color: 'var(--dashboard-foreground)',
             }}
             formatter={(value: string, entry: any) => {
               const item = chartData.find((d) => d.name === value)

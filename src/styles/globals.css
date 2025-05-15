@@ -160,6 +160,9 @@
   --notification-border: rgba(255, 255, 255, 20%);
   --notification-highlight: var(--primary);
 
+  --dashboard-stat: var(
+    --accent
+  ); /* #3b75af; not offical uiuc colors, --accent is */
   --dashboard-foreground: var(--foreground); /* var(--illinois-white); */
   --dashboard-foreground-faded: rgba(
     from var(--dashboard-foreground) r g b / 0.7
@@ -183,6 +186,10 @@
     var(--dashboard-button),
     var(--illinois-white) 20%
   );
+
+  --footer-foreground: var(--foreground-faded);
+  --footer-link: var(--illinois-white);
+  --footer-link-hover: var(--illinois-orange);
 
   --pulsate: var(
     --foreground

@@ -1272,6 +1272,7 @@ CRITICAL: The optimized prompt must:
                                       margin: '2px',
                                       overflow: 'visible',
                                       '&[data-selected]': {
+                                        color: 'var(--foreground)',
                                         backgroundColor: 'transparent',
                                         '&:hover': {
                                           color: 'var(--foreground)',

@@ -41,15 +41,15 @@ const useStyles = createStyles((theme) => ({
     outline: 'none',
   },
   switch: {
-    color: (theme.colors as any).aiPurple[0],
-    backgroundColor: (theme.colors as any).aiPurple[0],
+    color: 'var(--dashboard-button-foreground)',
+    backgroundColor: 'var(--dashboard-button)',
     input: {
-      color: (theme.colors as any).aiPurple[0],
-      backgroundColor: (theme.colors as any).aiPurple[0],
+      color: 'var(--foreground)',
+      backgroundColor: 'var(--background)',
     },
     root: {
-      color: (theme.colors as any).aiPurple[0],
-      backgroundColor: (theme.colors as any).aiPurple[0],
+      color: 'var(--foreground)',
+      backgroundColor: 'var(--background)',
     },
   },
   item: {
