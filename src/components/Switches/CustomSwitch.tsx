@@ -93,13 +93,6 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
             transition: 'all 0.3s ease',
             boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
             cursor: disabled ? 'not-allowed' : 'pointer',
-            '&:hover': disabled
-              ? {}
-              : {
-                  transform: 'scale(1.1)',
-                  boxShadow:
-                    '0 0 0 3px rgba(124, 58, 237, 0.3), 0 4px 8px rgba(0, 0, 0, 0.3)',
-                },
           },
         }}
       />

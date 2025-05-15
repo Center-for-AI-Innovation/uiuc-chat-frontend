@@ -554,7 +554,7 @@ export default function WebsiteIngestForm({
                           <Text style={{ color: '#C1C2C5' }}>
                             For more detail{' '}
                             <a
-                              className={'text-purple-600'}
+                              className={'text-[--dashboard-button]'}
                               href="https://docs.uiuc.chat/features/web-crawling-details"
                               target="_blank"
                               rel="noopener noreferrer"
@@ -635,7 +635,7 @@ export default function WebsiteIngestForm({
             <Button
               onClick={handleIngest}
               disabled={!isUrlValid}
-              className="h-11 w-full rounded-xl bg-purple-600 text-white transition-colors hover:bg-purple-700"
+              className="h-11 w-full rounded-xl bg-[--dashboard-button] text-[--dashboard-button-foreground] transition-colors hover:bg-[--dashboard-button-hover]"
             >
               Ingest the Website
             </Button>

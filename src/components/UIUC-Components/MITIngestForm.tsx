@@ -157,7 +157,7 @@ export default function MITIngestForm({
                     ocw.mit.edu/courses/ANY_COURSE
                   </code>{' '}
                   , for example:{' '}
-                  <span className="break-all text-purple-600">
+                  <span className="break-all text-[--dashboard-button]">
                     <NextLink
                       target="_blank"
                       rel="noreferrer"
@@ -213,7 +213,7 @@ export default function MITIngestForm({
             <Button
               onClick={handleIngest}
               disabled={!isUrlValid}
-              className="h-11 w-full rounded-xl bg-purple-600 text-white transition-colors hover:bg-purple-700"
+              className="h-11 w-full rounded-xl bg-[--dashboard-button] text-[--dashboard-button-foreground] transition-colors hover:bg-[--dashboard-button-hover]"
             >
               Ingest MIT Course
             </Button>

@@ -417,7 +417,7 @@ export function ProjectFilesTable({
             backgroundColor: theme.colors.nearlyWhite,
             borderColor: was_error
               ? theme.colors.errorBorder
-              : theme.colors.aiPurple,
+              : 'var(--dashboard-background-dark)',
           },
           title: {
             color: theme.colors.nearlyBlack,
@@ -461,7 +461,7 @@ export function ProjectFilesTable({
           backgroundColor: theme.colors.nearlyWhite,
           borderColor: was_error
             ? theme.colors.errorBorder
-            : theme.colors.aiPurple,
+            : 'var(--dashboard-background-dark)',
         },
         title: {
           color: theme.colors.nearlyBlack,
@@ -1224,7 +1224,7 @@ export function ProjectFilesTable({
             }}
           >
             <Button
-              className="min-w-[3rem] -translate-x-1 transform rounded-s-md bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none"
+              className="min-w-[3rem] -translate-x-1 transform rounded-s-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none"
               onClick={() => {
                 setExportModalOpened(false)
               }}
@@ -1236,7 +1236,7 @@ export function ProjectFilesTable({
               Cancel
             </Button>
             <Button
-              className="min-w-[3rem] -translate-x-1 transform rounded-s-md bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none"
+              className="min-w-[3rem] -translate-x-1 transform rounded-s-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none"
               onClick={async () => {
                 setExportModalOpened(false)
                 const result = await handleExport(getCurrentPageName())

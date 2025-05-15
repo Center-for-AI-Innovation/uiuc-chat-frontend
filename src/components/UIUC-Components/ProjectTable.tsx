@@ -235,7 +235,7 @@ const ListProjectTable: React.FC = () => {
         <>
           {/* Todo: add enticing copy for new recruits */}
           {/* <Title order={3}>
-            <Link className="text-purple-500 underline" href="/new">Make your own project here</Link>
+            <Link className="text-[--dashboard-button] underline" href="/new">Make your own project here</Link>
           </Title> */}
         </>
       )
