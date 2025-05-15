@@ -73,8 +73,8 @@ const DeleteCustomPromptModal: React.FC<DeleteCustomPromptModalProps> = ({
     >
       <Flex direction="column" gap="md">
         <Text className={`${montserrat_paragraph.className} font-montserratParagraph`} color="white">
-          Are you sure you want to delete the custom prompt "
-          {promptName || ''}"? This action cannot be undone.
+          Are you sure you want to delete the custom prompt &quot;
+          {promptName || ''}&quot;? This action cannot be undone.
         </Text>
         <Group position="right" mt="md">
           <Button

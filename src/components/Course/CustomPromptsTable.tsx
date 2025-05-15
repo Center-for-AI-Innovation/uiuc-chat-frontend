@@ -210,7 +210,7 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
               className={`${montserrat_paragraph.className}`}
               style={{ }}
             >
-              No custom system prompts added yet. Click "Add New Custom Prompt" to
+              No custom system prompts added yet. Click &quot;Add New Custom Prompt&quot; to
               create one.
             </Text>
           ) : (
