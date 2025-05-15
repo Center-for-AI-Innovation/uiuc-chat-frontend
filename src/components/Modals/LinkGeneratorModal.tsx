@@ -25,6 +25,7 @@ interface LinkGeneratorModalProps {
     systemPromptOnly: boolean;
   };
   customSystemPrompts?: CustomSystemPrompt[];
+  initialActivePrompt?: string;
 }
 
 export const LinkGeneratorModal = ({
@@ -33,6 +34,7 @@ export const LinkGeneratorModal = ({
   course_name,
   currentSettings,
   customSystemPrompts = [],
+  initialActivePrompt,
 }: LinkGeneratorModalProps) => {
   const [linkSettings, setLinkSettings] = useState({
     guidedLearning: false,
@@ -50,9 +52,9 @@ export const LinkGeneratorModal = ({
         documentsOnly: false,
         systemPromptOnly: false,
       });
-      setSelectedActivePrompt('');
+      setSelectedActivePrompt(initialActivePrompt || '');
     }
-  }, [opened]);
+  }, [opened, initialActivePrompt]);
 
   const handleSettingChange = (setting: keyof typeof linkSettings) => (value: boolean) => {
     setLinkSettings(prev => ({

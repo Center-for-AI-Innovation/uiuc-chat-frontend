@@ -41,6 +41,7 @@ interface BehaviorSettingsPanelProps {
   closeLinkGenerator: () => void;
   course_name: string;
   customSystemPrompts: CustomSystemPrompt[];
+  initialActivePromptForLink?: string;
 }
 
 const BehaviorSettingsPanel: React.FC<BehaviorSettingsPanelProps> = ({
@@ -62,6 +63,7 @@ const BehaviorSettingsPanel: React.FC<BehaviorSettingsPanelProps> = ({
   closeLinkGenerator,
   course_name,
   customSystemPrompts,
+  initialActivePromptForLink,
 }) => {
   if (!courseMetadata) return null;
 
@@ -452,17 +454,20 @@ const BehaviorSettingsPanel: React.FC<BehaviorSettingsPanelProps> = ({
                 </Button>
               </Flex>
 
-              <LinkGeneratorModal
-                opened={linkGeneratorOpened}
-                onClose={closeLinkGenerator}
-                course_name={course_name}
-                currentSettings={{
-                  guidedLearning,
-                  documentsOnly,
-                  systemPromptOnly,
-                }}
-                customSystemPrompts={customSystemPrompts}
-              />
+              {linkGeneratorOpened && (
+                <LinkGeneratorModal
+                  opened={linkGeneratorOpened}
+                  onClose={closeLinkGenerator}
+                  course_name={course_name}
+                  currentSettings={{
+                    guidedLearning: courseMetadata.guidedLearning || false,
+                    documentsOnly: courseMetadata.documentsOnly || false,
+                    systemPromptOnly: courseMetadata.systemPromptOnly || false,
+                  }}
+                  customSystemPrompts={customSystemPrompts}
+                  initialActivePrompt={initialActivePromptForLink}
+                />
+              )}
             </div>
           </Flex>
         </Flex>

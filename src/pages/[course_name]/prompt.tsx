@@ -256,6 +256,8 @@ const CourseMain: NextPage = () => {
   const [promptToDelete, setPromptToDelete] = useState<CustomSystemPrompt | null>(
     null,
   )
+  // New state for the initial prompt suffix for the link generator modal
+  const [linkGenInitialPromptSuffix, setLinkGenInitialPromptSuffix] = useState<string | undefined>(undefined);
 
   // New handler for toggling favorite status
   const handleToggleFavoritePrompt = async (promptId: string, newFavoriteStatus: boolean) => {
@@ -1090,6 +1092,12 @@ CRITICAL: The optimized prompt must:
     }
   }
 
+  // New handler to open link generator with a specific prompt
+  const handleOpenLinkGeneratorModal = (urlSuffix: string) => {
+    setLinkGenInitialPromptSuffix(urlSuffix);
+    openLinkGenerator();
+  };
+
   if (!isLoaded || isLoading) {
     return <LoadingPlaceholderForAdminPages />
   }
@@ -1275,9 +1283,13 @@ CRITICAL: The optimized prompt must:
                       resetSystemPrompt={resetSystemPrompt}
                       linkGeneratorOpened={linkGeneratorOpened}
                       openLinkGenerator={openLinkGenerator}
-                      closeLinkGenerator={closeLinkGenerator}
+                      closeLinkGenerator={() => {
+                        closeLinkGenerator();
+                        setLinkGenInitialPromptSuffix(undefined); // Reset suffix on close
+                      }}
                       course_name={course_name}
                       customSystemPrompts={customSystemPrompts}
+                      initialActivePromptForLink={linkGenInitialPromptSuffix} // Pass new state
                     />
                   </div>
                 )}
@@ -1296,6 +1308,7 @@ CRITICAL: The optimized prompt must:
               onCopyToClipboard={handleCopyToClipboard} 
               onDeletePrompt={handleInitiateDeleteCustomPrompt}
               onToggleFavorite={handleToggleFavoritePrompt}
+              onOpenLinkGeneratorModal={handleOpenLinkGeneratorModal} // Pass the new handler
             />
 
             {/* Modal for Adding/Editing Custom System Prompts */}

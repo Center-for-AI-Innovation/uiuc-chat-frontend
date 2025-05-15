@@ -24,6 +24,7 @@ import {
   IconSelector,
   IconStar,
   IconStarFilled,
+  IconLink,
 } from '@tabler/icons-react';
 import { type CustomSystemPrompt } from '~/types/courseMetadata';
 
@@ -36,6 +37,7 @@ interface CustomPromptsTableProps {
   onCopyToClipboard: (promptText: string) => void;
   onDeletePrompt: (prompt: CustomSystemPrompt) => void;
   onToggleFavorite: (promptId: string, isFavorite: boolean) => void;
+  onOpenLinkGeneratorModal: (urlSuffix: string) => void;
 }
 
 type SortableColumn = 'name' | 'urlSuffix' | 'promptText';
@@ -78,6 +80,7 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
   onCopyToClipboard,
   onDeletePrompt,
   onToggleFavorite,
+  onOpenLinkGeneratorModal,
 }) => {
   const [sortColumn, setSortColumn] = useState<SortableColumn | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -268,6 +271,7 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
                     <th
                       scope="col"
                       className="w-28 px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-6"
+                      style={{ minWidth: '120px' }}
                     >
                       Actions
                     </th>
@@ -302,6 +306,17 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
                       </td>
                       <td className="whitespace-nowrap px-4 py-4 text-right text-sm font-medium sm:px-6">
                         <Group spacing="xs" noWrap>
+                          <Tooltip label="Generate Link" className={`${montserrat_paragraph.className}`}>
+                            <Button
+                              variant="subtle"
+                              color="grape"
+                              size="xs"
+                              onClick={() => onOpenLinkGeneratorModal(prompt.urlSuffix)}
+                              px={5}
+                            >
+                              <IconLink size={16} />
+                            </Button>
+                          </Tooltip>
                           <Tooltip label="Edit" className={`${montserrat_paragraph.className}`}>
                             <Button
                               variant="subtle"
