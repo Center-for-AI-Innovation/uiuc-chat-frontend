@@ -913,7 +913,7 @@ export default function APIKeyInputForm() {
 
             {/* SECTION: OTHER INFO, TBD */}
             {/* <div
-              className="mx-auto mt-[2%] w-[90%] items-start rounded-2xl shadow-md shadow-purple-600"
+              className="mx-auto mt-[2%] w-[90%] items-start rounded-2xl shadow-md"
               style={{ zIndex: 1, background: '#15162c' }}
             >
               <Flex direction="row" justify="space-between">

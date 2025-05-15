@@ -53,7 +53,8 @@ const useStyles = createStyles((theme: MantineTheme) => ({
     fontFamily: 'var(--font-montserratHeading)',
     outline: 'none',
     border: 'solid 1.5px',
-    borderColor: theme.colors.grape[8],
+    color: 'var(--dashboard-button)',
+    borderColor: 'var(--dashboard-button)',
     alignItems: 'center',
     justifyContent: 'center',
     gap: theme.spacing.xs,
@@ -62,9 +63,11 @@ const useStyles = createStyles((theme: MantineTheme) => ({
     transition: 'background-color 0.2s ease-in-out',
     height: '48px',
     backgroundColor: 'var(--background-dark)',
+    /* border-1 border-[--dashboard-button] hover:bg-[--dashboard-button-hover] hover:border-[--dashboard-button-hover] */
 
     '&:hover': {
-      backgroundColor: theme.colors.grape[8],
+      color: 'var(--dashboard-button-foreground)',
+      backgroundColor: 'var(--dashboard-button)',
     },
     '@media (max-width: 768px)': {
       fontSize: theme.fontSizes.xs,
@@ -338,13 +341,12 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
           <Flex direction="column" align="center" w="100%">
             <div className="pt-5"></div>
             <div
-              className="w-[98%] rounded-3xl"
+              className="w-[98%] rounded-3xl bg-[--background]"
               style={{
                 // width: '98%',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                background: '#15162c',
                 paddingTop: '1rem',
               }}
             >
@@ -354,14 +356,13 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  background: '#15162c',
                   paddingBottom: '1rem',
                 }}
               >
                 <Title
                   order={3}
                   align="left"
-                  className={`px-4 text-[hsl(280,100%,70%)] ${montserrat_heading.variable} font-montserratHeading`}
+                  className={`px-4 text-[--dashboard-foreground] ${montserrat_heading.variable} font-montserratHeading`}
                   style={{ flexGrow: 2 }}
                 >
                   Usage Overview
@@ -387,18 +388,20 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                 </div>
               </div>
 
-              <Divider className="w-full" color="gray.4" size="sm" />
-
               {/* Project Analytics Dashboard */}
-              <div className="my-6 w-[95%] rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
+              <div className="my-6 w-[95%] rounded-xl bg-gradient-to-br from-[--dashboard-background-dark] to-[--dashboard-background] p-6 text-[--dashboard-foreground]">
                 <div className="mb-6">
                   <Title
                     order={4}
-                    className={`${montserrat_heading.variable} font-montserratHeading text-white`}
+                    className={`${montserrat_heading.variable} font-montserratHeading`}
                   >
                     Project Analytics
                   </Title>
-                  <Text size="sm" color="dimmed" mt={2}>
+                  <Text
+                    size="sm"
+                    color="var(--dashboard-foreground-faded)"
+                    mt={2}
+                  >
                     Overview of project engagement and usage statistics
                   </Text>
                 </div>
@@ -406,20 +409,20 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                 {/* Main Stats Grid with Integrated Weekly Trends */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                   {/* Conversations Card */}
-                  <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
+                  <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] shadow-md transition-all duration-200">
                     <div className="mb-3 flex items-center justify-between">
                       <div>
-                        <Text size="sm" color="dimmed" weight={500} mb={1}>
+                        <Text size="sm" weight={500} mb={1}>
                           Total Conversations
                         </Text>
-                        <Text size="xs" color="dimmed" opacity={0.7}>
+                        <Text size="xs" opacity={0.7}>
                           All-time chat sessions
                         </Text>
                       </div>
-                      <div className="rounded-full bg-purple-400/10 p-2">
+                      <div className="rounded-full bg-[--dashboard-background-dark] p-2">
                         <IconMessageCircle2
                           size={24}
-                          className="text-purple-400"
+                          className="text-[--dashboard-stat]"
                         />
                       </div>
                     </div>
@@ -428,11 +431,12 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         <Text
                           size="xl"
                           weight={700}
-                          className="text-purple-400"
+                          className="flex min-h-[3rem] min-w-[3rem] items-center justify-center rounded-full bg-[--dashboard-stat] text-white"
                         >
                           {courseStats?.total_conversations?.toLocaleString() ||
                             '0'}
                         </Text>
+
                         {(() => {
                           const trend = weeklyTrends.find(
                             (t) => t.metric_name === 'Total Conversations',
@@ -441,7 +445,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
                           return (
                             <div
-                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
+                              className={`flex items-center gap-2 rounded-md ${
                                 trend.percentage_change > 0
                                   ? 'bg-green-400/10'
                                   : 'bg-red-400/10'
@@ -449,12 +453,12 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                             >
                               {trend.percentage_change > 0 ? (
                                 <IconTrendingUp
-                                  size={18}
+                                  size={32}
                                   className="text-green-400"
                                 />
                               ) : (
                                 <IconTrendingDown
-                                  size={18}
+                                  size={32}
                                   className="text-red-400"
                                 />
                               )}
@@ -481,18 +485,21 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                   </div>
 
                   {/* Users Card */}
-                  <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
+                  <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] shadow-md transition-all duration-200">
                     <div className="mb-3 flex items-center justify-between">
                       <div>
-                        <Text size="sm" color="dimmed" weight={500} mb={1}>
+                        <Text size="sm" weight={500} mb={1}>
                           Total Users
                         </Text>
-                        <Text size="xs" color="dimmed" opacity={0.7}>
+                        <Text size="xs" opacity={0.7}>
                           All-time unique participants
                         </Text>
                       </div>
-                      <div className="rounded-full bg-purple-400/10 p-2">
-                        <IconUsers size={24} className="text-purple-400" />
+                      <div className="rounded-full bg-[--dashboard-background-dark] p-2">
+                        <IconUsers
+                          size={24}
+                          className="text-[--dashboard-stat]"
+                        />
                       </div>
                     </div>
                     <div className="mt-4">
@@ -500,7 +507,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         <Text
                           size="xl"
                           weight={700}
-                          className="text-purple-400"
+                          className="flex min-h-[3rem] min-w-[3rem] items-center justify-center rounded-full bg-[--dashboard-stat] text-white"
                         >
                           {courseStats?.total_users?.toLocaleString() || '0'}
                         </Text>
@@ -512,7 +519,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
                           return (
                             <div
-                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
+                              className={`flex items-center gap-2 rounded-md ${
                                 trend.percentage_change > 0
                                   ? 'bg-green-400/10'
                                   : 'bg-red-400/10'
@@ -520,12 +527,12 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                             >
                               {trend.percentage_change > 0 ? (
                                 <IconTrendingUp
-                                  size={18}
+                                  size={32}
                                   className="text-green-400"
                                 />
                               ) : (
                                 <IconTrendingDown
-                                  size={18}
+                                  size={32}
                                   className="text-red-400"
                                 />
                               )}
@@ -552,18 +559,21 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                   </div>
 
                   {/* Messages Card */}
-                  <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
+                  <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] shadow-md transition-all duration-200">
                     <div className="mb-3 flex items-center justify-between">
                       <div>
-                        <Text size="sm" color="dimmed" weight={500} mb={1}>
+                        <Text size="sm" weight={500} mb={1}>
                           Messages
                         </Text>
-                        <Text size="xs" color="dimmed" opacity={0.7}>
+                        <Text size="xs" opacity={0.7}>
                           Total exchanges
                         </Text>
                       </div>
-                      <div className="rounded-full bg-purple-400/10 p-2">
-                        <IconMessage2 size={24} className="text-purple-400" />
+                      <div className="rounded-full bg-[--dashboard-background-dark] p-2">
+                        <IconMessage2
+                          size={24}
+                          className="text-[--dashboard-stat]"
+                        />
                       </div>
                     </div>
                     <div className="mt-4">
@@ -571,10 +581,11 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         <Text
                           size="xl"
                           weight={700}
-                          className="text-purple-400"
+                          className="inline-flex min-h-[3rem] min-w-[3rem] items-center justify-center rounded-full bg-[--dashboard-stat] text-white"
                         >
                           {courseStats?.total_messages?.toLocaleString() || '0'}
                         </Text>
+
                         {(() => {
                           const trend = weeklyTrends.find(
                             (t) => t.metric_name === 'Total Messages',
@@ -583,7 +594,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
                           return (
                             <div
-                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
+                              className={`flex items-center gap-2 rounded-md ${
                                 trend.percentage_change > 0
                                   ? 'bg-green-400/10'
                                   : 'bg-red-400/10'
@@ -591,12 +602,12 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                             >
                               {trend.percentage_change > 0 ? (
                                 <IconTrendingUp
-                                  size={18}
+                                  size={32}
                                   className="text-green-400"
                                 />
                               ) : (
                                 <IconTrendingDown
-                                  size={18}
+                                  size={32}
                                   className="text-red-400"
                                 />
                               )}
@@ -634,7 +645,11 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                       >
                         User Engagement Metrics
                       </Text>
-                      <Text size="sm" color="dimmed" mt={1}>
+                      <Text
+                        size="sm"
+                        color="var(--dashboard-foreground-faded)"
+                        mt={1}
+                      >
                         Detailed breakdown of user interaction patterns
                       </Text>
                     </div>
@@ -642,20 +657,20 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                     {/* Average Conversations per User */}
-                    <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
+                    <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] shadow-md transition-all duration-200">
                       <div className="mb-3 flex items-center justify-between">
                         <div>
-                          <Text size="sm" color="dimmed" weight={500} mb={1}>
+                          <Text size="sm" weight={500} mb={1}>
                             Conversations per User
                           </Text>
-                          <Text size="xs" color="dimmed" opacity={0.7}>
+                          <Text size="xs" opacity={0.7}>
                             Average engagement frequency
                           </Text>
                         </div>
-                        <div className="rounded-full bg-purple-400/10 p-2">
+                        <div className="rounded-full bg-[--dashboard-background-dark] p-2">
                           <IconMessageCircle2
                             size={24}
-                            className="text-purple-400"
+                            className="text-[--dashboard-stat]"
                           />
                         </div>
                       </div>
@@ -663,7 +678,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         <Text
                           size="xl"
                           weight={700}
-                          className="text-purple-400"
+                          className="inline-flex min-h-[3rem] min-w-[3rem] items-center justify-center rounded-full bg-[--dashboard-stat] text-white"
                         >
                           {courseStats?.avg_conversations_per_user?.toFixed(
                             1,
@@ -676,25 +691,28 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     </div>
 
                     {/* Average Messages per User */}
-                    <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
+                    <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] shadow-md transition-all duration-200">
                       <div className="mb-3 flex items-center justify-between">
                         <div>
-                          <Text size="sm" color="dimmed" weight={500} mb={1}>
+                          <Text size="sm" weight={500} mb={1}>
                             Messages per User
                           </Text>
-                          <Text size="xs" color="dimmed" opacity={0.7}>
+                          <Text size="xs" opacity={0.7}>
                             Average interaction depth
                           </Text>
                         </div>
-                        <div className="rounded-full bg-purple-400/10 p-2">
-                          <IconMessage2 size={24} className="text-purple-400" />
+                        <div className="rounded-full bg-[--dashboard-background-dark] p-2">
+                          <IconMessage2
+                            size={24}
+                            className="text-[--dashboard-stat]"
+                          />
                         </div>
                       </div>
                       <div className="mt-4 flex items-baseline gap-2">
                         <Text
                           size="xl"
                           weight={700}
-                          className="text-purple-400"
+                          className="inline-flex min-h-[3rem] min-w-[3rem] items-center justify-center rounded-full bg-[--dashboard-stat] text-white"
                         >
                           {courseStats?.avg_messages_per_user?.toFixed(1) ||
                             '0'}
@@ -706,25 +724,28 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     </div>
 
                     {/* Average Messages per Conversation */}
-                    <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
+                    <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] shadow-md transition-all duration-200">
                       <div className="mb-3 flex items-center justify-between">
                         <div>
-                          <Text size="sm" color="dimmed" weight={500} mb={1}>
+                          <Text size="sm" weight={500} mb={1}>
                             Messages per Conversation
                           </Text>
-                          <Text size="xs" color="dimmed" opacity={0.7}>
+                          <Text size="xs" opacity={0.7}>
                             Average conversation length
                           </Text>
                         </div>
-                        <div className="rounded-full bg-purple-400/10 p-2">
-                          <IconChartBar size={24} className="text-purple-400" />
+                        <div className="rounded-full bg-[--dashboard-background-dark] p-2">
+                          <IconChartBar
+                            size={24}
+                            className="text-[--dashboard-stat]"
+                          />
                         </div>
                       </div>
                       <div className="mt-4 flex items-baseline gap-2">
                         <Text
                           size="xl"
                           weight={700}
-                          className="text-purple-400"
+                          className="inline-flex min-h-[3rem] min-w-[3rem] items-center justify-center rounded-full bg-[--dashboard-stat] text-white"
                         >
                           {courseStats?.avg_messages_per_conversation?.toFixed(
                             1,
@@ -741,14 +762,14 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
               <div className="grid w-[95%] grid-cols-1 gap-6 pb-10 lg:grid-cols-2">
                 {!hasConversationData ? (
-                  <div className="rounded-xl bg-[#1a1b30] p-6 text-center shadow-lg shadow-purple-900/20 lg:col-span-2">
+                  <div className="rounded-xl bg-gradient-to-br from-[--dashboard-background-dark] to-[--dashboard-background] p-6 text-center text-[--dashboard-foreground] transition-all duration-200">
                     <Title
                       order={4}
                       className={`${montserrat_heading.variable} font-montserratHeading`}
                     >
                       No conversation data available yet
                     </Title>
-                    <Text size="lg" color="dimmed" mt="md">
+                    <Text size="lg" mt="md">
                       Start some conversations to see analytics and
                       visualizations!
                     </Text>
@@ -756,16 +777,11 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                 ) : (
                   <>
                     {/* Model Usage Chart - Moved to top */}
-                    <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
-                      <Title
-                        order={4}
-                        mb="md"
-                        align="left"
-                        className="text-white"
-                      >
+                    <div className="rounded-xl bg-gradient-to-br from-[--dashboard-background-dark] to-[--dashboard-background] p-6 text-[--dashboard-foreground] transition-all duration-200">
+                      <Title order={4} mb="md" align="left">
                         Model Usage Distribution
                       </Title>
-                      <Text size="sm" color="dimmed" mb="xl">
+                      <Text size="sm" mb="xl">
                         Distribution of AI models used across all conversations
                       </Text>
                       <ModelUsageChart
@@ -776,16 +792,11 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     </div>
 
                     {/* Conversations Per Day Chart */}
-                    <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
-                      <Title
-                        order={4}
-                        mb="md"
-                        align="left"
-                        className="text-white"
-                      >
+                    <div className="rounded-xl bg-gradient-to-br from-[--dashboard-background-dark] to-[--dashboard-background] p-6 text-[--dashboard-foreground] transition-all duration-200">
+                      <Title order={4} mb="md" align="left">
                         Conversations Per Day
                       </Title>
-                      <Text size="sm" color="dimmed" mb="xl">
+                      <Text size="sm" mb="xl">
                         Shows the total number of conversations that occurred on
                         each calendar day
                       </Text>
@@ -797,13 +808,13 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     </div>
 
                     {/* Combined Hour/Weekday Chart */}
-                    <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
+                    <div className="rounded-xl bg-gradient-to-br from-[--dashboard-background-dark] to-[--dashboard-background] p-6 text-[--dashboard-foreground] transition-all duration-200">
                       <div className="mb-4 flex items-center justify-between">
                         <div>
-                          <Title order={4} className="text-white">
+                          <Title order={4}>
                             Aggregated Conversation Breakdown
                           </Title>
-                          <Text size="sm" color="dimmed" mt={1}>
+                          <Text size="sm" mt={1}>
                             View conversation patterns by hour of day or day of
                             week
                           </Text>
@@ -818,23 +829,36 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                           styles={(theme) => ({
                             input: {
-                              backgroundColor: '#232438',
-                              borderColor: theme.colors.grape[8],
-                              color: theme.white,
-                              '&:hover': {
-                                borderColor: theme.colors.grape[7],
+                              '&:focus': {
+                                borderColor: 'var(--dashboard-button)',
                               },
-                            },
-                            item: {
-                              backgroundColor: '#232438',
-                              color: theme.white,
-                              '&:hover': {
-                                backgroundColor: theme.colors.grape[8],
-                              },
+                              color: 'var(--foreground)',
+                              backgroundColor: 'var(--background)',
+                              fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
                             },
                             dropdown: {
-                              backgroundColor: '#232438',
-                              borderColor: theme.colors.grape[8],
+                              backgroundColor: 'var(--background)',
+                              border: '1px solid var(--background-dark)',
+                            },
+                            item: {
+                              color: 'var(--foreground)',
+                              backgroundColor: 'var(--background)',
+                              borderRadius: theme.radius.md,
+                              margin: '2px',
+                              '&[data-selected]': {
+                                '&': {
+                                  color: 'var(--foreground)',
+                                  backgroundColor: 'transparent',
+                                },
+                                '&:hover': {
+                                  color: 'var(--foreground)',
+                                  backgroundColor: 'var(--foreground-faded)',
+                                },
+                              },
+                              '&[data-hovered]': {
+                                color: 'var(--foreground)',
+                                backgroundColor: 'var(--foreground-faded)',
+                              },
                             },
                           })}
                           size="xs"
@@ -858,16 +882,11 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     </div>
 
                     {/* Heatmap Chart */}
-                    <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
-                      <Title
-                        order={4}
-                        mb="md"
-                        align="left"
-                        className="text-white"
-                      >
+                    <div className="rounded-xl bg-gradient-to-br from-[--dashboard-background-dark] to-[--dashboard-background] p-6 text-[--dashboard-foreground] transition-all duration-200">
+                      <Title order={4} mb="md" align="left">
                         Conversations Per Day and Hour
                       </Title>
-                      <Text size="sm" color="dimmed" mb="xl">
+                      <Text size="sm" mb="xl">
                         A heatmap showing conversation density across both days
                         and hours
                       </Text>
@@ -1125,7 +1144,7 @@ const showToastOnFileDeleted = (theme: MantineTheme, was_error = false) => {
             : theme.colors.nearlyWhite,
           borderColor: was_error
             ? theme.colors.errorBorder
-            : theme.colors.aiPurple,
+            : 'var(--dashboard-background-dark)',
         },
         title: {
           color: theme.colors.nearlyBlack,
@@ -1174,7 +1193,10 @@ export const showToastOnUpdate = (
           }
           target="_blank"
           rel="noopener noreferrer"
-          style={{ textDecoration: 'underline', color: 'lightpurple' }}
+          style={{
+            textDecoration: 'underline',
+            color: 'var(--dashboard-button)',
+          }}
         >
           our docs
         </Link>{' '}

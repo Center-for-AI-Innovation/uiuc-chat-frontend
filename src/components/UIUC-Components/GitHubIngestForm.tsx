@@ -468,7 +468,7 @@ export default function GitHubIngestForm({
                     github.com/USER/REPO
                   </code>
                   , for example:{' '}
-                  <span className={'text-purple-600'}>
+                  <span className={'text-[--dashboard-button]'}>
                     <Link
                       target="_blank"
                       rel="noreferrer"
@@ -515,7 +515,7 @@ export default function GitHubIngestForm({
             <Button
               onClick={handleIngest}
               disabled={!isUrlValid}
-              className="h-11 w-full rounded-xl bg-purple-600 text-white transition-colors hover:bg-purple-700"
+              className="h-11 w-full rounded-xl bg-[--dashboard-button] text-[--dashboard-button-foreground] transition-colors hover:bg-[--dashboard-button-hover]"
             >
               Ingest the Website
             </Button>
