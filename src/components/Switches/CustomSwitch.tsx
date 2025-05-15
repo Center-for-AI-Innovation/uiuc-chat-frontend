@@ -80,10 +80,10 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
           track: {
             backgroundColor: checked
               ? 'var(--dashboard-button) !important'
-              : '#25262b',
+              : 'var(--dashboard-background-dark) !important',
             borderColor: checked
               ? 'var(--dashboard-button) !important'
-              : '#25262b',
+              : 'var(--dashboard-background-darker) !important',
             cursor: disabled ? 'not-allowed' : 'pointer',
             opacity: disabled ? 0.6 : 1,
           },
@@ -105,13 +105,15 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
       />
       <span
         className={`${montserrat_paragraph.variable} text-md ml-3 flex items-center font-montserratParagraph transition-colors duration-200 ease-in-out ${
-          !disabled && isContainerHovered ? 'text-white' : 'text-gray-200'
+          !disabled && isContainerHovered
+            ? 'text-[--dashboard-foreground]'
+            : 'text-[--dashboard-foreground]'
         }`}
       >
         {label}
         <Tooltip
           label={
-            <Text size="sm" color="gray.1">
+            <Text size="sm" color="currentColor">
               {tooltip}
             </Text>
           }
@@ -122,30 +124,34 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
           withinPortal
           styles={(theme) => ({
             tooltip: {
-              backgroundColor: theme.colors.dark[7],
-              color: theme.colors.gray[2],
+              backgroundColor: 'var(--background)',
+              color: 'var(--foreground)',
+              fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
               borderRadius: theme.radius.md,
               fontSize: theme.fontSizes.sm,
               padding: '8px 12px',
               boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
             },
             arrow: {
-              backgroundColor: theme.colors.dark[7],
+              backgroundColor: 'var(--background)',
             },
           })}
         >
           <span
             className="ml-2 cursor-pointer transition-transform duration-200 ease-in-out"
-            style={{
-              transform:
-                !disabled && isContainerHovered ? 'scale(1.1)' : 'scale(1)',
-            }}
+            style={
+              {
+                /*              transform: !disabled && isContainerHovered ? 'scale(1.1)' : 'scale(1)', */
+              }
+            }
             onClick={(e) => e.stopPropagation()}
           >
             <IconInfoCircle
               size={16}
               className={
-                !disabled && isContainerHovered ? 'text-white' : 'text-gray-400'
+                !disabled && isContainerHovered
+                  ? 'text-gray/60'
+                  : 'text-gray-400'
               }
               style={{ transition: 'all 0.2s ease-in-out' }}
             />
