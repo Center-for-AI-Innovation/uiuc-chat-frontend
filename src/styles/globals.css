@@ -139,6 +139,7 @@
   --modal-dark: color-mix(in srgb, var(--modal), black 15%);
   --modal-active: var(--primary);
   --modal-text: var(--foreground);
+  --modal-border: var(--background-dark);
   --modal-button: var(--foreground-light);
   --modal-button-text: var(--background);
   --modal-button-text-hover: white;
@@ -333,7 +334,7 @@ pre:has(div.codeblock) {
   /* border: 1px solid #ccc; */
 }
 
-/* Make the purple background fade out  */
+/* Make the background fade out  */
 .course-page-main2 {
   /* height: 400px;     */
   background: -webkit-gradient(
@@ -351,7 +352,7 @@ pre:has(div.codeblock) {
   background-repeat: no-repeat;
 }
 
-/* Make the purple background fade out  */
+/* Make the background fade out  */
 .course-page-main {
   /* height: 400px;     */
   background: -webkit-gradient(
@@ -540,7 +541,7 @@ li {
     /* illinois-storm-dark */ rgba(29, 88, 167, 0.5),
     /* illinois-industrial */ rgba(92, 14, 65, 0) /* illinois-berry */
   );
-  /* Changed the primary color to purple-900 */
+
   animation: shimmer 5s infinite;
   content: '';
 }
@@ -667,8 +668,8 @@ a[data-footnote-backref] {
   align-items: center;
   font-size: 1rem;
   padding: 10px 10px;
-  color: var(--illinois-link);
-  background-color: var(--illinois-purple-dark);
+  color: var(--dashboard-button-foreground);
+  background-color: var(--dashboard-button);
   border-radius: 5px;
   border: none;
   text-decoration: none;
@@ -682,15 +683,14 @@ a[data-footnote-backref] {
 /* Simple, consistent hover state for all document buttons */
 .linkMarkDown button:not(.codeblock-button):hover,
 .linkMarkDown button:not(.codeblock-button):focus {
-  background-color: var(--illinois-blueviolet);
-  color: var(--illinois-white);
+  background-color: var(--dashboard-button-hover);
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 /* Visited state for document buttons */
 .linkMarkDown button:not(.codeblock-button):visited {
-  color: var(--illinois-berry);
+  color: var(--dashboard-button);
 }
 
 .linkMarkDown ol:has(> li > button) {
@@ -703,7 +703,7 @@ a[data-footnote-backref] {
   /* Padding inside the card */
   margin: 20px 0;
   /* Margin around the card */
-  background-color: var(--illinois-purple-dark);
+  background-color: var(--dashboard-background-dark);
   /* Slightly lighter than the button background for contrast */
   border-radius: 10px;
   /* Rounded corners for the card */
@@ -726,7 +726,7 @@ a[data-footnote-backref] {
 }
 
 .codeBlock pre:has(> code) {
-  background-color: var(--illinois-purple-dark) !important;
+  background-color: var(--dashboard-background-dark) !important;
 }
 
 /* Style for individual list items */
@@ -747,15 +747,15 @@ a[data-footnote-backref] {
 /* For styling MagicBell. We hide the logo, but keep the CTA button.  */
 /* `EnablePushNotificationsButton` works on localhost, `css-s37qmw` works on production. */
 body button[class$='EnablePushNotificationsButton'] {
-  background-color: var(--illinois-storm-95) !important;
-  color: var(--illinois-purple-dark) !important;
+  background-color: var(--dashboard-button) !important;
+  color: var(--dashboard-button-foreground) !important;
 }
 
 /* padding: 10px !important; */
 /* border-radius: 4px !important; */
 button.css-s37qmw {
-  background: var(--illinois-storm-95) !important;
-  color: var(--illinois-purple-dark) !important;
+  background: var(--dashboard-button) !important;
+  color: var(--dashboard-button-foreground) !important;
 }
 
 /* Remove branded footer from MagicBell (only works on prod w/ compiled css) */
@@ -781,13 +781,13 @@ button.css-s37qmw {
 
 /* Think Tag Dropdown Styles */
 .think-tag-dropdown {
-  @apply mb-4 w-full rounded-lg border border-gray-200 bg-gray-50/30 shadow-sm transition-all duration-200 hover:border-purple-200 dark:border-gray-700/50 dark:bg-gray-800/20 dark:hover:border-purple-500/30;
+  @apply mb-4 w-full rounded-lg border border-gray-200 bg-gray-50/30 shadow-sm transition-all duration-200 hover:border-[--dashboard-button];
   overflow: hidden;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .think-tag-header {
-  @apply flex cursor-pointer items-center justify-between p-4 text-gray-700 transition-colors duration-200 hover:bg-purple-50/50 dark:text-gray-200 dark:hover:bg-purple-900/20;
+  @apply flex cursor-pointer items-center justify-between p-4 text-gray-700 transition-colors duration-200 hover:bg-[--dashboard-button];
   border-radius: 0.5rem;
 }
 
@@ -797,7 +797,7 @@ button.css-s37qmw {
 }
 
 .think-tag-brain-icon {
-  @apply text-purple-500 dark:text-purple-400;
+  @apply text-[--accent];
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1));
   transition: transform 0.2s ease;
 }
@@ -848,11 +848,11 @@ button.css-s37qmw {
 }
 
 .think-tag-content.expanded:hover {
-  @apply bg-purple-50/30 dark:bg-purple-900/10;
+  @apply bg-[--dashboard-button] text-[--dashboard-button-foreground];
 }
 
 .think-tag-content.expanded:focus {
-  @apply outline-none ring-2 ring-purple-500/30 dark:ring-purple-500/20;
+  @apply outline-none ring-2 ring-[--accent];
 }
 
 .think-tag-content.expanded > div {
@@ -860,7 +860,7 @@ button.css-s37qmw {
 }
 
 .think-tag-header:focus {
-  @apply outline-none ring-2 ring-purple-500/30 dark:ring-purple-500/20;
+  @apply outline-none ring-2 ring-[--accent];
 }
 
 .think-tag-icon {
@@ -868,12 +868,12 @@ button.css-s37qmw {
 }
 
 .think-tag-header:hover .think-tag-icon {
-  @apply text-purple-500 dark:text-purple-400;
+  @apply text-[--dashboard-button];
 }
 
 .think-tag-icon.expanded {
   transform: rotate(180deg);
-  @apply text-purple-500 dark:text-purple-400;
+  @apply text-[--accent];
 }
 
 /* Update the link styles to show proper cursor and interaction states */
