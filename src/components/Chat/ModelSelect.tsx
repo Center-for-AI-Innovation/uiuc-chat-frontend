@@ -193,7 +193,7 @@ export const ModelItem = forwardRef<
                     <Text
                       size="s"
                       style={{ marginLeft: '7px' }}
-                      className="text-purple-600"
+                      className="text-[--accent]"
                     >
                       loading
                     </Text>
