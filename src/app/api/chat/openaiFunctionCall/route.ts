@@ -1,4 +1,3 @@
-import { OpenAIStream } from '~/utils/server'
 import type {
   ChatCompletionMessageParam,
   ChatCompletionMessageToolCall,
@@ -93,7 +92,7 @@ export async function POST(req: Request) {
         Authorization: `Bearer ${decryptedKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4.1',
         messages: message_to_send,
         tools: tools,
         stream: false,
