@@ -21,10 +21,6 @@ export async function addDocumentsToDocGroupQdrant(
   doc: CourseDocument,
 ) {
   try {
-    console.log('[qdrantUtils] Using QDRANT_URL:', process.env.QDRANT_URL);
-    console.log('[qdrantUtils] Using QDRANT_API_KEY:', process.env.QDRANT_API_KEY ? 'Exists' : 'Not Set or Empty'); // Avoid logging the key itself
-    console.log('[qdrantUtils] Using QDRANT_COLLECTION_NAME:', collection_name);
-
     // Uncomment with function definition to test collection schema:
     // const schema = await getCollectionSchema(collection_name ? collection_name : "");
     // console.log("Collection Schema:", schema);
@@ -51,26 +47,26 @@ export async function addDocumentsToDocGroupQdrant(
         },
       ],
     }
-    console.log("Doc s3_path: ", doc.s3_path);
-    console.log("Doc url: ", doc.url);
-    console.log("Document being used:", doc);
-    console.log("Search filter being used:", JSON.stringify(searchFilter, null, 2));
+    // console.log("Doc s3_path: ", doc.s3_path);
+    // console.log("Doc url: ", doc.url);
+    // console.log("Document being used:", doc);
+    // console.log("Search filter being used:", JSON.stringify(searchFilter, null, 2));
 
     // Following commented out code can be used for verifying Qdrant updates:
-    const dummyVector = new Array(1536).fill(0);
+    // const dummyVector = new Array(1536).fill(0);
 
-    const searchResultBefore = await qdrant.search(collection_name ? collection_name : "", {
-      vector: dummyVector,
-      filter: searchFilter,
-      with_payload: true,
-      with_vector: false,
-    });
+    // const searchResultBefore = await qdrant.search(collection_name ? collection_name : "", {
+    //   vector: dummyVector,
+    //   filter: searchFilter,
+    //   with_payload: true,
+    //   with_vector: false,
+    // });
 
-    console.log("Previous vectors:");
-    for (const document of searchResultBefore) {
-      console.log("Payload:", document.payload);
-    }
-    console.log('Filter used for adding doc to doc group: ', searchFilter, 'payload:', doc.doc_groups)
+    // console.log("Previous vectors:");
+    // for (const document of searchResultBefore) {
+    //   console.log("Payload:", document.payload);
+    // }
+    // console.log('Filter used for adding doc to doc group: ', searchFilter, 'payload:', doc.doc_groups)
 
     const response = await qdrant.setPayload(collection_name ? collection_name : '', {
       payload: {
@@ -79,17 +75,17 @@ export async function addDocumentsToDocGroupQdrant(
       filter: searchFilter,
     })
 
-    const searchResultAfter = await qdrant.search(collection_name ? collection_name : "", {
-      vector: dummyVector,
-      filter: searchFilter,
-      with_payload: true,
-    });
+    // const searchResultAfter = await qdrant.search(collection_name ? collection_name : "", {
+    //   vector: dummyVector,
+    //   filter: searchFilter,
+    //   with_payload: true,
+    // });
 
-    console.log("Updated vectors:");
-    for (const document of searchResultAfter) {
-      console.log("Payload:", document.payload);
-    }
-    console.log('Successfully added documents to doc group: ', response)
+    // console.log("Updated vectors:");
+    // for (const document of searchResultAfter) {
+    //   console.log("Payload:", document.payload);
+    // }
+    // console.log('Successfully added documents to doc group: ', response)
     return response
   } catch (error) {
     console.error('Error in addDocumentsToDocGroup:', error)

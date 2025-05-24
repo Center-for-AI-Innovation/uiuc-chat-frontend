@@ -75,9 +75,9 @@ export async function addDocumentsToDocGroup(
   try {
     console.log('addDocumentsToDocGroup called with courseName:', courseName, 'and doc:', JSON.stringify(doc, null, 2));
     if (doc.url) {
-      // If doc.url is present, it's likely the primary identifier or at least available.
+      // If doc.url is present, it's the primary identifier.
       // Call the RPC that can handle URL-based lookups.
-      console.log(`Calling Supabase RPC: 'add_document_to_group_url' for document with URL: ${doc.url}, s3_path: ${doc.s3_path}`);
+      // console.log(`Calling Supabase RPC: 'add_document_to_group_url' for document with URL: ${doc.url}, s3_path: ${doc.s3_path}`);
       const { data, error } = await supabase.rpc('add_document_to_group_url', {
         p_course_name: courseName,
         p_s3_path: doc.s3_path,
@@ -99,7 +99,7 @@ export async function addDocumentsToDocGroup(
       // If doc.url is not present, s3_path must be the identifier.
       // Call the RPC that (ostensibly) handles s3_path based lookups.
       // Note: The SQL for 'add_document_to_group' still has issues with empty p_s3_path.
-      console.log(`Calling Supabase RPC: 'add_document_to_group' for document with s3_path: ${doc.s3_path} (URL is null/empty)`);
+      // console.log(`Calling Supabase RPC: 'add_document_to_group' for document with s3_path: ${doc.s3_path} (URL is null/empty)`);
       const { data, error } = await supabase.rpc('add_document_to_group', {
         p_course_name: courseName,
         p_s3_path: doc.s3_path,
@@ -107,7 +107,6 @@ export async function addDocumentsToDocGroup(
         p_readable_filename: doc.readable_filename,
         p_doc_groups: doc.doc_groups,
       });
-      // console.log('in add_document_to_group_url') // This log was from the old 'else' block, might be confusing here
       if (!data) {
         console.error(
           'Failed to add documents to doc group (using s3_path path):',
