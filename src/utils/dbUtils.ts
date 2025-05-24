@@ -73,7 +73,7 @@ export async function addDocumentsToDocGroup(
   doc: CourseDocument,
 ) {
   try {
-    console.log('addDocumentsToDocGroup called with courseName:', courseName, 'and doc:', JSON.stringify(doc, null, 2));
+    // console.log('addDocumentsToDocGroup called with courseName:', courseName, 'and doc:', JSON.stringify(doc, null, 2));
     if (doc.url) {
       // If doc.url is present, it's the primary identifier.
       // Call the RPC that can handle URL-based lookups.
