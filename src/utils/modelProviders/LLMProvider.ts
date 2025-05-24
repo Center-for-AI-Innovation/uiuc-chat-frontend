@@ -130,10 +130,6 @@ export const VisionCapableModels: Set<
   BedrockModelID.Nova_Lite,
   BedrockModelID.Llama3_2_11B_Instruct,
   BedrockModelID.Llama3_2_90B_Instruct,
-
-  // SambaNova
-  SambaNovaModelID.Llama_3_2_11B_Vision_Instruct,
-  SambaNovaModelID.Llama_3_2_90B_Vision_Instruct,
 ])
 
 /**

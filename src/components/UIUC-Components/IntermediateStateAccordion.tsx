@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Accordion, Badge } from '@mantine/core'
 import { montserrat_paragraph } from 'fonts'
 import { LoadingSpinner } from './LoadingSpinner'
@@ -23,7 +23,15 @@ export const IntermediateStateAccordion = ({
   disableChevronRotation?: boolean
   defaultValue?: string
 }) => {
-  // console.log('IntermediateStateAccordion, key:', accordionKey, 'isLoading:', isLoading, 'error:', error, 'default value:', defaultValue)
+  const [value, setValue] = useState<string | null>(null)
+
+  // Set initial value based on defaultValue prop
+  useEffect(() => {
+    if (defaultValue !== undefined) {
+      setValue(defaultValue)
+    }
+  }, [defaultValue])
+
   return (
     <div className="w-full">
       <Accordion
@@ -42,7 +50,8 @@ export const IntermediateStateAccordion = ({
           )
         }
         disableChevronRotation={disableChevronRotation}
-        value={defaultValue !== undefined ? defaultValue : undefined}
+        value={value}
+        onChange={setValue}
       >
         <Accordion.Item
           key={accordionKey}
