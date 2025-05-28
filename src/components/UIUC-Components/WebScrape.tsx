@@ -67,35 +67,6 @@ const validateUrl = (url: string) => {
   )
 }
 
-const formatUrl = (url: string) => {
-  if (!/^https?:\/\//i.test(url)) {
-    url = 'http://' + url
-  }
-  return url
-}
-
-const formatUrlAndMatchRegex = (url: string) => {
-  // fullUrl always starts with http://. Is the starting place of the scrape.
-  // baseUrl is used to construct the match statement.
-
-  // Ensure the url starts with 'http://'
-  if (!/^https?:\/\//i.test(url)) {
-    url = 'http://' + url
-  }
-
-  // Extract the base url including the path
-  const baseUrl = (
-    url.replace(/^https?:\/\//i, '').split('?')[0] as string
-  ).replace(/\/$/, '') // Remove protocol (http/s), split at '?', and remove trailing slash
-
-  const matchRegex = `http?(s)://**${baseUrl}/**`
-
-  return {
-    fullUrl: baseUrl,
-    matchRegex: matchRegex,
-  }
-}
-
 export const WebScrape = ({
   is_new_course,
   courseName,
@@ -305,29 +276,16 @@ export const WebScrape = ({
       if (!url || !courseName) return null
       console.log('SCRAPING', url)
 
-      const fullUrl = formatUrl(url)
+      const response = await axios.post('/api/scrapeWeb', {
+        url,
+        courseName,
+        maxUrls,
+        scrapeStrategy,
+      })
 
-      const postParams = {
-        url: fullUrl,
-        courseName: courseName,
-        maxPagesToCrawl: maxUrls,
-        scrapeStrategy: scrapeStrategy,
-        match: formatUrlAndMatchRegex(fullUrl).matchRegex,
-        maxTokens: 2000000, // basically inf.
-      }
-      console.log(
-        'About to post to the web scraping endpoint, with params:',
-        postParams,
-      )
-
-      const response = await axios.post(
-        `https://crawlee-production.up.railway.app/crawl`,
-        {
-          params: postParams,
-        },
-      )
-      console.log('Response from web scraping endpoint:', response.data)
+      console.log('Response from Next.js API web scraping endpoint:', response.data)
       return response.data
+
     } catch (error: any) {
       console.error('Error during web scraping:', error)
 
