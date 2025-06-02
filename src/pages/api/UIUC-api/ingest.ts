@@ -37,23 +37,18 @@ const handler = async (
 
     const s3_filepath = `courses/${courseName}/${uniqueFileName}`
 
-    const response = await fetch(
-      'https://app.beam.cloud/taskqueue/ingest_task_queue/latest',
-      {
-        method: 'POST',
-        headers: {
-          Accept: '*/*',
-          'Accept-Encoding': 'gzip, deflate',
-          Authorization: `Bearer ${process.env.BEAM_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          course_name: courseName,
-          readable_filename: readableFilename,
-          s3_paths: s3_filepath,
-        }),
+    const response = await fetch(`${process.env.RABBITMQ_API_URL}`, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
       },
-    )
+      body: JSON.stringify({
+        course_name: courseName,
+        readable_filename: readableFilename,
+        s3_paths: s3_filepath,
+      }),
+    })
 
     const responseBody = await response.json()
     console.log(
