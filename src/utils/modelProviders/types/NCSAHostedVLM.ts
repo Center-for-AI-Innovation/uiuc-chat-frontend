@@ -14,6 +14,7 @@ export enum NCSAHostedVLMModelID {
   MOLMO_7B_D_0924 = 'allenai/Molmo-7B-D-0924',
   QWEN2_VL_72B_INSTRUCT = 'Qwen/Qwen2-VL-72B-Instruct',
   QWEN2_5VL_72B_INSTRUCT = 'Qwen/Qwen2.5-VL-72B-Instruct',
+  QWEN2_5VL_32B_INSTRUCT = 'Qwen/Qwen2.5-VL-32B-Instruct'
 }
 
 export const NCSAHostedVLMModels: Record<
@@ -44,6 +45,12 @@ export const NCSAHostedVLMModels: Record<
     tokenLimit: 23000,
     enabled: true,
   },
+  [NCSAHostedVLMModelID.QWEN2_5VL_32B_INSTRUCT]: {
+    id: NCSAHostedVLMModelID.QWEN2_5VL_32B_INSTRUCT,
+    name: 'Qwen 2.5 VL 32B',
+    tokenLimit:32000,
+    enabled:true
+  }
 }
 
 export const getNCSAHostedVLMModels = async (

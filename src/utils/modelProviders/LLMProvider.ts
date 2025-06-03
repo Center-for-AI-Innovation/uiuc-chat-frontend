@@ -116,6 +116,7 @@ export const VisionCapableModels: Set<
   NCSAHostedVLMModelID.MOLMO_7B_D_0924,
   NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT,
   NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT,
+  NCSAHostedVLMModelID.QWEN2_5VL_32B_INSTRUCT,
 
   // Gemini
   GeminiModelID.Gemini_2_5_Pro_Exp_03_25,
@@ -299,7 +300,8 @@ export const preferredModelIds = [
   OpenAIModelID.GPT_4,
   AzureModelID.GPT_4,
   OpenAIModelID.GPT_3_5,
-  NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT,
+  NCSAHostedVLMModelID.QWEN2_5VL_32B_INSTRUCT,
+  // NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT,
 ]
 
 export const selectBestModel = (
@@ -342,6 +344,7 @@ export const selectBestModel = (
       return model
     }
   }
-  // If no preferred models are available, fallback to llama3.1:8b-instruct-fp16
-  return NCSAHostedVLMModels[NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT]
+  
+  // If no preferred models are available, fallback to Qwen2.5-VL-32B-Instruct
+  return NCSAHostedVLMModels[NCSAHostedVLMModelID.QWEN2_5VL_32B_INSTRUCT]
 }
