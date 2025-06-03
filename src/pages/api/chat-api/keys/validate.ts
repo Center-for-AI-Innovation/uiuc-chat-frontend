@@ -1,6 +1,9 @@
 // src/pages/api/chat-api/keys/validate.ts
 
 import { supabase } from '~/utils/supabaseClient'
+import { db } from '~/db/dbClient'
+import { keycloakUsers } from '~/db/schema'
+import { eq } from 'drizzle-orm'
 import posthog from 'posthog-js'
 import { NextRequest, NextResponse } from 'next/server'
 import type { AuthContextProps } from 'react-oidc-context'
@@ -44,23 +47,25 @@ export async function validateApiKeyAndRetrieveData(
   try {
     const email = data.email
 
-    // Get user data from the email
-    const { data: userData, error: userError } = await supabase
-      .schema('keycloak')
-      .from('user_entity')
-      .select('*')
-      .eq('email', email)
-      .single()
+    // Get user data from email from keycloak
+    const userData = await db.select().from(keycloakUsers).where(eq(keycloakUsers.email, email)).limit(1)
 
-    if (userError) throw userError
+    if (!userData || userData.length === 0) {
+      throw new Error('User not found')
+    }
+
+    const user = userData[0]
+    if (!user) {
+      throw new Error('User data is invalid')
+    }
 
     // Construct auth context
     authContext = {
       isAuthenticated: true,
       user: {
         profile: {
-          sub: userData.id,
-          email: userData.email,
+          sub: user.id,
+          email: user.email,
         },
       },
     } as AuthContextProps
