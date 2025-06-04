@@ -6,10 +6,13 @@ import React, { useState, useEffect } from 'react'
 import { ArrowNarrowRight, ExternalLink } from 'tabler-icons-react'
 import ProjectTable from '~/components/UIUC-Components/ProjectTable'
 import { Card, Button } from '@mantine/core'
+import { useAuth } from 'react-oidc-context'
+import { useRouter } from 'next/router'
 
 import { LandingPageHeader } from '~/components/UIUC-Components/navbars/GlobalHeader'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 import { montserrat_heading, montserrat_paragraph, doto_font } from 'fonts'
+import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 
 // Typing animation component
 const TypingAnimation: React.FC = () => {
@@ -128,7 +131,38 @@ const TypingAnimation: React.FC = () => {
 
 const Home: NextPage = () => {
   const [isTooltipVisible, setIsTooltipVisible] = useState(false)
+  const auth = useAuth()
+  const router = useRouter()
 
+  // Redirect authenticated users to home page
+  useEffect(() => {
+    if (!auth.isLoading && auth.isAuthenticated) {
+      router.replace('/home')
+    }
+  }, [auth.isLoading, auth.isAuthenticated, router])
+
+  // Show loading spinner while checking authentication
+  if (auth.isLoading) {
+    return (
+      <>
+        <Head>
+          <title>Illinois Chat</title>
+          <meta
+            name="description"
+            content="Chat with your documents, with full support for any format and web scraping."
+          />
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
+        <LandingPageHeader />
+        <main className="flex min-h-screen flex-col items-center justify-center">
+          <LoadingSpinner />
+        </main>
+      </>
+    )
+  }
+
+  // If user is authenticated, they'll be redirected above
+  // This component will only render for non-authenticated users
   return (
     <>
       <Head>

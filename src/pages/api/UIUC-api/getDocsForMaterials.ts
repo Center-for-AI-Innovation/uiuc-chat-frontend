@@ -3,15 +3,11 @@ import { supabase } from '~/utils/supabaseClient'
 
 export const runtime = 'edge'
 
-export const getCourseDocumentsHandler = async (
-  req: NextApiRequest,
-  res: NextApiResponse,
-) => {
+const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   const { fileName, courseNameFromBody } = req.body as {
     fileName: string
     courseNameFromBody: string
   }
-
   // Ensure courseNameFromBody is provided
   if (!courseNameFromBody) {
     return res
@@ -63,3 +59,5 @@ export const getCourseDocuments = async (
     return null
   }
 }
+
+export default handler
