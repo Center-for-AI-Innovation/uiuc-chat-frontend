@@ -8,15 +8,20 @@ import {
   Flex,
   Group,
   Button,
+  Select,
   type MantineTheme,
 } from '@mantine/core';
 import { type NextFont } from 'next/dist/compiled/@next/font';
+import { useFetchEnabledDocGroups } from '~/hooks/docGroupsQueries';
+import { useRouter } from 'next/router';
+import { IconChevronDown } from '@tabler/icons-react';
 
 // Define the shape of the custom prompt form data
 interface CustomPromptFormState {
   name: string;
   urlSuffix: string;
   promptText: string;
+  documentGroup?: string;
 }
 
 interface CustomPromptModalProps {
@@ -45,6 +50,19 @@ const CustomPromptModal: React.FC<CustomPromptModalProps> = ({
   montserrat_heading,
   montserrat_paragraph,
 }) => {
+  const router = useRouter();
+  const course_name = router.query.course_name as string;
+  
+  const { data: documentGroups } = useFetchEnabledDocGroups(course_name);
+
+  const documentGroupOptions = [
+    { value: '', label: 'None' },
+    ...(documentGroups?.map(group => ({
+      value: group.name,
+      label: group.name,
+    })) || []),
+  ];
+
   return (
     <Modal
       opened={opened}
@@ -90,7 +108,7 @@ const CustomPromptModal: React.FC<CustomPromptModalProps> = ({
       }}
     >
       <Flex direction="column" gap="md">
-        <Textarea
+        <TextInput
           label="Prompt Name"
           placeholder="E.g., Friendly Tutor, Code Explainer"
           value={customPromptForm.name}
@@ -142,6 +160,67 @@ const CustomPromptModal: React.FC<CustomPromptModalProps> = ({
         >
           {customPromptForm.urlSuffix.length} / 50
         </Text>
+        <Select
+          label="Document Group"
+          placeholder="Select a document group (optional)"
+          value={customPromptForm.documentGroup}
+          onChange={(value) => handleCustomPromptFormChange('documentGroup', value || '')}
+          data={documentGroupOptions}
+          className={`${montserrat_paragraph.className} font-montserratParagraph`}
+          withinPortal
+          styles={{ 
+            label: { color: 'white', marginBottom: '4px' },
+            input: {
+              '&:focus': {
+                borderColor: theme.colors.violet[6],
+                boxShadow: `0 0 3px 1px ${theme.colors.violet[4]}`,
+              },
+            },
+            rightSection: {
+              pointerEvents: 'none',
+              color: theme.colors.gray[5],
+              width: '30px',
+              '@media (maxWidth: 480px)': {
+                width: '24px',
+              },
+            },
+            dropdown: {
+              backgroundColor: '#1d1f33',
+              border: '1px solid rgba(42,42,120,1)',
+              borderRadius: theme.radius.md,
+              marginTop: '2px',
+              boxShadow: theme.shadows.xs,
+            },
+            item: {
+              backgroundColor: '#1d1f33',
+              borderRadius: theme.radius.md,
+              margin: '2px',
+              '&[data-selected]': {
+                backgroundColor: 'transparent',
+                '&:hover': {
+                  backgroundColor: 'rgb(107, 33, 168)',
+                  color: theme.white,
+                },
+              },
+              '&[data-hovered]': {
+                backgroundColor: 'rgb(107, 33, 168)',
+                color: theme.white,
+              },
+              fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+              cursor: 'pointer',
+              whiteSpace: 'normal',
+              lineHeight: 1.2,
+              fontSize: '0.9rem',
+              padding: '8px 12px',
+            },
+          }}
+          rightSection={
+            <IconChevronDown
+              size={14}
+              style={{ marginRight: '8px' }}
+            />
+          }
+        />
         <Textarea
           label="System Prompt Text"
           placeholder="Enter the custom system prompt here..."
@@ -170,7 +249,7 @@ const CustomPromptModal: React.FC<CustomPromptModalProps> = ({
         <Group position="right" mt="md">
           <Button
             variant="outline"
-            onClick={onClose} // Use onClose directly from props
+            onClick={onClose}
             className={`${montserrat_paragraph.className} font-montserratParagraph`}
             styles={(themeParam) => ({
               root: {

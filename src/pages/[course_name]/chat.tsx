@@ -95,6 +95,7 @@ const ChatPage: NextPage = () => {
             fetchedCourseMetadata = {
               ...fetchedCourseMetadata,
               system_prompt: customPrompt.promptText,
+              document_group: customPrompt.documentGroup || undefined,
             };
           } else {
             console.log('activePromptSlug from URL not found in custom prompts. Using default system prompt.');

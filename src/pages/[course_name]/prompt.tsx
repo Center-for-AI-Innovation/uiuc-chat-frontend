@@ -142,6 +142,7 @@ interface CustomSystemPrompt {
   urlSuffix: string // The suffix for the shareable URL
   promptText: string // The actual system prompt text
   isFavorite?: boolean // Optional favorite status
+  documentGroup: string
 }
 
 export type { CustomSystemPrompt };
@@ -243,10 +244,12 @@ const CourseMain: NextPage = () => {
     name: string
     urlSuffix: string
     promptText: string
+    documentGroup: string
   }>({
     name: '',
     urlSuffix: '',
     promptText: '',
+    documentGroup: '',
   })
   // For delete confirmation
   const [
@@ -940,17 +943,18 @@ CRITICAL: The optimized prompt must:
         name: prompt.name,
         urlSuffix: prompt.urlSuffix,
         promptText: prompt.promptText,
+        documentGroup: prompt.documentGroup || '',
       })
     } else {
       setEditingCustomPromptId(null)
-      setCustomPromptForm({ name: '', urlSuffix: '', promptText: '' })
+      setCustomPromptForm({ name: '', urlSuffix: '', promptText: '', documentGroup: '' })
     }
     openCustomPromptModal()
   }
 
   const handleCloseCustomPromptModal = () => {
     setEditingCustomPromptId(null)
-    setCustomPromptForm({ name: '', urlSuffix: '', promptText: '' })
+    setCustomPromptForm({ name: '', urlSuffix: '', promptText: '', documentGroup: '' })
     closeCustomPromptModal()
   }
 
@@ -962,7 +966,7 @@ CRITICAL: The optimized prompt must:
   }
 
   const handleSaveCustomPrompt = async () => {
-    const { name, urlSuffix, promptText } = customPromptForm;
+    const { name, urlSuffix, promptText, documentGroup } = customPromptForm;
 
     if (!name.trim()) {
       showToastNotification(theme, 'Validation Error', 'Prompt Name is required.', true);
@@ -1011,7 +1015,7 @@ CRITICAL: The optimized prompt must:
         theme,
         'Limit Reached',
         'You have reached the maximum limit of 100 custom system prompts per course.',
-        true, // Assuming orange/warning maps to isError: true for styling
+        true,
       );
       return;
     }
@@ -1041,7 +1045,7 @@ CRITICAL: The optimized prompt must:
       const success = await callSetCourseMetadata(course_name, updatedMetadata)
       if (success) {
         setCustomSystemPrompts(updatedPrompts)
-        setCourseMetadata(updatedMetadata) // Ensure main courseMetadata state is also updated
+        setCourseMetadata(updatedMetadata)
         showToastNotification(
           theme,
           'Success',

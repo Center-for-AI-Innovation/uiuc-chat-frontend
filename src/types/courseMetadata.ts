@@ -9,6 +9,7 @@ export interface CustomSystemPrompt {
   urlSuffix: string
   promptText: string
   isFavorite?: boolean
+  documentGroup?: string
 }
 
 // courseMetadata.ts
@@ -28,6 +29,7 @@ export interface CourseMetadata {
   guidedLearning: boolean | undefined
   systemPromptOnly: boolean | undefined
   vector_search_rewrite_disabled: boolean | undefined
+  document_group?: string
   custom_system_prompts?: CustomSystemPrompt[]
 }
 
