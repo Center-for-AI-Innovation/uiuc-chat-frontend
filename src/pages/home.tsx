@@ -383,7 +383,7 @@ const Home: React.FC = () => {
                   size="lg"
                   className={`${montserrat_paragraph.variable} mb-4 font-montserratParagraph text-gray-600`}
                 >
-                  You haven't created any projects yet.
+                  You haven&apos;t created any projects yet.
                 </Text>
                 <Button
                   variant="light"
