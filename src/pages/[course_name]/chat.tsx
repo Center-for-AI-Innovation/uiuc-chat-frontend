@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import Home from '../api/home/home'
 import { useRouter } from 'next/router'
 
-import { type CourseMetadata } from '~/types/courseMetadata'
+import { type CourseMetadata, type CustomSystemPrompt } from '~/types/courseMetadata'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { montserrat_heading } from 'fonts'
@@ -29,27 +29,30 @@ const ChatPage: NextPage = () => {
   const [urlGuidedLearning, setUrlGuidedLearning] = useState(false)
   const [urlDocumentsOnly, setUrlDocumentsOnly] = useState(false)
   const [urlSystemPromptOnly, setUrlSystemPromptOnly] = useState(false)
+  const [urlActivePrompt, setUrlActivePrompt] = useState<string | null>(null)
   const [documentCount, setDocumentCount] = useState<number | null>(null)
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
 
-  // UseEffect to check URL parameters
+  // UseEffect to check URL parameters and fetch initial data
   useEffect(() => {
     const fetchData = async () => {
       if (!router.isReady) return
+
+      setIsLoading(true)
+      setIsCourseMetadataLoading(true)
 
       // Get URL parameters
       const urlParams = new URLSearchParams(window.location.search)
       const guidedLearning = urlParams.get('guidedLearning') === 'true'
       const documentsOnly = urlParams.get('documentsOnly') === 'true'
       const systemPromptOnly = urlParams.get('systemPromptOnly') === 'true'
+      const activePromptSlug = urlParams.get('activePrompt')
 
-      // Update the state with URL parameters
+      // Update the state with boolean URL parameters (these are passed to Home component later)
       setUrlGuidedLearning(guidedLearning)
       setUrlDocumentsOnly(documentsOnly)
       setUrlSystemPromptOnly(systemPromptOnly)
-
-      setIsLoading(true)
-      setIsCourseMetadataLoading(true)
+      setUrlActivePrompt(activePromptSlug)
 
       // Special case: Cropwizard redirect
       if (
@@ -58,6 +61,10 @@ const ChatPage: NextPage = () => {
         )
       ) {
         await router.push(`/cropwizard-1.5`)
+        // No need to proceed further if redirecting
+        setIsLoading(false) 
+        setIsCourseMetadataLoading(false)
+        return
       }
 
       // Fetch course metadata
@@ -65,23 +72,45 @@ const ChatPage: NextPage = () => {
         `/api/UIUC-api/getCourseMetadata?course_name=${courseName}`,
       )
       const metadataData = await metadataResponse.json()
+      let fetchedCourseMetadata: CourseMetadata | null = metadataData.course_metadata;
 
-      // Log original course metadata settings without modifying them
-      if (metadataData.course_metadata) {
-        console.log('Course metadata settings:', {
-          guidedLearning: metadataData.course_metadata.guidedLearning,
-          documentsOnly: metadataData.course_metadata.documentsOnly,
-          systemPromptOnly: metadataData.course_metadata.systemPromptOnly,
-          system_prompt: metadataData.course_metadata.system_prompt,
-        })
+      if (fetchedCourseMetadata) {
+        console.log('Original course metadata from fetch:', {
+          guidedLearning: fetchedCourseMetadata.guidedLearning,
+          documentsOnly: fetchedCourseMetadata.documentsOnly,
+          systemPromptOnly: fetchedCourseMetadata.systemPromptOnly,
+          system_prompt: fetchedCourseMetadata.system_prompt,
+          custom_system_prompts_count: fetchedCourseMetadata.custom_system_prompts?.length ?? 0
+        });
+        console.log('URL activePromptSlug read:', activePromptSlug);
+
+        // Override system prompt if activePromptSlug is present and valid
+        if (activePromptSlug && fetchedCourseMetadata.custom_system_prompts) {
+          const customPrompt = fetchedCourseMetadata.custom_system_prompts.find(
+            (p: CustomSystemPrompt) => p.urlSuffix === activePromptSlug
+          );
+          if (customPrompt) {
+            console.log('Applying custom system prompt from URL parameter:', customPrompt.name);
+            // Create a new object for the state to ensure reactivity
+            fetchedCourseMetadata = {
+              ...fetchedCourseMetadata,
+              system_prompt: customPrompt.promptText,
+            };
+          } else {
+            console.log('activePromptSlug from URL not found in custom prompts. Using default system prompt.');
+          }
+        } else if (activePromptSlug) {
+            console.log('activePromptSlug present in URL, but no custom_system_prompts array in course metadata or it is empty.')
+        }
       }
 
-      setCourseMetadata(metadataData.course_metadata)
+      setCourseMetadata(fetchedCourseMetadata)
       setIsCourseMetadataLoading(false)
       setIsLoading(false)
     }
     fetchData()
-  }, [courseName, urlGuidedLearning, urlDocumentsOnly, urlSystemPromptOnly])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courseName, router.isReady]);
 
   // UseEffect to fetch document count in the background
   useEffect(() => {

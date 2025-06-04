@@ -135,13 +135,24 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
             overflowY: 'auto',
           },
           item: {
+            backgroundColor: theme.colors.dark[6],
             color: theme.white,
+            borderRadius: theme.radius.sm,
+            padding: '8px 12px',
+            margin: '2px 4px',
+            transition: 'background-color 50ms ease-out',
+
+            '&:not([data-selected])[data-hovered]': {
+              backgroundColor: theme.colors.violet[5],
+            },
+
             '&[data-selected]': {
               backgroundColor: theme.colors.violet[6],
               color: theme.white,
             },
-            '&[data-hovered]': {
-              backgroundColor: theme.colors.violet[5],
+
+            '&[data-selected][data-hovered]': {
+              backgroundColor: theme.colors.violet[6],
             },
           },
           label: {
