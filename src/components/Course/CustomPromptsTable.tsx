@@ -140,10 +140,10 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
                 order={3}
                 className={`${montserrat_heading.className} text-white/90 text-lg sm:text-2xl`}
               >
-                Custom System Prompts
+                Custom GPTs
               </Title>
               <Tooltip
-                label="Custom system prompts allow you to create alternative behaviors for your course's AI assistant. These can be shared via links generated with the 'Generate Share Link' button, where recipients will interact with the AI using your custom prompt instead of the default one."
+                label="Custom GPTs allow you to create alternative behaviors for your course's AI assistant. These can be shared via links generated with the 'Generate Share Link' button, where recipients will interact with the AI using your custom GPT instead of the default one."
                 multiline
                 withArrow
                 arrowSize={10}
@@ -199,7 +199,7 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
                 },
               })}
             >
-              Add New Custom Prompt
+              Add New Custom GPT
             </Button>
           </Flex>
         </div>
@@ -213,7 +213,7 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
               className={`${montserrat_paragraph.className}`}
               style={{ }}
             >
-              No custom system prompts added yet. Click &quot;Add New Custom Prompt&quot; to
+              No Custom GPTs added yet. Click &quot;Add New Custom GPT&quot; to
               create one.
             </Text>
           ) : (

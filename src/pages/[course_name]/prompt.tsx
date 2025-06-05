@@ -135,7 +135,7 @@ const montserrat = Montserrat({
   subsets: ['latin'],
 })
 
-// Define the new interface for custom system prompts
+// Define the new interface for custom GPTs
 interface CustomSystemPrompt {
   id: string // Unique identifier for the prompt
   name: string // A user-friendly name for the prompt
@@ -229,7 +229,7 @@ const CourseMain: NextPage = () => {
   >([])
   const [isOptimizing, setIsOptimizing] = useState(false)
 
-  // State for custom system prompts
+  // State for custom GPTs
   const [customSystemPrompts, setCustomSystemPrompts] = useState<
     CustomSystemPrompt[]
   >([])
@@ -645,7 +645,7 @@ CRITICAL: The optimized prompt must:
       setBaseSystemPrompt(
         fetchedMetadata.system_prompt ?? DEFAULT_SYSTEM_PROMPT ?? '',
       )
-      // Initialize custom system prompts
+      // Initialize custom gpts
       setCustomSystemPrompts(fetchedMetadata.custom_system_prompts || [])
 
       // Initialize all state variables
@@ -935,7 +935,7 @@ CRITICAL: The optimized prompt must:
     }
   }
 
-  // Handler functions for custom system prompts
+  // Handler functions for custom GPTs
   const handleOpenCustomPromptModal = (prompt?: CustomSystemPrompt) => {
     if (prompt) {
       setEditingCustomPromptId(prompt.id)
@@ -1049,14 +1049,14 @@ CRITICAL: The optimized prompt must:
         showToastNotification(
           theme,
           'Success',
-          `Custom prompt ${editingCustomPromptId ? 'updated' : 'saved'} successfully.`,
+          `Custom GPT ${editingCustomPromptId ? 'updated' : 'saved'} successfully.`,
         )
         handleCloseCustomPromptModal()
       } else {
         showToastNotification(
           theme,
           'Error',
-          `Failed to ${editingCustomPromptId ? 'update' : 'save'} custom prompt.`,
+          `Failed to ${editingCustomPromptId ? 'update' : 'save'} custom GPT.`,
           true,
         )
       }
@@ -1086,11 +1086,11 @@ CRITICAL: The optimized prompt must:
     if (success) {
       setCustomSystemPrompts(updatedPrompts)
       setCourseMetadata(updatedMetadata)
-      showToastNotification(theme, 'Success', 'Custom prompt deleted successfully.')
+      showToastNotification(theme, 'Success', 'Custom GPT deleted successfully.')
       closeDeleteConfirmModal()
       setPromptToDelete(null)
     } else {
-      showToastNotification(theme, 'Error', 'Failed to delete custom prompt.', true)
+      showToastNotification(theme, 'Error', 'Failed to delete custom GPT.', true)
       closeDeleteConfirmModal()
       setPromptToDelete(null)
     }
@@ -1302,7 +1302,7 @@ CRITICAL: The optimized prompt must:
               </Flex>
             </Card>
 
-            {/* Custom System Prompts Section */}
+            {/* Custom GPTs Section */}
             <CustomPromptsTable
               customSystemPrompts={customSystemPrompts}
               theme={theme}
@@ -1315,7 +1315,7 @@ CRITICAL: The optimized prompt must:
               onOpenLinkGeneratorModal={handleOpenLinkGeneratorModal} // Pass the new handler
             />
 
-            {/* Modal for Adding/Editing Custom System Prompts */}
+            {/* Modal for Adding/Editing Custom GPTs */}
             <CustomPromptModal
               opened={customPromptModalOpened}
               onClose={handleCloseCustomPromptModal}
@@ -1339,7 +1339,7 @@ CRITICAL: The optimized prompt must:
               montserrat_paragraph={montserrat_paragraph}
             />
 
-            {/* End of Custom System Prompts Section */}
+            {/* End of Custom GPTs Section */}
           </Flex>
         </div>
         <GlobalFooter />

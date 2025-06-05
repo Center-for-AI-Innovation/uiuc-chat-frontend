@@ -31,6 +31,7 @@ export interface CourseMetadata {
   systemPromptOnly: boolean | undefined
   vector_search_rewrite_disabled: boolean | undefined
   document_group?: string
+  tool?: string
   custom_system_prompts?: CustomSystemPrompt[]
 }
 

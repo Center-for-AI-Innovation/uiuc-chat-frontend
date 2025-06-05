@@ -18,7 +18,7 @@ import { IconChevronDown } from '@tabler/icons-react';
 import { useFetchAllWorkflows } from '~/utils/functionCalling/handleFunctionCalling';
 import { type UIUCTool } from '~/types/chat';
 
-// Define the shape of the custom prompt form data
+// Define the shape of the custom GPT form data
 interface CustomPromptFormState {
   name: string;
   urlSuffix: string;
@@ -88,8 +88,8 @@ const CustomPromptModal: React.FC<CustomPromptModalProps> = ({
           gradient={{ from: 'gold', to: 'white', deg: 45 }}
         >
           {editingCustomPromptId
-            ? 'Edit Custom System Prompt'
-            : 'Add New Custom System Prompt'}
+            ? 'Edit Custom GPTs'
+            : 'Add New Custom GPTs'}
         </Text>
       }
       centered
