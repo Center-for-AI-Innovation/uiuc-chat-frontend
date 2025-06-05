@@ -10,6 +10,7 @@ export interface CustomSystemPrompt {
   promptText: string
   isFavorite?: boolean
   documentGroup?: string
+  tool?: string
 }
 
 // courseMetadata.ts
