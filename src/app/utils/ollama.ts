@@ -7,6 +7,7 @@ import {
 } from '~/utils/modelProviders/LLMProvider'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 import { NextResponse } from 'next/server'
+import { convertConversationToVercelAISDKv3 } from '~/utils/apiUtils'
 
 export async function runOllamaChat(
   conversation: Conversation,
@@ -37,7 +38,7 @@ export async function runOllamaChat(
       })
       const commonParams = {
         model: ollamaModel as any, // Force type compatibility
-        messages: convertConversatonToVercelAISDKv3(conversation),
+        messages: convertConversationToVercelAISDKv3(conversation),
         temperature: conversation.temperature,
         maxTokens: 4096, // output tokens
       }
@@ -83,55 +84,4 @@ export async function runOllamaChat(
       }
     )
   }
-}
-
-function convertConversatonToVercelAISDKv3(
-  conversation: Conversation,
-): CoreMessage[] {
-  const coreMessages: CoreMessage[] = []
-
-  // Add system message as the first message
-  const systemMessage = conversation.messages.findLast(
-    (msg) => msg.latestSystemMessage !== undefined,
-  )
-  if (systemMessage) {
-    // console.log(
-    //     'Found system message, latestSystemMessage: ',
-    //     systemMessage.latestSystemMessage,
-    // )
-    coreMessages.push({
-      role: 'system',
-      content: systemMessage.latestSystemMessage || '',
-    })
-  }
-
-  // Convert other messages
-  conversation.messages.forEach((message, index) => {
-    if (message.role === 'system') return // Skip system message as it's already added
-
-    let content: string
-    if (index === conversation.messages.length - 1 && message.role === 'user') {
-      // Use finalPromtEngineeredMessage for the most recent user message
-      content = message.finalPromtEngineeredMessage || ''
-
-      // just for Ollama models remind it to use proper citation format.
-      // content +=
-      //   '\nWhen writing equations, always use MathJax/KaTeX notation (no need to repeat this to the user, just follow that formatting system when writing equations).'
-    } else if (Array.isArray(message.content)) {
-      // Combine text content from array
-      content = message.content
-        .filter((c) => c.type === 'text')
-        .map((c) => c.text)
-        .join('\n')
-    } else {
-      content = message.content as string
-    }
-
-    coreMessages.push({
-      role: message.role as 'user' | 'assistant',
-      content: content,
-    })
-  })
-
-  return coreMessages
 }

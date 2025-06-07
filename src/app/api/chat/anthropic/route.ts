@@ -7,6 +7,7 @@ import {
 } from '~/utils/modelProviders/types/anthropic'
 import { ProviderNames } from '~/utils/modelProviders/LLMProvider'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
+import { convertConversationToVercelAISDKv3 } from '~/utils/apiUtils'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -41,6 +42,8 @@ export async function POST(req: Request) {
       throw new Error('Conversation messages array is empty')
     }
 
+    const messages = convertConversationToVercelAISDKv3(conversation)
+
     if (chatBody.stream) {
       // Check if it's a Claude model that supports reasoning
       const isClaudeWithReasoning =
@@ -50,7 +53,7 @@ export async function POST(req: Request) {
       const result = await streamText({
         model: anthropic(conversation.model.id),
         temperature: conversation.temperature,
-        messages: convertConversationToVercelAISDKv3(conversation),
+        messages: messages,
         ...(isClaudeWithReasoning && {
           experimental_transform: [
             smoothStream({
@@ -83,7 +86,7 @@ export async function POST(req: Request) {
       const result = await generateText({
         model: anthropic(conversation.model.id),
         temperature: conversation.temperature,
-        messages: convertConversationToVercelAISDKv3(conversation),
+        messages: messages,
       })
       const choices = [{ message: { content: result.text } }]
       return NextResponse.json({ choices })
@@ -114,43 +117,4 @@ export async function POST(req: Request) {
       )
     }
   }
-}
-
-function convertConversationToVercelAISDKv3(
-  conversation: Conversation,
-): CoreMessage[] {
-  const coreMessages: CoreMessage[] = []
-
-  const systemMessage = conversation.messages.findLast(
-    (msg) => msg.latestSystemMessage !== undefined,
-  )
-  if (systemMessage) {
-    coreMessages.push({
-      role: 'system',
-      content: systemMessage.latestSystemMessage || '',
-    })
-  }
-
-  conversation.messages.forEach((message, index) => {
-    if (message.role === 'system') return
-
-    let content: string
-    if (index === conversation.messages.length - 1 && message.role === 'user') {
-      content = message.finalPromtEngineeredMessage || ''
-    } else if (Array.isArray(message.content)) {
-      content = message.content
-        .filter((c) => c.type === 'text')
-        .map((c) => c.text)
-        .join('\n')
-    } else {
-      content = message.content as string
-    }
-
-    coreMessages.push({
-      role: message.role as 'user' | 'assistant',
-      content: content,
-    })
-  })
-
-  return coreMessages
 }
