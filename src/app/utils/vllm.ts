@@ -31,6 +31,8 @@ export async function runVLLM(
       messages: convertConversationToVercelAISDKv3(conversation),
       temperature: conversation.temperature,
       maxTokens: 8192,
+      topP: 0.8,
+      repetitionPenalty: 1.05,
     }
 
     try {
