@@ -3,16 +3,12 @@ import postgres from 'postgres';
 import * as schema from './schema';
 
 // Create postgres client
-const nodeEnv = process.env.NODE_ENV as string;
-const isLocalDevelopment = nodeEnv === 'localdevelopment';
-const connectionString = isLocalDevelopment 
-  ? process.env.DEV_DATABASE_URL as string
-  : `postgres://${process.env.RDS_UIUC_POSTGRES_USERNAME}:${process.env.RDS_UIUC_POSTGRES_PASSWORD}@${process.env.RDS_UIUC_POSTGRES_ENDPOINT}/postgres`;
+const connectionString = `postgres://${process.env.RDS_UIUC_POSTGRES_USERNAME}:${process.env.RDS_UIUC_POSTGRES_PASSWORD}@${process.env.RDS_UIUC_POSTGRES_ENDPOINT}/postgres`;
 
 // Configure postgres client with SSL for non-local connections
-const clientOptions = isLocalDevelopment ? {} : {
+const clientOptions = {
   ssl: {
-    rejectUnauthorized: false // Note: For production, consider using a more secure SSL configuration
+    rejectUnauthorized: false // TODO: For production, consider using a more secure SSL configuration
   }
 };
 
