@@ -17,7 +17,7 @@
     "db:migrate": "npx drizzle-kit migrate",
     "db:push": "npx drizzle-kit push",
     "db:pull": "npx drizzle-kit pull",
-    "db:populate": "PGPASSWORD=postgres psql -h localhost -p 5434 -U postgres -d postgres -f src/db/migrations/0001_test_test.sql"
+    "db:populate": "psql postgres://${RDS_UIUC_POSTGRES_USERNAME}:${RDS_UIUC_POSTGRES_PASSWORD}@${RDS_UIUC_POSTGRES_ENDPOINT}/postgres -f src/db/migrations/0001_test_test.sql"
   },
   "dependencies": {
     "@ai-sdk/amazon-bedrock": "^1.0.7",
@@ -26,6 +26,7 @@
     "@ai-sdk/openai": "^0.0.34",
     "@ai-sdk/provider": "^1.0.7",
     "@aws-sdk/client-bedrock-runtime": "^3.751.0",
+    "@aws-sdk/client-rds-data": "^3.825.0",
     "@aws-sdk/client-s3": "3.338.0",
     "@aws-sdk/s3-presigned-post": "3.338.0",
     "@aws-sdk/s3-request-presigner": "3.338.0",
@@ -92,7 +93,7 @@
     "ollama": "^0.5.6",
     "ollama-ai-provider": "^0.10.0",
     "openai": "^4.42.0",
-    "postgres": "^3.4.5",
+    "postgres": "^3.4.7",
     "posthog-js": "^1.96.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",

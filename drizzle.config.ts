@@ -1,11 +1,18 @@
 import type { Config } from 'drizzle-kit';
 import 'dotenv/config';
 
+// Match the same logic from dbClient.ts
+const nodeEnv = process.env.NODE_ENV as string;
+const isLocalDevelopment = nodeEnv === 'localdevelopment';
+const connectionString = isLocalDevelopment 
+  ? process.env.DEV_DATABASE_URL as string
+  : `postgres://${process.env.RDS_UIUC_POSTGRES_USERNAME}:${process.env.RDS_UIUC_POSTGRES_PASSWORD}@${process.env.RDS_UIUC_POSTGRES_ENDPOINT}/postgres`;
+
 export default {
   schema: './src/db/schema.ts',
   out: './src/db/migrations',
   dialect: 'postgresql',
   dbCredentials: {
-    url: process.env.NODE_ENV === 'production' ? process.env.DATABASE_URL as string : process.env.DEV_DATABASE_URL as string,
+    url: connectionString,
   },
 } satisfies Config; 
