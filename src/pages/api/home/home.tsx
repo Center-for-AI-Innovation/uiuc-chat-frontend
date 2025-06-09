@@ -398,7 +398,7 @@ const Home = ({
       prompt: DEFAULT_SYSTEM_PROMPT,
       temperature: selectBestTemperature(lastConversation, model, llmProviders),
       folderId: null,
-      userEmail: current_email || undefined,
+      userEmail: current_email,
       projectName: course_name,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
