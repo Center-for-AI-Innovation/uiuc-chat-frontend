@@ -7,7 +7,7 @@
 -- Name: add_document_to_group(text, text, text, text, text[]); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.add_document_to_group(p_course_name text, p_s3_path text, p_url text, p_readable_filename text, p_doc_groups text[]) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.add_document_to_group(p_course_name text, p_s3_path text, p_url text, p_readable_filename text, p_doc_groups text[]) RETURNS boolean
     LANGUAGE plpgsql
     AS $$DECLARE
     v_document_id bigint;
@@ -55,14 +55,11 @@ EXCEPTION
         RETURN v_success;
 END;$$;
 
-
-ALTER FUNCTION public.add_document_to_group(p_course_name text, p_s3_path text, p_url text, p_readable_filename text, p_doc_groups text[]) OWNER TO postgres;
-
 --
 -- Name: add_document_to_group_url(text, text, text, text, text[]); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.add_document_to_group_url(p_course_name text, p_s3_path text, p_url text, p_readable_filename text, p_doc_groups text[]) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.add_document_to_group_url(p_course_name text, p_s3_path text, p_url text, p_readable_filename text, p_doc_groups text[]) RETURNS boolean
     LANGUAGE plpgsql
     AS $$DECLARE
     v_document_id bigint;
@@ -111,14 +108,11 @@ EXCEPTION
         RETURN v_success;
 END;$$;
 
-
-ALTER FUNCTION public.add_document_to_group_url(p_course_name text, p_s3_path text, p_url text, p_readable_filename text, p_doc_groups text[]) OWNER TO postgres;
-
 --
 -- Name: c(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.c() RETURNS record
+CREATE OR REPLACE FUNCTION public.c() RETURNS record
     LANGUAGE plpgsql
     AS $$DECLARE
     course_names record;
@@ -131,14 +125,11 @@ BEGIN
     RETURN course_names;
 END;$$;
 
-
-ALTER FUNCTION public.c() OWNER TO postgres;
-
 --
 -- Name: calculate_weekly_trends(text); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.calculate_weekly_trends(course_name_input text) RETURNS TABLE(metric_name text, current_week_value numeric, previous_week_value numeric, percentage_change numeric)
+CREATE OR REPLACE FUNCTION public.calculate_weekly_trends(course_name_input text) RETURNS TABLE(metric_name text, current_week_value numeric, previous_week_value numeric, percentage_change numeric)
     LANGUAGE plpgsql
     AS $$DECLARE
     current_7_days_start DATE;
@@ -205,14 +196,11 @@ BEGIN
         ON TRUE;
 END;$$;
 
-
-ALTER FUNCTION public.calculate_weekly_trends(course_name_input text) OWNER TO postgres;
-
 --
 -- Name: check_and_lock_flows_v2(integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.check_and_lock_flows_v2(id integer) RETURNS text
+CREATE OR REPLACE FUNCTION public.check_and_lock_flows_v2(id integer) RETURNS text
     LANGUAGE plpgsql
     AS $$DECLARE
     workflow_id bigint;
@@ -242,14 +230,11 @@ BEGIN
     end if;
 end;$$;
 
-
-ALTER FUNCTION public.check_and_lock_flows_v2(id integer) OWNER TO postgres;
-
 --
 -- Name: cn(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.cn() RETURNS text
+CREATE OR REPLACE FUNCTION public.cn() RETURNS text
     LANGUAGE plpgsql
     AS $$DECLARE
     course_names text;
@@ -261,14 +246,11 @@ BEGIN
     RETURN course_names;
 END;$$;
 
-
-ALTER FUNCTION public.cn() OWNER TO postgres;
-
 --
 -- Name: count_models_by_project(text); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.count_models_by_project(project_name_input text) RETURNS TABLE(model character varying, count bigint)
+CREATE OR REPLACE FUNCTION public.count_models_by_project(project_name_input text) RETURNS TABLE(model character varying, count bigint)
     LANGUAGE plpgsql
     AS $$BEGIN
     RETURN QUERY
@@ -279,14 +261,11 @@ CREATE FUNCTION public.count_models_by_project(project_name_input text) RETURNS 
     ORDER BY count DESC;
 END;$$;
 
-
-ALTER FUNCTION public.count_models_by_project(project_name_input text) OWNER TO postgres;
-
 --
 -- Name: count_models_by_project_v2(text, timestamp without time zone, timestamp without time zone); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.count_models_by_project_v2(project_name_input text, start_date timestamp without time zone DEFAULT NULL::timestamp without time zone, end_date timestamp without time zone DEFAULT NULL::timestamp without time zone) RETURNS TABLE(model character varying, count bigint)
+CREATE OR REPLACE FUNCTION public.count_models_by_project_v2(project_name_input text, start_date timestamp without time zone DEFAULT NULL::timestamp without time zone, end_date timestamp without time zone DEFAULT NULL::timestamp without time zone) RETURNS TABLE(model character varying, count bigint)
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -301,14 +280,11 @@ BEGIN
 END;
 $$;
 
-
-ALTER FUNCTION public.count_models_by_project_v2(project_name_input text, start_date timestamp without time zone, end_date timestamp without time zone) OWNER TO postgres;
-
 --
 -- Name: get_base_url_with_doc_groups(text); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.get_base_url_with_doc_groups(p_course_name text) RETURNS json
+CREATE OR REPLACE FUNCTION public.get_base_url_with_doc_groups(p_course_name text) RETURNS json
     LANGUAGE plpgsql
     AS $$DECLARE
     result JSON;
@@ -331,14 +307,11 @@ BEGIN
     RETURN result;
 END;$$;
 
-
-ALTER FUNCTION public.get_base_url_with_doc_groups(p_course_name text) OWNER TO postgres;
-
 --
 -- Name: get_convo_maps(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.get_convo_maps() RETURNS json
+CREATE OR REPLACE FUNCTION public.get_convo_maps() RETURNS json
     LANGUAGE plpgsql
     AS $$DECLARE
     course_details JSON;
@@ -365,14 +338,11 @@ BEGIN
     RETURN course_details;
 END;$$;
 
-
-ALTER FUNCTION public.get_convo_maps() OWNER TO postgres;
-
 --
 -- Name: get_course_details(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.get_course_details() RETURNS TABLE(course_name text, convo_map_id text, last_uploaded_convo_id bigint)
+CREATE OR REPLACE FUNCTION public.get_course_details() RETURNS TABLE(course_name text, convo_map_id text, last_uploaded_convo_id bigint)
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -385,14 +355,11 @@ BEGIN
 END;
 $$;
 
-
-ALTER FUNCTION public.get_course_details() OWNER TO postgres;
-
 --
 -- Name: get_course_names(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.get_course_names() RETURNS json
+CREATE OR REPLACE FUNCTION public.get_course_names() RETURNS json
     LANGUAGE plpgsql
     AS $$DECLARE
     course_names text;
@@ -405,14 +372,11 @@ BEGIN
     RETURN course_names;
 END;$$;
 
-
-ALTER FUNCTION public.get_course_names() OWNER TO postgres;
-
 --
 -- Name: get_distinct_base_urls(text); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.get_distinct_base_urls(p_course_name text) RETURNS json
+CREATE OR REPLACE FUNCTION public.get_distinct_base_urls(p_course_name text) RETURNS json
     LANGUAGE plpgsql
     AS $$DECLARE
     distinct_base_urls JSON;
@@ -426,14 +390,11 @@ BEGIN
     RETURN distinct_base_urls;
 END;$$;
 
-
-ALTER FUNCTION public.get_distinct_base_urls(p_course_name text) OWNER TO postgres;
-
 --
 -- Name: get_distinct_course_names(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.get_distinct_course_names() RETURNS TABLE(course_name text)
+CREATE OR REPLACE FUNCTION public.get_distinct_course_names() RETURNS TABLE(course_name text)
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -446,14 +407,11 @@ BEGIN
 END;
 $$;
 
-
-ALTER FUNCTION public.get_distinct_course_names() OWNER TO postgres;
-
 --
 -- Name: get_doc_map_details(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.get_doc_map_details() RETURNS json
+CREATE OR REPLACE FUNCTION public.get_doc_map_details() RETURNS json
     LANGUAGE plpgsql
     AS $$DECLARE
     course_details JSON;
@@ -480,14 +438,11 @@ BEGIN
     RETURN course_details;
 END;$$;
 
-
-ALTER FUNCTION public.get_doc_map_details() OWNER TO postgres;
-
 --
 -- Name: get_latest_workflow_id(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.get_latest_workflow_id() RETURNS bigint
+CREATE OR REPLACE FUNCTION public.get_latest_workflow_id() RETURNS bigint
     LANGUAGE plpgsql
     AS $$DECLARE
     v_workflow_id bigint;
@@ -502,14 +457,11 @@ BEGIN
     RETURN v_workflow_id;
 END;$$;
 
-
-ALTER FUNCTION public.get_latest_workflow_id() OWNER TO postgres;
-
 --
 -- Name: get_run_data(text, integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.get_run_data(p_run_ids text, p_limit integer, p_offset integer) RETURNS json
+CREATE OR REPLACE FUNCTION public.get_run_data(p_run_ids text, p_limit integer, p_offset integer) RETURNS json
     LANGUAGE plpgsql
     AS $$DECLARE
     documents JSONB;
@@ -549,76 +501,34 @@ BEGIN
     RETURN documents;
 END;$$;
 
-
-ALTER FUNCTION public.get_run_data(p_run_ids text, p_limit integer, p_offset integer) OWNER TO postgres;
-
 --
 -- Name: hello(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.hello() RETURNS text
+CREATE OR REPLACE FUNCTION public.hello() RETURNS text
     LANGUAGE sql
     AS $$select 'hello world';$$;
-
-
-ALTER FUNCTION public.hello() OWNER TO postgres;
 
 --
 -- Name: increment(integer, text); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.increment(usage integer, apikey text) RETURNS void
-    LANGUAGE sql
+CREATE OR REPLACE FUNCTION public.increment(usage integer, apikey text) RETURNS void
+    LANGUAGE plpgsql
     AS $$
-					update api_keys 
-					set usage_count = usage_count + usage
-					where key = apikey
-				$$;
+    BEGIN
+        UPDATE api_keys 
+        SET usage_count = usage_count + usage
+        WHERE key = apikey;
+    END;
+    $$;
 
-
-ALTER FUNCTION public.increment(usage integer, apikey text) OWNER TO postgres;
-
---
--- Name: increment_api_usage(integer, text); Type: FUNCTION; Schema: public; Owner: postgres
---
-
-CREATE FUNCTION public.increment_api_usage(usage integer, apikey text) RETURNS void
-    LANGUAGE sql SECURITY DEFINER
-    AS $_$create function increment (usage int, apikey string)
-				returns void as
-				$$
-					update api_keys 
-					set usage_count = usage_count + usage
-					where api_key = apiKey
-				$$ 
-				language sql volatile;$_$;
-
-
-ALTER FUNCTION public.increment_api_usage(usage integer, apikey text) OWNER TO postgres;
-
---
--- Name: increment_api_usage_count(integer, text); Type: FUNCTION; Schema: public; Owner: postgres
---
-
-CREATE FUNCTION public.increment_api_usage_count(usage integer, apikey text) RETURNS void
-    LANGUAGE sql SECURITY DEFINER
-    AS $_$create function increment (usage int, apikey text)
-				returns void as
-				$$
-					update api_keys 
-					set usage_count = usage_count + usage
-					where key = apikey
-				$$ 
-				language sql volatile;$_$;
-
-
-ALTER FUNCTION public.increment_api_usage_count(usage integer, apikey text) OWNER TO postgres;
 
 --
 -- Name: increment_workflows(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.increment_workflows() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.increment_workflows() RETURNS trigger
     LANGUAGE plpgsql
     AS $$BEGIN
     -- Increase doc_count on insert
@@ -639,14 +549,11 @@ CREATE FUNCTION public.increment_workflows() RETURNS trigger
     RETURN NULL; -- Should never reach here
 END;$$;
 
-
-ALTER FUNCTION public.increment_workflows() OWNER TO postgres;
-
 --
 -- Name: initialize_project_stats(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.initialize_project_stats() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.initialize_project_stats() RETURNS trigger
     LANGUAGE plpgsql
     AS $$BEGIN
     INSERT INTO public.project_stats (project_id, project_name, total_conversations, total_messages, unique_users)
@@ -654,14 +561,11 @@ CREATE FUNCTION public.initialize_project_stats() RETURNS trigger
     RETURN NEW;
 END;$$;
 
-
-ALTER FUNCTION public.initialize_project_stats() OWNER TO postgres;
-
 --
 -- Name: myfunc(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.myfunc() RETURNS void
+CREATE OR REPLACE FUNCTION public.myfunc() RETURNS void
     LANGUAGE plpgsql
     AS $$
 begin
@@ -678,14 +582,11 @@ begin
 end;
 $$;
 
-
-ALTER FUNCTION public.myfunc() OWNER TO postgres;
-
 --
 -- Name: remove_document_from_group(text, text, text, text); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.remove_document_from_group(p_course_name text, p_s3_path text, p_url text, p_doc_group text) RETURNS void
+CREATE OR REPLACE FUNCTION public.remove_document_from_group(p_course_name text, p_s3_path text, p_url text, p_doc_group text) RETURNS void
     LANGUAGE plpgsql
     AS $$DECLARE
     v_document_id bigint;
@@ -721,14 +622,11 @@ BEGIN
     END IF;
 END;$$;
 
-
-ALTER FUNCTION public.remove_document_from_group(p_course_name text, p_s3_path text, p_url text, p_doc_group text) OWNER TO postgres;
-
 --
 -- Name: search_conversations(text, text, text, integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.search_conversations(p_user_email text, p_project_name text, p_search_term text DEFAULT NULL::text, p_limit integer DEFAULT 10, p_offset integer DEFAULT 0) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.search_conversations(p_user_email text, p_project_name text, p_search_term text DEFAULT NULL::text, p_limit integer DEFAULT 10, p_offset integer DEFAULT 0) RETURNS jsonb
     LANGUAGE plpgsql
     AS $$DECLARE
     total_count INT;
@@ -826,14 +724,11 @@ FROM conversation_data cd;
     RETURN conversations;
 END;$$;
 
-
-ALTER FUNCTION public.search_conversations(p_user_email text, p_project_name text, p_search_term text, p_limit integer, p_offset integer) OWNER TO postgres;
-
 --
 -- Name: search_conversations_v2(text, text, text, integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.search_conversations_v2(p_user_email text, p_project_name text, p_search_term text, p_limit integer, p_offset integer) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.search_conversations_v2(p_user_email text, p_project_name text, p_search_term text, p_limit integer, p_offset integer) RETURNS jsonb
     LANGUAGE plpgsql
     AS $$DECLARE
     total_count INT;
@@ -945,14 +840,11 @@ FROM conversation_data cd;
     RETURN conversations;
 END;$$;
 
-
-ALTER FUNCTION public.search_conversations_v2(p_user_email text, p_project_name text, p_search_term text, p_limit integer, p_offset integer) OWNER TO postgres;
-
 --
 -- Name: search_conversations_v3(text, text, text, integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.search_conversations_v3(p_user_email text, p_project_name text, p_search_term text, p_limit integer, p_offset integer) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.search_conversations_v3(p_user_email text, p_project_name text, p_search_term text, p_limit integer, p_offset integer) RETURNS jsonb
     LANGUAGE plpgsql
     AS $$DECLARE
     total_count INT;
@@ -1066,14 +958,11 @@ FROM conversation_data cd;
     RETURN conversations;
 END;$$;
 
-
-ALTER FUNCTION public.search_conversations_v3(p_user_email text, p_project_name text, p_search_term text, p_limit integer, p_offset integer) OWNER TO postgres;
-
 --
 -- Name: test_function(integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.test_function(id integer) RETURNS text
+CREATE OR REPLACE FUNCTION public.test_function(id integer) RETURNS text
     LANGUAGE plpgsql
     AS $$DECLARE
     workflow_id bigint;
@@ -1103,14 +992,11 @@ BEGIN
     end if;
 end;$$;
 
-
-ALTER FUNCTION public.test_function(id integer) OWNER TO postgres;
-
 --
 -- Name: update_doc_count(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.update_doc_count() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_doc_count() RETURNS trigger
     LANGUAGE plpgsql
     AS $$BEGIN
     -- Increase doc_count on insert
@@ -1129,14 +1015,11 @@ CREATE FUNCTION public.update_doc_count() RETURNS trigger
     RETURN NULL; -- Should never reach here
 END;$$;
 
-
-ALTER FUNCTION public.update_doc_count() OWNER TO postgres;
-
 --
 -- Name: update_project_stats(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.update_project_stats() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_project_stats() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -1209,14 +1092,11 @@ BEGIN
 END;
 $$;
 
-
-ALTER FUNCTION public.update_project_stats() OWNER TO postgres;
-
 --
 -- Name: update_total_messages_by_id_range(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.update_total_messages_by_id_range(start_id integer, end_id integer) RETURNS void
+CREATE OR REPLACE FUNCTION public.update_total_messages_by_id_range(start_id integer, end_id integer) RETURNS void
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -1260,6 +1140,3 @@ BEGIN
     END LOOP;
 END;
 $$;
-
-
-ALTER FUNCTION public.update_total_messages_by_id_range(start_id integer, end_id integer) OWNER TO postgres;
