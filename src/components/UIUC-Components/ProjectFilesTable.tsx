@@ -599,26 +599,86 @@ export function ProjectFilesTable({
                           value: doc_group_name,
                           label: doc_group_name,
                         })}
-                        onChange={async (newSelectedGroups) => {
-                          await addDocumentsToDocGroups(
-                            selectedRecords,
-                            newSelectedGroups,
-                          )
-                          const unselectedGroups: string[] =
-                            selectedDocGroups.filter(
-                              (group) => !newSelectedGroups.includes(group),
-                            )
-                          for (const record of selectedRecords) {
-                            for (const unselectedGroup of unselectedGroups) {
-                              await removeFromDocGroup.mutate({
-                                record,
-                                removedGroup: unselectedGroup,
-                              })
+                        onChange={async (newSelectedGroupsFromDropdown) => {
+                          const currentDocumentsQueryKey = ['documents', course_name, page, filterKey, filterValue, sortStatus.columnAccessor, sortStatus.direction];
+                          const documentGroupsQueryKey = ['documentGroups', course_name];
+
+                          await queryClient.cancelQueries({ queryKey: currentDocumentsQueryKey });
+                          await queryClient.cancelQueries({ queryKey: documentGroupsQueryKey });
+
+                          const previousDocuments = queryClient.getQueryData(currentDocumentsQueryKey);
+                          const previousDocGroups = queryClient.getQueryData(documentGroupsQueryKey);
+
+                          // Optimistically update the document list
+                          queryClient.setQueryData(currentDocumentsQueryKey, (oldData: any) => {
+                            if (!oldData || !oldData.final_docs) return oldData;
+                            return {
+                              ...oldData,
+                              final_docs: oldData.final_docs.map((doc: CourseDocument) => {
+                                if (selectedRecords.some(sr => sr.id === doc.id)) {
+                                  let updatedDocGroups = [...(doc.doc_groups || [])];
+                                  
+                                  // Add groups selected in the dropdown if not already present
+                                  newSelectedGroupsFromDropdown.forEach(groupToAdd => {
+                                    if (!updatedDocGroups.includes(groupToAdd)) {
+                                      updatedDocGroups.push(groupToAdd);
+                                    }
+                                  });
+
+                                  // Remove groups that were part of the initial common selection but are now deselected
+                                  const commonGroupsDeselected = selectedDocGroups.filter(
+                                    (commonGroup) => !newSelectedGroupsFromDropdown.includes(commonGroup)
+                                  );
+                                  updatedDocGroups = updatedDocGroups.filter(
+                                    (group) => !commonGroupsDeselected.includes(group)
+                                  );
+                                  
+                                  return { ...doc, doc_groups: updatedDocGroups.sort() };
+                                }
+                                return doc;
+                              }),
+                            };
+                          });
+                          
+                          // Optimistically update document groups list: add new group names if created
+                          queryClient.setQueryData(documentGroupsQueryKey, (oldGroups: DocumentGroup[] = []) => {
+                            const newGroupsData = JSON.parse(JSON.stringify(oldGroups));
+                            newSelectedGroupsFromDropdown.forEach(groupName => {
+                              if (!newGroupsData.some((g: DocumentGroup) => g.name === groupName)) {
+                                // This is a newly created group by the user via 'creatable'
+                                newGroupsData.push({ name: groupName, doc_count: 0, id: Date.now(), enabled: true }); // Mock ID and temp count 0, refetch will get real count
+                              }
+                            });
+                            return newGroupsData;
+                          });
+
+                          try {
+                            await addDocumentsToDocGroups(selectedRecords, newSelectedGroupsFromDropdown);
+                          
+                            const unselectedCommonGroups: string[] = selectedDocGroups.filter(
+                              (group) => !newSelectedGroupsFromDropdown.includes(group),
+                            );
+
+                            for (const record of selectedRecords) {
+                              for (const unselectedGroup of unselectedCommonGroups) {
+                                await removeFromDocGroup.mutate({
+                                  record,
+                                  removedGroup: unselectedGroup,
+                                });
+                              }
                             }
+                          } catch (error) {
+                            console.error("Error updating document groups:", error);
+                            if (previousDocuments) queryClient.setQueryData(currentDocumentsQueryKey, previousDocuments);
+                            if (previousDocGroups) queryClient.setQueryData(documentGroupsQueryKey, previousDocGroups);
+                          } finally {
+                            queryClient.invalidateQueries({ queryKey: currentDocumentsQueryKey });
+                            queryClient.invalidateQueries({ queryKey: documentGroupsQueryKey });
+                            
+                            setSelectedDocGroups(newSelectedGroupsFromDropdown);
+                            setShowMultiSelect(false);
+                            setSelectedRecords([]);
                           }
-                          setSelectedDocGroups(newSelectedGroups)
-                          setShowMultiSelect(false)
-                          setSelectedRecords([])
                         }}
                         disabled={isLoadingDocumentGroups}
                         classNames={{
