@@ -7,14 +7,14 @@ dotenv.config();
 async function runPsqlFile() {
   return new Promise<void>((resolve, reject) => {
     const psql = spawn('psql', [
-      '-h', process.env.RDS_UIUC_POSTGRES_ENDPOINT as string,
-      '-U', process.env.RDS_UIUC_POSTGRES_USERNAME as string,
-      '-d', 'postgres',
+      '-h', process.env.POSTGRES_ENDPOINT as string,
+      '-U', process.env.POSTGRES_USERNAME as string,
+      '-d', process.env.POSTGRES_DATABASE as string,
       '-f', './src/db/migrations/0001_custom_functions.sql'
     ], {
       env: {
         ...process.env,
-        PGPASSWORD: process.env.RDS_UIUC_POSTGRES_PASSWORD,  
+        PGPASSWORD: process.env.POSTGRES_PASSWORD,  
       }
     });
 
