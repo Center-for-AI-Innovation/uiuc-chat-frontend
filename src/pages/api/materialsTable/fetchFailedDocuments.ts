@@ -1,18 +1,27 @@
 import { db, documentsFailed } from '~/db/dbClient'
-import { NextRequest, NextResponse } from 'next/server'
-import { eq, sql, and, gte } from 'drizzle-orm'
+import { eq, sql, and, gte, InferSelectModel } from 'drizzle-orm'
+import type { NextApiResponse, NextApiRequest } from 'next'
 
-export const runtime = 'edge'
+// export const runtime = 'edge'
+
+type FetchFailedDocumentsResponse =
+  | {
+  final_docs: InferSelectModel<typeof documentsFailed>[] | null;
+  total_count: number;
+  recent_fail_count: number;
+}
+  | { error: string };
+
 
 export default async function fetchFailedDocuments(
-  req: NextRequest,
-  res: NextResponse,
+  req: NextApiRequest,
+  res: NextApiResponse<FetchFailedDocumentsResponse>,
 ) {
   if (req.method !== 'GET') {
-    return NextResponse.json({ error: 'Method not allowed' }, { status: 405 })
+    return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const url = new URL(req.url)
+  const url = new URL(req.url as string, `http://${req.headers.host}`)
   const fromStr = url.searchParams.get('from')
   const toStr = url.searchParams.get('to')
   const course_name = url.searchParams.get('course_name')
@@ -20,19 +29,15 @@ export default async function fetchFailedDocuments(
   const search_value = url.searchParams.get('filter_value') as string
   let sort_column = url.searchParams.get('sort_column') as string
   let sort_direction = url.searchParams.get('sort_direction') === 'asc'
-
   if (fromStr === null || toStr === null) {
     throw new Error('Missing required query parameters: from and to')
   }
-
   if (sort_column == null || sort_direction == null) {
     sort_column = 'created_at'
     sort_direction = false // 'desc' equivalent
   }
-
   const from = parseInt(fromStr as string)
   const to = parseInt(toStr as string)
-
   try {
     let failedDocs
     let finalError
@@ -60,14 +65,17 @@ export default async function fetchFailedDocuments(
           .where(
             and(
               eq(documentsFailed.course_name, course_name as string),
-              sql`${sql.identifier(search_key)} ILIKE ${`%${search_value}%`}`
-            )
+              sql`${sql.identifier(search_key as string)}
+              ILIKE
+              ${`%${search_value}%`}`,
+            ),
           )
-          .orderBy(sql`${sql.identifier(sort_column)} ${sort_direction ? sql`ASC` : sql`DESC`}`)
+          .orderBy(sql`${sql.identifier(sort_column as string)}
+          ${sort_direction ? sql`ASC` : sql`DESC`}`)
           .limit(to - from + 1)
           .offset(from)
 
-        failedDocs = data
+        failedDocs = data as InferSelectModel<typeof documentsFailed>[]
         finalError = null
       } catch (err) {
         failedDocs = null
@@ -79,11 +87,12 @@ export default async function fetchFailedDocuments(
           .select()
           .from(documentsFailed)
           .where(eq(documentsFailed.course_name, course_name as string))
-          .orderBy(sql`${sql.identifier(sort_column)} ${sort_direction ? sql`ASC` : sql`DESC`}`)
+          .orderBy(sql`${sql.identifier(sort_column as string)}
+          ${sort_direction ? sql`ASC` : sql`DESC`}`)
           .limit(to - from + 1)
           .offset(from)
 
-        failedDocs = data
+        failedDocs = data as InferSelectModel<typeof documentsFailed>[]
         finalError = null
       } catch (err) {
         failedDocs = null
@@ -104,11 +113,13 @@ export default async function fetchFailedDocuments(
           .select({ count: sql<number>`count(*)` })
           .from(documentsFailed)
           .where(
-          and(
-            eq(documentsFailed.course_name, course_name as string),
-            sql`${sql.identifier(search_key)} ILIKE ${`%${search_value}%`}`
+            and(
+              eq(documentsFailed.course_name, course_name as string),
+              sql`${sql.identifier(search_key as string)}
+              ILIKE
+              ${`%${search_value}%`}`,
+            ),
           )
-        )
         count = countResult[0]?.count ?? 0
         countError = null
       } catch (err) {
@@ -119,9 +130,9 @@ export default async function fetchFailedDocuments(
       // Fetch the total count of documents for the selected course
       try {
         const countResult = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(documentsFailed)
-        .where(eq(documentsFailed.course_name, course_name as string))
+          .select({ count: sql<number>`count(*)` })
+          .from(documentsFailed)
+          .where(eq(documentsFailed.course_name, course_name as string))
 
         count = countResult[0]?.count ?? 0
         countError = null
@@ -143,27 +154,25 @@ export default async function fetchFailedDocuments(
         .where(
           and(
             eq(documentsFailed.course_name, course_name as string),
-            gte(documentsFailed.created_at, oneDayAgo)
-          )
+            gte(documentsFailed.created_at, oneDayAgo),
+          ),
         )
-        recentFailCount = recentFailCountResult[0]?.count ?? 0
-        recentFailError = null
-      } catch (err) {
-        recentFailCount = 0
-        recentFailError = err
-      }
+      recentFailCount = recentFailCountResult[0]?.count ?? 0
+      recentFailError = null
+    } catch (err) {
+      recentFailCount = 0
+      recentFailError = err
+    }
 
-      if (recentFailError) throw recentFailError
+    if (recentFailError) throw recentFailError
 
-    return NextResponse.json(
-      {
-        final_docs: failedDocs,
-        total_count: count,
-        recent_fail_count: recentFailCount,
-      },
-      { status: 200 },
-    )
+    return res.status(200).json({
+      final_docs: failedDocs,
+      total_count: count,
+      recent_fail_count: recentFailCount,
+    })
+
   } catch (error) {
-    return NextResponse.json({ error: error }, { status: 500 })
+    return res.status(500).json({ error: (error as Error).message })
   }
 }
