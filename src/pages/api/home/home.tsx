@@ -38,6 +38,9 @@ import { FolderType, FolderWithConversation } from '~/types/folder'
 import { useQueryClient } from '@tanstack/react-query'
 import { useCreateFolder } from '~/hooks/folderQueries'
 import { selectBestTemperature } from '~/components/Chat/Temperature'
+import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
+import { montserrat_heading } from 'fonts'
+import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 
 const Home = ({
   current_email,
@@ -726,19 +729,23 @@ const Home = ({
     if (!isInitialSetupDone) {
       initialSetup()
     }
-  }, [
-    dispatch,
-    llmProviders,
-    current_email,
-    isInitialSetupDone,
-    course_name,
-    handleNewConversation,
-  ]) // ! serverSidePluginKeysSet, removed
+  }, [dispatch, llmProviders, current_email]) // ! serverSidePluginKeysSet, removed
   // }, [defaultModelId, dispatch, serverSidePluginKeysSet, models, conversations]) // original!
 
   if (isLoading || !isInitialSetupDone) {
     // show blank page during loading
-    return <>Loading</>
+    return (
+      <>
+        <MainPageBackground>
+          <div
+            className={`flex items-center justify-center font-montserratHeading ${montserrat_heading.variable}`}
+          >
+            <span className="mr-2">Warming up the knowledge engines...</span>
+            <LoadingSpinner size="sm" />
+          </div>
+        </MainPageBackground>
+      </>
+    )
   }
   return (
     <div>
