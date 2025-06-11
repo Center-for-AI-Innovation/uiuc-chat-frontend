@@ -697,6 +697,7 @@ const Home = ({
         if (parsedSelectedConversation.projectName === course_name) {
           const cleanedSelectedConversation = cleanSelectedConversation(
             parsedSelectedConversation,
+            current_email,
           )
           const oneHourAgo = new Date(Date.now() - 3600 * 1000).toISOString()
           if (
@@ -725,10 +726,17 @@ const Home = ({
     if (!isInitialSetupDone) {
       initialSetup()
     }
-  }, [dispatch, llmProviders, current_email]) // ! serverSidePluginKeysSet, removed
+  }, [
+    dispatch,
+    llmProviders,
+    current_email,
+    isInitialSetupDone,
+    course_name,
+    handleNewConversation,
+  ]) // ! serverSidePluginKeysSet, removed
   // }, [defaultModelId, dispatch, serverSidePluginKeysSet, models, conversations]) // original!
 
-  if (isLoading) {
+  if (isLoading || !isInitialSetupDone) {
     // show blank page during loading
     return <>Loading</>
   }
