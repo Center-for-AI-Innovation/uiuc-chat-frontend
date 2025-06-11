@@ -7,6 +7,7 @@ import {
   IconAlertCircle,
   IconX,
   IconRepeat,
+  IconPlus,
 } from '@tabler/icons-react'
 import { Text } from '@mantine/core'
 import {
@@ -60,6 +61,34 @@ const montserrat_med = Montserrat({
   weight: '500',
   subsets: ['latin'],
 })
+// constant created to check the types of files allowed to be uploaded
+const ALLOWED_FILE_EXTENSIONS = [
+  'html',
+  'py',
+  'pdf',
+  'txt',
+  'md',
+  'srt',
+  'vtt',
+  'docx',
+  'ppt',
+  'pptx',
+  'xlsx',
+  'xls',
+  'xlsm',
+  'xlsb',
+  'xltx',
+  'xltm',
+  'xlt',
+  'xml',
+  'xlam',
+  'xla',
+  'xlw',
+  'xlr',
+  'csv',
+  'png',
+  'jpg',
+]
 
 interface Props {
   onSend: (message: Message, plugin: Plugin | null) => void
@@ -130,6 +159,7 @@ export const ChatInput = ({
   const [imageUrls, setImageUrls] = useState<string[]>([])
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const modelSelectContainerRef = useRef<HTMLDivElement | null>(null)
+  const fileUploadRef = useRef<HTMLInputElement | null>(null)
 
   const handleFocus = () => {
     setIsFocused(true)
@@ -524,6 +554,44 @@ export const ChatInput = ({
     ],
   )
 
+  function handleFileSelection(newFiles: File[]) {
+    // Combine new files with already selected files (assume imageFiles is in state)
+    const allFiles = [...imageFiles, ...newFiles]
+
+    // Validation: number of files
+    if (allFiles.length > 5) {
+      notifications.show({
+        message: 'You can upload a maximum of 5 files at once.',
+        color: 'red',
+      })
+      return
+    }
+
+    // Validation: total size
+    const totalSize = allFiles.reduce((sum, file) => sum + file.size, 0)
+    if (totalSize > 25 * 1024 * 1024) {
+      notifications.show({
+        message: 'Total file size cannot exceed 25MB.',
+        color: 'red',
+      })
+      return
+    }
+    // Validation: file types
+    for (const file of newFiles) {
+      const ext = file.name.split('.').pop()?.toLowerCase()
+      if (!ext || !ALLOWED_FILE_EXTENSIONS.includes(ext)) {
+        notifications.show({
+          message: `File type .${ext} is not supported.`,
+          color: 'red',
+        })
+        return
+      }
+    }
+    // If all validations pass, add files to state and start upload
+    setImageFiles(allFiles)
+    newFiles.forEach((file) => processAndUploadImage(file))
+  }
+
   async function processAndUploadImage(
     file: File,
   ): Promise<ProcessedImage & { uploadedUrl: string }> {
@@ -842,34 +910,78 @@ export const ChatInput = ({
           className="absolute bottom-0 mx-4 flex w-[80%] flex-col self-center rounded-t-3xl border border-black/10 bg-[#070712] px-4 pb-8 pt-4 shadow-[0_0_10px_rgba(0,0,0,0.10)] dark:border-gray-900/50 dark:text-white dark:shadow-[0_0_15px_rgba(0,0,0,0.10)] md:mx-20 md:w-[70%]"
           style={{ pointerEvents: 'auto' }}
         >
-          {/* BUTTON 2: Image Icon and Input */}
-          {selectedConversation?.model?.id &&
-            VisionCapableModels.has(
-              selectedConversation.model?.id as OpenAIModelID,
-            ) && (
-              <button
-                className="absolute bottom-11 left-5 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
-                onClick={() => document.getElementById('imageUpload')?.click()}
-                style={{ pointerEvents: 'auto' }}
-              >
-                <div className="">
-                  <IconPhoto size={22} />
-                </div>
-              </button>
-            )}
-          <input
-            type="file"
-            multiple
-            id="imageUpload"
-            ref={imageUploadRef}
-            style={{ display: 'none', pointerEvents: 'auto' }}
-            onChange={(e) => {
-              const files = e.target.files
-              if (files) {
-                handleImageUpload(Array.from(files))
-              }
-            }}
-          />
+          {/* Flex row for upload buttons and textarea */}
+          <div className="flex w-full items-center">
+            {/* Image upload button */}
+            <button
+              className="mr-2 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
+              onClick={() => imageUploadRef.current?.click()}
+              type="button"
+              title="Upload image"
+              style={{ pointerEvents: 'auto' }}
+            >
+              <IconPhoto size={22} />
+            </button>
+            <input
+              type="file"
+              multiple
+              id="imageUpload"
+              ref={imageUploadRef}
+              style={{ display: 'none', pointerEvents: 'auto' }}
+              accept=".jpg,.jpeg,.png,.webp,.gif"
+              onChange={(e) => {
+                const files = e.target.files
+                if (files) {
+                  handleImageUpload(Array.from(files))
+                }
+              }}
+            />
+            {/* File upload button (plus sign) */}
+            <button
+              className="mr-2 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
+              onClick={() => fileUploadRef.current?.click()}
+              type="button"
+              title="Upload files"
+              style={{ pointerEvents: 'auto' }}
+            >
+              <IconPlus size={22} />
+            </button>
+            <input
+              type="file"
+              multiple
+              ref={fileUploadRef}
+              style={{ display: 'none', pointerEvents: 'auto' }}
+              accept={ALLOWED_FILE_EXTENSIONS.map((ext) => '.' + ext).join(',')}
+              onChange={(e) => {
+                const files = e.target.files
+                if (files) {
+                  handleFileSelection(Array.from(files))
+                }
+              }}
+            />
+            {/* Textarea for message input */}
+            <textarea
+              ref={textareaRef}
+              className="chat-input m-0 h-[24px] max-h-[400px] w-full flex-1 resize-none bg-transparent py-2 pl-2 pr-8 text-white outline-none"
+              style={{
+                resize: 'none',
+                minHeight: '24px',
+                height: 'auto',
+                maxHeight: '400px',
+                overflow: 'hidden',
+                pointerEvents: 'auto',
+              }}
+              placeholder={'Message UIUC.chat'}
+              value={content}
+              rows={1}
+              onCompositionStart={() => setIsTyping(true)}
+              onCompositionEnd={() => setIsTyping(false)}
+              onChange={handleChange}
+              onKeyDown={handleKeyDown}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+            />
+          </div>
 
           {showPluginSelect && (
             <div
@@ -960,43 +1072,6 @@ export const ChatInput = ({
                   </Tooltip>
                 </div>
               ))}
-            </div>
-
-            {/* Button 3: main input text area  */}
-            <div
-              className={`
-                ${
-                  VisionCapableModels.has(
-                    selectedConversation?.model?.id as OpenAIModelID,
-                  )
-                    ? 'pl-8'
-                    : 'pl-1'
-                }
-                  `}
-            >
-              <textarea
-                ref={textareaRef}
-                className={`chat-input m-0 h-[24px] max-h-[400px] w-full resize-none bg-transparent py-2 pl-2 pr-8 text-white outline-none ${
-                  isFocused ? 'border-blue-500' : ''
-                }`}
-                style={{
-                  resize: 'none',
-                  minHeight: '24px',
-                  height: 'auto',
-                  maxHeight: '400px',
-                  overflow: 'hidden',
-                  pointerEvents: 'auto',
-                }}
-                placeholder={'Message UIUC.chat'}
-                value={content}
-                rows={1}
-                onCompositionStart={() => setIsTyping(true)}
-                onCompositionEnd={() => setIsTyping(false)}
-                onChange={handleChange}
-                onKeyDown={handleKeyDown}
-                onFocus={handleFocus}
-                onBlur={handleBlur}
-              />
             </div>
 
             <button
