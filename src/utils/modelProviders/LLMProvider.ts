@@ -317,6 +317,10 @@ export const selectBestModel = (
 
   const defaultModelId = localStorage.getItem('defaultModel')
 
+  if (defaultModelId === NCSAHostedVLMModelID.QWEN2_5VL_32B_INSTRUCT) {
+    return NCSAHostedVLMModels[NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT]
+  }
+
   if (defaultModelId && allModels.find((m) => m.id === defaultModelId)) {
     const defaultModel = allModels
       .filter((model) => model.enabled)
@@ -346,5 +350,5 @@ export const selectBestModel = (
   }
 
   // If no preferred models are available, fallback to Qwen2.5-VL-72B-Instruct
-  return NCSAHostedVLMModels[NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT]
+  return NCSAHostedVLMModels[NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT]
 }
