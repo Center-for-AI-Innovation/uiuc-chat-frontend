@@ -184,7 +184,8 @@ const ChatPage: NextPage = () => {
       {!isLoading &&
         !auth.isLoading &&
         router.isReady &&
-        (currentEmail || !courseMetadata?.is_private) &&
+        ((currentEmail && currentEmail !== '') ||
+          !courseMetadata?.is_private) &&
         courseMetadata && (
           <Home
             current_email={currentEmail || ''}
@@ -198,16 +199,18 @@ const ChatPage: NextPage = () => {
             }}
           />
         )}
-      {isLoading && !currentEmail && (
-        <MainPageBackground>
-          <div
-            className={`flex items-center justify-center font-montserratHeading ${montserrat_heading.variable}`}
-          >
-            <span className="mr-2">Warming up the knowledge engines...</span>
-            <LoadingSpinner size="sm" />
-          </div>
-        </MainPageBackground>
-      )}
+      {isLoading ||
+        !currentEmail ||
+        (currentEmail === '' && (
+          <MainPageBackground>
+            <div
+              className={`flex items-center justify-center font-montserratHeading ${montserrat_heading.variable}`}
+            >
+              <span className="mr-2">Warming up the knowledge engines...</span>
+              <LoadingSpinner size="sm" />
+            </div>
+          </MainPageBackground>
+        ))}
     </>
   )
 }
