@@ -3,7 +3,7 @@ import { useTranslation } from 'next-i18next'
 import { useCreateReducer } from '@/hooks/useCreateReducer'
 import { DEFAULT_SYSTEM_PROMPT, DEFAULT_TEMPERATURE } from '@/utils/app/const'
 import { exportData } from '@/utils/app/importExport'
-import { Conversation } from '@/types/chat'
+import { Conversation, Message } from '~/types/chat'
 import { LatestExportFormat, SupportedExportFormats } from '@/types/export'
 import { OpenAIModels } from '~/utils/modelProviders/types/openai'
 import { PluginKey } from '@/types/plugin'
@@ -30,13 +30,21 @@ import { useDebouncedState } from '@mantine/hooks'
 import posthog from 'posthog-js'
 import { saveConversationToServer } from '~/utils/app/conversation'
 import { downloadConversationHistoryUser } from '~/pages/api/UIUC-api/downloadConvoHistoryUser'
+import CustomGPTsList from './components/CustomGPTsList'
+import { CourseMetadata, CustomSystemPrompt } from '~/types/courseMetadata'
+import { callSetCourseMetadata } from '~/utils/apiUtils'
+import { showNotification } from '@mantine/notifications'
 
 export const Chatbar = ({
   current_email,
   courseName,
+  courseMetadata,
+  onCourseMetadataUpdate,
 }: {
   current_email: string | undefined
   courseName: string | undefined
+  courseMetadata: CourseMetadata | null
+  onCourseMetadataUpdate?: (updatedMetadata: CourseMetadata) => void
 }) => {
   const { t } = useTranslation('sidebar')
   const chatBarContextValue = useCreateReducer<ChatbarInitialState>({
@@ -45,7 +53,7 @@ export const Chatbar = ({
   const [isExporting, setIsExporting] = useState<boolean>(false)
 
   const {
-    state: { conversations, showChatbar, defaultModelId, folders },
+    state: { conversations, showChatbar, defaultModelId, folders, selectedConversation },
     dispatch: homeDispatch,
     handleCreateFolder,
     handleNewConversation,
@@ -148,11 +156,15 @@ export const Chatbar = ({
       if (
         isConversationHistoryFetched &&
         !isConversationHistoryLoading &&
-        conversationHistory
+        conversationHistory &&
+        conversationHistory.pages
       ) {
         // console.log('Raw conversation history:', conversationHistory)
         const allConversations = conversationHistory.pages
-          .flatMap((page) => (Array.isArray(page) ? page : []))
+          .flatMap((page) => {
+            if (!page || !page.conversations) return [];
+            return Array.isArray(page.conversations) ? page.conversations : [];
+          })
           .filter((conversation) => conversation !== undefined)
         homeDispatch({ field: 'conversations', value: allConversations })
         // console.log('Dispatching conversations: ', allConversations)
@@ -295,6 +307,90 @@ export const Chatbar = ({
     }
   }
 
+  const handleSelectCustomGPT = (customGPT: CustomSystemPrompt) => {
+    console.log('Selected custom GPT:', customGPT);
+    
+    // Create a new conversation with the custom GPT's prompt
+    const model = selectedConversation?.model || (defaultModelId ? OpenAIModels[defaultModelId] : null);
+    
+    if (!model) {
+      console.error('No model available for new conversation');
+      return;
+    }
+
+    // Create the initial user message with the custom GPT's prompt text
+    const initialMessage: Message = {
+      id: uuidv4(),
+      role: 'user',
+      content: customGPT.promptText,
+    };
+
+    const newConversation: Conversation = {
+      id: uuidv4(),
+      name: customGPT.name || 'Custom GPT Chat',
+      messages: [initialMessage], // Start with the custom GPT's prompt as the first message
+      model: model,
+      prompt: DEFAULT_SYSTEM_PROMPT, // Use default system prompt
+      temperature: selectedConversation?.temperature || DEFAULT_TEMPERATURE,
+      folderId: null,
+      userEmail: current_email,
+      projectName: courseName,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Update the selected conversation to use the custom GPT
+    homeDispatch({ field: 'selectedConversation', value: newConversation });
+    
+    // Save to localStorage
+    try {
+      localStorage.setItem('selectedConversation', JSON.stringify(newConversation));
+    } catch (error) {
+      console.error('Error saving custom GPT conversation to localStorage:', error);
+    }
+  };
+
+  const handleToggleFavoritePrompt = async (promptId: string, isFavorite: boolean) => {
+    if (!courseMetadata?.custom_system_prompts || !courseName) {
+      console.error('Cannot toggle favorite: missing course metadata or course name');
+      return;
+    }
+
+    try {
+      // Update the prompts array with the new favorite status
+      const updatedPrompts = courseMetadata.custom_system_prompts.map((prompt) =>
+        prompt.id === promptId ? { ...prompt, isFavorite } : prompt,
+      );
+
+      // Create updated metadata
+      const updatedMetadata = {
+        ...courseMetadata,
+        custom_system_prompts: updatedPrompts,
+      } as CourseMetadata;
+
+      // Save to backend
+      const success = await callSetCourseMetadata(courseName, updatedMetadata);
+      
+      if (success) {
+        // Update parent component's metadata if callback is provided
+        if (onCourseMetadataUpdate) {
+          onCourseMetadataUpdate(updatedMetadata);
+        }
+      } 
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    }
+  };
+
+  // Create the custom GPTs component
+  const customGPTsComponent = courseMetadata?.custom_system_prompts && courseMetadata.custom_system_prompts.length > 0 ? (
+    <CustomGPTsList
+      customSystemPrompts={courseMetadata.custom_system_prompts}
+      onSelectGPT={handleSelectCustomGPT}
+      onToggleFavorite={handleToggleFavoritePrompt}
+    />
+  ) : null;
+
   if (!current_email || !courseName) {
     return (
       <div className="flex-1 overflow-hidden">
@@ -384,6 +480,7 @@ export const Chatbar = ({
         handleDrop={handleDrop}
         footerComponent={<ChatbarSettings />}
         onScroll={handleScroll}
+        customGPTsComponent={customGPTsComponent}
       />
     </ChatbarContext.Provider>
   )

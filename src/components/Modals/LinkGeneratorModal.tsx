@@ -4,15 +4,16 @@ import {
   Text,
   Flex,
   Divider,
-  TextInput,
   Group,
   Button,
   CopyButton,
   Paper,
+  Select,
 } from '@mantine/core';
 import { montserrat_heading, montserrat_paragraph } from 'fonts';
-import { IconCheck, IconCopy } from '@tabler/icons-react';
+import { IconCheck, IconCopy, IconChevronDown } from '@tabler/icons-react';
 import CustomSwitch from '~/components/Switches/CustomSwitch';
+import { type CustomSystemPrompt } from '~/types/courseMetadata';
 
 interface LinkGeneratorModalProps {
   opened: boolean;
@@ -23,14 +24,24 @@ interface LinkGeneratorModalProps {
     documentsOnly: boolean;
     systemPromptOnly: boolean;
   };
+  customSystemPrompts?: CustomSystemPrompt[];
+  initialActivePrompt?: string;
 }
 
-export const LinkGeneratorModal = ({ opened, onClose, course_name, currentSettings }: LinkGeneratorModalProps) => {
+export const LinkGeneratorModal = ({
+  opened,
+  onClose,
+  course_name,
+  currentSettings,
+  customSystemPrompts = [],
+  initialActivePrompt,
+}: LinkGeneratorModalProps) => {
   const [linkSettings, setLinkSettings] = useState({
     guidedLearning: false,
     documentsOnly: false,
     systemPromptOnly: false,
   });
+  const [selectedActivePrompt, setSelectedActivePrompt] = useState<string>('');
   const [generatedLink, setGeneratedLink] = useState('');
 
   // Reset link settings when modal is opened
@@ -41,8 +52,9 @@ export const LinkGeneratorModal = ({ opened, onClose, course_name, currentSettin
         documentsOnly: false,
         systemPromptOnly: false,
       });
+      setSelectedActivePrompt(initialActivePrompt || '');
     }
-  }, [opened]);
+  }, [opened, initialActivePrompt]);
 
   const handleSettingChange = (setting: keyof typeof linkSettings) => (value: boolean) => {
     setLinkSettings(prev => ({
@@ -54,18 +66,30 @@ export const LinkGeneratorModal = ({ opened, onClose, course_name, currentSettin
   useEffect(() => {
     const baseUrl = window.location.origin;
     const queryParams = new URLSearchParams();
-    
+
+    if (selectedActivePrompt) {
+      queryParams.append('activePrompt', selectedActivePrompt);
+    }
+
     Object.entries(linkSettings).forEach(([key, value]) => {
       if (value) {
         const paramName = key as keyof typeof linkSettings;
         queryParams.append(paramName, 'true');
       }
     });
-    
+
     const queryString = queryParams.toString();
     const chatUrl = `${baseUrl}/${course_name}/chat${queryString ? `?${queryString}` : ''}`;
     setGeneratedLink(chatUrl);
-  }, [linkSettings, course_name]);
+  }, [linkSettings, course_name, selectedActivePrompt]);
+
+  const customPromptOptions = [
+    { value: '', label: 'Use Course Default System Prompt' },
+    ...(customSystemPrompts || []).map(prompt => ({
+      value: prompt.urlSuffix,
+      label: prompt.name || prompt.urlSuffix,
+    })),
+  ];
 
   return (
     <Modal
@@ -117,6 +141,62 @@ export const LinkGeneratorModal = ({ opened, onClose, course_name, currentSettin
         </Text>
 
         <Divider style={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+        
+        <Select
+          labelProps={{ style: { color: 'white', marginBottom: '4px' } }}
+          label="System Prompt for Link"
+          placeholder="Choose a system prompt"
+          data={customPromptOptions}
+          value={selectedActivePrompt}
+          onChange={(value) => setSelectedActivePrompt(value ?? '')}
+          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+          rightSection={<IconChevronDown size="1rem" />}
+          withinPortal
+          styles={(theme) => ({
+            input: {
+              backgroundColor: theme.colors.dark[6],
+              borderColor: theme.colors.dark[4],
+              color: theme.white,
+              transition: 'border-color 0.2s ease',
+              '&::placeholder': {
+                color: theme.colors.dark[2],
+              },
+              '&:focus, &:focus-within': {
+                borderColor: theme.colors.violet[4],
+              },
+            },
+            dropdown: {
+              backgroundColor: theme.colors.dark[6],
+              borderColor: theme.colors.dark[4],
+              maxHeight: '250px',
+              overflowY: 'auto',
+            },
+            item: {
+              backgroundColor: theme.colors.dark[6],
+              color: theme.white,
+              borderRadius: theme.radius.sm,
+              padding: '8px 12px',
+              margin: '2px 4px',
+              transition: 'background-color 50ms ease-out',
+
+              '&:not([data-selected])[data-hovered]': {
+                backgroundColor: theme.colors.violet[5],
+              },
+
+              '&[data-selected]': {
+                backgroundColor: theme.colors.violet[6],
+                color: theme.white,
+              },
+
+              '&[data-selected][data-hovered]': {
+                backgroundColor: theme.colors.violet[6],
+              }
+            },
+            rightSection: {
+              color: theme.colors.gray[5],
+            },
+          })}
+        />
 
         <Flex direction="column" gap="md">
           <CustomSwitch

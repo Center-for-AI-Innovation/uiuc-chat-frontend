@@ -13,9 +13,16 @@ export async function fetchConversationHistory(
     conversations: [],
     nextCursor: null,
   }
+  
   try {
+    // Validate input parameters
+    if (!user_email || !courseName) {
+      console.warn('fetchConversationHistory: Missing required parameters');
+      return finalResponse;
+    }
+
     const response = await fetch(
-      `/api/conversation?user_email=${user_email}&searchTerm=${searchTerm}&courseName=${courseName}&pageParam=${pageParam}`,
+      `/api/conversation?user_email=${encodeURIComponent(user_email)}&searchTerm=${encodeURIComponent(searchTerm)}&courseName=${encodeURIComponent(courseName)}&pageParam=${pageParam}`,
       {
         method: 'GET',
         headers: {
@@ -25,15 +32,30 @@ export async function fetchConversationHistory(
     )
 
     if (!response.ok) {
-      throw new Error('Error fetching conversation history')
+      console.error(`fetchConversationHistory: HTTP ${response.status} - ${response.statusText}`);
+      return finalResponse;
     }
 
-    const { conversations, nextCursor } = await response.json()
+    const responseData = await response.json()
+    
+    // Ensure response has expected structure
+    if (!responseData || typeof responseData !== 'object') {
+      console.warn('fetchConversationHistory: Invalid response format');
+      return finalResponse;
+    }
 
-    // // Clean the conversations and ensure they're properly structured
+    const { conversations, nextCursor } = responseData
+
+    // Ensure conversations is an array
+    if (!Array.isArray(conversations)) {
+      console.warn('fetchConversationHistory: conversations is not an array');
+      return finalResponse;
+    }
+
+    // Clean the conversations and ensure they're properly structured
     const cleanedConversations = conversations.map((conversation: any) => {
       // Ensure messages are properly ordered by creation time
-      if (conversation.messages) {
+      if (conversation.messages && Array.isArray(conversation.messages)) {
         conversation.messages.sort((a: any, b: any) => {
           return (
             new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
@@ -49,15 +71,19 @@ export async function fetchConversationHistory(
     // Sync with local storage
     const selectedConversation = localStorage.getItem('selectedConversation')
     if (selectedConversation && finalResponse?.conversations?.length > 0) {
-      const parsed = JSON.parse(selectedConversation)
-      const serverConversation = finalResponse.conversations.find(
-        (c) => c.id === parsed.id,
-      )
-      if (serverConversation) {
-        localStorage.setItem(
-          'selectedConversation',
-          JSON.stringify(serverConversation),
+      try {
+        const parsed = JSON.parse(selectedConversation)
+        const serverConversation = finalResponse.conversations.find(
+          (c) => c.id === parsed.id,
         )
+        if (serverConversation) {
+          localStorage.setItem(
+            'selectedConversation',
+            JSON.stringify(serverConversation),
+          )
+        }
+      } catch (parseError) {
+        console.warn('fetchConversationHistory: Error parsing selectedConversation from localStorage', parseError);
       }
     }
   } catch (error) {
@@ -66,7 +92,12 @@ export async function fetchConversationHistory(
       error,
     )
   }
-  return finalResponse
+  
+  // Ensure we always return a valid structure
+  return {
+    conversations: finalResponse.conversations || [],
+    nextCursor: finalResponse.nextCursor || null,
+  }
 }
 
 export const deleteConversationFromServer = async (id: string) => {
@@ -367,12 +398,24 @@ export async function saveConversationToServer(conversation: Conversation) {
   while (retryCount < MAX_RETRIES) {
     try {
       console.debug('Saving conversation to server:', conversation)
+      
+      // Validate required fields
+      if (!conversation.userEmail) {
+        throw new Error('User email is required to save conversation')
+      }
+      if (!conversation.projectName) {
+        throw new Error('Project name is required to save conversation')
+      }
+      
       const response = await fetch('/api/conversation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ conversation }),
+        body: JSON.stringify({ 
+          emailAddress: conversation.userEmail,
+          conversation 
+        }),
       })
 
       if (!response.ok) {
