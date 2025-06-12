@@ -121,7 +121,7 @@ const CustomPromptModal: React.FC<CustomPromptModalProps> = ({
     >
       <Flex direction="column" gap="md">
         <TextInput
-          label="Prompt Name"
+          label="Name"
           placeholder="E.g., Friendly Tutor, Code Explainer"
           value={customPromptForm.name}
           onChange={(event) =>
@@ -139,39 +139,6 @@ const CustomPromptModal: React.FC<CustomPromptModalProps> = ({
             },
           }}
         />
-        <TextInput
-          label="Link Identifier"
-          placeholder="E.g., friendly-tutor (letters, numbers, -, _ only)"
-          value={customPromptForm.urlSuffix}
-          onChange={(event) =>
-            handleCustomPromptFormChange(
-              'urlSuffix',
-              event.currentTarget.value,
-            )
-          }
-          required
-          maxLength={50}
-          className={`${montserrat_paragraph.className} font-montserratParagraph`}
-          styles={{ 
-            label: { color: 'white', marginBottom: '4px' },
-            input: {
-              '&:focus': {
-                borderColor: theme.colors.violet[6],
-                boxShadow: `0 0 3px 1px ${theme.colors.violet[4]}`,
-              },
-            },
-          }}
-        />
-        <Text
-          size="xs"
-          align="right"
-          color={customPromptForm.urlSuffix.length > 45 ? 'red' : 'dimmed'}
-          className={`${montserrat_paragraph.className} font-montserratParagraph`}
-          mt={-10}
-          mb={10}
-        >
-          {customPromptForm.urlSuffix.length} / 50
-        </Text>
         <Select
           label="Document Group"
           placeholder="Select a document group (optional)"
@@ -360,7 +327,7 @@ const CustomPromptModal: React.FC<CustomPromptModalProps> = ({
               },
             })}
           >
-            {editingCustomPromptId ? 'Save Changes' : 'Add Prompt'}
+            {editingCustomPromptId ? 'Save Changes' : 'Add GPT'}
           </Button>
         </Group>
       </Flex>

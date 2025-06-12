@@ -40,7 +40,7 @@ interface CustomPromptsTableProps {
   onOpenLinkGeneratorModal: (urlSuffix: string) => void;
 }
 
-type SortableColumn = 'name' | 'urlSuffix' | 'promptText';
+type SortableColumn = 'name' | 'urlSuffix' | 'promptText' | 'documentGroup' | 'tool';
 type SortDirection = 'asc' | 'desc';
 
 interface ThProps {
@@ -252,25 +252,33 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
                     <Th
                       scope="col"
                       className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-6"
-                      width="15%"
-                      sorted={sortColumn === 'urlSuffix'}
-                      reversed={sortDirection === 'desc'}
-                      onSort={() => handleSort('urlSuffix')}
-                    >
-                      Link Identifier
-                    </Th>
-                    <Th
-                      scope="col"
-                      className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-6"
                       sorted={sortColumn === 'promptText'}
                       reversed={sortDirection === 'desc'}
                       onSort={() => handleSort('promptText')}
                     >
                       Prompt Preview
                     </Th>
+                    <Th
+                      scope="col"
+                      className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-6"
+                      sorted={sortColumn === 'documentGroup'}
+                      reversed={sortDirection === 'desc'}
+                      onSort={() => handleSort('documentGroup')}
+                    >
+                      Document Group
+                    </Th>
+                    <Th
+                      scope="col"
+                      className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-6"
+                      sorted={sortColumn === 'tool'}
+                      reversed={sortDirection === 'desc'}
+                      onSort={() => handleSort('tool')}
+                    >
+                      Tool
+                    </Th>
                     <th
                       scope="col"
-                      className="w-28 px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-6"
+                      className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-6"
                       style={{ minWidth: '120px' }}
                     >
                       Actions
@@ -298,11 +306,15 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
                       <td className={`truncate max-w-0 px-4 py-4 text-sm font-medium text-white sm:px-6 ${montserrat_paragraph.className}`}>
                         {prompt.name}
                       </td>
-                      <td className={`truncate max-w-0 px-4 py-4 text-sm text-gray-300 sm:px-6 ${montserrat_paragraph.className}`}>
-                        {prompt.urlSuffix}
-                      </td>
+
                       <td className={`truncate max-w-0 px-4 py-4 text-sm text-gray-400 sm:px-6`}>
                         <Text truncate className={`${montserrat_paragraph.className}`}>{prompt.promptText}</Text>
+                      </td>
+                      <td className={`truncate max-w-0 px-4 py-4 text-sm text-gray-300 sm:px-6 ${montserrat_paragraph.className}`}>
+                        {prompt.documentGroup || '-'}
+                      </td>
+                      <td className={`truncate max-w-0 px-4 py-4 text-sm text-gray-300 sm:px-6 ${montserrat_paragraph.className}`}>
+                        {prompt.tool || '-'}
                       </td>
                       <td className="whitespace-nowrap px-4 py-4 text-right text-sm font-medium sm:px-6">
                         <Group spacing="xs" noWrap>
