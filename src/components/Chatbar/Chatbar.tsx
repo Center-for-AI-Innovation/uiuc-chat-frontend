@@ -3,7 +3,7 @@ import { useTranslation } from 'next-i18next'
 import { useCreateReducer } from '@/hooks/useCreateReducer'
 import { DEFAULT_SYSTEM_PROMPT, DEFAULT_TEMPERATURE } from '@/utils/app/const'
 import { exportData } from '@/utils/app/importExport'
-import { Conversation } from '@/types/chat'
+import { Conversation, Message } from '~/types/chat'
 import { LatestExportFormat, SupportedExportFormats } from '@/types/export'
 import { OpenAIModels } from '~/utils/modelProviders/types/openai'
 import { PluginKey } from '@/types/plugin'
@@ -53,7 +53,7 @@ export const Chatbar = ({
   const [isExporting, setIsExporting] = useState<boolean>(false)
 
   const {
-    state: { conversations, showChatbar, defaultModelId, folders },
+    state: { conversations, showChatbar, defaultModelId, folders, selectedConversation },
     dispatch: homeDispatch,
     handleCreateFolder,
     handleNewConversation,
@@ -309,7 +309,45 @@ export const Chatbar = ({
 
   const handleSelectCustomGPT = (customGPT: CustomSystemPrompt) => {
     console.log('Selected custom GPT:', customGPT);
-    // TODO: Implement custom GPT selection logic
+    
+    // Create a new conversation with the custom GPT's prompt
+    const model = selectedConversation?.model || (defaultModelId ? OpenAIModels[defaultModelId] : null);
+    
+    if (!model) {
+      console.error('No model available for new conversation');
+      return;
+    }
+
+    // Create the initial user message with the custom GPT's prompt text
+    const initialMessage: Message = {
+      id: uuidv4(),
+      role: 'user',
+      content: customGPT.promptText,
+    };
+
+    const newConversation: Conversation = {
+      id: uuidv4(),
+      name: customGPT.name || 'Custom GPT Chat',
+      messages: [initialMessage], // Start with the custom GPT's prompt as the first message
+      model: model,
+      prompt: DEFAULT_SYSTEM_PROMPT, // Use default system prompt
+      temperature: selectedConversation?.temperature || DEFAULT_TEMPERATURE,
+      folderId: null,
+      userEmail: current_email,
+      projectName: courseName,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Update the selected conversation to use the custom GPT
+    homeDispatch({ field: 'selectedConversation', value: newConversation });
+    
+    // Save to localStorage
+    try {
+      localStorage.setItem('selectedConversation', JSON.stringify(newConversation));
+    } catch (error) {
+      console.error('Error saving custom GPT conversation to localStorage:', error);
+    }
   };
 
   const handleToggleFavoritePrompt = async (promptId: string, isFavorite: boolean) => {
