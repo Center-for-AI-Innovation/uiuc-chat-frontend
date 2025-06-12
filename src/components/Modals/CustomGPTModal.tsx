@@ -19,21 +19,22 @@ import { useFetchAllWorkflows } from '~/utils/functionCalling/handleFunctionCall
 import { type UIUCTool } from '~/types/chat';
 
 // Define the shape of the custom GPT form data
-interface CustomPromptFormState {
+interface CustomGPTFormState {
   name: string;
   urlSuffix: string;
   promptText: string;
   documentGroup?: string;
   tool?: string;
+  id: string;
 }
 
 interface CustomGPTModalProps {
   opened: boolean;
   onClose: () => void;
   editingCustomPromptId: string | null;
-  customPromptForm: CustomPromptFormState;
+  customPromptForm: CustomGPTFormState;
   handleCustomPromptFormChange: (
-    field: keyof CustomPromptFormState,
+    field: keyof CustomGPTFormState,
     value: string,
   ) => void;
   handleSaveCustomPrompt: () => Promise<void>;

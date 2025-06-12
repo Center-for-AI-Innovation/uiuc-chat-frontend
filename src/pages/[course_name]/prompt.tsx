@@ -52,12 +52,13 @@ import {
 import { type AnthropicModel } from '~/utils/modelProviders/types/anthropic'
 import { v4 as uuidv4 } from 'uuid'
 import { type ChatBody } from '~/types/chat'
-import CustomGPTTable from '~/components/Course/CustomGPTTable'
+import CustomPromptsTable from '~/components/Course/CustomGPTTable'
 import CustomGPTModal from '~/components/Modals/CustomGPTModal'
 import PromptEngineeringGuide from '~/components/Course/PromptEngineeringGuide';
 import SystemPromptControls from '~/components/Course/SystemPromptControls';
 import BehaviorSettingsPanel from '~/components/Course/BehaviorSettingsPanel';
 import DeleteCustomPromptModal from '~/components/Modals/DeleteCustomPromptModal';
+import { CustomSystemPrompt } from '~/types/courseMetadata';
 
 // Moved utility functions before the component that uses them
 const showToastNotification = (
@@ -134,18 +135,6 @@ const montserrat = Montserrat({
   weight: '700',
   subsets: ['latin'],
 })
-
-// Define the new interface for custom GPTs
-interface CustomSystemPrompt {
-  id: string // Unique identifier for the prompt
-  name: string // A user-friendly name for the prompt
-  urlSuffix: string // The suffix for the shareable URL
-  promptText: string // The actual system prompt text
-  isFavorite?: boolean // Optional favorite status
-  documentGroup: string
-}
-
-export type { CustomSystemPrompt };
 
 type PartialCourseMetadata = {
   [K in keyof CourseMetadata]?: CourseMetadata[K]
@@ -246,11 +235,14 @@ const CourseMain: NextPage = () => {
     promptText: string
     documentGroup: string
     tool?: string
+    id: string
   }>({
     name: '',
     urlSuffix: '',
     promptText: '',
     documentGroup: '',
+    tool: '',
+    id: uuidv4()
   })
   // For delete confirmation
   const [
@@ -939,23 +931,39 @@ CRITICAL: The optimized prompt must:
   // Handler functions for custom GPTs
   const handleOpenCustomPromptModal = (prompt?: CustomSystemPrompt) => {
     if (prompt) {
-      setEditingCustomPromptId(prompt.id)
       setCustomPromptForm({
         name: prompt.name,
         urlSuffix: prompt.urlSuffix,
         promptText: prompt.promptText,
         documentGroup: prompt.documentGroup || '',
+        tool: prompt.tool || '',
+        id: prompt.id
       })
+      setEditingCustomPromptId(prompt.id)
     } else {
+      setCustomPromptForm({
+        name: '',
+        urlSuffix: '',
+        promptText: '',
+        documentGroup: '',
+        tool: '',
+        id: uuidv4()
+      })
       setEditingCustomPromptId(null)
-      setCustomPromptForm({ name: '', urlSuffix: '', promptText: '', documentGroup: '' })
     }
     openCustomPromptModal()
   }
 
   const handleCloseCustomPromptModal = () => {
+    setCustomPromptForm({
+      name: '',
+      urlSuffix: '',
+      promptText: '',
+      documentGroup: '',
+      tool: '',
+      id: uuidv4()
+    })
     setEditingCustomPromptId(null)
-    setCustomPromptForm({ name: '', urlSuffix: '', promptText: '', documentGroup: '' })
     closeCustomPromptModal()
   }
 
@@ -963,13 +971,18 @@ CRITICAL: The optimized prompt must:
     field: keyof typeof customPromptForm,
     value: string,
   ) => {
-    setCustomPromptForm((prev) => ({ ...prev, [field]: value }))
+    if (field === 'id') {
+      // Ensure id is always a string
+      setCustomPromptForm((prev) => ({ ...prev, id: value || uuidv4() }))
+    } else {
+      setCustomPromptForm((prev) => ({ ...prev, [field]: value }))
+    }
   }
 
   const handleSaveCustomPrompt = async () => {
     console.log('CustomPromptForm state:', customPromptForm); // Log the customPromptForm state
     
-    const { name, urlSuffix, promptText, documentGroup, tool } = customPromptForm;
+    const { name, urlSuffix, promptText, documentGroup, tool, id } = customPromptForm;
 
     // Validate required fields
     if (!name.trim()) {
@@ -994,22 +1007,24 @@ CRITICAL: The optimized prompt must:
       if (index !== -1) {
         updatedPrompts[index] = {
           ...updatedPrompts[index],
+          id: editingCustomPromptId, // Ensure id is preserved
           name: name.trim(),
           promptText: promptText.trim(),
           documentGroup: documentGroup.trim(),
           urlSuffix: linkIdentifier,
-          tool: tool?.trim()
+          tool: tool?.trim() || undefined
         };
       }
     } else {
       // Add new prompt
-      const newPrompt = {
-        id: uuidv4(),
+      const newPrompt: CustomSystemPrompt = {
+        id: id || uuidv4(), // Ensure id is always a string
         name: name.trim(),
         promptText: promptText.trim(),
         documentGroup: documentGroup.trim(),
         urlSuffix: linkIdentifier,
-        tool: tool?.trim()
+        tool: tool?.trim() || undefined,
+        isFavorite: false
       };
       updatedPrompts.push(newPrompt);
     }
@@ -1289,7 +1304,7 @@ CRITICAL: The optimized prompt must:
             </Card>
 
             {/* Custom GPTs Section */}
-            <CustomGPTTable
+            <CustomPromptsTable
               customSystemPrompts={customSystemPrompts}
               theme={theme}
               montserrat_heading={montserrat_heading}

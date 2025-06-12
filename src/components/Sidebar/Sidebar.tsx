@@ -1,7 +1,7 @@
 import { IconFolderPlus, IconMistOff, IconPlus } from '@tabler/icons-react'
 import { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Switch } from '@mantine/core'
+import { Switch, Text } from '@mantine/core'
 
 import {
   CloseSidebarButton,
@@ -103,22 +103,30 @@ const Sidebar = <T,>({
         
         <div className="flex-grow overflow-auto" onScroll={onScroll}>
           {folders?.length > 0 && (
-            <div className="flex border-b border-white/20 pb-2">
-              <div className="sidebar-header text-xs font-bold text-gray-400 mb-1 px-1 uppercase tracking-wider">Folders</div>
-              {folderComponent}
+            <div className="mt-4 border-t border-white/20 pt-4">
+              <Text size="sm" color="dimmed" className="mb-2 px-3">
+                Folders
+              </Text>
+              <div className="border-b border-white/20 pb-2">
+                {folderComponent}
+              </div>
             </div>
           )}
 
           {items?.length > 0 ? (
-            <div
-              className="pt-2"
-              onDrop={handleDrop}
-              onDragOver={allowDrop}
-              onDragEnter={highlightDrop}
-              onDragLeave={removeHighlight}
-            >
-              <div className="sidebar-header text-xs font-bold text-gray-400 mb-1 px-1 uppercase tracking-wider">Conversations</div>
-              {itemComponent}
+            <div className="mt-4 border-t border-white/20 pt-4">
+              <Text size="sm" color="dimmed" className="mb-2 px-3">
+                Conversations
+              </Text>
+              <div
+                className="pt-2"
+                onDrop={handleDrop}
+                onDragOver={allowDrop}
+                onDragEnter={highlightDrop}
+                onDragLeave={removeHighlight}
+              >
+                {itemComponent}
+              </div>
             </div>
           ) : (
             <div className="mt-8 select-none text-center text-white opacity-50">

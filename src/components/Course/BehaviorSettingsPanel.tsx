@@ -20,7 +20,7 @@ import CustomSwitch from '~/components/Switches/CustomSwitch';
 import CustomCopyButton from '~/components/Buttons/CustomCopyButton';
 import { LinkGeneratorModal } from '~/components/Modals/LinkGeneratorModal';
 import { type CourseMetadata } from '~/types/courseMetadata';
-import { type CustomSystemPrompt } from '~/pages/[course_name]/prompt';
+import { type CustomSystemPrompt } from '~/types/courseMetadata';
 
 interface BehaviorSettingsPanelProps {
   theme: MantineTheme;

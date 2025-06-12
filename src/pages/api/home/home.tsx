@@ -59,6 +59,18 @@ const Home = ({
     systemPromptOnly: boolean
   }
 }) => {
+  // State for managing course metadata updates
+  const [currentCourseMetadata, setCurrentCourseMetadata] = useState<CourseMetadata | null>(course_metadata)
+
+  // Update local state when props change
+  useEffect(() => {
+    setCurrentCourseMetadata(course_metadata)
+  }, [course_metadata])
+
+  // Callback to handle course metadata updates from child components
+  const handleCourseMetadataUpdate = useCallback((updatedMetadata: CourseMetadata) => {
+    setCurrentCourseMetadata(updatedMetadata)
+  }, [])
   // States
   const [isInitialSetupDone, setIsInitialSetupDone] = useState(false)
 
@@ -795,12 +807,17 @@ const Home = ({
                     </span>
                   </div>
                 )}
-              <Chatbar current_email={current_email} courseName={course_name} courseMetadata={course_metadata} />
+              <Chatbar 
+                current_email={current_email} 
+                courseName={course_name} 
+                courseMetadata={currentCourseMetadata} 
+                onCourseMetadataUpdate={handleCourseMetadataUpdate}
+              />
 
-              {course_metadata && (
+              {currentCourseMetadata && (
                 <Chat
                   stopConversationRef={stopConversationRef}
-                  courseMetadata={course_metadata}
+                  courseMetadata={currentCourseMetadata}
                   courseName={course_name}
                   currentEmail={current_email}
                   documentCount={document_count}
