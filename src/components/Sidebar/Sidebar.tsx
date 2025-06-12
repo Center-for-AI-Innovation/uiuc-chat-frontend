@@ -27,6 +27,7 @@ interface Props<T> {
   handleCreateFolder: () => void
   handleDrop: (e: any) => void
   onScroll: (e: any) => void
+  customGPTsComponent?: ReactNode
 }
 
 const Sidebar = <T,>({
@@ -45,6 +46,7 @@ const Sidebar = <T,>({
   handleCreateFolder,
   handleDrop,
   onScroll,
+  customGPTsComponent,
 }: Props<T>) => {
   const { t } = useTranslation('promptbar')
 
@@ -95,9 +97,14 @@ const Sidebar = <T,>({
           searchTerm={searchTerm}
           onSearch={handleSearchTerm}
         />
+        
+        {/* Custom GPTs Component - Display below search and above folders */}
+        {customGPTsComponent}
+        
         <div className="flex-grow overflow-auto" onScroll={onScroll}>
           {folders?.length > 0 && (
             <div className="flex border-b border-white/20 pb-2">
+              <div className="sidebar-header text-xs font-bold text-gray-400 mb-1 px-1 uppercase tracking-wider">Folders</div>
               {folderComponent}
             </div>
           )}
@@ -109,8 +116,8 @@ const Sidebar = <T,>({
               onDragOver={allowDrop}
               onDragEnter={highlightDrop}
               onDragLeave={removeHighlight}
-              // onScroll={onScroll}
             >
+              <div className="sidebar-header text-xs font-bold text-gray-400 mb-1 px-1 uppercase tracking-wider">Conversations</div>
               {itemComponent}
             </div>
           ) : (

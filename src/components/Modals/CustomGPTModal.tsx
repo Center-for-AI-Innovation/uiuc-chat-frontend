@@ -27,7 +27,7 @@ interface CustomPromptFormState {
   tool?: string;
 }
 
-interface CustomPromptModalProps {
+interface CustomGPTModalProps {
   opened: boolean;
   onClose: () => void;
   editingCustomPromptId: string | null;
@@ -42,7 +42,7 @@ interface CustomPromptModalProps {
   montserrat_paragraph: NextFont;
 }
 
-const CustomPromptModal: React.FC<CustomPromptModalProps> = ({
+const CustomGPTModal: React.FC<CustomGPTModalProps> = ({
   opened,
   onClose,
   editingCustomPromptId,
@@ -335,4 +335,4 @@ const CustomPromptModal: React.FC<CustomPromptModalProps> = ({
   );
 };
 
-export default CustomPromptModal; 
+export default CustomGPTModal; 

@@ -52,11 +52,11 @@ import {
 import { type AnthropicModel } from '~/utils/modelProviders/types/anthropic'
 import { v4 as uuidv4 } from 'uuid'
 import { type ChatBody } from '~/types/chat'
-import CustomPromptsTable from '~/components/Course/CustomPromptsTable'
+import CustomGPTTable from '~/components/Course/CustomGPTTable'
+import CustomGPTModal from '~/components/Modals/CustomGPTModal'
 import PromptEngineeringGuide from '~/components/Course/PromptEngineeringGuide';
 import SystemPromptControls from '~/components/Course/SystemPromptControls';
 import BehaviorSettingsPanel from '~/components/Course/BehaviorSettingsPanel';
-import CustomPromptModal from '~/components/Modals/CustomPromptModal';
 import DeleteCustomPromptModal from '~/components/Modals/DeleteCustomPromptModal';
 
 // Moved utility functions before the component that uses them
@@ -245,6 +245,7 @@ const CourseMain: NextPage = () => {
     urlSuffix: string
     promptText: string
     documentGroup: string
+    tool?: string
   }>({
     name: '',
     urlSuffix: '',
@@ -966,103 +967,88 @@ CRITICAL: The optimized prompt must:
   }
 
   const handleSaveCustomPrompt = async () => {
-    const { name, urlSuffix, promptText, documentGroup } = customPromptForm;
+    console.log('CustomPromptForm state:', customPromptForm); // Log the customPromptForm state
+    
+    const { name, urlSuffix, promptText, documentGroup, tool } = customPromptForm;
 
+    // Validate required fields
     if (!name.trim()) {
+      console.error('Prompt name is undefined');
       showToastNotification(theme, 'Validation Error', 'Prompt Name is required.', true);
       return;
     }
-    if (!editingCustomPromptId && !urlSuffix.trim()) {
-      showToastNotification(theme, 'Validation Error', 'Link Identifier is required.', true);
-      return;
-    }
-    if (editingCustomPromptId && customSystemPrompts.find(p => p.id === editingCustomPromptId)?.urlSuffix !== urlSuffix && !urlSuffix.trim()){
-      showToastNotification(theme, 'Validation Error', 'Link Identifier cannot be empty if changed.', true);
-      return;
-    }
-    if (urlSuffix.trim() && !/^[a-zA-Z0-9_-]+$/.test(urlSuffix.trim())) {
-      showToastNotification(
-        theme,
-        'Validation Error',
-        'Link Identifier can only contain letters, numbers, underscores, and hyphens.',
-        true,
-      );
-      return;
-    }
+
     if (!promptText.trim()) {
       showToastNotification(theme, 'Validation Error', 'Prompt Text is required.', true);
       return;
     }
 
-    if (urlSuffix.trim()) {
-      const isSuffixUnique = customSystemPrompts.every(
-        (p) =>
-          p.id === editingCustomPromptId || p.urlSuffix !== urlSuffix.trim(),
-      );
-      if (!isSuffixUnique) {
-        showToastNotification(
-          theme,
-          'Duplicate Identifier',
-          'This Link Identifier is already in use. Please choose a unique one.',
-          true,
-        );
-        return;
-      }
-    }
+    // Derive link identifier from name if urlSuffix is empty
+    const linkIdentifier = urlSuffix.trim() || name.toLowerCase().replace(/\s+/g, '-');
 
-    if (!editingCustomPromptId && customSystemPrompts.length >= 100) {
-      showToastNotification(
-        theme,
-        'Limit Reached',
-        'You have reached the maximum limit of 100 custom system prompts per course.',
-        true,
-      );
-      return;
-    }
-
-    let updatedPrompts: CustomSystemPrompt[];
+    const updatedPrompts = [...customSystemPrompts];
+    
     if (editingCustomPromptId) {
-      updatedPrompts = customSystemPrompts.map((p) =>
-        p.id === editingCustomPromptId
-          ? { ...p, ...customPromptForm, urlSuffix: customPromptForm.urlSuffix.trim() }
-          : p,
-      )
-    } else {
-      const newPrompt: CustomSystemPrompt = {
-        id: uuidv4(),
-        ...customPromptForm,
-        urlSuffix: customPromptForm.urlSuffix.trim(),
+      // Update existing prompt
+      const index = updatedPrompts.findIndex((p) => p.id === editingCustomPromptId);
+      if (index !== -1) {
+        updatedPrompts[index] = {
+          ...updatedPrompts[index],
+          name: name.trim(),
+          promptText: promptText.trim(),
+          documentGroup: documentGroup.trim(),
+          urlSuffix: linkIdentifier,
+          tool: tool?.trim()
+        };
       }
-      updatedPrompts = [...customSystemPrompts, newPrompt]
+    } else {
+      // Add new prompt
+      const newPrompt = {
+        id: uuidv4(),
+        name: name.trim(),
+        promptText: promptText.trim(),
+        documentGroup: documentGroup.trim(),
+        urlSuffix: linkIdentifier,
+        tool: tool?.trim()
+      };
+      updatedPrompts.push(newPrompt);
     }
 
+    setCustomSystemPrompts(updatedPrompts);
+
+    // Save to course metadata
     if (courseMetadataRef.current && course_name) {
       const updatedMetadata = {
         ...courseMetadataRef.current,
         custom_system_prompts: updatedPrompts,
-      } as CourseMetadata
+      } as CourseMetadata;
 
-      const success = await callSetCourseMetadata(course_name, updatedMetadata)
+      const success = await callSetCourseMetadata(course_name, updatedMetadata);
       if (success) {
-        setCustomSystemPrompts(updatedPrompts)
-        setCourseMetadata(updatedMetadata)
+        setCourseMetadata(updatedMetadata);
         showToastNotification(
           theme,
           'Success',
           `Custom GPT ${editingCustomPromptId ? 'updated' : 'saved'} successfully.`,
-        )
-        handleCloseCustomPromptModal()
+        );
       } else {
         showToastNotification(
           theme,
           'Error',
           `Failed to ${editingCustomPromptId ? 'update' : 'save'} custom GPT.`,
           true,
-        )
+        );
       }
     } else {
-      showToastNotification(theme, 'Error', 'Course data not available.', true)
+      showToastNotification(theme, 'Error', 'Course data not available.', true);
     }
+
+    handleCloseCustomPromptModal();
+  };
+
+  // Add debug logger for onClick event
+  const handleClick = (event: React.MouseEvent) => {
+    console.log('Click event:', event); // Log the click event
   }
 
   const handleInitiateDeleteCustomPrompt = (prompt: CustomSystemPrompt) => {
@@ -1303,7 +1289,7 @@ CRITICAL: The optimized prompt must:
             </Card>
 
             {/* Custom GPTs Section */}
-            <CustomPromptsTable
+            <CustomGPTTable
               customSystemPrompts={customSystemPrompts}
               theme={theme}
               montserrat_heading={montserrat_heading}
@@ -1316,7 +1302,7 @@ CRITICAL: The optimized prompt must:
             />
 
             {/* Modal for Adding/Editing Custom GPTs */}
-            <CustomPromptModal
+            <CustomGPTModal
               opened={customPromptModalOpened}
               onClose={handleCloseCustomPromptModal}
               editingCustomPromptId={editingCustomPromptId}

@@ -795,7 +795,7 @@ const Home = ({
                     </span>
                   </div>
                 )}
-              <Chatbar current_email={current_email} courseName={course_name} />
+              <Chatbar current_email={current_email} courseName={course_name} courseMetadata={course_metadata} />
 
               {course_metadata && (
                 <Chat

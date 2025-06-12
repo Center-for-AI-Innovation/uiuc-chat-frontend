@@ -30,13 +30,17 @@ import { useDebouncedState } from '@mantine/hooks'
 import posthog from 'posthog-js'
 import { saveConversationToServer } from '~/utils/app/conversation'
 import { downloadConversationHistoryUser } from '~/pages/api/UIUC-api/downloadConvoHistoryUser'
+import CustomGPTsList from './components/CustomGPTsList'
+import { CourseMetadata, CustomSystemPrompt } from '~/types/courseMetadata'
 
 export const Chatbar = ({
   current_email,
   courseName,
+  courseMetadata,
 }: {
   current_email: string | undefined
   courseName: string | undefined
+  courseMetadata: CourseMetadata | null
 }) => {
   const { t } = useTranslation('sidebar')
   const chatBarContextValue = useCreateReducer<ChatbarInitialState>({
@@ -295,6 +299,25 @@ export const Chatbar = ({
     }
   }
 
+  const handleSelectCustomGPT = (customGPT: CustomSystemPrompt) => {
+    console.log('Selected custom GPT:', customGPT);
+    // TODO: Implement custom GPT selection logic
+  };
+
+  const handleToggleFavoritePrompt = (promptId: string, isFavorite: boolean) => {
+    console.log('Toggle favorite prompt:', promptId, isFavorite);
+    // TODO: Implement favorite toggle logic
+  };
+
+  // Create the custom GPTs component
+  const customGPTsComponent = courseMetadata?.custom_system_prompts && courseMetadata.custom_system_prompts.length > 0 ? (
+    <CustomGPTsList
+      customSystemPrompts={courseMetadata.custom_system_prompts}
+      onSelectGPT={handleSelectCustomGPT}
+      onToggleFavorite={handleToggleFavoritePrompt}
+    />
+  ) : null;
+
   if (!current_email || !courseName) {
     return (
       <div className="flex-1 overflow-hidden">
@@ -384,6 +407,7 @@ export const Chatbar = ({
         handleDrop={handleDrop}
         footerComponent={<ChatbarSettings />}
         onScroll={handleScroll}
+        customGPTsComponent={customGPTsComponent}
       />
     </ChatbarContext.Provider>
   )
