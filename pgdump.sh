@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# This is the script to get dump from postgres and write to file schema.sql
 # requires postgresql@15
 
 # MacOS
