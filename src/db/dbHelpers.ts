@@ -1,3 +1,4 @@
+// File copy-pasted from dbUtils. This has modifications from supabase.rpc to psql functions.
 import { eq, and, like, desc, sql, asc } from 'drizzle-orm';
 import { db } from './dbClient';
 import { apiKeys, conversations, documents, messages, projects, courseNames, docGroups, documentsDocGroups } from './schema';
