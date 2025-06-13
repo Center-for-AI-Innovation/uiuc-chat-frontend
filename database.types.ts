@@ -7,7 +7,6 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-  // TODO : Remove the Functions from the database types. This is not useful as only the function names are there and not the function definitions.
 export type Database = {
   public: {
     Tables: {
