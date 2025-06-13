@@ -1,9 +1,10 @@
 // src/pages/api/chat-api/keys/validate.ts
-
-import { supabase } from '~/utils/supabaseClient'
+import { AuthContextProps } from 'react-oidc-context'
+import { db, apiKeys, keycloakUsers } from '~/db/dbClient'
+import { eq, and, sql } from 'drizzle-orm'
 import posthog from 'posthog-js'
 import { NextRequest, NextResponse } from 'next/server'
-import type { AuthContextProps } from 'react-oidc-context'
+
 
 /**
  * Validates the provided API key and retrieves the associated user data.
@@ -25,56 +26,54 @@ export async function validateApiKeyAndRetrieveData(
   } as AuthContextProps
   // console.log('Validating apiKey', apiKey, ' for course_name', course_name)
   // Attempt to retrieve the email associated with the API key from the database
-  const { data, error } = await supabase
-    .from('api_keys')
-    .select('email')
-    .eq('key', apiKey)
-    .eq('is_active', true)
-    .single()
+  const data = await db
+    .select({ email: apiKeys.email })
+    .from(apiKeys)
+    .where(and(eq(apiKeys.key, apiKey), eq(apiKeys.is_active, true)))
 
-  console.log('data', data)
+  console.log('validateApiKeyAndRetrieveData data', data)
 
   // Determine if the API key is valid based on the absence of errors and presence of data.
-  const isValidApiKey = !error && data !== null
+  const isValidApiKey = data.length > 0
   if (!isValidApiKey) {
     return { isValidApiKey, authContext }
   }
 
   console.log('isValidApiKey', isValidApiKey)
   try {
-    const email = data.email
+    const email = data[0]?.email
+    if (!email) {
+      throw new Error('Email not found')
+    }
 
-    // Get user data from the email
-    const { data: userData, error: userError } = await supabase
-      .schema('keycloak')
-      .from('user_entity')
-      .select('*')
-      .eq('email', email)
-      .single()
+    // Get user data from email from keycloak
+    const userData = await db.select().from(keycloakUsers).where(eq(keycloakUsers.email, email)).limit(1)
 
-    if (userError) throw userError
+    if (!userData || userData.length === 0) {
+      throw new Error('User not found')
+    }
+
+    const user = userData[0]
+    if (!user) {
+      throw new Error('User data is invalid')
+    }
 
     // Construct auth context
     authContext = {
       isAuthenticated: true,
       user: {
         profile: {
-          sub: userData.id,
-          email: userData.email,
+          sub: user.id,
+          email: user.email,
         },
       },
     } as AuthContextProps
 
-    // Increment the API call count for the user.
-    const { error: updateError } = await supabase.rpc('increment', {
-      usage: 1,
-      apikey: apiKey,
-    })
-
-    if (updateError) {
-      console.error('Error updating API call count:', updateError)
-      throw updateError
-    }
+    // Update API key usage count
+    await db
+      .update(apiKeys)
+      .set({ usage_count: sql`${apiKeys.usage_count} + 1` })
+      .where(eq(apiKeys.key, apiKey))
 
     posthog.capture('api_key_validated', {
       email: email,

@@ -1,10 +1,10 @@
 // src/pages/api/chat-api/keys/generate.ts
 
 import { NextApiRequest, NextApiResponse } from 'next'
-import { supabase } from '@/utils/supabaseClient'
+import { db, apiKeys } from '~/db/dbClient'
 import { v4 as uuidv4 } from 'uuid'
 import posthog from 'posthog-js'
-
+import { and, eq } from 'drizzle-orm'
 type ApiResponse = {
   message?: string
   apiKey?: string
@@ -53,15 +53,14 @@ export default async function generateKey(
     console.log('Generating API key for user email:', email)
 
     // Check if the user already has an API key
-    const { data: keys, error: existingKeyError } = await supabase
-      .from('api_keys')
-      .select('key, is_active')
-      .eq('email', email)
-      .eq('is_active', true)
+    const keys = await db
+      .select({ key: apiKeys.key, is_active: apiKeys.is_active })
+      .from(apiKeys)
+      .where(and(eq(apiKeys.email, email), eq(apiKeys.is_active, true)))
 
-    if (existingKeyError) {
-      console.error('Error retrieving existing API key:', existingKeyError)
-      throw existingKeyError
+    if (keys.length === 0) {
+      console.error('No existing API key found for user email:', email)
+      throw new Error('No existing API key found for user email')
     }
 
     console.log('Existing keys found:', keys.length)
@@ -78,37 +77,43 @@ export default async function generateKey(
 
     if (keys.length === 0) {
       console.log('Inserting new API key record')
-      const { error: insertError } = await supabase.from('api_keys').insert([
-        {
+      try {
+        const result = await db.insert(apiKeys).values({
           email: email,
           user_id: decodedPayload.sub,
           key: apiKey,
           is_active: true,
-        },
-      ])
-
-      if (insertError) throw insertError
+        })
+        
+        console.log('Successfully inserted new API key record:', result)
+      } catch (error) {
+        console.error('Failed to insert API key record:', error)
+        throw error
+      }
     } else {
       console.log('Updating existing API key record')
-      const { error: updateError } = await supabase
-        .from('api_keys')
-        .update({
-          key: apiKey,
-          is_active: true,
-          user_id: decodedPayload.sub,
-        })
-        .eq('email', email)
+      try {
+        await db
+          .update(apiKeys)
+          .set({
+            key: apiKey,
+            is_active: true,
+            user_id: decodedPayload.sub,
+          })
+          .where(eq(apiKeys.email, email))
+        
+        console.log('Successfully updated API key record')
 
-      if (updateError) throw updateError
+      } catch (error) {
+        console.error('Failed to update API key record:', error)
+        throw error
+      }
     }
-
-    console.log('Successfully stored API key in database')
 
     posthog.capture('api_key_generated', {
       email,
       apiKey,
     })
-
     console.log('API key generation successful')
     return res.status(200).json({
       message: 'API key generated successfully',

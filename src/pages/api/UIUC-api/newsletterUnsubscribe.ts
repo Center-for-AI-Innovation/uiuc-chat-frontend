@@ -1,22 +1,22 @@
-import { supabase } from '@/utils/supabaseClient'
+import { db } from '~/db/dbClient'
+import { emailNewsletter } from '~/db/schema'
 
 const newsletterUnsubscribe = async (req: any, res: any) => {
   const { email } = req.body
 
-  const { data, error } = await supabase.from('email-newsletter').upsert(
-    [
-      {
-        email: email,
-        'unsubscribed-from-newsletter': true,
-      },
-    ],
-    {
-      onConflict: 'email',
+  try{
+    const result = await db.insert(emailNewsletter).values({
+      email: email,
+      unsubscribedFromNewsletter: true,
+  }).onConflictDoUpdate({
+    target: [emailNewsletter.email],
+    set: {
+      unsubscribedFromNewsletter: true,
     },
-  )
-  if (error) {
+  })
+  } catch (error: any) {
     console.error('error form supabase:', error)
-    return res.status(500).json({ success: false, error })
+    return res.status(500).json({ success: false, error: error })
   }
   return res.status(200).json({ success: true })
 }
