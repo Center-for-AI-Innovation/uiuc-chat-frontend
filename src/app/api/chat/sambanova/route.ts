@@ -1,5 +1,5 @@
 import { type CoreMessage, generateText, streamText } from 'ai'
-import { createOpenAI } from '@ai-sdk/openai'
+import { createSambaNova } from 'sambanova-ai-provider'
 import { NextResponse } from 'next/server'
 import { type Conversation } from '~/types/chat'
 import { decrypt } from '~/utils/crypto'
@@ -11,6 +11,7 @@ import {
   SambaNovaModels,
   type SambaNovaModel,
 } from '~/utils/modelProviders/types/SambaNova'
+import { convertConversationToVercelAISDKv3 } from '~/utils/apiUtils'
 
 // Configure runtime
 export const runtime = 'nodejs'
@@ -32,13 +33,11 @@ export async function runSambaNovaChat(
   }
 
   try {
-    const openai = createOpenAI({
-      baseURL: 'https://api.sambanova.ai/v1',
+    const sambanova = createSambaNova({
       apiKey: await decrypt(
         sambaNovaProvider.apiKey,
         process.env.NEXT_PUBLIC_SIGNING_KEY as string,
       ),
-      compatibility: 'compatible',
     })
 
     if (conversation.messages.length === 0) {
@@ -54,8 +53,7 @@ export async function runSambaNovaChat(
       throw new Error(`Invalid SambaNova model ID: ${conversation.model.id}`)
     }
 
-    const model = openai(conversation.model.id)
-    console.log('Using SambaNova model:', conversation.model.id)
+    const model = sambanova(conversation.model.id)
 
     const messages = convertConversationToVercelAISDKv3(conversation)
     console.log('Converted messages:', JSON.stringify(messages, null, 2))
@@ -115,45 +113,6 @@ export async function runSambaNovaChat(
     console.error('SambaNova API error:', error)
     throw error
   }
-}
-
-function convertConversationToVercelAISDKv3(
-  conversation: Conversation,
-): CoreMessage[] {
-  const coreMessages: CoreMessage[] = []
-
-  const systemMessage = conversation.messages.findLast(
-    (msg) => msg.latestSystemMessage !== undefined,
-  )
-  if (systemMessage) {
-    coreMessages.push({
-      role: 'system',
-      content: systemMessage.latestSystemMessage || '',
-    })
-  }
-
-  conversation.messages.forEach((message, index) => {
-    if (message.role === 'system') return
-
-    let content: string
-    if (index === conversation.messages.length - 1 && message.role === 'user') {
-      content = message.finalPromtEngineeredMessage || ''
-    } else if (Array.isArray(message.content)) {
-      content = message.content
-        .filter((c) => c.type === 'text')
-        .map((c) => c.text)
-        .join('\n')
-    } else {
-      content = message.content as string
-    }
-
-    coreMessages.push({
-      role: message.role as 'user' | 'assistant',
-      content: content,
-    })
-  })
-
-  return coreMessages
 }
 
 export async function GET() {

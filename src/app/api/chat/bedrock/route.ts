@@ -10,6 +10,7 @@ import {
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
+import { convertConversationToVercelAISDKv3 } from '~/utils/apiUtils'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -54,7 +55,7 @@ export async function runBedrockChat(
     }
     const commonParams = {
       model: bedrock(conversation.model.id),
-      messages: convertConversationToBedrockFormat(conversation),
+      messages: convertConversationToVercelAISDKv3(conversation),
       temperature: conversation.temperature,
       maxTokens: 4096,
       type: 'text-delta' as const,
@@ -80,45 +81,6 @@ export async function runBedrockChat(
     console.error('Error in runBedrockChat:', error)
     throw error
   }
-}
-
-function convertConversationToBedrockFormat(
-  conversation: Conversation,
-): CoreMessage[] {
-  const messages = []
-  const systemMessage = conversation.messages.findLast(
-    (msg) => msg.latestSystemMessage !== undefined,
-  )
-  if (systemMessage) {
-    messages.push({
-      role: 'system',
-      content: systemMessage.latestSystemMessage || '',
-    })
-  }
-
-  conversation.messages.forEach((message, index) => {
-    if (message.role === 'system') {
-      return
-    }
-
-    let content: string
-    if (index === conversation.messages.length - 1 && message.role === 'user') {
-      content = message.finalPromtEngineeredMessage || ''
-    } else if (Array.isArray(message.content)) {
-      content = message.content
-        .filter((c) => c.type === 'text')
-        .map((c) => c.text)
-        .join('\n')
-    } else {
-      content = message.content as string
-    }
-
-    messages.push({
-      role: message.role === 'user' ? 'user' : 'assistant',
-      content: content,
-    })
-  })
-  return messages as CoreMessage[]
 }
 
 export async function GET(req: Request) {
