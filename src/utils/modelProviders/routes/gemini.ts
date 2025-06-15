@@ -1,7 +1,6 @@
 import { type GeminiProvider, ProviderNames } from '../LLMProvider'
 import {
-  type GeminiModel,
-  GeminiModelID,
+  type GeminiModelID,
   GeminiModels,
   preferredGeminiModelIds,
 } from '../types/gemini'
@@ -17,7 +16,11 @@ export const getGeminiModels = async (
   geminiProvider.provider = ProviderNames.Gemini
   delete geminiProvider.error // Clear any previous errors
 
-  if (!geminiProvider.apiKey || geminiProvider.apiKey === '') {
+  if (
+    !geminiProvider.apiKey ||
+    geminiProvider.apiKey === '' ||
+    !geminiProvider.enabled
+  ) {
     // Don't show any error here... too confusing for users.
     geminiProvider.models = []
     return geminiProvider

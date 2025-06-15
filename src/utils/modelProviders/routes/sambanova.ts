@@ -2,7 +2,7 @@ import { type SambaNovaProvider, ProviderNames } from '../LLMProvider'
 import {
   SambaNovaModels,
   type SambaNovaModel,
-  SambaNovaModelID,
+  type SambaNovaModelID,
   SambanovaPreferredModelIDs,
 } from '../types/SambaNova'
 

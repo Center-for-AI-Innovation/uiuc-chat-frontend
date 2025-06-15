@@ -14,7 +14,11 @@ export const getOpenAIModels = async (
     // 1. Use all passed-in models that are ALSO available from the endpoint...
     // If no passed-in models, then use all. Enabled by default, following our types spec.
 
-    if (!openAIProvider.apiKey || openAIProvider.apiKey === undefined) {
+    if (
+      !openAIProvider.apiKey ||
+      openAIProvider.apiKey === undefined ||
+      !openAIProvider.enabled
+    ) {
       // No error here, too confusing for users.
       // openAIProvider.error = 'OpenAI API Key is not set.'
       openAIProvider.models = [] // clear any previous models.

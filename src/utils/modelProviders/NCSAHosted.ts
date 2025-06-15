@@ -3,13 +3,17 @@ import {
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { OllamaModels, OllamaModelIDs } from './ollama'
-import { ChatBody } from '~/types/chat'
 
 export const getNCSAHostedModels = async (
   ncsaHostedProvider: NCSAHostedProvider,
 ): Promise<NCSAHostedProvider> => {
   delete ncsaHostedProvider.error // Remove the error property if it exists
   ncsaHostedProvider.provider = ProviderNames.NCSAHosted
+
+  if (!ncsaHostedProvider.enabled) {
+    ncsaHostedProvider.models = []
+    return ncsaHostedProvider
+  }
 
   // Store existing model states
   const existingModelStates = new Map<

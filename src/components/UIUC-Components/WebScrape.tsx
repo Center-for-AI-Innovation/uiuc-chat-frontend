@@ -67,35 +67,6 @@ const validateUrl = (url: string) => {
   )
 }
 
-const formatUrl = (url: string) => {
-  if (!/^https?:\/\//i.test(url)) {
-    url = 'http://' + url
-  }
-  return url
-}
-
-const formatUrlAndMatchRegex = (url: string) => {
-  // fullUrl always starts with http://. Is the starting place of the scrape.
-  // baseUrl is used to construct the match statement.
-
-  // Ensure the url starts with 'http://'
-  if (!/^https?:\/\//i.test(url)) {
-    url = 'http://' + url
-  }
-
-  // Extract the base url including the path
-  const baseUrl = (
-    url.replace(/^https?:\/\//i, '').split('?')[0] as string
-  ).replace(/\/$/, '') // Remove protocol (http/s), split at '?', and remove trailing slash
-
-  const matchRegex = `http?(s)://**${baseUrl}/**`
-
-  return {
-    fullUrl: baseUrl,
-    matchRegex: matchRegex,
-  }
-}
-
 export const WebScrape = ({
   is_new_course,
   courseName,
@@ -173,7 +144,7 @@ export const WebScrape = ({
       if (url.includes('coursera.org')) {
         // TODO: coursera ingest
         alert(
-          'Coursera ingest is not yet automated (auth is hard). Please email kvday2@illinois.edu to do it for you',
+          'Coursera ingest is not yet automated (auth is hard). Please email rohan13@illinois.edu to do it for you',
         )
       } else if (url.includes('ocw.mit.edu')) {
         data = downloadMITCourse(url, courseName, 'local_dir') // no await -- do in background
@@ -270,7 +241,7 @@ export const WebScrape = ({
         // position="top-center",
         title: 'Web scraping started',
         message:
-          "It'll scrape in the background, just wait for the results to show up in your project (~3 minutes total).\nThis feature is stable but the web is a messy place. If you have trouble, I'd love to fix it. Just shoot me an email: kvday2@illinois.edu.",
+          "It'll scrape in the background, just wait for the results to show up in your project (~3 minutes total).\nThis feature is stable but the web is a messy place. If you have trouble, I'd love to fix it. Just shoot me an email: rohan13@illinois.edu.",
         icon: <IconWorldDownload />,
         styles: {
           root: {
@@ -305,29 +276,16 @@ export const WebScrape = ({
       if (!url || !courseName) return null
       console.log('SCRAPING', url)
 
-      const fullUrl = formatUrl(url)
+      const response = await axios.post('/api/scrapeWeb', {
+        url,
+        courseName,
+        maxUrls,
+        scrapeStrategy,
+      })
 
-      const postParams = {
-        url: fullUrl,
-        courseName: courseName,
-        maxPagesToCrawl: maxUrls,
-        scrapeStrategy: scrapeStrategy,
-        match: formatUrlAndMatchRegex(fullUrl).matchRegex,
-        maxTokens: 2000000, // basically inf.
-      }
-      console.log(
-        'About to post to the web scraping endpoint, with params:',
-        postParams,
-      )
-
-      const response = await axios.post(
-        `https://crawlee-production.up.railway.app/crawl`,
-        {
-          params: postParams,
-        },
-      )
-      console.log('Response from web scraping endpoint:', response.data)
+      console.log('Response from Next.js API web scraping endpoint:', response.data)
       return response.data
+
     } catch (error: any) {
       console.error('Error during web scraping:', error)
 

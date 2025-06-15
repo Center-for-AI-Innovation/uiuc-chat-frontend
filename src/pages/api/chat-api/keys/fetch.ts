@@ -33,14 +33,14 @@ export default async function fetchKey(
     const [, payload = ''] = token.split('.')
     const decodedPayload = JSON.parse(Buffer.from(payload, 'base64').toString())
 
-    console.log('Token payload:', {
-      sub: decodedPayload.sub,
-      userId: decodedPayload.user_id,
-      preferred_username: decodedPayload.preferred_username,
-      email: decodedPayload.email,
-      // Log all claims to see what's available
-      allClaims: decodedPayload,
-    })
+    // console.log('Token payload:', {
+    //   sub: decodedPayload.sub,
+    //   userId: decodedPayload.user_id,
+    //   preferred_username: decodedPayload.preferred_username,
+    //   email: decodedPayload.email,
+    //   // Log all claims to see what's available
+    //   allClaims: decodedPayload,
+    // })
 
     const email = decodedPayload.email
     if (!email) {

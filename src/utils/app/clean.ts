@@ -6,7 +6,10 @@ import {
 
 import { DEFAULT_SYSTEM_PROMPT, DEFAULT_TEMPERATURE } from './const'
 
-export const cleanSelectedConversation = (conversation: Conversation) => {
+export const cleanSelectedConversation = (
+  conversation: Conversation,
+  current_email: string,
+) => {
   // added model for each conversation (3/20/23)
   // added system prompt for each conversation (3/21/23)
   // added folders (3/23/23)
@@ -49,6 +52,14 @@ export const cleanSelectedConversation = (conversation: Conversation) => {
     updatedConversation = {
       ...updatedConversation,
       messages: updatedConversation.messages || [],
+    }
+  }
+
+  if (!updatedConversation.userEmail || updatedConversation.userEmail === '') {
+    // console.log('setting userEmail to', current_email)
+    updatedConversation = {
+      ...updatedConversation,
+      userEmail: current_email,
     }
   }
 

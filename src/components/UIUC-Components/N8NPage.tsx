@@ -402,7 +402,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                             <List.Item>
                               Tool use via LLMs is invite-only to prevent abuse.
                               Please shoot me an email for access:
-                              kvday2@illinois.edu
+                              rohan13@illinois.edu
                             </List.Item>
                             <List.Item>
                               Once you have access, please{' '}

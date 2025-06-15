@@ -73,49 +73,54 @@ export async function addDocumentsToDocGroup(
   doc: CourseDocument,
 ) {
   try {
+    // console.log('addDocumentsToDocGroup called with courseName:', courseName, 'and doc:', JSON.stringify(doc, null, 2));
     if (doc.url) {
-      // Workflow when doc.url is not null
-      const { data, error } = await supabase.rpc('add_document_to_group', {
-        p_course_name: courseName,
-        p_s3_path: doc.s3_path,
-        p_url: doc.url,
-        p_readable_filename: doc.readable_filename,
-        p_doc_groups: doc.doc_groups,
-      })
-      if (!data) {
-        console.error(
-          'Failed to add documents to doc group:',
-          data,
-          ' with error:',
-          error,
-        )
-        throw new Error(`Failed to add documents to doc group: ${error}`)
-      }
-      return data
-    } else {
-      // Workflow when doc.url is null
+      // If doc.url is present, it's the primary identifier.
+      // Call the RPC that can handle URL-based lookups.
+      // console.log(`Calling Supabase RPC: 'add_document_to_group_url' for document with URL: ${doc.url}, s3_path: ${doc.s3_path}`);
       const { data, error } = await supabase.rpc('add_document_to_group_url', {
         p_course_name: courseName,
         p_s3_path: doc.s3_path,
         p_url: doc.url,
         p_readable_filename: doc.readable_filename,
         p_doc_groups: doc.doc_groups,
-      })
-      console.log('in add_document_to_group_url')
+      });
       if (!data) {
         console.error(
-          'Failed to add documents to doc group URL:',
+          'Failed to add documents to doc group (using URL path):',
           data,
           ' with error:',
           error,
-        )
-        throw new Error(`Failed to add documents to doc group URL: ${error}`)
+        );
+        throw new Error(`Failed to add documents to doc group (using URL path): ${error}`);
       }
-      return data
+      return data;
+    } else {
+      // If doc.url is not present, s3_path must be the identifier.
+      // Call the RPC that (ostensibly) handles s3_path based lookups.
+      // Note: The SQL for 'add_document_to_group' still has issues with empty p_s3_path.
+      // console.log(`Calling Supabase RPC: 'add_document_to_group' for document with s3_path: ${doc.s3_path} (URL is null/empty)`);
+      const { data, error } = await supabase.rpc('add_document_to_group', {
+        p_course_name: courseName,
+        p_s3_path: doc.s3_path,
+        p_url: doc.url, // p_url would be null or empty here
+        p_readable_filename: doc.readable_filename,
+        p_doc_groups: doc.doc_groups,
+      });
+      if (!data) {
+        console.error(
+          'Failed to add documents to doc group (using s3_path path):',
+          data,
+          ' with error:',
+          error,
+        );
+        throw new Error(`Failed to add documents to doc group (using s3_path path): ${error}`);
+      }
+      return data;
     }
   } catch (error) {
-    console.error('Error in addDocumentsToDocGroup:', error)
-    throw error
+    console.error('Error in addDocumentsToDocGroup:', error);
+    throw error;
   }
 }
 

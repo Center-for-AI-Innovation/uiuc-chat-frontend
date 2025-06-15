@@ -11,7 +11,11 @@ export const getAnthropicModels = async (
   anthropicProvider.provider = ProviderNames.Anthropic
   delete anthropicProvider.error // Clear any previous errors
 
-  if (!anthropicProvider.apiKey || anthropicProvider.apiKey === '') {
+  if (
+    !anthropicProvider.apiKey ||
+    anthropicProvider.apiKey === '' ||
+    !anthropicProvider.enabled
+  ) {
     // Don't show any error here... too confusing for users.
     anthropicProvider.models = []
     return anthropicProvider
