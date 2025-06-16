@@ -101,8 +101,8 @@ const ChatPage: NextPage = () => {
             fetchedCourseMetadata = {
               ...fetchedCourseMetadata,
               system_prompt: customPrompt.promptText,
-              document_group: customPrompt.documentGroup || undefined,
-              tool: customPrompt.tool || undefined,
+              document_group: customPrompt.documentGroups?.[0] || undefined,
+              tool: customPrompt.tools?.[0] || undefined,
             };
           } else {
             console.log(`Custom prompt with ID ${gptId} not found in Redis for course ${courseName}. Using default system prompt.`);
