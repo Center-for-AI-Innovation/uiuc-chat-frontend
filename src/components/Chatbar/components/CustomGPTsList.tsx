@@ -165,22 +165,6 @@ const CustomGPTsList: React.FC<CustomGPTsListProps> = ({
             </div>
           </ScrollArea>
 
-          {selectedPrompt && (
-            <div className="mt-4 space-y-2 rounded bg-[#2A2A40] p-4">
-              <Text size="sm" weight={500}>
-                Selected GPT: {selectedPrompt.name}
-              </Text>
-              <Text size="sm" color="dimmed">
-                System Prompt:
-              </Text>
-              <ScrollArea h={150} className="rounded bg-[#1A1B34] p-3">
-                <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
-                  {selectedPrompt.promptText}
-                </Text>
-              </ScrollArea>
-            </div>
-          )}
-
           <Group position="right" mt="md">
             <UnstyledButton
               className="rounded bg-gray-700 px-4 py-2 text-sm hover:bg-gray-600"

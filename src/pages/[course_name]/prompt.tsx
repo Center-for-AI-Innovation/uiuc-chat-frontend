@@ -298,25 +298,52 @@ const CourseMain: NextPage = () => {
   };
 
   // New handler for copying to clipboard
-  const handleCopyToClipboard = (promptText: string) => {
-    navigator.clipboard
-      .writeText(promptText)
-      .then(() => {
-        showToastNotification(
-          theme,
-          'Copied to Clipboard',
-          'Custom prompt text has been copied to your clipboard.',
-        );
-      })
-      .catch((err) => {
-        console.error('Could not copy text: ', err);
-        showToastNotification(
-          theme,
-          'Error Copying',
-          'Could not copy text to clipboard.',
-          true,
-        );
-      });
+  const handleCopyToClipboard = (text: string, type: 'url' | 'prompt') => {
+    if (type === 'url') {
+      const baseUrl = window.location.origin;
+      const chatUrl = `${baseUrl}/chat?gpt=${text}`;
+      navigator.clipboard.writeText(chatUrl)
+        .then(() => {
+          showToastNotification(
+            theme,
+            'URL Copied',
+            'The custom GPT URL has been copied to your clipboard',
+            false,
+            <IconCheck size="1rem" />
+          );
+        })
+        .catch((error) => {
+          console.error('Failed to copy URL:', error);
+          showToastNotification(
+            theme,
+            'Error',
+            'Failed to copy URL to clipboard',
+            true,
+            <IconAlertTriangle size="1rem" />
+          );
+        });
+    } else {
+      navigator.clipboard.writeText(text)
+        .then(() => {
+          showToastNotification(
+            theme,
+            'Prompt Copied',
+            'The custom GPT prompt has been copied to your clipboard',
+            false,
+            <IconCheck size="1rem" />
+          );
+        })
+        .catch((error) => {
+          console.error('Failed to copy prompt:', error);
+          showToastNotification(
+            theme,
+            'Error',
+            'Failed to copy prompt to clipboard',
+            true,
+            <IconAlertTriangle size="1rem" />
+          );
+        });
+    }
   };
 
   const removeThinkSections = (text: string): string => {
@@ -1309,11 +1336,11 @@ CRITICAL: The optimized prompt must:
               theme={theme}
               montserrat_heading={montserrat_heading}
               montserrat_paragraph={montserrat_paragraph}
-              onOpenAddEditModal={handleOpenCustomPromptModal} // This handles both add (no arg) and edit (with arg)
-              onCopyToClipboard={handleCopyToClipboard} 
+              onOpenAddEditModal={handleOpenCustomPromptModal}
               onDeletePrompt={handleInitiateDeleteCustomPrompt}
               onToggleFavorite={handleToggleFavoritePrompt}
-              onOpenLinkGeneratorModal={handleOpenLinkGeneratorModal} // Pass the new handler
+              onOpenLinkGeneratorModal={handleOpenLinkGeneratorModal}
+              onCopyToClipboard={handleCopyToClipboard}
             />
 
             {/* Modal for Adding/Editing Custom GPTs */}

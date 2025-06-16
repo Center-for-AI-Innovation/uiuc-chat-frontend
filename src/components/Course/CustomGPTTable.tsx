@@ -27,6 +27,7 @@ import {
   IconLink,
 } from '@tabler/icons-react';
 import { type CustomSystemPrompt } from '~/types/courseMetadata';
+import { showNotification } from '@mantine/notifications';
 
 interface CustomPromptsTableProps {
   customSystemPrompts: CustomSystemPrompt[];
@@ -34,10 +35,10 @@ interface CustomPromptsTableProps {
   montserrat_heading: { className: string; variable?: string };
   montserrat_paragraph: { className: string; variable?: string };
   onOpenAddEditModal: (prompt?: CustomSystemPrompt) => void;
-  onCopyToClipboard: (promptText: string) => void;
   onDeletePrompt: (prompt: CustomSystemPrompt) => void;
   onToggleFavorite: (promptId: string, isFavorite: boolean) => void;
   onOpenLinkGeneratorModal: (urlSuffix: string) => void;
+  onCopyToClipboard: (text: string, type: 'url' | 'prompt') => void;
 }
 
 type SortableColumn = 'name' | 'urlSuffix' | 'promptText' | 'documentGroup' | 'tool';
@@ -77,10 +78,10 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
   montserrat_heading,
   montserrat_paragraph,
   onOpenAddEditModal,
-  onCopyToClipboard,
   onDeletePrompt,
   onToggleFavorite,
   onOpenLinkGeneratorModal,
+  onCopyToClipboard,
 }) => {
   const [sortColumn, setSortColumn] = useState<SortableColumn | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -323,7 +324,7 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
                               variant="subtle"
                               color="grape"
                               size="xs"
-                              onClick={() => onOpenLinkGeneratorModal(prompt.urlSuffix)}
+                              onClick={() => onCopyToClipboard(prompt.urlSuffix, 'url')}
                               px={5}
                             >
                               <IconLink size={16} />
@@ -345,7 +346,7 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
                               variant="subtle"
                               color="teal"
                               size="xs"
-                              onClick={() => onCopyToClipboard(prompt.promptText)}
+                              onClick={() => onCopyToClipboard(prompt.promptText, 'prompt')}
                               px={5}
                             >
                               <IconCopy size={16} />
