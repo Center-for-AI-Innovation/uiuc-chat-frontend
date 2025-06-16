@@ -107,9 +107,7 @@ const Sidebar = <T,>({
               <Text size="sm" color="dimmed" className="mb-2 px-3">
                 Folders
               </Text>
-              <div className="border-b border-white/20 pb-2">
                 {folderComponent}
-              </div>
             </div>
           )}
 
