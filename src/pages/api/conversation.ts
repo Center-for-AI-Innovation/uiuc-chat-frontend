@@ -60,7 +60,6 @@ export async function convertDBToChatConversation(
     .filter(msg => msg.custom_gpt_id)
     .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())[0]
 
-  console.log('Custom GPT ID from message:', lastCustomGPTMessage?.custom_gpt_id);
 
   // Get the custom GPT name from course metadata if available
   let customGPTName = '';
