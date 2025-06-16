@@ -9,8 +9,8 @@ export interface CustomSystemPrompt {
   urlSuffix: string
   promptText: string
   isFavorite?: boolean
-  documentGroup?: string
-  tool?: string
+  documentGroups?: string[]
+  tools?: string[]
 }
 
 // courseMetadata.ts

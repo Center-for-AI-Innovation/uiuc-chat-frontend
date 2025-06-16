@@ -41,7 +41,7 @@ interface CustomPromptsTableProps {
   onCopyToClipboard: (text: string, type: 'url' | 'prompt') => void;
 }
 
-type SortableColumn = 'name' | 'urlSuffix' | 'promptText' | 'documentGroup' | 'tool';
+type SortableColumn = 'name' | 'urlSuffix' | 'promptText' | 'documentGroups' | 'tools';
 type SortDirection = 'asc' | 'desc';
 
 interface ThProps {
@@ -262,18 +262,18 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
                     <Th
                       scope="col"
                       className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-6"
-                      sorted={sortColumn === 'documentGroup'}
+                      sorted={sortColumn === 'documentGroups'}
                       reversed={sortDirection === 'desc'}
-                      onSort={() => handleSort('documentGroup')}
+                      onSort={() => handleSort('documentGroups')}
                     >
                       Document Group
                     </Th>
                     <Th
                       scope="col"
                       className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-6"
-                      sorted={sortColumn === 'tool'}
+                      sorted={sortColumn === 'tools'}
                       reversed={sortDirection === 'desc'}
-                      onSort={() => handleSort('tool')}
+                      onSort={() => handleSort('tools')}
                     >
                       Tool
                     </Th>
@@ -312,10 +312,10 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
                         <Text truncate className={`${montserrat_paragraph.className}`}>{prompt.promptText}</Text>
                       </td>
                       <td className={`truncate max-w-0 px-4 py-4 text-sm text-gray-300 sm:px-6 ${montserrat_paragraph.className}`}>
-                        {prompt.documentGroup || '-'}
+                        {prompt.documentGroups?.join(', ') || '-'}
                       </td>
                       <td className={`truncate max-w-0 px-4 py-4 text-sm text-gray-300 sm:px-6 ${montserrat_paragraph.className}`}>
-                        {prompt.tool || '-'}
+                        {prompt.tools?.join(', ') || '-'}
                       </td>
                       <td className="whitespace-nowrap px-4 py-4 text-right text-sm font-medium sm:px-6">
                         <Group spacing="xs" noWrap>

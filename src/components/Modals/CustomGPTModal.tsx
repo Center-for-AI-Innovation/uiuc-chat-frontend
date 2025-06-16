@@ -8,7 +8,7 @@ import {
   Flex,
   Group,
   Button,
-  Select,
+  MultiSelect,
   type MantineTheme,
 } from '@mantine/core';
 import { type NextFont } from 'next/dist/compiled/@next/font';
@@ -23,8 +23,8 @@ interface CustomGPTFormState {
   name: string;
   urlSuffix: string;
   promptText: string;
-  documentGroup?: string;
-  tool?: string;
+  documentGroups?: string[];
+  tools?: string[];
   id: string;
 }
 
@@ -35,7 +35,7 @@ interface CustomGPTModalProps {
   customPromptForm: CustomGPTFormState;
   handleCustomPromptFormChange: (
     field: keyof CustomGPTFormState,
-    value: string,
+    value: string | string[],
   ) => void;
   handleSaveCustomPrompt: () => Promise<void>;
   theme: MantineTheme;
@@ -60,21 +60,15 @@ const CustomGPTModal: React.FC<CustomGPTModalProps> = ({
   const { data: documentGroups } = useFetchEnabledDocGroups(course_name);
   const { data: tools } = useFetchAllWorkflows(course_name);
 
-  const documentGroupOptions = [
-    { value: '', label: 'None' },
-    ...(documentGroups?.map(group => ({
-      value: group.name,
-      label: group.name,
-    })) || []),
-  ];
+  const documentGroupOptions = documentGroups?.map(group => ({
+    value: group.name,
+    label: group.name,
+  })) || [];
 
-  const toolOptions = [
-    { value: '', label: 'None' },
-    ...(tools?.map((tool: UIUCTool) => ({
-      value: tool.id,
-      label: tool.readableName,
-    })) || []),
-  ];
+  const toolOptions = tools?.map((tool: UIUCTool) => ({
+    value: tool.id,
+    label: tool.readableName,
+  })) || [];
 
   return (
     <Modal
@@ -140,14 +134,16 @@ const CustomGPTModal: React.FC<CustomGPTModalProps> = ({
             },
           }}
         />
-        <Select
-          label="Document Group"
-          placeholder="Select a document group (optional)"
-          value={customPromptForm.documentGroup}
-          onChange={(value) => handleCustomPromptFormChange('documentGroup', value || '')}
+        <MultiSelect
+          label="Document Groups"
+          placeholder="Select document groups (optional)"
+          value={customPromptForm.documentGroups || []}
+          onChange={(value) => handleCustomPromptFormChange('documentGroups', value)}
           data={documentGroupOptions}
           className={`${montserrat_paragraph.className} font-montserratParagraph`}
           withinPortal
+          searchable
+          clearable
           styles={{ 
             label: { color: 'white', marginBottom: '4px' },
             input: {
@@ -201,14 +197,16 @@ const CustomGPTModal: React.FC<CustomGPTModalProps> = ({
             />
           }
         />
-        <Select
-          label=" Tool"
-          placeholder="Select a tool (optional)"
-          value={customPromptForm.tool}
-          onChange={(value) => handleCustomPromptFormChange('tool', value || '')}
+        <MultiSelect
+          label="Tools"
+          placeholder="Select tools (optional)"
+          value={customPromptForm.tools || []}
+          onChange={(value) => handleCustomPromptFormChange('tools', value)}
           data={toolOptions}
           className={`${montserrat_paragraph.className} font-montserratParagraph`}
           withinPortal
+          searchable
+          clearable
           styles={{ 
             label: { color: 'white', marginBottom: '4px' },
             input: {

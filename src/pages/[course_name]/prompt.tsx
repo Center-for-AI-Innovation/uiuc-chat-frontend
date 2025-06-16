@@ -233,15 +233,15 @@ const CourseMain: NextPage = () => {
     name: string
     urlSuffix: string
     promptText: string
-    documentGroup: string
-    tool?: string
+    documentGroups: string[]
+    tools: string[]
     id: string
   }>({
     name: '',
     urlSuffix: '',
     promptText: '',
-    documentGroup: '',
-    tool: '',
+    documentGroups: [],
+    tools: [],
     id: uuidv4()
   })
   // For delete confirmation
@@ -962,8 +962,8 @@ CRITICAL: The optimized prompt must:
         name: prompt.name,
         urlSuffix: prompt.urlSuffix,
         promptText: prompt.promptText,
-        documentGroup: prompt.documentGroup || '',
-        tool: prompt.tool || '',
+        documentGroups: prompt.documentGroups || [],
+        tools: prompt.tools || [],
         id: prompt.id
       })
       setEditingCustomPromptId(prompt.id)
@@ -972,8 +972,8 @@ CRITICAL: The optimized prompt must:
         name: '',
         urlSuffix: '',
         promptText: '',
-        documentGroup: '',
-        tool: '',
+        documentGroups: [],
+        tools: [],
         id: uuidv4()
       })
       setEditingCustomPromptId(null)
@@ -986,8 +986,8 @@ CRITICAL: The optimized prompt must:
       name: '',
       urlSuffix: '',
       promptText: '',
-      documentGroup: '',
-      tool: '',
+      documentGroups: [],
+      tools: [],
       id: uuidv4()
     })
     setEditingCustomPromptId(null)
@@ -996,11 +996,11 @@ CRITICAL: The optimized prompt must:
 
   const handleCustomPromptFormChange = (
     field: keyof typeof customPromptForm,
-    value: string,
+    value: string | string[],
   ) => {
     if (field === 'id') {
       // Ensure id is always a string
-      setCustomPromptForm((prev) => ({ ...prev, id: value || uuidv4() }))
+      setCustomPromptForm((prev) => ({ ...prev, id: value as string || uuidv4() }))
     } else {
       setCustomPromptForm((prev) => ({ ...prev, [field]: value }))
     }
@@ -1009,7 +1009,7 @@ CRITICAL: The optimized prompt must:
   const handleSaveCustomPrompt = async () => {
     console.log('CustomPromptForm state:', customPromptForm); // Log the customPromptForm state
     
-    const { name, urlSuffix, promptText, documentGroup, tool, id } = customPromptForm;
+    const { name, urlSuffix, promptText, documentGroups, tools, id } = customPromptForm;
 
     // Validate required fields
     if (!name.trim()) {
@@ -1037,9 +1037,9 @@ CRITICAL: The optimized prompt must:
           id: editingCustomPromptId, // Ensure id is preserved
           name: name.trim(),
           promptText: promptText.trim(),
-          documentGroup: documentGroup.trim(),
+          documentGroups: documentGroups.map(group => group.trim()),
+          tools: tools.map(tool => tool.trim()),
           urlSuffix: linkIdentifier,
-          tool: tool?.trim() || undefined
         };
       }
     } else {
@@ -1048,9 +1048,9 @@ CRITICAL: The optimized prompt must:
         id: id || uuidv4(), // Ensure id is always a string
         name: name.trim(),
         promptText: promptText.trim(),
-        documentGroup: documentGroup.trim(),
+        documentGroups: documentGroups.map(group => group.trim()),
+        tools: tools.map(tool => tool.trim()),
         urlSuffix: linkIdentifier,
-        tool: tool?.trim() || undefined,
         isFavorite: false
       };
       updatedPrompts.push(newPrompt);
@@ -1128,6 +1128,10 @@ CRITICAL: The optimized prompt must:
   const handleOpenLinkGeneratorModal = (urlSuffix: string) => {
     setLinkGenInitialPromptSuffix(urlSuffix);
     openLinkGenerator();
+  };
+
+  const handleDeletePrompt = (prompt: CustomSystemPrompt) => {
+    handleInitiateDeleteCustomPrompt(prompt);
   };
 
   if (!isLoaded || isLoading) {
@@ -1337,10 +1341,29 @@ CRITICAL: The optimized prompt must:
               montserrat_heading={montserrat_heading}
               montserrat_paragraph={montserrat_paragraph}
               onOpenAddEditModal={handleOpenCustomPromptModal}
-              onDeletePrompt={handleInitiateDeleteCustomPrompt}
+              onDeletePrompt={handleDeletePrompt}
               onToggleFavorite={handleToggleFavoritePrompt}
               onOpenLinkGeneratorModal={handleOpenLinkGeneratorModal}
-              onCopyToClipboard={handleCopyToClipboard}
+              onCopyToClipboard={(text, type) => {
+                if (type === 'url') {
+                  // Create the full URL with course name and GPT ID
+                  const baseUrl = window.location.origin;
+                  const fullUrl = `${baseUrl}/${course_name}/chat?gpt=${text}`;
+                  navigator.clipboard.writeText(fullUrl);
+                  showToastNotification(
+                    theme,
+                    'Success',
+                    'Chat link copied to clipboard!'
+                  );
+                } else {
+                  navigator.clipboard.writeText(text);
+                  showToastNotification(
+                    theme,
+                    'Success',
+                    'Prompt copied to clipboard!'
+                  );
+                }
+              }}
             />
 
             {/* Modal for Adding/Editing Custom GPTs */}
