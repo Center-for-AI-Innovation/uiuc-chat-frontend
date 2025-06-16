@@ -25,6 +25,7 @@ export interface Conversation {
   createdAt?: string
   updatedAt?: string
   customGptId?: string | null
+  customGptName?: string
   linkParameters?: {
     guidedLearning: boolean
     documentsOnly: boolean
