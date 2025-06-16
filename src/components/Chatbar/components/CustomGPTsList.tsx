@@ -71,21 +71,21 @@ const CustomGPTsList: React.FC<CustomGPTsListProps> = ({
                   {prompt.name}
                 </Text>
               </div>
-              <Tooltip label={prompt.isFavorite ? 'Unfavorite' : 'Favorite'}>
-                <UnstyledButton
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onToggleFavorite(prompt.id, !prompt.isFavorite);
-                  }}
-                  className="opacity-0 group-hover:opacity-100"
-                >
-                  {prompt.isFavorite ? (
-                    <IconStarFilled size={14} className="text-yellow-400" />
-                  ) : (
+              {prompt.isFavorite ? (
+                <IconStarFilled size={14} className="text-yellow-400" />
+              ) : (
+                <Tooltip label="Favorite">
+                  <UnstyledButton
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleFavorite(prompt.id, !prompt.isFavorite);
+                    }}
+                    className="opacity-0 group-hover:opacity-100"
+                  >
                     <IconStar size={14} className="text-gray-500 hover:text-yellow-400" />
-                  )}
-                </UnstyledButton>
-              </Tooltip>
+                  </UnstyledButton>
+                </Tooltip>
+              )}
             </UnstyledButton>
           </div>
         ))}
