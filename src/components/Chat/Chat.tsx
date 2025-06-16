@@ -391,6 +391,10 @@ export const Chat = memo(
               deletedMessages: messagesToDelete,
             })
           } else {
+            // If this is a user message and the conversation has a custom GPT ID, add it to the message
+            if (message.role === 'user' && selectedConversation.customGptId) {
+              message.custom_gpt_id = selectedConversation.customGptId;
+            }
             updatedConversation = {
               ...selectedConversation,
               messages: [...(selectedConversation.messages || []), message],

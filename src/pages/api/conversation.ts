@@ -145,6 +145,7 @@ export function convertDBToChatConversation(
         feedback: feedbackObj,
         wasQueryRewritten: msg.was_query_rewritten ?? null,
         queryRewriteText: msg.query_rewrite_text ?? null,
+        custom_gpt_id: msg.custom_gpt_id || null,
       }
 
       return messageObj
@@ -253,6 +254,7 @@ export function convertChatToDBMessage(
     query_rewrite_text: chatMessage.queryRewriteText
       ? sanitizeText(chatMessage.queryRewriteText)
       : null,
+    custom_gpt_id: chatMessage.custom_gpt_id || null,
   }
 }
 

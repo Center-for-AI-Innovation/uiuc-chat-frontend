@@ -387,7 +387,7 @@ const Home = ({
     if (selectedConversation?.messages.length === 0) return
   }
 
-  const handleNewConversation = (customPrompt?: { text: string; name: string }) => {
+  const handleNewConversation = (customPrompt?: { text: string; name: string; id?: string }) => {
     // If we're already in an empty conversation, don't create a new one
     if (selectedConversation && selectedConversation.messages.length === 0) {
       return
@@ -418,6 +418,7 @@ const Home = ({
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       linkParameters: newLinkParameters,
+      customGptId: customPrompt?.id || null,
     }
 
     // Only update selectedConversation, don't add to conversations list yet
@@ -717,7 +718,8 @@ const Home = ({
           console.log('Found custom prompt in course metadata:', customPrompt)
           handleNewConversation({
             text: customPrompt.promptText,
-            name: customPrompt.name
+            name: customPrompt.name,
+            id: customPrompt.id
           })
           setIsInitialSetupDone(true)
           return

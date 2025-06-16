@@ -313,7 +313,8 @@ export const Chatbar = ({
     // Create a new conversation with the custom GPT's prompt
     handleNewConversation({
       text: customGPT.promptText,
-      name: customGPT.name || 'Custom GPT Chat'
+      name: customGPT.name || 'Custom GPT Chat',
+      id: customGPT.id
     });
   };
 
