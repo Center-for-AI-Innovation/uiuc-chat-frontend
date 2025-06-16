@@ -58,9 +58,9 @@ export default async function generateKey(
       .from(apiKeys)
       .where(and(eq(apiKeys.email, email), eq(apiKeys.is_active, true)))
 
-    if (keys.length === 0) {
-      console.error('No existing API key found for user email:', email)
-      throw new Error('No existing API key found for user email')
+    if (!keys) {
+      console.error('Error retrieving API keys from DB');
+      throw new Error('Failed to fetch API keys');
     }
 
     console.log('Existing keys found:', keys.length)
