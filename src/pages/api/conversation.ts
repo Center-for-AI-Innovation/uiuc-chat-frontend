@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { supabase } from '@/utils/supabaseClient'
+import { db, messages, conversations as conversationsTable } from '~/db/dbClient'
 import {
   Conversation as ChatConversation,
   Message as ChatMessage,
@@ -8,13 +8,16 @@ import {
   Role,
   UIUCTool,
 } from '@/types/chat'
-import { Database } from 'database.types'
+import { Database, Json } from 'database.types'
 import { v4 as uuidv4 } from 'uuid'
 import {
   AllSupportedModels,
   GenericSupportedModel,
 } from '~/utils/modelProviders/LLMProvider'
 import { sanitizeText } from '@/utils/sanitization'
+import { inArray, eq, and, isNull, desc, sql, asc, gt } from 'drizzle-orm'
+import { NewConversations, NewMessages } from '~/db/schema'
+
 
 export const config = {
   api: {
@@ -282,34 +285,66 @@ export default async function handler(
           // Return success without saving - no need to throw an error
           return res.status(200).json({ message: 'No messages to save' })
         }
-        // Save conversation to Supabase
-        const { data, error } = await supabase
-          .from('conversations')
-          .upsert([dbConversation], { onConflict: 'id' })
-
-        if (error) throw error
+        
+        // Create a correctly typed conversation object for DrizzleORM
+        const conversationData: NewConversations = {
+          id: dbConversation.id,
+          name: dbConversation.name,
+          model: dbConversation.model,
+          prompt: dbConversation.prompt,
+          temperature: dbConversation.temperature,
+          user_email: dbConversation.user_email,
+          project_name: dbConversation.project_name,
+          folder_id: dbConversation.folder_id,
+          created_at: dbConversation.created_at ? new Date(dbConversation.created_at) : new Date(),
+          updated_at: dbConversation.updated_at ? new Date(dbConversation.updated_at) : new Date()
+        };
+        
+        // Save conversation to DB using DrizzleORM
+        try {
+          await db.insert(conversationsTable).values(conversationData)
+            .onConflictDoUpdate({
+              target: conversationsTable.id,
+              set: {
+                name: dbConversation.name,
+                model: dbConversation.model,
+                prompt: dbConversation.prompt,
+                temperature: dbConversation.temperature,
+                user_email: dbConversation.user_email,
+                project_name: dbConversation.project_name,
+                folder_id: dbConversation.folder_id,
+                updated_at: new Date(),
+              }
+            });
+        } catch (error) {
+          console.error('Error saving conversation:', error);
+          throw error;
+        }
 
         // Check for edited messages and get their existing versions
         const messageIds = conversation.messages.map((m) => m.id)
-        const { data: existingMessages } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('conversation_id', conversation.id)
-          .in('id', messageIds)
+        
+        // Get existing messages using DrizzleORM
+        const existingMessages = await db
+          .select()
+          .from(messages)
+          .where(and(
+            sql`${messages.id}::text IN (${messageIds.join(',')})`,
+            sql`${messages.conversation_id}::text = ${conversation.id}`
+          ))
 
         // Find any messages that were edited by comparing content
         const editedMessages = existingMessages?.filter((existingMsg) => {
           const newMsg = conversation.messages.find(
-            (m) => m.id === existingMsg.id,
+            (m) => m.id === existingMsg.id.toString()
           )
+          if (!newMsg) return false;
+          
+          const newDbMsg = convertChatToDBMessage(newMsg, conversation.id);
           return (
-            newMsg &&
-            (existingMsg.content_text !==
-              convertChatToDBMessage(newMsg, conversation.id).content_text ||
-              JSON.stringify(existingMsg.contexts) !==
-                JSON.stringify(
-                  convertChatToDBMessage(newMsg, conversation.id).contexts,
-                ))
+            existingMsg.content_text !== newDbMsg.content_text ||
+            JSON.stringify(existingMsg.contexts) !==
+              JSON.stringify(newDbMsg.contexts)
           )
         })
 
@@ -317,19 +352,24 @@ export default async function handler(
         if (editedMessages && editedMessages.length > 0) {
           // Find the earliest edited message timestamp
           const earliestEditTime = Math.min(
-            ...editedMessages.map((m) => new Date(m.created_at).getTime()),
+            ...editedMessages.map((m) => 
+              m.created_at ? new Date(m.created_at).getTime() : Date.now()
+            ),
           )
 
           // Delete all messages after this timestamp
-          const { error: deleteError } = await supabase
-            .from('messages')
-            .delete()
-            .eq('conversation_id', conversation.id)
-            .gt('created_at', new Date(earliestEditTime).toISOString())
-
-          if (deleteError) {
-            console.error('Error deleting subsequent messages:', deleteError)
-            throw deleteError
+          try {
+            await db
+              .delete(messages)
+              .where(
+                and(
+                  sql`${messages.conversation_id}::text = ${conversation.id}`,
+                  sql`${messages.created_at} > ${new Date(earliestEditTime)}`
+                )
+              );
+          } catch (error) {
+            console.error('Error deleting subsequent messages:', error)
+            throw error
           }
         }
 
@@ -338,9 +378,9 @@ export default async function handler(
         const dbMessages = conversation.messages.map((message, index) => {
           // If the message wasn't edited, preserve its original timestamp
           const existingMessage = existingMessages?.find(
-            (m) => m.id === message.id,
+            (m) => m.id.toString() === message.id
           )
-          const wasEdited = editedMessages?.some((m) => m.id === message.id)
+          const wasEdited = editedMessages?.some((m) => m.id.toString() === message.id)
 
           let created_at
           if (existingMessage && !wasEdited) {
@@ -358,18 +398,29 @@ export default async function handler(
 
         // Sort messages by created_at before upserting to ensure consistent order
         dbMessages.sort(
-          (a, b) =>
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+          (a, b) => {
+            const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return aTime - bTime;
+          }
         )
 
-        const { error: messagesError } = await supabase
-          .from('messages')
-          .upsert(dbMessages, {
-            onConflict: 'id',
-            ignoreDuplicates: false,
-          })
-
-        if (messagesError) throw messagesError
+        // Insert messages using DrizzleORM
+        for (const message of dbMessages) {
+          // Convert string dates to Date objects for DrizzleORM and ensure ID is a number
+          const messageForInsert = {
+            ...message,
+            id: typeof message.id === 'string' ? parseInt(message.id, 10) : message.id,
+            created_at: message.created_at ? new Date(message.created_at) : new Date(),
+            updated_at: message.updated_at ? new Date(message.updated_at) : new Date(),
+          };
+          
+          await db.insert(messages).values(messageForInsert as any)
+            .onConflictDoUpdate({
+              target: messages.id,
+              set: messageForInsert as any
+            });
+        }
 
         res.status(200).json({ message: 'Conversation saved successfully' })
       } catch (error) {
@@ -398,34 +449,38 @@ export default async function handler(
 
       try {
         const pageSize = 8
+        const offset = pageParam * pageSize
 
-        const { data, error } = await supabase.rpc('search_conversations_v3', {
-          p_user_email: user_email,
-          p_project_name: courseName,
-          p_search_term: searchTerm || null,
-          p_limit: pageSize,
-          p_offset: pageParam * pageSize,
-        })
-
-        // console.log('data:', data)
-
-        const count = data?.total_count || 0
-
-        if (error) {
-          console.error(
-            'Error fetching conversation history in sql query:',
-            error,
-          )
-          throw error
+        // Execute the SQL query directly using db.execute
+        const result = await db.execute<{search_conversations_v3: { conversations: any[], total_count: number }}>(sql`
+          SELECT * FROM search_conversations_v3(
+            ${user_email},
+            ${courseName},
+            ${searchTerm || null},
+            ${pageSize},
+            ${offset}
+          );
+        `);
+        
+        // Parse the result - handle potential different result structures
+        const sqlResult = result[0]?.search_conversations_v3;
+        
+        // Need to properly parse the result which might be a string
+        let parsedData: { conversations: any[], total_count: number };
+        
+        if (typeof sqlResult === 'string') {
+          // If the result is a JSON string
+          parsedData = JSON.parse(sqlResult);
+        } else {
+          // If the result is already an object
+          parsedData = sqlResult as { conversations: any[], total_count: number };
         }
-        // console.log(
-        //   'Fetched conversations before conversion in /conversation:',
-        //   data,
-        // )
+        
+        const count = parsedData?.total_count || 0;
+        const conversations = parsedData?.conversations || [];
 
-        const fetchedConversations = (data.conversations || []).map(
+        const fetchedConversations = conversations.map(
           (conv: any) => {
-            // console.log('Fetched conversation:', conv)
             const convMessages = conv.messages || []
             return convertDBToChatConversation(conv, convMessages)
           },
@@ -438,12 +493,6 @@ export default async function handler(
             ? pageParam + 1
             : null
 
-        // console.log(
-        //   'Fetched conversations:',
-        //   fetchedConversations.length,
-        //   'for user_email:',
-        //   user_email,
-        // )
         res.status(200).json({
           conversations: fetchedConversations,
           nextCursor: nextCursor,
@@ -474,21 +523,21 @@ export default async function handler(
 
       try {
         if (id) {
-          // Delete single conversation
-          const { data, error } = await supabase
-            .from('conversations')
-            .delete()
-            .eq('id', id)
-          if (error) throw error
+          // Delete single conversation using DrizzleORM
+          await db
+            .delete(conversationsTable)
+            .where(eq(conversationsTable.id, id));
         } else if (userEmail && course_name) {
           // Delete all conversations that are not in folders
-          const { data, error } = await supabase
-            .from('conversations')
-            .delete()
-            .eq('user_email', userEmail)
-            .eq('project_name', course_name)
-            .is('folder_id', null) // Only delete conversations that are not in folders
-          if (error) throw error
+          await db
+            .delete(conversationsTable)
+            .where(
+              and(
+                eq(conversationsTable.user_email, userEmail),
+                eq(conversationsTable.project_name, course_name),
+                isNull(conversationsTable.folder_id)
+              )
+            );
         } else {
           res.status(400).json({ error: 'Invalid request parameters' })
           return

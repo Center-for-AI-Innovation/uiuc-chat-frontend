@@ -8,7 +8,7 @@ import {
   fetchEnabledDocGroups,
   removeDocGroup,
   updateDocGroupStatus,
-} from '~/utils/dbUtils'
+} from '~/db/dbHelpers'
 
 import { addDocumentsToDocGroupQdrant } from '~/utils/qdrantUtils'
 
