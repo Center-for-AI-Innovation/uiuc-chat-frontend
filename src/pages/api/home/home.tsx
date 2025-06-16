@@ -387,7 +387,7 @@ const Home = ({
     if (selectedConversation?.messages.length === 0) return
   }
 
-  const handleNewConversation = () => {
+  const handleNewConversation = (customPrompt?: { text: string; name: string }) => {
     // If we're already in an empty conversation, don't create a new one
     if (selectedConversation && selectedConversation.messages.length === 0) {
       return
@@ -407,10 +407,10 @@ const Home = ({
 
     const newConversation: Conversation = {
       id: uuidv4(),
-      name: '',
+      name: customPrompt?.name || '',
       messages: [],
       model: model,
-      prompt: DEFAULT_SYSTEM_PROMPT,
+      prompt: customPrompt?.text || DEFAULT_SYSTEM_PROMPT,
       temperature: selectBestTemperature(lastConversation, model, llmProviders),
       folderId: null,
       userEmail: current_email,
@@ -705,6 +705,25 @@ const Home = ({
         dispatch({ field: 'showChatbar', value: showChatbar === 'true' })
       }
 
+      // Check for custom GPT in URL parameters and course metadata
+      const urlParams = new URLSearchParams(window.location.search)
+      const gptId = urlParams.get('gpt')
+      
+      if (gptId && currentCourseMetadata?.custom_system_prompts) {
+        const customPrompt = currentCourseMetadata.custom_system_prompts.find(
+          (p) => p.id === gptId
+        )
+        if (customPrompt) {
+          console.log('Found custom prompt in course metadata:', customPrompt)
+          handleNewConversation({
+            text: customPrompt.promptText,
+            name: customPrompt.name
+          })
+          setIsInitialSetupDone(true)
+          return
+        }
+      }
+
       const selectedConversation = localStorage.getItem('selectedConversation')
       if (selectedConversation) {
         const parsedSelectedConversation: Conversation =
@@ -734,14 +753,13 @@ const Home = ({
         if (!llmProviders || Object.keys(llmProviders).length === 0) return
         handleNewConversation()
       }
-      // handleNewConversation()
       setIsInitialSetupDone(true)
     }
 
     if (!isInitialSetupDone) {
       initialSetup()
     }
-  }, [dispatch, llmProviders, current_email]) // ! serverSidePluginKeysSet, removed
+  }, [dispatch, llmProviders, current_email, currentCourseMetadata, course_name]) // Added course_name to dependencies
   // }, [defaultModelId, dispatch, serverSidePluginKeysSet, models, conversations]) // original!
 
   if (isLoading || !isInitialSetupDone) {

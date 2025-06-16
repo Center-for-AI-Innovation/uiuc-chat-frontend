@@ -311,43 +311,10 @@ export const Chatbar = ({
     console.log('Selected custom GPT:', customGPT);
     
     // Create a new conversation with the custom GPT's prompt
-    const model = selectedConversation?.model || (defaultModelId ? OpenAIModels[defaultModelId] : null);
-    
-    if (!model) {
-      console.error('No model available for new conversation');
-      return;
-    }
-
-    // Create the initial user message with the custom GPT's prompt text
-    const initialMessage: Message = {
-      id: uuidv4(),
-      role: 'user',
-      content: customGPT.promptText,
-    };
-
-    const newConversation: Conversation = {
-      id: uuidv4(),
-      name: customGPT.name || 'Custom GPT Chat',
-      messages: [initialMessage], // Start with the custom GPT's prompt as the first message
-      model: model,
-      prompt: DEFAULT_SYSTEM_PROMPT, // Use default system prompt
-      temperature: selectedConversation?.temperature || DEFAULT_TEMPERATURE,
-      folderId: null,
-      userEmail: current_email,
-      projectName: courseName,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    // Update the selected conversation to use the custom GPT
-    homeDispatch({ field: 'selectedConversation', value: newConversation });
-    
-    // Save to localStorage
-    try {
-      localStorage.setItem('selectedConversation', JSON.stringify(newConversation));
-    } catch (error) {
-      console.error('Error saving custom GPT conversation to localStorage:', error);
-    }
+    handleNewConversation({
+      text: customGPT.promptText,
+      name: customGPT.name || 'Custom GPT Chat'
+    });
   };
 
   const handleToggleFavoritePrompt = async (promptId: string, isFavorite: boolean) => {

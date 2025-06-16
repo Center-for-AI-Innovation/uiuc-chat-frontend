@@ -324,7 +324,7 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
                               variant="subtle"
                               color="grape"
                               size="xs"
-                              onClick={() => onCopyToClipboard(prompt.urlSuffix, 'url')}
+                              onClick={() => onCopyToClipboard(prompt.id, 'url')}
                               px={5}
                             >
                               <IconLink size={16} />

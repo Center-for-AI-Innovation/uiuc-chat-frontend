@@ -5,6 +5,7 @@ import { type NextPage } from 'next'
 import { useEffect, useState } from 'react'
 import Home from '../api/home/home'
 import { useRouter } from 'next/router'
+import { v4 as uuidv4 } from 'uuid'
 
 import { type CourseMetadata, type CustomSystemPrompt } from '~/types/courseMetadata'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
@@ -12,6 +13,8 @@ import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { montserrat_heading } from 'fonts'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
+import { OpenAIModels, OpenAIModelID } from '~/utils/modelProviders/types/openai'
+import { DEFAULT_TEMPERATURE } from '~/utils/app/const'
 
 const ChatPage: NextPage = () => {
   const auth = useAuth()
@@ -46,13 +49,13 @@ const ChatPage: NextPage = () => {
       const guidedLearning = urlParams.get('guidedLearning') === 'true'
       const documentsOnly = urlParams.get('documentsOnly') === 'true'
       const systemPromptOnly = urlParams.get('systemPromptOnly') === 'true'
-      const activePromptSlug = urlParams.get('activePrompt')
+      const gptId = urlParams.get('gpt')
 
       // Update the state with boolean URL parameters (these are passed to Home component later)
       setUrlGuidedLearning(guidedLearning)
       setUrlDocumentsOnly(documentsOnly)
       setUrlSystemPromptOnly(systemPromptOnly)
-      setUrlActivePrompt(activePromptSlug)
+      setUrlActivePrompt(gptId)
 
       // Special case: Cropwizard redirect
       if (
@@ -67,7 +70,7 @@ const ChatPage: NextPage = () => {
         return
       }
 
-      // Fetch course metadata
+      // Fetch course metadata from Redis using course name
       const metadataResponse = await fetch(
         `/api/UIUC-api/getCourseMetadata?course_name=${courseName}`,
       )
@@ -75,22 +78,25 @@ const ChatPage: NextPage = () => {
       let fetchedCourseMetadata: CourseMetadata | null = metadataData.course_metadata;
 
       if (fetchedCourseMetadata) {
-        console.log('Original course metadata from fetch:', {
+        console.log('Course metadata from Redis:', {
+          courseName,
           guidedLearning: fetchedCourseMetadata.guidedLearning,
           documentsOnly: fetchedCourseMetadata.documentsOnly,
           systemPromptOnly: fetchedCourseMetadata.systemPromptOnly,
           system_prompt: fetchedCourseMetadata.system_prompt,
           custom_system_prompts_count: fetchedCourseMetadata.custom_system_prompts?.length ?? 0
         });
-        console.log('URL activePromptSlug read:', activePromptSlug);
+        console.log('URL gptId read:', gptId);
 
-        // Override system prompt if activePromptSlug is present and valid
-        if (activePromptSlug && fetchedCourseMetadata.custom_system_prompts) {
+        // Override system prompt if gptId is present and valid
+        if (gptId && fetchedCourseMetadata.custom_system_prompts) {
+          // Find the custom prompt in Redis using the course name as key
           const customPrompt = fetchedCourseMetadata.custom_system_prompts.find(
-            (p: CustomSystemPrompt) => p.urlSuffix === activePromptSlug
+            (p: CustomSystemPrompt) => p.id === gptId
           );
+          
           if (customPrompt) {
-            console.log('Applying custom system prompt from URL parameter:', customPrompt.name);
+            console.log('Found custom prompt in Redis for course:', courseName, customPrompt);
             // Create a new object for the state to ensure reactivity
             fetchedCourseMetadata = {
               ...fetchedCourseMetadata,
@@ -99,10 +105,10 @@ const ChatPage: NextPage = () => {
               tool: customPrompt.tool || undefined,
             };
           } else {
-            console.log('activePromptSlug from URL not found in custom prompts. Using default system prompt.');
+            console.log(`Custom prompt with ID ${gptId} not found in Redis for course ${courseName}. Using default system prompt.`);
           }
-        } else if (activePromptSlug) {
-            console.log('activePromptSlug present in URL, but no custom_system_prompts array in course metadata or it is empty.')
+        } else if (gptId) {
+            console.log(`gptId present in URL, but no custom_system_prompts array in Redis for course ${courseName} or it is empty.`)
         }
       }
 

@@ -301,7 +301,7 @@ const CourseMain: NextPage = () => {
   const handleCopyToClipboard = (text: string, type: 'url' | 'prompt') => {
     if (type === 'url') {
       const baseUrl = window.location.origin;
-      const chatUrl = `${baseUrl}/chat?gpt=${text}`;
+      const chatUrl = `${baseUrl}/${course_name}/chat?gpt=${text}`;
       navigator.clipboard.writeText(chatUrl)
         .then(() => {
           showToastNotification(
