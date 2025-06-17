@@ -394,6 +394,42 @@ export default async function handler(
       break
 
     case 'GET':
+      // Check if this is a request for a single conversation by ID
+      const conversationId = req.query.conversationId as string
+      if (conversationId) {
+        try {
+          // Fetch single conversation by ID
+          const { data: conversationData, error: conversationError } = await supabase
+            .from('conversations')
+            .select('*')
+            .eq('id', conversationId)
+            .single()
+
+          if (conversationError) throw conversationError
+          if (!conversationData) {
+            return res.status(404).json({ error: 'Conversation not found' })
+          }
+
+          // Fetch messages for this conversation
+          const { data: messagesData, error: messagesError } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('conversation_id', conversationId)
+            .order('created_at', { ascending: true })
+
+          if (messagesError) throw messagesError
+
+          // Convert to chat format
+          const conversation = await convertDBToChatConversation(conversationData, messagesData || [])
+
+          return res.status(200).json({ conversation })
+        } catch (error) {
+          console.error('Error fetching single conversation:', error)
+          return res.status(500).json({ error: 'Error fetching conversation' })
+        }
+      }
+
+      // Original logic for fetching multiple conversations
       const user_email = req.query.user_email as string
       const searchTerm = req.query.searchTerm as string
       const courseName = req.query.courseName as string

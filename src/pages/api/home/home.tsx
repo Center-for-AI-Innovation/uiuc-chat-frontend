@@ -42,13 +42,7 @@ import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackgro
 import { montserrat_heading } from 'fonts'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 
-const Home = ({
-  current_email,
-  course_metadata,
-  course_name,
-  document_count,
-  link_parameters,
-}: {
+interface Props {
   current_email: string
   course_metadata: CourseMetadata | null
   course_name: string
@@ -58,7 +52,19 @@ const Home = ({
     documentsOnly: boolean
     systemPromptOnly: boolean
   }
-}) => {
+  isReadOnly?: boolean
+  sharedConversationId?: string | null
+}
+
+const Home = ({
+  current_email,
+  course_metadata,
+  course_name,
+  document_count,
+  link_parameters,
+  isReadOnly = false,
+  sharedConversationId = null,
+}: Props) => {
   // State for managing course metadata updates
   const [currentCourseMetadata, setCurrentCourseMetadata] = useState<CourseMetadata | null>(course_metadata)
 
@@ -283,6 +289,33 @@ const Home = ({
       // localStorage.setItem('folders', JSON.stringify(foldersData))
     }
   }, [foldersData])
+
+  // Handle shared conversation loading
+  useEffect(() => {
+    const loadSharedConversation = async () => {
+      if (sharedConversationId && selectedConversation?.id !== sharedConversationId) {
+        try {
+          const response = await fetch(`/api/conversation?conversationId=${sharedConversationId}`)
+          const data = await response.json()
+          
+          if (data.conversation) {
+            // Set the shared conversation as selected
+            dispatch({ field: 'selectedConversation', value: data.conversation })
+            
+            // Add to conversations list if not already there
+            const existingConversation = conversations.find(c => c.id === sharedConversationId)
+            if (!existingConversation) {
+              dispatch({ field: 'conversations', value: [...conversations, data.conversation] })
+            }
+          }
+        } catch (error) {
+          console.error('Error loading shared conversation:', error)
+        }
+      }
+    }
+
+    loadSharedConversation()
+  }, [sharedConversationId, selectedConversation?.id, conversations, dispatch])
 
   // FOLDER OPERATIONS  --------------------------------------------
   const handleCreateFolder = (name: string, type: FolderType) => {
@@ -689,6 +722,14 @@ const Home = ({
       // console.log('current_email: ', current_email)
       console.log('isInitialSetupDone: ', isInitialSetupDone)
       if (isInitialSetupDone) return
+      
+      // Skip normal initialization if we have a shared conversation
+      if (sharedConversationId) {
+        console.log('Skipping normal initialization due to shared conversation')
+        setIsInitialSetupDone(true)
+        return
+      }
+      
       const settings = getSettings()
       if (settings.theme) {
         dispatch({
@@ -761,7 +802,7 @@ const Home = ({
     if (!isInitialSetupDone) {
       initialSetup()
     }
-  }, [dispatch, llmProviders, current_email, currentCourseMetadata, course_name]) // Added course_name to dependencies
+  }, [dispatch, llmProviders, current_email, currentCourseMetadata, course_name, sharedConversationId]) // Added course_name to dependencies
   // }, [defaultModelId, dispatch, serverSidePluginKeysSet, models, conversations]) // original!
 
   if (isLoading || !isInitialSetupDone) {
@@ -827,12 +868,14 @@ const Home = ({
                     </span>
                   </div>
                 )}
-              <Chatbar 
-                current_email={current_email} 
-                courseName={course_name} 
-                courseMetadata={currentCourseMetadata} 
-                onCourseMetadataUpdate={handleCourseMetadataUpdate}
-              />
+              {!isReadOnly && (
+                <Chatbar 
+                  current_email={current_email} 
+                  courseName={course_name} 
+                  courseMetadata={currentCourseMetadata} 
+                  onCourseMetadataUpdate={handleCourseMetadataUpdate}
+                />
+              )}
 
               {currentCourseMetadata && (
                 <Chat
@@ -841,6 +884,8 @@ const Home = ({
                   courseName={course_name}
                   currentEmail={current_email}
                   documentCount={document_count}
+                  isReadOnly={isReadOnly}
+                  sharedConversationId={sharedConversationId}
                 />
               )}
             </div>

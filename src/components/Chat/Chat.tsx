@@ -42,6 +42,8 @@ interface Props {
   courseName: string
   currentEmail: string
   documentCount: number | null
+  isReadOnly?: boolean
+  sharedConversationId?: string | null
 }
 
 import { useRouter } from 'next/router'
@@ -93,6 +95,8 @@ export const Chat = memo(
     courseName,
     currentEmail,
     documentCount,
+    isReadOnly = false,
+    sharedConversationId = null,
   }: Props) => {
     const { t } = useTranslation('chat')
     const auth = useAuth()
@@ -1910,6 +1914,16 @@ export const Chat = memo(
             <div className="justify-center" style={{ height: '40px' }}>
               <ChatNavbar bannerUrl={bannerUrl as string} isgpt4={true} />
             </div>
+            {isReadOnly && (
+              <div className="bg-blue-500/10 p-3 text-center text-sm text-blue-600 dark:text-blue-400 border-b border-blue-500/20">
+                <div className="flex items-center justify-center gap-2">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                  </svg>
+                  Read-only mode: You have view-only access to this shared conversation
+                </div>
+              </div>
+            )}
             <div className="mt-10 max-w-full flex-grow overflow-y-auto overflow-x-hidden">
               {modelError ? (
                 <ErrorMessageDiv error={modelError} />
@@ -1941,7 +1955,7 @@ export const Chat = memo(
                               key={index}
                               message={message}
                               messageIndex={index}
-                              onEdit={(editedMessage) => {
+                              onEdit={isReadOnly ? undefined : (editedMessage) => {
                                 handleSend(
                                   editedMessage,
                                   selectedConversation?.messages?.length -
@@ -1952,10 +1966,11 @@ export const Chat = memo(
                                   llmProviders,
                                 )
                               }}
-                              onRegenerate={() => handleRegenerate(index)}
-                              onFeedback={handleFeedback}
+                              onRegenerate={isReadOnly ? undefined : () => handleRegenerate(index)}
+                              onFeedback={isReadOnly ? undefined : handleFeedback}
                               onImageUrlsUpdate={onImageUrlsUpdate}
                               courseName={courseName}
+                              isReadOnly={isReadOnly}
                             />
                           ),
                         )}
@@ -1968,27 +1983,29 @@ export const Chat = memo(
                     )}
                   </motion.div>
                   {/* <div className="w-full max-w-[calc(100% - var(--sidebar-width))] mx-auto flex justify-center"> */}
-                  <ChatInput
-                    stopConversationRef={stopConversationRef}
-                    textareaRef={textareaRef}
-                    onSend={(message, plugin) => {
-                      handleSend(
-                        message,
-                        0,
-                        plugin,
-                        tools,
-                        enabledDocumentGroups,
-                        llmProviders,
-                      )
-                    }}
-                    onScrollDownClick={handleScrollDown}
-                    showScrollDownButton={showScrollDownButton}
-                    onRegenerate={() => handleRegenerate()}
-                    inputContent={inputContent}
-                    setInputContent={setInputContent}
-                    courseName={getCurrentPageName()}
-                    chat_ui={chat_ui}
-                  />
+                  {!isReadOnly && (
+                    <ChatInput
+                      stopConversationRef={stopConversationRef}
+                      textareaRef={textareaRef}
+                      onSend={(message, plugin) => {
+                        handleSend(
+                          message,
+                          0,
+                          plugin,
+                          tools,
+                          enabledDocumentGroups,
+                          llmProviders,
+                        )
+                      }}
+                      onScrollDownClick={handleScrollDown}
+                      showScrollDownButton={showScrollDownButton}
+                      onRegenerate={() => handleRegenerate()}
+                      inputContent={inputContent}
+                      setInputContent={setInputContent}
+                      courseName={getCurrentPageName()}
+                      chat_ui={chat_ui}
+                    />
+                  )}
                 </>
               )}
             </div>
