@@ -52,13 +52,17 @@ CREATE TABLE "cedar_runs" (
 	"metadata" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "conversations" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"uuid" uuid DEFAULT gen_random_uuid() NOT NULL,
-	"user_email" text,
-	"project_name" text,
-	"created_at" timestamp DEFAULT now(),
-	"updated_at" timestamp DEFAULT now()
+CREATE TABLE conversations (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  name varchar(255) NOT NULL,
+  model varchar(100) NOT NULL,
+  prompt text NOT NULL,
+  temperature double precision NOT NULL,
+  user_email varchar(255),
+  project_name text NOT NULL DEFAULT '',
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  folder_id uuid
 );
 --> statement-breakpoint
 CREATE TABLE "course_names" (
