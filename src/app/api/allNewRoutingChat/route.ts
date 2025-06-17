@@ -25,6 +25,7 @@ export async function POST(req: NextRequest, res: NextResponse) {
     })
 
     body.conversation = newConversation
+
     const result = await routeModelRequest(body as ChatBody)
 
     return result

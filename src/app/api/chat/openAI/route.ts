@@ -3,11 +3,21 @@ import { type CoreMessage, generateText, streamText } from 'ai'
 import { NextResponse } from 'next/server'
 import { decrypt } from '~/utils/crypto'
 import { createOpenAI } from '@ai-sdk/openai'
+import { ChatBody, Conversation } from '~/types/chat'
+import { convertConversationToVercelAISDKv3 } from '~/utils/apiUtils'
+import { preferredModelIds } from '~/utils/modelProviders/LLMProvider'
+import { OpenAIModelID } from '~/utils/modelProviders/types/openai'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 export const revalidate = 0
+
+const firstPreferredOpenAIModel = preferredModelIds.find(id =>
+  Object.values(OpenAIModelID).includes(id as OpenAIModelID)
+) as OpenAIModelID | undefined;
+
+const defaultOpenAIModel = firstPreferredOpenAIModel || OpenAIModelID.GPT_4_1;
 
 export async function POST(req: Request) {
   try {
@@ -25,7 +35,17 @@ export async function POST(req: Request) {
     }
 
     let apiKey = authHeader.substring(7)
-    const { messages, model = 'gpt-4', stream = true } = await req.json()
+    const { 
+      messages, 
+      model = defaultOpenAIModel, 
+      stream = true,
+      conversation 
+    }: { 
+      messages: CoreMessage[], 
+      model: string, 
+      stream: boolean,
+      conversation?: Conversation
+    } = await req.json()
 
     if (
       !apiKey ||
@@ -94,10 +114,15 @@ export async function POST(req: Request) {
     })
 
     const openAIModel = openAIClient(model)
-
+    
+    // Use our utility to process messages with image descriptions if conversation is available
+    const processedMessages = conversation 
+      ? convertConversationToVercelAISDKv3(conversation)
+      : messages;
+    
     const commonParams = {
       model: openAIModel,
-      messages: messages as CoreMessage[],
+      messages: processedMessages,
       temperature: 0.7, // You might want to make this configurable
       maxTokens: 8192,
     }

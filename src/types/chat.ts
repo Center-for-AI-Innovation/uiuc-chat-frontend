@@ -92,6 +92,7 @@ export interface Content {
   image_url?: {
     url: string
   }
+  imageDescription?: boolean // Flag to indicate this is an image description
 }
 
 export interface OpenAIChatMessage {

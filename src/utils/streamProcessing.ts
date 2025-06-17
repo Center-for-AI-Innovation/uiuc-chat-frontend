@@ -693,6 +693,17 @@ export async function handleImageContent(
 
     searchQuery += ` Image description: ${imgDesc}`
 
+    // Convert string content to array if needed
+    if (!Array.isArray(message.content)) {
+      // Create array with the original text content and an empty slot for the image description
+      message.content = [
+        {
+          type: 'text',
+          text: message.content as string
+        }
+      ];
+    }
+
     const imgDescIndex = (message.content as Content[]).findIndex(
       (content) =>
         content.type === 'text' &&
@@ -703,11 +714,13 @@ export async function handleImageContent(
       ;(message.content as Content[])[imgDescIndex] = {
         type: 'text',
         text: `Image description: ${imgDesc}`,
+        imageDescription: true
       }
     } else {
       ;(message.content as Content[]).push({
         type: 'text',
         text: `Image description: ${imgDesc}`,
+        imageDescription: true
       })
     }
   } catch (error) {

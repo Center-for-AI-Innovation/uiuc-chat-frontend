@@ -77,26 +77,37 @@ export const openAIAzureChat = async (
 const convertConversationToOpenAIMessages = (
   messages: Message[],
 ): Message[] => {
-  return messages.map((message, messageIndex) => {
+  const transformedMessages = messages.map((message, messageIndex) => {
     const strippedMessage = { ...message }
     // When content is an array
-    if (Array.isArray(strippedMessage.content)) {
-      strippedMessage.content.map((content, contentIndex) => {
+    if (Array.isArray(strippedMessage.content)) {      
+      strippedMessage.content = strippedMessage.content.map((content, contentIndex) => {
+        // Create a clean copy 
+        const cleanContent = { ...content };
+        
         // Convert tool_image_url to image_url for OpenAI
-        if (content.type === 'tool_image_url') {
-          content.type = 'image_url'
+        if (cleanContent.type === 'tool_image_url') {
+          cleanContent.type = 'image_url'
         }
-        // Add final prompt to last message
-        if (
-          content.type === 'text' &&
-          messageIndex === messages.length - 1 &&
-          !content.text?.startsWith('Image description:')
-        ) {
-          // console.debug('Replacing the text: ', content.text)
-          content.text = strippedMessage.finalPromtEngineeredMessage
+        
+        // Ensure text content has a string value
+        if (cleanContent.type === 'text') {
+          if (typeof cleanContent.text !== 'string') {
+            cleanContent.text = String(cleanContent.text || '');
+          }
+          
+          // Add final prompt to last message
+          if (
+            messageIndex === messages.length - 1 &&
+            !cleanContent.text?.startsWith('Image description:')
+          ) {
+            // console.debug('Replacing the text: ', content.text)
+            cleanContent.text = strippedMessage.finalPromtEngineeredMessage || cleanContent.text;
+          }
         }
-        return content
-      })
+        
+        return cleanContent;
+      });
     } else {
       // When content is a string
       // Add final prompt to last message
@@ -105,14 +116,14 @@ const convertConversationToOpenAIMessages = (
           strippedMessage.content = [
             {
               type: 'text',
-              text: strippedMessage.finalPromtEngineeredMessage,
+              text: strippedMessage.finalPromtEngineeredMessage || '',
             },
           ]
         } else if (strippedMessage.role === 'system') {
           strippedMessage.content = [
             {
               type: 'text',
-              text: strippedMessage.latestSystemMessage,
+              text: strippedMessage.latestSystemMessage || '',
             },
           ]
         }
@@ -125,4 +136,6 @@ const convertConversationToOpenAIMessages = (
     delete strippedMessage.feedback
     return strippedMessage
   })
+  
+  return transformedMessages
 }
