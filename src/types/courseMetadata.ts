@@ -8,6 +8,7 @@ export interface CustomSystemPrompt {
   name: string
   urlSuffix: string
   promptText: string
+  description?: string
   isFavorite?: boolean
   documentGroups?: string[]
   tools?: string[]

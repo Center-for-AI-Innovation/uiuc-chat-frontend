@@ -49,7 +49,8 @@ const CustomGPTsList: React.FC<CustomGPTsListProps> = ({
 
   const filteredPrompts = searchTerm
     ? sortedPrompts.filter(prompt =>
-        prompt.name.toLowerCase().includes(searchTerm.toLowerCase())
+        prompt.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (prompt.description && prompt.description.toLowerCase().includes(searchTerm.toLowerCase()))
       )
     : sortedPrompts;
 
@@ -60,34 +61,39 @@ const CustomGPTsList: React.FC<CustomGPTsListProps> = ({
       </Text>
       <div className="space-y-1">
         {displayedPrompts.map((prompt) => (
-          <div key={prompt.id} className="group relative">
-            <UnstyledButton
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-1.5 text-sm transition-colors duration-200 hover:bg-[#343541]/90"
-              onClick={() => handlePromptClick(prompt)}
-            >
-              <IconRobot size={16} className="text-blue-400" />
-              <div className="flex-1 truncate text-left">
-                <Text size="sm" className="truncate">
-                  {prompt.name}
-                </Text>
-              </div>
-              {prompt.isFavorite ? (
-                <IconStarFilled size={14} className="text-yellow-400" />
-              ) : (
-                <Tooltip label="Favorite">
+          <UnstyledButton
+            key={prompt.id}
+            onClick={() => handlePromptClick(prompt)}
+            className="w-full rounded-lg bg-gray-800/50 p-2 hover:bg-gray-700/50"
+          >
+            <Group position="apart" noWrap>
+              <Group spacing="xs" noWrap>
+                <IconRobot size={20} className="text-purple-400" />
+                <div>
+                  <Text size="sm" weight={500} className="text-white">
+                    {prompt.name}
+                  </Text>
+                </div>
+              </Group>
+              <Group spacing="xs" noWrap>
+                <Tooltip label={prompt.isFavorite ? 'Unfavorite' : 'Favorite'}>
                   <UnstyledButton
                     onClick={(e) => {
                       e.stopPropagation();
                       onToggleFavorite(prompt.id, !prompt.isFavorite);
                     }}
-                    className="opacity-0 group-hover:opacity-100"
                   >
-                    <IconStar size={14} className="text-gray-500 hover:text-yellow-400" />
+                    {prompt.isFavorite ? (
+                      <IconStarFilled size={16} className="text-yellow-400" />
+                    ) : (
+                      <IconStar size={16} className="text-gray-500 hover:text-yellow-400" />
+                    )}
                   </UnstyledButton>
                 </Tooltip>
-              )}
-            </UnstyledButton>
-          </div>
+                <IconChevronRight size={16} className="text-gray-500" />
+              </Group>
+            </Group>
+          </UnstyledButton>
         ))}
       </div>
 
@@ -142,25 +148,20 @@ const CustomGPTsList: React.FC<CustomGPTsListProps> = ({
           <ScrollArea h={300} className="rounded bg-[#2A2A40]">
             <div className="space-y-1 p-2">
               {filteredPrompts.map((prompt) => (
-                <UnstyledButton
+                <div
                   key={prompt.id}
-                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-200 hover:bg-[#343541]/90 ${
+                  className={`flex cursor-pointer items-center gap-3 rounded-lg px-3 py-3 text-sm transition-colors duration-200 hover:bg-[#343541]/90 ${
                     selectedPrompt?.id === prompt.id ? 'bg-[#343541]/90' : ''
                   }`}
                   onClick={() => {
                     setSelectedPrompt(prompt);
                   }}
                 >
-                  <IconRobot size={18} className="text-blue-400" />
-                  <div className="flex-1 truncate text-left">
-                    <Text size="sm" className="truncate">
-                      {prompt.name}
-                    </Text>
+                  <IconRobot size={16} />
+                  <div className="relative max-h-5 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                    {prompt.name}
                   </div>
-                  {prompt.isFavorite && (
-                    <IconStarFilled size={16} className="text-yellow-400" />
-                  )}
-                </UnstyledButton>
+                </div>
               ))}
             </div>
           </ScrollArea>

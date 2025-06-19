@@ -41,7 +41,7 @@ interface CustomPromptsTableProps {
   onCopyToClipboard: (text: string, type: 'url' | 'prompt') => void;
 }
 
-type SortableColumn = 'name' | 'urlSuffix' | 'promptText' | 'documentGroups' | 'tools';
+type SortableColumn = 'name' | 'urlSuffix' | 'promptText' | 'documentGroups' | 'tools' | 'description';
 type SortDirection = 'asc' | 'desc';
 
 interface ThProps {
@@ -253,6 +253,15 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
                     <Th
                       scope="col"
                       className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-6"
+                      sorted={sortColumn === 'description'}
+                      reversed={sortDirection === 'desc'}
+                      onSort={() => handleSort('description')}
+                    >
+                      Description
+                    </Th>
+                    <Th
+                      scope="col"
+                      className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-6"
                       sorted={sortColumn === 'promptText'}
                       reversed={sortDirection === 'desc'}
                       onSort={() => handleSort('promptText')}
@@ -307,7 +316,9 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
                       <td className={`truncate max-w-0 px-4 py-4 text-sm font-medium text-white sm:px-6 ${montserrat_paragraph.className}`}>
                         {prompt.name}
                       </td>
-
+                      <td className={`truncate max-w-0 px-4 py-4 text-sm text-gray-400 sm:px-6 ${montserrat_paragraph.className}`}>
+                        {prompt.description || '-'}
+                      </td>
                       <td className={`truncate max-w-0 px-4 py-4 text-sm text-gray-400 sm:px-6`}>
                         <Text truncate className={`${montserrat_paragraph.className}`}>{prompt.promptText}</Text>
                       </td>

@@ -23,9 +23,10 @@ interface CustomGPTFormState {
   name: string;
   urlSuffix: string;
   promptText: string;
-  documentGroups?: string[];
-  tools?: string[];
+  documentGroups: string[];
+  tools: string[];
   id: string;
+  description: string;
 }
 
 interface CustomGPTModalProps {
@@ -124,7 +125,26 @@ const CustomGPTModal: React.FC<CustomGPTModalProps> = ({
           }
           required
           className={`${montserrat_paragraph.className} font-montserratParagraph`}
-          styles={{ 
+          styles={{
+            label: { color: 'white', marginBottom: '4px' },
+            input: {
+              '&:focus': {
+                borderColor: theme.colors.violet[6],
+                boxShadow: `0 0 3px 1px ${theme.colors.violet[4]}`,
+              },
+            },
+          }}
+        />
+        <TextInput
+          label="Description"
+          placeholder="Enter a description for your custom GPT..."
+          value={customPromptForm.description}
+          onChange={(event) =>
+            handleCustomPromptFormChange('description', event.currentTarget.value)
+          }
+          required
+          className={`${montserrat_paragraph.className} font-montserratParagraph`}
+          styles={{
             label: { color: 'white', marginBottom: '4px' },
             input: {
               '&:focus': {
@@ -136,15 +156,12 @@ const CustomGPTModal: React.FC<CustomGPTModalProps> = ({
         />
         <MultiSelect
           label="Document Groups"
-          placeholder="Select document groups (optional)"
-          value={customPromptForm.documentGroups || []}
+          placeholder="Select document groups..."
+          data={documentGroups?.map(group => group.name) || []}
+          value={customPromptForm.documentGroups}
           onChange={(value) => handleCustomPromptFormChange('documentGroups', value)}
-          data={documentGroupOptions}
           className={`${montserrat_paragraph.className} font-montserratParagraph`}
-          withinPortal
-          searchable
-          clearable
-          styles={{ 
+          styles={{
             label: { color: 'white', marginBottom: '4px' },
             input: {
               '&:focus': {
@@ -152,50 +169,7 @@ const CustomGPTModal: React.FC<CustomGPTModalProps> = ({
                 boxShadow: `0 0 3px 1px ${theme.colors.violet[4]}`,
               },
             },
-            rightSection: {
-              pointerEvents: 'none',
-              color: theme.colors.gray[5],
-              width: '30px',
-              '@media (maxWidth: 480px)': {
-                width: '24px',
-              },
-            },
-            dropdown: {
-              backgroundColor: '#1d1f33',
-              border: '1px solid rgba(42,42,120,1)',
-              borderRadius: theme.radius.md,
-              marginTop: '2px',
-              boxShadow: theme.shadows.xs,
-            },
-            item: {
-              backgroundColor: '#1d1f33',
-              borderRadius: theme.radius.md,
-              margin: '2px',
-              '&[data-selected]': {
-                backgroundColor: 'transparent',
-                '&:hover': {
-                  backgroundColor: 'rgb(107, 33, 168)',
-                  color: theme.white,
-                },
-              },
-              '&[data-hovered]': {
-                backgroundColor: 'rgb(107, 33, 168)',
-                color: theme.white,
-              },
-              fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
-              cursor: 'pointer',
-              whiteSpace: 'normal',
-              lineHeight: 1.2,
-              fontSize: '0.9rem',
-              padding: '8px 12px',
-            },
           }}
-          rightSection={
-            <IconChevronDown
-              size={14}
-              style={{ marginRight: '8px' }}
-            />
-          }
         />
         <MultiSelect
           label="Tools"

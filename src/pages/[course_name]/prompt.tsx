@@ -236,6 +236,7 @@ const CourseMain: NextPage = () => {
     documentGroups: string[]
     tools: string[]
     id: string
+    description?: string
   }>({
     name: '',
     urlSuffix: '',
@@ -964,7 +965,8 @@ CRITICAL: The optimized prompt must:
         promptText: prompt.promptText,
         documentGroups: prompt.documentGroups || [],
         tools: prompt.tools || [],
-        id: prompt.id
+        id: prompt.id,
+        description: prompt.description
       })
       setEditingCustomPromptId(prompt.id)
     } else {
@@ -1009,7 +1011,7 @@ CRITICAL: The optimized prompt must:
   const handleSaveCustomPrompt = async () => {
     console.log('CustomPromptForm state:', customPromptForm); // Log the customPromptForm state
     
-    const { name, urlSuffix, promptText, documentGroups, tools, id } = customPromptForm;
+    const { name, urlSuffix, promptText, documentGroups, tools, id, description } = customPromptForm;
 
     // Validate required fields
     if (!name.trim()) {
@@ -1037,6 +1039,7 @@ CRITICAL: The optimized prompt must:
           id: editingCustomPromptId, // Ensure id is preserved
           name: name.trim(),
           promptText: promptText.trim(),
+          description: description?.trim(),
           documentGroups: documentGroups.map(group => group.trim()),
           tools: tools.map(tool => tool.trim()),
           urlSuffix: linkIdentifier,
@@ -1048,6 +1051,7 @@ CRITICAL: The optimized prompt must:
         id: id || uuidv4(), // Ensure id is always a string
         name: name.trim(),
         promptText: promptText.trim(),
+        description: description?.trim(),
         documentGroups: documentGroups.map(group => group.trim()),
         tools: tools.map(tool => tool.trim()),
         urlSuffix: linkIdentifier,
