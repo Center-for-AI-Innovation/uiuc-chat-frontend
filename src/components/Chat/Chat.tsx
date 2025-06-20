@@ -1621,8 +1621,9 @@ export const Chat = memo(
     const renderIntroductoryStatements = () => {
       // If there's a custom GPT selected, display its name and description
       if (selectedConversation?.customGptId && courseMetadata?.custom_system_prompts) {
+        // First try to find by gpt_id, then fall back to id
         const customGPT = courseMetadata.custom_system_prompts.find(
-          (p) => p.id === selectedConversation.customGptId
+          (p) => p.gpt_id === selectedConversation.customGptId || p.id === selectedConversation.customGptId
         );
         if (customGPT) {
           return (

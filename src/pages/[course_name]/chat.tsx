@@ -84,8 +84,9 @@ const ChatPage: NextPage = () => {
 
         // Override system prompt if gptId is present and valid
         if (gptId && fetchedCourseMetadata.custom_system_prompts) {
+          // First try to find by gpt_id, then fall back to id
           const customPrompt = fetchedCourseMetadata.custom_system_prompts.find(
-            (p: CustomSystemPrompt) => p.id === gptId
+            (p: CustomSystemPrompt) => p.gpt_id === gptId || p.id === gptId
           )
           
           if (customPrompt) {

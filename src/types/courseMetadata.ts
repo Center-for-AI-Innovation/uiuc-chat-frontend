@@ -5,6 +5,7 @@ import { LLMProvider, ProviderNames } from '../utils/modelProviders/LLMProvider'
 // Define the CustomSystemPrompt interface here so it can be reused
 export interface CustomSystemPrompt {
   id: string
+  gpt_id?: string
   name: string
   urlSuffix: string
   promptText: string

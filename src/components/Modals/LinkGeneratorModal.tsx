@@ -68,7 +68,15 @@ export const LinkGeneratorModal = ({
     const queryParams = new URLSearchParams();
 
     if (selectedActivePrompt) {
-      queryParams.append('activePrompt', selectedActivePrompt);
+      // Find the custom prompt to get its gpt_id
+      const selectedPrompt = customSystemPrompts?.find(prompt => prompt.urlSuffix === selectedActivePrompt);
+      if (selectedPrompt) {
+        // Use gpt_id if available, otherwise fall back to urlSuffix
+        queryParams.append('gpt', selectedPrompt.gpt_id || selectedPrompt.urlSuffix);
+      } else {
+        // Fallback to the original behavior if prompt not found
+        queryParams.append('activePrompt', selectedActivePrompt);
+      }
     }
 
     Object.entries(linkSettings).forEach(([key, value]) => {
@@ -81,7 +89,7 @@ export const LinkGeneratorModal = ({
     const queryString = queryParams.toString();
     const chatUrl = `${baseUrl}/${course_name}/chat${queryString ? `?${queryString}` : ''}`;
     setGeneratedLink(chatUrl);
-  }, [linkSettings, course_name, selectedActivePrompt]);
+  }, [linkSettings, course_name, selectedActivePrompt, customSystemPrompts]);
 
   const customPromptOptions = [
     { value: '', label: 'Use Course Default System Prompt' },

@@ -70,8 +70,9 @@ export async function convertDBToChatConversation(
       if (response.ok) {
         const courseMetadata = await response.json();
         if (courseMetadata?.custom_system_prompts) {
+          // First try to find by gpt_id, then fall back to id
           const customGPT = courseMetadata.custom_system_prompts.find(
-            (p: { id: string }) => p.id === lastCustomGPTMessage.custom_gpt_id
+            (p: { id: string; gpt_id?: string }) => p.gpt_id === lastCustomGPTMessage.custom_gpt_id || p.id === lastCustomGPTMessage.custom_gpt_id
           );
           if (customGPT) {
             customGPTName = customGPT.name;

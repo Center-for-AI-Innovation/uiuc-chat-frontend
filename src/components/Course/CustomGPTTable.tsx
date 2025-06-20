@@ -330,12 +330,12 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
                       </td>
                       <td className="whitespace-nowrap px-4 py-4 text-right text-sm font-medium sm:px-6">
                         <Group spacing="xs" noWrap>
-                          <Tooltip label="Generate Link" className={`${montserrat_paragraph.className}`}>
+                          <Tooltip label="Generate Custom GPT Link" className={`${montserrat_paragraph.className}`}>
                             <Button
                               variant="subtle"
                               color="grape"
                               size="xs"
-                              onClick={() => onCopyToClipboard(prompt.id, 'url')}
+                              onClick={() => onCopyToClipboard(prompt.gpt_id || prompt.id, 'url')}
                               px={5}
                             >
                               <IconLink size={16} />
@@ -352,7 +352,7 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
                               <IconPencil size={16} />
                             </Button>
                           </Tooltip>
-                          <Tooltip label="Copy to Clipboard" className={`${montserrat_paragraph.className}`}>
+                          <Tooltip label="Copy Prompt Text to Clipboard" className={`${montserrat_paragraph.className}`}>
                             <Button
                               variant="subtle"
                               color="teal"

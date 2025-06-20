@@ -236,14 +236,15 @@ const CourseMain: NextPage = () => {
     documentGroups: string[]
     tools: string[]
     id: string
-    description?: string
+    description: string
   }>({
     name: '',
     urlSuffix: '',
     promptText: '',
     documentGroups: [],
     tools: [],
-    id: uuidv4()
+    id: uuidv4(),
+    description: ''
   })
   // For delete confirmation
   const [
@@ -966,7 +967,7 @@ CRITICAL: The optimized prompt must:
         documentGroups: prompt.documentGroups || [],
         tools: prompt.tools || [],
         id: prompt.id,
-        description: prompt.description
+        description: prompt.description || ''
       })
       setEditingCustomPromptId(prompt.id)
     } else {
@@ -976,7 +977,8 @@ CRITICAL: The optimized prompt must:
         promptText: '',
         documentGroups: [],
         tools: [],
-        id: uuidv4()
+        id: uuidv4(),
+        description: ''
       })
       setEditingCustomPromptId(null)
     }
@@ -990,7 +992,8 @@ CRITICAL: The optimized prompt must:
       promptText: '',
       documentGroups: [],
       tools: [],
-      id: uuidv4()
+      id: uuidv4(),
+      description: ''
     })
     setEditingCustomPromptId(null)
     closeCustomPromptModal()

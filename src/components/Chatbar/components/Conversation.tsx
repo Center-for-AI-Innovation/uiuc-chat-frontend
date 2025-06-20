@@ -90,8 +90,9 @@ export const ConversationComponent = ({ conversation }: Props) => {
           if (response.ok) {
             const data = await response.json();
             if (data.course_metadata?.custom_system_prompts) {
+              // First try to find by gpt_id, then fall back to id
               const customGPT = data.course_metadata.custom_system_prompts.find(
-                (p: { id: string }) => p.id === conversation.customGptId
+                (p: { id: string; gpt_id?: string }) => p.gpt_id === conversation.customGptId || p.id === conversation.customGptId
               );
               if (customGPT) {
                 setCustomGPTName(customGPT.name);
@@ -167,7 +168,13 @@ export const ConversationComponent = ({ conversation }: Props) => {
     e.stopPropagation()
     const baseUrl = window.location.origin
     const courseName = router.query.course_name
-    const url = `${baseUrl}/${courseName}/chat?conversation=${conversation.id}&readonly=true`
+    let url = `${baseUrl}/${courseName}/chat?conversation=${conversation.id}&readonly=true`
+    
+    // Add custom GPT ID to the URL if the conversation has one
+    if (conversation.customGptId) {
+      url += `&gpt=${conversation.customGptId}`
+    }
+    
     setShareUrl(url)
     setIsShareModalOpen(true)
   }

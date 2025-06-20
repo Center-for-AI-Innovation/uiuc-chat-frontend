@@ -752,15 +752,16 @@ const Home = ({
       const gptId = urlParams.get('gpt')
       
       if (gptId && currentCourseMetadata?.custom_system_prompts) {
+        // First try to find by gpt_id, then fall back to id
         const customPrompt = currentCourseMetadata.custom_system_prompts.find(
-          (p) => p.id === gptId
+          (p) => p.gpt_id === gptId || p.id === gptId
         )
         if (customPrompt) {
           console.log('Found custom prompt in course metadata:', customPrompt)
           handleNewConversation({
             text: customPrompt.promptText,
             name: customPrompt.name,
-            id: customPrompt.id
+            id: customPrompt.gpt_id || customPrompt.id
           })
           setIsInitialSetupDone(true)
           return
