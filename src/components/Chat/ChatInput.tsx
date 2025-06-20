@@ -8,6 +8,12 @@ import {
   IconX,
   IconRepeat,
   IconPlus,
+  IconFileTypeTxt,
+  IconFileTypePdf,
+  IconFileTypeDocx,
+  IconFileTypePpt,
+  IconFileTypeXls,
+  IconCheck,
 } from '@tabler/icons-react'
 import { Text } from '@mantine/core'
 import {
@@ -90,6 +96,12 @@ const ALLOWED_FILE_EXTENSIONS = [
   'jpg',
 ]
 
+type FileUploadStatus = {
+  file: File
+  status: 'uploading' | 'uploaded' | 'error'
+  url?: string
+}
+
 interface Props {
   onSend: (message: Message, plugin: Plugin | null) => void
   onScrollDownClick: () => void
@@ -160,6 +172,7 @@ export const ChatInput = ({
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const modelSelectContainerRef = useRef<HTMLDivElement | null>(null)
   const fileUploadRef = useRef<HTMLInputElement | null>(null)
+  const [fileUploads, setFileUploads] = useState<FileUploadStatus[]>([])
 
   const handleFocus = () => {
     setIsFocused(true)
@@ -587,9 +600,29 @@ export const ChatInput = ({
         return
       }
     }
-    // If all validations pass, add files to state and start upload
-    setImageFiles(allFiles)
-    newFiles.forEach((file) => processAndUploadImage(file))
+
+    // For each valid file, add to fileUploads and start upload
+    newFiles.forEach((file) => {
+      // Prevent duplicate files by name
+      setFileUploads((prev) => {
+        if (prev.some((f) => f.file.name === file.name)) return prev
+        return [...prev, { file, status: 'uploading' }]
+      })
+
+      uploadToS3(file, courseName)
+        .then((s3Key) => {
+          setFileUploads((prev) =>
+            prev.map((f) =>
+              f.file === file ? { ...f, status: 'uploaded', url: s3Key } : f,
+            ),
+          )
+        })
+        .catch(() => {
+          setFileUploads((prev) =>
+            prev.map((f) => (f.file === file ? { ...f, status: 'error' } : f)),
+          )
+        })
+    })
   }
 
   async function processAndUploadImage(
@@ -912,53 +945,71 @@ export const ChatInput = ({
         >
           {/* Flex row for upload buttons and textarea */}
           <div className="flex w-full items-center">
-            {/* Image upload button */}
-            <button
-              className="mr-2 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
-              onClick={() => imageUploadRef.current?.click()}
-              type="button"
-              title="Upload image"
-              style={{ pointerEvents: 'auto' }}
-            >
-              <IconPhoto size={22} />
-            </button>
-            <input
-              type="file"
-              multiple
-              id="imageUpload"
-              ref={imageUploadRef}
-              style={{ display: 'none', pointerEvents: 'auto' }}
-              accept=".jpg,.jpeg,.png,.webp,.gif"
-              onChange={(e) => {
-                const files = e.target.files
-                if (files) {
-                  handleImageUpload(Array.from(files))
-                }
-              }}
-            />
-            {/* File upload button (plus sign) */}
-            <button
-              className="mr-2 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
-              onClick={() => fileUploadRef.current?.click()}
-              type="button"
-              title="Upload files"
-              style={{ pointerEvents: 'auto' }}
-            >
-              <IconPlus size={22} />
-            </button>
-            <input
-              type="file"
-              multiple
-              ref={fileUploadRef}
-              style={{ display: 'none', pointerEvents: 'auto' }}
-              accept={ALLOWED_FILE_EXTENSIONS.map((ext) => '.' + ext).join(',')}
-              onChange={(e) => {
-                const files = e.target.files
-                if (files) {
-                  handleFileSelection(Array.from(files))
-                }
-              }}
-            />
+            <>
+              {/* Image upload button: only for vision-capable models */}
+              {VisionCapableModels.has(
+                selectedConversation?.model?.id as OpenAIModelID,
+              ) && (
+                <>
+                  <button
+                    className="mr-2 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
+                    onClick={() => imageUploadRef.current?.click()}
+                    type="button"
+                    title="Upload image"
+                    style={{ pointerEvents: 'auto' }}
+                  >
+                    <IconPhoto size={22} />
+                  </button>
+                  <input
+                    type="file"
+                    multiple
+                    id="imageUpload"
+                    ref={imageUploadRef}
+                    style={{ display: 'none', pointerEvents: 'auto' }}
+                    accept=".jpg,.jpeg,.png,.webp,.gif"
+                    onChange={(e) => {
+                      const files = e.target.files
+                      if (files) {
+                        handleImageUpload(Array.from(files))
+                      }
+                      // Reset input value so the same file can be selected again
+                      if (imageUploadRef.current) {
+                        imageUploadRef.current.value = ''
+                      }
+                    }}
+                  />
+                </>
+              )}
+              {/* File upload button (plus sign): always visible */}
+              <button
+                className="mr-2 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
+                onClick={() => fileUploadRef.current?.click()}
+                type="button"
+                title="Upload files"
+                style={{ pointerEvents: 'auto' }}
+              >
+                <IconPlus size={22} />
+              </button>
+              <input
+                type="file"
+                multiple
+                ref={fileUploadRef}
+                style={{ display: 'none', pointerEvents: 'auto' }}
+                accept={ALLOWED_FILE_EXTENSIONS.map((ext) => '.' + ext).join(
+                  ',',
+                )}
+                onChange={(e) => {
+                  const files = e.target.files
+                  if (files) {
+                    handleFileSelection(Array.from(files))
+                  }
+                  // Reset input value so the same file can be selected again
+                  if (fileUploadRef.current) {
+                    fileUploadRef.current.value = ''
+                  }
+                }}
+              />
+            </>
             {/* Textarea for message input */}
             <textarea
               ref={textareaRef}
@@ -1045,7 +1096,6 @@ export const ChatInput = ({
                     <button
                       className="remove-button"
                       onClick={() => {
-                        // Filter out the image from both imageFiles and imagePreviewUrls
                         setImageFiles((prev) =>
                           prev.filter((_, i) => i !== index),
                         )
@@ -1072,6 +1122,117 @@ export const ChatInput = ({
                   </Tooltip>
                 </div>
               ))}
+            </div>
+
+            {/* File upload preview section (non-image files) */}
+            <div className="mt-2 flex flex-wrap gap-3">
+              {fileUploads
+                .filter((fu) => {
+                  // Only show non-image files here
+                  const ext = fu.file.name.split('.').pop()?.toLowerCase()
+                  const imageTypes = ['jpg', 'jpeg', 'png', 'webp', 'gif']
+                  return ext && !imageTypes.includes(ext)
+                })
+                .map((fu, idx) => {
+                  // Icon selection based on file type
+                  const ext = fu.file.name.split('.').pop()?.toLowerCase()
+                  let icon = <IconFileTypeTxt size={28} />
+                  if (ext === 'pdf')
+                    icon = (
+                      <IconFileTypePdf size={28} className="text-red-500" />
+                    )
+                  else if (['doc', 'docx'].includes(ext!))
+                    icon = (
+                      <IconFileTypeDocx size={28} className="text-blue-500" />
+                    )
+                  else if (['ppt', 'pptx'].includes(ext!))
+                    icon = (
+                      <IconFileTypePpt size={28} className="text-orange-500" />
+                    )
+                  else if (
+                    [
+                      'xls',
+                      'xlsx',
+                      'xlsm',
+                      'xlsb',
+                      'xltx',
+                      'xltm',
+                      'xlt',
+                      'xml',
+                      'xlam',
+                      'xla',
+                      'xlw',
+                      'xlr',
+                      'csv',
+                    ].includes(ext!)
+                  )
+                    icon = (
+                      <IconFileTypeXls size={28} className="text-green-500" />
+                    )
+                  else if (
+                    ['md', 'txt', 'srt', 'vtt', 'html', 'py'].includes(ext!)
+                  )
+                    icon = <IconFileTypeTxt size={28} />
+                  // Status icon
+                  let statusIcon = null
+                  if (fu.status === 'uploading')
+                    statusIcon = (
+                      <div className="ml-2 h-4 w-4 animate-spin rounded-full border-t-2 border-neutral-800 opacity-60 dark:border-neutral-100" />
+                    )
+                  else if (fu.status === 'uploaded')
+                    statusIcon = (
+                      <IconCheck size={18} className="ml-2 text-green-500" />
+                    )
+                  else if (fu.status === 'error')
+                    statusIcon = (
+                      <IconX size={18} className="ml-2 text-red-500" />
+                    )
+                  return (
+                    <div
+                      key={fu.file.name + idx}
+                      className="relative flex items-center rounded-lg bg-neutral-800 px-3 py-2"
+                    >
+                      {icon}
+                      <span
+                        className="ml-2 max-w-[120px] truncate text-white"
+                        title={fu.file.name}
+                      >
+                        {fu.file.name}
+                      </span>
+                      {statusIcon}
+                      <Tooltip
+                        label="Remove File"
+                        position="top"
+                        withArrow
+                        style={{ backgroundColor: '#2b2b2b', color: 'white' }}
+                      >
+                        <button
+                          className="remove-button ml-2"
+                          onClick={() => {
+                            setFileUploads((prev) =>
+                              prev.filter((_, i) => i !== idx),
+                            )
+                          }}
+                          style={removeButtonStyle}
+                          onMouseEnter={(e) => {
+                            const current = e.currentTarget
+                            current.style.backgroundColor =
+                              removeButtonHoverStyle.backgroundColor!
+                            current.style.color = removeButtonHoverStyle.color!
+                          }}
+                          onMouseLeave={(e) => {
+                            const current = e.currentTarget
+                            current.style.backgroundColor =
+                              removeButtonStyle.backgroundColor!
+                            current.style.color = removeButtonStyle.color!
+                          }}
+                        >
+                          <IconX size={16} />
+                        </button>
+                      </Tooltip>
+                    </div>
+                  )
+                })}
             </div>
 
             <button
