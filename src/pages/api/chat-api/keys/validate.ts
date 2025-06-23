@@ -11,13 +11,11 @@ import { NextRequest, NextResponse } from 'next/server'
  * Validates the provided API key and retrieves the associated user data.
  *
  * @param {string} apiKey - The API key to validate.
- * @param {string} course_name - The name of the course (currently unused).
  * @returns An object containing a boolean indicating if the API key is valid,
  *          and the user object if the key is valid.
  */
 export async function validateApiKeyAndRetrieveData(
   apiKey: string,
-  course_name: string,
 ) {
   let authContext: AuthContextProps = {
     isAuthenticated: false,
@@ -25,7 +23,6 @@ export async function validateApiKeyAndRetrieveData(
     isLoading: false,
     error: undefined,
   } as AuthContextProps
-  // console.log('Validating apiKey', apiKey, ' for course_name', course_name)
   // Attempt to retrieve the email associated with the API key from the database
   const data = await db
     .select({ email: apiKeys.email })
@@ -96,9 +93,8 @@ export async function validateApiKeyAndRetrieveData(
  * API route handler to validate an API key and return the associated user object.
  *
  * @param {NextApiRequest} req - The incoming HTTP request.
- * @param {NextApiResponse} res - The outgoing HTTP response.
  */
-export default async function handler(req: NextRequest, res: NextResponse) {
+export default async function handler(req: NextRequest) {
   try {
     console.log('req: ', req)
     // Extract the API key and course name from the request body.
@@ -109,13 +105,11 @@ export default async function handler(req: NextRequest, res: NextResponse) {
 
     const { isValidApiKey, authContext } = await validateApiKeyAndRetrieveData(
       api_key,
-      course_name,
     )
 
     if (!isValidApiKey) {
       // Respond with a 403 Forbidden status if the API key is invalid.
       return NextResponse.json({ error: 'Invalid API key' }, { status: 403 })
-      return
     }
 
     // Respond with the user object if the API key is valid.
