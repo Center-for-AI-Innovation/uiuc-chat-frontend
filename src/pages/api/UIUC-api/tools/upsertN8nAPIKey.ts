@@ -1,22 +1,15 @@
 import { db } from '~/db/dbClient'
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextApiRequest, NextApiResponse } from 'next';
 import { projects } from '~/db/schema'
 
 
-export default async function handler(req: NextRequest, res: NextResponse) {
-  const requestBody = await req.json()
-  // console.log('upsertN8nAPIKey course_name and n8n_api_key:', requestBody)
-  const { course_name, n8n_api_key } = requestBody
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const { course_name, n8n_api_key } = req.body;
   if (!course_name) {
-    return new NextResponse(
-      JSON.stringify({
-        success: false,
-        error: 'course_name is required',
-      }),
-      { status: 400 },
-    )
+    return res.status(400).json({ success: false, error: 'course_name is required' });
   }
-  try{
+
+  try {
     const result = await db
       .insert(projects)
       .values({
@@ -29,13 +22,10 @@ export default async function handler(req: NextRequest, res: NextResponse) {
           n8n_api_key: n8n_api_key,
         },
       })
-    console.log('upsertN8nAPIKey result:', result)
-    return new NextResponse(JSON.stringify({ success: true }), { status: 200 })
-  } catch (error: any) {
-    console.error('Error upserting N8n key to Supabase:', error)
-    return new NextResponse(JSON.stringify({ success: false, error: error }), {
-      status: 500,
-    })
+    console.log('upsertN8nAPIKey result:', result);
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Error upserting N8n key to Supabase:', error);
+    return res.status(500).json({ success: false, error: error });
   }
-
 }
