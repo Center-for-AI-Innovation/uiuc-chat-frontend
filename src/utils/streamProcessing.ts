@@ -25,8 +25,8 @@ import {
   type SambaNovaProvider,
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
-import fetchMQRContexts from '~/pages/api/getContextsMQR'
-import fetchContexts from '~/pages/api/getContexts'
+import { fetchMQRContexts } from '~/pages/api/getContextsMQR'
+import { fetchContexts } from '~/pages/api/getContexts'
 import { OllamaModelIDs } from './modelProviders/ollama'
 import { webLLMModels } from './modelProviders/WebLLM'
 import { OpenAIModelID } from './modelProviders/types/openai'
