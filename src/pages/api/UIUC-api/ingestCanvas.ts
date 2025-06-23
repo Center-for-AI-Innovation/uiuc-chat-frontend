@@ -25,7 +25,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     // Send email to kastan alerting that he needs to approve a canvas course
     const sendEmailResponse = await fetch(
-      `https://flask-production-751b.up.railway.app/send-transactional-email`,
+      `${process.env.RAILWAY_URL}/send-transactional-email`,
       {
         method: 'POST',
         headers: {
