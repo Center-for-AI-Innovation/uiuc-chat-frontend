@@ -259,7 +259,7 @@ const callN8nFunction = async (
   })
 
   const timeStart = Date.now()
-  const baseUrl = base_url || 'https://flask-production-751b.up.railway.app'
+  const baseUrl = base_url || process.env.RAILWAY_URL || 'https://flask-production-751b.up.railway.app'
   const response: Response = await fetch(
     `${baseUrl}/run_flow`,
     {
@@ -530,7 +530,7 @@ export async function fetchTools(
 
   const parsedPagination = pagination.toLowerCase() === 'true'
 
-  const baseUrl = base_url || 'https://flask-production-751b.up.railway.app'
+  const baseUrl = base_url || process.env.RAILWAY_URL || 'https://flask-production-751b.up.railway.app'
   const response = await fetch(
     `${baseUrl}/getworkflows?api_key=${api_key}&limit=${limit}&pagination=${parsedPagination}`,
   )
