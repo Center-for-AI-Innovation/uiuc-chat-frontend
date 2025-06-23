@@ -60,12 +60,19 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         )
       }
 
+      // Extract bucket name from the first part of the path
+      const pathParts = filePath.split('/')
+      const bucketName = pathParts[0]
+      const actualKey = pathParts.slice(1).join('/')
+
       const command = new GetObjectCommand({
-        Bucket: 'pubmed', // Custom for Vyriad
-        Key: filePath,
+        Bucket: bucketName,
+        Key: actualKey,
         ResponseContentDisposition: 'inline',
         ResponseContentType: ResponseContentType,
       })
+
+      console.log('final key', actualKey)
 
       presignedUrl = await getSignedUrl(vyriadMinioClient, command, {
         expiresIn: 3600,
