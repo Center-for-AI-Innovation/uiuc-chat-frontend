@@ -3,6 +3,7 @@ import { Content, Conversation } from '~/types/chat'
 import { RunTree } from 'langsmith'
 import { sanitizeForLogging } from '@/utils/sanitization'
 import { llmConvoMonitor } from '~/db/schema'
+import { validate as isUUID  } from 'uuid'
 
 export const config = {
   api: {
@@ -12,7 +13,7 @@ export const config = {
   },
 }
 
-const logConversationToSupabase = async (req: any, res: any) => {
+const logConversation = async (req: any, res: any) => {
   const { course_name, conversation } = req.body as {
     course_name: string
     conversation: Conversation
@@ -37,7 +38,7 @@ const logConversationToSupabase = async (req: any, res: any) => {
         },
       })
   } catch (error: any) {
-    console.log('new error form supabase in logConversationToSupabase:', error)
+    console.log('new error form database in logConversation:', error)
   }
 
   // Send to our custom monitor
@@ -50,7 +51,7 @@ const logConversationToSupabase = async (req: any, res: any) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          // messages: sanitizedConversation.messages, // we get these from Supabase on the backend.
+          // messages: sanitizedConversation.messages, // we get these from database on the backend.
           course_name: course_name,
           conversation_id: conversation.id,
           model_name: conversation.model.name,
@@ -143,4 +144,4 @@ const logConversationToSupabase = async (req: any, res: any) => {
   return res.status(200).json({ success: true })
 }
 
-export default logConversationToSupabase
+export default logConversation

@@ -631,7 +631,7 @@ export async function updateConversationInDatabase(
   try {
     const baseUrl = await getBaseUrl()
     const response = await fetch(
-      `${baseUrl}/api/UIUC-api/logConversationToSupabase`,
+      `${baseUrl}/api/UIUC-api/logConversation`,
       {
         method: 'POST',
         headers: {

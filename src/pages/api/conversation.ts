@@ -9,7 +9,7 @@ import {
   UIUCTool,
 } from '@/types/chat'
 import { Database, Json } from 'database.types'
-import { v4 as uuidv4 } from 'uuid'
+import { v4 as uuidv4, validate as isUUID  } from 'uuid'
 import {
   AllSupportedModels,
   GenericSupportedModel,
@@ -274,9 +274,8 @@ export default async function handler(
   switch (method) {
     case 'POST':
       const {
-        emailAddress,
         conversation,
-      }: { emailAddress: string; conversation: ChatConversation } = req.body
+      }: { conversation: ChatConversation } = req.body
       try {
         // Convert conversation to DB type
         const dbConversation = convertChatToDBConversation(conversation)
@@ -295,11 +294,11 @@ export default async function handler(
           temperature: dbConversation.temperature,
           user_email: dbConversation.user_email,
           project_name: dbConversation.project_name,
-          folder_id: dbConversation.folder_id,
+          folder_id: isUUID(dbConversation.folder_id ?? '') ? dbConversation.folder_id : null,
           created_at: dbConversation.created_at ? new Date(dbConversation.created_at) : new Date(),
           updated_at: dbConversation.updated_at ? new Date(dbConversation.updated_at) : new Date()
         };
-        
+
         // Save conversation to DB using DrizzleORM
         try {
           await db.insert(conversationsTable).values(conversationData)
@@ -323,15 +322,17 @@ export default async function handler(
 
         // Check for edited messages and get their existing versions
         const messageIds = conversation.messages.map((m) => m.id)
-        
+
         // Get existing messages using DrizzleORM
         const existingMessages = await db
           .select()
           .from(messages)
-          .where(and(
-            sql`${messages.id}::text IN (${messageIds.join(',')})`,
-            sql`${messages.conversation_id}::text = ${conversation.id}`
-          ))
+          .where(
+            and(
+              inArray(messages.id, messageIds),
+              eq(messages.conversation_id, conversation.id)
+            )
+          );
 
         // Find any messages that were edited by comparing content
         const editedMessages = existingMessages?.filter((existingMsg) => {
@@ -407,10 +408,14 @@ export default async function handler(
 
         // Insert messages using DrizzleORM
         for (const message of dbMessages) {
+           if (!isUUID(message.id)) {
+              throw new Error(`Invalid UUID for message.id: ${message.id}`);
+            }
+
           // Convert string dates to Date objects for DrizzleORM and ensure ID is a number
           const messageForInsert = {
             ...message,
-            id: typeof message.id === 'string' ? parseInt(message.id, 10) : message.id,
+            id: message.id,
             created_at: message.created_at ? new Date(message.created_at) : new Date(),
             updated_at: message.updated_at ? new Date(message.updated_at) : new Date(),
           };
