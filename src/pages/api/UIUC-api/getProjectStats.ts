@@ -1,41 +1,31 @@
 // src/pages/api/UIUC-api/getProjectStats.ts
-import { type NextRequest, NextResponse } from 'next/server'
 
-export const runtime = 'edge'
-
-export default async function handler(req: NextRequest, res: NextResponse) {
-  const project_name = req.nextUrl.searchParams.get('project_name')
+export default async function handler(req: any, res: any) {
+  const { project_name } = req.query
 
   if (!project_name) {
-    return NextResponse.json(
-      { error: 'Missing required project_name parameter' },
-      { status: 400 },
-    )
+    return res.status(400).json({ error: 'Missing required project_name parameter' })
   }
 
   try {
     const response = await fetch(
-      `https://flask-production-751b.up.railway.app/getProjectStats?project_name=${project_name}`,
+      `${process.env.RAILWAY_URL}/getProjectStats?project_name=${project_name}`,
     )
 
     if (!response.ok) {
-      return NextResponse.json(
-        { error: `Failed to fetch data: ${response.statusText}` },
-        { status: response.status },
-      )
+      return res.status(response.status).json({ 
+        error: `Failed to fetch data: ${response.statusText}` 
+      })
     }
 
     const data = await response.json()
-    return NextResponse.json(data)
+    return res.status(200).json(data)
   } catch (error) {
     console.error('Error fetching project stats:', error)
-    return NextResponse.json(
-      {
-        error: 'Failed to fetch project stats',
-        details: (error as Error).message,
-      },
-      { status: 500 },
-    )
+    return res.status(500).json({
+      error: 'Failed to fetch project stats',
+      details: (error as Error).message,
+    })
   }
 }
 
