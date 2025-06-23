@@ -259,13 +259,15 @@ const callN8nFunction = async (
   })
 
   const timeStart = Date.now()
-  const baseUrl = base_url || process.env.RAILWAY_URL
-  if (!baseUrl) {
-    throw new Error('No backend URL configured. Please provide base_url parameter or set RAILWAY_URL environment variable.')
-  }
-  const response: Response = await fetch(
-    `${baseUrl}/run_flow`,
-    {
+  
+  // Check if we're running on client-side (browser) or server-side
+  const isClientSide = typeof window !== 'undefined'
+  
+  let response: Response
+  
+  if (isClientSide) {
+    // Client-side: use our API route
+    response = await fetch('/api/UIUC-api/runN8nFlow', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -273,15 +275,40 @@ const callN8nFunction = async (
       },
       body: body,
       signal: controller.signal,
-    },
-  ).catch((error) => {
-    if (error.name === 'AbortError') {
-      throw new Error(
-        'Request timed out after 30 seconds, try "Regenerate Response" button',
-      )
+    }).catch((error) => {
+      if (error.name === 'AbortError') {
+        throw new Error(
+          'Request timed out after 30 seconds, try "Regenerate Response" button',
+        )
+      }
+      throw error
+    })
+  } else {
+    // Server-side: use direct backend call
+    const baseUrl = base_url || process.env.RAILWAY_URL
+    if (!baseUrl) {
+      throw new Error('No backend URL configured. Please provide base_url parameter or set RAILWAY_URL environment variable.')
     }
-    throw error
-  })
+    response = await fetch(
+      `${baseUrl}/run_flow`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+        },
+        body: body,
+        signal: controller.signal,
+      },
+    ).catch((error) => {
+      if (error.name === 'AbortError') {
+        throw new Error(
+          'Request timed out after 30 seconds, try "Regenerate Response" button',
+        )
+      }
+      throw error
+    })
+  }
   const timeEnd = Date.now()
   console.debug(
     'Time taken for n8n function call: ',
@@ -532,14 +559,27 @@ export async function fetchTools(
   }
 
   const parsedPagination = pagination.toLowerCase() === 'true'
-
-  const baseUrl = base_url || process.env.RAILWAY_URL
-  if (!baseUrl) {
-    throw new Error('No backend URL configured. Please provide base_url parameter or set RAILWAY_URL environment variable.')
+  
+  // Check if we're running on client-side (browser) or server-side
+  const isClientSide = typeof window !== 'undefined'
+  
+  let response: Response
+  
+  if (isClientSide) {
+    // Client-side: use our API route
+    response = await fetch(
+      `/api/UIUC-api/getN8nWorkflows?api_key=${api_key}&limit=${limit}&pagination=${parsedPagination}`,
+    )
+  } else {
+    // Server-side: use direct backend call
+    const baseUrl = base_url || process.env.RAILWAY_URL
+    if (!baseUrl) {
+      throw new Error('No backend URL configured. Please provide base_url parameter or set RAILWAY_URL environment variable.')
+    }
+    response = await fetch(
+      `${baseUrl}/getworkflows?api_key=${api_key}&limit=${limit}&pagination=${parsedPagination}`,
+    )
   }
-  const response = await fetch(
-    `${baseUrl}/getworkflows?api_key=${api_key}&limit=${limit}&pagination=${parsedPagination}`,
-  )
   if (!response.ok) {
     // return res.status(response.status).json({ error: response.statusText })
     throw new Error(`Unable to fetch n8n tools: ${response.statusText}`)
