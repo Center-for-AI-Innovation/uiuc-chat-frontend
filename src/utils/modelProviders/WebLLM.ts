@@ -144,8 +144,6 @@ export default class ChatUI {
     projectName: string,
     courseMetadata: CourseMetadata,
   ) {
-    console.log('chatBody (webllm)', chatBody)
-
     const buildPromptResponse = await fetch('/api/buildPrompt', {
       method: 'POST',
       headers: {
@@ -301,7 +299,11 @@ export const getWebLLMModels = async (
   webLLMProvider: WebLLMProvider,
 ): Promise<WebLLMProvider> => {
   webLLMProvider.provider = ProviderNames.WebLLM
-  if (!webLLMProvider.models || webLLMProvider.models.length === 0) {
+  if (
+    !webLLMProvider.models ||
+    webLLMProvider.models.length === 0 ||
+    !webLLMProvider.enabled
+  ) {
     // If no models, add all models but only enable Llama 3 8b, Phi 3 mini, and Gemma 2b by default
     webLLMProvider.models = webLLMModels.map((model) => ({
       ...model,

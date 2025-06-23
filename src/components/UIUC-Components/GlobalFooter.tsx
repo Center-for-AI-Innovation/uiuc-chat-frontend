@@ -43,7 +43,7 @@ export default function Footer({ isNavbar = false }: { isNavbar?: boolean }) {
         <span>
           MIT Licensed{' '}
           <Link
-            href="https://github.com/kastanday/ai-ta-frontend"
+            href="https://github.com/Center-for-AI-Innovation/uiuc-chat-frontend"
             className="link-hover link text-[--footer-link] hover:text-[--footer-link-hover]"
             target="_blank"
             rel="noopener noreferrer"
@@ -52,7 +52,7 @@ export default function Footer({ isNavbar = false }: { isNavbar?: boolean }) {
           </Link>{' '}
           and{' '}
           <Link
-            href="https://github.com/UIUC-Chatbot/ai-ta-backend"
+            href="https://github.com/Center-for-AI-Innovation/ai-ta-backendhttps://github.com/UIUC-Chatbot/ai-ta-backend"
             className="link-hover link text-[--footer-link] hover:text-[--footer-link-hover]"
             target="_blank"
             rel="noopener noreferrer"

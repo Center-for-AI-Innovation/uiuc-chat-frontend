@@ -28,6 +28,7 @@ import { useMediaQuery } from '@mantine/hooks'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { v4 as uuidv4 } from 'uuid'
 import { FileUpload } from './UploadNotification'
+import { AuthContextProps } from 'react-oidc-context'
 
 const useStyles = createStyles((theme) => ({
   wrapper: {
@@ -65,6 +66,7 @@ export function LargeDropzone({
   courseMetadata,
   is_new_course,
   setUploadFiles,
+  auth,
 }: {
   courseName: string
   current_user_email: string
@@ -73,6 +75,7 @@ export function LargeDropzone({
   courseMetadata: CourseMetadata
   is_new_course: boolean
   setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
+  auth: AuthContextProps
 }) {
   // upload-in-progress spinner control
   const [uploadInProgress, setUploadInProgress] = useState(false)
@@ -240,11 +243,10 @@ export function LargeDropzone({
       await refreshOrRedirect(redirect_to_gpt_4)
     }
   }
-
   useEffect(() => {
-    let pollInterval = 3000 // Start with a slower interval
+    let pollInterval = 9000 // Start with a slower interval
     const MIN_INTERVAL = 1000 // Fast polling when active
-    const MAX_INTERVAL = 5000 // Slow polling when inactive
+    const MAX_INTERVAL = 20000 // Slow polling when inactive
     let consecutiveEmptyPolls = 0
 
     const checkIngestStatus = async () => {
@@ -254,7 +256,7 @@ export function LargeDropzone({
       const data = await response.json()
 
       const docsResponse = await fetch(
-        `/api/materialsTable/docs?course_name=${courseName}`,
+        `/api/materialsTable/successDocs?course_name=${courseName}`,
       )
       const docsData = await docsResponse.json()
       // Adjust polling interval based on activity

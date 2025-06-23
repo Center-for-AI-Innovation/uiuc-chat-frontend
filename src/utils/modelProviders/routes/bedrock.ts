@@ -17,7 +17,8 @@ export const getBedrockModels = async (
     !bedrockProvider.region ||
     bedrockProvider.accessKeyId === '' ||
     bedrockProvider.secretAccessKey === '' ||
-    bedrockProvider.region === ''
+    bedrockProvider.region === '' ||
+    !bedrockProvider.enabled
   ) {
     // Don't show any error here... too confusing for users.
     bedrockProvider.models = []

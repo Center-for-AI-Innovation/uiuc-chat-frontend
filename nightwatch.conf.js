@@ -33,7 +33,6 @@ module.exports = {
 
   webdriver: {
     start_process: true,
-    server_path: require('chromedriver').path,
     port: 9515,
   },
 
@@ -55,6 +54,7 @@ module.exports = {
       desiredCapabilities: {
         browserName: 'chrome',
         'goog:chromeOptions': {
+          binary: process.env.CHROME_BIN || undefined,
           args: [
             '--headless=new',
             '--no-sandbox',

@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://github.com/KastanDay/ai-ta-frontend/assets/13607221/ac748045-fd91-4ab2-a0b7-e7dc8bbc22d7" alt="UIUC.chat Architecture" width="600">
+  <img src="https://github.com/Center-for-AI-Innovation/uiuc-chat-frontend/assets/13607221/ac748045-fd91-4ab2-a0b7-e7dc8bbc22d7" alt="UIUC.chat Architecture" width="600">
   <h1>🎓 UIUC.chat Frontend</h1>
   <p><strong>Revolutionizing Education with AI: Upload Anything, Search Everything, Get Answers</strong></p>
 </div>
@@ -22,7 +22,7 @@
 Our cutting-edge frontend is built with:
 
 - [Next.js](https://nextjs.org) - React framework for production
-- [Clerk](https://clerk.com/) - Authentication and user management
+- [Keycloak](https://keycloak.org/) - Authentication and user management
 - [Tailwind CSS](https://tailwindcss.com) - Utility-first CSS framework
 
 We follow the [T3 Stack](https://create.t3.gg/) architecture for robust and scalable applications.
@@ -40,4 +40,5 @@ We're a group of passionate indie hackers building the best AI Teaching Assistan
 </div>
 
 ## Repo activity
-![Alt](https://repobeats.axiom.co/api/embed/1c4916d2e30187aaa32c54635bdbc1059f0563b0.svg "Repo activity and contributors")
+
+![Alt](https://repobeats.axiom.co/api/embed/1c4916d2e30187aaa32c54635bdbc1059f0563b0.svg 'Repo activity and contributors')

@@ -1,24 +1,21 @@
 // export { default } from '~/pages/api/home'
 
-import { useUser } from '@clerk/nextjs'
-import { NextPage } from 'next'
+import { useAuth } from 'react-oidc-context'
+import { type NextPage } from 'next'
 import { useEffect, useState } from 'react'
 import Home from '../api/home/home'
 import { useRouter } from 'next/router'
-import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
-import { CourseMetadata } from '~/types/courseMetadata'
+
+import { type CourseMetadata } from '~/types/courseMetadata'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { montserrat_heading } from 'fonts'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
-import Head from 'next/head'
-import { GUIDED_LEARNING_PROMPT } from '~/utils/app/const'
+import { fetchCourseMetadata } from '~/utils/apiUtils'
 
 const ChatPage: NextPage = () => {
-  const clerk_user_outer = useUser()
-  const { user, isLoaded, isSignedIn } = clerk_user_outer
+  const auth = useAuth()
   const router = useRouter()
-  const curr_route_path = router.asPath as string
   const getCurrentPageName = () => {
     return router.query.course_name as string
   }
@@ -33,6 +30,7 @@ const ChatPage: NextPage = () => {
   const [urlDocumentsOnly, setUrlDocumentsOnly] = useState(false)
   const [urlSystemPromptOnly, setUrlSystemPromptOnly] = useState(false)
   const [documentCount, setDocumentCount] = useState<number | null>(null)
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
 
   // UseEffect to check URL parameters
   useEffect(() => {
@@ -59,7 +57,7 @@ const ChatPage: NextPage = () => {
           courseName.toLowerCase(),
         )
       ) {
-        await router.push(`/cropwizard-1.5/chat`)
+        await router.push(`/cropwizard-1.5`)
       }
 
       // Fetch course metadata
@@ -105,82 +103,114 @@ const ChatPage: NextPage = () => {
 
   // UseEffect to check user permissions and fetch user email
   useEffect(() => {
-    if (!isLoaded || isCourseMetadataLoading) {
-      return
-    }
-    if (clerk_user_outer.isLoaded || isCourseMetadataLoading) {
-      if (courseMetadata != null) {
-        const permission_str = get_user_permission(
-          courseMetadata,
-          clerk_user_outer,
-          router,
-        )
+    const checkAuthorization = async () => {
+      // console.log('Starting authorization check', {
+      //   isAuthLoading: auth.isLoading,
+      //   isRouterReady: router.isReady,
+      //   authUser: auth.user?.profile.email || 'No user email',
+      // })
 
-        if (permission_str == 'edit' || permission_str == 'view') {
-        } else {
-          router.replace(`/${courseName}/not_authorized`)
-        }
-      } else {
-        // 🆕 MAKE A NEW COURSE
-        console.log('Course does not exist, redirecting to materials page')
-        router.push(`/${courseName}/dashboard`)
-      }
-      // console.log(
-      //   'Changing user email to: ',
-      //   extractEmailsFromClerk(clerk_user_outer.user)[0],
-      // )
-      // This will not work because setUserEmail is async
-      // setUserEmail(extractEmailsFromClerk(clerk_user_outer.user)[0] as string)
-      const email = extractEmailsFromClerk(user)[0]
-      if (email) {
-        setCurrentEmail(email)
-        // console.log('setting user email: ', user)
-        // console.log('type of user: ', typeof user)
-      } else {
-        const key = process.env.NEXT_PUBLIC_POSTHOG_KEY as string
-        // console.log('key: ', key)
-        const postHogUserObj = localStorage.getItem('ph_' + key + '_posthog')
-        // console.log('posthog user obj: ', postHogUserObj)
-        if (postHogUserObj) {
-          const postHogUser = JSON.parse(postHogUserObj)
-          setCurrentEmail(postHogUser.distinct_id)
-          console.log(
-            'setting user email as posthog user: ',
-            postHogUser.distinct_id,
-          )
-        } else {
-          // When user is not logged in and posthog user is not found, what to do?
-          // This is where page will not load
+      if (!auth.isLoading && router.isReady) {
+        const courseName = router.query.course_name as string
+        try {
+          // Fetch course metadata
+          const metadata = await fetchCourseMetadata(courseName)
+
+          if (!metadata) {
+            router.replace(`/new?course_name=${courseName}`)
+            return
+          }
+
+          // Check if course is public
+          if (!metadata.is_private) {
+            setIsAuthorized(true)
+
+            // Set email for public access
+            if (auth.user?.profile.email) {
+              setCurrentEmail(auth.user.profile.email)
+            } else {
+              // Use PostHog ID when user is not logged in for public courses
+              const key = process.env.NEXT_PUBLIC_POSTHOG_KEY as string
+              const postHogUserObj = localStorage.getItem(
+                'ph_' + key + '_posthog',
+              )
+
+              if (postHogUserObj) {
+                const postHogUser = JSON.parse(postHogUserObj)
+                setCurrentEmail(postHogUser.distinct_id)
+              } else {
+                // When user is not logged in and posthog user is not found
+                setCurrentEmail('')
+              }
+            }
+            return
+          } else {
+            // For private courses, user must be authenticated
+            if (!auth.isAuthenticated) {
+              router.replace(`/${courseName}/not_authorized`)
+              return
+            }
+
+            // Set email for authenticated users
+            if (auth.user?.profile.email) {
+              setCurrentEmail(auth.user.profile.email)
+            } else {
+              console.error('Authenticated user has no email')
+              router.replace(`/${courseName}/not_authorized`)
+              return
+            }
+          }
+
+          const permission = get_user_permission(metadata, auth)
+
+          if (permission === 'no_permission') {
+            router.replace(`/${courseName}/not_authorized`)
+            return
+          }
+
+          setIsAuthorized(true)
+        } catch (error) {
+          console.error('Authorization check failed:', error)
+          setIsAuthorized(false)
         }
       }
     }
-  }, [clerk_user_outer.isLoaded, isCourseMetadataLoading])
+
+    checkAuthorization()
+  }, [auth.isLoading, auth.isAuthenticated, router.isReady, auth, router])
 
   return (
     <>
-      {!isLoading && currentEmail && courseMetadata && (
-        <Home
-          current_email={currentEmail}
-          course_metadata={courseMetadata}
-          course_name={courseName}
-          document_count={documentCount}
-          link_parameters={{
-            guidedLearning: urlGuidedLearning,
-            documentsOnly: urlDocumentsOnly,
-            systemPromptOnly: urlSystemPromptOnly,
-          }}
-        />
-      )}
-      {isLoading && !currentEmail && (
-        <MainPageBackground>
-          <div
-            className={`flex items-center justify-center font-montserratHeading text-white ${montserrat_heading.variable}`}
-          >
-            <span className="mr-2">Warming up the knowledge engines...</span>
-            <LoadingSpinner size="sm" />
-          </div>
-        </MainPageBackground>
-      )}
+      {!isLoading &&
+        !auth.isLoading &&
+        router.isReady &&
+        ((currentEmail && currentEmail !== '') ||
+          !courseMetadata?.is_private) &&
+        courseMetadata && (
+          <Home
+            current_email={currentEmail || ''}
+            course_metadata={courseMetadata}
+            course_name={courseName}
+            document_count={documentCount}
+            link_parameters={{
+              guidedLearning: urlGuidedLearning,
+              documentsOnly: urlDocumentsOnly,
+              systemPromptOnly: urlSystemPromptOnly,
+            }}
+          />
+        )}
+      {isLoading ||
+        !currentEmail ||
+        (currentEmail === '' && (
+          <MainPageBackground>
+            <div
+              className={`flex items-center justify-center font-montserratHeading ${montserrat_heading.variable}`}
+            >
+              <span className="mr-2">Warming up the knowledge engines...</span>
+              <LoadingSpinner size="sm" />
+            </div>
+          </MainPageBackground>
+        ))}
     </>
   )
 }

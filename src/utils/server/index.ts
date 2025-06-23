@@ -58,7 +58,8 @@ export const OpenAIStream = async (
   let provider
   if (llmProviders) {
     if (
-      Object.values(OpenAIModels).some((oaiModel) => oaiModel.id === model.id)
+      llmProviders.OpenAI.enabled &&
+      (llmProviders.OpenAI.models || []).filter((m) => m.enabled).some((oaiModel) => oaiModel.id === model.id)
     ) {
       // OPENAI
       provider = llmProviders[ProviderNames.OpenAI] as OpenAIProvider
@@ -66,7 +67,8 @@ export const OpenAIStream = async (
       apiType = ProviderNames.OpenAI
       url = `${OPENAI_API_HOST}/v1/chat/completions`
     } else if (
-      Object.values(AzureModels).some((oaiModel) => oaiModel.id === model.id)
+      llmProviders.Azure.enabled &&
+      (llmProviders.Azure.models || []).filter((m) => m.enabled).some((oaiModel) => oaiModel.id === model.id)
     ) {
       // AZURE
       apiType = ProviderNames.Azure
@@ -80,7 +82,8 @@ export const OpenAIStream = async (
         }
       })
     } else if (
-      Object.values(NCSAHostedVLMModels).some(
+      llmProviders.NCSAHostedVLM.enabled &&
+      (llmProviders.NCSAHostedVLM.models || []).filter((m) => m.enabled).some(
         (oaiModel) => oaiModel.id === model.id,
       )
     ) {

@@ -1,11 +1,4 @@
 import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  UserButton,
-  useUser,
-} from '@clerk/nextjs'
-import {
   IconCirclePlus,
   IconClipboardText,
   IconFile,
@@ -15,46 +8,36 @@ import {
 } from '@tabler/icons-react'
 import { Menu2 } from 'tabler-icons-react'
 
-// import MagicBell, {
-//   FloatingNotificationInbox,
-// } from '@magicbell/magicbell-react'
+import { useAuth } from 'react-oidc-context'
+import { AuthMenu } from './AuthMenu'
 
 export default function Header({ isNavbar = false }: { isNavbar?: boolean }) {
   const headerStyle = isNavbar
     ? {
-        // backgroundColor: 'var(--background)', //illinois-blue -- this caused horrible white background on clerk icon
         display: 'flex',
         justifyContent: 'flex-end',
         padding: '0.2em 0.2em',
       }
     : {
-        // backgroundColor: 'var(--background)', //illinois-blue -- this caused horrible white background on clerk icon
         display: 'flex',
         justifyContent: 'flex-end',
         padding: '0.5em',
       }
 
-  const clerk_obj = useUser()
+  const auth = useAuth()
   const posthog = usePostHog()
-  const [userEmail, setUserEmail] = useState('no_email')
   const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
-    if (clerk_obj.isLoaded) {
-      if (clerk_obj.isSignedIn) {
-        const emails = extractEmailsFromClerk(clerk_obj.user)
-        setUserEmail(emails[0] || 'no_email')
-
-        // Posthog identify
-        posthog?.identify(clerk_obj.user.id, {
-          email: emails[0] || 'no_email',
+    if (!auth.isLoading) {
+      if (auth.isAuthenticated) {
+        posthog?.identify(auth.user?.profile.sub || 'unknown', {
+          email: auth.user?.profile.email || 'no_email',
         })
       }
       setIsLoaded(true)
-    } else {
-      // console.debug('NOT LOADED OR SIGNED IN')
     }
-  }, [clerk_obj.isLoaded])
+  }, [auth.isLoading])
 
   if (!isLoaded) {
     return (
@@ -77,24 +60,15 @@ export default function Header({ isNavbar = false }: { isNavbar?: boolean }) {
 
   return (
     <header style={headerStyle} className="py-16">
-      <SignedIn>
-        <div className="pt-4">
-          <UserButton />
-        </div>
-      </SignedIn>
-      <SignedOut>
-        {/* Signed out users get sign in button */}
-        <SignInButton />
-      </SignedOut>
+      <AuthMenu />
     </header>
   )
 }
 
 import Link from 'next/link'
 import { montserrat_heading } from 'fonts'
-import { createStyles, Group, rem } from '@mantine/core'
-import { extractEmailsFromClerk } from '../clerkHelpers'
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { createStyles, rem } from '@mantine/core'
+import { useEffect, useState, useRef } from 'react'
 import { usePostHog } from 'posthog-js/react'
 import { IconFilePlus } from '@tabler/icons-react'
 
@@ -120,8 +94,7 @@ export function LandingPageHeader({
       }
 
   const headerRef = useRef<HTMLElement>(null)
-  const clerk_obj = useUser()
-  const [userEmail, setUserEmail] = useState('no_email')
+  const auth = useAuth()
   const [isLoaded, setIsLoaded] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [windowWidth, setWindowWidth] = useState(0)
@@ -154,32 +127,17 @@ export function LandingPageHeader({
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // Auto-toggle the menu when needed as screen size changes
-  // useEffect(() => {
-  //   // Always ensure the hamburger button appears immediately when Docs disappears from nav
-  //   if (!showDocsInNav && showHamburgerMenu && !isMenuOpen) {
-  //     // Show hamburger menu icon explicitly when Docs would be hidden
-  //     setIsMenuOpen(false)
-  //     setMenuVisible(false)
-  //   }
-  // }, [windowWidth, showDocsInNav, showHamburgerMenu, isMenuOpen])
-
   useEffect(() => {
-    if (clerk_obj.isLoaded) {
-      if (clerk_obj.isSignedIn) {
-        const emails = extractEmailsFromClerk(clerk_obj.user)
-        setUserEmail(emails[0] || 'no_email')
-
+    if (!auth.isLoading) {
+      if (auth.isAuthenticated) {
         // Posthog identify
-        posthog?.identify(clerk_obj.user.id, {
-          email: emails[0] || 'no_email',
+        posthog?.identify(auth.user?.profile.sub || 'unknown', {
+          email: auth.user?.profile.email || 'no_email',
         })
       }
       setIsLoaded(true)
-    } else {
-      // console.debug('NOT LOADED OR SIGNED IN')
     }
-  }, [clerk_obj.isLoaded])
+  }, [auth.isLoading])
 
   // Update header height on mount and window resize
   useEffect(() => {
@@ -416,22 +374,7 @@ export function LandingPageHeader({
         <div className="flex items-center gap-3">
           {/* Login/User button - always visible */}
           <div className="order-1">
-            <SignedIn>
-              <div className="pl-1 pt-1">
-                <UserButton />
-              </div>
-            </SignedIn>
-            <SignedOut>
-              <SignInButton>
-                <button className={classes.link}>
-                  <span
-                    className={`${montserrat_heading.variable} font-montserratHeading`}
-                  >
-                    Login / Signup
-                  </span>
-                </button>
-              </SignInButton>
-            </SignedOut>
+            <AuthMenu />
           </div>
 
           {/* Hamburger menu for small screens */}
@@ -776,6 +719,37 @@ const useStyles = createStyles((theme) => ({
 
     '&:hover': {
       backgroundColor: 'rgba(255, 95, 5, 0.05)',
+    },
+  },
+  userAvatar: {
+    cursor: 'pointer',
+    backgroundColor: 'hsl(280,100%,70%)',
+    color: 'white',
+    '&:hover': {
+      backgroundColor: 'hsl(280,100%,60%)',
+    },
+  },
+  avatarButton: {
+    cursor: 'pointer',
+    borderRadius: theme.radius.xl,
+    transition: 'background-color 100ms ease',
+    padding: rem(2),
+
+    '&:hover': {
+      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    },
+  },
+  userMenu: {
+    backgroundColor: '#15162c',
+    border: '1px solid hsl(280,100%,70%)',
+    color: '#f1f5f9',
+    padding: rem(4),
+
+    '.mantine-Menu-item': {
+      padding: `${rem(8)} ${rem(12)}`,
+      '&:hover': {
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      },
     },
   },
 }))

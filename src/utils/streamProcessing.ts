@@ -22,6 +22,8 @@ import {
   VisionCapableModels,
   type BedrockProvider,
   type GeminiProvider,
+  type SambaNovaProvider,
+  ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import fetchMQRContexts from '~/pages/api/getContextsMQR'
 import fetchContexts from '~/pages/api/getContexts'
@@ -34,6 +36,7 @@ import { AnthropicModelID } from './modelProviders/types/anthropic'
 import { type NextApiRequest, type NextApiResponse } from 'next'
 import { BedrockModelID } from './modelProviders/types/bedrock'
 import { GeminiModelID } from './modelProviders/types/gemini'
+import { SambaNovaModelID } from './modelProviders/types/SambaNova'
 import { runOllamaChat } from '~/app/utils/ollama'
 import { openAIAzureChat } from './modelProviders/OpenAIAzureChat'
 import { runAnthropicChat } from '~/app/utils/anthropic'
@@ -42,8 +45,7 @@ import { runVLLM } from '~/app/utils/vllm'
 import { type CoreMessage } from 'ai'
 import { runGeminiChat } from '~/app/api/chat/gemini/route'
 import { runBedrockChat } from '~/app/api/chat/bedrock/route'
-
-export const maxDuration = 60
+import { runSambaNovaChat } from '~/app/api/chat/sambanova/route'
 
 /**
  * Enum representing the possible states of the state machine used in processing text chunks.
@@ -92,10 +94,7 @@ export async function processChunkWithStateMachine(
     switch (state) {
       case State.Normal:
         if (char === '<') {
-          // Always buffer '<' initially since it might be start of <cite>
-          buffer = char
-
-          // If we have enough chars to check for <cite
+          // Check if it's the start of a citation tag
           if (remainingChars >= 5) {
             const nextChars = combinedChunk.slice(i, i + 5)
             if (nextChars === '<cite') {
@@ -104,9 +103,8 @@ export async function processChunkWithStateMachine(
               i += 4 // Skip the rest of 'cite'
               continue
             } else {
-              // Definitely not a <cite> tag, output the buffered '<'
-              processedChunk += buffer
-              buffer = ''
+              // Not a citation tag, output the character
+              processedChunk += char
             }
           } else {
             // Not enough chars to check - keep in buffer and wait for next chunk
@@ -156,6 +154,7 @@ export async function processChunkWithStateMachine(
               buffer += '</cite>'
               i += 6 // Skip all 7 characters (loop will increment i by 1)
               state = State.Normal
+              // Process the citation without adding extra spaces
               const processedCitation = await replaceCitationLinks(
                 buffer,
                 lastMessage,
@@ -720,13 +719,17 @@ export async function handleImageContent(
 }
 
 export const getOpenAIKey = (
+  llmProviders: AllLLMProviders,
   courseMetadata: CourseMetadata,
   userApiKey: string,
 ) => {
   const key =
-    courseMetadata?.openai_api_key && courseMetadata?.openai_api_key != ''
-      ? courseMetadata.openai_api_key
+    llmProviders[ProviderNames.OpenAI]?.apiKey &&
+    llmProviders[ProviderNames.OpenAI]?.apiKey != ''
+      ? llmProviders[ProviderNames.OpenAI]?.apiKey
       : userApiKey
+  // console.log('OpenAI key found for getOpenAIKey:', key)
+  // console.log('llmProviders:', llmProviders)
   return key
 }
 
@@ -780,12 +783,13 @@ export const routeModelRequest = async (
   NOTE: WebLLM is handled separately, because it MUST be called from the Client browser itself. 
   */
 
-  console.log('In routeModelRequest: ', chatBody, baseUrl)
+  // console.debug('In routeModelRequest: ', chatBody, baseUrl)
+  // console.debug('In routeModelRequest: ', baseUrl)
 
   const selectedConversation = chatBody.conversation!
-  console.log('Selected conversation:', selectedConversation)
+  // console.debug('Selected conversation:', selectedConversation)
   if (!selectedConversation.model || !selectedConversation.model.id) {
-    console.log('Invalid conversation:', selectedConversation)
+    console.debug('Invalid conversation:', selectedConversation)
     throw new Error('Conversation model is undefined or missing "id" property.')
   }
 
@@ -814,6 +818,7 @@ export const routeModelRequest = async (
   } else if (
     Object.values(OllamaModelIDs).includes(selectedConversation.model.id as any)
   ) {
+    // Ollama
     return await runOllamaChat(
       selectedConversation,
       chatBody!.llmProviders!.Ollama as OllamaProvider,
@@ -824,26 +829,11 @@ export const routeModelRequest = async (
       selectedConversation.model.id as any,
     )
   ) {
-    try {
-      return await runAnthropicChat(
-        selectedConversation,
-        chatBody.llmProviders?.Anthropic as AnthropicProvider,
-        chatBody.stream,
-      )
-    } catch (error) {
-      return new Response(
-        JSON.stringify({
-          error:
-            error instanceof Error
-              ? error.message
-              : 'Unknown error occurred when streaming Anthropic LLMs.',
-        }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        },
-      )
-    }
+    return await runAnthropicChat(
+      selectedConversation,
+      chatBody.llmProviders?.Anthropic as AnthropicProvider,
+      chatBody.stream,
+    )
   } else if (
     Object.values(OpenAIModelID).includes(
       selectedConversation.model.id as any,
@@ -854,49 +844,29 @@ export const routeModelRequest = async (
   } else if (
     Object.values(BedrockModelID).includes(selectedConversation.model.id as any)
   ) {
-    try {
-      return await runBedrockChat(
-        selectedConversation,
-        chatBody.llmProviders?.Bedrock as BedrockProvider,
-        chatBody.stream,
-      )
-    } catch (error) {
-      return new Response(
-        JSON.stringify({
-          error:
-            error instanceof Error
-              ? error.message
-              : 'Unknown error occurred when streaming Bedrock LLMs.',
-        }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        },
-      )
-    }
+    return await runBedrockChat(
+      selectedConversation,
+      chatBody.llmProviders?.Bedrock as BedrockProvider,
+      chatBody.stream,
+    )
   } else if (
     Object.values(GeminiModelID).includes(selectedConversation.model.id as any)
   ) {
-    try {
-      return await runGeminiChat(
-        selectedConversation,
-        chatBody.llmProviders?.Gemini as GeminiProvider,
-        chatBody.stream,
-      )
-    } catch (error) {
-      return new Response(
-        JSON.stringify({
-          error:
-            error instanceof Error
-              ? error.message
-              : 'Unknown error occurred when streaming Gemini LLMs.',
-        }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        },
-      )
-    }
+    return await runGeminiChat(
+      selectedConversation,
+      chatBody.llmProviders?.Gemini as GeminiProvider,
+      chatBody.stream,
+    )
+  } else if (
+    Object.values(SambaNovaModelID).includes(
+      selectedConversation.model.id as any,
+    )
+  ) {
+    return await runSambaNovaChat(
+      selectedConversation,
+      chatBody.llmProviders?.SambaNova as SambaNovaProvider,
+      chatBody.stream,
+    )
   } else {
     throw new Error(
       `Model '${selectedConversation.model.name}' is not supported.`,
