@@ -16,8 +16,10 @@ export default async function handler(req: any, res: any) {
 
   try {
     // Note: This uses a different Railway service endpoint than the main RAILWAY_URL
-    // You may need to set RAILWAY_MQR_URL or similar environment variable
-    const mqrUrl = process.env.RAILWAY_MQR_URL || 'https://flask-doc-groups.up.railway.app'
+    const mqrUrl = process.env.RAILWAY_MQR_URL
+    if (!mqrUrl) {
+      throw new Error('No MQR backend URL configured. Please set RAILWAY_MQR_URL environment variable.')
+    }
     const response: AxiosResponse<ContextWithMetadata[]> = await axios.get(
       `${mqrUrl}/getTopContextsWithMQR`,
       {

@@ -259,7 +259,10 @@ const callN8nFunction = async (
   })
 
   const timeStart = Date.now()
-  const baseUrl = base_url || process.env.RAILWAY_URL || 'https://flask-production-751b.up.railway.app'
+  const baseUrl = base_url || process.env.RAILWAY_URL
+  if (!baseUrl) {
+    throw new Error('No backend URL configured. Please provide base_url parameter or set RAILWAY_URL environment variable.')
+  }
   const response: Response = await fetch(
     `${baseUrl}/run_flow`,
     {
@@ -530,7 +533,10 @@ export async function fetchTools(
 
   const parsedPagination = pagination.toLowerCase() === 'true'
 
-  const baseUrl = base_url || process.env.RAILWAY_URL || 'https://flask-production-751b.up.railway.app'
+  const baseUrl = base_url || process.env.RAILWAY_URL
+  if (!baseUrl) {
+    throw new Error('No backend URL configured. Please provide base_url parameter or set RAILWAY_URL environment variable.')
+  }
   const response = await fetch(
     `${baseUrl}/getworkflows?api_key=${api_key}&limit=${limit}&pagination=${parsedPagination}`,
   )
