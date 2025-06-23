@@ -1,4 +1,3 @@
-import { OpenAIStream } from '~/utils/server'
 import type {
   ChatCompletionMessageParam,
   ChatCompletionMessageToolCall,
@@ -46,16 +45,20 @@ export async function POST(req: Request) {
     openaiKey: string
   } = await req.json()
 
-  let decryptedKey = openaiKey ? 
-    await decryptKeyIfNeeded(openaiKey) : 
-    process.env.VLADS_OPENAI_KEY
+  // console.log('Received request with openaiKey:', openaiKey)
+  let decryptedKey = openaiKey
+    ? await decryptKeyIfNeeded(openaiKey)
+    : process.env.VLADS_OPENAI_KEY
 
   if (!decryptedKey?.startsWith('sk-')) {
     decryptedKey = process.env.VLADS_OPENAI_KEY as string
   }
 
+  // console.log('Using key for function calling:', decryptedKey)
+
   // Format messages
-  const message_to_send: ChatCompletionMessageParam[] = conversationToMessages(conversation)
+  const message_to_send: ChatCompletionMessageParam[] =
+    conversationToMessages(conversation)
 
   // Add system message
   const globalToolsSytemPromptPrefix =
@@ -89,7 +92,7 @@ export async function POST(req: Request) {
         Authorization: `Bearer ${decryptedKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4.1',
         messages: message_to_send,
         tools: tools,
         stream: false,
@@ -97,41 +100,46 @@ export async function POST(req: Request) {
     })
 
     if (!response.ok) {
+      console.log('OpenAI API error:', response.status, response.statusText)
       return new Response(
-        JSON.stringify({ error: `OpenAI API error: ${response.status}` }), 
-        { 
+        JSON.stringify({ error: `OpenAI API error: ${response.status}` }),
+        {
           status: response.status,
-          headers: { 'Content-Type': 'application/json' }
-        }
+          headers: { 'Content-Type': 'application/json' },
+        },
       )
     }
 
     const data = await response.json()
 
     if (!data.choices) {
+      console.log('No response from OpenAI')
       return new Response(
-        JSON.stringify({ error: 'No response from OpenAI' }), 
-        { 
+        JSON.stringify({ error: 'No response from OpenAI' }),
+        {
           status: 500,
-          headers: { 'Content-Type': 'application/json' }
-        }
+          headers: { 'Content-Type': 'application/json' },
+        },
       )
     }
 
     if (!data.choices[0]?.message.tool_calls) {
+      console.log('No tool calls from OpenAI')
       return new Response(
         JSON.stringify({
-          choices: [{
-            message: {
-              content: 'No tools invoked by OpenAI',
-              role: 'assistant'
-            }
-          }]
+          choices: [
+            {
+              message: {
+                content: 'No tools invoked by OpenAI',
+                role: 'assistant',
+              },
+            },
+          ],
         }),
         {
           status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        }
+          headers: { 'Content-Type': 'application/json' },
+        },
       )
     }
 
@@ -139,28 +147,33 @@ export async function POST(req: Request) {
 
     return new Response(
       JSON.stringify({
-        choices: [{
-          message: {
-            content: JSON.stringify(toolCalls),
-            role: 'assistant',
-            tool_calls: toolCalls
-          }
-        }]
+        choices: [
+          {
+            message: {
+              content: JSON.stringify(toolCalls),
+              role: 'assistant',
+              tool_calls: toolCalls,
+            },
+          },
+        ],
       }),
       {
         status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      }
+        headers: { 'Content-Type': 'application/json' },
+      },
     )
   } catch (error) {
     return new Response(
-      JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'An unexpected error occurred'
+      JSON.stringify({
+        error:
+          error instanceof Error
+            ? error.message
+            : 'An unexpected error occurred',
       }),
-      { 
+      {
         status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
+        headers: { 'Content-Type': 'application/json' },
+      },
     )
   }
 }

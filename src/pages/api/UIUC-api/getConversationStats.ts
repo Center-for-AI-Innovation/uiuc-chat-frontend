@@ -5,6 +5,8 @@ export const runtime = 'edge'
 
 export default async function handler(req: NextRequest, res: NextResponse) {
   const course_name = req.nextUrl.searchParams.get('course_name')
+  const from_date = req.nextUrl.searchParams.get('from_date')
+  const to_date = req.nextUrl.searchParams.get('to_date')
 
   if (!course_name) {
     return NextResponse.json(
@@ -14,9 +16,14 @@ export default async function handler(req: NextRequest, res: NextResponse) {
   }
 
   try {
-    const response = await fetch(
-      `https://flask-production-751b.up.railway.app/getConversationStats?course_name=${course_name}`,
+    const url = new URL(
+      'https://flask-production-751b.up.railway.app/getConversationStats',
     )
+    url.searchParams.append('course_name', course_name)
+    if (from_date) url.searchParams.append('from_date', from_date)
+    if (to_date) url.searchParams.append('to_date', to_date)
+
+    const response = await fetch(url.toString())
 
     if (!response.ok) {
       throw new Error(`Failed to fetch data: ${response.statusText}`)
@@ -34,11 +41,21 @@ export default async function handler(req: NextRequest, res: NextResponse) {
   }
 }
 
-export async function getConversationStats(course_name: string) {
+export async function getConversationStats(
+  course_name: string,
+  from_date?: string,
+  to_date?: string,
+) {
   try {
-    const response = await fetch(
-      `/api/UIUC-api/getConversationStats?course_name=${course_name}`,
+    const url = new URL(
+      '/api/UIUC-api/getConversationStats',
+      window.location.origin,
     )
+    url.searchParams.append('course_name', course_name)
+    if (from_date) url.searchParams.append('from_date', from_date)
+    if (to_date) url.searchParams.append('to_date', to_date)
+
+    const response = await fetch(url.toString())
     if (!response.ok) {
       throw new Error(`Failed to fetch data: ${response.statusText}`)
     }

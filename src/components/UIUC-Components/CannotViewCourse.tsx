@@ -1,27 +1,11 @@
-// import React from 'react'
 import Link from 'next/link'
-import {
-  // Card,
-  // Image,
-  Text,
-  // Badge,
-  // MantineProvider,
-  // Button,
-  // Group,
-  // Stack,
-  // createStyles,
-  // FileInput,
-  // rem,
-  Title,
-  Flex,
-} from '@mantine/core'
+import { Text, Title, Flex } from '@mantine/core'
 import GlobalHeader from './navbars/GlobalHeader'
 import { CourseMetadata } from '~/types/courseMetadata'
-// const rubikpuddles = Rubik_Puddles({ weight: '400', subsets: ['latin'] })
 import React, { useState, useEffect } from 'react'
 import { LoadingSpinner } from './LoadingSpinner'
 import { useRouter } from 'next/router'
-import { useUser } from '@clerk/nextjs'
+import { useAuth } from 'react-oidc-context'
 import { CannotEditCourse } from './CannotEditCourse'
 import GlobalFooter from './GlobalFooter'
 import { montserrat_heading } from 'fonts'
@@ -40,11 +24,8 @@ export const CannotViewCourse = ({
   // creator_email_address: string
   // admins_email_addresses: string
 }) => {
-  // console.log('course_name in CannotViewCourse: ', course_name)
-  const currentPageName = GetCurrentPageName()
-
-  const { isSignedIn, user } = useUser()
-  const curr_user_email = user?.primaryEmailAddress?.emailAddress as string
+  const auth = useAuth()
+  const curr_user_email = auth.user?.profile.email
 
   const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
     null,
@@ -86,8 +67,9 @@ export const CannotViewCourse = ({
   }
 
   if (
-    courseMetadata.course_owner === curr_user_email ||
-    courseMetadata.course_admins.includes(curr_user_email)
+    curr_user_email &&
+    (courseMetadata.course_owner === curr_user_email ||
+      courseMetadata.course_admins.includes(curr_user_email))
   ) {
     // CAN view course
     // Cannot edit course

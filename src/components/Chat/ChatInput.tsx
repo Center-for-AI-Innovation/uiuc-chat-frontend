@@ -196,10 +196,7 @@ export const ChatInput = ({
 
     if (maxLength && value.length > maxLength) {
       alert(
-        t(
-          `Message limit is {{maxLength}} characters. You have entered {{valueLength}} characters.`,
-          { maxLength, valueLength: value.length },
-        ),
+        `This LLM can only handle ${maxLength} characters, but you entered ${value.length} characters. Please switch to a model with a bigger input limit (like Gemini, Claude or GPT) or shorten your message.`,
       )
       return
     }
@@ -482,7 +479,7 @@ export const ChatInput = ({
       // TODO: FIX IMAGE UPLOADS ASAP
       // showConfirmationToast({
       //   title: `😢 We can't handle all these images...`,
-      //   message: `Image uploads are temporarily disabled. I'm really sorry, I'm working on getting them back. Email me if you want to complain: kvday2@illinois.edu`,
+      //   message: `Image uploads are temporarily disabled. I'm really sorry, I'm working on getting them back. Email me if you want to complain: rohan13@illinois.edu`,
       //   isError: true,
       //   autoClose: 10000,
       // })
@@ -811,12 +808,17 @@ export const ChatInput = ({
   return (
     <div
       className={`absolute bottom-0 left-0 w-full border-transparent bg-transparent pt-6 md:pt-2`}
+      style={{ pointerEvents: 'none' }}
     >
-      <div className="stretch mx-2 mt-4 flex flex-col gap-3 last:mb-2 md:mx-4 md:mt-[52px] md:last:mb-6 lg:mx-auto lg:max-w-3xl">
+      <div
+        className="stretch mx-2 mt-4 flex flex-col gap-3 last:mb-2 md:mx-4 md:mt-[52px] md:last:mb-6 lg:mx-auto lg:max-w-3xl"
+        style={{ pointerEvents: 'auto' }}
+      >
         {messageIsStreaming && (
           <button
             className={`absolute ${isSmallScreen ? '-top-28' : '-top-20'} left-0 right-0 mx-auto mb-12 flex w-fit items-center gap-3 rounded border border-[--primary] bg-[--primary] px-4 py-2 text-[--background] opacity-[.85] hover:opacity-100 md:mb-0 md:mt-2`}
             onClick={handleStopConversation}
+            style={{ pointerEvents: 'auto' }}
           >
             <IconPlayerStop size={16} /> {t('Stop Generating')}
           </button>
@@ -833,6 +835,7 @@ export const ChatInput = ({
               className={`absolute ${isSmallScreen ? '-top-28' : '-top-20'} left-0 right-0 mx-auto mb-12 flex w-fit items-center gap-3 rounded border border-[--primary] bg-[--primary] px-4 py-2 text-[--background] opacity-[.85] hover:opacity-100 md:mb-0 md:mt-2`}
               style={{ backdropFilter: 'blur(4px)' }}
               onClick={onRegenerate}
+              style={{ pointerEvents: 'auto' }}
             >
               <IconRepeat size={16} /> {t('Regenerate Response')}
             </button>
@@ -841,7 +844,7 @@ export const ChatInput = ({
         <div
           ref={chatInputParentContainerRef}
           className="chat_input_container absolute bottom-0 mx-4 flex w-[80%] flex-col self-center rounded-t-3xl bg-[--message-background] px-4 pb-8 pt-4 text-[--message] md:mx-20 md:w-[70%]"
-          style={{ backdropFilter: 'blur(4px)' }}
+          style={{ pointerEvents: 'auto', backdropFilter: 'blur(4px)' }}
         >
           {/* FUTURE: rewrite to be flex instead of using absolute */}
 
@@ -853,6 +856,7 @@ export const ChatInput = ({
               <button
                 className="absolute bottom-[2.25rem] left-5 rounded-full bg-white/30 p-2 opacity-50 hover:opacity-100"
                 onClick={() => document.getElementById('imageUpload')?.click()}
+                style={{ pointerEvents: 'auto' }}
               >
                 <div className="">
                   <IconPhoto size={22} />
@@ -864,7 +868,7 @@ export const ChatInput = ({
             multiple
             id="imageUpload"
             ref={imageUploadRef}
-            style={{ display: 'none' }}
+            style={{ display: 'none', pointerEvents: 'auto' }}
             onChange={(e) => {
               const files = e.target.files
               if (files) {
@@ -874,7 +878,9 @@ export const ChatInput = ({
           />
 
           {showPluginSelect && (
-            <div className="absolute bottom-14 left-0 rounded">
+            <div className="absolute bottom-14 left-0 rounded"
+              style={{ pointerEvents: 'auto' }}
+            >
               <PluginSelect
                 plugin={plugin}
                 onKeyDown={(e: any) => {
@@ -902,9 +908,10 @@ export const ChatInput = ({
             tabIndex={0}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            onClick={() => textareaRef.current?.focus()} // Add this line
+            onClick={() => textareaRef.current?.focus()}
             style={{
-              ...chatInputContainerStyle, // Apply the dynamic padding here
+              ...chatInputContainerStyle,
+              pointerEvents: 'auto',
             }}
           >
             {/* Image preview section */}
@@ -983,6 +990,7 @@ export const ChatInput = ({
                   height: 'auto',
                   maxHeight: '400px',
                   overflow: 'hidden',
+                  pointerEvents: 'auto',
                 }}
                 placeholder={'Message UIUC.chat'}
                 value={content}
@@ -999,6 +1007,7 @@ export const ChatInput = ({
             <button
               className="absolute bottom-[2.25rem] right-5 rounded-full bg-white/30 p-2 opacity-50 hover:opacity-100"
               onClick={handleSend}
+              style={{ pointerEvents: 'auto' }}
             >
               {messageIsStreaming ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-t-2 border-neutral-800 opacity-60"></div>
@@ -1012,6 +1021,7 @@ export const ChatInput = ({
                 <button
                   className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-300 text-gray-800 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-neutral-200"
                   onClick={onScrollDownClick}
+                  style={{ pointerEvents: 'auto' }}
                 >
                   <IconArrowDown size={18} />
                 </button>
@@ -1019,7 +1029,10 @@ export const ChatInput = ({
             )}
 
             {showPromptList && filteredPrompts.length > 0 && (
-              <div className="absolute bottom-12 w-full">
+              <div
+                className="absolute bottom-12 w-full"
+                style={{ pointerEvents: 'auto' }}
+              >
                 <PromptList
                   activePromptIndex={activePromptIndex}
                   prompts={filteredPrompts}
@@ -1031,12 +1044,14 @@ export const ChatInput = ({
             )}
 
             {isModalVisible && filteredPrompts[activePromptIndex] && (
-              <VariableModal
-                prompt={filteredPrompts[activePromptIndex]}
-                variables={variables}
-                onSubmit={handleSubmit}
-                onClose={() => setIsModalVisible(false)}
-              />
+              <div style={{ pointerEvents: 'auto' }}>
+                <VariableModal
+                  prompt={filteredPrompts[activePromptIndex]}
+                  variables={variables}
+                  onSubmit={handleSubmit}
+                  onClose={() => setIsModalVisible(false)}
+                />
+              </div>
             )}
           </div>
 
@@ -1044,7 +1059,7 @@ export const ChatInput = ({
             size={isSmallScreen ? '10px' : 'xs'}
             className={`font-montserratHeading ${montserrat_heading.variable} absolute bottom-[.35rem] left-5 -ml-2 flex items-center gap-1 break-words rounded-full px-3 py-1 text-[--message-faded] opacity-60 hover:bg-white/20 hover:text-[--message] hover:opacity-100`}
             onClick={handleTextClick}
-            style={{ cursor: 'pointer' }}
+            style={{ cursor: 'pointer', pointerEvents: 'auto' }}
           >
             {selectBestModel(llmProviders)?.name}
             {selectedConversation?.model &&
@@ -1063,6 +1078,7 @@ export const ChatInput = ({
                 zIndex: 100,
                 right: '30px',
                 top: '75px',
+                pointerEvents: 'auto',
               }}
             >
               <UserSettings />

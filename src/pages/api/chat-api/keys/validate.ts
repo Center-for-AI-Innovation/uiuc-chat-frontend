@@ -1,12 +1,9 @@
 // src/pages/api/chat-api/keys/validate.ts
 
-import { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '~/utils/supabaseClient'
-import { clerkClient } from '@clerk/nextjs/server'
 import posthog from 'posthog-js'
 import { NextRequest, NextResponse } from 'next/server'
-
-
+import type { AuthContextProps } from 'react-oidc-context'
 
 /**
  * Validates the provided API key and retrieves the associated user data.
@@ -20,65 +17,79 @@ export async function validateApiKeyAndRetrieveData(
   apiKey: string,
   course_name: string,
 ) {
+  let authContext: AuthContextProps = {
+    isAuthenticated: false,
+    user: null,
+    isLoading: false,
+    error: undefined,
+  } as AuthContextProps
   // console.log('Validating apiKey', apiKey, ' for course_name', course_name)
-  // Attempt to retrieve the user ID associated with the API key from the database.
-  const { data, error } = (await supabase
+  // Attempt to retrieve the email associated with the API key from the database
+  const { data, error } = await supabase
     .from('api_keys')
-    .select('user_id')
+    .select('email')
     .eq('key', apiKey)
     .eq('is_active', true)
-    .single()) as { data: { user_id: string } | null; error: Error | null }
+    .single()
 
-  // console.log('data', data)
+  console.log('data', data)
 
   // Determine if the API key is valid based on the absence of errors and presence of data.
   const isValidApiKey = !error && data !== null
-  let userObject = null
-
-  // console.log('isValidApiKey', isValidApiKey)
-  if (isValidApiKey) {
-    try {
-      // Retrieve the full Clerk user object using the user ID.
-      userObject = await clerkClient.users.getUser(data.user_id)
-
-      // Todo: Create a procedure to increment the API call count for the user.
-      /**
-       * create function increment (usage int, apikey string)
-        returns void as
-        $$
-          update api_keys 
-          set usage_count = usage_count + usage
-          where api_key = apiKey
-        $$ 
-        language sql volatile;
-       */
-      // Increment the API call count for the user.
-      const { error: updateError } = await supabase.rpc('increment', {
-        usage: 1,
-        apikey: apiKey,
-      })
-
-      if (updateError) {
-        console.error('Error updating API call count:', updateError)
-        throw updateError
-      }
-      // Track the event in PostHog
-      posthog.capture('api_key_validated', {
-        userId: userObject.id,
-        apiKey: apiKey,
-      })
-    } catch (userError) {
-      // Log the error if there's an issue retrieving the user object.
-      console.error('Error retrieving user object:', userError)
-      posthog.capture('api_key_validation_failed', {
-        userId: userObject?.id,
-        error: (userError as Error).message,
-      })
-      throw userError
-    }
+  if (!isValidApiKey) {
+    return { isValidApiKey, authContext }
   }
-  // console.log('userObject', userObject, 'isValidApiKey', isValidApiKey)
-  return { isValidApiKey, userObject }
+
+  console.log('isValidApiKey', isValidApiKey)
+  try {
+    const email = data.email
+
+    // Get user data from the email
+    const { data: userData, error: userError } = await supabase
+      .schema('keycloak')
+      .from('user_entity')
+      .select('*')
+      .eq('email', email)
+      .single()
+
+    if (userError) throw userError
+
+    // Construct auth context
+    authContext = {
+      isAuthenticated: true,
+      user: {
+        profile: {
+          sub: userData.id,
+          email: userData.email,
+        },
+      },
+    } as AuthContextProps
+
+    // Increment the API call count for the user.
+    const { error: updateError } = await supabase.rpc('increment', {
+      usage: 1,
+      apikey: apiKey,
+    })
+
+    if (updateError) {
+      console.error('Error updating API call count:', updateError)
+      throw updateError
+    }
+
+    posthog.capture('api_key_validated', {
+      email: email,
+      apiKey: apiKey,
+    })
+
+    return { isValidApiKey, authContext }
+  } catch (userError) {
+    // Log the error if there's an issue retrieving the user object.
+    console.error('Error retrieving user object:', userError)
+    posthog.capture('api_key_validation_failed', {
+      error: (userError as Error).message,
+    })
+    throw userError
+  }
 }
 
 /**
@@ -96,10 +107,7 @@ export default async function handler(req: NextRequest, res: NextResponse) {
       course_name: string
     }
 
-    // console.log('api_key', api_key, 'course_name', course_name)
-
-    // Validate the API key and retrieve the user object.
-    const { isValidApiKey, userObject } = await validateApiKeyAndRetrieveData(
+    const { isValidApiKey, authContext } = await validateApiKeyAndRetrieveData(
       api_key,
       course_name,
     )
@@ -111,7 +119,7 @@ export default async function handler(req: NextRequest, res: NextResponse) {
     }
 
     // Respond with the user object if the API key is valid.
-    return NextResponse.json({ userObject }, { status: 200 })
+    return NextResponse.json({ authContext }, { status: 200 })
   } catch (error) {
     // Respond with a 500 Internal Server Error status if an exception occurs.
     console.error('Error in handler:', error)

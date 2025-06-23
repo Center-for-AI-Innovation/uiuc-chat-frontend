@@ -8,7 +8,6 @@ import {
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 import { AnthropicModel } from '~/utils/modelProviders/types/anthropic'
 export const dynamic = 'force-dynamic'
-export const maxDuration = 60
 
 /**
  * Runs an Anthropic chat with the given conversation and API provider
@@ -23,9 +22,11 @@ export async function runAnthropicChat(
   if (!conversation) {
     throw new Error('Conversation is missing')
   }
-
   if (!anthropicProvider.apiKey) {
     throw new Error('Anthropic API key is missing')
+  }
+  if (conversation.messages.length === 0) {
+    throw new Error('Conversation messages array is empty')
   }
 
   const anthropic = createAnthropic({
