@@ -1,6 +1,6 @@
 // Generated schema.ts based on PostgreSQL database
-import { pgTable, serial, text, timestamp, uuid, varchar, integer, boolean, jsonb, bigint, date, foreignKey, primaryKey, uniqueIndex, index, doublePrecision, PgArray, bigserial } from 'drizzle-orm/pg-core';
-import { relations, sql } from 'drizzle-orm';
+import { pgTable, serial, text, timestamp, uuid, varchar, integer, boolean, jsonb, bigint, date, doublePrecision, bigserial } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 
 
 // API keys table
