@@ -1,6 +1,7 @@
 // src/pages/api/chat-api/keys/validate.ts
 import { AuthContextProps } from 'react-oidc-context'
-import { db, apiKeys, keycloakUsers } from '~/db/dbClient'
+import { db, keycloakDB, apiKeys } from '~/db/dbClient'
+import { keycloakUsers } from '~/db/schema'
 import { eq, and, sql } from 'drizzle-orm'
 import posthog from 'posthog-js'
 import { NextRequest, NextResponse } from 'next/server'
@@ -47,7 +48,7 @@ export async function validateApiKeyAndRetrieveData(
     }
 
     // Get user data from email from keycloak
-    const userData = await db.select().from(keycloakUsers).where(eq(keycloakUsers.email, email)).limit(1)
+    const userData = await keycloakDB.select().from(keycloakUsers).where(eq(keycloakUsers.email, email)).limit(1)
 
     if (!userData || userData.length === 0) {
       throw new Error('User not found')
