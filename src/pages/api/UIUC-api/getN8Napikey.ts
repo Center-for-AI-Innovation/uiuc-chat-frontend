@@ -9,7 +9,7 @@ type ApiResponse = {
   error?: any
 }
 
-export default async function getApiKeyByCourseName(
+export default async function getN8Napikey(
   req: NextApiRequest,
   res: NextApiResponse<ApiResponse>
 ) {
@@ -23,10 +23,9 @@ export default async function getApiKeyByCourseName(
     .select({ n8n_api_key: projects.n8n_api_key })
     .from(projects)
     .where(eq(projects.course_name, course_name))
-  // console.log('data from apifromsupa:', data)
   if (data.length === 0) {
     console.error('No API key found for course:', course_name)
-    return res.status(500).json({ success: false, error: 'No API key found for course' })
+    return res.status(404).json({ success: false, error: 'No API key found for course' })
   }
   return res.status(200).json({ success: true, api_key: data[0]?.n8n_api_key })
 }

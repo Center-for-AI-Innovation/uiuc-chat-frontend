@@ -13,10 +13,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       .select({ n8n_api_key: projects.n8n_api_key })
       .from(projects)
       .where(eq(projects.course_name, course_name))
-      .limit(1)
-
-    if (!data) {
-      return res.status(500).json({ error: 'No N8n API keys found for your project.' })
+    if (data.length === 0) {
+      return res.status(404).json({ error: 'No N8n API keys found for your project.' })
     }
     return res.status(200).json(data[0]?.n8n_api_key)
   } catch (error: any) {
