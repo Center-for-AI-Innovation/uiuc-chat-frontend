@@ -1149,7 +1149,7 @@ const CourseFilesList = ({ files }: CourseFilesListProps) => {
   const handleDelete = async (s3_path: string, course_name: string) => {
     try {
       const response = await axios.delete(
-        `https://flask-production-751b.up.railway.app/delete`,
+        `/api/UIUC-api/deleteDocument`,
         {
           params: { s3_path, course_name: 'ece120' },
         },
