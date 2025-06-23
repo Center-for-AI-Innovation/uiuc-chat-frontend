@@ -75,6 +75,8 @@ export const getModelLogo = (modelType: string) => {
       return 'https://icon2.cleanpng.com/20190418/vhc/kisspng-amazon-web-services-logo-cloud-computing-amazon-co-logoaws-1-itnext-summit-1713897597915.webp'
     case ProviderNames.Gemini:
       return 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png'
+    case ProviderNames.SambaNova:
+      return 'https://sambanova.ai/hubfs/logotype_sambanova_orange.png'
     default:
       throw new Error(`Unknown model type: ${modelType}`)
   }

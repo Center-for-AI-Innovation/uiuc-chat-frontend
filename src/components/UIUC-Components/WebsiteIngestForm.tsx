@@ -113,13 +113,6 @@ export default function WebsiteIngestForm({
     maxDepth: { error: false, message: '' },
   })
 
-  const formatUrl = (url: string) => {
-    if (!/^https?:\/\//i.test(url)) {
-      url = 'http://' + url
-    }
-    return url
-  }
-
   const handleIngest = async () => {
     setOpen(false)
 
@@ -161,28 +154,6 @@ export default function WebsiteIngestForm({
     await new Promise((resolve) => setTimeout(resolve, 8000))
   }
 
-  const formatUrlAndMatchRegex = (url: string) => {
-    // fullUrl always starts with http://. Is the starting place of the scrape.
-    // baseUrl is used to construct the match statement.
-
-    // Ensure the url starts with 'http://'
-    if (!/^https?:\/\//i.test(url)) {
-      url = 'http://' + url
-    }
-
-    // Extract the base url including the path
-    const baseUrl = (
-      url.replace(/^https?:\/\//i, '').split('?')[0] as string
-    ).replace(/\/$/, '') // Remove protocol (http/s), split at '?', and remove trailing slash
-
-    const matchRegex = `http?(s)://**${baseUrl}/**`
-
-    return {
-      fullUrl: baseUrl,
-      matchRegex: matchRegex,
-    }
-  }
-
   useEffect(() => {
     if (url && url.length > 0 && validateUrl(url)) {
       setIsUrlUpdated(true)
@@ -198,7 +169,7 @@ export default function WebsiteIngestForm({
       )
       const data = await response.json()
       const docsResponse = await fetch(
-        `/api/materialsTable/docs?course_name=${project_name}`,
+        `/api/materialsTable/successDocs?course_name=${project_name}`,
       )
       const docsData = await docsResponse.json()
       // Helper function to organize docs by base URL
@@ -326,29 +297,16 @@ export default function WebsiteIngestForm({
       if (!url || !courseName) return null
       console.log('SCRAPING', url)
 
-      const fullUrl = formatUrl(url)
+      const response = await axios.post('/api/scrapeWeb', {
+        url,
+        courseName,
+        maxUrls,
+        scrapeStrategy,
+      })
 
-      const postParams = {
-        url: fullUrl,
-        courseName: courseName,
-        maxPagesToCrawl: maxUrls,
-        scrapeStrategy: scrapeStrategy,
-        match: formatUrlAndMatchRegex(fullUrl).matchRegex,
-        maxTokens: 2000000, // basically inf.
-      }
-      console.log(
-        'About to post to the web scraping endpoint, with params:',
-        postParams,
-      )
-
-      const response = await axios.post(
-        `https://crawlee-production.up.railway.app/crawl`,
-        {
-          params: postParams,
-        },
-      )
-      console.log('Response from web scraping endpoint:', response.data)
+      console.log('Response from Next.js API web scraping endpoint:', response.data)
       return response.data
+
     } catch (error: any) {
       console.error('Error during web scraping:', error)
 

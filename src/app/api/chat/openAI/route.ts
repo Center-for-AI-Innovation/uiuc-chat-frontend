@@ -43,7 +43,6 @@ export async function POST(req: Request) {
       )
     }
 
-    // If the key is already in sk- format, use it directly
     if (!apiKey.startsWith('sk-')) {
       try {
         apiKey = (await decrypt(
@@ -51,7 +50,6 @@ export async function POST(req: Request) {
           process.env.NEXT_PUBLIC_SIGNING_KEY as string,
         )) as string
 
-        // Double check it's not Vlad's key after decryption
         if (apiKey === process.env.VLADS_OPENAI_KEY) {
           return new Response(
             JSON.stringify({
@@ -77,7 +75,6 @@ export async function POST(req: Request) {
       }
     }
 
-    // Final validation that we have a valid key format
     if (!apiKey.startsWith('sk-')) {
       return new Response(
         JSON.stringify({

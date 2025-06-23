@@ -3,7 +3,7 @@ import MakeNewCoursePage from '~/components/UIUC-Components/MakeNewCoursePage'
 import React, { useEffect, useState } from 'react'
 import { Montserrat } from 'next/font/google'
 import { useRouter } from 'next/router'
-import { useUser } from '@clerk/nextjs'
+
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
 import {
   LoadingPlaceholderForAdminPages,
@@ -11,9 +11,11 @@ import {
 } from '~/components/UIUC-Components/MainPageBackground'
 import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 import { Title } from '@mantine/core'
-import { extractEmailsFromClerk } from '~/components/UIUC-Components/clerkHelpers'
+
 import MakeToolsPage from '~/components/UIUC-Components/N8NPage'
 import posthog from 'posthog-js'
+import { useAuth } from 'react-oidc-context'
+import { ProtectedRoute } from '~/components/ProtectedRoute'
 
 const montserrat = Montserrat({
   weight: '700',
@@ -26,13 +28,13 @@ const ToolsPage: NextPage = () => {
   const GetCurrentPageName = () => {
     // return router.asPath.slice(1).split('/')[0]
     // Possible improvement.
-    return router.query.course_name as string // Change this line
+    return router.query.course_name as string
   }
+  const auth = useAuth()
 
   const course_name = GetCurrentPageName() as string
-  const { user, isLoaded, isSignedIn } = useUser()
+
   const [courseData, setCourseData] = useState(null)
-  const [courseExists, setCourseExists] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -44,7 +46,6 @@ const ToolsPage: NextPage = () => {
         `/api/UIUC-api/getCourseExists?course_name=${course_name}`,
       )
       const data = await response.json()
-      setCourseExists(data)
       if (data) {
         const response = await fetch(
           `https://flask-production-751b.up.railway.app/getAll?course_name=${course_name}`,
@@ -62,25 +63,33 @@ const ToolsPage: NextPage = () => {
     fetchCourseData()
   }, [router.isReady])
 
-  // Check auth - https://clerk.com/docs/nextjs/read-session-and-user-data
-  if (!isLoaded || isLoading || courseExists === null) {
+  if (auth.isLoading) {
     return <LoadingPlaceholderForAdminPages />
   }
 
-  if (!isSignedIn) {
-    console.log('User not logged in', isSignedIn, isLoaded, course_name)
-    return <AuthComponent course_name={course_name} />
+  if (!auth.isAuthenticated) {
+    void router.push(`/new?course_name=${course_name}`)
+    return (
+      <ProtectedRoute>
+        <AuthComponent course_name={course_name} />
+      </ProtectedRoute>
+    )
   }
 
-  const user_emails = extractEmailsFromClerk(user)
+  if (isLoading) {
+    return <LoadingPlaceholderForAdminPages />
+  }
+
+  const user_emails = auth.user?.profile?.email ? [auth.user.profile.email] : []
 
   // if their account is somehow broken (with no email address)
 
   // Don't edit certain special pages (no context allowed)
   if (
-    course_name.toLowerCase() == 'gpt4' ||
-    course_name.toLowerCase() == 'global' ||
-    course_name.toLowerCase() == 'extreme'
+    course_name &&
+    (course_name.toLowerCase() == 'gpt4' ||
+      course_name.toLowerCase() == 'global' ||
+      course_name.toLowerCase() == 'extreme')
   ) {
     return <CannotEditGPT4Page course_name={course_name as string} />
   }
@@ -98,8 +107,8 @@ const ToolsPage: NextPage = () => {
         >
           You&apos;ve encountered a software bug!<br></br>Your account has no
           email address. Please shoot me an email so I can fix it for you:{' '}
-          <a className="goldUnderline" href="mailto:kvday2@illinois.edu">
-            kvday2@illinois.edu
+          <a className="goldUnderline" href="mailto:rohan13@illinois.edu">
+            rohan13@illinois.edu
           </a>
         </Title>
       </MainPageBackground>

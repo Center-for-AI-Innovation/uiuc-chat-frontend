@@ -808,7 +808,7 @@ const Home: NextPage = () => {
           <div className="mt-4 grid grid-cols-1 gap-14 sm:grid-cols-2 md:gap-8">
             <Link
               className="bg-[var(--illinois-white)]/10 duration-600 flex max-w-xs flex-col gap-4 rounded-xl transition-transform hover:scale-[1.01] sm:p-4"
-              href="https://github.com/kastanday/ai-ta-frontend"
+              href="https://github.com/Center-for-AI-Innovation/uiuc-chat-frontend"
               target="_blank"
               style={{ boxShadow: '4px 4px 10px rgba(0,0,0, .2)' }}
             >
@@ -846,7 +846,7 @@ const Home: NextPage = () => {
             </Link>
             <Link
               className="bg-[var(--illinois-white)]/10 duration-600 flex max-w-xs flex-col gap-4 rounded-xl transition-transform hover:scale-[1.01] sm:p-4"
-              href="https://kastanday.com/"
+              href="https://rohanmarwaha.com/"
               target="_blank"
               style={{ boxShadow: '4px 4px 10px rgba(0,0,0, .2)' }}
             >
@@ -859,9 +859,9 @@ const Home: NextPage = () => {
                 Bio
               </h3>
               <div className="text-lg">
-                Started by Kastan Day at the University of Illinois. But it{' '}
+                Started by Rohan Marwaha at the University of Illinois. But it{' '}
                 <a
-                  href="https://github.com/CAII-NCSA/uiuc-chat-frontend/graphs/contributors"
+                  href="https://github.com/Center-for-AI-Innovation/uiuc-chat-frontend/graphs/contributors"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{

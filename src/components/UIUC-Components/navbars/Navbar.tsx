@@ -52,6 +52,7 @@ const HEADER_HEIGHT = rem(90)
 
 const useStyles = createStyles((theme) => ({
   burger: {
+    color: '#f1f5f9',
     [theme.fn.largerThan('md')]: {
       display: 'none',
     },
@@ -87,6 +88,7 @@ const useStyles = createStyles((theme) => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    color: '#f1f5f9',
 
     '&:hover': {
       color: 'var(--navbar-hover)',
@@ -120,6 +122,7 @@ const useStyles = createStyles((theme) => ({
     borderRadius: '10px',
     overflow: 'hidden',
     width: '200px',
+    backgroundColor: 'rgb(26, 27, 30)',
     [theme.fn.largerThan('lg')]: {
       display: 'none',
     },
@@ -221,7 +224,7 @@ function NavigationContent({
     <>
       <Transition transition="pop-top-right" duration={200} mounted={opened}>
         {(styles) => (
-          <Paper className={classes.dropdown} withBorder style={styles}>
+          <Paper className={classes.dropdown} style={styles}>
             {items.map((item, index) => (
               <Link
                 key={index}
@@ -283,6 +286,7 @@ function NavigationContent({
         onClick={onToggle}
         className={classes.burger}
         size="sm"
+        color="#f1f5f9"
       />
     </>
   )
@@ -401,12 +405,12 @@ export default function Navbar({
     {
       name: <NavText>Dashboard</NavText>,
       icon: <DashboardIcon />,
-      link: `/${course_name}/dashboard`,
+      link: course_name ? `/${course_name}/dashboard` : '/dashboard', // Add conditional
     },
     {
       name: <NavText>LLMs</NavText>,
       icon: <LLMIcon />,
-      link: `/${course_name}/llms`,
+      link: course_name ? `/${course_name}/llms` : '/llms', // Add conditional
     },
     {
       name: (
@@ -420,22 +424,22 @@ export default function Navbar({
         </Indicator>
       ),
       icon: <ReportIcon />,
-      link: `/${course_name}/analysis`,
+      link: course_name ? `/${course_name}/analysis` : '/analysis', // Add conditional
     },
     {
       name: <NavText>Prompting</NavText>,
       icon: <MessageCodeIcon />,
-      link: `/${course_name}/prompt`,
+      link: course_name ? `/${course_name}/prompt` : '/prompt', // Add conditional
     },
     {
       name: <NavText>Tools</NavText>,
       icon: <ChartDots3Icon />,
-      link: `/${course_name}/tools`,
+      link: course_name ? `/${course_name}/tools` : '/tools', // Add conditional
     },
     {
       name: <NavText>API</NavText>,
       icon: <ApiIcon />,
-      link: `/${course_name}/api`,
+      link: course_name ? `/${course_name}/api` : '/api', // Add conditional
     },
   ]
 
