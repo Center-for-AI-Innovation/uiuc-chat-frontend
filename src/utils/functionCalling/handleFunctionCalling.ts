@@ -259,8 +259,9 @@ const callN8nFunction = async (
   })
 
   const timeStart = Date.now()
+  const baseUrl = base_url || 'https://flask-production-751b.up.railway.app'
   const response: Response = await fetch(
-    `https://flask-production-751b.up.railway.app/run_flow`,
+    `${baseUrl}/run_flow`,
     {
       method: 'POST',
       headers: {
@@ -529,8 +530,9 @@ export async function fetchTools(
 
   const parsedPagination = pagination.toLowerCase() === 'true'
 
+  const baseUrl = base_url || 'https://flask-production-751b.up.railway.app'
   const response = await fetch(
-    `https://flask-production-751b.up.railway.app/getworkflows?api_key=${api_key}&limit=${limit}&pagination=${parsedPagination}`,
+    `${baseUrl}/getworkflows?api_key=${api_key}&limit=${limit}&pagination=${parsedPagination}`,
   )
   if (!response.ok) {
     // return res.status(response.status).json({ error: response.statusText })
