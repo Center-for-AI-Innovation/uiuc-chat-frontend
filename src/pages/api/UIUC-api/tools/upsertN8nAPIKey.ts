@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         course_name: course_name,
       })
       .onConflictDoUpdate({
-        target: [projects.course_name],
+        target: [projects.id],
         set: {
           n8n_api_key: n8n_api_key,
         },
