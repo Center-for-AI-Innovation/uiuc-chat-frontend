@@ -16,7 +16,7 @@ import {
 import { DataTable, DataTableSortStatus } from 'mantine-datatable'
 import { LoadingSpinner } from './LoadingSpinner'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { UIUCTool } from '~/types/chat'
+import { type UIUCTool } from '~/types/chat'
 import { useFetchAllWorkflows } from '~/utils/functionCalling/handleFunctionCalling'
 
 const PAGE_SIZE = 25
@@ -254,10 +254,10 @@ export const N8nWorkflowsTable = ({
                 className="cursor-pointer"
                 styles={{
                   track: {
-                    backgroundColor: record.active
+                    backgroundColor: record.enabled
                       ? 'var(--dashboard-button) !important'
                       : 'var(--dashboard-background-faded)',
-                    borderColor: record.active
+                    borderColor: record.enabled
                       ? 'var(--dashboard-button) !important'
                       : 'var(--dashboard-background-faded)',
                   },

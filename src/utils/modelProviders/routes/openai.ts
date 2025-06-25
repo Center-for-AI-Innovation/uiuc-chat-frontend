@@ -1,5 +1,5 @@
 import { decryptKeyIfNeeded } from '~/utils/crypto'
-import { OpenAIModelID, OpenAIModels, OpenAIProvider } from '../types/openai'
+import { OpenAIModelID, OpenAIModels, type OpenAIProvider } from '../types/openai'
 import OpenAI from 'openai'
 import { preferredModelIds, ProviderNames } from '../LLMProvider'
 

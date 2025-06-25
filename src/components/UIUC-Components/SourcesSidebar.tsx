@@ -1,5 +1,5 @@
 import { IconArrowBarRight } from '@tabler/icons-react'
-import { ContextWithMetadata } from '~/types/chat'
+import { type ContextWithMetadata } from '~/types/chat'
 import { Text } from '@mantine/core'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useRouter } from 'next/router'

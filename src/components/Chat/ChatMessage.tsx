@@ -19,7 +19,7 @@ import {
 } from '@tabler/icons-react'
 
 import { useTranslation } from 'next-i18next'
-import { Content, ContextWithMetadata, Message } from '@/types/chat'
+import { type Content, type ContextWithMetadata, type Message } from '@/types/chat'
 import HomeContext from '~/pages/api/home/home.context'
 import { CodeBlock } from '../Markdown/CodeBlock'
 import { MemoizedReactMarkdown } from '../Markdown/MemoizedReactMarkdown'

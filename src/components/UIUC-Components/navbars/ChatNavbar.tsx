@@ -24,6 +24,7 @@ import HomeContext from '~/pages/api/home/home.context'
 import { UserSettings } from '../../Chat/UserSettings'
 import { usePostHog } from 'posthog-js/react'
 import { AuthMenu } from './AuthMenu'
+import { ThemeToggle } from '../ThemeToggle'
 
 const styles: Record<string, React.CSSProperties> = {
   logoContainerBox: {

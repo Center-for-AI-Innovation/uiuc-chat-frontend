@@ -1,8 +1,8 @@
 import { supabase } from '@/utils/supabaseClient'
 import posthog from 'posthog-js'
-import { NextApiRequest, NextApiResponse } from 'next'
-import { PostgrestError } from '@supabase/supabase-js'
-import { CourseDocument } from '~/types/courseMaterials'
+import { type NextApiRequest, type NextApiResponse } from 'next'
+import { type PostgrestError } from '@supabase/supabase-js'
+import { type CourseDocument } from '~/types/courseMaterials'
 
 type FetchDocumentsResponse = {
   final_docs?: CourseDocument[]

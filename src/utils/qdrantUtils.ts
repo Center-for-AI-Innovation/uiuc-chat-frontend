@@ -1,5 +1,5 @@
 // qdrantUtils.ts
-import { CourseDocument } from '~/types/courseMaterials'
+import { type CourseDocument } from '~/types/courseMaterials'
 import { qdrant } from '@/utils/qdrantClient'
 import posthog from 'posthog-js'
 

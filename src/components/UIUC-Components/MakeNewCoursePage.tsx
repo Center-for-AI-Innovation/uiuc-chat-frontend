@@ -168,7 +168,6 @@ const MakeNewCoursePage = ({
                     data-form-type="other"
                     styles={{
                       input: {
-                        color: 'var(--text-white)',
                         backgroundColor: 'var(--illinois-background-darker)',
                         paddingRight: '6rem',
                         textOverflow: 'ellipsis',

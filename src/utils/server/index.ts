@@ -1,7 +1,7 @@
 import { type OpenAIChatMessage } from '@/types/chat'
 import {
   ModelIDsThatUseDeveloperMessage,
-  OpenAIModelID,
+  type OpenAIModelID,
   OpenAIModels,
   type OpenAIModel,
 } from '~/utils/modelProviders/types/openai'

@@ -1,6 +1,6 @@
 import { TextInput, Button, Group, Box } from '@mantine/core'
 import { useState, useEffect } from 'react'
-import { CourseMetadataOptionalForUpsert } from '~/types/courseMetadata'
+import { type CourseMetadataOptionalForUpsert } from '~/types/courseMetadata'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 
 export default function SetExampleQuestions({
