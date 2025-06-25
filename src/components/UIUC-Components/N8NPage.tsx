@@ -175,28 +175,32 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
   }
 
   useEffect(() => {
-    const getApiFromSupabase = async () => {
+    const getApiKey = async () => {
       try {
-        const response = await fetch(`/api/UIUC-api/getN8NapiFromSupabase`, {
+        const response = await fetch('/api/UIUC-api/getN8Napikey', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            course_name: currentPageName,
-          }),
-        })
-        const data = await response.json()
-        setN8nApiKeyTextbox(data.api_key[0].n8n_api_key)
-        setN8nApiKey(data.api_key[0].n8n_api_key)
-        // return data.success
+          body: JSON.stringify({ course_name: currentPageName }),
+        });
+
+        const data = await response.json();
+        const apiKey = data.api_key?.[0]?.n8n_api_key;
+
+        if (apiKey) {
+          setN8nApiKeyTextbox(apiKey);
+          setN8nApiKey(apiKey);
+        } else {
+          console.warn('API key not found in response:', data);
+        }
       } catch (error) {
-        console.error('Error getting course data:', error)
-        // return false
+        console.error('Error getting course data:', error);
       }
-    }
-    getApiFromSupabase()
-  }, [course_name])
+    };
+
+    getApiKey();
+  }, [currentPageName]);
 
   useEffect(() => {
     const fetchData = async () => {
