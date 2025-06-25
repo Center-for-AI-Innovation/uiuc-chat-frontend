@@ -833,9 +833,8 @@ export const ChatInput = ({
           ]?.role === 'user' && (
             <button
               className={`absolute ${isSmallScreen ? '-top-28' : '-top-20'} left-0 right-0 mx-auto mb-12 flex w-fit items-center gap-3 rounded border border-[--primary] bg-[--primary] px-4 py-2 text-[--background] opacity-[.85] hover:opacity-100 md:mb-0 md:mt-2`}
-              style={{ backdropFilter: 'blur(4px)' }}
+              style={{ backdropFilter: 'blur(4px)', pointerEvents: 'auto' }}
               onClick={onRegenerate}
-              style={{ pointerEvents: 'auto' }}
             >
               <IconRepeat size={16} /> {t('Regenerate Response')}
             </button>
@@ -878,7 +877,8 @@ export const ChatInput = ({
           />
 
           {showPluginSelect && (
-            <div className="absolute bottom-14 left-0 rounded"
+            <div
+              className="absolute bottom-14 left-0 rounded"
               style={{ pointerEvents: 'auto' }}
             >
               <PluginSelect
