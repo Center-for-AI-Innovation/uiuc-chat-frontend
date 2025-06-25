@@ -27,6 +27,7 @@ const logConversationToSupabase = async (req: any, res: any) => {
         convo_id: await sanitizedConversation.id.toString(),
         course_name: course_name,
         user_email: sanitizedConversation.userEmail,
+        summary: sanitizedConversation.summary,
       },
     ],
     {

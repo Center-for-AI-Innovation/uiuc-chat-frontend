@@ -1771,63 +1771,7 @@ export const ChatMessage = memo(
                   {/* Action Buttons Container */}
                   <div className="flex flex-col gap-2">
                     {/* Sources button */}
-                    {Array.isArray(message.contexts) &&
-                      message.contexts.length > 0 &&
-                      !(
-                        messageIsStreaming &&
-                        messageIndex ===
-                          (selectedConversation?.messages.length ?? 0) - 1
-                      ) &&
-                      !(
-                        loading &&
-                        messageIndex ===
-                          (selectedConversation?.messages.length ?? 0) - 1
-                      ) && (
-                        <div className="relative z-0 mb-1 flex justify-start">
-                          <button
-                            className="group/button relative flex items-center gap-0 rounded-xl border border-gray-200 bg-gray-50/50 px-3 py-1.5 text-sm font-medium text-gray-600 shadow-sm transition-all duration-200 hover:border-purple-300 hover:bg-purple-50/50 hover:text-gray-900 dark:border-gray-700 dark:bg-gray-800/30 dark:text-gray-300 dark:hover:border-purple-500/40 dark:hover:bg-purple-900/20 dark:hover:text-gray-100"
-                            onClick={() => handleSourcesSidebarToggle(true)}
-                          >
-                            <span className="whitespace-nowrap">
-                              Sources
-                              <span className="ml-0.5 rounded-md bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600 group-hover/button:bg-purple-100 group-hover/button:text-purple-600 dark:bg-gray-700/50 dark:text-gray-400 dark:group-hover/button:bg-purple-900/30 dark:group-hover/button:text-purple-300">
-                                {getContextsLength(message.contexts)}
-                              </span>
-                            </span>
-
-                            {sourceThumbnails.length > 0 && (
-                              <div className="flex items-center">
-                                <div className="ml-0.5 mr-1 h-4 border-l border-gray-300 dark:border-gray-600"></div>
-                                <div className="relative flex">
-                                  {sourceThumbnails.map((thumbnail, index) => (
-                                    <div
-                                      key={index}
-                                      className="relative h-7 w-7 overflow-hidden rounded-lg border-2 border-gray-200 bg-white shadow-sm transition-transform duration-200 group-hover/button:shadow dark:border-gray-700 dark:bg-gray-800"
-                                      style={{
-                                        marginLeft:
-                                          index > 0 ? '-0.75rem' : '0',
-                                        zIndex: index,
-                                        transform: `rotate(${index % 2 === 0 ? '-1deg' : '1deg'})`,
-                                      }}
-                                    >
-                                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity duration-200 group-hover/button:opacity-100"></div>
-                                      <img
-                                        src={thumbnail}
-                                        alt={`Source ${index + 1}`}
-                                        className="h-full w-full object-cover"
-                                        onError={(e) => {
-                                          e.currentTarget.style.display = 'none'
-                                        }}
-                                      />
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </button>
-                        </div>
-                      )}
-
+                    {/* removed the sources button for mHealth */}
                     {/* Other buttons in their container */}
                     {!(
                       messageIsStreaming &&

@@ -1,6 +1,6 @@
 // src/app/api/allNewRoutingChat/route.ts
 
-import { ChatBody } from '@/types/chat'
+import { ChatBody, Conversation } from '@/types/chat'
 import { routeModelRequest } from '~/utils/streamProcessing'
 import { NextRequest, NextResponse } from 'next/server'
 import { buildPrompt } from '~/app/utils/buildPromptUtils'
@@ -12,17 +12,39 @@ export const fetchCache = 'force-no-store'
 export const revalidate = 0
 
 export async function POST(req: NextRequest, res: NextResponse) {
+  const startTime = Date.now()
+  const { searchParams } = new URL(req.url)
+  const summary = searchParams.get('summary') === 'true'
+
   try {
     const body = await req.json()
     const { conversation, course_name, courseMetadata, mode } = body as ChatBody
 
-    // Build the prompt
-    const newConversation = await buildPrompt({
-      conversation,
-      projectName: course_name,
-      courseMetadata,
-      mode,
-    })
+    const buildPromptStartTime = Date.now()
+    let newConversation: Conversation
+
+    if (summary) {
+      // call LLM for summarized conversation
+      newConversation = await buildPrompt({
+        conversation,
+        projectName: course_name,
+        courseMetadata,
+        summary: true,
+        mode,
+      })
+    } else {
+      // normal flow without summary
+      newConversation = await buildPrompt({
+        conversation,
+        projectName: course_name,
+        courseMetadata,
+        summary: false,
+        mode,
+      })
+    }
+    const buildPromptEndTime = Date.now()
+    const buildPromptDuration = buildPromptEndTime - buildPromptStartTime
+    console.log(`buildPrompt duration: ${buildPromptDuration}ms`)
 
     body.conversation = newConversation
     const result = await routeModelRequest(body as ChatBody)
