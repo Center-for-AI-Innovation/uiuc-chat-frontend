@@ -1,14 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
-import { type Conversation, type Message } from '~/types/chat'
 import { type ChatCompletionMessageToolCall } from 'openai/resources/chat/completions'
+import posthog from 'posthog-js'
+import { runN8nFlowBackend } from '~/pages/api/UIUC-api/runN8nFlow'
+import type { ToolOutput } from '~/types/chat'
+import { type Conversation, type Message, type UIUCTool } from '~/types/chat'
 import {
   type N8NParameter,
   type N8nWorkflow,
   type OpenAICompatibleTool,
 } from '~/types/tools'
-import { type UIUCTool } from '~/types/chat'
-import type { ToolOutput } from '~/types/chat'
-import posthog from 'posthog-js'
 
 export async function handleFunctionCall(
   message: Message,
@@ -251,29 +251,26 @@ const callN8nFunction = async (
     n8n_api_key = await response.json()
   }
 
-  // Run tool
-  const body = JSON.stringify({
-    api_key: n8n_api_key,
-    name: tool.readableName,
-    data: tool.aiGeneratedArgumentValues,
-  })
-
   const timeStart = Date.now()
   
   // Check if we're running on client-side (browser) or server-side
   const isClientSide = typeof window !== 'undefined'
   
-  let response: Response
+  let n8nResponse: any
   
   if (isClientSide) {
     // Client-side: use our API route
-    response = await fetch('/api/UIUC-api/runN8nFlow', {
+    const response = await fetch('/api/UIUC-api/runN8nFlow', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-cache',
       },
-      body: body,
+      body: JSON.stringify({
+        api_key: n8n_api_key,
+        name: tool.readableName,
+        data: tool.aiGeneratedArgumentValues,
+      }),
       signal: controller.signal,
     }).catch((error) => {
       if (error.name === 'AbortError') {
@@ -283,32 +280,36 @@ const callN8nFunction = async (
       }
       throw error
     })
-  } else {
-    // Server-side: use direct backend call
-    const baseUrl = base_url || process.env.RAILWAY_URL
-    if (!baseUrl) {
-      throw new Error('No backend URL configured. Please provide base_url parameter or set RAILWAY_URL environment variable.')
+
+    if (!response.ok) {
+      const errjson = await response.json()
+      console.error('Error calling n8n function: ', errjson.error)
+      throw new Error(errjson.error)
     }
-    response = await fetch(
-      `${baseUrl}/run_flow`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache',
-        },
-        body: body,
-        signal: controller.signal,
-      },
-    ).catch((error) => {
-      if (error.name === 'AbortError') {
+
+    n8nResponse = await response.json()
+  } else {
+    // Server-side: use the common function directly
+    if (!n8n_api_key) {
+      throw new Error('N8N API key is required')
+    }
+    
+    try {
+      n8nResponse = await runN8nFlowBackend(
+        n8n_api_key,
+        tool.readableName,
+        tool.aiGeneratedArgumentValues
+      )
+    } catch (error: any) {
+      if (error.message.includes('timed out')) {
         throw new Error(
           'Request timed out after 30 seconds, try "Regenerate Response" button',
         )
       }
       throw error
-    })
+    }
   }
+
   const timeEnd = Date.now()
   console.debug(
     'Time taken for n8n function call: ',
@@ -317,14 +318,7 @@ const callN8nFunction = async (
   )
 
   clearTimeout(timeoutId)
-  if (!response.ok) {
-    const errjson = await response.json()
-    console.error('Error calling n8n function: ', errjson.error)
-    throw new Error(errjson.error)
-  }
-
-  // Parse final answer from n8n workflow object
-  const n8nResponse = await response.json()
+  
   const resultData = n8nResponse.data.resultData
   console.debug('N8n results data: ', resultData)
   const finalNodeType = resultData.lastNodeExecuted
@@ -572,12 +566,12 @@ export async function fetchTools(
     )
   } else {
     // Server-side: use direct backend call
-    const baseUrl = base_url || process.env.RAILWAY_URL
-    if (!baseUrl) {
+    const backendUrl = process.env.RAILWAY_URL
+    if (!backendUrl) {
       throw new Error('No backend URL configured. Please provide base_url parameter or set RAILWAY_URL environment variable.')
     }
     response = await fetch(
-      `${baseUrl}/getworkflows?api_key=${api_key}&limit=${limit}&pagination=${parsedPagination}`,
+      `${backendUrl}/getworkflows?api_key=${api_key}&limit=${limit}&pagination=${parsedPagination}`,
     )
   }
   if (!response.ok) {
