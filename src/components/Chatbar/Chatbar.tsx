@@ -314,7 +314,7 @@ export const Chatbar = ({
     handleNewConversation({
       text: customGPT.promptText,
       name: customGPT.name || 'Custom GPT Chat',
-      id: customGPT.id
+      id: customGPT.gpt_id || customGPT.id
     });
   };
 

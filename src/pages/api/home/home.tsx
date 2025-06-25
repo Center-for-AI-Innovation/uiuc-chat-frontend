@@ -421,9 +421,14 @@ const Home = ({
   }
 
   const handleNewConversation = (customPrompt?: { text: string; name: string; id?: string }) => {
-    // If we're already in an empty conversation, don't create a new one
-    if (selectedConversation && selectedConversation.messages.length === 0) {
+    // If we're already in an empty conversation and not switching to a custom GPT, don't create a new one
+    if (selectedConversation && selectedConversation.messages.length === 0 && !customPrompt) {
       return
+    }
+    
+    // If we're switching to a different custom GPT, always create a new conversation
+    if (customPrompt && selectedConversation && selectedConversation.customGptId === customPrompt.id) {
+      return // Same custom GPT, no need to create new conversation
     }
 
     const lastConversation = conversations[conversations.length - 1]
