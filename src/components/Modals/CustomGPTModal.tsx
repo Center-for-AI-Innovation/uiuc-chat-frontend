@@ -61,15 +61,19 @@ const CustomGPTModal: React.FC<CustomGPTModalProps> = ({
   const { data: documentGroups } = useFetchEnabledDocGroups(course_name);
   const { data: tools } = useFetchAllWorkflows(course_name);
 
-  const documentGroupOptions = documentGroups?.map(group => ({
-    value: group.name,
-    label: group.name,
-  })) || [];
+  const documentGroupOptions = documentGroups && documentGroups.length > 0 
+    ? documentGroups.map(group => ({
+        value: group.name,
+        label: group.name,
+      }))
+    : [{ value: 'none', label: 'None' }];
 
-  const toolOptions = tools?.map((tool: UIUCTool) => ({
-    value: tool.id,
-    label: tool.readableName,
-  })) || [];
+  const toolOptions = tools && tools.length > 0
+    ? tools.map((tool: UIUCTool) => ({
+        value: tool.id,
+        label: tool.readableName,
+      }))
+    : [{ value: 'none', label: 'None' }];
 
   return (
     <Modal
@@ -156,11 +160,12 @@ const CustomGPTModal: React.FC<CustomGPTModalProps> = ({
         />
         <MultiSelect
           label="Document Groups"
-          placeholder="Select document groups..."
-          data={documentGroups?.map(group => group.name) || []}
+          placeholder={documentGroups && documentGroups.length > 0 ? "Select document groups..." : "None"}
+          data={documentGroupOptions}
           value={customPromptForm.documentGroups}
-          onChange={(value) => handleCustomPromptFormChange('documentGroups', value)}
+          onChange={(value) => handleCustomPromptFormChange('documentGroups', value.filter(v => v !== 'none'))}
           className={`${montserrat_paragraph.className} font-montserratParagraph`}
+          disabled={!documentGroups || documentGroups.length === 0}
           styles={{
             label: { color: 'white', marginBottom: '4px' },
             input: {
@@ -173,14 +178,15 @@ const CustomGPTModal: React.FC<CustomGPTModalProps> = ({
         />
         <MultiSelect
           label="Tools"
-          placeholder="Select tools (optional)"
+          placeholder={tools && tools.length > 0 ? "Select tools (optional)" : "None"}
           value={customPromptForm.tools || []}
-          onChange={(value) => handleCustomPromptFormChange('tools', value)}
+          onChange={(value) => handleCustomPromptFormChange('tools', value.filter(v => v !== 'none'))}
           data={toolOptions}
           className={`${montserrat_paragraph.className} font-montserratParagraph`}
           withinPortal
           searchable
           clearable
+          disabled={!tools || tools.length === 0}
           styles={{ 
             label: { color: 'white', marginBottom: '4px' },
             input: {

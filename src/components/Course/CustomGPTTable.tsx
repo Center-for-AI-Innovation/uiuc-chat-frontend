@@ -323,10 +323,10 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
                         <Text truncate className={`${montserrat_paragraph.className}`}>{prompt.promptText}</Text>
                       </td>
                       <td className={`truncate max-w-0 px-4 py-4 text-sm text-gray-300 sm:px-6 ${montserrat_paragraph.className}`}>
-                        {prompt.documentGroups?.join(', ') || '-'}
+                        {prompt.documentGroups && prompt.documentGroups.length > 0 ? prompt.documentGroups.join(', ') : 'None'}
                       </td>
                       <td className={`truncate max-w-0 px-4 py-4 text-sm text-gray-300 sm:px-6 ${montserrat_paragraph.className}`}>
-                        {prompt.tools?.join(', ') || '-'}
+                        {prompt.tools && prompt.tools.length > 0 ? prompt.tools.join(', ') : 'None'}
                       </td>
                       <td className="whitespace-nowrap px-4 py-4 text-right text-sm font-medium sm:px-6">
                         <Group spacing="xs" noWrap>
