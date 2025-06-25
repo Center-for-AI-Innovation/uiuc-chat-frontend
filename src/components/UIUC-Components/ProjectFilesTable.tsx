@@ -13,7 +13,7 @@ import {
   Stack,
   Image,
   createStyles,
-  MantineTheme,
+  type MantineTheme,
   TextInput,
   Code,
   CopyButton,
@@ -30,13 +30,13 @@ import {
   IconX,
 } from '@tabler/icons-react'
 import Link from 'next/link'
-import { DataTable, DataTableSortStatus } from 'mantine-datatable'
+import { DataTable, type DataTableSortStatus } from 'mantine-datatable'
 import { createRef, useEffect, useRef, useState } from 'react'
 import axios from 'axios'
 import { notifications, showNotification } from '@mantine/notifications'
 import styled, { createGlobalStyle } from 'styled-components'
 
-import { CourseDocument, DocumentGroup } from 'src/types/courseMaterials'
+import { type CourseDocument, type DocumentGroup } from 'src/types/courseMaterials'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchPresignedUrl } from '~/utils/apiUtils'
 import {

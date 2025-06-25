@@ -6,15 +6,15 @@ import {
   IconX,
 } from '@tabler/icons-react'
 import {
-  DragEvent,
-  KeyboardEvent,
-  MouseEventHandler,
+  type DragEvent,
+  type KeyboardEvent,
+  type MouseEventHandler,
   useContext,
   useEffect,
   useState,
 } from 'react'
 
-import { Conversation } from '@/types/chat'
+import { type Conversation } from '@/types/chat'
 
 import HomeContext from '~/pages/api/home/home.context'
 

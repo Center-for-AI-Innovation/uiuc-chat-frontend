@@ -1,10 +1,10 @@
 // upsertCourseMetadata.ts
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { ProjectWideLLMProviders } from '~/types/courseMetadata'
+import { type ProjectWideLLMProviders } from '~/types/courseMetadata'
 import { encryptKeyIfNeeded } from '~/utils/crypto'
 import {
-  AllLLMProviders,
-  LLMProvider,
+  type AllLLMProviders,
+  type LLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
 import { redisClient } from '~/utils/redisClient'
 

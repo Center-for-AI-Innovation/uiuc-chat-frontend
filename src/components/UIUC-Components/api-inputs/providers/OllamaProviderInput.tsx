@@ -3,7 +3,7 @@ import { Text, Switch, Card, TextInput, Skeleton } from '@mantine/core'
 import { IconCheck, IconExternalLink, IconX } from '@tabler/icons-react'
 import { ModelToggles } from '../ModelToggles'
 import {
-  OllamaProvider,
+  type OllamaProvider,
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { motion, AnimatePresence } from 'framer-motion'

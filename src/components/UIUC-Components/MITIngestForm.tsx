@@ -11,8 +11,8 @@ import {
 } from '../Dialog'
 import NextLink from 'next/link'
 import axios from 'axios'
-import { FileUpload } from './UploadNotification'
-import { QueryClient } from '@tanstack/react-query'
+import { type FileUpload } from './UploadNotification'
+import { type QueryClient } from '@tanstack/react-query'
 export default function MITIngestForm({
   project_name,
   setUploadFiles,

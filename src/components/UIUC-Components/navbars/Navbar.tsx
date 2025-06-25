@@ -88,7 +88,7 @@ const useStyles = createStyles((theme) => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#f1f5f9',
+    // color: '#f1f5f9',
 
     '&:hover': {
       color: 'var(--navbar-hover)',

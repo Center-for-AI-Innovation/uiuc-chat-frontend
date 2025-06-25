@@ -1,6 +1,6 @@
 //MemoizedChatMessage.tsx
-import { FC, memo } from 'react'
-import { ChatMessage, Props } from './ChatMessage'
+import { type FC, memo } from 'react'
+import { ChatMessage, type Props } from './ChatMessage'
 
 export const MemoizedChatMessage: FC<Props> = memo(
   ChatMessage,

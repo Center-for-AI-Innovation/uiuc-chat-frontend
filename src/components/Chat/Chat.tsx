@@ -19,8 +19,8 @@ import {
   type ChatBody,
   type Conversation,
   type Message,
-  Content,
-  UIUCTool,
+  type Content,
+  type UIUCTool,
 } from '@/types/chat'
 import { type Plugin } from '@/types/plugin'
 
@@ -66,14 +66,14 @@ import { CropwizardLicenseDisclaimer } from '~/pages/cropwizard-licenses'
 import Head from 'next/head'
 import ChatUI, { webLLMModels } from '~/utils/modelProviders/WebLLM'
 import { MLCEngine } from '@mlc-ai/web-llm'
-import * as webllm from '@mlc-ai/web-llm'
-import { WebllmModel } from '~/utils/modelProviders/WebLLM'
+import type * as webllm from '@mlc-ai/web-llm'
+import { type WebllmModel } from '~/utils/modelProviders/WebLLM'
 import { handleImageContent } from '~/utils/streamProcessing'
 import { useQueryClient } from '@tanstack/react-query'
 import { useUpdateConversation } from '~/hooks/conversationQueries'
 import { motion } from 'framer-motion'
 import { useDeleteMessages } from '~/hooks/messageQueries'
-import { AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
+import { type AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
 
 const montserrat_med = Montserrat({
   weight: '500',

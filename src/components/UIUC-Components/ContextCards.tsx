@@ -3,7 +3,7 @@ import { Card, Image, Text, Group } from '@mantine/core'
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import axios from 'axios'
-import { ContextWithMetadata } from '~/types/chat'
+import { type ContextWithMetadata } from '~/types/chat'
 import { montserrat_paragraph } from 'fonts'
 import { fetchPresignedUrl } from '~/utils/apiUtils'
 

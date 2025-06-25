@@ -16,7 +16,7 @@ import {
 } from '@mantine/core'
 import { useClipboard, useMediaQuery } from '@mantine/hooks'
 import { showNotification } from '@mantine/notifications'
-import { AuthContextProps } from 'react-oidc-context'
+import { type AuthContextProps } from 'react-oidc-context'
 import {
   IconCheck,
   IconCopy,

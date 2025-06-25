@@ -143,7 +143,6 @@ export function DocGroupsTable({ course_name }: { course_name: string }) {
             }}
             // withBorder
             withColumnBorders
-            highlightOnHover_disabled
           >
             <thead>
               <tr>

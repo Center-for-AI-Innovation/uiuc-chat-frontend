@@ -1,5 +1,5 @@
 import { IconFolderPlus, IconMistOff, IconPlus } from '@tabler/icons-react'
-import { ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Switch } from '@mantine/core'
 
@@ -9,7 +9,7 @@ import {
 } from './components/OpenCloseButton'
 
 import Search from '../Search'
-import { FolderWithConversation } from '~/types/folder'
+import { type FolderWithConversation } from '~/types/folder'
 
 interface Props<T> {
   isOpen: boolean

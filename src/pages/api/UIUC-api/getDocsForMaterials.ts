@@ -1,4 +1,4 @@
-import { NextApiRequest, NextApiResponse } from 'next'
+import type { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '~/utils/supabaseClient'
 
 export const runtime = 'edge'
@@ -63,3 +63,6 @@ export const getCourseDocuments = async (
     return null
   }
 }
+
+// Add default export for Next.js API route
+export default getCourseDocumentsHandler

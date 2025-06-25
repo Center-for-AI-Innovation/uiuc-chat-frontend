@@ -27,8 +27,8 @@ import SupportedFileUploadTypes from './SupportedFileUploadTypes'
 import { useMediaQuery } from '@mantine/hooks'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { v4 as uuidv4 } from 'uuid'
-import { FileUpload } from './UploadNotification'
-import { AuthContextProps } from 'react-oidc-context'
+import { type FileUpload } from './UploadNotification'
+import { type AuthContextProps } from 'react-oidc-context'
 
 const useStyles = createStyles((theme) => ({
   wrapper: {

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import React, { ReactNode } from 'react'
+import React, { type ReactNode } from 'react'
 import { LandingPageHeader } from './navbars/GlobalHeader'
 import Navbar from './navbars/Navbar'
 import { useRouter } from 'next/router'

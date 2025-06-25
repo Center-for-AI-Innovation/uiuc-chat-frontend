@@ -12,7 +12,7 @@ import { ModelParams } from './ModelParams'
 import { useTranslation } from 'react-i18next'
 import { prebuiltAppConfig } from '~/utils/modelProviders/ConfigWebLLM'
 import * as webllm from '@mlc-ai/web-llm'
-import { WebllmModel, webLLMModels } from '~/utils/modelProviders/WebLLM'
+import { type WebllmModel, webLLMModels } from '~/utils/modelProviders/WebLLM'
 
 const useStyles = createStyles((theme) => ({
   modalContent: {

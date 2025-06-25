@@ -1,9 +1,9 @@
-import { CourseMetadata } from './courseMetadata'
-import { N8NParameter } from './tools'
+import { type CourseMetadata } from './courseMetadata'
+import { type N8NParameter } from './tools'
 import {
-  AnySupportedModel,
+  type AnySupportedModel,
   BaseLLMProvider,
-  AllLLMProviders,
+  type AllLLMProviders,
 } from '../utils/modelProviders/LLMProvider'
 
 export interface ConversationPage {

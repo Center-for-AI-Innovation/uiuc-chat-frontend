@@ -1,5 +1,5 @@
 import { supabase } from '@/utils/supabaseClient'
-import { Content, Conversation } from '~/types/chat'
+import { type Content, type Conversation } from '~/types/chat'
 import { RunTree } from 'langsmith'
 import { sanitizeForLogging } from '@/utils/sanitization'
 

@@ -1,5 +1,5 @@
 import { AuthProvider } from 'react-oidc-context'
-import { ReactNode, useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import { WebStorageStateStore } from 'oidc-client-ts'
 
 interface AuthProviderProps {

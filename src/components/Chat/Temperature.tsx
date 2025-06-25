@@ -1,4 +1,4 @@
-import { FC, useContext, useState } from 'react'
+import { type FC, useContext, useState } from 'react'
 import { useTranslation } from 'next-i18next'
 import { DEFAULT_TEMPERATURE } from '@/utils/app/const'
 import HomeContext from '~/pages/api/home/home.context'
@@ -6,8 +6,8 @@ import { Title, Slider } from '@mantine/core' // Import Slider from @mantine/cor
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useMediaQuery } from '@mantine/hooks'
 import {
-  AllLLMProviders,
-  GenericSupportedModel,
+  type AllLLMProviders,
+  type GenericSupportedModel,
 } from '~/utils/modelProviders/LLMProvider'
 
 export const selectBestTemperature = (
