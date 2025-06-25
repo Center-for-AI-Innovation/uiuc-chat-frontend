@@ -9,7 +9,7 @@ import {
   IconThumbDownFilled,
   IconRepeat,
 } from '@tabler/icons-react'
-import { Message, Content } from '@/types/chat'
+import { type Message, Content } from '@/types/chat'
 import { useTranslation } from 'next-i18next'
 
 interface MessageActionsProps {

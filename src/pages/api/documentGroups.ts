@@ -1,7 +1,7 @@
 // src/pages/api/documentGroups.ts
-import { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiRequest, type NextApiResponse } from 'next'
 import posthog from 'posthog-js'
-import { CourseDocument } from 'src/types/courseMaterials'
+import { type CourseDocument } from 'src/types/courseMaterials'
 import {
   addDocumentsToDocGroup,
   fetchDocumentGroups,

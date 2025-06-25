@@ -26,14 +26,14 @@ import {
   selectBestModel,
   VisionCapableModels,
 } from '~/utils/modelProviders/LLMProvider'
-import { OpenAIModelID } from '~/utils/modelProviders/types/openai'
+import { type OpenAIModelID } from '~/utils/modelProviders/types/openai'
 import {
   useDeleteFolder,
   useFetchFolders,
   useUpdateFolder,
 } from '~/hooks/folderQueries'
 import { useUpdateConversation } from '~/hooks/conversationQueries'
-import { FolderType, FolderWithConversation } from '~/types/folder'
+import { type FolderType, type FolderWithConversation } from '~/types/folder'
 import { useQueryClient } from '@tanstack/react-query'
 import { useCreateFolder } from '~/hooks/folderQueries'
 import { selectBestTemperature } from '~/components/Chat/Temperature'

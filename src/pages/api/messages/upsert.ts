@@ -1,4 +1,4 @@
-import { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiRequest, type NextApiResponse } from 'next'
 import { supabase } from '@/utils/supabaseClient'
 import { convertChatToDBMessage } from '@/pages/api/conversation'
 

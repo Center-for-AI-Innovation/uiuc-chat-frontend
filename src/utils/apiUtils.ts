@@ -4,8 +4,8 @@ import {
   type CourseMetadata,
 } from '~/types/courseMetadata'
 import { v4 as uuidv4 } from 'uuid'
-import { Conversation, Message } from '~/types/chat'
-import { CoreMessage } from 'ai'
+import { type Conversation, type Message } from '~/types/chat'
+import { type CoreMessage } from 'ai'
 
 // Configuration for runtime environment
 

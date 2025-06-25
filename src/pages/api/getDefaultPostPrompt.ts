@@ -1,4 +1,4 @@
-import { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiRequest, type NextApiResponse } from 'next'
 import { getDefaultPostPrompt } from '~/app/utils/buildPromptUtils'
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {

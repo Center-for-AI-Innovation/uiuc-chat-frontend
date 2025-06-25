@@ -10,8 +10,8 @@ import {
 } from '@tabler/icons-react'
 import { Text } from '@mantine/core'
 import {
-  KeyboardEvent,
-  MutableRefObject,
+  type KeyboardEvent,
+  type MutableRefObject,
   useCallback,
   useContext,
   useEffect,
@@ -20,9 +20,9 @@ import {
 } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { useTranslation } from 'next-i18next'
-import { Content, Message, MessageType } from '@/types/chat'
-import { Plugin } from '@/types/plugin'
-import { Prompt } from '@/types/prompt'
+import { type Content, type Message, type MessageType } from '@/types/chat'
+import { type Plugin } from '@/types/plugin'
+import { type Prompt } from '@/types/prompt'
 
 import HomeContext from '~/pages/api/home/home.context'
 
@@ -36,13 +36,14 @@ import { Montserrat } from 'next/font/google'
 
 import React from 'react'
 
-import { CSSProperties } from 'react'
+import { type CSSProperties } from 'react'
 
 import { fetchPresignedUrl, uploadToS3 } from 'src/utils/apiUtils'
 import { ImagePreview } from './ImagePreview'
 import { montserrat_heading } from 'fonts'
 import { useMediaQuery } from '@mantine/hooks'
-import ChatUI, {
+import type ChatUI from '~/utils/modelProviders/WebLLM';
+import {
   WebllmModel,
   webLLMModels,
 } from '~/utils/modelProviders/WebLLM'
@@ -50,7 +51,7 @@ import {
   selectBestModel,
   VisionCapableModels,
 } from '~/utils/modelProviders/LLMProvider'
-import { OpenAIModelID } from '~/utils/modelProviders/types/openai'
+import { type OpenAIModelID } from '~/utils/modelProviders/types/openai'
 import { UserSettings } from '~/components/Chat/UserSettings'
 import { IconChevronRight } from '@tabler/icons-react'
 import { findDefaultModel } from '../UIUC-Components/api-inputs/LLMsApiKeyInputForm'

@@ -8,7 +8,7 @@ import {
   useMantineTheme,
   Text,
   Group,
-  MantineTheme,
+  type MantineTheme,
 } from '@mantine/core';
 
 const useStyles = createStyles((theme: MantineTheme) => ({
