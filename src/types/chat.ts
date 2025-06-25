@@ -57,7 +57,8 @@ export type MessageFeedback = {
 }
 
 export interface UIUCTool {
-  id: string
+  id: string // This is the N8N workflow ID
+  invocationId?: string // This is the unique ID for a specific tool *call* from OpenAI
   name: string // Openai uses this
   readableName: string // N8N uses this
   description: string

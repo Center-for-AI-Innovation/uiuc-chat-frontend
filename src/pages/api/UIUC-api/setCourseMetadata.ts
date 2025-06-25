@@ -21,7 +21,7 @@ const setCourseMetadata = async (req: any, res: any) => {
     req.nextUrl.searchParams.get('is_private') || 'false',
   )
   const course_admins = JSON.parse(
-    req.nextUrl.searchParams.get('course_admins') || '["kvday2@illinois.edu"]',
+    req.nextUrl.searchParams.get('course_admins') || '["rohan13@illinois.edu"]',
   )
   const approved_emails_list = JSON.parse(
     req.nextUrl.searchParams.get('approved_emails_list') || '[]',

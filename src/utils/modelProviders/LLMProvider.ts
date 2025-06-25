@@ -87,13 +87,24 @@ export const VisionCapableModels: Set<
   | BedrockModelID
   | SambaNovaModelID
 > = new Set([
+  OpenAIModelID.o3,
+  OpenAIModelID.o4_mini,
   OpenAIModelID.GPT_4_Turbo,
   OpenAIModelID.GPT_4o,
   OpenAIModelID.GPT_4o_mini,
+  OpenAIModelID.GPT_4_1,
+  OpenAIModelID.GPT_4_1_mini,
+  OpenAIModelID.GPT_4_1_nano,
 
+  AzureModelID.o3,
+  AzureModelID.o4_mini,
   AzureModelID.GPT_4_Turbo,
   AzureModelID.GPT_4o,
   AzureModelID.GPT_4o_mini,
+  AzureModelID.GPT_4_1,
+  AzureModelID.GPT_4_1_mini,
+  AzureModelID.GPT_4_1_nano,
+
   // claude-3.5....
   AnthropicModelID.Claude_3_7_Sonnet,
   AnthropicModelID.Claude_3_7_Sonnet_Thinking,
@@ -105,11 +116,14 @@ export const VisionCapableModels: Set<
   NCSAHostedVLMModelID.MOLMO_7B_D_0924,
   NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT,
   NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT,
+  NCSAHostedVLMModelID.QWEN2_5VL_32B_INSTRUCT,
 
   // Gemini
-  GeminiModelID.Gemini_2_0_Flash,
+  GeminiModelID.Gemini_2_5_Pro_Exp_03_25,
   GeminiModelID.Gemini_2_0_Pro_Exp_02_05,
-  GeminiModelID.Gemini_1_5_Pro,
+  GeminiModelID.Gemini_2_0_Flash,
+  GeminiModelID.Gemini_2_0_Flash_Lite,
+
   // Bedrock
   BedrockModelID.Claude_3_Opus,
   BedrockModelID.Claude_3_5_Sonnet_Latest,
@@ -131,7 +145,10 @@ export const ReasoningCapableModels: Set<
   AnthropicModelID | OpenAIModelID | OllamaModelIDs
 > = new Set([
   AnthropicModelID.Claude_3_7_Sonnet_Thinking,
-  OpenAIModelID.O3_mini,
+  OpenAIModelID.o3,
+  OpenAIModelID.o3_mini,
+  OpenAIModelID.o4_mini,
+  OpenAIModelID.GPT_4_1,
   OllamaModelIDs.DEEPSEEK_R1_14b_qwen_fp16,
   // Add other reasoning-capable models as they become available
 ])
@@ -266,10 +283,15 @@ export type AllLLMProviders = {
 
 // Ordered list of preferred model IDs -- the first available model will be used as default
 export const preferredModelIds = [
+  OpenAIModelID.GPT_4_1,
+  OpenAIModelID.GPT_4_1_mini,
+  OpenAIModelID.o3,
+  OpenAIModelID.o4_mini,
   AnthropicModelID.Claude_3_5_Sonnet,
   OpenAIModelID.GPT_4o_mini,
   AzureModelID.GPT_4o_mini,
   AnthropicModelID.Claude_3_5_Haiku,
+  OpenAIModelID.GPT_4_1_nano,
   OpenAIModelID.GPT_4o,
   AzureModelID.GPT_4o,
   OpenAIModelID.GPT_4_Turbo,
@@ -278,6 +300,7 @@ export const preferredModelIds = [
   OpenAIModelID.GPT_4,
   AzureModelID.GPT_4,
   OpenAIModelID.GPT_3_5,
+  // NCSAHostedVLMModelID.QWEN2_5VL_32B_INSTRUCT,
   NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT,
 ]
 
@@ -293,6 +316,10 @@ export const selectBestModel = (
     .filter((model) => model.enabled)
 
   const defaultModelId = localStorage.getItem('defaultModel')
+
+  if (defaultModelId === NCSAHostedVLMModelID.QWEN2_5VL_32B_INSTRUCT) {
+    return NCSAHostedVLMModels[NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT]
+  }
 
   if (defaultModelId && allModels.find((m) => m.id === defaultModelId)) {
     const defaultModel = allModels
@@ -321,6 +348,7 @@ export const selectBestModel = (
       return model
     }
   }
-  // If no preferred models are available, fallback to llama3.1:8b-instruct-fp16
+
+  // If no preferred models are available, fallback to Qwen2.5-VL-72B-Instruct
   return NCSAHostedVLMModels[NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT]
 }

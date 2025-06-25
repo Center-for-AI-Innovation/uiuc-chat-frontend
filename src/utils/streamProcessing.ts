@@ -23,6 +23,7 @@ import {
   type BedrockProvider,
   type GeminiProvider,
   type SambaNovaProvider,
+  ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import fetchMQRContexts from '~/pages/api/getContextsMQR'
 import fetchContexts from '~/pages/api/getContexts'
@@ -45,7 +46,6 @@ import { type CoreMessage } from 'ai'
 import { runGeminiChat } from '~/app/api/chat/gemini/route'
 import { runBedrockChat } from '~/app/api/chat/bedrock/route'
 import { runSambaNovaChat } from '~/app/api/chat/sambanova/route'
-
 
 /**
  * Enum representing the possible states of the state machine used in processing text chunks.
@@ -700,12 +700,12 @@ export async function handleImageContent(
     )
 
     if (imgDescIndex !== -1) {
-      ; (message.content as Content[])[imgDescIndex] = {
+      ;(message.content as Content[])[imgDescIndex] = {
         type: 'text',
         text: `Image description: ${imgDesc}`,
       }
     } else {
-      ; (message.content as Content[]).push({
+      ;(message.content as Content[]).push({
         type: 'text',
         text: `Image description: ${imgDesc}`,
       })
@@ -719,13 +719,17 @@ export async function handleImageContent(
 }
 
 export const getOpenAIKey = (
+  llmProviders: AllLLMProviders,
   courseMetadata: CourseMetadata,
   userApiKey: string,
 ) => {
   const key =
-    courseMetadata?.openai_api_key && courseMetadata?.openai_api_key != ''
-      ? courseMetadata.openai_api_key
+    llmProviders[ProviderNames.OpenAI]?.apiKey &&
+    llmProviders[ProviderNames.OpenAI]?.apiKey != ''
+      ? llmProviders[ProviderNames.OpenAI]?.apiKey
       : userApiKey
+  // console.log('OpenAI key found for getOpenAIKey:', key)
+  // console.log('llmProviders:', llmProviders)
   return key
 }
 
@@ -783,8 +787,11 @@ export const routeModelRequest = async (
   NOTE: WebLLM is handled separately, because it MUST be called from the Client browser itself. 
   */
 
+  // console.debug('In routeModelRequest: ', chatBody, baseUrl)
+  // console.debug('In routeModelRequest: ', baseUrl)
+
   const selectedConversation = chatBody.conversation!
-  console.debug('Selected conversation:', selectedConversation)
+  // console.debug('Selected conversation:', selectedConversation)
   if (!selectedConversation.model || !selectedConversation.model.id) {
     console.debug('Invalid conversation:', selectedConversation)
     throw new Error('Conversation model is undefined or missing "id" property.')

@@ -1,18 +1,16 @@
 // export { default } from '~/pages/api/home'
 
 import { useAuth } from 'react-oidc-context'
-import { NextPage } from 'next'
+import { type NextPage } from 'next'
 import { useEffect, useState } from 'react'
 import Home from '../api/home/home'
 import { useRouter } from 'next/router'
 
-import { CourseMetadata } from '~/types/courseMetadata'
+import { type CourseMetadata } from '~/types/courseMetadata'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { montserrat_heading } from 'fonts'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
-import Head from 'next/head'
-import { GUIDED_LEARNING_PROMPT } from '~/utils/app/const'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 
 const ChatPage: NextPage = () => {
@@ -106,12 +104,18 @@ const ChatPage: NextPage = () => {
   // UseEffect to check user permissions and fetch user email
   useEffect(() => {
     const checkAuthorization = async () => {
+      // console.log('Starting authorization check', {
+      //   isAuthLoading: auth.isLoading,
+      //   isRouterReady: router.isReady,
+      //   authUser: auth.user?.profile.email || 'No user email',
+      // })
+
       if (!auth.isLoading && router.isReady) {
         const courseName = router.query.course_name as string
         try {
           // Fetch course metadata
           const metadata = await fetchCourseMetadata(courseName)
-          console.log(metadata)
+
           if (!metadata) {
             router.replace(`/new?course_name=${courseName}`)
             return
@@ -120,24 +124,23 @@ const ChatPage: NextPage = () => {
           // Check if course is public
           if (!metadata.is_private) {
             setIsAuthorized(true)
+
             // Set email for public access
             if (auth.user?.profile.email) {
-              setCurrentEmail(auth.user?.profile.email)
+              setCurrentEmail(auth.user.profile.email)
             } else {
               // Use PostHog ID when user is not logged in for public courses
               const key = process.env.NEXT_PUBLIC_POSTHOG_KEY as string
-              const postHogUserObj = localStorage.getItem('ph_' + key + '_posthog')
+              const postHogUserObj = localStorage.getItem(
+                'ph_' + key + '_posthog',
+              )
+
               if (postHogUserObj) {
                 const postHogUser = JSON.parse(postHogUserObj)
                 setCurrentEmail(postHogUser.distinct_id)
-                console.log(
-                  'setting user email as posthog user: ',
-                  postHogUser.distinct_id,
-                )
               } else {
                 // When user is not logged in and posthog user is not found
                 setCurrentEmail('')
-                console.log('No PostHog ID found, setting empty email')
               }
             }
             return
@@ -147,7 +150,7 @@ const ChatPage: NextPage = () => {
               router.replace(`/${courseName}/not_authorized`)
               return
             }
-            
+
             // Set email for authenticated users
             if (auth.user?.profile.email) {
               setCurrentEmail(auth.user.profile.email)
@@ -174,12 +177,15 @@ const ChatPage: NextPage = () => {
     }
 
     checkAuthorization()
-  }, [auth.isLoading, auth.isAuthenticated, router.isReady])
+  }, [auth.isLoading, auth.isAuthenticated, router.isReady, auth, router])
 
   return (
     <>
       {!isLoading &&
-        (currentEmail || !courseMetadata?.is_private) &&
+        !auth.isLoading &&
+        router.isReady &&
+        ((currentEmail && currentEmail !== '') ||
+          !courseMetadata?.is_private) &&
         courseMetadata && (
           <Home
             current_email={currentEmail || ''}
@@ -193,16 +199,18 @@ const ChatPage: NextPage = () => {
             }}
           />
         )}
-      {isLoading && !currentEmail && (
-        <MainPageBackground>
-          <div
-            className={`flex items-center justify-center font-montserratHeading ${montserrat_heading.variable}`}
-          >
-            <span className="mr-2">Warming up the knowledge engines...</span>
-            <LoadingSpinner size="sm" />
-          </div>
-        </MainPageBackground>
-      )}
+      {isLoading ||
+        !currentEmail ||
+        (currentEmail === '' && (
+          <MainPageBackground>
+            <div
+              className={`flex items-center justify-center font-montserratHeading ${montserrat_heading.variable}`}
+            >
+              <span className="mr-2">Warming up the knowledge engines...</span>
+              <LoadingSpinner size="sm" />
+            </div>
+          </MainPageBackground>
+        ))}
     </>
   )
 }

@@ -436,6 +436,11 @@ export const Chat = memo(
             // Remove tools from message to clear old tools
             message.tools = []
             message.contexts = []
+            tools.forEach((tool) => {
+              tool.aiGeneratedArgumentValues = undefined
+              tool.output = undefined
+              tool.error = undefined
+            })
             message.content = Array.isArray(message.content)
               ? message.content.filter(
                   (content) => content.type !== 'tool_image_url',
@@ -529,7 +534,7 @@ export const Chat = memo(
 
           // Skip vector search entirely if there are no documents
           if (documentCount === 0) {
-            console.log('Vector search skipped: no documents available')
+            // console.log('Vector search skipped: no documents available')
             homeDispatch({ field: 'wasQueryRewritten', value: false })
             homeDispatch({ field: 'queryRewriteText', value: null })
             message.wasQueryRewritten = undefined
@@ -705,7 +710,7 @@ export const Chat = memo(
                             : '',
                     })),
                   },
-                  key: getOpenAIKey(courseMetadata, apiKey),
+                  key: getOpenAIKey(llmProviders, courseMetadata, apiKey),
                   course_name: courseName,
                   stream: false,
                   courseMetadata: courseMetadata,
@@ -883,7 +888,7 @@ export const Chat = memo(
                 imageUrls,
                 imgDesc,
                 updatedConversation,
-                getOpenAIKey(courseMetadata, apiKey),
+                getOpenAIKey(llmProviders, courseMetadata, apiKey),
               )
               homeDispatch({ field: 'isRouting', value: false })
               if (uiucToolsToRun.length > 0) {
@@ -909,7 +914,7 @@ export const Chat = memo(
 
           const finalChatBody: ChatBody = {
             conversation: updatedConversation,
-            key: getOpenAIKey(courseMetadata, apiKey),
+            key: getOpenAIKey(llmProviders, courseMetadata, apiKey),
             course_name: courseName,
             stream: true,
             courseMetadata: courseMetadata,
