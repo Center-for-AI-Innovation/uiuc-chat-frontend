@@ -364,26 +364,26 @@ export default function WebsiteIngestForm({
       >
         <DialogTrigger asChild>
           <Card
-            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-gradient-to-br from-[#1c1c2e] to-[#2a2a40] p-6 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
+            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-gradient-to-br from-[--dashboard-background-dark] to-[--dashboard-background] p-6 text-[--dashboard-foreground] shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
             style={{ height: '100%' }}
           >
             <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-900/30">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[--dashboard-background-darker]">
                   <IconWorldDownload className="h-8 w-8" />
                 </div>
-                <Text className="text-xl font-semibold text-gray-100">
+                <Text className="text-xl font-semibold text-[--dashboard-foreground]">
                   Website
                 </Text>
               </div>
             </div>
 
-            <Text className="mb-4 text-sm leading-relaxed text-gray-400">
+            <Text className="mb-4 text-sm leading-relaxed text-[--dashboard-foreground-faded]">
               Import content from any website by providing the URL. Supports
               recursive crawling with customizable depth.
             </Text>
 
-            <div className="mt-auto flex items-center text-sm text-purple-400">
+            <div className="mt-auto flex items-center text-sm text-[--dashboard-button]">
               <span>Configure import</span>
               <IconArrowRight
                 size={16}
@@ -512,7 +512,7 @@ export default function WebsiteIngestForm({
                           <Text style={{ color: '#C1C2C5' }}>
                             For more detail{' '}
                             <a
-                              className={'text-purple-600'}
+                              className={'text-[--dashboard-button]'}
                               href="https://docs.uiuc.chat/features/web-crawling-details"
                               target="_blank"
                               rel="noopener noreferrer"
@@ -593,7 +593,7 @@ export default function WebsiteIngestForm({
             <Button
               onClick={handleIngest}
               disabled={!isUrlValid}
-              className="h-11 w-full rounded-xl bg-purple-600 text-white transition-colors hover:bg-purple-700"
+              className="h-11 w-full rounded-xl bg-[--dashboard-button] text-[--dashboard-button-foreground] transition-colors hover:bg-[--dashboard-button-hover]"
             >
               Ingest the Website
             </Button>

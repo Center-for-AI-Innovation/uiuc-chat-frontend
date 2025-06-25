@@ -11,8 +11,8 @@ import {
 } from '../Dialog'
 import NextLink from 'next/link'
 import axios from 'axios'
-import { FileUpload } from './UploadNotification'
-import { QueryClient } from '@tanstack/react-query'
+import { type FileUpload } from './UploadNotification'
+import { type QueryClient } from '@tanstack/react-query'
 export default function MITIngestForm({
   project_name,
   setUploadFiles,
@@ -109,12 +109,12 @@ export default function MITIngestForm({
       >
         <DialogTrigger asChild>
           <Card
-            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-gradient-to-br from-[#1c1c2e] to-[#2a2a40] p-6 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
+            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-gradient-to-br from-[--dashboard-background-dark] to-[--dashboard-background] p-6 text-[--dashboard-foreground] shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
             style={{ height: '100%' }}
           >
             <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-900/30">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[--dashboard-background-darker]">
                   <Image
                     src="/media/mitocw_logo.jpg"
                     alt="MIT OCW Logo"
@@ -123,17 +123,15 @@ export default function MITIngestForm({
                     className="rounded-full object-contain"
                   />
                 </div>
-                <Text className="text-xl font-semibold text-gray-100">
-                  MIT Course
-                </Text>
+                <Text className="text-xl font-semibold">MIT Course</Text>
               </div>
             </div>
 
-            <Text className="mb-4 text-sm leading-relaxed text-gray-400">
+            <Text className="mb-4 text-sm leading-relaxed text-[--dashboard-foreground-faded]">
               Import content from MIT OpenCourseWare, including lecture notes,
               assignments, and course materials.
             </Text>
-            <div className="mt-auto flex items-center text-sm text-purple-400">
+            <div className="mt-auto flex items-center text-sm text-[--dashboard-button]">
               <span>Configure import</span>
               <IconArrowRight
                 size={16}
@@ -159,7 +157,7 @@ export default function MITIngestForm({
                     ocw.mit.edu/courses/ANY_COURSE
                   </code>{' '}
                   , for example:{' '}
-                  <span className="break-all text-purple-600">
+                  <span className="break-all text-[--dashboard-button]">
                     <NextLink
                       target="_blank"
                       rel="noreferrer"
@@ -215,7 +213,7 @@ export default function MITIngestForm({
             <Button
               onClick={handleIngest}
               disabled={!isUrlValid}
-              className="h-11 w-full rounded-xl bg-purple-600 text-white transition-colors hover:bg-purple-700"
+              className="h-11 w-full rounded-xl bg-[--dashboard-button] text-[--dashboard-button-foreground] transition-colors hover:bg-[--dashboard-button-hover]"
             >
               Ingest MIT Course
             </Button>

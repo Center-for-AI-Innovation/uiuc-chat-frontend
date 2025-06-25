@@ -1,6 +1,6 @@
 import { Group } from '@mantine/core'
 import { IconExternalLink } from '@tabler/icons-react'
-import { NextPage } from 'next'
+import { type NextPage } from 'next'
 import Link from 'next/link'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'

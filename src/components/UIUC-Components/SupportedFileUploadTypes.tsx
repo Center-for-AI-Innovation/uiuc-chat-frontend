@@ -13,7 +13,7 @@ import {
   IconMusic,
   IconCode,
   IconFileTypeTxt,
-  TablerIconsProps
+  type TablerIconsProps
 } from '@tabler/icons-react'
 import {
   Tooltip,

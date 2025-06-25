@@ -10,8 +10,8 @@ import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { validateApiKeyAndRetrieveData } from './keys/validate'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import posthog from 'posthog-js'
-import { NextApiRequest, NextApiResponse } from 'next'
-import { CourseMetadata } from '~/types/courseMetadata'
+import { type NextApiRequest, type NextApiResponse } from 'next'
+import { type CourseMetadata } from '~/types/courseMetadata'
 import {
   attachContextsToLastMessage,
   constructSearchQuery,
@@ -37,7 +37,7 @@ import {
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { buildPrompt } from '~/app/utils/buildPromptUtils'
-import { AuthContextProps } from 'react-oidc-context'
+import { type AuthContextProps } from 'react-oidc-context'
 import { selectBestTemperature } from '~/components/Chat/Temperature'
 
 /**

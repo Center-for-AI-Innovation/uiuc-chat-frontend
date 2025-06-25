@@ -1,11 +1,11 @@
 import {
-  QueryClient,
+  type QueryClient,
   useInfiniteQuery,
   useMutation,
   useQuery,
 } from '@tanstack/react-query'
-import { Conversation, ConversationPage } from '~/types/chat'
-import { FolderWithConversation } from '~/types/folder'
+import { type Conversation, type ConversationPage } from '~/types/chat'
+import { type FolderWithConversation } from '~/types/folder'
 import {
   deleteAllConversationsFromServer,
   deleteConversationFromServer,

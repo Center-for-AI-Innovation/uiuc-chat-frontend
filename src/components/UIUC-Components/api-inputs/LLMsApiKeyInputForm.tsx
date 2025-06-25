@@ -94,7 +94,13 @@ export const APIKeyInput = ({
 
   return (
     <div style={{ position: 'relative', width: '100%' }}>
-      <Input.Wrapper id="API-key-input" label={placeholder}>
+      <Input.Wrapper
+        id="API-key-input"
+        label={placeholder}
+        styles={{
+          label: { color: 'var(--dashboard-foreground-faded)' },
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <TextInput
             type="password"
@@ -113,7 +119,8 @@ export const APIKeyInput = ({
             style={{ flex: 1 }}
             styles={{
               input: {
-                color: 'white',
+                color: 'var(--foreground)',
+                backgroundColor: 'var(--background)',
                 padding: '8px',
                 borderRadius: '4px',
               },
@@ -128,6 +135,7 @@ export const APIKeyInput = ({
               field.form.handleSubmit()
             }}
             type="submit"
+            className="hover:bg-[red] hover:text-[white]"
             style={{ marginLeft: '8px' }}
           >
             <IconX size={12} />
@@ -151,7 +159,7 @@ export const APIKeyInput = ({
         <div>
           <Button
             compact
-            className="bg-purple-800 hover:border-indigo-600 hover:bg-indigo-600"
+            className="bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover]"
             onClick={() => {
               field.form.handleSubmit()
             }}
@@ -281,7 +289,8 @@ const NewModelDropdown: React.FC<{
         }}
         styles={(theme) => ({
           input: {
-            backgroundColor: 'rgb(107, 33, 168)',
+            color: 'var(--foreground)',
+            backgroundColor: 'var(--background)',
             border: 'none',
             // color: theme.white,
             // borderRadius: theme.radius.md,
@@ -291,8 +300,8 @@ const NewModelDropdown: React.FC<{
             // },
           },
           dropdown: {
-            backgroundColor: '#1d1f33',
-            border: '1px solid rgba(42,42,120,1)',
+            backgroundColor: 'var(--background)',
+            border: '1px solid var(--background-dark)',
             borderRadius: theme.radius.md,
             marginTop: '2px',
             boxShadow: theme.shadows.xs,
@@ -301,21 +310,23 @@ const NewModelDropdown: React.FC<{
             position: 'absolute',
           },
           item: {
-            backgroundColor: '#1d1f33',
+            color: 'var(--foreground)',
+            backgroundColor: 'var(--background)',
             borderRadius: theme.radius.md,
             margin: '2px',
             '&[data-selected]': {
               '&': {
+                color: 'var(--foreground)',
                 backgroundColor: 'transparent',
               },
               '&:hover': {
-                backgroundColor: 'rgb(107, 33, 168)',
-                color: theme.white,
+                color: 'var(--foreground)',
+                backgroundColor: 'var(--foreground-faded)',
               },
             },
             '&[data-hovered]': {
-              backgroundColor: 'rgb(107, 33, 168)',
-              color: theme.white,
+              color: 'var(--foreground)',
+              backgroundColor: 'var(--foreground-faded)',
             },
           },
         })}
@@ -611,7 +622,7 @@ export default function APIKeyInputForm() {
                     border: 'None',
                     color: 'white',
                   }}
-                  className="min-h-full flex-[1_1_100%] bg-gradient-to-r from-purple-900 via-indigo-800 to-blue-800 md:flex-[1_1_70%]"
+                  className="min-h-full flex-[1_1_100%] bg-[--background] md:flex-[1_1_70%]"
                 >
                   <Flex
                     gap="md"
@@ -622,16 +633,14 @@ export default function APIKeyInputForm() {
                   >
                     <Title
                       order={2}
-                      variant="gradient"
                       align="left"
-                      gradient={{ from: 'gold', to: 'white', deg: 50 }}
-                      className={`pl-8 pt-8 ${montserrat_heading.variable} font-montserratHeading`}
+                      className={`pl-8 pr-2 pt-8 ${montserrat_heading.variable} font-montserratHeading text-[--foreground]`}
                     >
                       {/* API Keys: Add LLMs to your Chatbot */}
                       Configure LLM Providers for your Chatbot
                     </Title>
                     <Title
-                      className={`${montserrat_heading.variable} flex-[1_1_50%] font-montserratHeading`}
+                      className={`${montserrat_heading.variable} flex-[1_1_50%] font-montserratHeading text-[--foreground]`}
                       order={5}
                       px={18}
                       ml={'md'}
@@ -659,13 +668,7 @@ export default function APIKeyInputForm() {
                         >
                           <>
                             <Title
-                              className={`${montserrat_heading.variable} mt-4 font-montserratHeading`}
-                              variant="gradient"
-                              gradient={{
-                                from: 'gold',
-                                to: 'white',
-                                deg: 170,
-                              }}
+                              className={`${montserrat_heading.variable} mt-4 font-montserratHeading text-[--foreground]`}
                               order={3}
                             >
                               Closed source LLMs
@@ -729,12 +732,6 @@ export default function APIKeyInputForm() {
                             </Flex>
                             <Title
                               className={`-mb-3 ${montserrat_heading.variable} mt-4 font-montserratHeading`}
-                              variant="gradient"
-                              gradient={{
-                                from: 'gold',
-                                to: 'white',
-                                deg: 170,
-                              }}
                               order={3}
                             >
                               Open source LLMs
@@ -794,8 +791,8 @@ export default function APIKeyInputForm() {
                   style={{
                     // flex: isSmallScreen ? '1 1 100%' : '1 1 40%',
                     padding: '1rem',
-                    backgroundColor: '#15162c',
-                    color: 'white',
+                    backgroundColor: 'var(--dashboard-background-dark)',
+                    color: 'var(--dashboard-foreground)',
                   }}
                 >
                   <div className="card flex h-full flex-col justify-center">
@@ -803,8 +800,6 @@ export default function APIKeyInputForm() {
                       <div className="pb-4">
                         <Title
                           className={`label ${montserrat_heading.variable} font-montserratHeading`}
-                          variant="gradient"
-                          gradient={{ from: 'gold', to: 'white', deg: 170 }}
                           order={3}
                         >
                           Default Model
@@ -929,7 +924,7 @@ export default function APIKeyInputForm() {
 
             {/* SECTION: OTHER INFO, TBD */}
             {/* <div
-              className="mx-auto mt-[2%] w-[90%] items-start rounded-2xl shadow-md shadow-purple-600"
+              className="mx-auto mt-[2%] w-[90%] items-start rounded-2xl shadow-md"
               style={{ zIndex: 1, background: '#15162c' }}
             >
               <Flex direction="row" justify="space-between">
@@ -998,7 +993,33 @@ export const showConfirmationToast = ({
     radius: 'lg',
     icon: isError ? <IconAlertCircle /> : <IconCheck />,
     className: 'my-notification-class',
-    style: { backgroundColor: '#15162c' },
+    styles: {
+      root: {
+        backgroundColor: 'var(--notification)', // Dark background to match the page
+        borderColor: isError ? '#E53935' : 'var(--notification-border)', // Red for errors,  for success
+        borderWidth: '1px',
+        borderStyle: 'solid',
+        borderRadius: '8px', // Added rounded corners
+      },
+      title: {
+        color: 'var(--notification-title)', // White text for the title
+        fontWeight: 600,
+      },
+      description: {
+        color: 'var(--notification-message)', // Light gray text for the message
+      },
+      closeButton: {
+        color: 'var(--notification-title)', // White color for the close button
+        borderRadius: '4px', // Added rounded corners to close button
+        '&:hover': {
+          backgroundColor: 'rgba(255, 255, 255, 0.1)', // Subtle hover effect
+        },
+      },
+      icon: {
+        backgroundColor: 'transparent', // Transparent background for the icon
+        color: isError ? '#E53935' : 'var(--notification-title)', // Icon color matches the border
+      },
+    },
     loading: false,
   })
 }

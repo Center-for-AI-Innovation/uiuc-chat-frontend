@@ -21,14 +21,14 @@ function DocumentGroupsCard({ course_name }: { course_name: string }) {
         style={{
           color: 'white',
         }}
-        className="min-h-full bg-gradient-to-r from-purple-900 via-indigo-800 to-blue-800"
+        className="min-h-full bg-[--background]"
       >
         <div className="w-full border-b border-white/10 bg-black/20 px-4 py-3 sm:px-6 sm:py-4 md:px-8">
           <div className="flex items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-2">
               <Title
                 order={3}
-                className={`${montserrat_heading.variable} font-montserratHeading text-lg text-white/90 sm:text-2xl`}
+                className={`${montserrat_heading.variable} font-montserratHeading text-lg text-[--foreground] sm:text-2xl`}
               >
                 Document Groups
               </Title>
@@ -36,16 +36,16 @@ function DocumentGroupsCard({ course_name }: { course_name: string }) {
                 variant="subtle"
                 color="gray"
                 onClick={() => setAccordionOpened(!accordionOpened)}
-                className="hover:bg-white/10"
+                className="hover:bg-black/10"
                 title="More info on document groups"
               >
-                <IconInfoCircle className="text-white/60" />
+                <IconInfoCircle className="text-[--dashboard-foreground-faded]" />
               </ActionIcon>
             </div>
           </div>
         </div>
 
-        <div className="bg-[#1e1f3a]/80 px-4 py-4 sm:px-6 sm:py-6 md:px-8">
+        <div className="bg-[--background] px-4 py-4 sm:px-6 sm:py-6 md:px-8">
           <AnimatePresence>
             {accordionOpened && (
               <motion.div

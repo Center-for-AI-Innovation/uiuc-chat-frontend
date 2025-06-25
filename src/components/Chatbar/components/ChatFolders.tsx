@@ -1,6 +1,6 @@
 import { useContext } from 'react'
 
-import { FolderInterface, FolderWithConversation } from '@/types/folder'
+import { type FolderInterface, type FolderWithConversation } from '@/types/folder'
 
 import HomeContext from '~/pages/api/home/home.context'
 

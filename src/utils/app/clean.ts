@@ -1,4 +1,4 @@
-import { Conversation, ConversationPage } from '@/types/chat'
+import { type Conversation, type ConversationPage } from '@/types/chat'
 import {
   OpenAIModelID,
   OpenAIModels,

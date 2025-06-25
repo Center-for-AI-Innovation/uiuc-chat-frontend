@@ -1,5 +1,5 @@
-import axios, { AxiosResponse } from 'axios'
-import { ContextWithMetadata } from '~/types/chat'
+import axios, { type AxiosResponse } from 'axios'
+import { type ContextWithMetadata } from '~/types/chat'
 
 export const fetchMQRContexts = async (
   course_name: string,

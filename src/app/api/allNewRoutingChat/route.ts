@@ -1,8 +1,8 @@
 // src/app/api/allNewRoutingChat/route.ts
 
-import { ChatBody } from '@/types/chat'
+import { type ChatBody } from '@/types/chat'
 import { routeModelRequest } from '~/utils/streamProcessing'
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, type NextResponse } from 'next/server'
 import { buildPrompt } from '~/app/utils/buildPromptUtils'
 import { OpenAIError } from '~/utils/server'
 

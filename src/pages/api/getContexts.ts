@@ -1,4 +1,4 @@
-import { ContextWithMetadata } from '~/types/chat'
+import { type ContextWithMetadata } from '~/types/chat'
 
 
 

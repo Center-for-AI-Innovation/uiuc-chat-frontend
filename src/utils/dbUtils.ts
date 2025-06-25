@@ -1,5 +1,5 @@
 // dbUtils.ts
-import { CourseDocument } from '~/types/courseMaterials'
+import { type CourseDocument } from '~/types/courseMaterials'
 import { supabase } from './supabaseClient'
 
 export async function fetchEnabledDocGroups(courseName: string) {

@@ -1,5 +1,5 @@
-import { CourseMetadata } from '~/types/courseMetadata'
-import { NextRequest, NextResponse } from 'next/server'
+import { type CourseMetadata } from '~/types/courseMetadata'
+import { type NextRequest, NextResponse } from 'next/server'
 import { redisClient } from '~/utils/redisClient'
 
 export const runtime = 'edge'
