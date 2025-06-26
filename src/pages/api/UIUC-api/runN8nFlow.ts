@@ -1,4 +1,5 @@
 import { type NextApiRequest, type NextApiResponse } from 'next'
+import { getBackendUrl } from '~/utils/apiUtils'
 
 // Common function to run N8N flow - can be used anywhere
 export const runN8nFlowBackend = async (
@@ -6,10 +7,7 @@ export const runN8nFlowBackend = async (
   name: string,
   data: any,
 ): Promise<any> => {
-  const backendUrl = process.env.RAILWAY_URL
-  if (!backendUrl) {
-    throw new Error('No backend URL configured. Please set RAILWAY_URL environment variable.')
-  }
+  const backendUrl = getBackendUrl()
 
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), 30000)

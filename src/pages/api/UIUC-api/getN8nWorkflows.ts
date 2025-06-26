@@ -1,4 +1,5 @@
 import { type NextApiRequest, type NextApiResponse } from 'next'
+import { getBackendUrl } from '~/utils/apiUtils'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -13,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const response = await fetch(
-      `${process.env.RAILWAY_URL}/getworkflows?api_key=${api_key}&limit=${limit || 10}&pagination=${pagination || 'true'}`,
+      `${getBackendUrl()}/getworkflows?api_key=${api_key}&limit=${limit || 10}&pagination=${pagination || 'true'}`,
     )
 
     if (!response.ok) {

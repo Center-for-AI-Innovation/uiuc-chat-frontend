@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { type NextApiRequest, type NextApiResponse } from 'next'
+import { getBackendUrl } from '~/utils/apiUtils'
 
 interface DownloadResult {
   message: string
@@ -21,7 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const response = await axios.get(
-      `${process.env.RAILWAY_URL}/export-convo-history?course_name=${course_name}`,
+      `${getBackendUrl()}/export-convo-history?course_name=${course_name}`,
       { responseType: 'blob' },
     )
 

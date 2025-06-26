@@ -1,5 +1,7 @@
 // src/pages/api/UIUC-api/getConversationStats.ts
 
+import { getBackendUrl } from '~/utils/apiUtils'
+
 export default async function handler(req: any, res: any) {
   const { course_name, from_date, to_date } = req.query
 
@@ -8,7 +10,7 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const url = new URL(`${process.env.RAILWAY_URL}/getConversationStats`)
+    const url = new URL(`${getBackendUrl()}/getConversationStats`)
     url.searchParams.append('course_name', course_name)
     if (from_date) url.searchParams.append('from_date', from_date)
     if (to_date) url.searchParams.append('to_date', to_date)

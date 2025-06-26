@@ -1,3 +1,5 @@
+import { getBackendUrl } from '~/utils/apiUtils'
+
 export default async function handler(req: any, res: any) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -13,7 +15,7 @@ export default async function handler(req: any, res: any) {
 
   try {
     const response = await fetch(
-      `${process.env.RAILWAY_URL}/mit-download?url=${encodeURIComponent(url)}&course_name=${encodeURIComponent(course_name)}&local_dir=${encodeURIComponent(local_dir)}`,
+      `${getBackendUrl()}/mit-download?url=${encodeURIComponent(url)}&course_name=${encodeURIComponent(course_name)}&local_dir=${encodeURIComponent(local_dir)}`,
     )
 
     if (!response.ok) {
