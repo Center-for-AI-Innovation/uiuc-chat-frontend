@@ -72,9 +72,10 @@ const handler = async (
       })
     } catch (error: any) {
       console.error(
-        '❌❌ Supabase failed to insert into `documents_in_progress`:',
+        '❌❌ Database failed to insert into `documents_in_progress`:',
         error,
       )
+      // TODO need to update event name to remove supabase
       posthog.capture('supabase_failure_insert_documents_in_progress', {
         s3_path: s3_filepath,
         course_name: courseName,
