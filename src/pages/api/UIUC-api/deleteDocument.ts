@@ -1,3 +1,5 @@
+import { getBackendUrl } from '~/utils/apiUtils'
+
 export default async function handler(req: any, res: any) {
   if (req.method !== 'DELETE') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -24,7 +26,7 @@ export default async function handler(req: any, res: any) {
     if (url) params.append('url', url)
 
     const response = await fetch(
-      `${process.env.RAILWAY_URL}/delete?${params.toString()}`,
+      `${getBackendUrl()}/delete?${params.toString()}`,
       {
         method: 'DELETE',
       }

@@ -1,5 +1,6 @@
 import { type NextApiRequest, type NextApiResponse } from 'next'
 import { type ContextWithMetadata } from '~/types/chat'
+import { getBackendUrl } from '~/utils/apiUtils'
 
 // Common function to fetch contexts from backend - can be used anywhere
 export const fetchContextsFromBackend = async (
@@ -8,10 +9,7 @@ export const fetchContextsFromBackend = async (
   token_limit = 4000,
   doc_groups: string[] = [],
 ): Promise<ContextWithMetadata[]> => {
-  const backendUrl = process.env.RAILWAY_URL
-  if (!backendUrl) {
-    throw new Error('No backend URL configured. Please set RAILWAY_URL environment variable.')
-  }
+  const backendUrl = getBackendUrl()
 
   const requestBody = {
     course_name: course_name,

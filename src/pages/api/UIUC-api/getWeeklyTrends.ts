@@ -1,3 +1,5 @@
+import { getBackendUrl } from '~/utils/apiUtils'
+
 export default async function handler(req: any, res: any) {
   const { project_name } = req.query
 
@@ -7,7 +9,7 @@ export default async function handler(req: any, res: any) {
 
   try {
     const response = await fetch(
-      `${process.env.RAILWAY_URL}/getWeeklyTrends?project_name=${project_name}`,
+      `${getBackendUrl()}/getWeeklyTrends?project_name=${project_name}`,
     )
 
     if (!response.ok) {

@@ -1,3 +1,5 @@
+import { getBackendUrl } from '~/utils/apiUtils'
+
 interface ModelUsage {
   model_name: string
   count: number
@@ -13,7 +15,7 @@ export default async function handler(req: any, res: any) {
 
   try {
     const response = await fetch(
-      `${process.env.RAILWAY_URL}/getModelUsageCounts?project_name=${project_name}`,
+      `${getBackendUrl()}/getModelUsageCounts?project_name=${project_name}`,
     )
 
     if (!response.ok) {
