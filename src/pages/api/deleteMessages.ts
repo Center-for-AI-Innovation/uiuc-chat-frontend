@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { supabase } from '@/utils/supabaseClient'
-
+import { db, messages } from '~/db/dbClient'
+import { inArray } from 'drizzle-orm'
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -37,12 +37,16 @@ export default async function handler(
   }
 
   try {
-    const { data, error } = await supabase
-      .from('messages')
-      .delete()
-      .in('id', messageIds)
-
-    if (error) throw error
+    // Keep IDs as strings since they are UUIDs
+    const result = await db
+      .delete(messages)
+      .where(inArray(messages.id, messageIds));
+    
+    // DrizzleORM doesn't return data/error objects like Supabase
+    // Instead it returns the number of affected rows
+    if (!result) {
+      throw new Error('Failed to delete messages');
+    }
 
     res.status(200).json({ message: 'Messages deleted successfully' })
   } catch (error) {
