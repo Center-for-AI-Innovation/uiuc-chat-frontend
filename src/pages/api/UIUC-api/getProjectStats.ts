@@ -1,4 +1,5 @@
 // src/pages/api/UIUC-api/getProjectStats.ts
+import { getBackendUrl } from '~/utils/apiUtils'
 
 export default async function handler(req: any, res: any) {
   const { project_name } = req.query
@@ -9,7 +10,7 @@ export default async function handler(req: any, res: any) {
 
   try {
     const response = await fetch(
-      `${process.env.RAILWAY_URL}/getProjectStats?project_name=${project_name}`,
+      `${getBackendUrl()}/getProjectStats?project_name=${project_name}`,
     )
 
     if (!response.ok) {

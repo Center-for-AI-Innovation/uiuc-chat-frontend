@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { getBackendUrl } from '~/utils/apiUtils'
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
@@ -25,7 +26,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     // Send email to kastan alerting that he needs to approve a canvas course
     const sendEmailResponse = await fetch(
-      `${process.env.RAILWAY_URL}/send-transactional-email`,
+      `${getBackendUrl()}/send-transactional-email`,
       {
         method: 'POST',
         headers: {

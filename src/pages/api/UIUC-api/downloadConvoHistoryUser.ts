@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { getBackendUrl } from '~/utils/apiUtils'
 
 interface DownloadResult {
   message: string
@@ -13,7 +14,7 @@ export const downloadConversationHistoryUser = async (
   )
   try {
     const response = await axios.get(
-      `${process.env.RAILWAY_URL}/export-convo-history-user?user_email=${userEmail}&project_name=${projectName}`,
+      `${getBackendUrl()}/export-convo-history-user?user_email=${userEmail}&project_name=${projectName}`,
       { responseType: 'blob' },
     )
     console.log('Received response:', response)

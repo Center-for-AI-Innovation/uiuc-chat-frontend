@@ -9,6 +9,7 @@ import {
   type N8nWorkflow,
   type OpenAICompatibleTool,
 } from '~/types/tools'
+import { getBackendUrl } from '~/utils/apiUtils'
 
 export async function handleFunctionCall(
   message: Message,
@@ -566,7 +567,7 @@ export async function fetchTools(
     )
   } else {
     // Server-side: use direct backend call
-    const backendUrl = process.env.RAILWAY_URL
+    const backendUrl = getBackendUrl()
     if (!backendUrl) {
       throw new Error('No backend URL configured. Please provide base_url parameter or set RAILWAY_URL environment variable.')
     }
