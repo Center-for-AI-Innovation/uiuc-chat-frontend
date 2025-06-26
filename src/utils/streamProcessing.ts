@@ -1,3 +1,16 @@
+import { type CoreMessage } from 'ai'
+import { type NextApiRequest, type NextApiResponse } from 'next'
+import posthog from 'posthog-js'
+import { v4 as uuidv4 } from 'uuid'
+import { runBedrockChat } from '~/app/api/chat/bedrock/route'
+import { runGeminiChat } from '~/app/api/chat/gemini/route'
+import { runSambaNovaChat } from '~/app/api/chat/sambanova/route'
+import { runAnthropicChat } from '~/app/utils/anthropic'
+import { runOllamaChat } from '~/app/utils/ollama'
+import { runVLLM } from '~/app/utils/vllm'
+import { fetchContexts } from '~/pages/api/getContexts'
+import fetchMQRContexts from '~/pages/api/getContextsMQR'
+import { fetchImageDescription } from '~/pages/api/UIUC-api/fetchImageDescription'
 import {
   type ChatApiBody,
   type ChatBody,
@@ -7,45 +20,32 @@ import {
   type Message,
 } from '~/types/chat'
 import { type CourseMetadata } from '~/types/courseMetadata'
-import { OpenAIError } from './server'
-import { replaceCitationLinks } from './citations'
-import { fetchImageDescription } from '~/pages/api/UIUC-api/fetchImageDescription'
 import { getBaseUrl } from '~/utils/apiUtils'
-import posthog from 'posthog-js'
 import {
   type AllLLMProviders,
   AllSupportedModels,
   type AnthropicProvider,
+  type BedrockProvider,
+  type GeminiProvider,
   type GenericSupportedModel,
   type NCSAHostedVLMProvider,
   type OllamaProvider,
-  VisionCapableModels,
-  type BedrockProvider,
-  type GeminiProvider,
-  type SambaNovaProvider,
   ProviderNames,
+  type SambaNovaProvider,
+  VisionCapableModels,
 } from '~/utils/modelProviders/LLMProvider'
-import fetchMQRContexts from '~/pages/api/getContextsMQR'
-import fetchContexts from '~/pages/api/getContexts'
-import { OllamaModelIDs } from './modelProviders/ollama'
-import { webLLMModels } from './modelProviders/WebLLM'
-import { OpenAIModelID } from './modelProviders/types/openai'
-import { v4 as uuidv4 } from 'uuid'
+import { replaceCitationLinks } from './citations'
 import { AzureModelID } from './modelProviders/azure'
+import { OllamaModelIDs } from './modelProviders/ollama'
+import { openAIAzureChat } from './modelProviders/OpenAIAzureChat'
 import { AnthropicModelID } from './modelProviders/types/anthropic'
-import { type NextApiRequest, type NextApiResponse } from 'next'
 import { BedrockModelID } from './modelProviders/types/bedrock'
 import { GeminiModelID } from './modelProviders/types/gemini'
-import { SambaNovaModelID } from './modelProviders/types/SambaNova'
-import { runOllamaChat } from '~/app/utils/ollama'
-import { openAIAzureChat } from './modelProviders/OpenAIAzureChat'
-import { runAnthropicChat } from '~/app/utils/anthropic'
 import { NCSAHostedVLMModelID } from './modelProviders/types/NCSAHostedVLM'
-import { runVLLM } from '~/app/utils/vllm'
-import { type CoreMessage } from 'ai'
-import { runGeminiChat } from '~/app/api/chat/gemini/route'
-import { runBedrockChat } from '~/app/api/chat/bedrock/route'
-import { runSambaNovaChat } from '~/app/api/chat/sambanova/route'
+import { OpenAIModelID } from './modelProviders/types/openai'
+import { SambaNovaModelID } from './modelProviders/types/SambaNova'
+import { webLLMModels } from './modelProviders/WebLLM'
+import { OpenAIError } from './server'
 
 /**
  * Enum representing the possible states of the state machine used in processing text chunks.

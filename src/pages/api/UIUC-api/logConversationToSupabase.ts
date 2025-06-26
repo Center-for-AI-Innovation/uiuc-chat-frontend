@@ -1,7 +1,8 @@
-import { supabase } from '@/utils/supabaseClient'
-import { Content, Conversation } from '~/types/chat'
-import { RunTree } from 'langsmith'
 import { sanitizeForLogging } from '@/utils/sanitization'
+import { supabase } from '@/utils/supabaseClient'
+import { RunTree } from 'langsmith'
+import { Content, Conversation } from '~/types/chat'
+import { getBackendUrl } from '~/utils/apiUtils'
 
 export const config = {
   api: {
@@ -40,7 +41,7 @@ const logConversationToSupabase = async (req: any, res: any) => {
   // Send to our custom monitor
   try {
     const response = await fetch(
-      process.env.RAILWAY_URL + '/llm-monitor-message',
+      getBackendUrl() + '/llm-monitor-message',
       {
         method: 'POST',
         headers: {
