@@ -1,4 +1,4 @@
-import { type NextRequest, NextResponse } from 'next/server'
+import { getBackendUrl } from '~/utils/apiUtils'
 
 interface ModelUsage {
   model_name: string
@@ -6,43 +6,34 @@ interface ModelUsage {
   percentage: number
 }
 
-export const runtime = 'edge'
-
-export default async function handler(req: NextRequest, res: NextResponse) {
-  const project_name = req.nextUrl.searchParams.get('project_name')
+export default async function handler(req: any, res: any) {
+  const { project_name } = req.query
 
   if (!project_name) {
-    return NextResponse.json(
-      { error: 'Missing required project_name parameter' },
-      { status: 400 },
-    )
+    return res.status(400).json({ error: 'Missing required project_name parameter' })
   }
 
   try {
     const response = await fetch(
-      `https://flask-production-751b.up.railway.app/getModelUsageCounts?project_name=${project_name}`,
+      `${getBackendUrl()}/getModelUsageCounts?project_name=${project_name}`,
     )
 
     if (!response.ok) {
       const errorText = await response.text()
       console.error('Backend response not OK:', response.status, errorText)
-      return NextResponse.json(
-        { error: `Failed to fetch data: ${response.status} - ${errorText}` },
-        { status: response.status },
-      )
+      return res.status(response.status).json({ 
+        error: `Failed to fetch data: ${response.status} - ${errorText}` 
+      })
     }
 
     const data = (await response.json()) as ModelUsage[]
-    return NextResponse.json(data)
+    return res.status(200).json(data)
   } catch (error) {
     console.error('Error in handler:', error)
-    return NextResponse.json(
-      {
-        error: 'Failed to fetch model usage counts',
-        details: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 },
-    )
+    return res.status(500).json({
+      error: 'Failed to fetch model usage counts',
+      details: error instanceof Error ? error.message : String(error),
+    })
   }
 }
 

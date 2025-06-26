@@ -16,7 +16,7 @@ import {
 import { useMediaQuery } from '@mantine/hooks'
 import router from 'next/router'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import createProject from '~/pages/api/UIUC-api/createProject'
+import { createProject } from '~/pages/api/UIUC-api/createProject'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { CourseMetadata } from '~/types/courseMetadata'
 
@@ -255,9 +255,15 @@ const MakeNewCoursePage = ({
                       Next: let&apos;s upload some documents
                     </Title>
                     <Tooltip
-                      label="Add a project name above :)"
+                      label={
+                        projectName === ''
+                          ? 'Add a project name above :)'
+                          : !isCourseAvailable
+                            ? 'This project name is already taken!'
+                            : ''
+                      }
                       withArrow
-                      disabled={projectName !== ''}
+                      disabled={projectName !== '' && isCourseAvailable}
                     >
                       <span>
                         <Button
@@ -277,8 +283,16 @@ const MakeNewCoursePage = ({
                           style={{
                             alignSelf: 'flex-end',
                           }}
-                          disabled={projectName === '' || isLoading}
-                          leftIcon={isLoading ? <Loader size="xs" color="white" /> : null}
+                          disabled={
+                            projectName === '' ||
+                            isLoading ||
+                            !isCourseAvailable
+                          }
+                          leftIcon={
+                            isLoading ? (
+                              <Loader size="xs" color="white" />
+                            ) : null
+                          }
                         >
                           {isLoading ? 'Creating...' : 'Create'}
                         </Button>
