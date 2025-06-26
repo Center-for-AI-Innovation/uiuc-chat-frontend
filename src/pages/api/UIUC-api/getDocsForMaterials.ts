@@ -5,7 +5,7 @@ import { documents } from '~/db/schema'
 
 export const runtime = 'edge'
 
-export const getCourseDocumentsHandler = async (
+const getCourseDocumentsHandler = async (
   req: NextApiRequest,
   res: NextApiResponse,
 ) => {
@@ -71,3 +71,5 @@ export const getCourseDocuments = async (
     return null
   }
 }
+
+export default getCourseDocumentsHandler

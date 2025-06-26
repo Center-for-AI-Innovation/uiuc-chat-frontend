@@ -3,7 +3,7 @@ import { Content, Conversation } from '~/types/chat'
 import { RunTree } from 'langsmith'
 import { sanitizeForLogging } from '@/utils/sanitization'
 import { llmConvoMonitor } from '~/db/schema'
-import { validate as isUUID  } from 'uuid'
+import { getBackendUrl } from '~/utils/apiUtils'
 
 export const config = {
   api: {
@@ -44,7 +44,7 @@ const logConversation = async (req: any, res: any) => {
   // Send to our custom monitor
   try {
     const response = await fetch(
-      process.env.RAILWAY_URL + '/llm-monitor-message',
+      getBackendUrl() + '/llm-monitor-message',
       {
         method: 'POST',
         headers: {
