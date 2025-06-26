@@ -15,7 +15,7 @@ const newsletterUnsubscribe = async (req: any, res: any) => {
     },
   })
   } catch (error: any) {
-    console.error('error form supabase:', error)
+    console.error('error:', error)
     return res.status(500).json({ success: false, error: error })
   }
   return res.status(200).json({ success: true })

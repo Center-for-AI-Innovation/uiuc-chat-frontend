@@ -25,7 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.log('upsertN8nAPIKey result:', result);
     return res.status(200).json({ success: true });
   } catch (error) {
-    console.error('Error upserting N8n key to Supabase:', error);
+    console.error('Error upserting N8n key:', error);
     return res.status(500).json({ success: false, error: error });
   }
 }

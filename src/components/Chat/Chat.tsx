@@ -257,7 +257,7 @@ export const Chat = memo(
     }, [tools])
 
     const onMessageReceived = async (conversation: Conversation) => {
-      // Log conversation to Supabase
+      // Log conversation to database
       try {
         const response = await fetch(
           `/api/UIUC-api/logConversation`,
@@ -1853,7 +1853,7 @@ export const Chat = memo(
           // Update database
           await updateConversationMutation.mutateAsync(updatedConversation)
 
-          // Log to Supabase
+          // Log to database
           await fetch('/api/UIUC-api/logConversation', {
             method: 'POST',
             headers: {

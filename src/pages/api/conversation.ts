@@ -263,12 +263,6 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  // console.log(
-  //   'Received request for conversation API:',
-  //   req.method,
-  //   req.body,
-  //   req.query,
-  // )
   const { method } = req
 
   switch (method) {
@@ -316,7 +310,7 @@ export default async function handler(
               }
             });
         } catch (error) {
-          console.error('Error saving conversation:', error);
+          console.error('Error insert conversation to db:', error);
           throw error;
         }
 
@@ -360,12 +354,13 @@ export default async function handler(
 
           // Delete all messages after this timestamp
           try {
+            // use DrizzleORM gt to compare timestamps avoid serialization issues
             await db
               .delete(messages)
               .where(
                 and(
-                  sql`${messages.conversation_id}::text = ${conversation.id}`,
-                  sql`${messages.created_at} > ${new Date(earliestEditTime)}`
+                  eq(sql`${messages.conversation_id}::text`, conversation.id),
+                  gt(messages.created_at, new Date(earliestEditTime))
                 )
               );
           } catch (error) {
@@ -419,12 +414,17 @@ export default async function handler(
             created_at: message.created_at ? new Date(message.created_at) : new Date(),
             updated_at: message.updated_at ? new Date(message.updated_at) : new Date(),
           };
-          
-          await db.insert(messages).values(messageForInsert as any)
+          try{
+            await db.insert(messages).values(messageForInsert as any)
             .onConflictDoUpdate({
               target: messages.id,
               set: messageForInsert as any
             });
+          }
+          catch (error) {
+            console.error('Error inserting message to db:', error);
+            throw error;
+          }
         }
 
         res.status(200).json({ message: 'Conversation saved successfully' })
