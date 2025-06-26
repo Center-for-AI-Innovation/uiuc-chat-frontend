@@ -1,5 +1,7 @@
+import { eq } from 'drizzle-orm'
 import { NextApiRequest, NextApiResponse } from 'next'
-import { supabase } from '~/utils/supabaseClient'
+import { db } from '~/db/dbClient'
+import { documents } from '~/db/schema'
 
 export const runtime = 'edge'
 
@@ -44,17 +46,23 @@ export const getCourseDocuments = async (
     return null
   }
   try {
-    const { data: documents, error } = await supabase
-      .from('documents')
-      .select('readable_filename,url,s3_path,created_at,base_url')
-      .eq('course_name', course_name)
+    const data = await db
+      .select({ readable_filename: documents.readable_filename, url: documents.url, s3_path: documents.s3_path, created_at: documents.created_at, base_url: documents.base_url })
+      .from(documents)
+      .where(eq(documents.course_name, course_name))
 
-    if (error) {
-      console.error('Error fetching course documents:', error)
+    if (data.length === 0) {
+      console.error('No documents found for course:', course_name)
       return null
     }
 
-    return documents
+    return data.map((doc) => ({
+      readable_filename: doc.readable_filename || '',
+      url: doc.url || '',
+      s3_path: doc.s3_path || '',
+      created_at: doc.created_at?.toISOString() || '',
+      base_url: doc.base_url || '',
+    }))
   } catch (error) {
     console.error(
       'Unexpected error occurred while fetching course documents:',

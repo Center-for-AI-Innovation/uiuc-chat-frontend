@@ -1,8 +1,9 @@
 // src/pages/api/chat-api/keys/rotate.ts
 
 import { NextApiRequest, NextApiResponse } from 'next'
-import { supabase } from '@/utils/supabaseClient'
+import { db, apiKeys } from '~/db/dbClient'
 import { v4 as uuidv4 } from 'uuid'
+import { and, eq } from 'drizzle-orm'
 
 type ApiResponse = {
   message?: string
@@ -46,18 +47,13 @@ export default async function rotateKey(
     console.log('Rotating API key for email:', email)
 
     // Retrieve existing API key
-    const { data: existingKey, error: existingKeyError } = await supabase
-      .from('api_keys')
-      .select('key')
-      .eq('email', email)
-      .eq('is_active', true)
+    const existingKey = await db
+      .select({ key: apiKeys.key })
+      .from(apiKeys)
+      .where(and(eq(apiKeys.email, email), eq(apiKeys.is_active, true)))
 
-    if (existingKeyError) {
-      console.error('Error retrieving existing API key:', existingKeyError)
-      return res.status(500).json({ error: existingKeyError.message })
-    }
 
-    if (!existingKey || existingKey.length === 0) {
+    if (existingKey.length === 0) {
       return res.status(404).json({
         error: 'API key not found for user, please generate one!',
       })
@@ -68,20 +64,24 @@ export default async function rotateKey(
     const newApiKey = `uc_${rawApiKey.replace(/-/g, '')}`
 
     // Update the API key
-    const { error } = await supabase
-      .from('api_keys')
-      .update({ key: newApiKey, is_active: true, modified_at: new Date() })
-      .eq('email', email)
+    try {
+      await db
+        .update(apiKeys)
+        .set({ key: newApiKey, is_active: true, modified_at: new Date() })
+        .where(eq(apiKeys.email, email))
+      
+      console.log('Successfully updated API key for user:', email)
+      
+      return res.status(200).json({
+        message: 'API key rotated successfully',
+        newApiKey,
+      })
 
-    if (error) {
+    } catch (error) {
       console.error('Error updating API key:', error)
-      return res.status(500).json({ error: error.message })
+      return res.status(500).json({ error: 'Error updating API key' })
     }
 
-    return res.status(200).json({
-      message: 'API key rotated successfully',
-      newApiKey,
-    })
   } catch (error) {
     console.error('Failed to rotate API key:', error)
     return res.status(500).json({
