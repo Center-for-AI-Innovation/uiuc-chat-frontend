@@ -59,6 +59,18 @@ const Home = ({
     systemPromptOnly: boolean
   }
 }) => {
+  // State for managing course metadata updates
+  const [currentCourseMetadata, setCurrentCourseMetadata] = useState<CourseMetadata | null>(course_metadata)
+
+  // Update local state when props change
+  useEffect(() => {
+    setCurrentCourseMetadata(course_metadata)
+  }, [course_metadata])
+
+  // Callback to handle course metadata updates from child components
+  const handleCourseMetadataUpdate = useCallback((updatedMetadata: CourseMetadata) => {
+    setCurrentCourseMetadata(updatedMetadata)
+  }, [])
   // States
   const [isInitialSetupDone, setIsInitialSetupDone] = useState(false)
 
@@ -375,7 +387,7 @@ const Home = ({
     if (selectedConversation?.messages.length === 0) return
   }
 
-  const handleNewConversation = () => {
+  const handleNewConversation = (customPrompt?: { text: string; name: string; id?: string }) => {
     // If we're already in an empty conversation, don't create a new one
     if (selectedConversation && selectedConversation.messages.length === 0) {
       return
@@ -395,10 +407,10 @@ const Home = ({
 
     const newConversation: Conversation = {
       id: uuidv4(),
-      name: '',
+      name: customPrompt?.name || '',
       messages: [],
       model: model,
-      prompt: DEFAULT_SYSTEM_PROMPT,
+      prompt: customPrompt?.text || DEFAULT_SYSTEM_PROMPT,
       temperature: selectBestTemperature(lastConversation, model, llmProviders),
       folderId: null,
       userEmail: current_email,
@@ -406,6 +418,7 @@ const Home = ({
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       linkParameters: newLinkParameters,
+      customGptId: customPrompt?.id || null,
     }
 
     // Only update selectedConversation, don't add to conversations list yet
@@ -693,6 +706,26 @@ const Home = ({
         dispatch({ field: 'showChatbar', value: showChatbar === 'true' })
       }
 
+      // Check for custom GPT in URL parameters and course metadata
+      const urlParams = new URLSearchParams(window.location.search)
+      const gptId = urlParams.get('gpt')
+      
+      if (gptId && currentCourseMetadata?.custom_system_prompts) {
+        const customPrompt = currentCourseMetadata.custom_system_prompts.find(
+          (p) => p.id === gptId
+        )
+        if (customPrompt) {
+          console.log('Found custom prompt in course metadata:', customPrompt)
+          handleNewConversation({
+            text: customPrompt.promptText,
+            name: customPrompt.name,
+            id: customPrompt.id
+          })
+          setIsInitialSetupDone(true)
+          return
+        }
+      }
+
       const selectedConversation = localStorage.getItem('selectedConversation')
       if (selectedConversation) {
         const parsedSelectedConversation: Conversation =
@@ -722,14 +755,13 @@ const Home = ({
         if (!llmProviders || Object.keys(llmProviders).length === 0) return
         handleNewConversation()
       }
-      // handleNewConversation()
       setIsInitialSetupDone(true)
     }
 
     if (!isInitialSetupDone) {
       initialSetup()
     }
-  }, [dispatch, llmProviders, current_email]) // ! serverSidePluginKeysSet, removed
+  }, [dispatch, llmProviders, current_email, currentCourseMetadata, course_name]) // Added course_name to dependencies
   // }, [defaultModelId, dispatch, serverSidePluginKeysSet, models, conversations]) // original!
 
   if (isLoading || !isInitialSetupDone) {
@@ -795,12 +827,17 @@ const Home = ({
                     </span>
                   </div>
                 )}
-              <Chatbar current_email={current_email} courseName={course_name} />
+              <Chatbar 
+                current_email={current_email} 
+                courseName={course_name} 
+                courseMetadata={currentCourseMetadata} 
+                onCourseMetadataUpdate={handleCourseMetadataUpdate}
+              />
 
-              {course_metadata && (
+              {currentCourseMetadata && (
                 <Chat
                   stopConversationRef={stopConversationRef}
-                  courseMetadata={course_metadata}
+                  courseMetadata={currentCourseMetadata}
                   courseName={course_name}
                   currentEmail={current_email}
                   documentCount={document_count}
