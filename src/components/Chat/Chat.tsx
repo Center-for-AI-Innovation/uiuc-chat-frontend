@@ -237,6 +237,33 @@ export const Chat = memo(
       )
     }, [documentGroups])
 
+    // Update document groups when custom GPT changes
+    useEffect(() => {
+      if (selectedConversation?.customGptId && courseMetadata?.custom_system_prompts) {
+        // Find the custom GPT by gpt_id or id
+        const customGPT = courseMetadata.custom_system_prompts.find(
+          (p) => p.gpt_id === selectedConversation.customGptId || p.id === selectedConversation.customGptId
+        );
+        
+        if (customGPT) {
+          if (customGPT.documentGroups && customGPT.documentGroups.length > 0) {
+            // Custom GPT has specific document groups - override enabled document groups
+            setEnabledDocumentGroups(customGPT.documentGroups);
+          } else {
+            // Custom GPT has no document groups (undefined or empty array) - use no document groups
+            setEnabledDocumentGroups([]);
+          }
+        }
+      } else if (!selectedConversation?.customGptId) {
+        // No custom GPT - use the normal document groups based on UI selection
+        setEnabledDocumentGroups(
+          documentGroups
+            .filter((action) => action.checked)
+            .map((action) => action.name),
+        )
+      }
+    }, [selectedConversation?.customGptId, courseMetadata?.custom_system_prompts, documentGroups])
+
     // TOOLS
     useEffect(() => {
       if (isSuccessTools) {
@@ -423,6 +450,18 @@ export const Chat = memo(
               }
             }
           }
+          
+          // Ensure the conversation is added to the conversations list immediately
+          const existingConversationIndex = conversations.findIndex(
+            (c) => c.id === updatedConversation.id,
+          )
+          
+          if (existingConversationIndex < 0) {
+            // If this is a new conversation (not in the list), add it immediately
+            const updatedConversations = [updatedConversation, ...conversations]
+            homeDispatch({ field: 'conversations', value: updatedConversations })
+          }
+          
           handleUpdateConversation(updatedConversation, {
             key: 'messages',
             value: updatedConversation.messages,
@@ -1400,13 +1439,38 @@ export const Chat = memo(
             }
           }
 
+          // Determine which document groups to use based on custom GPT settings
+          let documentGroupsToUse = enabledDocumentGroups;
+          
+          // Get the custom GPT ID from either the conversation or the most recent message
+          let customGptId = selectedConversation?.customGptId;
+          if (!customGptId && selectedConversation?.messages && selectedConversation.messages.length > 0) {
+            // Fallback: check the most recent message for custom_gpt_id
+            const lastMessage = selectedConversation.messages[selectedConversation.messages.length - 1];
+            customGptId = lastMessage?.custom_gpt_id;
+          }
+          
+          // If there's a custom GPT with specific document groups, use those instead
+          if (customGptId && courseMetadata?.custom_system_prompts) {
+            const customGPT = courseMetadata.custom_system_prompts.find(
+              (p) => p.gpt_id === customGptId || p.id === customGptId
+            );
+            
+            if (customGPT?.documentGroups && customGPT.documentGroups.length > 0) {
+              documentGroupsToUse = customGPT.documentGroups;
+            } else if (customGPT) {
+              // Custom GPT exists but has no document groups (undefined or empty array) - don't use any document groups
+              documentGroupsToUse = [];
+            }
+          }
+
           // Call handleSend with the prepared message and delete count
           handleSend(
             userMessageToRegenerate,
             messagesToDeleteCount,
             null,
             tools,
-            enabledDocumentGroups,
+            documentGroupsToUse,
             llmProviders,
           )
 
@@ -2010,12 +2074,37 @@ export const Chat = memo(
                       stopConversationRef={stopConversationRef}
                       textareaRef={textareaRef}
                       onSend={(message, plugin) => {
+                        // Determine which document groups to use based on custom GPT settings
+                        let documentGroupsToUse = enabledDocumentGroups;
+                        
+                        // Get the custom GPT ID from either the conversation or the most recent message
+                        let customGptId = selectedConversation?.customGptId;
+                        if (!customGptId && selectedConversation?.messages && selectedConversation.messages.length > 0) {
+                          // Fallback: check the most recent message for custom_gpt_id
+                          const lastMessage = selectedConversation.messages[selectedConversation.messages.length - 1];
+                          customGptId = lastMessage?.custom_gpt_id;
+                        }
+                        
+                        // If there's a custom GPT with specific document groups, use those instead
+                        if (customGptId && courseMetadata?.custom_system_prompts) {
+                          const customGPT = courseMetadata.custom_system_prompts.find(
+                            (p) => p.gpt_id === customGptId || p.id === customGptId
+                          );
+                          
+                          if (customGPT?.documentGroups && customGPT.documentGroups.length > 0) {
+                            documentGroupsToUse = customGPT.documentGroups;
+                          } else if (customGPT) {
+                            // Custom GPT exists but has no document groups (undefined or empty array) - don't use any document groups
+                            documentGroupsToUse = [];
+                          }
+                        }
+                        
                         handleSend(
                           message,
                           0,
                           plugin,
                           tools,
-                          enabledDocumentGroups,
+                          documentGroupsToUse,
                           llmProviders,
                         )
                       }}

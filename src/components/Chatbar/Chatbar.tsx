@@ -159,7 +159,6 @@ export const Chatbar = ({
         conversationHistory &&
         conversationHistory.pages
       ) {
-        // console.log('Raw conversation history:', conversationHistory)
         const allConversations = conversationHistory.pages
           .flatMap((page) => {
             if (!page || !page.conversations) return [];
@@ -167,7 +166,6 @@ export const Chatbar = ({
           })
           .filter((conversation) => conversation !== undefined)
         homeDispatch({ field: 'conversations', value: allConversations })
-        // console.log('Dispatching conversations: ', allConversations)
 
         const convoMigrationComplete = localStorage.getItem(
           'convoMigrationComplete',

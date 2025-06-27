@@ -435,13 +435,9 @@ export default async function handler(
       const searchTerm = req.query.searchTerm as string
       const courseName = req.query.courseName as string
       const pageParam = parseInt(req.query.pageParam as string, 0)
+      
       // Search term is optional
       if (!user_email || !courseName || isNaN(pageParam)) {
-        console.log('first boolean:', !user_email)
-        console.log('second boolean:', !searchTerm)
-        console.log('third boolean:', !courseName)
-        console.log('fourth boolean:', isNaN(pageParam))
-        console.log('Invalid query parameters:', req.query)
         res.status(400).json({ error: 'Invalid query parameters' })
         return
       }
@@ -457,8 +453,6 @@ export default async function handler(
           p_offset: pageParam * pageSize,
         })
 
-        // console.log('data:', data)
-
         const count = data?.total_count || 0
 
         if (error) {
@@ -468,14 +462,9 @@ export default async function handler(
           )
           throw error
         }
-        // console.log(
-        //   'Fetched conversations before conversion in /conversation:',
-        //   data,
-        // )
 
         const fetchedConversations = (data.conversations || []).map(
           (conv: any) => {
-            // console.log('Fetched conversation:', conv)
             const convMessages = conv.messages || []
             return convertDBToChatConversation(conv, convMessages)
           },
@@ -487,13 +476,7 @@ export default async function handler(
           count > fetchedConversations.length
             ? pageParam + 1
             : null
-
-        // console.log(
-        //   'Fetched conversations:',
-        //   fetchedConversations.length,
-        //   'for user_email:',
-        //   user_email,
-        // )
+        
         res.status(200).json({
           conversations: fetchedConversations,
           nextCursor: nextCursor,
