@@ -190,9 +190,26 @@ export default async function chat(
     }
   }
 
-  // Fetch document groups
-  // We can fetch custom doc groups here instead, but for now we'll just use the default
-  const doc_groups = ['All Documents']
+  // Fetch document groups - check if there's a custom GPT with specific document groups
+  let doc_groups = ['All Documents']
+  
+  // Check if the last message has a custom GPT ID
+  if (lastMessage?.custom_gpt_id && courseMetadata?.custom_system_prompts) {
+    // Find the custom GPT by gpt_id or id
+    const customGPT = courseMetadata.custom_system_prompts.find(
+      (p) => p.gpt_id === lastMessage.custom_gpt_id || p.id === lastMessage.custom_gpt_id
+    )
+    
+    if (customGPT) {
+      // If custom GPT has document groups defined, use only those
+      if (customGPT.documentGroups && customGPT.documentGroups.length > 0) {
+        doc_groups = customGPT.documentGroups
+      } else {
+        // Custom GPT exists but has no document groups (undefined or empty array) - don't retrieve any documents
+        doc_groups = []
+      }
+    }
+  }
 
   const controller = new AbortController()
   // Construct the search query
@@ -246,11 +263,6 @@ export default async function chat(
   }
 
   // Fetch Contexts
-  console.log('Before context search:', {
-    courseName: course_name,
-    searchQuery,
-    documentGroups: doc_groups,
-  })
   const contexts = await handleContextSearch(
     lastMessage,
     course_name,

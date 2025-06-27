@@ -423,6 +423,13 @@ export const handleContextSearch = async (
   documentGroups: string[],
 ): Promise<ContextWithMetadata[]> => {
   if (courseName !== 'gpt4') {
+    // If no document groups are specified, skip context search entirely
+    if (!documentGroups || documentGroups.length === 0) {
+      console.log('Skipping context search: no document groups specified')
+      message.contexts = []
+      return []
+    }
+
     const token_limit = selectedConversation.model.tokenLimit
     const useMQRetrieval = false
 
