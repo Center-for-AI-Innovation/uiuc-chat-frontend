@@ -23,6 +23,9 @@ export enum OllamaModelIDs {
   LLAMA31_8b_instruct_fp16 = 'llama3.1:8b-instruct-fp16',
   // LLAMA31_70b_instruct_fp16 = 'llama3.1:70b-instruct-fp16',
 
+  GEMMA3_27B = 'gemma3:27b',
+
+
   LLAMA32_1b_fp16 = 'llama3.2:1b-instruct-fp16',
   LLAMA32_3b_fp16 = 'llama3.2:3b-instruct-fp16',
 
@@ -33,6 +36,13 @@ export enum OllamaModelIDs {
 }
 
 export const OllamaModels: Record<OllamaModelIDs, OllamaModel> = {
+  [OllamaModelIDs.GEMMA3_27B]: {
+    id: OllamaModelIDs.GEMMA3_27B,
+    name: 'Gemma 3 27B',
+    parameterSize: '27B',
+    tokenLimit: 21_000,
+    enabled: true,
+  },
   [OllamaModelIDs.LLAMA32_1b_fp16]: {
     id: OllamaModelIDs.LLAMA32_1b_fp16,
     name: 'llama 3.2 1B',
@@ -51,7 +61,7 @@ export const OllamaModels: Record<OllamaModelIDs, OllamaModel> = {
     id: OllamaModelIDs.LLAMA31_8b_instruct_fp16,
     name: 'Llama 3.1 8B',
     parameterSize: '8B',
-    tokenLimit: 11_500,
+    tokenLimit: 12_500,
     enabled: true,
   },
   // [OllamaModelIDs.LLAMA32_1b]: {
@@ -73,14 +83,14 @@ export const OllamaModels: Record<OllamaModelIDs, OllamaModel> = {
     id: OllamaModelIDs.QWEN25_14b_fp16,
     name: 'Qwen 14B',
     parameterSize: '14B',
-    tokenLimit: 6_300,
+    tokenLimit: 20_000,
     enabled: true,
   },
   [OllamaModelIDs.DEEPSEEK_R1_14b_qwen_fp16]: {
     id: OllamaModelIDs.DEEPSEEK_R1_14b_qwen_fp16,
     name: 'Deepseek R1 14B (based on Qwen)',
     parameterSize: '14B',
-    tokenLimit: 6_300,
+    tokenLimit: 10_000,
     enabled: true,
   },
   // [OllamaModelIDs.LLAMA31_70b_instruct_fp16]: {
