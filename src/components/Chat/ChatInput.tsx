@@ -7,6 +7,13 @@ import {
   IconAlertCircle,
   IconX,
   IconRepeat,
+  IconPlus,
+  IconFileTypeTxt,
+  IconFileTypePdf,
+  IconFileTypeDocx,
+  IconFileTypePpt,
+  IconFileTypeXls,
+  IconCheck,
 } from '@tabler/icons-react'
 import { Text } from '@mantine/core'
 import {
@@ -60,6 +67,40 @@ const montserrat_med = Montserrat({
   weight: '500',
   subsets: ['latin'],
 })
+// constant created to check the types of files allowed to be uploaded
+const ALLOWED_FILE_EXTENSIONS = [
+  'html',
+  'py',
+  'pdf',
+  'txt',
+  'md',
+  'srt',
+  'vtt',
+  'docx',
+  'ppt',
+  'pptx',
+  'xlsx',
+  'xls',
+  'xlsm',
+  'xlsb',
+  'xltx',
+  'xltm',
+  'xlt',
+  'xml',
+  'xlam',
+  'xla',
+  'xlw',
+  'xlr',
+  'csv',
+  'png',
+  'jpg',
+]
+
+type FileUploadStatus = {
+  file: File
+  status: 'uploading' | 'uploaded' | 'error'
+  url?: string
+}
 
 interface Props {
   onSend: (message: Message, plugin: Plugin | null) => void
@@ -130,6 +171,8 @@ export const ChatInput = ({
   const [imageUrls, setImageUrls] = useState<string[]>([])
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const modelSelectContainerRef = useRef<HTMLDivElement | null>(null)
+  const fileUploadRef = useRef<HTMLInputElement | null>(null)
+  const [fileUploads, setFileUploads] = useState<FileUploadStatus[]>([])
 
   const handleFocus = () => {
     setIsFocused(true)
@@ -524,6 +567,64 @@ export const ChatInput = ({
     ],
   )
 
+  function handleFileSelection(newFiles: File[]) {
+    // Combine new files with already selected files (assume imageFiles is in state)
+    const allFiles = [...imageFiles, ...newFiles]
+
+    // Validation: number of files
+    if (allFiles.length > 5) {
+      notifications.show({
+        message: 'You can upload a maximum of 5 files at once.',
+        color: 'red',
+      })
+      return
+    }
+
+    // Validation: total size
+    const totalSize = allFiles.reduce((sum, file) => sum + file.size, 0)
+    if (totalSize > 25 * 1024 * 1024) {
+      notifications.show({
+        message: 'Total file size cannot exceed 25MB.',
+        color: 'red',
+      })
+      return
+    }
+    // Validation: file types
+    for (const file of newFiles) {
+      const ext = file.name.split('.').pop()?.toLowerCase()
+      if (!ext || !ALLOWED_FILE_EXTENSIONS.includes(ext)) {
+        notifications.show({
+          message: `File type .${ext} is not supported.`,
+          color: 'red',
+        })
+        return
+      }
+    }
+
+    // For each valid file, add to fileUploads and start upload
+    newFiles.forEach((file) => {
+      // Prevent duplicate files by name
+      setFileUploads((prev) => {
+        if (prev.some((f) => f.file.name === file.name)) return prev
+        return [...prev, { file, status: 'uploading' }]
+      })
+
+      uploadToS3(file, courseName)
+        .then((s3Key) => {
+          setFileUploads((prev) =>
+            prev.map((f) =>
+              f.file === file ? { ...f, status: 'uploaded', url: s3Key } : f,
+            ),
+          )
+        })
+        .catch(() => {
+          setFileUploads((prev) =>
+            prev.map((f) => (f.file === file ? { ...f, status: 'error' } : f)),
+          )
+        })
+    })
+  }
+
   async function processAndUploadImage(
     file: File,
   ): Promise<ProcessedImage & { uploadedUrl: string }> {
@@ -842,34 +943,96 @@ export const ChatInput = ({
           className="absolute bottom-0 mx-4 flex w-[80%] flex-col self-center rounded-t-3xl border border-black/10 bg-[#070712] px-4 pb-8 pt-4 shadow-[0_0_10px_rgba(0,0,0,0.10)] dark:border-gray-900/50 dark:text-white dark:shadow-[0_0_15px_rgba(0,0,0,0.10)] md:mx-20 md:w-[70%]"
           style={{ pointerEvents: 'auto' }}
         >
-          {/* BUTTON 2: Image Icon and Input */}
-          {selectedConversation?.model?.id &&
-            VisionCapableModels.has(
-              selectedConversation.model?.id as OpenAIModelID,
-            ) && (
+          {/* Flex row for upload buttons and textarea */}
+          <div className="flex w-full items-center">
+            <>
+              {/* Image upload button: only for vision-capable models */}
+              {VisionCapableModels.has(
+                selectedConversation?.model?.id as OpenAIModelID,
+              ) && (
+                <>
+                  <button
+                    className="mr-2 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
+                    onClick={() => imageUploadRef.current?.click()}
+                    type="button"
+                    title="Upload image"
+                    style={{ pointerEvents: 'auto' }}
+                  >
+                    <IconPhoto size={22} />
+                  </button>
+                  <input
+                    type="file"
+                    multiple
+                    id="imageUpload"
+                    ref={imageUploadRef}
+                    style={{ display: 'none', pointerEvents: 'auto' }}
+                    accept=".jpg,.jpeg,.png,.webp,.gif"
+                    onChange={(e) => {
+                      const files = e.target.files
+                      if (files) {
+                        handleImageUpload(Array.from(files))
+                      }
+                      // Reset input value so the same file can be selected again
+                      if (imageUploadRef.current) {
+                        imageUploadRef.current.value = ''
+                      }
+                    }}
+                  />
+                </>
+              )}
+              {/* File upload button (plus sign): always visible */}
               <button
-                className="absolute bottom-11 left-5 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
-                onClick={() => document.getElementById('imageUpload')?.click()}
+                className="mr-2 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
+                onClick={() => fileUploadRef.current?.click()}
+                type="button"
+                title="Upload files"
                 style={{ pointerEvents: 'auto' }}
               >
-                <div className="">
-                  <IconPhoto size={22} />
-                </div>
+                <IconPlus size={22} />
               </button>
-            )}
-          <input
-            type="file"
-            multiple
-            id="imageUpload"
-            ref={imageUploadRef}
-            style={{ display: 'none', pointerEvents: 'auto' }}
-            onChange={(e) => {
-              const files = e.target.files
-              if (files) {
-                handleImageUpload(Array.from(files))
-              }
-            }}
-          />
+              <input
+                type="file"
+                multiple
+                ref={fileUploadRef}
+                style={{ display: 'none', pointerEvents: 'auto' }}
+                accept={ALLOWED_FILE_EXTENSIONS.map((ext) => '.' + ext).join(
+                  ',',
+                )}
+                onChange={(e) => {
+                  const files = e.target.files
+                  if (files) {
+                    handleFileSelection(Array.from(files))
+                  }
+                  // Reset input value so the same file can be selected again
+                  if (fileUploadRef.current) {
+                    fileUploadRef.current.value = ''
+                  }
+                }}
+              />
+            </>
+            {/* Textarea for message input */}
+            <textarea
+              ref={textareaRef}
+              className="chat-input m-0 h-[24px] max-h-[400px] w-full flex-1 resize-none bg-transparent py-2 pl-2 pr-8 text-white outline-none"
+              style={{
+                resize: 'none',
+                minHeight: '24px',
+                height: 'auto',
+                maxHeight: '400px',
+                overflow: 'hidden',
+                pointerEvents: 'auto',
+              }}
+              placeholder={'Message UIUC.chat'}
+              value={content}
+              rows={1}
+              onCompositionStart={() => setIsTyping(true)}
+              onCompositionEnd={() => setIsTyping(false)}
+              onChange={handleChange}
+              onKeyDown={handleKeyDown}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+            />
+          </div>
 
           {showPluginSelect && (
             <div
@@ -933,7 +1096,6 @@ export const ChatInput = ({
                     <button
                       className="remove-button"
                       onClick={() => {
-                        // Filter out the image from both imageFiles and imagePreviewUrls
                         setImageFiles((prev) =>
                           prev.filter((_, i) => i !== index),
                         )
@@ -962,41 +1124,115 @@ export const ChatInput = ({
               ))}
             </div>
 
-            {/* Button 3: main input text area  */}
-            <div
-              className={`
-                ${
-                  VisionCapableModels.has(
-                    selectedConversation?.model?.id as OpenAIModelID,
+            {/* File upload preview section (non-image files) */}
+            <div className="mt-2 flex flex-wrap gap-3">
+              {fileUploads
+                .filter((fu) => {
+                  // Only show non-image files here
+                  const ext = fu.file.name.split('.').pop()?.toLowerCase()
+                  const imageTypes = ['jpg', 'jpeg', 'png', 'webp', 'gif']
+                  return ext && !imageTypes.includes(ext)
+                })
+                .map((fu, idx) => {
+                  // Icon selection based on file type
+                  const ext = fu.file.name.split('.').pop()?.toLowerCase()
+                  let icon = <IconFileTypeTxt size={28} />
+                  if (ext === 'pdf')
+                    icon = (
+                      <IconFileTypePdf size={28} className="text-red-500" />
+                    )
+                  else if (['doc', 'docx'].includes(ext!))
+                    icon = (
+                      <IconFileTypeDocx size={28} className="text-blue-500" />
+                    )
+                  else if (['ppt', 'pptx'].includes(ext!))
+                    icon = (
+                      <IconFileTypePpt size={28} className="text-orange-500" />
+                    )
+                  else if (
+                    [
+                      'xls',
+                      'xlsx',
+                      'xlsm',
+                      'xlsb',
+                      'xltx',
+                      'xltm',
+                      'xlt',
+                      'xml',
+                      'xlam',
+                      'xla',
+                      'xlw',
+                      'xlr',
+                      'csv',
+                    ].includes(ext!)
                   )
-                    ? 'pl-8'
-                    : 'pl-1'
-                }
-                  `}
-            >
-              <textarea
-                ref={textareaRef}
-                className={`chat-input m-0 h-[24px] max-h-[400px] w-full resize-none bg-transparent py-2 pl-2 pr-8 text-white outline-none ${
-                  isFocused ? 'border-blue-500' : ''
-                }`}
-                style={{
-                  resize: 'none',
-                  minHeight: '24px',
-                  height: 'auto',
-                  maxHeight: '400px',
-                  overflow: 'hidden',
-                  pointerEvents: 'auto',
-                }}
-                placeholder={'Message UIUC.chat'}
-                value={content}
-                rows={1}
-                onCompositionStart={() => setIsTyping(true)}
-                onCompositionEnd={() => setIsTyping(false)}
-                onChange={handleChange}
-                onKeyDown={handleKeyDown}
-                onFocus={handleFocus}
-                onBlur={handleBlur}
-              />
+                    icon = (
+                      <IconFileTypeXls size={28} className="text-green-500" />
+                    )
+                  else if (
+                    ['md', 'txt', 'srt', 'vtt', 'html', 'py'].includes(ext!)
+                  )
+                    icon = <IconFileTypeTxt size={28} />
+                  // Status icon
+                  let statusIcon = null
+                  if (fu.status === 'uploading')
+                    statusIcon = (
+                      <div className="ml-2 h-4 w-4 animate-spin rounded-full border-t-2 border-neutral-800 opacity-60 dark:border-neutral-100" />
+                    )
+                  else if (fu.status === 'uploaded')
+                    statusIcon = (
+                      <IconCheck size={18} className="ml-2 text-green-500" />
+                    )
+                  else if (fu.status === 'error')
+                    statusIcon = (
+                      <IconX size={18} className="ml-2 text-red-500" />
+                    )
+                  return (
+                    <div
+                      key={fu.file.name + idx}
+                      className="relative flex items-center rounded-lg bg-neutral-800 px-3 py-2"
+                    >
+                      {icon}
+                      <span
+                        className="ml-2 max-w-[120px] truncate text-white"
+                        title={fu.file.name}
+                      >
+                        {fu.file.name}
+                      </span>
+                      {statusIcon}
+                      <Tooltip
+                        label="Remove File"
+                        position="top"
+                        withArrow
+                        style={{ backgroundColor: '#2b2b2b', color: 'white' }}
+                      >
+                        <button
+                          className="remove-button ml-2"
+                          onClick={() => {
+                            setFileUploads((prev) =>
+                              prev.filter((_, i) => i !== idx),
+                            )
+                          }}
+                          style={removeButtonStyle}
+                          onMouseEnter={(e) => {
+                            const current = e.currentTarget
+                            current.style.backgroundColor =
+                              removeButtonHoverStyle.backgroundColor!
+                            current.style.color = removeButtonHoverStyle.color!
+                          }}
+                          onMouseLeave={(e) => {
+                            const current = e.currentTarget
+                            current.style.backgroundColor =
+                              removeButtonStyle.backgroundColor!
+                            current.style.color = removeButtonStyle.color!
+                          }}
+                        >
+                          <IconX size={16} />
+                        </button>
+                      </Tooltip>
+                    </div>
+                  )
+                })}
             </div>
 
             <button
