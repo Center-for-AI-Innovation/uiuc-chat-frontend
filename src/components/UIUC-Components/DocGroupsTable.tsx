@@ -125,6 +125,7 @@ export function DocGroupsTable({ course_name }: { course_name: string }) {
           onChange={handleDocumentGroupSearchChange}
           className="sticky top-0 z-10"
         />
+        {/*@ts-expect-error TODO: fix ScrollArea prop mismatch*/}
         <ScrollArea.Autosize
           mah="calc(80vh - 16rem)"
           type="always"
