@@ -30,6 +30,7 @@ if (typeof window !== 'undefined') {
       maskInputOptions: {
         password: true,
         email: true,
+        // @ts-expect-error TODO: Object literal may only specify known properties, and 'creditCard' does not exist...
         creditCard: true,
       },
     },

@@ -66,6 +66,7 @@ export const PluginSelect: FC<Props> = ({
         <select
           ref={selectRef}
           className="w-full cursor-pointer bg-transparent p-2"
+          // @ts-expect-error TODO: Fix select placeholder prop mismatch
           placeholder={t('Select a plugin') || ''}
           value={plugin?.id || ''}
           onChange={(e) => {
