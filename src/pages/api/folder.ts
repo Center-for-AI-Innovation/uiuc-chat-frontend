@@ -6,18 +6,18 @@ import { convertDBToChatConversation, DBConversation } from './conversation'
 
 type Folder = Database['public']['Tables']['folders']['Row']
 
-export function convertDBFolderToChatFolder(
+export async function convertDBFolderToChatFolder(
   dbFolder: Folder,
   dbConversations: any[],
-): FolderWithConversation {
+): Promise<FolderWithConversation> {
   return {
     id: dbFolder.id,
     name: dbFolder.name,
     type: dbFolder.type as 'chat' | 'prompt',
-    conversations: (dbConversations || []).map((conv) => {
+    conversations: await Promise.all((dbConversations || []).map(async (conv) => {
       const convMessages = conv.messages
-      return convertDBToChatConversation(conv, convMessages)
-    }),
+      return await convertDBToChatConversation(conv, convMessages)
+    })),
     createdAt: dbFolder.created_at || new Date().toISOString(),
     updatedAt: dbFolder.updated_at || new Date().toISOString(),
   }

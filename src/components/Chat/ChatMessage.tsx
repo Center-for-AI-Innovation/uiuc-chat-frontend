@@ -126,6 +126,7 @@ export interface Props {
   contentRenderer?: (message: Message) => JSX.Element
   onImageUrlsUpdate?: (message: Message, messageIndex: number) => void
   courseName: string
+  isReadOnly?: boolean
 }
 
 // Add this helper function before the ChatMessage component
@@ -202,6 +203,7 @@ export const ChatMessage = memo(
     onFeedback,
     onImageUrlsUpdate,
     courseName,
+    isReadOnly = false,
   }: Props) => {
     const { t } = useTranslation('chat')
     const { activeSidebarMessageId, setActiveSidebarMessageId } =

@@ -24,6 +24,8 @@ export interface Conversation {
   projectName?: string
   createdAt?: string
   updatedAt?: string
+  customGptId?: string | null
+  customGptName?: string
   linkParameters?: {
     guidedLearning: boolean
     documentsOnly: boolean
@@ -46,6 +48,7 @@ export interface Message {
   feedback?: MessageFeedback
   wasQueryRewritten?: boolean
   queryRewriteText?: string
+  custom_gpt_id?: string // ID of the custom GPT used for this message
 }
 
 export type MessageFeedback = {

@@ -15,7 +15,7 @@ export async function POST(req: NextRequest, res: NextResponse) {
   try {
     const body = await req.json()
     const { conversation, course_name, courseMetadata, mode } = body as ChatBody
-
+    
     // Build the prompt
     const newConversation = await buildPrompt({
       conversation,
@@ -25,8 +25,8 @@ export async function POST(req: NextRequest, res: NextResponse) {
     })
 
     body.conversation = newConversation
-    const result = await routeModelRequest(body as ChatBody)
 
+    const result = await routeModelRequest(body as ChatBody)
     return result
   } catch (error) {
     console.error('Error in route handler:', error)
