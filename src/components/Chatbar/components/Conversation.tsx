@@ -191,7 +191,7 @@ export const ConversationComponent = ({ conversation }: Props) => {
     
     // Use the shared ID in the URL (no readonly parameter, no gpt parameter)
     // GPT information will be retrieved from the conversation data
-    let url = `${baseUrl}/${courseName}/chat?conversation=${sharedId}`
+    const url = `${baseUrl}/${courseName}/chat?conversation=${sharedId}`
     
     setShareUrl(url)
     setIsShareModalOpen(true)
