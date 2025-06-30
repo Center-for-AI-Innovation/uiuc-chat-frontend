@@ -896,6 +896,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           w={200}
                           value={dateRange}
                           onChange={setDateRange}
+                          // @ts-expect-error TODO: Fix DatePickerInput placeholder prop mismatch
                           placeholder="Pick date range"
                           styles={(theme: MantineTheme) => ({
                             input: {
