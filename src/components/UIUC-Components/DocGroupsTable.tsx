@@ -112,6 +112,7 @@ export function DocGroupsTable({ course_name }: { course_name: string }) {
     setDocumentGroupSearch(event.target.value)
   }
 
+  // @ts-ignore
   return (
     <>
       <GlobalStyle />
