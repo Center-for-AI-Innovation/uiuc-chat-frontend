@@ -1,5 +1,4 @@
-import { S3Client } from '@aws-sdk/client-s3'
-import { GetObjectCommand } from '@aws-sdk/client-s3'
+import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import type { NextApiRequest, NextApiResponse } from 'next'
 
@@ -71,8 +70,6 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         ResponseContentDisposition: 'inline',
         ResponseContentType: ResponseContentType,
       })
-
-      console.log('final key', actualKey)
 
       presignedUrl = await getSignedUrl(vyriadMinioClient, command, {
         expiresIn: 3600,
