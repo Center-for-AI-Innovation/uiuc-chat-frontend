@@ -952,7 +952,6 @@ export const Chat = memo(
             }
           } else {
             try {
-              // CALL OUR NEW ENDPOINT... /api/allNewRoutingChat
               startOfCallToLLM = performance.now()
               try {
                 response = await fetch('/api/allNewRoutingChat', {

@@ -987,7 +987,7 @@ export const ChatInput = ({
                   overflow: 'hidden',
                   pointerEvents: 'auto',
                 }}
-                placeholder={'Message UIUC.chat'}
+                placeholder={selectedConversation?.customGptName ? `Message ${selectedConversation.customGptName}` : 'Message UIUC.chat'}
                 value={content}
                 rows={1}
                 onCompositionStart={() => setIsTyping(true)}

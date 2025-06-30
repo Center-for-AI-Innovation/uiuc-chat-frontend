@@ -790,12 +790,10 @@ export const routeModelRequest = async (
   NOTE: WebLLM is handled separately, because it MUST be called from the Client browser itself. 
   */
 
-  // console.debug('In routeModelRequest: ', chatBody, baseUrl)
-  // console.debug('In routeModelRequest: ', baseUrl)
-
   const selectedConversation = chatBody.conversation!
-  // console.debug('Selected conversation:', selectedConversation)
+  
   if (!selectedConversation.model || !selectedConversation.model.id) {
+    console.error('Invalid conversation model:', selectedConversation.model)
     console.debug('Invalid conversation:', selectedConversation)
     throw new Error('Conversation model is undefined or missing "id" property.')
   }
@@ -875,6 +873,7 @@ export const routeModelRequest = async (
       chatBody.stream,
     )
   } else {
+    console.error('Unsupported model:', selectedConversation.model.name)
     throw new Error(
       `Model '${selectedConversation.model.name}' is not supported.`,
     )

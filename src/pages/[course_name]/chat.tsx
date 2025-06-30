@@ -51,6 +51,7 @@ const ChatPage: NextPage = () => {
       const systemPromptOnly = urlParams.get('systemPromptOnly') === 'true'
       const gptId = urlParams.get('gpt')
       const conversationId = urlParams.get('conversation')
+      const isReadOnlyParam = urlParams.get('readonly') === 'true'
 
       // Update the state with boolean URL parameters
       setUrlGuidedLearning(guidedLearning)
@@ -103,15 +104,24 @@ const ChatPage: NextPage = () => {
         // If there's a shared conversation ID, determine read-only mode based on user permissions
         if (conversationId && fetchedCourseMetadata) {
           try {
-            // Use get_user_permission to determine if user has edit access to the course
-            const permission = get_user_permission(fetchedCourseMetadata, auth)
+            // Check if this is a shared conversation ID (starts with 'share_')
+            const isSharedConversation = conversationId.startsWith('share_')
             
-            // Set read-only mode if user doesn't have edit permission
-            // Only course owners and admins can edit shared conversations
-            setIsReadOnly(permission !== 'edit')
+            if (isSharedConversation) {
+              // For shared conversations, default to readonly but allow editing if user has permissions
+              const permission = get_user_permission(fetchedCourseMetadata, auth)
+              
+              // Allow editing only if user has edit permission on the course
+              setIsReadOnly(permission !== 'edit')
+            } else {
+              // For regular conversations (not shared), user can edit
+              setIsReadOnly(false)
+            }
           } catch (error) {
             console.error('Error checking user permissions for shared conversation:', error)
-            setIsReadOnly(true) // Default to read-only if there's an error
+            // Default to readonly for shared conversations if there's an error
+            const isSharedConversation = conversationId.startsWith('share_')
+            setIsReadOnly(isSharedConversation)
           }
         }
       }

@@ -64,6 +64,23 @@ interface Props {
   conversation: Conversation
 }
 
+// Utility function to generate alternative conversation ID for sharing
+const generateSharedConversationId = (originalId: string): string => {
+  // Create a simple encoded version by reversing the ID and adding a prefix
+  const reversed = originalId.split('').reverse().join('')
+  return `share_${reversed}`
+}
+
+// Utility function to decode shared conversation ID back to original ID
+const decodeSharedConversationId = (sharedId: string): string => {
+  // Extract the original ID from the shared ID
+  if (sharedId.startsWith('share_')) {
+    const reversed = sharedId.substring(6) // Remove 'share_' prefix
+    return reversed.split('').reverse().join('') // Reverse back to original
+  }
+  return sharedId // Fallback to treating it as a regular ID
+}
+
 export const ConversationComponent = ({ conversation }: Props) => {
   const { classes } = useStyles()
   const router = useRouter()
@@ -164,16 +181,17 @@ export const ConversationComponent = ({ conversation }: Props) => {
     setIsDeleting(true)
   }
 
-  const handleShare = (e: React.MouseEvent) => {
+  const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation()
     const baseUrl = window.location.origin
     const courseName = router.query.course_name
-    let url = `${baseUrl}/${courseName}/chat?conversation=${conversation.id}&readonly=true`
     
-    // Add custom GPT ID to the URL if the conversation has one
-    if (conversation.customGptId) {
-      url += `&gpt=${conversation.customGptId}`
-    }
+    // Generate a shared ID from the conversation ID
+    const sharedId = generateSharedConversationId(conversation.id)
+    
+    // Use the shared ID in the URL (no readonly parameter, no gpt parameter)
+    // GPT information will be retrieved from the conversation data
+    let url = `${baseUrl}/${courseName}/chat?conversation=${sharedId}`
     
     setShareUrl(url)
     setIsShareModalOpen(true)

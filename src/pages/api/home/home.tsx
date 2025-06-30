@@ -291,22 +291,26 @@ const Home = ({
   }, [foldersData])
 
   // Handle shared conversation loading
+  const loadedSharedConversationRef = useRef<string | null>(null)
+  
   useEffect(() => {
     const loadSharedConversation = async () => {
-      if (sharedConversationId && selectedConversation?.id !== sharedConversationId) {
+      // Prevent loading the same shared conversation multiple times
+      if (sharedConversationId && 
+          sharedConversationId !== loadedSharedConversationRef.current &&
+          selectedConversation?.id !== sharedConversationId) {
         try {
           const response = await fetch(`/api/conversation?conversationId=${sharedConversationId}`)
           const data = await response.json()
           
           if (data.conversation) {
-            // Set the shared conversation as selected
-            dispatch({ field: 'selectedConversation', value: data.conversation })
+            // Mark this shared conversation as loaded
+            loadedSharedConversationRef.current = sharedConversationId
             
-            // Add to conversations list if not already there
-            const existingConversation = conversations.find(c => c.id === sharedConversationId)
-            if (!existingConversation) {
-              dispatch({ field: 'conversations', value: [...conversations, data.conversation] })
-            }
+            // Set the shared conversation as selected
+            // Note: We don't add shared conversations to the conversations list
+            // This prevents infinite loops and provides better UX for shared links
+            dispatch({ field: 'selectedConversation', value: data.conversation })
           }
         } catch (error) {
           console.error('Error loading shared conversation:', error)
@@ -315,7 +319,7 @@ const Home = ({
     }
 
     loadSharedConversation()
-  }, [sharedConversationId, selectedConversation?.id, conversations, dispatch])
+  }, [sharedConversationId, selectedConversation?.id, dispatch])
 
   // FOLDER OPERATIONS  --------------------------------------------
   const handleCreateFolder = (name: string, type: FolderType) => {
@@ -421,8 +425,8 @@ const Home = ({
   }
 
   const handleNewConversation = (customPrompt?: { text: string; name: string; id?: string }) => {
-    // If we're already in an empty conversation and not switching to a custom GPT, don't create a new one
-    if (selectedConversation && selectedConversation.messages.length === 0 && !customPrompt) {
+    // If we're already in an empty default conversation (no custom GPT) and not switching to a custom GPT, don't create a new one
+    if (selectedConversation && selectedConversation.messages.length === 0 && !customPrompt && !selectedConversation.customGptId) {
       return
     }
     
@@ -457,6 +461,7 @@ const Home = ({
       updatedAt: new Date().toISOString(),
       linkParameters: newLinkParameters,
       customGptId: customPrompt?.id || null,
+      customGptName: customPrompt?.name || undefined,
     }
 
     // Only update selectedConversation, don't add to conversations list yet

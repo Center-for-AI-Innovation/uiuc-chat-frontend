@@ -66,12 +66,12 @@ export async function convertDBToChatConversation(
   if (lastCustomGPTMessage?.custom_gpt_id && dbConversation.project_name) {
     try {
       
-      const response = await fetch(`/api/course-metadata?courseName=${encodeURIComponent(dbConversation.project_name)}`);
+      const response = await fetch(`/api/UIUC-api/getCourseMetadata?course_name=${encodeURIComponent(dbConversation.project_name)}`);
       if (response.ok) {
         const courseMetadata = await response.json();
-        if (courseMetadata?.custom_system_prompts) {
+        if (courseMetadata?.course_metadata?.custom_system_prompts) {
           // First try to find by gpt_id, then fall back to id
-          const customGPT = courseMetadata.custom_system_prompts.find(
+          const customGPT = courseMetadata.course_metadata.custom_system_prompts.find(
             (p: { id: string; gpt_id?: string }) => p.gpt_id === lastCustomGPTMessage.custom_gpt_id || p.id === lastCustomGPTMessage.custom_gpt_id
           );
           if (customGPT) {
@@ -270,6 +270,16 @@ export function convertChatToDBMessage(
   }
 }
 
+// Utility function to decode shared conversation ID back to original ID
+const decodeSharedConversationId = (sharedId: string): string => {
+  // Extract the original ID from the shared ID
+  if (sharedId.startsWith('share_')) {
+    const reversed = sharedId.substring(6) // Remove 'share_' prefix
+    return reversed.split('').reverse().join('') // Reverse back to original
+  }
+  return sharedId // Fallback to treating it as a regular ID
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -399,11 +409,14 @@ export default async function handler(
       const conversationId = req.query.conversationId as string
       if (conversationId) {
         try {
-          // Fetch single conversation by ID
+          // Decode the conversation ID in case it's a shared ID
+          const actualConversationId = decodeSharedConversationId(conversationId)
+          
+          // Fetch single conversation by actual ID
           const { data: conversationData, error: conversationError } = await supabase
             .from('conversations')
             .select('*')
-            .eq('id', conversationId)
+            .eq('id', actualConversationId)
             .single()
 
           if (conversationError) throw conversationError
@@ -415,7 +428,7 @@ export default async function handler(
           const { data: messagesData, error: messagesError } = await supabase
             .from('messages')
             .select('*')
-            .eq('conversation_id', conversationId)
+            .eq('conversation_id', actualConversationId)
             .order('created_at', { ascending: true })
 
           if (messagesError) throw messagesError
