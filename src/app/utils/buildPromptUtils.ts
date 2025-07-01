@@ -8,6 +8,7 @@ import {
   type OpenAIChatMessage,
   type UIUCTool,
 } from '@/types/chat'
+import { NextApiRequest, NextApiResponse } from 'next'
 import { AnySupportedModel } from '~/utils/modelProviders/LLMProvider'
 import {
   DEFAULT_SYSTEM_PROMPT,
@@ -75,6 +76,10 @@ const shouldAppendDocumentsOnlyPrompt = (
     conversation.linkParameters?.documentsOnly && !courseMetadata?.documentsOnly
   )
 }
+
+const encoding = encodingForModel('gpt-4o')
+
+export type BuildPromptMode = 'chat' | 'optimize_prompt'
 
 const googleFitData = {
   '1': {
@@ -198,21 +203,15 @@ const getUserProfile = (userID: string) => {
   return profile[userID as keyof typeof profile]
 }
 
-const encoding = encodingForModel('gpt-4o')
-
-export type BuildPromptMode = 'chat' | 'optimize_prompt'
-
 export const buildPrompt = async ({
   conversation,
   projectName,
   courseMetadata,
-  summary,
   mode,
 }: {
   conversation: Conversation | undefined
   projectName: string
   courseMetadata: CourseMetadata | undefined
-  summary: boolean | undefined
   mode?: BuildPromptMode
 }): Promise<Conversation> => {
   /*
@@ -220,9 +219,7 @@ export const buildPrompt = async ({
   
     Priorities for building prompt w/ limited window:
     1. ✅ Most recent user text input & images/img-description (depending on model support for images)
-    1.5. LLM memory - Key for follow-up questions: 
-      1.5.1. ✅ Conversation summary - running summary of the last user query and assistant answer + previous conversation summary. 
-      1.5.2. ❌ Last 1 or 2 conversation history. At least the user message and the AI response.
+    1.5. ❌ Last 1 or 2 conversation history. At least the user message and the AI response. Key for follow-up questions.
     2. ✅ Image description
     3. ✅ Tool result
     4. ✅ query_topContext (if documents are retrieved)
@@ -233,14 +230,6 @@ export const buildPrompt = async ({
   if (conversation == undefined) {
     throw new Error('Conversation is undefined when building prompt.')
   }
-
-  // Check if encoding is initialized
-  if (!encoding) {
-    console.error('Encoding is not initialized.')
-    throw new Error('Encoding initialization failed.')
-  }
-
-  // console.log('conversation in BuildPromptUtils: ', conversation)
 
   let remainingTokenBudget = conversation.model.tokenLimit - 1500 // Save space for images, OpenAI's handling, etc.
 
@@ -273,7 +262,8 @@ export const buildPrompt = async ({
       ]
 
     // Build the final system prompt with all components
-    let finalSystemPrompt = ''
+    const finalSystemPrompt = systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
+
     // Adjust remaining token budget based on the system prompt length
     if (encoding) {
       const tokenCount = encoding.encode(finalSystemPrompt).length
@@ -284,171 +274,107 @@ export const buildPrompt = async ({
     // Initialize an array to collect sections of the user prompt
     const userPromptSections: string[] = []
 
-    if (!true) {
-      // Hard-coding this to false for now
-      console.log('Call for summarization')
-      // build prompt for summarization
-      finalSystemPrompt =
-        'You are a helpful assistant that summarizes content. Summarize the content in 3 sentences'
-
-      // Adjust remaining token budget based on the system prompt length
-      const tokenCount = encoding.encode(finalSystemPrompt).length
-      remainingTokenBudget -= tokenCount
-
-      // P1 : get the previous conversation summary, if it exists
-      if (conversation.summary) {
-        const previousConversationSummary = `\n<Previous Conversation Summary>\n${conversation.summary}\n</Previous Conversation Summary>`
-        userPromptSections.push(previousConversationSummary)
-        remainingTokenBudget -= encoding.encode(
-          previousConversationSummary,
-        ).length
-      }
-      // P2 : get the most recent user text input
-      const userQuery = `\n<User Query>\n${lastUserTextInput}\n</User Query>`
+    // P1.1: Most recent user text input
+    const userQuery = `\n<User Query>\n${lastUserTextInput}\n</User Query>`
+    if (encoding) {
       remainingTokenBudget -= encoding.encode(userQuery).length
-      userPromptSections.push(userQuery)
+    }
 
-      // P3.1 : get the last assistant message
-      const lastAssistantMessage: string | Content[] =
-        conversation?.messages
-          .filter((msg) => msg.role === 'assistant')
-          .slice(-1)[0]?.content || ''
-      // P3.2 : get the last assistant message text
-      let cleanedAssistantMessage = ''
-      if (
-        Array.isArray(lastAssistantMessage) &&
-        lastAssistantMessage.every(
-          (item) =>
-            typeof item === 'object' && 'type' in item && 'text' in item,
-        )
-      ) {
-        // Get the last element of the array
-        const lastElement = lastAssistantMessage.slice(-1)[0]
-        if (lastElement?.type === 'text') {
-          cleanedAssistantMessage = lastElement.text || ''
-        }
-      } else if (typeof lastAssistantMessage === 'string') {
-        cleanedAssistantMessage = lastAssistantMessage
-      }
-      // P3.3 : Remove "References:" section from assistant message if it exists
-      const referencesIndex = cleanedAssistantMessage.search(
-        /References:|Relevant Sources:/,
-      ) // TODO: make this search string more robust
-      cleanedAssistantMessage =
-        referencesIndex !== -1
-          ? cleanedAssistantMessage.substring(0, referencesIndex).trim()
-          : cleanedAssistantMessage
+    // P1.2: User GoogleFit Data
+    const user_data = getUserGoogleFitData('1')
+    const user_data_str = JSON.stringify(user_data)
+    const userData = `\nBelow is the user's GoogleFit health and workoutdata. Use this data to answer the user's question.\n<User Data>\n${user_data_str}\n</User Data>`
+    remainingTokenBudget -= encoding.encode(userData).length
+    userPromptSections.push(userData)
 
-      const answer = `\n<Answer>\n${cleanedAssistantMessage}\n</Answer>`
-      remainingTokenBudget -= encoding.encode(answer).length
-      userPromptSections.push(answer)
-    } else {
-      // normal flow without summary
-      // Build the final system prompt with all components
-      finalSystemPrompt = systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
-      // Adjust remaining token budget based on the system prompt length
-      const tokenCount = encoding.encode(finalSystemPrompt).length
-      remainingTokenBudget -= tokenCount
+    // P1.3: User Profile
+    const userProfile = getUserProfile('1')
+    const userProfileStr = JSON.stringify(userProfile)
+    const userProfileData = `\nBelow is the user's profile. Use this data to answer the user's question.\n<User Profile>\n${userProfileStr}\n</User Profile>`
+    remainingTokenBudget -= encoding.encode(userProfileData).length
+    userPromptSections.push(userProfileData)
 
-      // P1.1: Most recent user text input
-      const userQuery = `\n<User Query>\n${lastUserTextInput}\n</User Query>`
-      remainingTokenBudget -= encoding.encode(userQuery).length
-      userPromptSections.push(userQuery)
+    // P2.1 : get the previous conversation summary, if it exists
+    if (conversation.summary) {
+      const previousConversationSummary = `\n<Previous Conversation Summary>\n${conversation.summary}\n</Previous Conversation Summary>`
+      userPromptSections.push(previousConversationSummary)
+      remainingTokenBudget -= encoding.encode(
+        previousConversationSummary,
+      ).length
+    }
 
-      // P1.2: User GoogleFit Data
-      const user_data = getUserGoogleFitData('1')
-      const user_data_str = JSON.stringify(user_data)
-      const userData = `\nBelow is the user's GoogleFit health and workoutdata. Use this data to answer the user's question.\n<User Data>\n${user_data_str}\n</User Data>`
-      remainingTokenBudget -= encoding.encode(userData).length
-      userPromptSections.push(userData)
+    // P2.2: Latest 2 conversation messages (Reserved tokens)
+    const tokensInLastTwoMessages = _getRecentConvoTokens({
+      conversation,
+    })
+    // console.log('Tokens in last two messages: ', tokensInLastTwoMessages)
+    remainingTokenBudget -= tokensInLastTwoMessages
 
-      // P1.3: User Profile
-      const userProfile = getUserProfile('1')
-      const userProfileStr = JSON.stringify(userProfile)
-      const userProfileData = `\nBelow is the user's profile. Use this data to answer the user's question.\n<User Profile>\n${userProfileStr}\n</User Profile>`
-      remainingTokenBudget -= encoding.encode(userProfileData).length
-      userPromptSections.push(userProfileData)
+    // Get contexts from the last message
+    const contexts =
+      (conversation.messages[conversation.messages.length - 1]
+        ?.contexts as ContextWithMetadata[]) || []
 
-      // P2.1 : get the previous conversation summary, if it exists
-      if (conversation.summary) {
-        const previousConversationSummary = `\n<Previous Conversation Summary>\n${conversation.summary}\n</Previous Conversation Summary>`
-        userPromptSections.push(previousConversationSummary)
-        remainingTokenBudget -= encoding.encode(
-          previousConversationSummary,
-        ).length
+    if (contexts && contexts.length > 0) {
+      // Documents are present; maintain all existing processes as normal
+      // P5: query_topContext
+
+      // Check if encoding is initialized
+      if (!encoding) {
+        console.error('Encoding is not initialized.')
+        throw new Error('Encoding initialization failed.')
       }
 
-      // P2.2: Latest 2 conversation messages (Reserved tokens)
-      const tokensInLastTwoMessages = _getRecentConvoTokens({
-        conversation,
+      const query_topContext = _buildQueryTopContext({
+        conversation: conversation,
+        // encoding: encoding,
+        tokenLimit: remainingTokenBudget - tokensInLastTwoMessages, // Keep room for conversation history
       })
-      // console.log('Tokens in last two messages: ', tokensInLastTwoMessages)
-      remainingTokenBudget -= tokensInLastTwoMessages
 
-      // Get contexts from the last message
-      const contexts =
-        (conversation.messages[conversation.messages.length - 1]
-          ?.contexts as ContextWithMetadata[]) || []
+      if (query_topContext) {
+        const queryContextMsg = `
+        <RetrievedDocumentsInstructions>
+        The following are passages retrieved via RAG from a large dataset. They may be relevant but aren't guaranteed to be. Evaluate critically, use what's pertinent, and disregard irrelevant info. When using information from these passages, place citations before the period, using the exact same XML citation format shown in the examples above (e.g., "This is a statement <cite>1</cite>.").
+        </RetrievedDocumentsInstructions>
+        
+        <PotentiallyRelevantDocuments>
+        ${query_topContext}
+        </PotentiallyRelevantDocuments>`
+        // Adjust remaining token budget
+        remainingTokenBudget -= encoding.encode(queryContextMsg).length
+        // Add to user prompt sections
+        userPromptSections.push(queryContextMsg)
+      }
+    }
 
-      if (contexts && contexts.length > 0) {
-        // Documents are present; maintain all existing processes as normal
-        // P5: query_topContext
+    const latestUserMessage =
+      conversation.messages[conversation.messages.length - 1]
 
-        const query_topContext = _buildQueryTopContext({
-          conversation: conversation,
-          // encoding: encoding,
-          tokenLimit: remainingTokenBudget - tokensInLastTwoMessages, // Keep room for conversation history
-        })
+    // Move Tool Outputs to be added before the userQuery
+    if (latestUserMessage?.tools) {
+      const toolsOutputResults = _buildToolsOutputResults({ conversation })
 
-        if (query_topContext) {
-          const queryContextMsg = `
-          <RetrievedDocumentsInstructions>
-          The following are passages retrieved via RAG from a large dataset. They may be relevant but aren't guaranteed to be. Evaluate critically, use what's pertinent, disregard irrelevant info. Cite used passages carefully in the format previously described.
-          </RetrievedDocumentsInstructions>
-          
-          <PotentiallyRelevantDocuments>
-          ${query_topContext}
-          </PotentiallyRelevantDocuments>`
-          // Adjust remaining token budget
-          remainingTokenBudget -= encoding.encode(queryContextMsg).length
-          // Add to user prompt sections
-          userPromptSections.push(queryContextMsg)
-        }
+      // Add Tool Instructions and outputs
+      const toolInstructions =
+        "<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool `tool name`...' or 'According to tool `tool name`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>"
+
+      // Add to user prompt sections
+      userPromptSections.push(toolInstructions)
+
+      // Adjust remaining token budget for tool outputs
+      if (encoding) {
+        remainingTokenBudget -= encoding.encode(toolsOutputResults).length
       }
 
-      const latestUserMessage =
-        conversation.messages[conversation.messages.length - 1]
+      // Add tool outputs to user prompt sections
+      userPromptSections.push(toolsOutputResults)
+    }
 
-      // No tools use in mHealth
-      // Move Tool Outputs to be added before the userQuery
-      // if (latestUserMessage?.tools) {
-      //   const toolsOutputResults = _buildToolsOutputResults({ conversation })
-
-      //   // Add Tool Instructions and outputs
-      //   const toolInstructions =
-      //     "<Tool Instructions>The user query required the invocation of external tools, and now it's your job to use the tool outputs and any other information to craft a great response. All tool invocations have already been completed before you saw this message. You should not attempt to invoke any tools yourself; instead, use the provided results/outputs of the tools. If any tools errored out, inform the user. If the tool outputs are irrelevant to their query, let the user know. Use relevant tool outputs to craft your response. The user may or may not reference the tools directly, but provide a helpful response based on the available information. Never tell the user you will run tools for them, as this has already been done. Always use the past tense to refer to the tool outputs. Never request access to the tools, as you are guaranteed to have access when appropriate; for example, never say 'I would need access to the tool.' When using tool results in your answer, always specify the source, using code notation, such as '...as per tool `tool name`...' or 'According to tool `tool name`...'. Never fabricate tool results; it is crucial to be honest and transparent. Stick to the facts as presented.</Tool Instructions>"
-
-      //   // Add to user prompt sections
-      //   userPromptSections.push(toolInstructions)
-
-      //   // Adjust remaining token budget for tool outputs
-      //   remainingTokenBudget -= encoding.encode(toolsOutputResults).length
-
-      //   // Add tool outputs to user prompt sections
-      //   userPromptSections.push(toolsOutputResults)
-      // }
-    } // end summary if-else here
+    // Add the user's query to the prompt sections
+    userPromptSections.push(userQuery)
 
     // Assemble the user prompt by joining sections with double line breaks
     const userPrompt = userPromptSections.join('\n\n')
-
-    // if (summary) {
-    //   console.debug('Summary userPrompt: ', userPrompt)
-    //   console.debug('Summary finalSystemPrompt: ', finalSystemPrompt)
-    // } else {
-    //   console.debug('Normal userPrompt: ', userPrompt)
-    //   console.debug('Normal finalSystemPrompt: ', finalSystemPrompt)
-    // }
 
     // Set final system and user prompts in the conversation
     conversation.messages[
@@ -458,12 +384,6 @@ export const buildPrompt = async ({
     conversation.messages[
       conversation.messages.length - 1
     ]!.latestSystemMessage = finalSystemPrompt
-    if (summary) {
-      // change last message role to user
-      // this is for convertConversatonToVercelAISDKv3. Only the "user" role finalPromtEngineeredMessage is used.
-      // Here since the summary message is from assistant, we need to change it to user.
-      conversation.messages[conversation.messages.length - 1]!.role = 'user'
-    }
 
     return conversation
   } catch (error) {
@@ -584,12 +504,9 @@ const _getLastUserTextInput = async ({
   /* 
       Gets ONLY the text that the user input. Does not return images or anything else. Just what the user typed.
     */
-  // const lastMessageContent =
-  //   conversation.messages?.[conversation.messages.length - 1]?.content
+  const lastMessageContent =
+    conversation.messages?.[conversation.messages.length - 1]?.content
 
-  const lastMessageContent: string | Content[] =
-    conversation?.messages.filter((msg) => msg.role === 'user').slice(-1)[0]
-      ?.content || ''
   if (typeof lastMessageContent === 'string') {
     return lastMessageContent
   } else if (Array.isArray(lastMessageContent)) {
@@ -640,6 +557,14 @@ function _buildQueryTopContext({
           }\n${d.text}\n`,
       )
       .join(separator)
+
+    // const stuffedPrompt =
+    //   contextText + '\n\nNow please respond to my query: ' + searchQuery
+    // const totalNumTokens = encoding.encode(stuffedPrompt).length
+    // console.log('contextText', contextText)
+    // console.log(
+    // `Total number of tokens: ${totalNumTokens}. Number of docs: ${contexts.length}, number of valid docs: ${validDocs.length}`,
+    // )
 
     return contextText
   } catch (e) {
