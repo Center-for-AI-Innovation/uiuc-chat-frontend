@@ -48,7 +48,7 @@ const ToolsPage: NextPage = () => {
       const data = await response.json()
       if (data) {
         const response = await fetch(
-          `https://flask-production-751b.up.railway.app/getAll?course_name=${course_name}`,
+          `/api/UIUC-api/getAllCourseData?course_name=${course_name}`,
         )
         const data = await response.json()
         const courseData = data.distinct_files
