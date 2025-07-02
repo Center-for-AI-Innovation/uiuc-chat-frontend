@@ -432,6 +432,7 @@ export const handleContextSearch = async (
       searchQuery,
       token_limit,
       documentGroups,
+      selectedConversation.id,
     )
 
     message.contexts = curr_contexts as ContextWithMetadata[]
