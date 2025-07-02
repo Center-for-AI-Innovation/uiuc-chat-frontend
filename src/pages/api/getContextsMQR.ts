@@ -6,6 +6,7 @@ export const fetchMQRContexts = async (
   search_query: string,
   token_limit = 6000,
   doc_groups: string[] = [],
+  conversation_id?: string,
 ) => {
   try {
     const response: AxiosResponse<ContextWithMetadata[]> = await axios.get(
@@ -16,6 +17,7 @@ export const fetchMQRContexts = async (
           search_query: search_query,
           token_limit: token_limit,
           doc_groups: doc_groups,
+          conversation_id: conversation_id,
         },
       },
     )

@@ -27,7 +27,7 @@ import {
 } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { useTranslation } from 'next-i18next'
-import { Content, Message, MessageType } from '@/types/chat'
+import { Content, Message, MessageType, Conversation } from '@/types/chat'
 import { Plugin } from '@/types/plugin'
 import { Prompt } from '@/types/prompt'
 
@@ -118,6 +118,37 @@ interface Props {
 interface ProcessedImage {
   resizedFile: File
   dataUrl: string
+}
+
+async function createNewConversation(
+  courseName: string,
+  homeDispatch: any,
+): Promise<Conversation> {
+  const conversationId = uuidv4()
+  const newConversation: Conversation = {
+    id: conversationId,
+    name: `File Upload - ${new Date().toLocaleString()}`,
+    messages: [],
+    model: {
+      id: 'gpt-4o-mini',
+      name: 'GPT-4o mini',
+      tokenLimit: 128000,
+      enabled: true,
+    },
+    prompt:
+      'You are a helpful assistant. You can analyze uploaded files and answer questions.',
+    temperature: 0.5,
+    folderId: null,
+    createdAt: new Date().toISOString(),
+  }
+
+  homeDispatch({ field: 'selectedConversation', value: newConversation })
+  homeDispatch({
+    field: 'conversations',
+    value: (prev: Conversation[]) => [newConversation, ...prev],
+  })
+
+  return newConversation
 }
 
 export const ChatInput = ({
@@ -249,17 +280,16 @@ export const ChatInput = ({
   type Role = 'user' | 'system' // Add other roles as needed
 
   const handleSend = async () => {
-    if (messageIsStreaming) {
-      return
-    }
+    if (messageIsStreaming) return
 
     const textContent = content
-    let imageContent: Content[] = [] // Explicitly declare the type for imageContent
+    let imageContent: Content[] = []
+    let fileContent: Content[] = []
 
+    // Handle image uploads (existing code - keep this as is)
     if (imageFiles.length > 0 && !uploadingImage) {
       setUploadingImage(true)
       try {
-        // If imageUrls is empty, upload all images and get their URLs
         const imageUrlsToUse =
           imageUrls.length > 0
             ? imageUrls
@@ -269,17 +299,13 @@ export const ChatInput = ({
                 ),
               )
 
-        // Construct image content for the message
         imageContent = imageUrlsToUse
-          .filter((url): url is string => url !== '') // Type-guard to filter out empty strings
+          .filter((url): url is string => url !== '')
           .map((url) => ({
             type: 'image_url',
             image_url: { url },
           }))
 
-        // console.log("Final imageUrls: ", imageContent)
-
-        // Clear the files after uploading
         setImageFiles([])
         setImagePreviewUrls([])
         setImageUrls([])
@@ -291,8 +317,61 @@ export const ChatInput = ({
       }
     }
 
-    if (!textContent && imageContent.length === 0) {
-      alert(t('Please enter a message or upload an image'))
+    // --- Conversation creation logic ---
+    let conversation = selectedConversation
+    if (!conversation?.id) {
+      conversation = await createNewConversation(courseName, homeDispatch)
+    }
+    // -----------------------------------
+
+    // Handle file uploads: create DB record and associate with conversation
+    if (fileUploads.length > 0) {
+      try {
+        // Only process files that are already uploaded to S3 and have a url
+        await Promise.all(
+          fileUploads
+            .filter((fu) => fu.status === 'uploaded' && fu.url)
+            .map(async (fu) => {
+              try {
+                // Create chat file upload record (associate with conversation)
+                await fetch('/api/UIUC-api/chat-file-upload', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    conversationId: conversation.id,
+                    courseName,
+                    s3Key: fu.url,
+                    fileName: fu.file.name,
+                    fileType: fu.file.type,
+                  }),
+                })
+              } catch (error) {
+                setFileUploads((prev) =>
+                  prev.map((f) =>
+                    f.file.name === fu.file.name
+                      ? { ...f, status: 'error' }
+                      : f,
+                  ),
+                )
+              }
+            }),
+        )
+        setFileUploads([])
+      } catch (error) {
+        console.error('Error processing file uploads:', error)
+      }
+    }
+
+    // Create file content for the message
+    fileContent = fileUploads
+      .filter((fu) => fu.status === 'uploaded')
+      .map((fu) => ({
+        type: 'text' as MessageType,
+        text: `📎 Uploaded file: ${fu.file.name}`,
+      }))
+
+    if (!textContent && imageContent.length === 0 && fileContent.length === 0) {
+      alert(t('Please enter a message or upload a file'))
       return
     }
 
@@ -302,17 +381,18 @@ export const ChatInput = ({
         ? [{ type: 'text' as MessageType, text: textContent }]
         : []),
       ...imageContent,
+      ...fileContent,
     ]
 
-    // Create a structured message for GPT-4 Vision
-    const messageForGPT4Vision: Message = {
+    // Create a structured message
+    const messageForChat: Message = {
       id: uuidv4(),
       role: 'user',
       content: contentArray,
     }
 
     // Use the onSend prop to send the structured message
-    onSend(messageForGPT4Vision, plugin) // Cast to unknown then to Message if needed
+    onSend(messageForChat, plugin)
 
     // Reset states
     setContent('')
@@ -321,9 +401,13 @@ export const ChatInput = ({
     setImageUrls([])
     setImageFiles([])
     setImagePreviewUrls([])
+    setFileUploads([])
 
     if (imageUploadRef.current) {
       imageUploadRef.current.value = ''
+    }
+    if (fileUploadRef.current) {
+      fileUploadRef.current.value = ''
     }
   }
 
@@ -567,62 +651,179 @@ export const ChatInput = ({
     ],
   )
 
-  function handleFileSelection(newFiles: File[]) {
-    // Combine new files with already selected files (assume imageFiles is in state)
-    const allFiles = [...imageFiles, ...newFiles]
+  async function handleFileSelection(newFiles: File[]) {
+    const allFiles = [...fileUploads.map((f) => f.file), ...newFiles]
 
-    // Validation: number of files
+    // 1. Validation: number of files
     if (allFiles.length > 5) {
       notifications.show({
-        message: 'You can upload a maximum of 5 files at once.',
+        title: 'Too Many Files',
+        message:
+          'You can upload a maximum of 5 files at once. Please remove some files before adding new ones.',
         color: 'red',
+        icon: <IconAlertCircle />,
+        autoClose: 6000,
       })
       return
     }
 
-    // Validation: total size
+    // 2. Validation: total size
     const totalSize = allFiles.reduce((sum, file) => sum + file.size, 0)
     if (totalSize > 25 * 1024 * 1024) {
       notifications.show({
-        message: 'Total file size cannot exceed 25MB.',
+        title: 'Files Too Large',
+        message:
+          'The total size of all files cannot exceed 25MB. Please remove large files or upload smaller ones.',
         color: 'red',
+        icon: <IconAlertCircle />,
+        autoClose: 6000,
       })
       return
     }
-    // Validation: file types
+
+    // 3. Validation: file types
     for (const file of newFiles) {
       const ext = file.name.split('.').pop()?.toLowerCase()
       if (!ext || !ALLOWED_FILE_EXTENSIONS.includes(ext)) {
         notifications.show({
-          message: `File type .${ext} is not supported.`,
+          title: 'Unsupported File Type',
+          message: `The file "${file.name}" is not supported. Please upload files of the following types: ${ALLOWED_FILE_EXTENSIONS.join(', ')}.`,
           color: 'red',
+          icon: <IconAlertCircle />,
+          autoClose: 6000,
         })
         return
       }
     }
 
-    // For each valid file, add to fileUploads and start upload
-    newFiles.forEach((file) => {
-      // Prevent duplicate files by name
-      setFileUploads((prev) => {
-        if (prev.some((f) => f.file.name === file.name)) return prev
-        return [...prev, { file, status: 'uploading' }]
+    // Prevent duplicates by name
+    const existingNames = new Set(fileUploads.map((fu) => fu.file.name))
+    const uniqueNewFiles = newFiles.filter(
+      (file) => !existingNames.has(file.name),
+    )
+
+    if (uniqueNewFiles.length === 0) {
+      notifications.show({
+        title: 'Duplicate Files',
+        message: 'All selected files are already uploaded or in progress.',
+        color: 'yellow',
+        icon: <IconAlertCircle />,
+        autoClose: 6000,
+      })
+      return
+    }
+
+    // Add all new files to state as "uploading"
+    setFileUploads((prev) => [
+      ...prev,
+      ...uniqueNewFiles.map((file) => ({
+        file,
+        status: 'uploading' as 'uploading',
+      })),
+    ])
+
+    // Immediately upload each file to S3 and update status
+    for (const file of uniqueNewFiles) {
+      try {
+        // Upload to S3 only (do not create DB record yet)
+        const s3Key = await uploadToS3(file, courseName)
+
+        setFileUploads((prev) =>
+          prev.map((f) =>
+            f.file.name === file.name
+              ? { ...f, status: 'uploaded', url: s3Key }
+              : f,
+          ),
+        )
+      } catch (error) {
+        setFileUploads((prev) =>
+          prev.map((f) =>
+            f.file.name === file.name ? { ...f, status: 'error' } : f,
+          ),
+        )
+        notifications.show({
+          message: `Failed to upload ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          color: 'red',
+        })
+      }
+    }
+  }
+
+  async function uploadFileForChat(
+    file: File,
+    conversationId: string,
+  ): Promise<string | undefined> {
+    try {
+      // 1. Upload to S3 (existing flow)
+      const s3Key = await uploadToS3(file, courseName)
+      if (!s3Key) {
+        throw new Error('S3 upload failed')
+      }
+
+      // 2. Create chat file upload record
+      const response = await fetch('/api/UIUC-api/chat-file-upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId,
+          courseName,
+          s3Key,
+          fileName: file.name,
+          fileType: file.type,
+        }),
       })
 
-      uploadToS3(file, courseName)
-        .then((s3Key) => {
-          setFileUploads((prev) =>
-            prev.map((f) =>
-              f.file === file ? { ...f, status: 'uploaded', url: s3Key } : f,
-            ),
-          )
-        })
-        .catch(() => {
-          setFileUploads((prev) =>
-            prev.map((f) => (f.file === file ? { ...f, status: 'error' } : f)),
-          )
-        })
-    })
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Chat upload failed')
+      }
+
+      const result = await response.json()
+      console.log('Chat file upload successful:', result)
+
+      return s3Key
+    } catch (error) {
+      console.error('Chat file upload error:', error)
+      throw error
+    }
+  }
+
+  async function processChatFiles(
+    fileUploads: FileUploadStatus[],
+    conversationId: string,
+  ) {
+    const uploadPromises = fileUploads
+      .filter((fu) => fu.status === 'uploaded' && fu.url)
+      .map(async (fu) => {
+        try {
+          // Create chat file upload record
+          const response = await fetch('/api/UIUC-api/chat-file-upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              conversationId,
+              courseName,
+              s3Key: fu.url,
+              fileName: fu.file.name,
+              fileType: fu.file.type,
+            }),
+          })
+
+          if (!response.ok) {
+            const errorData = await response.json()
+            throw new Error(errorData.error || 'Chat upload failed')
+          }
+
+          const result = await response.json()
+          console.log('Chat file upload successful:', result)
+          return result
+        } catch (error) {
+          console.error('Chat file upload error:', error)
+          throw error
+        }
+      })
+
+    return Promise.all(uploadPromises)
   }
 
   async function processAndUploadImage(
@@ -1248,7 +1449,7 @@ export const ChatInput = ({
             </button>
 
             {showScrollDownButton && (
-              <div className="absolute bottom-12 right-0 lg:-right-10 lg:bottom-0">
+              <div className="absolute bottom-11 right-0 lg:-right-10 lg:bottom-0">
                 <button
                   className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-300 text-gray-800 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-neutral-200"
                   onClick={onScrollDownClick}

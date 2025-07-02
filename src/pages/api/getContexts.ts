@@ -1,18 +1,18 @@
 import { ContextWithMetadata } from '~/types/chat'
 
-
-
 export const fetchContexts = async (
   course_name: string,
   search_query: string,
   token_limit = 4000,
   doc_groups: string[] = [],
+  conversation_id?: string,
 ): Promise<ContextWithMetadata[]> => {
   const requestBody = {
     course_name: course_name,
     search_query: search_query,
     token_limit: token_limit,
     doc_groups: doc_groups,
+    conversation_id: conversation_id,
   }
 
   // UESFUL FOR TESTING -- SHORTEN CONTEXTS
