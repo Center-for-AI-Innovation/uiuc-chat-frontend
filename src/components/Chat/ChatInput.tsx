@@ -713,21 +713,33 @@ export const ChatInput = ({
       return
     }
 
-    // Add all new files to state as "uploading"
-    setFileUploads((prev) => [
-      ...prev,
-      ...uniqueNewFiles.map((file) => ({
-        file,
-        status: 'uploading' as const,
-      })),
-    ])
-
-    // Immediately upload each file to S3 and update status
     for (const file of uniqueNewFiles) {
-      try {
-        // Upload to S3 only (do not create DB record yet)
-        const s3Key = await uploadToS3(file, courseName)
+      const ext = file.name.split('.').pop()?.toLowerCase()
+      const imageTypes = ['jpg', 'jpeg', 'png', 'webp', 'gif']
 
+      // If image, generate preview for UI
+      if (ext && imageTypes.includes(ext)) {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          const dataUrl = e.target?.result as string
+          setImagePreviewUrls((prev) => [...prev, dataUrl])
+          setImageFiles((prev) => [...prev, file])
+        }
+        reader.readAsDataURL(file)
+      } else {
+        // For non-image files, just add to fileUploads
+        setFileUploads((prev) => [
+          ...prev,
+          {
+            file,
+            status: 'uploading' as const,
+          },
+        ])
+      }
+
+      // Upload all files (including images) to S3 and update status
+      try {
+        const s3Key = await uploadToS3(file, courseName)
         setFileUploads((prev) =>
           prev.map((f) =>
             f.file.name === file.name
@@ -1329,10 +1341,9 @@ export const ChatInput = ({
             <div className="mt-2 flex flex-wrap gap-3">
               {fileUploads
                 .filter((fu) => {
-                  // Only show non-image files here
                   const ext = fu.file.name.split('.').pop()?.toLowerCase()
                   const imageTypes = ['jpg', 'jpeg', 'png', 'webp', 'gif']
-                  return ext && !imageTypes.includes(ext)
+                  return !(ext && imageTypes.includes(ext))
                 })
                 .map((fu, idx) => {
                   // Icon selection based on file type
