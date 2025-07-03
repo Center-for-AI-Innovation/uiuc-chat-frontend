@@ -111,12 +111,12 @@ export function convertDBToChatConversation(
         }
       }
       // add summary message
-      if (msg.summary) {
-        content.push({
-          type: 'summary',
-          text: msg.summary,
-        })
-      }
+      // if (msg.summary) {
+      //   content.push({
+      //     type: 'summary',
+      //     text: msg.summary,
+      //   })
+      // }
 
       const feedbackObj = msg.feedback
         ? {

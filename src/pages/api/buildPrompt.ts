@@ -7,7 +7,7 @@ export default async function handler(
   res: NextApiResponse,
 ) {
   try {
-    const { conversation, course_name, courseMetadata, summary } = req.body
+    const { conversation, course_name, courseMetadata } = req.body
 
     // **Add a nullish check for 'conversation'**
     if (!conversation) {
@@ -20,7 +20,6 @@ export default async function handler(
       conversation: conversation, // Now TypeScript knows 'conversation' is not undefined
       projectName: course_name,
       courseMetadata: courseMetadata,
-      summary: summary,
     })
 
     return res.status(200).json(updatedConversation)
