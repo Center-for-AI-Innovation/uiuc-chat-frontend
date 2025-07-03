@@ -113,13 +113,13 @@ const handler = async (
         })
         .eq('id', fileUploadId)
 
-      console.error(' Ingest failed for chat file:', responseBody)
+      console.error('Ingest failed for chat file:', responseBody)
       return res.status(500).json({
-        error: ' Failed to process file',
+        error: 'Failed to process file',
       })
     }
 
-    // 4. Update file_uploads with success and task_id
+    // 4. Update file_uploads with success and task_id - use original pattern
     await supabase
       .from('file_uploads')
       .update({
@@ -141,10 +141,15 @@ const handler = async (
       beam_task_id: responseBody.task_id,
     })
   } catch (error) {
-    const err = ` -- Bottom of /chat-file-upload -- Internal Server Error: ${error}`
-    console.error(err)
+    // Fix: Avoid string interpolation with potentially unsafe content
+    console.error(
+      'Bottom of /chat-file-upload -- Internal Server Error:',
+      error,
+    )
 
-    return res.status(500).json({ error: err })
+    return res.status(500).json({
+      error: 'Internal Server Error occurred in chat file upload',
+    })
   }
 }
 
