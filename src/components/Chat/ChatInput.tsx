@@ -718,7 +718,7 @@ export const ChatInput = ({
       ...prev,
       ...uniqueNewFiles.map((file) => ({
         file,
-        status: 'uploading' as 'uploading',
+        status: 'uploading' as const,
       })),
     ])
 
