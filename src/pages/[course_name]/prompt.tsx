@@ -1141,6 +1141,38 @@ CRITICAL: The optimized prompt must:
     handleInitiateDeleteCustomPrompt(prompt);
   };
 
+  const handleToggleEnabledPrompt = async (promptId: string, isEnabled: boolean) => {
+    const updatedPrompts = customSystemPrompts.map((p) =>
+      p.id === promptId ? { ...p, isEnabled } : p
+    );
+    setCustomSystemPrompts(updatedPrompts);
+    // Save to course metadata
+    if (courseMetadataRef.current && course_name) {
+      const updatedMetadata = {
+        ...courseMetadataRef.current,
+        custom_system_prompts: updatedPrompts,
+      } as CourseMetadata;
+      const success = await callSetCourseMetadata(course_name, updatedMetadata);
+      if (success) {
+        setCourseMetadata(updatedMetadata);
+        showToastNotification(
+          theme,
+          'Success',
+          `Custom GPT ${isEnabled ? 'enabled' : 'disabled'} successfully.`
+        );
+      } else {
+        showToastNotification(
+          theme,
+          'Error',
+          `Failed to ${isEnabled ? 'enable' : 'disable'} custom GPT.`,
+          true
+        );
+      }
+    } else {
+      showToastNotification(theme, 'Error', 'Course data not available.', true);
+    }
+  };
+
   if (!isLoaded || isLoading) {
     return <LoadingPlaceholderForAdminPages />
   }
@@ -1350,6 +1382,7 @@ CRITICAL: The optimized prompt must:
               onOpenAddEditModal={handleOpenCustomPromptModal}
               onDeletePrompt={handleDeletePrompt}
               onToggleFavorite={handleToggleFavoritePrompt}
+              onToggleEnabled={handleToggleEnabledPrompt}
               onOpenLinkGeneratorModal={handleOpenLinkGeneratorModal}
               onCopyToClipboard={(text, type) => {
                 if (type === 'url') {

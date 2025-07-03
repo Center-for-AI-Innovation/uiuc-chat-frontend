@@ -11,6 +11,7 @@ export interface CustomSystemPrompt {
   promptText: string
   description?: string
   isFavorite?: boolean
+  isEnabled?: boolean
   documentGroups?: string[]
   tools?: string[]
 }

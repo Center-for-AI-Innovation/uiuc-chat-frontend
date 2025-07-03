@@ -23,12 +23,14 @@ const CustomGPTsList: React.FC<CustomGPTsListProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPrompt, setSelectedPrompt] = useState<CustomSystemPrompt | null>(null);
 
-  // Sort prompts to show favorites first
-  const sortedPrompts = [...customSystemPrompts].sort((a, b) => {
-    if (a.isFavorite && !b.isFavorite) return -1;
-    if (!a.isFavorite && b.isFavorite) return 1;
-    return 0;
-  });
+  // Filter to only enabled prompts, then sort to show favorites first
+  const sortedPrompts = [...customSystemPrompts]
+    .filter(prompt => prompt.isEnabled !== false) // Only show enabled GPTs (default to enabled if not set)
+    .sort((a, b) => {
+      if (a.isFavorite && !b.isFavorite) return -1;
+      if (!a.isFavorite && b.isFavorite) return 1;
+      return 0;
+    });
 
   // Show first 3 prompts
   const displayedPrompts = sortedPrompts.slice(0, 3);

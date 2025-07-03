@@ -11,6 +11,7 @@ import {
   UnstyledButton,
   Center,
   ActionIcon,
+  Switch,
   type MantineTheme,
 } from '@mantine/core';
 import {
@@ -37,6 +38,7 @@ interface CustomPromptsTableProps {
   onOpenAddEditModal: (prompt?: CustomSystemPrompt) => void;
   onDeletePrompt: (prompt: CustomSystemPrompt) => void;
   onToggleFavorite: (promptId: string, isFavorite: boolean) => void;
+  onToggleEnabled?: (promptId: string, isEnabled: boolean) => void;
   onOpenLinkGeneratorModal: (urlSuffix: string) => void;
   onCopyToClipboard: (text: string, type: 'url' | 'prompt') => void;
 }
@@ -80,6 +82,7 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
   onOpenAddEditModal,
   onDeletePrompt,
   onToggleFavorite,
+  onToggleEnabled,
   onOpenLinkGeneratorModal,
   onCopyToClipboard,
 }) => {
@@ -94,6 +97,8 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
       setSortDirection('asc');
     }
   };
+
+  const handleToggleEnabled = onToggleEnabled || (() => {});
 
   const sortedPrompts = useMemo(() => {
     if (!sortColumn) {
@@ -240,6 +245,13 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
                     >
                       Fav
                     </th>
+                    <th
+                      scope="col"
+                      className="w-16 px-2 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-3"
+                      style={{ width: '4rem' }}
+                    >
+                      Enabled
+                    </th>
                     <Th
                       scope="col"
                       className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-6"
@@ -311,6 +323,27 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
                               <IconStar size={18} className="text-gray-500 hover:text-yellow-400" />
                             )}
                           </ActionIcon>
+                        </Tooltip>
+                      </td>
+                      <td className="px-2 py-4 text-center sm:px-3">
+                        <Tooltip 
+                          label={prompt.isEnabled !== false ? 'Disable this Custom GPT' : 'Enable this Custom GPT'} 
+                          className={`${montserrat_paragraph.className}`}
+                        >
+                          <Switch
+                            checked={prompt.isEnabled !== false}
+                            onChange={(event) => handleToggleEnabled(prompt.id, event.currentTarget.checked)}
+                            size="sm"
+                            color="violet"
+                            styles={{
+                              track: {
+                                backgroundColor: prompt.isEnabled !== false ? theme.colors.violet[6] : theme.colors.gray[6],
+                                '&:hover': {
+                                  backgroundColor: prompt.isEnabled !== false ? theme.colors.violet[7] : theme.colors.gray[5],
+                                },
+                              },
+                            }}
+                          />
                         </Tooltip>
                       </td>
                       <td className={`truncate max-w-0 px-4 py-4 text-sm font-medium text-white sm:px-6 ${montserrat_paragraph.className}`}>
