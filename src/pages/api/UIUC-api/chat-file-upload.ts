@@ -18,13 +18,13 @@ const handler = async (
     if (req.method !== 'POST') {
       console.error('Request method not allowed')
       return res.status(405).json({
-        error: '❌❌ Request method not allowed',
+        error: ' Request method not allowed',
       })
     }
 
     const { conversationId, courseName, s3Key, fileName, fileType } = req.body
 
-    console.log('👉 Processing chat file upload:', {
+    console.log('Processing chat file upload:', {
       conversationId,
       courseName,
       s3Key,
@@ -37,7 +37,7 @@ const handler = async (
       console.error('Missing required parameters')
       return res.status(400).json({
         error:
-          '❌❌ Missing required parameters: conversationId, courseName, s3Key, fileName',
+          ' Missing required parameters: conversationId, courseName, s3Key, fileName',
       })
     }
 
@@ -51,7 +51,7 @@ const handler = async (
     if (convError || !conversation) {
       console.error('Conversation not found:', conversationId, convError)
       return res.status(404).json({
-        error: '❌❌ Conversation not found',
+        error: ' Conversation not found',
       })
     }
 
@@ -67,9 +67,9 @@ const handler = async (
     })
 
     if (uploadError) {
-      console.error('❌❌ Failed to create file_upload record:', uploadError)
+      console.error(' Failed to create file_upload record:', uploadError)
       return res.status(500).json({
-        error: '❌❌ Failed to create file record',
+        error: ' Failed to create file record',
       })
     }
 
@@ -97,10 +97,11 @@ const handler = async (
     )
 
     const responseBody = await response.json()
-    console.log(
-      `📤 Submitted chat file to ingest queue: ${s3_filepath}. Response status: ${response.status}`,
+    console.log('Submitted chat file to ingest queue', {
+      s3_filepath,
+      responseStatus: response.status,
       responseBody,
-    )
+    })
 
     if (!response.ok) {
       // Mark as failed in file_uploads
@@ -112,9 +113,9 @@ const handler = async (
         })
         .eq('id', fileUploadId)
 
-      console.error('❌❌ Ingest failed for chat file:', responseBody)
+      console.error(' Ingest failed for chat file:', responseBody)
       return res.status(500).json({
-        error: '❌❌ Failed to process file',
+        error: ' Failed to process file',
       })
     }
 
@@ -131,16 +132,16 @@ const handler = async (
       })
       .eq('id', fileUploadId)
 
-    console.log('✅ Chat file upload successful:', fileUploadId)
+    console.log('Chat file upload successful:', fileUploadId)
 
     res.status(200).json({
       success: true,
       fileUploadId,
-      message: '✅ File uploaded and processing started',
+      message: 'File uploaded and processing started',
       beam_task_id: responseBody.task_id,
     })
   } catch (error) {
-    const err = `❌❌ -- Bottom of /chat-file-upload -- Internal Server Error: ${error}`
+    const err = ` -- Bottom of /chat-file-upload -- Internal Server Error: ${error}`
     console.error(err)
 
     return res.status(500).json({ error: err })
