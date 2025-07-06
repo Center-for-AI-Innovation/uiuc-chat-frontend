@@ -70,7 +70,16 @@ export async function replaceCitationLinks(
   lastMessage: Message,
   citationLinkCache: Map<number, string>,
   courseName: string,
+  removeCitations?: boolean,
 ): Promise<string> {
+  if (removeCitations) {
+    return content
+      .replace(
+        /(?:&lt;cite|<cite)[ \t]{0,100}>([0-9,\s]+)(?:[ \t]{0,100},[ \t]{0,100}p\.[ \t]{0,100}(\d+))?[ \t]{0,100}(?:&lt;\/cite&gt;|<\/cite>)/g,
+        '',
+      )
+      .replace(/\b\d+\s*\.\s*\[.*?\]\(#\)/g, '')
+  }
   if (!lastMessage.contexts) {
     return safeText(content)
   }
@@ -185,7 +194,6 @@ export async function replaceCitationLinks(
           const innerText = citation.pageNumber
             ? `${citation.title}, p.${citation.pageNumber}`
             : `${citation.title}`
-
           // Create tooltip with citation number
           const tooltipTitle = `Citation ${citation.index}`
 

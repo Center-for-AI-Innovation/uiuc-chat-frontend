@@ -126,6 +126,7 @@ export interface Props {
   contentRenderer?: (message: Message) => JSX.Element
   onImageUrlsUpdate?: (message: Message, messageIndex: number) => void
   courseName: string
+  removeCitations?: boolean
 }
 
 // Add this helper function before the ChatMessage component
@@ -202,6 +203,7 @@ export const ChatMessage = memo(
     onFeedback,
     onImageUrlsUpdate,
     courseName,
+    removeCitations,
   }: Props) => {
     const { t } = useTranslation('chat')
     const { activeSidebarMessageId, setActiveSidebarMessageId } =
@@ -873,6 +875,17 @@ export const ChatMessage = memo(
           extractThinkTagContent(localContent)
         thoughtsContent = thoughts
         contentToRender = remainingContent
+
+        // ADD THIS: Remove citation patterns if removeCitations is true
+        if (removeCitations) {
+          // Remove citation tooltips: [text](url "Citation X")
+          contentToRender = contentToRender.replace(
+            /\[([^\]]+)\]\([^)]+\s+"Citation\s+\d+"\)/g,
+            '$1',
+          )
+          // Remove old format citations: (Document | X)
+          contentToRender = contentToRender.replace(/\([^|]+\|\s*\d+\)/g, '')
+        }
       } else if (Array.isArray(localContent)) {
         contentToRender = localContent
           .filter((content) => content.type === 'text')
@@ -882,6 +895,15 @@ export const ChatMessage = memo(
           extractThinkTagContent(contentToRender)
         thoughtsContent = thoughts
         contentToRender = remainingContent
+
+        // ADD THIS: Remove citation patterns if removeCitations is true
+        if (removeCitations) {
+          contentToRender = contentToRender.replace(
+            /\[([^\]]+)\]\([^)]+\s+"Citation\s+\d+"\)/g,
+            '$1',
+          )
+          contentToRender = contentToRender.replace(/\([^|]+\|\s*\d+\)/g, '')
+        }
       }
 
       return (
@@ -1126,6 +1148,12 @@ export const ChatMessage = memo(
 
       const isValidCitation =
         isCitationByTitle || isCitationByContent || isOldFormatCitation
+
+      // ADD THIS CONDITION: Hide citation links if removeCitations is true
+      if (removeCitations && isValidCitation) {
+        // Return just the text content without the link
+        return <span>{children}</span>
+      }
 
       const handleClick = useCallback(
         (e: React.MouseEvent) => {
@@ -1771,7 +1799,8 @@ export const ChatMessage = memo(
                   {/* Action Buttons Container */}
                   <div className="flex flex-col gap-2">
                     {/* Sources button */}
-                    {Array.isArray(message.contexts) &&
+                    {!removeCitations &&
+                      Array.isArray(message.contexts) &&
                       message.contexts.length > 0 &&
                       !(
                         messageIsStreaming &&
@@ -1861,7 +1890,7 @@ export const ChatMessage = memo(
         </div>
 
         {/* Move SourcesSidebar outside the message div but keep it in the fragment */}
-        {isSourcesSidebarOpen && (
+        {!removeCitations && isSourcesSidebarOpen && (
           <SourcesSidebar
             isOpen={isSourcesSidebarOpen}
             contexts={Array.isArray(message.contexts) ? message.contexts : []}
