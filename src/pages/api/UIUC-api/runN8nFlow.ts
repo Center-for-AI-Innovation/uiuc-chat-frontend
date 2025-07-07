@@ -75,9 +75,9 @@ export const runN8nFlowBackend = async (
   }
 }
 
-// This function can run for a maximum of 5 minutes
+// This function can run for a maximum of 3 minutes
 export const config = {
-  maxDuration: 300, // 5 minutes
+  maxDuration: 180, // 3 minutes
 }
 
 export default async function handler(
