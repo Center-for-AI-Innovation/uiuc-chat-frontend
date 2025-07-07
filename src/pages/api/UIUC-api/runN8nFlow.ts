@@ -1,6 +1,11 @@
 import { type NextApiRequest, type NextApiResponse } from 'next'
 import { getBackendUrl } from '~/utils/apiUtils'
 
+// This function can run for a maximum of 5 minutes
+export const config = {
+  maxDuration: 300, // 5 minutes
+}
+
 // Common function to run N8N flow - can be used anywhere
 export const runN8nFlowBackend = async (
   api_key: string,
@@ -74,8 +79,6 @@ export const runN8nFlowBackend = async (
     throw error
   }
 }
-
-export const maxDuration = 300 // 5 minutes Vercel runtime
 
 export default async function handler(
   req: NextApiRequest,
