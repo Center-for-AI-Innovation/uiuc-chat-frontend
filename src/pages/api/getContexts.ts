@@ -34,6 +34,9 @@ export const fetchContextsFromBackend = async (
   return data
 }
 
+  // const url = `https://flask-pr-316.up.railway.app/getTopContexts`  // mHealth backend app
+  // const url = `https://flask-production-751b.up.railway.app/getTopContexts` // production backend app
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })

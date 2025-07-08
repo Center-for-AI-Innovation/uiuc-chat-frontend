@@ -5,7 +5,7 @@ import { type CourseMetadata } from '~/types/courseMetadata'
 import { useRouter } from 'next/router'
 import { DataTable } from 'mantine-datatable'
 import styled from 'styled-components'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import { montserrat_heading } from 'fonts'
 import Link from 'next/link'
 import React from 'react'
 import { useMediaQuery } from '@mantine/hooks'
@@ -17,7 +17,7 @@ import {
 
 const StyledRow = styled.tr`
   &:hover {
-    background-color: rgba(255, 95, 5, 0.6);
+    background-color: hsla(280, 100%, 70%, 0.5);
   }
   color: #c1c2c5;
 `
@@ -25,8 +25,7 @@ const StyledRow = styled.tr`
 const StyledTable = styled(Table)`
   table-layout: fixed;
   width: 100%;
-  background-color: white;
-  color: var(--illinois-blue);
+  margin: 0 auto;
 
   th,
   td {
@@ -34,14 +33,15 @@ const StyledTable = styled(Table)`
     overflow-wrap: break-word;
     hyphens: auto;
     padding: 8px;
+    height: 50px;
   }
 `
 
 const ResponsiveTableWrapper = styled.div`
   overflow-x: auto;
   width: 100%;
-  background-color: white;
-  box-shadow: 0px 0px 10px 2px rgba(0, 0, 0, 0.1);
+  background-color: #15162b;
+  box-shadow: 0px 0px 10px 2px rgba(0, 0, 0, 0.5);
   border-radius: 15px;
   padding: 0;
 
@@ -91,12 +91,11 @@ const ListProjectTable: React.FC = () => {
   }
 
   const getSortIcon = (column: SortableColumn) => {
-    if (sortColumn !== column)
-      return <IconSelector size={14} color="var(--illinois-blue)" />
+    if (sortColumn !== column) return <IconSelector size={14} />
     return sortDirection === 'asc' ? (
-      <IconChevronUp size={14} color="var(--illinois-blue)" />
+      <IconChevronUp size={14} />
     ) : (
-      <IconChevronDown size={14} color="var(--illinois-blue)" />
+      <IconChevronDown size={14} />
     )
   }
 
@@ -162,22 +161,13 @@ const ListProjectTable: React.FC = () => {
         return (
           <StyledRow
             key={courseName}
-            onClick={(e) => {
-              // Check if cmd (Mac) or ctrl (Windows/Linux) key is pressed
-              if (e.metaKey || e.ctrlKey) {
-                // Open in new tab
-                window.open(`/${courseName}/chat`, '_blank')
-              } else {
-                // Normal navigation in current tab
-                router.push(`/${courseName}/chat`)
-              }
-            }}
-            style={{ cursor: 'pointer', color: 'var(--illinois-blue)' }}
+            onClick={() => router.push(`/${courseName}/chat`)}
+            style={{ cursor: 'pointer' }}
           >
             <td>{courseName}</td>
-            <td>{courseMetadata.is_private ? 'Private' : 'Public'}</td>
+            {/* <td>{courseMetadata.is_private ? 'Private' : 'Public'}</td>
             <td>{courseMetadata.course_owner}</td>
-            <td>{filteredAdmins.join(', ')}</td>
+            <td>{filteredAdmins.join(', ')}</td> */}
           </StyledRow>
         )
       })
@@ -244,93 +234,65 @@ const ListProjectTable: React.FC = () => {
 
     return (
       <>
-        <div className="mx-auto w-full max-w-[950px] md:w-11/12 lg:w-5/6">
-          <Title
-            order={2}
-            ta="center"
-            className={`
-              text-2xl font-bold sm:pt-2 
-              ${montserrat_heading.variable} font-montserratHeading
-            `}
-            style={{ color: 'var(--illinois-blue)' }}
-          >
-            Your Chatbots
+        <div className="mx-auto w-full md:w-4/5">
+          <Title order={2} color="white" ta="center" pb={16} pt={8}>
+            Explore the mHealth Chatbot
           </Title>
           {rows.length > 0 ? (
-            <>
-              <p
-                className={`
-                text-md pb-8 pt-2
-                ${montserrat_paragraph.variable} font-montserratParagraph
-              `}
-                style={{ color: 'var(--illinois-blue)' }}
-              >
-                These are projects you&apos;ve created, or where you are an
-                admin.
-              </p>
-              <div
-                style={{
-                  overflowX: 'auto',
-                  width: '100%',
-                  backgroundColor: 'white',
-                  boxShadow: '0px 0px 10px 2px rgba(0, 0, 0, 0.1)',
-                  borderRadius: '15px',
-                }}
-              >
-                <StyledTable>
-                  <thead>
-                    <tr>
-                      {[
-                        { label: 'Chatbot Name', key: 'name' },
-                        { label: 'Privacy', key: 'privacy' },
-                        { label: 'Owner', key: 'owner' },
-                        { label: 'Admins', key: 'admins' },
-                      ].map(({ label, key }) => (
-                        <th
-                          key={key}
-                          onClick={() => handleSort(key as SortableColumn)}
-                          style={{ cursor: 'pointer' }}
+            <div
+              style={{
+                overflowX: 'auto',
+                width: '50%',
+                backgroundColor: '#15162b',
+                boxShadow: '0px 0px 10px 2px rgba(0,0,0,0,5)',
+                borderRadius: '15px',
+                margin: '0 auto',
+              }}
+            >
+              <StyledTable>
+                <thead>
+                  <tr>
+                    {[
+                      { label: 'Chatbot Name', key: 'name' },
+                      // { label: 'Privacy', key: 'privacy' },
+                      // { label: 'Project Owner', key: 'owner' },
+                      // { label: 'Project Admins', key: 'admins' }
+                    ].map(({ label, key }) => (
+                      <th
+                        key={key}
+                        onClick={() => handleSort(key as SortableColumn)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                          }}
                         >
-                          <div
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: '4px',
-                            }}
+                          <span
+                            className={`text-md text-slate-200 ${montserrat_heading.variable} font-montserratHeading`}
                           >
-                            <span
-                              className={`text-md text-[var(--illinois-blue)] ${montserrat_heading.variable} font-montserratHeading`}
-                            >
-                              {label}
-                            </span>
-                            {getSortIcon(key as SortableColumn)}
-                          </div>
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>{rows}</tbody>
-                </StyledTable>
-              </div>
-            </>
+                            {label}
+                          </span>
+                          {getSortIcon(key as SortableColumn)}
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>{rows}</tbody>
+              </StyledTable>
+            </div>
           ) : (
             <Text
               size="md"
-              className={`pt-2 ${montserrat_heading.variable} font-montserratHeading`}
+              className={`${montserrat_heading.variable} font-montserratHeading`}
               bg={'bg-transparent'}
-              style={{
-                backgroundColor: 'transparent',
-                textAlign: 'center',
-                color: 'var(--illinois-blue)',
-              }}
+              style={{ backgroundColor: 'clear', textAlign: 'center' }}
             >
               You haven&apos;t created any projects yet. Let&apos;s{' '}
-              <Link
-                className="underline"
-                href="/new"
-                style={{ color: 'var(--illinois-orange)' }}
-              >
+              <Link className="text-purple-500 underline" href="/new">
                 go make one here
               </Link>
               , don&apos;t worry it&apos;s easy.
