@@ -10,7 +10,7 @@ export const runN8nFlowBackend = async (
   const backendUrl = getBackendUrl()
 
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), 30000)
+  const timeoutId = setTimeout(() => controller.abort(), 300000) // 5 minutes
 
   try {
     const body = JSON.stringify({
@@ -75,9 +75,9 @@ export const runN8nFlowBackend = async (
   }
 }
 
-// This function can run for a maximum of 3 minutes
+// This function can run for a maximum of 5 minutes
 export const config = {
-  maxDuration: 180, // 3 minutes
+  maxDuration: 300, // 5 minutes
 }
 
 export default async function handler(
