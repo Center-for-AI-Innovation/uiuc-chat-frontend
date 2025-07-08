@@ -24,6 +24,7 @@ export const runN8nFlowBackend = async (
       headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-cache',
+        Connection: 'close', // Force HTTP/1.1
       },
       body: body,
       signal: controller.signal,
@@ -71,6 +72,16 @@ export const runN8nFlowBackend = async (
       )
     }
 
+    // Handle HTTP/2 protocol errors specifically
+    if (error.message && error.message.includes('pseudo-header')) {
+      console.error('HTTP/2 protocol error detected:', error.message)
+      throw new Error(
+        'Backend communication error (HTTP/2 protocol issue). Please try again or contact support if this persists.',
+      )
+    }
+
+    // Log the full error for debugging
+    console.error('Backend communication error:', error)
     throw error
   }
 }
