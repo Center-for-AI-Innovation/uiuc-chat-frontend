@@ -266,7 +266,6 @@ const callN8nFunction = async (
       headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-cache',
-        Connection: 'close', // Force HTTP/1.1
       },
       body: JSON.stringify({
         api_key: n8n_api_key,
