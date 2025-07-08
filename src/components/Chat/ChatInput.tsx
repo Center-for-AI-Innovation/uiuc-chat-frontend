@@ -367,7 +367,7 @@ export const ChatInput = ({
       .filter((fu) => fu.status === 'uploaded')
       .map((fu) => ({
         type: 'text' as MessageType,
-        text: `📎 Uploaded file: ${fu.file.name}`,
+        text: `📎 Uploaded file: ${fu.file.name}|${fu.url}|${fu.file.type}`,
       }))
 
     if (!textContent && imageContent.length === 0 && fileContent.length === 0) {
