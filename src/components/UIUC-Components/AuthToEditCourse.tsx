@@ -42,7 +42,7 @@ export const AuthComponent = ({ course_name }: { course_name: string }) => {
             </Title>
             <Link href="/sign-in">
               <Button
-                className="kas-gradient-text btn"
+                className="kas-gradient-text btn login-btn"
                 style={{ fontSize: '24px' }}
                 onClick={handleSignIn}
               >
