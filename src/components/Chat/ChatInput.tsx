@@ -212,7 +212,7 @@ export const ChatInput = ({
       return
     }
 
-    let textContent = content
+    const textContent = content
     let imageContent: Content[] = [] // Explicitly declare the type for imageContent
 
     if (isWebSearchEnabled && textContent.trim()) {
