@@ -122,7 +122,7 @@ const FileCard: React.FC<{
     return <IconFile {...iconProps} className="text-gray-600" />
   }
 
-  const truncateFileName = (name: string, maxLength: number = 30) => {
+  const truncateFileName = (name: string, maxLength = 30) => {
     if (name.length <= maxLength) return name
     const extension = name.split('.').pop()
     const nameWithoutExt = name.substring(0, name.lastIndexOf('.'))
