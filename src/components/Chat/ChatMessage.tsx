@@ -203,6 +203,8 @@ export const ChatMessage = memo(
     onImageUrlsUpdate,
     courseName,
   }: Props) => {
+    console.log('ChatMessage message:', message)
+    // console.log('role:', message.role, typeof message.role); //
     const { t } = useTranslation('chat')
     const { activeSidebarMessageId, setActiveSidebarMessageId } =
       useReactContext(SourcesSidebarContext)
@@ -1466,6 +1468,58 @@ export const ChatMessage = memo(
                                 isLoading={false}
                                 error={false}
                                 content={`Found ${getContextsLength(message.contexts)} document chunks.`}
+                              />
+                            )}
+
+                          {/* Exa.ai Search Results for all messages */}
+
+                          {(message.role as any) === 'assistant' &&
+                            Array.isArray(message.searchResults) &&
+                            message.searchResults.length > 0 && (
+                              <IntermediateStateAccordion
+                                accordionKey="search results"
+                                title="Web Search Results"
+                                isLoading={false}
+                                error={false}
+                                content={
+                                  <div>
+                                    {message.searchResults.map(
+                                      (result, idx) => {
+                                        console.log(
+                                          'Rendering search result link:',
+                                          result.url || result.link,
+                                          result.title,
+                                        )
+                                        return (
+                                          <div
+                                            key={idx}
+                                            style={{ marginBottom: 8 }}
+                                          >
+                                            <a
+                                              href={result.url || result.link}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                            >
+                                              {result.title ||
+                                                result.url ||
+                                                result.link}
+                                            </a>
+                                            {result.snippet && (
+                                              <div
+                                                style={{
+                                                  fontSize: 12,
+                                                  color: '#aaa',
+                                                }}
+                                              >
+                                                {result.snippet}
+                                              </div>
+                                            )}
+                                          </div>
+                                        )
+                                      },
+                                    )}
+                                  </div>
+                                }
                               />
                             )}
 

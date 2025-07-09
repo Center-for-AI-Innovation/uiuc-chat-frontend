@@ -73,6 +73,7 @@
     "embla-carousel-react": "^7.1.0",
     "endent": "^2.1.0",
     "eventsource-parser": "^1.0.0",
+    "exa-js": "^1.8.17",
     "framer-motion": "^11.5.2",
     "i18next": "^22.5.0",
     "js-tiktoken": "^1.0.15",

@@ -36,6 +36,8 @@ export interface Message {
   role: Role
   content: string | Content[]
   contexts?: ContextWithMetadata[]
+  searchResults?: any[]
+  webSearchEnabled?: boolean
   tools?: UIUCTool[]
   latestSystemMessage?: string
   finalPromtEngineeredMessage?: string // after all prompt enginering, to generate final response.
