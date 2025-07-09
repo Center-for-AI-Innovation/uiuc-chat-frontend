@@ -1473,8 +1473,7 @@ export const ChatMessage = memo(
 
                           {/* Exa.ai Search Results for all messages */}
 
-                          {(message.role as any) === 'assistant' &&
-                            Array.isArray(message.searchResults) &&
+                          {Array.isArray(message.searchResults) &&
                             message.searchResults.length > 0 && (
                               <IntermediateStateAccordion
                                 accordionKey="search results"
