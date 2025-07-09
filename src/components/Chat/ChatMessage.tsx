@@ -203,8 +203,6 @@ export const ChatMessage = memo(
     onImageUrlsUpdate,
     courseName,
   }: Props) => {
-    console.log('ChatMessage message:', message)
-    // console.log('role:', message.role, typeof message.role); //
     const { t } = useTranslation('chat')
     const { activeSidebarMessageId, setActiveSidebarMessageId } =
       useReactContext(SourcesSidebarContext)
@@ -1484,11 +1482,6 @@ export const ChatMessage = memo(
                                   <div>
                                     {message.searchResults.map(
                                       (result, idx) => {
-                                        console.log(
-                                          'Rendering search result link:',
-                                          result.url || result.link,
-                                          result.title,
-                                        )
                                         return (
                                           <div
                                             key={idx}
