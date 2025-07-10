@@ -301,10 +301,14 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
 
   return (
     <Card
-      shadow="xs"
+      withBorder
       padding="none"
       radius="xl"
       className="mt-[2%] w-[96%] md:w-[90%] 2xl:w-[90%]"
+      style={{
+        backgroundColor: 'var(--background)',
+        borderColor: 'var(--dashboard-border)',
+      }}
     >
       <Flex
         direction={isSmallScreen ? 'column' : 'row'}
@@ -318,7 +322,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
           }}
           className="min-h-full bg-[--background] text-[--foreground]"
         >
-          <div className="w-full border-b border-white/10 bg-[--dashboard-background-dark] px-4 py-3 sm:px-6 sm:py-4 md:px-8">
+          <div className="w-full border-b border-white/10 px-4 py-3 sm:px-6 sm:py-4 md:px-8">
             <div className="flex items-center justify-between gap-2">
               <div className="flex min-w-0 flex-wrap items-center gap-2 text-[--dashboard-foreground]">
                 <Title
@@ -362,17 +366,12 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                 }}
               >
                 <Paper
-                  className="w-full rounded-xl bg-gradient-to-br from-[--dashboard-background-dark] to-[--dashboard-background] px-4 sm:px-6 md:px-8"
+                  className="w-full rounded-xl bg-[--dashboard-background-faded] px-4 sm:px-6 md:px-8"
                   shadow="xs"
                   p="md"
                   sx={{
-                    border: '1px solid var(--dashboard-background-dark)',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
-                    '&:hover': {
-                      backgroundColor: 'var(--dashboard-background-dark)',
-                      borderColor: 'var(--dashboard-button)',
-                    },
                   }}
                   onClick={() => setInsightsOpen(!insightsOpen)}
                 >
@@ -514,7 +513,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    background: 'var(--dashboard-background-dark)',
+                    background: 'var(--dashboard-background-faded)',
                     paddingTop: '1.5rem',
                     paddingBottom: '1rem',
                     borderRadius: '1rem',
@@ -537,7 +536,10 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
             flex: isSmallScreen ? '1 1 100%' : '1 1 40%',
             padding: '1rem',
             color: 'var(--dashboard-foreground)',
-            backgroundColor: 'var(--dashboard-background-dark)',
+            backgroundColor: 'var(--dashboard-sidebar-background)',
+            borderLeft: isSmallScreen
+              ? ''
+              : '1px solid var(--dashboard-border)',
           }}
         >
           <div className="card flex h-full flex-col">

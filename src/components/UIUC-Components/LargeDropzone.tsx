@@ -354,7 +354,7 @@ export function LargeDropzone({
               maxWidth: '100%',
               overflow: 'hidden',
               background:
-                'linear-gradient(135deg, var(--dashboard-background-dark) 0%, var(--dashboard-background) 100%)',
+                'linear-gradient(135deg, var(--dashboard-background-faded) 0%, var(--dashboard-background) 100%)',
               transition: 'all 0.3s ease, background-position 0.3s ease',
               backgroundSize: '200% 200%',
               // backgroundPosition: '0% 0%',

@@ -843,10 +843,14 @@ CRITICAL: The optimized prompt must:
         <div className="items-left flex w-full flex-col justify-center py-0">
           <Flex direction="column" align="center" w="100%">
             <Card
-              shadow="xs"
+              withBorder
               padding="none"
               radius="xl"
               className="mt-[2%] w-[96%] md:w-[90%] 2xl:w-[90%]"
+              style={{
+                backgroundColor: 'var(--background)',
+                borderColor: 'var(--dashboard-border)',
+              }}
             >
               <Flex direction={isSmallScreen ? 'column' : 'row'}>
                 <div
@@ -903,19 +907,12 @@ CRITICAL: The optimized prompt must:
                       >
                         {/* Prompt Engineering Guide */}
                         <Paper
-                          className="w-full rounded-xl bg-gradient-to-br from-[--dashboard-background-dark] to-[--dashboard-background] px-4 sm:px-6 md:px-8"
+                          className="w-full rounded-xl bg-[--dashboard-background-faded] px-4 sm:px-6 md:px-8"
                           shadow="xs"
                           p="md"
                           sx={{
-                            border:
-                              '1px solid var(--dashboard-background-dark)',
                             cursor: 'pointer',
                             transition: 'all 0.2s ease',
-                            '&:hover': {
-                              backgroundColor:
-                                'var(--dashboard-background-dark)',
-                              borderColor: 'var(--dashboard-button)',
-                            },
                           }}
                           onClick={() => setInsightsOpen(!insightsOpen)}
                         >
@@ -1072,7 +1069,7 @@ CRITICAL: The optimized prompt must:
                             display: 'flex',
                             flexDirection: 'column',
                             alignItems: 'center',
-                            background: 'var(--dashboard-background-dark)',
+                            background: 'var(--dashboard-background-faded)',
                           }}
                           className="rounded-xl px-4 py-6 sm:px-6 sm:py-6 md:px-8"
                         >
@@ -1088,7 +1085,7 @@ CRITICAL: The optimized prompt must:
                               align="center"
                               mb="md"
                             >
-                              <Flex align="center" className="gap-2">
+                              <Flex align="center" className="gap-4">
                                 <Title
                                   className={`label ${montserrat_heading.variable} pl-1 pr-0 font-montserratHeading text-[--dashboard-foreground] md:pl-0 md:pr-2`}
                                   order={4}
@@ -1367,7 +1364,7 @@ CRITICAL: The optimized prompt must:
                                   <div>
                                     <IconInfoCircle
                                       size={18}
-                                      className="text-white/60 transition-colors duration-200 hover:text-white/80"
+                                      className="text-[--foreground-faded] transition-colors duration-200 hover:text-[--foreground]"
                                       style={{ cursor: 'pointer' }}
                                     />
                                   </div>
@@ -1379,11 +1376,12 @@ CRITICAL: The optimized prompt must:
                                   key="close"
                                 >
                                   <div
-                                    className="cursor-pointer p-0"
+                                    className="cursor-pointer p-0 pl-2"
                                     data-right-sidebar-icon
                                   >
                                     <IconLayoutSidebarRight
                                       stroke={2}
+                                      className="text-[--foreground-faded] transition-colors duration-200 hover:text-[--foreground]"
                                       onClick={() =>
                                         setIsRightSideVisible(false)
                                       }
@@ -1479,7 +1477,7 @@ CRITICAL: The optimized prompt must:
                                   className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                                   sx={(theme) => ({
                                     background:
-                                      'linear-gradient(90deg, var(--dashboard-button) 0%, var(--dashboard-button-hover) 100%) !important',
+                                      'var(--dashboard-button) !important',
                                     border: 'none',
                                     color: '#fff',
                                     padding: '10px 20px',
@@ -1487,7 +1485,7 @@ CRITICAL: The optimized prompt must:
                                     transition: 'all 0.2s ease',
                                     '&:hover': {
                                       background:
-                                        'linear-gradient(90deg, var(--dashboard-button-hover) 0%, var(--dashboard-button-hover) 100%) !important',
+                                        'var(--dashboard-button-hover) !important',
                                     },
                                     '&:active': {},
                                     '&:disabled': {
@@ -1684,12 +1682,13 @@ CRITICAL: The optimized prompt must:
                         flex: isSmallScreen ? '1 1 100%' : '1 1 40%',
                         padding: '1rem',
                         color: 'var(--dashboard-foreground)',
-                        backgroundColor: 'var(--dashboard-background-dark)',
+                        backgroundColor: 'var(--dashboard-sidebar-background)',
+                        borderLeft: '1px solid var(--dashboard-border)',
                       }}
                     >
                       <div className="card flex h-full flex-col">
                         <Flex direction="column" m="3rem" gap="md">
-                          <Flex align="center">
+                          <Flex align="flex-start">
                             <Title
                               className={`${montserrat_heading.variable} font-montserratHeading`}
                               order={3}
@@ -2002,9 +2001,9 @@ CRITICAL: The optimized prompt must:
 
                               {/* Reset and Share Link buttons */}
                               <Flex
+                                direction="column"
                                 mt="md"
                                 justify="flex-start"
-                                align="center"
                                 gap="md"
                               >
                                 <Button
@@ -2038,7 +2037,7 @@ CRITICAL: The optimized prompt must:
                                   className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                                   sx={(theme) => ({
                                     background:
-                                      'linear-gradient(90deg, var(--dashboard-button) 0%, var(--dashboard-button-hover) 100%) !important',
+                                      'var(--dashboard-button) !important',
                                     border: 'none',
                                     color: '#fff',
                                     padding: '10px 20px',
@@ -2046,7 +2045,7 @@ CRITICAL: The optimized prompt must:
                                     transition: 'all 0.2s ease',
                                     '&:hover': {
                                       background:
-                                        'linear-gradient(90deg, var(--dashboard-button-hover) 0%, var(--dashboard-button-hover) 100%) !important',
+                                        'var(--dashboard-button-hover) !important',
                                     },
                                     '&:active': {},
                                   })}

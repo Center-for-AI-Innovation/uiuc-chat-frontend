@@ -125,7 +125,7 @@ const MakeNewCoursePage = ({
         <Card
           shadow="xs"
           padding="none"
-          radius="xl"
+          radius="md"
           // style={{ maxWidth: '85%', width: '100%', marginTop: '4%' }}
           className="mt-[4%] w-[96%] md:w-[90%] lg:max-w-[750px]"
         >
@@ -136,7 +136,7 @@ const MakeNewCoursePage = ({
                 border: 'None',
                 color: 'white',
               }}
-              className="min-h-full bg-gradient-to-r from-[--illinois-background-darker] to-[--illinois-background-darker]"
+              className="min-h-full bg-[--background-faded]"
             >
               <Group
                 m="3rem"
@@ -151,7 +151,7 @@ const MakeNewCoursePage = ({
                 >
                   <Title
                     order={isSmallScreen ? 3 : 2}
-                    className={`${montserrat_heading.variable} text-left font-montserratHeading`}
+                    className={`${montserrat_heading.variable} text-left font-montserratHeading text-[--foreground]`}
                   >
                     {!is_new_course ? `${projectName}` : 'Create a new project'}
                   </Title>
@@ -168,14 +168,14 @@ const MakeNewCoursePage = ({
                     data-form-type="other"
                     styles={{
                       input: {
-                        backgroundColor: 'var(--illinois-background-darker)',
+                        backgroundColor: 'var(--background)',
                         paddingRight: '6rem',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         color:
                           isCourseAvailable && projectName != ''
-                            ? 'var(--text-white)'
+                            ? 'var(--foreground)'
                             : 'red',
                         '&:focus-within': {
                           borderColor:
@@ -188,8 +188,8 @@ const MakeNewCoursePage = ({
                       },
                       label: {
                         fontWeight: 'bold',
-                        fontSize: isSmallScreen ? '14px' : '20px',
-                        color: 'white',
+                        fontSize: '1rem',
+                        color: 'var(--foreground)',
                         marginBottom: '1rem',
                       },
                     }}
@@ -210,13 +210,12 @@ const MakeNewCoursePage = ({
                   />
                   <Flex direction="row" align="flex-end">
                     <label
-                      className={`${montserrat_paragraph.variable} mt-4 font-montserratParagraph font-bold`}
-                      style={{ fontSize: isSmallScreen ? '14px' : '20px' }}
+                      className={`${montserrat_paragraph.variable} mt-4 font-montserratParagraph font-bold text-[--foreground]`}
                     >
                       What do you want to achieve?
                     </label>
                     <label
-                      className={`${montserrat_paragraph.variable} mt-5 pl-2 font-montserratParagraph text-gray-400`}
+                      className={`${montserrat_paragraph.variable} mt-5 pl-2 font-montserratParagraph text-[--foreground-faded]`}
                     >
                       (optional)
                     </label>
@@ -230,8 +229,8 @@ const MakeNewCoursePage = ({
                     minRows={4}
                     styles={{
                       input: {
-                        color: 'var(--text-white)',
-                        backgroundColor: 'var(--illinois-background-darker)',
+                        color: 'var(--foreground)',
+                        backgroundColor: 'var(--background)',
                         fontSize: isSmallScreen ? '12px' : '16px', // Added text styling
                         font: `${montserrat_paragraph.variable} font-montserratParagraph`,
                         // borderColor: '#8e44ad', // Grape color
@@ -241,7 +240,7 @@ const MakeNewCoursePage = ({
                       },
                       label: {
                         fontWeight: 'bold',
-                        color: 'white',
+                        color: 'var(--foreground)',
                       },
                     }}
                     className={`${montserrat_paragraph.variable} font-montserratParagraph`}
@@ -249,7 +248,7 @@ const MakeNewCoursePage = ({
                   <Flex direction={'row'}>
                     <Title
                       order={isSmallScreen ? 5 : 4}
-                      className={`w-full pr-2 pr-7 text-right ${montserrat_paragraph.variable} mt-2 font-montserratParagraph`}
+                      className={`w-full pr-2 pr-7 ${montserrat_paragraph.variable} mt-2 font-montserratParagraph text-sm text-[--foreground]`}
                     >
                       Next: let&apos;s upload some documents
                     </Title>
@@ -263,6 +262,12 @@ const MakeNewCoursePage = ({
                       }
                       withArrow
                       disabled={projectName !== '' && isCourseAvailable}
+                      styles={{
+                        tooltip: {
+                          color: 'var(--tooltip)',
+                          backgroundColor: 'var(--tooltip-background)',
+                        },
+                      }}
                     >
                       <span>
                         <Button
@@ -273,9 +278,9 @@ const MakeNewCoursePage = ({
                               current_user_email,
                             )
                           }}
-                          size="md"
-                          radius={'md'}
-                          className={`${isCourseAvailable && projectName !== '' ? 'bg-[--illinois-orange] text-white hover:bg-[--illinois-orange] hover:text-white' : 'border-[--illinois-blue] bg-[--illinois-blue] text-white opacity-[20%] hover:bg-[--illinois-blue]'}
+                          size="sm"
+                          radius={'sm'}
+                          className={`${isCourseAvailable && projectName !== '' ? 'bg-[--illinois-orange] text-white hover:bg-[--illinois-orange] hover:text-white' : 'disabled:bg-[--button-disabled] disabled:text-[--button-disabled-text-color]'}
                         mt-2 min-w-[5-rem] transform overflow-ellipsis text-ellipsis p-2 focus:shadow-none focus:outline-none lg:min-w-[8rem]`}
                           // w={`${isSmallScreen ? '5rem' : '50%'}`}
                           style={{
