@@ -1,11 +1,11 @@
 // utils/apiUtils.ts
-import {
-  type CourseMetadataOptionalForUpsert,
-  type CourseMetadata,
-} from '~/types/courseMetadata'
+import { CoreMessage } from 'ai'
 import { v4 as uuidv4 } from 'uuid'
-import { type Conversation, type Message } from '~/types/chat'
-import { type CoreMessage } from 'ai'
+import { Conversation, Message } from '~/types/chat'
+import {
+  type CourseMetadata,
+  type CourseMetadataOptionalForUpsert,
+} from '~/types/courseMetadata'
 
 // Configuration for runtime environment
 
@@ -14,6 +14,25 @@ export const getBaseUrl = () => {
   if (process.env.VERCEL_ENV == 'production') return 'https://uiuc.chat'
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}` // SSR should use vercel url
   return `http://localhost:${process.env.PORT ?? 3000}` // dev SSR should use localhost
+}
+
+/**
+ * Gets the backend URL from environment variables.
+ * Throws an error if RAILWAY_URL is not configured.
+ * @returns {string} - The validated backend URL
+ * @throws {Error} - If RAILWAY_URL is not set
+ */
+export const getBackendUrl = (): string => {
+  const backendUrl = process.env.RAILWAY_URL
+  
+  if (!backendUrl) {
+    throw new Error(
+      'Backend URL is not configured. Please set the RAILWAY_URL environment variable.'
+    )
+  }
+  
+  // Remove trailing slash if present for consistency
+  return backendUrl.endsWith('/') ? backendUrl.slice(0, -1) : backendUrl
 }
 
 /**

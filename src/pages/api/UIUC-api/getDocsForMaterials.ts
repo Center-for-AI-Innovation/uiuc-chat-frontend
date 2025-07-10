@@ -3,7 +3,7 @@ import { supabase } from '~/utils/supabaseClient'
 
 export const runtime = 'edge'
 
-export const getCourseDocumentsHandler = async (
+const getCourseDocumentsHandler = async (
   req: NextApiRequest,
   res: NextApiResponse,
 ) => {
@@ -64,5 +64,4 @@ export const getCourseDocuments = async (
   }
 }
 
-// Add default export for Next.js API route
 export default getCourseDocumentsHandler
