@@ -1628,7 +1628,7 @@ export const Chat = memo(
             />
 
             <h4
-              className={`text-md mb-2 text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
+              className={`text-md mb-2 text-[--welcome-foreground] ${montserrat_paragraph.variable} font-montserratParagraph`}
             >
               {getCurrentPageName() === 'cropwizard-1.5' && (
                 <CropwizardLicenseDisclaimer />
@@ -1655,7 +1655,7 @@ export const Chat = memo(
                   >
                     <Button
                       variant="link"
-                      className={`text-md h-auto p-2 font-bold leading-relaxed text-white hover:underline ${montserrat_paragraph.variable} font-montserratParagraph `}
+                      className={`text-md h-auto p-2 font-bold leading-relaxed text-[--foreground] hover:text-[--background] hover:underline ${montserrat_paragraph.variable} font-montserratParagraph `}
                     >
                       <IconArrowRight size={25} className="mr-2 min-w-[40px]" />
                       <p className="whitespace-break-spaces">{statement}</p>

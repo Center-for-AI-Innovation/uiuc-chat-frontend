@@ -291,7 +291,7 @@ const NewModelDropdown: React.FC<{
           input: {
             color: 'var(--foreground)',
             backgroundColor: 'var(--background)',
-            border: 'none',
+            borderColor: 'var(--button)',
             // color: theme.white,
             // borderRadius: theme.radius.md,
             // width: '24rem',
@@ -611,16 +611,22 @@ export default function APIKeyInputForm() {
             className="mt-8 lg:mt-4"
           >
             <Card
-              shadow="xs"
+              withBorder
               padding="none"
               radius="xl"
-              style={{ maxWidth: '90%', width: '100%', marginTop: '2%' }}
+              style={{
+                maxWidth: '90%',
+                width: '100%',
+                marginTop: '2%',
+                backgroundColor: 'var(--background)',
+                borderColor: 'var(--dashboard-border)',
+              }}
             >
               <Flex className="flex-col md:flex-row">
                 <div
                   style={{
                     border: 'None',
-                    color: 'white',
+                    color: 'text-[--foreground]',
                   }}
                   className="min-h-full flex-[1_1_100%] bg-[--background] md:flex-[1_1_70%]"
                 >
@@ -646,8 +652,8 @@ export default function APIKeyInputForm() {
                       ml={'md'}
                       style={{ textAlign: 'left' }}
                     >
-                      Configure which LLMs are available to you users. Enable or
-                      disable models to balance price and performance.
+                      Configure which LLMs are available to your users. Enable
+                      or disable models to balance price and performance.
                     </Title>
                     <Stack align="center" justify="start">
                       <form
@@ -789,10 +795,13 @@ export default function APIKeyInputForm() {
                 <div
                   className="flex flex-[1_1_100%] md:flex-[1_1_30%]"
                   style={{
-                    // flex: isSmallScreen ? '1 1 100%' : '1 1 40%',
+                    //flex: isSmallScreen ? '1 1 100%' : '1 1 40%',
                     padding: '1rem',
-                    backgroundColor: 'var(--dashboard-background-dark)',
+                    backgroundColor: 'var(--dashboard-sidebar-background)',
                     color: 'var(--dashboard-foreground)',
+                    borderLeft: isSmallScreen
+                      ? ''
+                      : '1px solid var(--dashboard-border)',
                   }}
                 >
                   <div className="card flex h-full flex-col justify-center">

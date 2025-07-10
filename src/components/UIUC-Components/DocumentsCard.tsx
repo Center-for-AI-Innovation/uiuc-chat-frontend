@@ -114,7 +114,7 @@ function DocumentsCard({
           </div>
         </Modal>
 
-        <div className="w-full border-b border-white/10 bg-black/20 px-4 py-3 sm:px-6 sm:py-4 md:px-8">
+        <div className="w-full border-b border-white/10 bg-[--dashboard-background-faded] px-4 py-3 sm:px-6 sm:py-4 md:px-8">
           <div className="flex items-center justify-between gap-2">
             <Title
               order={3}

@@ -221,7 +221,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
       <Divider
         my="lg"
         size="md"
-        className="-mx-4 border-[--dashboard-background-darker] sm:-mx-10"
+        className="-mx-4 border-[--dashboard-background-dark] sm:-mx-10"
       />
 
       <div className="space-y-6">

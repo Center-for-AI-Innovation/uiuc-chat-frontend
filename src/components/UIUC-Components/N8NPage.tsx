@@ -9,6 +9,7 @@ import {
   Card,
   Group,
 } from '@mantine/core'
+import { useMediaQuery } from '@mantine/hooks'
 
 import {
   IconAlertCircle,
@@ -60,6 +61,8 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
   const [isEmptyWorkflowTable, setIsEmptyWorkflowTable] =
     useState<boolean>(false)
   const [isLoading, setIsLoading] = useState(false)
+
+  const isSmallScreen = useMediaQuery('(max-width: 960px)')
 
   const {
     data: flows_table,
@@ -327,10 +330,16 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
         <div className="items-left flex w-full flex-col justify-center py-0">
           <Flex direction="column" align="center" w="100%">
             <Card
-              shadow="xs"
+              withBorder
               padding="none"
               radius="xl"
-              style={{ maxWidth: '85%', width: '100%', marginTop: '2%' }}
+              style={{
+                maxWidth: '85%',
+                width: '100%',
+                marginTop: '2%',
+                backgroundColor: 'var(--background)',
+                borderColor: 'var(--dashboard-border)',
+              }}
             >
               <Flex className="flex-col md:flex-row">
                 {/* // direction={isSmallScreen ? 'column' : 'row'}> */}
@@ -386,7 +395,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                               '_blank',
                             )
                           }
-                          className="mx-[8%] mt-2 max-w-[50%] rounded-lg bg-[--dashboard-button] hover:bg-[--dashboard-button-hover] lg:flex-[1_1_50%] lg:self-center"
+                          className="mx-[8%] mt-2 max-w-[50%] rounded-lg bg-[--dashboard-button] hover:bg-[--dashboard-button-hover] disabled:bg-[--button-disabled] disabled:text-[--button-disabled-text-color] lg:flex-[1_1_50%] lg:self-center"
                           type="submit"
                           disabled={!n8nApiKey}
                         >
@@ -417,15 +426,22 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                         }
                         content={
                           <List
-                            w={'80%'}
                             type="ordered"
                             withPadding
                             className={`${montserrat_paragraph.variable} font-montserratParagraph text-[--foreground]`}
                           >
                             <List.Item>
                               Tool use via LLMs is invite-only to prevent abuse.
-                              Please shoot me an email for access:
-                              rohan13@illinois.edu
+                              Please shoot our admin an email for access:{' '}
+                              <a
+                                href="mailto:rohan13@illinois.edu"
+                                style={{
+                                  color: 'var(--link)',
+                                  textDecoration: 'underline',
+                                }}
+                              >
+                                rohan13@illinois.edu
+                              </a>
                             </List.Item>
                             <List.Item>
                               Once you have access, please{' '}
@@ -551,8 +567,11 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                   style={{
                     // flex: isSmallScreen ? '1 1 100%' : '1 1 40%',
                     padding: '1rem',
-                    backgroundColor: 'var(--dashboard-background-dark)',
+                    backgroundColor: 'var(--dashboard-sidebar-background)',
                     color: 'var(--dashboard-foreground)',
+                    borderLeft: isSmallScreen
+                      ? ''
+                      : '1px solid var(--dashboard-border)',
                   }}
                 >
                   <div className="card flex h-full flex-col justify-center">
@@ -560,7 +579,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                       <div className="pb-4">
                         <Title
                           // className={`label ${montserrat.className}`}
-                          className={`label ${montserrat_heading.variable} font-montserratHeading`}
+                          className={`label ${montserrat_heading.variable} mb-2 p-0 font-montserratHeading`}
                           order={3}
                         >
                           Your n8n API Key
@@ -574,6 +593,13 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                           onChange={(event) =>
                             setN8nApiKeyTextbox(event.target.value)
                           }
+                          styles={{
+                            input: {
+                              color: 'var(--foreground)',
+                              backgroundColor: 'var(--background)',
+                              margin: '1rem 0rem .1rem 0rem',
+                            },
+                          }}
                           className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                         />
                         <div className="pt-2" />

@@ -447,7 +447,7 @@ export default function Navbar({
     <div className="bg-[--navbar-background]">
       <Flex direction="row" align="center" justify="center">
         <div className="w-full">
-          <div className="navbar h-20 bg-[--navbar-background] shadow-lg shadow-[--illinois-background-dark]">
+          <div className="navbar h-20 bg-[--navbar-background] shadow-sm shadow-[--background-faded]">
             <Logo />
             {bannerUrl && <BannerImage url={bannerUrl} />}
             {!isPlain && (

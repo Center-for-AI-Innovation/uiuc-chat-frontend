@@ -56,9 +56,7 @@ const useStyles = createStyles((theme: MantineTheme) => ({
   downloadButton: {
     fontFamily: 'var(--font-montserratHeading)',
     outline: 'none',
-    border: 'solid 1.5px',
-    color: 'var(--dashboard-button)',
-    borderColor: 'var(--dashboard-button)',
+    color: 'var(--dashboard-button-foreground)',
     alignItems: 'center',
     justifyContent: 'center',
     gap: theme.spacing.xs,
@@ -66,12 +64,10 @@ const useStyles = createStyles((theme: MantineTheme) => ({
     cursor: 'pointer',
     transition: 'background-color 0.2s ease-in-out',
     height: '48px',
-    backgroundColor: 'var(--background-dark)',
     /* border-1 border-[--dashboard-button] hover:bg-[--dashboard-button-hover] hover:border-[--dashboard-button-hover] */
 
     '&:hover': {
       color: 'var(--dashboard-button-foreground)',
-      backgroundColor: 'var(--dashboard-button)',
     },
     '@media (max-width: 768px)': {
       fontSize: theme.fontSizes.xs,
@@ -444,7 +440,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                   Usage Overview
                 </Title>
                 <Button
-                  className={`${montserrat_paragraph.variable} font-montserratParagraph ${classes.downloadButton} w-full px-2 text-sm sm:w-auto sm:px-4 sm:text-base`}
+                  className={`${montserrat_paragraph.variable} font-montserratParagraph ${classes.downloadButton} w-full bg-[--dashboard-button] px-2 text-sm hover:bg-[--dashboard-button-hover] sm:w-auto sm:px-4 sm:text-base`}
                   rightIcon={
                     isLoading ? (
                       <LoadingSpinner size="sm" />
@@ -462,7 +458,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
               </div>
 
               {/* Project Analytics Dashboard - Using all-time stats */}
-              <div className="my-6 w-[95%] rounded-xl bg-gradient-to-br from-[--dashboard-background-dark] to-[--dashboard-background] p-6 text-[--dashboard-foreground]">
+              <div className="my-6 w-[95%] rounded-xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground]">
                 <div className="mb-6">
                   <Title
                     order={4}
@@ -520,11 +516,11 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                             <div
                               className={`flex items-center gap-2 rounded-md ${
                                 trend.percentage_change > 0
-                                ? 'bg-green-400/10'
-                                : trend.percentage_change < 0
-                                  ? 'bg-red-400/10'
-                                  : 'bg-gray-400/10'
-                                }`}
+                                  ? 'bg-green-400/10'
+                                  : trend.percentage_change < 0
+                                    ? 'bg-red-400/10'
+                                    : 'bg-gray-400/10'
+                              }`}
                             >
                               {trend.percentage_change > 0 ? (
                                 <IconTrendingUp
@@ -603,11 +599,11 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                             <div
                               className={`flex items-center gap-2 rounded-md ${
                                 trend.percentage_change > 0
-                                ? 'bg-green-400/10'
-                                : trend.percentage_change < 0
-                                  ? 'bg-red-400/10'
-                                  : 'bg-gray-400/10'
-                                }`}
+                                  ? 'bg-green-400/10'
+                                  : trend.percentage_change < 0
+                                    ? 'bg-red-400/10'
+                                    : 'bg-gray-400/10'
+                              }`}
                             >
                               {trend.percentage_change > 0 ? (
                                 <IconTrendingUp
@@ -687,11 +683,11 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                             <div
                               className={`flex items-center gap-2 rounded-md ${
                                 trend.percentage_change > 0
-                                ? 'bg-green-400/10'
-                                : trend.percentage_change < 0
-                                  ? 'bg-red-400/10'
-                                  : 'bg-gray-400/10'
-                                }`}
+                                  ? 'bg-green-400/10'
+                                  : trend.percentage_change < 0
+                                    ? 'bg-red-400/10'
+                                    : 'bg-gray-400/10'
+                              }`}
                             >
                               {trend.percentage_change > 0 ? (
                                 <IconTrendingUp
@@ -863,10 +859,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
               {/* Charts Section - Using filtered stats */}
               <div className="grid w-[95%] grid-cols-1 gap-6 pb-10 lg:grid-cols-2">
                 {/* Date Range Selector - Always visible */}
-                <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20 lg:col-span-2">
+                <div className="rounded-xl bg-[--dashboard-background-faded] p-6 lg:col-span-2">
                   <div className="flex items-center justify-between">
                     <div>
-                      <Title order={4} className="text-white">
+                      <Title order={4} className="text-[--foreground]">
                         Conversation Visualizations
                       </Title>
                       <Text size="sm" color="dimmed" mt={1}>
@@ -893,23 +889,25 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         ]}
                         styles={(theme: MantineTheme) => ({
                           input: {
-                            backgroundColor: '#232438',
-                            borderColor: theme.colors.grape[8],
-                            color: theme.white,
+                            backgroundColor: 'var(--button)',
+                            borderColor: 'var(--button)',
+                            color: 'var(--button-text-color)',
                             '&:hover': {
-                              borderColor: theme.colors.grape[7],
+                              color: 'var(--button-hover-text-color)',
+                              borderColor: 'var(--button-hover)',
                             },
                           },
                           item: {
-                            backgroundColor: '#232438',
-                            color: theme.white,
+                            backgroundColor: 'var(--button)',
+                            color: 'var(--button-text-color)',
                             '&:hover': {
-                              backgroundColor: theme.colors.grape[8],
+                              color: 'var(--button-hover-text-color)',
+                              backgroundColor: 'var(--button-hover)',
                             },
                           },
                           dropdown: {
-                            backgroundColor: '#232438',
-                            borderColor: theme.colors.grape[8],
+                            backgroundColor: 'var(--button)',
+                            borderColor: 'var(--button)',
                           },
                         })}
                       />
@@ -925,40 +923,41 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           placeholder="Pick date range"
                           styles={(theme: MantineTheme) => ({
                             input: {
-                              backgroundColor: '#232438',
-                              borderColor: theme.colors.grape[8],
-                              color: theme.white,
+                              backgroundColor: 'var(--button)',
+                              borderColor: 'var(--button)',
+                              color: 'var(--foreground)',
                               '&:selected': {
-                                backgroundColor: theme.colors.grape[8],
-                                borderColor: theme.colors.grape[8],
+                                color: 'var(--button-text-color)',
+                                backgroundColor: 'var(--button)',
+                                borderColor: 'var(--button)',
                               },
                               '&:hover': {
-                                borderColor: theme.colors.grape[7],
+                                borderColor: 'var(--button-hover)',
                               },
                               '&:focus': {
-                                borderColor: theme.colors.grape[8],
+                                borderColor: 'var(--button)',
                               },
                             },
                             calendarHeader: {
-                              borderColor: theme.colors.grape[8],
+                              borderColor: 'var(--button)',
                               color: theme.white,
                             },
                             calendarHeaderControl: {
                               color: theme.white,
                               '&:hover': {
-                                backgroundColor: theme.colors.grape[8],
+                                color: theme.white,
                               },
                             },
                             monthPickerControl: {
                               color: theme.white,
                               '&:hover': {
-                                backgroundColor: theme.colors.grape[8],
+                                backgroundColor: 'var(--button-hover)',
                               },
                             },
                             yearPickerControl: {
                               color: theme.white,
                               '&:hover': {
-                                backgroundColor: theme.colors.grape[8],
+                                backgroundColor: 'var(--button-hover)',
                               },
                             },
                             day: {
@@ -980,7 +979,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                 </div>
 
                 {!hasConversationData ? (
-                  <div className="rounded-xl bg-gradient-to-br from-[--dashboard-background-dark] to-[--dashboard-background] p-6 text-center text-[--dashboard-foreground] transition-all duration-200">
+                  <div className="rounded-xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-200">
                     <Title
                       order={4}
                       className={`${montserrat_heading.variable} font-montserratHeading`}
@@ -988,19 +987,15 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                       No conversation data available for selected time range
                     </Title>
                     <Text size="lg" mt="md">
-                      Try selecting a different time range to view the visualizations
+                      Try selecting a different time range to view the
+                      visualizations
                     </Text>
                   </div>
                 ) : (
                   <>
                     {/* Model Usage Chart */}
-                    <div className="rounded-xl bg-gradient-to-br from-[--dashboard-background-dark] to-[--dashboard-background] p-6 text-[--dashboard-foreground] transition-all duration-200">
-                      <Title
-                        order={4}
-                        mb="md"
-                        align="left"
-                        className="text-white"
-                      >
+                    <div className="rounded-xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-200">
+                      <Title order={4} mb="md" align="left">
                         Model Usage Distribution
                       </Title>
                       <Text size="sm" mb="xl">
@@ -1014,7 +1009,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     </div>
 
                     {/* Conversations Per Day Chart */}
-                    <div className="rounded-xl bg-gradient-to-br from-[--dashboard-background-dark] to-[--dashboard-background] p-6 text-[--dashboard-foreground] transition-all duration-200">
+                    <div className="rounded-xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-200">
                       <Title order={4} mb="md" align="left">
                         Conversations Per Day
                       </Title>
@@ -1030,7 +1025,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     </div>
 
                     {/* Combined Hour/Weekday Chart */}
-                    <div className="rounded-xl bg-gradient-to-br from-[--dashboard-background-dark] to-[--dashboard-background] p-6 text-[--dashboard-foreground] transition-all duration-200">
+                    <div className="rounded-xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-200">
                       <div className="mb-4 flex items-center justify-between">
                         <div>
                           <Title order={4}>
@@ -1103,7 +1098,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     </div>
 
                     {/* Heatmap Chart */}
-                    <div className="rounded-xl bg-gradient-to-br from-[--dashboard-background-dark] to-[--dashboard-background] p-6 text-[--dashboard-foreground] transition-all duration-200">
+                    <div className="rounded-xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-200">
                       <Title order={4} mb="md" align="left">
                         Conversations Per Day and Hour
                       </Title>
