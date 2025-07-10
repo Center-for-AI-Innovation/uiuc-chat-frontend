@@ -55,7 +55,6 @@
   --illinois-scrollbar-track-hover: rgba(255, 255, 255, 0.06);
   --illinois-scrollbar-thumb: rgba(156, 154, 157, 0.5);
   --illinois-scrollbar-thumb-hover: var(--illinois-storm-dark);
-  
 
   /* Existing variables mapped to UIUC colors */
   --foreground: var(--illinois-blue);
@@ -124,9 +123,21 @@
   --button-text-color: var(--background);
   --button-hover: var(--foreground);
   --button-hover-text-color: var(--button-text-color);
-  --button-active: var(--button-hover);
+  --button-border: rgba(from var(--button) r g b / 0.25);
 
-  --chat-background: color-mix(in srgb, var(--background), black 3%);
+  --button-active: var(--button-hover);
+  --button-disabled: color-mix(
+    in srgb,
+    var(--foreground),
+    var(--background) 95%
+  );
+  --button-disabled-text-color: color-mix(
+    in srgb,
+    var(--foreground),
+    var(--background) 80%
+  );
+
+  --chat-background: color-mix(in srgb, var(--background), black 2%);
   --chat-background-user: var(
     --chat-background
   ); /* color-mix(in srgb, var(--background), black 10%); */
@@ -176,12 +187,22 @@
     from var(--dashboard-foreground) r g b / 0.7
   );
   --dashboard-background: white; /* color-mix(in srgb, var(--illinois-blue), white 5%); */
+  --dashboard-background-faded: color-mix(
+    in srgb,
+    var(--dashboard-background),
+    black 5%
+  );
   --dashboard-background-dark: #ddd; /* color-mix(in srgb, var(--illinois-background-dark), white 5%); */
   --dashboard-background-darker: color-mix(
     in srgb,
     var(--dashboard-background-dark),
     black 10%
   );
+  --dashboard-border: var(--dashboard-background-faded);
+  --dashboard-sidebar-background: var(
+    --background
+  ); /* var(--dashboard-background-faded); */
+
   --dashboard-button-foreground: var(--illinois-white);
   --dashboard-button: var(--illinois-orange);
   --dashboard-button-hover: color-mix(
@@ -196,7 +217,7 @@
   );
 
   --footer-foreground: var(--foreground-faded);
-  --footer-link: var(--illinois-white);
+  --footer-link: var(--foreground-dark);
   --footer-link-hover: var(--illinois-orange);
 
   --pulsate: var(
@@ -204,20 +225,26 @@
   ); /* color-mix(in srgb, var(--foreground), var(--background) 75%); */
   --pulsate-secondary: var(--primary);
 
+  /* sidebar is always the same color */
+  /*
   --sidebar: white;
   --sidebar-background: color-mix(
     in srgb,
     var(--illinois-blue),
     black 25%
-  ); /* sidebar is always the same color */
-  --sidebar-selected: var(--illinois-orange);
+  );
+  */
+  --sidebar: var(--foreground);
+  --sidebar-background: var(--background);
+  --sidebar-selected: var(--background-faded); /* var(--illinois-orange); */
 
   --spinner: var(--foreground-faded);
 
   --tooltip: var(--background);
   --tooltip-background: var(--foreground-dark);
 
-  --welcome-background: color-mix(in srgb, var(--illinois-blue), black 0%);
+  --welcome-foreground: color-mix(in srgb, var(--foreground), black 0%);
+  --welcome-background: color-mix(in srgb, var(--background), black 10%);
   --welcome-button-hover: color-mix(in srgb, var(--illinois-blue), white 20%);
 }
 
@@ -263,15 +290,25 @@
   --foreground: var(--illinois-white);
   --background: var(--illinois-blue);
 
-  --chat-background: color-mix(in srgb, var(--background), black 40%);
+  --chat-background: color-mix(in srgb, var(--background), black 20%);
 
   --dashboard-background: var(--illinois-blue);
+  --dashboard-background-faded: color-mix(
+    in srgb,
+    var(--dashboard-background),
+    black 20%
+  );
   --dashboard-background-dark: var(--illinois-background-dark);
   --dashboard-background-darker: color-mix(
     in srgb,
     var(--dashboard-background-dark),
     black 20%
   );
+}
+
+::selection {
+  color: var(--illinois-white);
+  background-color: var(--illinois-orange);
 }
 
 /* Scrollbar Styles - Clean gray theme with hover effects */
@@ -363,6 +400,7 @@ pre:has(div.codeblock) {
 /* Make the background fade out  */
 .course-page-main {
   /* height: 400px;     */
+  /*
   background: -webkit-gradient(
     linear,
     left top,
@@ -372,6 +410,8 @@ pre:has(div.codeblock) {
     color-stop(0.75, var(--illinois-background-dark))
   );
   background-color: var(--illinois-background-darker);
+  */
+  background-color: var(--background);
   background-size:
     100% 45%,
     0%;
@@ -1086,4 +1126,37 @@ button.css-s37qmw {
   position: relative;
   z-index: 0;
   /* Changed from 1 to 0 to match surrounding text */
+}
+
+/*
+changed dashboard > projectFilesTable checkboxes because dataTable v6 doesn't have a way to style it directly
+after changing to v8+, this can be removed and use checkboxProps to style the checkbox
+https://icflorescu.github.io/mantine-datatable/examples/records-selection/
+*/
+
+.project_files_table .mantine-Checkbox-input {
+  color: var(--button-text-color);
+  background-color: transparent;
+  border: 1px solid var(--button-border);
+}
+
+.project_files_table .mantine-ActionIcon-root {
+  color: var(--foreground-faded);
+  background-color: transparent;
+  border: 1px solid var(--button-border);
+
+  &:hover {
+    background-color: var(--button-hover);
+    border-color: var(--button-hover);
+  }
+
+  svg {
+    color: var(--foreground-faded);
+  }
+}
+
+.project_files_table .mantine-Center-root {
+  .tabler-icon {
+    color: var(--foreground-faded);
+  }
 }

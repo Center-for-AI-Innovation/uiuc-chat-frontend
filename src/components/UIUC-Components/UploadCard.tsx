@@ -136,10 +136,14 @@ export const UploadCard = memo(function UploadCard({
   }
   return (
     <Card
-      shadow="xs"
+      withBorder
       padding="none"
       radius="xl"
       className="mt-[2%] w-[96%] md:w-[90%] 2xl:w-[90%]"
+      style={{
+        backgroundColor: 'var(--background)',
+        borderColor: 'var(--dashboard-border)',
+      }}
     >
       <Flex direction={isSmallScreen ? 'column' : 'row'}>
         <div
@@ -150,7 +154,7 @@ export const UploadCard = memo(function UploadCard({
           }}
           className="min-h-full bg-[--background]"
         >
-          <div className="w-full border-b border-white/10 bg-[--dashboard-background-dark] px-4 py-3 sm:px-6 sm:py-4 md:px-8">
+          <div className="w-full border-b border-[--dashboard-background-faded] px-4 py-3 sm:px-6 sm:py-4 md:px-8">
             <div className="flex items-center justify-between gap-2">
               <div className="flex min-w-0 flex-wrap items-center gap-2">
                 <Title
@@ -251,8 +255,11 @@ export const UploadCard = memo(function UploadCard({
         <div
           style={{
             flex: isSmallScreen ? '1 1 100%' : '1 1 40%',
-            backgroundColor: 'var(--dashboard-background-dark)',
+            backgroundColor: 'var(--dashboard-sidebar-background)',
             color: 'var(--dashboard-foreground)',
+            borderLeft: isSmallScreen
+              ? ''
+              : '1px solid var(--dashboard-border)',
           }}
           className="p-4 sm:p-6"
         >

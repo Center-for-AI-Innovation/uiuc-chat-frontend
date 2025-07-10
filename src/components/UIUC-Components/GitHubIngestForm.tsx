@@ -328,9 +328,11 @@ export default function GitHubIngestForm({
         scrapeStrategy,
       })
 
-      console.log('Response from Next.js API web scraping endpoint:', response.data)
+      console.log(
+        'Response from Next.js API web scraping endpoint:',
+        response.data,
+      )
       return response.data
-
     } catch (error: any) {
       console.error('Error during web scraping:', error)
 
@@ -384,7 +386,7 @@ export default function GitHubIngestForm({
       >
         <DialogTrigger asChild>
           <Card
-            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-gradient-to-br from-[--dashboard-background-dark] to-[--dashboard-background] p-6 text-[--dashboard-foreground] shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
+            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
             style={{ height: '100%' }}
           >
             <div className="mb-6 flex items-center justify-between">

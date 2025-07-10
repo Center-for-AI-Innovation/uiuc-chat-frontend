@@ -63,11 +63,13 @@ const Sidebar = <T,>({
   return isOpen ? (
     <div>
       <div
-        className={`fixed top-0 ${side}-0 z-40 flex h-full w-[260px] flex-none flex-col space-y-2 border-r border-black/50 bg-[--sidebar-background] p-2 text-[14px] transition-all sm:relative sm:top-0`}
+        className={`fixed top-0 ${side}-0 z-40 flex h-full w-[260px] flex-none flex-col space-y-2 border-r border-[--dashboard-border] bg-[--sidebar-background] p-2 text-[14px] transition-all sm:relative sm:top-0`}
       >
         <div className="flex items-center">
           <button
-            className="text-sidebar flex w-[190px] flex-shrink-0 cursor-pointer select-none items-center gap-3 rounded-md border border-white/20 p-3 text-white transition-colors duration-200 hover:bg-white/10"
+            className="text-sidebar flex w-[190px] flex-shrink-0 cursor-pointer select-none items-center gap-3 rounded-md border border-[--button-border] p-3 text-[--foreground] 
+            transition-colors duration-200
+            hover:border-[--button-hover] hover:bg-[--button-hover] hover:text-[--button-text-color]"
             onClick={() => {
               handleCreateItem()
               handleSearchTerm('')
@@ -86,7 +88,9 @@ const Sidebar = <T,>({
           </button>
 
           <button
-            className="ml-2 flex flex-shrink-0 cursor-pointer items-center gap-3 rounded-md border border-white/20 p-3 text-sm text-white transition-colors duration-200 hover:bg-white/10"
+            className="ml-2 flex flex-shrink-0 cursor-pointer items-center gap-3 rounded-md border border-[--button-border] p-3 text-sm text-[--foreground] 
+            transition-colors duration-200
+            hover:border-[--button-hover] hover:bg-[--button-hover] hover:text-[--button-text-color]"
             onClick={handleCreateFolder}
           >
             <IconFolderPlus size={16} />
@@ -99,7 +103,7 @@ const Sidebar = <T,>({
         />
         <div className="flex-grow overflow-auto" onScroll={onScroll}>
           {folders?.length > 0 && (
-            <div className="flex border-b border-white/20 pb-2">
+            <div className="flex border-b border-[--foreground-faded] pb-2">
               {folderComponent}
             </div>
           )}
@@ -116,7 +120,7 @@ const Sidebar = <T,>({
               {itemComponent}
             </div>
           ) : (
-            <div className="mt-8 select-none text-center text-white opacity-50">
+            <div className="mt-8 select-none text-center text-[--foreground] opacity-50">
               <IconMistOff className="mx-auto mb-3" />
               <span className="text-[14px] leading-normal">
                 {t('No data.')}

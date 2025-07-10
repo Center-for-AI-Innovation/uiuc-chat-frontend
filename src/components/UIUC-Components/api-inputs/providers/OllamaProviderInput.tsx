@@ -26,7 +26,7 @@ export default function OllamaProviderInput({
         shadow="sm"
         p="lg"
         radius="lg"
-        className="max-w-[330px] bg-gradient-to-br from-[--dashboard-background-dark] to-[--dashboard-background] text-[--dashboard-foreground] md:w-[330px]"
+        className="max-w-[330px] bg-[--dashboard-background-faded] text-[--dashboard-foreground] md:w-[330px]"
       >
         <div
           style={{
@@ -143,6 +143,12 @@ export default function OllamaProviderInput({
                         label="Base URL"
                         placeholder="http://your-domain.com"
                         value={field.state.value}
+                        styles={{
+                          input: {
+                            color: 'var(--foreground)',
+                            backgroundColor: 'var(--background)',
+                          },
+                        }}
                         onChange={(event) =>
                           field.handleChange(event.currentTarget.value)
                         }
