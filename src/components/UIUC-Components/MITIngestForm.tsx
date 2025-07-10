@@ -44,7 +44,7 @@ export default function MITIngestForm({
       if (!url || !courseName || !localDir) return null
       console.log('calling downloadMITCourse')
       const response = await axios.get(
-        `https://flask-production-751b.up.railway.app/mit-download`,
+        `/api/UIUC-api/downloadMITCourse`,
         {
           params: {
             url: url,

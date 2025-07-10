@@ -16,7 +16,7 @@ import {
 import { useMediaQuery } from '@mantine/hooks'
 import router from 'next/router'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import createProject from '~/pages/api/UIUC-api/createProject'
+import { createProject } from '~/pages/api/UIUC-api/createProject'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { CourseMetadata } from '~/types/courseMetadata'
 
