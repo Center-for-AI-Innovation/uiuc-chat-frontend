@@ -252,7 +252,7 @@ const ListProjectTable: React.FC = () => {
               text-2xl font-bold sm:pt-2 
               ${montserrat_heading.variable} font-montserratHeading
             `}
-            style={{ color: 'var(--illinois-blue)' }}
+            style={{ color: 'var(--foreground)' }}
           >
             Your Chatbots
           </Title>
@@ -263,7 +263,7 @@ const ListProjectTable: React.FC = () => {
                 text-md pb-8 pt-2
                 ${montserrat_paragraph.variable} font-montserratParagraph
               `}
-                style={{ color: 'var(--illinois-blue)' }}
+                style={{ color: 'var(--foreground-faded)' }}
               >
                 These are projects you&apos;ve created, or where you are an
                 admin.
