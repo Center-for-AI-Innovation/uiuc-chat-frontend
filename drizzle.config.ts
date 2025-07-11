@@ -1,7 +1,7 @@
-import type { Config } from 'drizzle-kit';
-import 'dotenv/config';
+import type { Config } from 'drizzle-kit'
+import 'dotenv/config'
 
-const connectionString = `postgres://${process.env.POSTGRES_USERNAME}:${process.env.POSTGRES_PASSWORD}@${process.env.POSTGRES_ENDPOINT}/${process.env.POSTGRES_DATABASE}`;
+const connectionString = `postgres://${process.env.POSTGRES_USERNAME}:${process.env.POSTGRES_PASSWORD}@${process.env.POSTGRES_ENDPOINT}:${process.env.POSTGRES_PORT}/${process.env.POSTGRES_DATABASE}`
 
 export default {
   schema: './src/db/schema.ts',
@@ -10,4 +10,4 @@ export default {
   dbCredentials: {
     url: connectionString,
   },
-} satisfies Config; 
+} satisfies Config
