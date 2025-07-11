@@ -240,6 +240,9 @@
 
   --spinner: var(--foreground-faded);
 
+  --table-border: rgba(from var(--foreground-faded) r g b / 0.2);
+  --table-header: var(--foreground);
+
   --tooltip: var(--background);
   --tooltip-background: var(--foreground-dark);
 
@@ -1158,5 +1161,15 @@ https://icflorescu.github.io/mantine-datatable/examples/records-selection/
 .project_files_table .mantine-Center-root {
   .tabler-icon {
     color: var(--foreground-faded);
+  }
+}
+
+.project_files_table .mantine-ScrollArea-root {
+  border-radius: 0px;
+}
+
+.project_files_table .mantine-ScrollArea-viewport {
+  > div > div {
+    display: none;
   }
 }
