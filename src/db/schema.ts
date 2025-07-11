@@ -210,10 +210,9 @@ export const docGroups = pgTable('doc_groups', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
   course_name: text('course_name').notNull(),
-  description: text('description'),
   created_at: timestamp('created_at').defaultNow(),
-  updated_at: timestamp('updated_at').defaultNow(),
   enabled: boolean('enabled').default(true),
+  private: boolean('private').default(true),
   doc_count: integer('doc_count').default(0),
 })
 
