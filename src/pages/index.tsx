@@ -216,7 +216,7 @@ const Home: NextPage = () => {
           >
             <div className="sm:w-1/2 ">
               <div
-                style={{ color: 'var(--illinois-blue)', lineHeight: '110%' }}
+                style={{ color: 'var(--foreground)', lineHeight: '110%' }}
                 className={`
                   text-3xl font-bold sm:mt-4
                   sm:text-3xl
@@ -233,7 +233,7 @@ const Home: NextPage = () => {
                 </h2>
               </div>
 
-              <div className="mb-8 mt-4 text-sm text-neutral-400">
+              <div className="mb-8 mt-4 text-sm text-[--foreground-faded]">
                 Deep search your documents, build an AI-teaching assistant,
                 accelerate your literature review,{' '}
                 <span className="whitespace-nowrap">and get creative.</span>
@@ -268,11 +268,11 @@ const Home: NextPage = () => {
                   <div className="icons_scrolling">
                     <img
                       src="/media/banner_icons.png"
-                      className="max-w-full rounded-xl"
+                      className="max-w-full"
                     ></img>
                     <img
                       src="/media/banner_icons.png"
-                      className="max-w-full rounded-xl"
+                      className="max-w-full"
                     ></img>
                   </div>
                 </div>
@@ -294,7 +294,7 @@ const Home: NextPage = () => {
                 text-2xl font-bold sm:pt-2 
                 ${montserrat_heading.variable} font-montserratHeading
               `}
-              style={{ color: 'var(--illinois-blue)' }}
+              style={{ color: 'var(--foreground)' }}
             >
               Flagship Chatbots
             </h2>
@@ -1012,14 +1012,14 @@ function FlagshipChatbots() {
           radius="md"
           className="flex h-56 flex-col"
           style={{
-            background: 'var(--background)',
-            boxShadow: '4px 4px 10px rgba(0,0,0, .2)',
+            color: 'var(--illinois-blue)',
+            background: 'var(--illinois-white)',
           }}
         >
           <Card.Section className="h-12">
             <div
               className={`
-                flex items-center px-3 text-sm font-semibold text-neutral-600
+                flex items-center px-3 text-sm font-semibold
                 ${montserrat_heading.variable} font-montserratHeading
               `}
               style={{ height: '100%' }}
@@ -1042,7 +1042,7 @@ function FlagshipChatbots() {
                     width: '100%',
                     height: '100%',
                     objectFit: 'contain',
-                    backgroundColor: 'var(--background)',
+                    backgroundColor: 'var(--illinois-white)',
                   }}
                 />
               </div>
@@ -1054,7 +1054,7 @@ function FlagshipChatbots() {
               <div
                 className="
                 line-clamp-2 max-w-full
-                text-xs text-neutral-600 sm:line-clamp-5
+                text-xs sm:line-clamp-5
                 "
               >
                 {card.tagline}

@@ -72,6 +72,10 @@ const GlobalStyle = createGlobalStyle`
 
 const PAGE_SIZE = 100
 
+const dataTableTitleStyles = {
+  color: 'var(--table-header)',
+}
+
 export function ProjectFilesTable({
   course_name,
   setFailedCount = (count: number) => {},
@@ -866,8 +870,9 @@ export function ProjectFilesTable({
           }
           recordsPerPage={PAGE_SIZE}
           customLoader={<LoadingSpinner />}
-          borderRadius="lg"
           withColumnBorders
+          borderColor="var(--table-border)"
+          rowBorderColor="var(--table-border)"
           withBorder={false}
           paginationColor="var(--dashboard-button)"
           // c={{pagintation: {backgroundColor: '#1e1f3a'}}}
@@ -888,6 +893,7 @@ export function ProjectFilesTable({
           }}
           columns={[
             {
+              titleStyle: dataTableTitleStyles,
               accessor: 'readable_filename',
               title: 'File Name',
               // render: ({ readable_filename }) =>
@@ -931,6 +937,7 @@ export function ProjectFilesTable({
               filtering: filterKey !== null,
             },
             {
+              titleStyle: dataTableTitleStyles,
               accessor: 'url',
               title: 'URL',
               render: ({ url }) =>
@@ -971,6 +978,7 @@ export function ProjectFilesTable({
               filtering: filterKey !== null,
             },
             {
+              titleStyle: dataTableTitleStyles,
               accessor: 'base_url',
               title: 'The Starting URL of Web Scraping',
               render: ({ base_url }) =>
@@ -1010,6 +1018,7 @@ export function ProjectFilesTable({
               filtering: filterKey !== null,
             },
             {
+              titleStyle: dataTableTitleStyles,
               accessor: 'created_at',
               title: 'Date created',
               render: ({ created_at }) =>
@@ -1058,6 +1067,7 @@ export function ProjectFilesTable({
             ...(tabValue === 'failed'
               ? [
                   {
+                    titleStyle: dataTableTitleStyles,
                     accessor: 'error',
                     title: 'Error',
                     width: 200,
@@ -1104,6 +1114,7 @@ export function ProjectFilesTable({
                 ]
               : [
                   {
+                    titleStyle: dataTableTitleStyles,
                     accessor: 'doc_group',
                     title: 'Document Groups',
                     width: 200, // Increase this value to make the column wider
@@ -1168,6 +1179,7 @@ export function ProjectFilesTable({
               ? []
               : [
                   {
+                    titleStyle: dataTableTitleStyles,
                     accessor: 'actions',
                     title: <Box mr={6}>Actions</Box>,
                     width: 75,
@@ -1438,18 +1450,23 @@ function errorStateForProjectFilesTable() {
       }}
       columns={[
         {
+          titleStyle: dataTableTitleStyles,
           accessor: 'Name',
         },
         {
+          titleStyle: dataTableTitleStyles,
           accessor: 'URL',
         },
         {
+          titleStyle: dataTableTitleStyles,
           accessor: 'The Starting URL of Web Scraping',
         },
         {
+          titleStyle: dataTableTitleStyles,
           accessor: 'doc_group',
         },
         {
+          titleStyle: dataTableTitleStyles,
           accessor: 'actions',
         },
       ]}

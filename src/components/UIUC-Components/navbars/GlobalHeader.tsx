@@ -288,7 +288,7 @@ export function LandingPageHeader({
             ></img>
           </div>
           <div className="text-[var(--illinois-orange)] sm:ml-4">Illinois</div>
-          <div className="text-[var(--illinois-blue)]">Chat</div>
+          <div className="text-[var(--foreground)]">Chat</div>
         </div>
 
         {/* Navigation links on desktop */}
