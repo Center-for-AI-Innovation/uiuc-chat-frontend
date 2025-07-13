@@ -462,9 +462,30 @@ export const Chat = memo(
             }
           }
 
-          // Skip vector search entirely if there are no documents
-          if (documentCount === 0) {
-            // console.log('Vector search skipped: no documents available')
+          const hasConversationFiles = (
+            conversation: Conversation | undefined,
+          ): boolean => {
+            if (!conversation?.messages) return false
+
+            return conversation.messages.some((message) => {
+              if (Array.isArray(message.content)) {
+                return message.content.some(
+                  (content) =>
+                    content.type === 'text' &&
+                    content.text?.includes('📎 Uploaded file:'),
+                )
+              }
+              return false
+            })
+          }
+
+          // Updated condition to include conversation files
+          const hasAnyDocuments =
+            (documentCount || 0) > 0 ||
+            hasConversationFiles(selectedConversation)
+
+          // Skip vector search entirely if there are no documents AND no conversation files
+          if (!hasAnyDocuments) {
             homeDispatch({ field: 'wasQueryRewritten', value: false })
             homeDispatch({ field: 'queryRewriteText', value: null })
             message.wasQueryRewritten = undefined
