@@ -791,7 +791,6 @@ export const ChatInput = ({
       }
 
       const result = await response.json()
-      console.log('Chat file upload successful:', result)
 
       return s3Key
     } catch (error) {

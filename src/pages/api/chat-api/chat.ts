@@ -91,6 +91,7 @@ export default async function chat(
     stream,
     api_key,
     retrieval_only,
+    conversation_id,
   }: {
     model: string
     messages: Message[]
@@ -100,6 +101,7 @@ export default async function chat(
     stream: boolean
     api_key: string
     retrieval_only: boolean
+    conversation_id?: string
   } = body
 
   // Validate the API key and retrieve user data
@@ -201,14 +203,14 @@ export default async function chat(
 
   // Construct the conversation object
   const conversation: Conversation = {
-    id: uuidv4(),
+    id: conversation_id || uuidv4(),
     name: 'New Conversation',
     messages: messages,
     model: selectedModel,
     prompt:
       messages.filter((message) => message.role === 'system').length > 0
         ? ((messages.filter((message) => message.role === 'system')[0]
-          ?.content as string) ??
+            ?.content as string) ??
           (messages.filter((message) => message.role === 'system')[0]
             ?.content as string))
         : DEFAULT_SYSTEM_PROMPT,
@@ -221,8 +223,8 @@ export default async function chat(
   // Check if the content is an array and filter out image content
   const imageContent = Array.isArray(lastMessage.content)
     ? (lastMessage.content as Content[]).filter(
-      (content) => content.type === 'image_url',
-    )
+        (content) => content.type === 'image_url',
+      )
     : []
 
   const imageUrls = imageContent.map(
@@ -245,36 +247,29 @@ export default async function chat(
     imgDesc = newImgDesc
   }
 
-  // Fetch Contexts
-  console.log('Before context search:', {
-    courseName: course_name,
-    searchQuery,
-    documentGroups: doc_groups,
-  })
-  const contexts = await handleContextSearch(
+  await handleContextSearch(
     lastMessage,
     course_name,
     conversation,
     searchQuery,
     doc_groups,
   )
+
   // Check if contexts were found
+  const contexts = lastMessage.contexts || []
+
   if (contexts.length === 0) {
     console.error('No contexts found')
     posthog.capture('stream_api_no_contexts_found', {
       distinct_id: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
       user_id: email,
     })
-    // res.status(500).json({ error: 'No contexts found' })
-    // return
   } else {
     if (retrieval_only) {
       res.status(200).json({ contexts: contexts })
       return
     }
-
-    // Attach contexts to the last message
-    attachContextsToLastMessage(lastMessage, contexts)
+    // Contexts are already attached to lastMessage by handleContextSearch
   }
 
   // Handle tools
