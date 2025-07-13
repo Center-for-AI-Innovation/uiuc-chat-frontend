@@ -24,14 +24,6 @@ const handler = async (
 
     const { conversationId, courseName, s3Key, fileName, fileType } = req.body
 
-    console.log('Processing chat file upload:', {
-      conversationId,
-      courseName,
-      s3Key,
-      fileName,
-      fileType,
-    })
-
     // Validate required parameters
     if (!conversationId || !courseName || !s3Key || !fileName) {
       console.error('Missing required parameters')
@@ -73,35 +65,29 @@ const handler = async (
       })
     }
 
-    // 3. Call your existing ingest endpoint with conversation context
+    // 3. Call your new chat file processing endpoint
     const s3_filepath = s3Key // s3Key should already be the full path
 
     const response = await fetch(
-      'https://app.beam.cloud/taskqueue/ingest_task_queue/latest',
+      'https://flask-production-751b.up.railway.app/process-chat-file',
+      //'http://localhost:8000/process-chat-file',
       {
         method: 'POST',
         headers: {
           Accept: '*/*',
           'Accept-Encoding': 'gzip, deflate',
-          Authorization: `Bearer ${process.env.BEAM_API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          course_name: courseName,
+          conversation_id: conversationId,
+          s3_path: s3_filepath,
           readable_filename: fileName,
-          s3_paths: s3_filepath,
-          conversation_id: conversationId, // Pass to backend for chat context
-          is_chat_upload: true, // Flag to indicate this is a chat upload
+          user_id: conversation.user_email,
         }),
       },
     )
 
     const responseBody = await response.json()
-    console.log('Submitted chat file to ingest queue', {
-      s3_filepath,
-      responseStatus: response.status,
-      responseBody,
-    })
 
     if (!response.ok) {
       // Mark as failed in file_uploads
@@ -131,8 +117,6 @@ const handler = async (
         updated_at: new Date().toISOString(),
       })
       .eq('id', fileUploadId)
-
-    console.log('Chat file upload successful:', fileUploadId)
 
     res.status(200).json({
       success: true,
