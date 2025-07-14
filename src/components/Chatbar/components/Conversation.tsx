@@ -101,6 +101,7 @@ export const ConversationComponent = ({ conversation }: Props) => {
 
   useEffect(() => {
     const fetchCustomGPTName = async () => {
+      // Only show custom GPT name if the conversation has a customGptId
       if (conversation.customGptId && conversation.projectName) {
         try {
           const response = await fetch(`/api/UIUC-api/getCourseMetadata?course_name=${encodeURIComponent(conversation.projectName)}`);
@@ -121,6 +122,9 @@ export const ConversationComponent = ({ conversation }: Props) => {
         } catch (error) {
           console.error('Error fetching course metadata:', error);
         }
+      } else {
+        // Clear custom GPT name if no customGptId
+        setCustomGPTName('');
       }
     };
 
