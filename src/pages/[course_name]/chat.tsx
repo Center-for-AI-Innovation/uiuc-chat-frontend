@@ -83,24 +83,7 @@ const ChatPage: NextPage = () => {
           custom_system_prompts_count: fetchedCourseMetadata.custom_system_prompts?.length ?? 0
         })
 
-        // Override system prompt if gptId is present and valid
-        if (gptId && fetchedCourseMetadata.custom_system_prompts) {
-          // First try to find by gpt_id, then fall back to id
-          const customPrompt = fetchedCourseMetadata.custom_system_prompts.find(
-            (p: CustomSystemPrompt) => p.gpt_id === gptId || p.id === gptId
-          )
-          
-          if (customPrompt) {
-            console.log('Found custom prompt in Redis for course:', courseName, customPrompt)
-            fetchedCourseMetadata = {
-              ...fetchedCourseMetadata,
-              system_prompt: customPrompt.promptText,
-              document_group: customPrompt.documentGroups?.[0] || undefined,
-              tool: customPrompt.tools?.[0] || undefined,
-            }
-          }
-        }
-
+       
         // If there's a shared conversation ID, determine read-only mode based on user permissions
         if (conversationId && fetchedCourseMetadata) {
           try {

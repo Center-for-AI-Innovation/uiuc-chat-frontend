@@ -424,7 +424,7 @@ const Home = ({
     if (selectedConversation?.messages.length === 0) return
   }
 
-  const handleNewConversation = (customPrompt?: { text: string; name: string; id?: string }) => {
+  const handleNewConversation = (customPrompt?: { text: string; name: string; id?: string }) => {    
     // If we're already in an empty default conversation (no custom GPT) and not switching to a custom GPT, don't create a new one
     if (selectedConversation && selectedConversation.messages.length === 0 && !customPrompt && !selectedConversation.customGptId) {
       return
@@ -449,7 +449,7 @@ const Home = ({
 
     const newConversation: Conversation = {
       id: uuidv4(),
-      name: customPrompt?.name || '',
+      name: customPrompt?.text ? (customPrompt?.name || '') : '',
       messages: [],
       model: model,
       prompt: customPrompt?.text || DEFAULT_SYSTEM_PROMPT,
@@ -460,8 +460,8 @@ const Home = ({
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       linkParameters: newLinkParameters,
-      customGptId: customPrompt?.id || null,
-      customGptName: customPrompt?.name || undefined,
+      customGptId: customPrompt?.text ? (customPrompt?.id || null) : null,
+      customGptName: customPrompt?.text ? (customPrompt?.name || undefined) : undefined,
     }
 
     // Only update selectedConversation, don't add to conversations list yet
@@ -768,6 +768,14 @@ const Home = ({
         )
         if (customPrompt) {
           console.log('Found custom prompt in course metadata:', customPrompt)
+          console.log('Custom prompt from URL parameter details:', {
+            name: customPrompt.name,
+            promptText: customPrompt.promptText,
+            gpt_id: customPrompt.gpt_id,
+            id: customPrompt.id,
+            hasPromptText: !!customPrompt.promptText,
+            promptTextLength: customPrompt.promptText?.length || 0
+          })
           handleNewConversation({
             text: customPrompt.promptText,
             name: customPrompt.name,
