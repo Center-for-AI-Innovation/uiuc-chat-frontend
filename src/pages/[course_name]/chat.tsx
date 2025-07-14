@@ -71,7 +71,7 @@ const ChatPage: NextPage = () => {
       // Fetch course metadata from Redis using course name
       const metadataResponse = await fetch(`/api/UIUC-api/getCourseMetadata?course_name=${courseName}`)
       const metadataData = await metadataResponse.json()
-      let fetchedCourseMetadata: CourseMetadata | null = metadataData.course_metadata
+      const fetchedCourseMetadata: CourseMetadata | null = metadataData.course_metadata
 
       if (fetchedCourseMetadata) {
         console.log('Course metadata from Redis:', {
