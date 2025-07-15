@@ -131,9 +131,15 @@ export function DocGroupsTable({ course_name }: { course_name: string }) {
           mah="calc(80vh - 16rem)"
           type="always"
           offsetScrollbars
-          className="overflow-hidden rounded-xl"
+          className="overflow-hidden"
+          styles={{
+            root: {
+              borderRadius: '0px !important',
+            },
+          }}
         >
           <Table
+            className="document_groups_table"
             style={{
               tableLayout: 'fixed',
               position: 'relative',
@@ -197,8 +203,17 @@ export function DocGroupsTable({ course_name }: { course_name: string }) {
                           enabled: event.currentTarget.checked,
                         })
                       }
-                      color="grape"
-                      size="lg"
+                      className="cursor-pointer"
+                      styles={{
+                        track: {
+                          backgroundColor: doc_group_obj.enabled
+                            ? 'var(--dashboard-button) !important'
+                            : 'var(--dashboard-background-dark)',
+                          borderColor: doc_group_obj.enabled
+                            ? 'var(--dashboard-button) !important'
+                            : 'var(--dashboard-background-dark)',
+                        },
+                      }}
                     />
                   </td>
                 </tr>

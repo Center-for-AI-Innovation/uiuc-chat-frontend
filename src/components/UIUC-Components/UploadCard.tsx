@@ -154,7 +154,7 @@ export const UploadCard = memo(function UploadCard({
           }}
           className="min-h-full bg-[--background]"
         >
-          <div className="w-full border-b border-[--dashboard-background-faded] px-4 py-3 sm:px-6 sm:py-4 md:px-8">
+          <div className="w-full border-b border-[--dashboard-border] px-4 py-3 sm:px-6 sm:py-4 md:px-8">
             <div className="flex items-center justify-between gap-2">
               <div className="flex min-w-0 flex-wrap items-center gap-2">
                 <Title

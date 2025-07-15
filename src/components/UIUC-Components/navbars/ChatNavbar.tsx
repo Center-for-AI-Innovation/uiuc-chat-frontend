@@ -99,14 +99,14 @@ const useStyles = createStyles((theme, { isAdmin }: { isAdmin: boolean }) => ({
     top: HEADER_HEIGHT,
     right: '20px',
     zIndex: 10,
-    borderRadius: '10px',
+    borderRadius: '4px',
     overflow: 'hidden',
     width: '200px',
     [theme.fn.largerThan(isAdmin ? 825 : 500)]: {
       display: 'none',
     },
-    backgroundColor: '#15162c',
-    color: 'white',
+    backgroundColor: 'var(--background-faded)',
+    color: 'var(--foreground)',
   },
   adminDashboard: {
     [theme.fn.smallerThan(825)]: {
@@ -303,6 +303,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                     ...styles,
                     transform: 'translateY(26px)',
                     minWidth: '120px',
+                    borderColor: 'var(--background-dark)',
                   }}
                 >
                   {/* New Chat button in hamburger when screen is small */}
@@ -621,6 +622,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                 opened={opened}
                 onClick={toggle}
                 className={classes.burger}
+                color="var(--foreground)"
                 size="sm"
               />
             </Container>

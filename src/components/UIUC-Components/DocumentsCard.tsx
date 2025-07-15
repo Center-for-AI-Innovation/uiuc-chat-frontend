@@ -78,10 +78,14 @@ function DocumentsCard({
 
   return (
     <Card
-      shadow="xs"
+      withBorder
       padding="none"
       radius="xl"
       className="mt-[2%] w-[96%] md:w-[90%] 2xl:w-[90%]"
+      style={{
+        backgroundColor: 'var(--background)',
+        borderColor: 'var(--dashboard-border)',
+      }}
     >
       <div className="min-h-full bg-[--background]">
         <Modal
@@ -114,7 +118,7 @@ function DocumentsCard({
           </div>
         </Modal>
 
-        <div className="w-full border-b border-white/10 bg-[--dashboard-background-faded] px-4 py-3 sm:px-6 sm:py-4 md:px-8">
+        <div className="w-full border-b border-[--dashboard-border] px-4 py-3 sm:px-6 sm:py-4 md:px-8">
           <div className="flex items-center justify-between gap-2">
             <Title
               order={3}

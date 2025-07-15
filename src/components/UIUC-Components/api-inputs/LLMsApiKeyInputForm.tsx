@@ -737,7 +737,7 @@ export default function APIKeyInputForm() {
                               />
                             </Flex>
                             <Title
-                              className={`-mb-3 ${montserrat_heading.variable} mt-4 font-montserratHeading`}
+                              className={`-mb-3 ${montserrat_heading.variable} mt-4 font-montserratHeading text-[--foreground]`}
                               order={3}
                             >
                               Open source LLMs

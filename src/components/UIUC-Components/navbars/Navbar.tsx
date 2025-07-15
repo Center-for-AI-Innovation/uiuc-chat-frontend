@@ -52,7 +52,6 @@ const HEADER_HEIGHT = rem(90)
 
 const useStyles = createStyles((theme) => ({
   burger: {
-    color: '#f1f5f9',
     [theme.fn.largerThan('md')]: {
       display: 'none',
     },
@@ -122,7 +121,7 @@ const useStyles = createStyles((theme) => ({
     borderRadius: '10px',
     overflow: 'hidden',
     width: '200px',
-    backgroundColor: 'rgb(26, 27, 30)',
+    backgroundColor: 'var(--background-faded)',
     [theme.fn.largerThan('lg')]: {
       display: 'none',
     },
@@ -286,7 +285,7 @@ function NavigationContent({
         onClick={onToggle}
         className={classes.burger}
         size="sm"
-        color="#f1f5f9"
+        color="var(--foreground)"
       />
     </>
   )

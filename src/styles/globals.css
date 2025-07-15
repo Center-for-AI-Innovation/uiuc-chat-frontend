@@ -198,7 +198,11 @@
     var(--dashboard-background-dark),
     black 10%
   );
-  --dashboard-border: var(--dashboard-background-faded);
+  --dashboard-border: color-mix(
+    in srgb,
+    var(--dashboard-background),
+    black 15%
+  ); /* var(--dashboard-background-faded); */
   --dashboard-sidebar-background: var(
     --background
   ); /* var(--dashboard-background-faded); */
@@ -512,33 +516,27 @@ li {
 }
 
 .tag-item {
-  background-color: var(--illinois-background-darker);
-  display: inline-block;
-  font-size: 16px;
-  border-radius: 30px;
-  height: 30px;
-  padding: 0 4px 0 1rem;
+  color: var(--background);
+  background-color: var(--button);
+  /*  font-size: 16px; */
+  border-radius: 2000px;
+  padding: 0.25rem 0.25rem 0.25rem 0.75rem;
   display: inline-flex;
   align-items: center;
-  margin: 0 0.3rem 0.3rem 0;
 }
 
 .tag-item button {
-  background-color: var(--illinois-blueviolet);
-  width: 22px;
-  height: 22px;
   border-radius: 50%;
   border: none;
   cursor: pointer;
   font: inherit;
-  margin-left: 10px;
   font-weight: bold;
   padding: 0;
   line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--button-text-color);
 }
 
 /* 👆 FOR EmailChips.tsx -- to make nice email input fields. 👆 */
@@ -1170,6 +1168,35 @@ https://icflorescu.github.io/mantine-datatable/examples/records-selection/
 
 .project_files_table .mantine-ScrollArea-viewport {
   > div > div {
-    display: none;
+    display: none; /* hack to hide the scroll shadows */
+  }
+}
+
+/* table is also older v6 version and needs to be updated */
+.document_groups_table {
+  thead {
+    tr {
+      th {
+        color: var(--foreground);
+        border-color: var(--table-border);
+        border-bottom-color: var(--table-border) !important;
+
+        &:last-of-type {
+          border-left-color: transparent;
+        }
+      }
+    }
+  }
+
+  tbody {
+    tr {
+      td {
+        border-color: var(--table-border);
+
+        &:last-of-type {
+          border-left-color: transparent;
+        }
+      }
+    }
   }
 }
