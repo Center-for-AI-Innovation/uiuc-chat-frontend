@@ -33,7 +33,7 @@ export const llmConvoMonitor = pgTable('llm-convo-monitor', {
   id: serial('id').primaryKey(),
   created_at: timestamp('created_at').defaultNow(),
   convo: jsonb('convo'),
-  convo_id: text('convo_id'),
+  convo_id: text('convo_id').unique(),
   course_name: text('course_name'),
   user_email: text('user_email'),
   summary: text('summary'),
