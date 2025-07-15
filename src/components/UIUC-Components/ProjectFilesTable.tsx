@@ -518,7 +518,7 @@ export function ProjectFilesTable({
       <GlobalStyle />
       {/* Fixed Header Section */}
       <div className="flex-none">
-        <div className="mb-2 flex items-center justify-between border-b border-[--foreground-faded] px-4 pt-4 sm:px-6 md:px-8 ">
+        <div className="mb-2 flex items-center justify-between border-b border-[--dashboard-border] px-4 pt-4 sm:px-6 md:px-8 ">
           <div className="flex items-center md:space-x-4">
             <button
               onClick={() => onTabChange('success')}
@@ -907,7 +907,7 @@ export function ProjectFilesTable({
                   ''
                 ),
               // width: '14vw',
-              width: isSmallScreen ? '35vw' : '14vw',
+              width: isSmallScreen ? '35vw' : '20vw',
               sortable: true,
               filter: (
                 <TextInput
@@ -1117,7 +1117,6 @@ export function ProjectFilesTable({
                     titleStyle: dataTableTitleStyles,
                     accessor: 'doc_group',
                     title: 'Document Groups',
-                    width: 200, // Increase this value to make the column wider
                     render: (record: CourseDocument) => (
                       <Group position="apart" spacing="xs">
                         <MultiSelect

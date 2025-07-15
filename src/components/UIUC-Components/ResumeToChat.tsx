@@ -54,12 +54,12 @@ export default function ResumeToChat({
         className={`btn rounded-full ${classes.button}`}
         style={{
           backgroundColor: 'transparent',
-          outline: `solid 1.5px ${theme.colors.grape[8]}`,
+          outline: `solid 1.5px var(--button)`,
           overflow: 'hidden',
           textOverflow: 'ellipsis',
         }}
         onMouseEnter={(e) =>
-          (e.currentTarget.style.backgroundColor = theme.colors.grape[8])
+          (e.currentTarget.style.backgroundColor = 'var(--button-hover)')
         }
         onMouseLeave={(e) =>
           (e.currentTarget.style.backgroundColor = 'transparent')

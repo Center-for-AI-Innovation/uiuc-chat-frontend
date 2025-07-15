@@ -133,8 +133,17 @@ export const DocumentGroupsItem = ({}) => {
                       <Switch
                         checked={doc_group_obj.checked}
                         onChange={() => handleToggleChecked(doc_group_obj.id)}
-                        size={isSmallScreen ? 'sm' : 'lg'}
-                        color="orange"
+                        className="cursor-pointer"
+                        styles={{
+                          track: {
+                            backgroundColor: doc_group_obj.enabled
+                              ? 'var(--dashboard-button) !important'
+                              : 'var(--dashboard-background-dark)',
+                            borderColor: doc_group_obj.enabled
+                              ? 'var(--dashboard-button) !important'
+                              : 'var(--dashboard-background-dark)',
+                          },
+                        }}
                       />
                     </td>
                   </tr>
