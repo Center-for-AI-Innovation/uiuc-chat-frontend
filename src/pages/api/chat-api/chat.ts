@@ -247,7 +247,7 @@ export default async function chat(
     imgDesc = newImgDesc
   }
 
-  await handleContextSearch(
+  const contexts = await handleContextSearch(
     lastMessage,
     course_name,
     conversation,
@@ -256,8 +256,6 @@ export default async function chat(
   )
 
   // Check if contexts were found
-  const contexts = lastMessage.contexts || []
-
   if (contexts.length === 0) {
     console.error('No contexts found')
     posthog.capture('stream_api_no_contexts_found', {
@@ -269,7 +267,8 @@ export default async function chat(
       res.status(200).json({ contexts: contexts })
       return
     }
-    // Contexts are already attached to lastMessage by handleContextSearch
+
+    attachContextsToLastMessage(lastMessage, contexts)
   }
 
   // Handle tools
