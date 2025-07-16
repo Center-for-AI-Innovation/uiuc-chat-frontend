@@ -136,10 +136,10 @@ export const DocumentGroupsItem = ({}) => {
                         className="cursor-pointer"
                         styles={{
                           track: {
-                            backgroundColor: doc_group_obj.enabled
+                            backgroundColor: doc_group_obj.checked
                               ? 'var(--dashboard-button) !important'
                               : 'var(--dashboard-background-dark)',
-                            borderColor: doc_group_obj.enabled
+                            borderColor: doc_group_obj.checked
                               ? 'var(--dashboard-button) !important'
                               : 'var(--dashboard-background-dark)',
                           },
