@@ -314,8 +314,8 @@
 }
 
 ::selection {
-  color: var(--illinois-white);
-  background-color: var(--illinois-orange);
+  color: var(--background);
+  background-color: var(--foreground);
 }
 
 /* Scrollbar Styles - Clean gray theme with hover effects */
