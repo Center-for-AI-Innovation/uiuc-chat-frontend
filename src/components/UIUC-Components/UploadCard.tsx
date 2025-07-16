@@ -197,7 +197,7 @@ export const UploadCard = memo(function UploadCard({
             </div>
           </div>
 
-          <div className="px-4 pt-4 sm:px-6 sm:pt-6 md:px-8">
+          <div className="px-4 pt-2 sm:px-6 sm:pt-2 md:px-8">
             <LargeDropzone
               courseName={projectName}
               current_user_email={current_user_email as string}
@@ -310,7 +310,7 @@ export const UploadCard = memo(function UploadCard({
               </Button>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-2">
               <Title
                 className={`${montserrat_heading.variable} font-montserratHeading text-[--dashboard-foreground]`}
                 order={3}
@@ -380,14 +380,14 @@ export const UploadCard = memo(function UploadCard({
                 )}
               </div>
               <label
-                className={`label ${montserrat_heading.variable} font-montserratHeading`}
+                className={`label !mt-8 ${montserrat_heading.variable} pt-0 font-montserratHeading`}
               >
                 <span className="label-text-unused text-lg">
                   Set example questions
                 </span>
               </label>
               <Text
-                className={`label ${montserrat_light.className} pb-0 pt-0`}
+                className={`label !mt-0 ${montserrat_light.className} pb-0`}
                 mb={-3}
                 size={'sm'}
               >
@@ -407,13 +407,13 @@ export const UploadCard = memo(function UploadCard({
                 </label>
                 <Text
                   size={'sm'}
-                  className={`label ${montserrat_light.className}`}
+                  className={`label !mt-0 ${montserrat_light.className}`}
                 >
                   This logo will appear in the header of the chat page.
                 </Text>
                 <input
                   type="file"
-                  className={`file-input-bordered file-input w-full cursor-pointer border-[--dashboard-background] bg-[--dashboard-button] text-[--dashboard-button-foreground] shadow-inner hover:border-[--dashboard-background] hover:bg-[--dashboard-button-hover] ${montserrat_paragraph.variable} font-montserratParagraph`}
+                  className={`file-input-bordered file-input w-full cursor-pointer border-[--foreground] bg-[--background] text-sm text-[--foreground] shadow-inner hover:border-[--dashboard-button] hover:bg-[--dashboard-button] hover:text-[--dashboard-button-foreground] ${montserrat_paragraph.variable} font-montserratParagraph`}
                   onChange={async (e) => {
                     // Assuming the file is converted to a URL somewhere else
                     if (e.target.files?.length) {

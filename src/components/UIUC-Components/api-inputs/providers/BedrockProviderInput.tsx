@@ -121,7 +121,6 @@ export default function BedrockProviderInput({
   return (
     <motion.div layout>
       <Card
-        shadow="sm"
         p="lg"
         radius="lg"
         className="max-w-[330px] bg-[--dashboard-background-faded] text-[--dashboard-foreground] md:w-[330px]"

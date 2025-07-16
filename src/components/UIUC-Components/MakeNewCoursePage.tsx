@@ -208,6 +208,12 @@ const MakeNewCoursePage = ({
                     className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                     rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
                   />
+
+                  <div className="text-sm text-[--foreground-faded]">
+                    The project name will be used as part of the unique url
+                    across the entire campus.
+                  </div>
+
                   <Flex direction="row" align="flex-end">
                     <label
                       className={`${montserrat_paragraph.variable} mt-4 font-montserratParagraph font-bold text-[--foreground]`}
