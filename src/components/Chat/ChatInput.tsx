@@ -14,6 +14,7 @@ import {
   IconFileTypePpt,
   IconFileTypeXls,
   IconCheck,
+  IconFile,
 } from '@tabler/icons-react'
 import { Text } from '@mantine/core'
 import {
@@ -98,7 +99,7 @@ const ALLOWED_FILE_EXTENSIONS = [
 
 type FileUploadStatus = {
   file: File
-  status: 'uploading' | 'uploaded' | 'error'
+  status: 'uploading' | 'uploaded' | 'processing' | 'completed' | 'error' // Add 'processing' and 'completed'
   url?: string
 }
 
@@ -280,7 +281,24 @@ export const ChatInput = ({
   type Role = 'user' | 'system' // Add other roles as needed
 
   const handleSend = async () => {
-    if (messageIsStreaming) return
+    const hasProcessingFiles = fileUploads.some(
+      (fu) =>
+        fu.status === 'processing' ||
+        fu.status === 'uploading' ||
+        fu.status === 'uploaded',
+    )
+
+    if (messageIsStreaming || hasProcessingFiles) {
+      // ✅ Show notification to user
+      if (hasProcessingFiles) {
+        notifications.show({
+          title: 'Files Processing',
+          message: 'Please wait for all files to finish processing',
+          color: 'yellow',
+        })
+      }
+      return
+    }
 
     const textContent = content
     let imageContent: Content[] = []
@@ -317,58 +335,30 @@ export const ChatInput = ({
       }
     }
 
-    // --- Conversation creation logic ---
-    let conversation = selectedConversation
-    if (!conversation?.id) {
-      conversation = await createNewConversation(courseName, homeDispatch)
-    }
-    // -----------------------------------
-
-    // Handle file uploads: create DB record and associate with conversation
+    // Handle file uploads: Only proceed if all files are completed
     if (fileUploads.length > 0) {
-      try {
-        // Only process files that are already uploaded to S3 and have a url
-        await Promise.all(
-          fileUploads
-            .filter((fu) => fu.status === 'uploaded' && fu.url)
-            .map(async (fu) => {
-              try {
-                // Create chat file upload record (associate with conversation)
-                await fetch('/api/UIUC-api/chat-file-upload', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    conversationId: conversation.id,
-                    courseName,
-                    s3Key: fu.url,
-                    fileName: fu.file.name,
-                    fileType: fu.file.type,
-                  }),
-                })
-              } catch (error) {
-                setFileUploads((prev) =>
-                  prev.map((f) =>
-                    f.file.name === fu.file.name
-                      ? { ...f, status: 'error' }
-                      : f,
-                  ),
-                )
-              }
-            }),
-        )
-        setFileUploads([])
-      } catch (error) {
-        console.error('Error processing file uploads:', error)
-      }
-    }
+      const pendingFiles = fileUploads.filter((fu) => fu.status !== 'completed')
 
-    // Create file content for the message
-    fileContent = fileUploads
-      .filter((fu) => fu.status === 'uploaded')
-      .map((fu) => ({
-        type: 'text' as MessageType,
-        text: `📎 Uploaded file: ${fu.file.name}|${fu.url}|${fu.file.type}`,
-      }))
+      if (pendingFiles.length > 0) {
+        notifications.show({
+          title: 'Files Still Processing',
+          message:
+            'Please wait for all files to finish processing before sending',
+          color: 'yellow',
+        })
+        return
+      }
+
+      // Create file content for the message (files are already processed)
+      fileContent = fileUploads
+        .filter((fu) => fu.status === 'completed')
+        .map((fu) => ({
+          type: 'text' as MessageType,
+          text: `📎 Uploaded file: ${fu.file.name}|${fu.url}|${fu.file.type}`,
+        }))
+
+      setFileUploads([]) // Clear after using
+    }
 
     if (!textContent && imageContent.length === 0 && fileContent.length === 0) {
       alert(t('Please enter a message or upload a file'))
@@ -747,6 +737,46 @@ export const ChatInput = ({
               : f,
           ),
         )
+
+        // **NEW: Immediately process the file after S3 upload**
+        setFileUploads((prev) =>
+          prev.map((f) =>
+            f.file.name === file.name ? { ...f, status: 'processing' } : f,
+          ),
+        )
+
+        // Create conversation if needed
+        let conversation = selectedConversation
+        if (!conversation?.id) {
+          conversation = await createNewConversation(courseName, homeDispatch)
+        }
+
+        // Process the file immediately
+        const response = await fetch('/api/UIUC-api/chat-file-upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            conversationId: conversation.id,
+            courseName,
+            s3Key: s3Key,
+            fileName: file.name,
+            fileType: file.type,
+          }),
+        })
+
+        if (!response.ok) {
+          throw new Error('File processing failed')
+        }
+
+        const result = await response.json()
+        console.log('File processing completed:', result)
+
+        // Update to completed status
+        setFileUploads((prev) =>
+          prev.map((f) =>
+            f.file.name === file.name ? { ...f, status: 'completed' } : f,
+          ),
+        )
       } catch (error) {
         setFileUploads((prev) =>
           prev.map((f) =>
@@ -754,7 +784,7 @@ export const ChatInput = ({
           ),
         )
         notifications.show({
-          message: `Failed to upload ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          message: `Failed to process ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
           color: 'red',
         })
       }
@@ -1150,6 +1180,12 @@ export const ChatInput = ({
             </button>
           )}
 
+        {fileUploads.map((fu, index) => (
+          <div key={index} className="mb-1 text-sm text-neutral-500">
+            📎 {fu.file.name}
+          </div>
+        ))}
+
         <div
           ref={chatInputParentContainerRef}
           className="absolute bottom-0 mx-4 flex w-[80%] flex-col self-center rounded-t-3xl border border-black/10 bg-[#070712] px-4 pb-8 pt-4 shadow-[0_0_10px_rgba(0,0,0,0.10)] dark:border-gray-900/50 dark:text-white dark:shadow-[0_0_15px_rgba(0,0,0,0.10)] md:mx-20 md:w-[70%]"
@@ -1336,114 +1372,129 @@ export const ChatInput = ({
               ))}
             </div>
 
-            {/* File upload preview section (non-image files) */}
+            {/* File upload preview section */}
             <div className="mt-2 flex flex-wrap gap-3">
-              {fileUploads
-                .filter((fu) => {
-                  const ext = fu.file.name.split('.').pop()?.toLowerCase()
-                  const imageTypes = ['jpg', 'jpeg', 'png', 'webp', 'gif']
-                  return !(ext && imageTypes.includes(ext))
-                })
-                .map((fu, idx) => {
-                  // Icon selection based on file type
-                  const ext = fu.file.name.split('.').pop()?.toLowerCase()
-                  let icon = <IconFileTypeTxt size={28} />
-                  if (ext === 'pdf')
-                    icon = (
-                      <IconFileTypePdf size={28} className="text-red-500" />
+              {fileUploads.map((fu, index) => {
+                const getFileIcon = (name: string, type?: string) => {
+                  const extension = name.split('.').pop()?.toLowerCase()
+                  const iconProps = { size: 20 }
+
+                  if (type?.includes('pdf') || extension === 'pdf') {
+                    return (
+                      <IconFileTypePdf
+                        {...iconProps}
+                        className="text-red-500"
+                      />
                     )
-                  else if (['doc', 'docx'].includes(ext!))
-                    icon = (
-                      <IconFileTypeDocx size={28} className="text-blue-500" />
+                  }
+                  if (
+                    type?.includes('doc') ||
+                    extension === 'docx' ||
+                    extension === 'doc'
+                  ) {
+                    return (
+                      <IconFileTypeDocx
+                        {...iconProps}
+                        className="text-blue-500"
+                      />
                     )
-                  else if (['ppt', 'pptx'].includes(ext!))
-                    icon = (
-                      <IconFileTypePpt size={28} className="text-orange-500" />
+                  }
+                  if (type?.includes('text') || extension === 'txt') {
+                    return (
+                      <IconFileTypeTxt
+                        {...iconProps}
+                        className="text-gray-500"
+                      />
                     )
-                  else if (
-                    [
-                      'xls',
-                      'xlsx',
-                      'xlsm',
-                      'xlsb',
-                      'xltx',
-                      'xltm',
-                      'xlt',
-                      'xml',
-                      'xlam',
-                      'xla',
-                      'xlw',
-                      'xlr',
-                      'csv',
-                    ].includes(ext!)
+                  }
+                  return <IconFile {...iconProps} className="text-gray-600" />
+                }
+
+                const getStatusIcon = (status: string) => {
+                  switch (status) {
+                    case 'uploading':
+                    case 'processing':
+                      return (
+                        <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-blue-600"></div>
+                      )
+                    case 'completed':
+                      return (
+                        <div className="flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
+                          <svg
+                            className="h-2.5 w-2.5 text-white"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                      )
+                    case 'error':
+                      return (
+                        <div className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500">
+                          <svg
+                            className="h-2.5 w-2.5 text-white"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                      )
+                    default:
+                      return null
+                  }
+                }
+
+                const truncateFileName = (name: string, maxLength = 25) => {
+                  if (name.length <= maxLength) return name
+                  const extension = name.split('.').pop()
+                  const nameWithoutExt = name.substring(
+                    0,
+                    name.lastIndexOf('.'),
                   )
-                    icon = (
-                      <IconFileTypeXls size={28} className="text-green-500" />
-                    )
-                  else if (
-                    ['md', 'txt', 'srt', 'vtt', 'html', 'py'].includes(ext!)
-                  )
-                    icon = <IconFileTypeTxt size={28} />
-                  // Status icon
-                  let statusIcon = null
-                  if (fu.status === 'uploading')
-                    statusIcon = (
-                      <div className="ml-2 h-4 w-4 animate-spin rounded-full border-t-2 border-neutral-800 opacity-60 dark:border-neutral-100" />
-                    )
-                  else if (fu.status === 'uploaded')
-                    statusIcon = (
-                      <IconCheck size={18} className="ml-2 text-green-500" />
-                    )
-                  else if (fu.status === 'error')
-                    statusIcon = (
-                      <IconX size={18} className="ml-2 text-red-500" />
-                    )
-                  return (
-                    <div
-                      key={fu.file.name + idx}
-                      className="relative flex items-center rounded-lg bg-neutral-800 px-3 py-2"
-                    >
-                      {icon}
-                      <span
-                        className="ml-2 max-w-[120px] truncate text-white"
-                        title={fu.file.name}
-                      >
-                        {fu.file.name}
+                  return `${nameWithoutExt.substring(0, maxLength - 3)}...${extension ? `.${extension}` : ''}`
+                }
+
+                return (
+                  <div
+                    key={index}
+                    className="flex items-center gap-2 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2"
+                  >
+                    {getFileIcon(fu.file.name, fu.file.type)}
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-gray-300">
+                        {truncateFileName(fu.file.name)}
                       </span>
-                      {statusIcon}
-                      <Tooltip
-                        label="Remove File"
-                        position="top"
-                        withArrow
-                        style={{ backgroundColor: '#2b2b2b', color: 'white' }}
-                      >
-                        <button
-                          className="remove-button ml-2"
-                          onClick={() => {
-                            setFileUploads((prev) =>
-                              prev.filter((_, i) => i !== idx),
-                            )
-                          }}
-                          style={removeButtonStyle}
-                          onMouseEnter={(e) => {
-                            const current = e.currentTarget
-                            current.style.backgroundColor =
-                              removeButtonHoverStyle.backgroundColor!
-                            current.style.color = removeButtonHoverStyle.color!
-                          }}
-                          onMouseLeave={(e) => {
-                            const current = e.currentTarget
-                            current.style.backgroundColor =
-                              removeButtonStyle.backgroundColor!
-                            current.style.color = removeButtonStyle.color!
-                          }}
-                        >
-                          <IconX size={16} />
-                        </button>
-                      </Tooltip>
+                      <span className="text-xs text-gray-500">
+                        {fu.status === 'uploading' && 'Uploading...'}
+                        {fu.status === 'processing' && 'Processing...'}
+                        {fu.status === 'completed' && 'Ready for chat'}
+                        {fu.status === 'error' && 'Upload failed'}
+                      </span>
                     </div>
-                  )
-                })}
+                    {getStatusIcon(fu.status)}
+                    <button
+                      onClick={() => {
+                        setFileUploads((prev) =>
+                          prev.filter((_, i) => i !== index),
+                        )
+                      }}
+                      className="ml-2 text-gray-400 hover:text-gray-300"
+                    >
+                      <IconX size={16} />
+                    </button>
+                  </div>
+                )
+              })}
             </div>
 
             <button

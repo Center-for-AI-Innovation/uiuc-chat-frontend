@@ -8,6 +8,8 @@ type ChatFileUploadResponse = {
   message?: string
   error?: string
   beam_task_id?: string
+  details?: string
+  chunks_created?: number
 }
 
 const handler = async (
@@ -34,17 +36,44 @@ const handler = async (
     }
 
     // 1. Verify conversation exists
-    const { data: conversation, error: convError } = await supabase
+    const { data: existingConv, error: findError } = await supabase
       .from('conversations')
       .select('id, user_email')
       .eq('id', conversationId)
-      .single()
+      .maybeSingle()
 
-    if (convError || !conversation) {
-      console.error('Conversation not found:', conversationId, convError)
-      return res.status(404).json({
-        error: ' Conversation not found',
-      })
+    if (!existingConv) {
+      if (findError) {
+        console.error('Error checking conversation:', findError)
+        return res.status(500).json({ error: 'Database error' })
+      }
+      // Create conversation with ALL required fields
+      const { data: newConv, error: convError } = await supabase
+        .from('conversations')
+        .insert({
+          id: conversationId,
+          name: 'File Upload Conversation', // ✅ Required field added
+          user_email: 'placeholder@example.com',
+          project_name: courseName, // ✅ Correct column name
+          model: 'gpt-4o-mini',
+          prompt: 'You are a helpful assistant.',
+          temperature: 0.7,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .select('id, user_email')
+        .single()
+
+      if (convError || !newConv) {
+        console.error(
+          'Failed to create conversation:',
+          conversationId,
+          convError,
+        )
+        return res.status(500).json({
+          error: 'Failed to create conversation',
+        })
+      }
     }
 
     // 2. Create file_uploads record
@@ -82,47 +111,55 @@ const handler = async (
           conversation_id: conversationId,
           s3_path: s3_filepath,
           readable_filename: fileName,
-          user_id: conversation.user_email,
+          user_id: 'placeholder@example.com', // Placeholder, will be updated later
         }),
       },
     )
 
-    const responseBody = await response.json()
-
     if (!response.ok) {
-      // Mark as failed in file_uploads
-      await supabase
-        .from('file_uploads')
-        .update({
-          contexts: { error: 'Ingest failed', details: responseBody },
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', fileUploadId)
+      console.error(
+        `Flask backend error: ${response.status} ${response.statusText}`,
+      )
+      const errorText = await response.text()
+      console.error('Backend response:', errorText.substring(0, 500))
 
-      console.error('Ingest failed for chat file:', responseBody)
       return res.status(500).json({
-        error: 'Failed to process file',
+        error: `Backend processing failed: ${response.status}`,
+        details: response.statusText,
       })
     }
 
-    // 4. Update file_uploads with success and task_id - use original pattern
+    let responseBody
+    try {
+      responseBody = await response.json()
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError)
+      return res.status(500).json({
+        error: 'Failed to parse backend response',
+        details:
+          parseError instanceof Error ? parseError.message : String(parseError),
+      })
+    }
+
+    // 4. Update file_uploads with success and task_id
     await supabase
       .from('file_uploads')
       .update({
         contexts: {
-          status: 'processing',
-          beam_task_id: responseBody.task_id,
-          submitted_at: new Date().toISOString(),
+          status: 'completed',
+          chunks_created: responseBody.chunks_created || 0,
+          completed_at: new Date().toISOString(),
         },
         updated_at: new Date().toISOString(),
       })
       .eq('id', fileUploadId)
 
+    // ✅ Return success only after processing is complete
     res.status(200).json({
       success: true,
       fileUploadId,
-      message: 'File uploaded and processing started',
-      beam_task_id: responseBody.task_id,
+      message: 'File processed and ready for chat',
+      chunks_created: responseBody.chunks_created,
     })
   } catch (error) {
     // Fix: Avoid string interpolation with potentially unsafe content
