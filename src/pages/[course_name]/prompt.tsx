@@ -908,7 +908,6 @@ CRITICAL: The optimized prompt must:
                         {/* Prompt Engineering Guide */}
                         <Paper
                           className="w-full rounded-xl bg-[--dashboard-background-faded] px-4 sm:px-6 md:px-8"
-                          shadow="xs"
                           p="md"
                           sx={{
                             cursor: 'pointer',

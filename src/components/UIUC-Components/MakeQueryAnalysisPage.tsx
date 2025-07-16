@@ -473,7 +473,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                 {/* Main Stats Grid with Integrated Weekly Trends */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                   {/* Conversations Card */}
-                  <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] shadow-md transition-all duration-200">
+                  <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] transition-all duration-200">
                     <div className="mb-3 flex items-center justify-between">
                       <div>
                         <Text size="sm" weight={500} mb={1}>
@@ -558,7 +558,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                   </div>
 
                   {/* Users Card */}
-                  <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] shadow-md transition-all duration-200">
+                  <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] transition-all duration-200">
                     <div className="mb-3 flex items-center justify-between">
                       <div>
                         <Text size="sm" weight={500} mb={1}>
@@ -641,7 +641,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                   </div>
 
                   {/* Messages Card */}
-                  <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] shadow-md transition-all duration-200">
+                  <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] transition-all duration-200">
                     <div className="mb-3 flex items-center justify-between">
                       <div>
                         <Text size="sm" weight={500} mb={1}>
@@ -748,7 +748,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                     {/* Average Conversations per User */}
-                    <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] shadow-md transition-all duration-200">
+                    <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] transition-all duration-200">
                       <div className="mb-3 flex items-center justify-between">
                         <div>
                           <Text size="sm" weight={500} mb={1}>
@@ -782,7 +782,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     </div>
 
                     {/* Average Messages per User */}
-                    <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] shadow-md transition-all duration-200">
+                    <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] transition-all duration-200">
                       <div className="mb-3 flex items-center justify-between">
                         <div>
                           <Text size="sm" weight={500} mb={1}>
@@ -815,7 +815,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     </div>
 
                     {/* Average Messages per Conversation */}
-                    <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] shadow-md transition-all duration-200">
+                    <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] transition-all duration-200">
                       <div className="mb-3 flex items-center justify-between">
                         <div>
                           <Text size="sm" weight={500} mb={1}>
@@ -1121,10 +1121,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   )
 }
 
-import {
-  IconCheck,
-  IconCloudDownload,
-} from '@tabler/icons-react'
+import { IconCheck, IconCloudDownload } from '@tabler/icons-react'
 
 import { CannotEditCourse } from './CannotEditCourse'
 import { type CourseMetadata } from '~/types/courseMetadata'
@@ -1133,7 +1130,6 @@ import GlobalFooter from './GlobalFooter'
 import Navbar from './navbars/Navbar'
 import Link from 'next/link'
 import NomicDocumentMap from './NomicDocumentsMap'
-
 
 async function fetchCourseMetadata(course_name: string) {
   try {

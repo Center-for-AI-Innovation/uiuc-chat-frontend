@@ -43,16 +43,13 @@ export default function MITIngestForm({
     try {
       if (!url || !courseName || !localDir) return null
       console.log('calling downloadMITCourse')
-      const response = await axios.get(
-        `/api/UIUC-api/downloadMITCourse`,
-        {
-          params: {
-            url: url,
-            course_name: courseName,
-            local_dir: localDir,
-          },
+      const response = await axios.get(`/api/UIUC-api/downloadMITCourse`, {
+        params: {
+          url: url,
+          course_name: courseName,
+          local_dir: localDir,
         },
-      )
+      })
       return response.data
     } catch (error) {
       console.error('Error during MIT course download:', error)
@@ -109,7 +106,7 @@ export default function MITIngestForm({
       >
         <DialogTrigger asChild>
           <Card
-            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
+            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
             style={{ height: '100%' }}
           >
             <div className="mb-6 flex items-center justify-between">
@@ -131,7 +128,7 @@ export default function MITIngestForm({
               Import content from MIT OpenCourseWare, including lecture notes,
               assignments, and course materials.
             </Text>
-            <div className="mt-auto flex items-center text-sm text-[--dashboard-button]">
+            <div className="mt-auto flex items-center text-sm font-bold text-[--dashboard-button]">
               <span>Configure import</span>
               <IconArrowRight
                 size={16}

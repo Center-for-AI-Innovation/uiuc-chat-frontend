@@ -72,7 +72,7 @@ export default function CourseraIngestForm(): JSX.Element {
       >
         <DialogTrigger asChild>
           <Card
-            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
+            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
             style={{ height: '100%' }}
           >
             <div className="mb-6 flex items-center justify-between">
@@ -93,7 +93,7 @@ export default function CourseraIngestForm(): JSX.Element {
               Import content from Coursera courses, including lectures,
               assignments, and course materials.
             </Text>
-            <div className="mt-auto flex items-center text-sm text-[--dashboard-button]">
+            <div className="mt-auto flex items-center text-sm font-bold text-[--dashboard-button]">
               <span>Configure import</span>
               <IconArrowRight
                 size={16}

@@ -367,7 +367,6 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
               >
                 <Paper
                   className="w-full rounded-xl bg-[--dashboard-background-faded] px-4 sm:px-6 md:px-8"
-                  shadow="xs"
                   p="md"
                   sx={{
                     cursor: 'pointer',
