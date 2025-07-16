@@ -417,25 +417,28 @@ export function constructSearchQuery(messages: Message[]): string {
 
 export const handleContextSearch = async (
   message: Message,
-  course_name: string,
+  courseName: string,
   selectedConversation: Conversation,
   searchQuery: string,
-  enabledDocumentGroups: string[],
-): Promise<void> => {
-  try {
-    const searchResults = await fetchContexts(
-      course_name,
+  documentGroups: string[],
+): Promise<ContextWithMetadata[]> => {
+  if (courseName !== 'gpt4') {
+    const token_limit = selectedConversation.model.tokenLimit
+    const useMQRetrieval = false
+
+    const fetchContextsFunc = useMQRetrieval ? fetchMQRContexts : fetchContexts
+    const curr_contexts = await fetchContextsFunc(
+      courseName,
       searchQuery,
-      1047576,
-      enabledDocumentGroups,
+      token_limit,
+      documentGroups,
       selectedConversation.id,
     )
 
-    message.contexts = searchResults || []
-  } catch (error) {
-    console.error('Error in context search:', error)
-    message.contexts = []
+    message.contexts = curr_contexts as ContextWithMetadata[]
+    return curr_contexts as ContextWithMetadata[]
   }
+  return []
 }
 
 /**
