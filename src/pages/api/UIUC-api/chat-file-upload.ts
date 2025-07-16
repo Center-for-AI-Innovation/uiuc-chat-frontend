@@ -24,7 +24,8 @@ const handler = async (
       })
     }
 
-    const { conversationId, courseName, s3Key, fileName, fileType } = req.body
+    const { conversationId, courseName, s3Key, fileName, fileType, model } =
+      req.body
 
     // Validate required parameters
     if (!conversationId || !courseName || !s3Key || !fileName) {
@@ -55,7 +56,7 @@ const handler = async (
           name: 'File Upload Conversation', // ✅ Required field added
           user_email: 'placeholder@example.com',
           project_name: courseName, // ✅ Correct column name
-          model: 'gpt-4o-mini',
+          model: model || 'gpt-4o-mini',
           prompt: 'You are a helpful assistant.',
           temperature: 0.7,
           created_at: new Date().toISOString(),

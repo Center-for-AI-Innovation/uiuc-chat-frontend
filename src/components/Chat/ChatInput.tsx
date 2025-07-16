@@ -761,6 +761,7 @@ export const ChatInput = ({
             s3Key: s3Key,
             fileName: file.name,
             fileType: file.type,
+            model: conversation.model?.id,
           }),
         })
 
@@ -789,82 +790,6 @@ export const ChatInput = ({
         })
       }
     }
-  }
-
-  async function uploadFileForChat(
-    file: File,
-    conversationId: string,
-  ): Promise<string | undefined> {
-    try {
-      // 1. Upload to S3 (existing flow)
-      const s3Key = await uploadToS3(file, courseName)
-      if (!s3Key) {
-        throw new Error('S3 upload failed')
-      }
-
-      // 2. Create chat file upload record
-      const response = await fetch('/api/UIUC-api/chat-file-upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          conversationId,
-          courseName,
-          s3Key,
-          fileName: file.name,
-          fileType: file.type,
-        }),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Chat upload failed')
-      }
-
-      const result = await response.json()
-
-      return s3Key
-    } catch (error) {
-      console.error('Chat file upload error:', error)
-      throw error
-    }
-  }
-
-  async function processChatFiles(
-    fileUploads: FileUploadStatus[],
-    conversationId: string,
-  ) {
-    const uploadPromises = fileUploads
-      .filter((fu) => fu.status === 'uploaded' && fu.url)
-      .map(async (fu) => {
-        try {
-          // Create chat file upload record
-          const response = await fetch('/api/UIUC-api/chat-file-upload', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              conversationId,
-              courseName,
-              s3Key: fu.url,
-              fileName: fu.file.name,
-              fileType: fu.file.type,
-            }),
-          })
-
-          if (!response.ok) {
-            const errorData = await response.json()
-            throw new Error(errorData.error || 'Chat upload failed')
-          }
-
-          const result = await response.json()
-          console.log('Chat file upload successful:', result)
-          return result
-        } catch (error) {
-          console.error('Chat file upload error:', error)
-          throw error
-        }
-      })
-
-    return Promise.all(uploadPromises)
   }
 
   async function processAndUploadImage(
