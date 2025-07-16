@@ -1095,7 +1095,7 @@ export function ProjectFilesTable({
                           {overflowStates[index] && (
                             <Text
                               size="sm"
-                              color="grape"
+                              color="var(--link)"
                               onClick={() => openModel(true, error)}
                               className="rounded-md hover:underline"
                               style={{
