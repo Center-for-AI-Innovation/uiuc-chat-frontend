@@ -110,7 +110,7 @@ const Folder = ({
               onChange={(e) => setRenameValue(e.target.value)}
               onKeyDown={handleEnterDown}
               autoFocus
-              placeholder={t('rename_folder_placeholder')}
+              placeholder={t('rename_folder_placeholder') || ''}
             />
           </div>
         ) : (
@@ -149,7 +149,7 @@ const Folder = ({
                 setIsDeleting(false)
                 setIsRenaming(false)
               }}
-              tooltip={isRenaming ? t('confirm') : t('delete')}
+              tooltip={(isRenaming ? t('confirm') : t('delete')) || ''}
             >
               <IconCheck
                 size={18}
@@ -162,7 +162,7 @@ const Folder = ({
                 setIsDeleting(false)
                 setIsRenaming(false)
               }}
-              tooltip={t('cancel')}
+              tooltip={t('cancel') || ''}
             >
               <IconX
                 size={18}
@@ -180,7 +180,7 @@ const Folder = ({
                 setIsRenaming(true)
                 setRenameValue(currentFolder.name)
               }}
-              tooltip={t('rename')}
+              tooltip={t('rename') || ''}
             >
               <IconPencil size={18} />
             </SidebarActionButton>
@@ -189,7 +189,7 @@ const Folder = ({
                 e.stopPropagation()
                 setIsDeleting(true)
               }}
-              tooltip={t('delete')}
+              tooltip={t('delete') || ''}
             >
               <IconTrash size={18} />
             </SidebarActionButton>

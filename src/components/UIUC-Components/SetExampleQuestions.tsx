@@ -77,7 +77,7 @@ export default function SetExampleQuestions({
             <TextInput
               key={i}
               // withAsterisk
-              label={t('example_questions.example_question_label')}
+              label={t('example_questions.example_question_label') || ''}
               name="question"
               placeholder="Contrast Shakespeare against Kierkegaard..."
               styles={{

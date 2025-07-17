@@ -242,7 +242,7 @@ const Sidebar = <T,>({
         </Tooltip>
 
         <Search
-          placeholder={t('search')}
+          placeholder={t('search') || ''}
           searchTerm={searchTerm}
           onSearch={handleSearchTerm}
         />

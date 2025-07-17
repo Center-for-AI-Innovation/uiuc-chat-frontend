@@ -1422,7 +1422,7 @@ CRITICAL: The optimized prompt must:
                                 autosize
                                 minRows={3}
                                 maxRows={20}
-                                placeholder={t('enter_system_prompt')}
+                                placeholder={t('enter_system_prompt') || ''}
                                 className="px-1 pt-3 md:px-0"
                                 value={baseSystemPrompt}
                                 onChange={(e) => {
@@ -1743,8 +1743,8 @@ CRITICAL: The optimized prompt must:
                           </Flex>
 
                           <CustomSwitch
-                            label={t('smart_document_search')}
-                            tooltip={t('smart_document_search_tooltip')}
+                            label={t('smart_document_search') || ''}
+                            tooltip={t('smart_document_search_tooltip') || ''}
                             checked={vectorSearchRewrite}
                             onChange={(value: boolean) => {
                               handleSettingChange({
@@ -1791,8 +1791,8 @@ CRITICAL: The optimized prompt must:
                           <Flex direction="column" gap="md">
                             <div className="flex flex-col gap-1">
                               <CustomSwitch
-                                label={t('guided_learning')}
-                                tooltip={t('guided_learning_tooltip')}
+                                label={t('guided_learning') || ''}
+                                tooltip={t('guided_learning_tooltip') || ''}
                                 checked={guidedLearning}
                                 onChange={(value: boolean) =>
                                   handleCheckboxChange({
@@ -1802,8 +1802,8 @@ CRITICAL: The optimized prompt must:
                               />
 
                               <CustomSwitch
-                                label={t('document_based_references_only')}
-                                tooltip={t('document_based_references_only_tooltip')}
+                                label={t('document_based_references_only') || ''}
+                                tooltip={t('document_based_references_only_tooltip') || ''}
                                 checked={documentsOnly}
                                 onChange={(value: boolean) =>
                                   handleCheckboxChange({ documentsOnly: value })
@@ -1811,8 +1811,8 @@ CRITICAL: The optimized prompt must:
                               />
 
                               <CustomSwitch
-                                label={t('bypass_internal_prompting')}
-                                tooltip={t('bypass_internal_prompting_tooltip')}
+                                label={t('bypass_internal_prompting') || ''}
+                                tooltip={t('bypass_internal_prompting_tooltip') || ''}
                                 checked={systemPromptOnly}
                                 onChange={(value: boolean) =>
                                   handleCheckboxChange({
@@ -1830,8 +1830,8 @@ CRITICAL: The optimized prompt must:
                                   className="mt-[-4px] pl-[82px]"
                                 >
                                   <CustomCopyButton
-                                    label={t('copy_internal_prompt')}
-                                    tooltip={t('copy_internal_prompt_tooltip')}
+                                    label={t('copy_internal_prompt') || ''}
+                                    tooltip={t('copy_internal_prompt_tooltip') || ''}
                                     onClick={handleCopyDefaultPrompt}
                                   />
                                 </Flex>
@@ -2171,8 +2171,8 @@ export const showToastOnPromptUpdate = (
 
 export default CourseMain
 
-export const getServerSideProps = async ({ locale }) => ({
+export const getServerSideProps = async ({ locale }: GetServerSidePropsContext) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common'])),
+    ...(await serverSideTranslations(locale ?? 'en', ['common'])),
   },
 });

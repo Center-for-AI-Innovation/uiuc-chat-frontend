@@ -121,7 +121,7 @@ export function DocGroupsTable({ course_name }: { course_name: string }) {
       <GlobalStyle />
       <div className="w-full px-0 py-4 md:px-2">
         <TextInput
-          placeholder={t('documents.search_by_document_group')}
+          placeholder={t('documents.search_by_document_group') || ''}
           mb="sm"
           radius="md"
           icon={<IconSearch />}
@@ -169,7 +169,7 @@ export function DocGroupsTable({ course_name }: { course_name: string }) {
                     arrowSize={8}
                     width={220}
                     withArrow
-                    label={t('documents.enabled_tooltip')}
+                    label={t('documents.enabled_tooltip') || ''}
                   >
                     <span className="flex items-center justify-center whitespace-nowrap">
                       <span className="hidden sm:inline">{t('documents.enabled')}</span>

@@ -105,7 +105,7 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
             : 'text-[--dashboard-foreground]'
         }`}
       >
-        {t(label)}
+        {t(label) || ''}
         <Tooltip
           label={
             <Text size="sm" color="currentColor">

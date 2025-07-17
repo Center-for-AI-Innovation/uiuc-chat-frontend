@@ -29,13 +29,13 @@ const ConversationsPerDayOfWeekChart: React.FC<ChartProps> = ({
 }) => {
   const { t } = useTranslation('common')
   const daysOfWeek = [
-    t('analysis.sunday', 'Sunday'),
-    t('analysis.monday', 'Monday'),
-    t('analysis.tuesday', 'Tuesday'),
-    t('analysis.wednesday', 'Wednesday'),
-    t('analysis.thursday', 'Thursday'),
-    t('analysis.friday', 'Friday'),
-    t('analysis.saturday', 'Saturday'),
+    t('analysis.sunday', 'Sunday') || 'Sunday',
+    t('analysis.monday', 'Monday') || 'Monday',
+    t('analysis.tuesday', 'Tuesday') || 'Tuesday',
+    t('analysis.wednesday', 'Wednesday') || 'Wednesday',
+    t('analysis.thursday', 'Thursday') || 'Thursday',
+    t('analysis.friday', 'Friday') || 'Friday',
+    t('analysis.saturday', 'Saturday') || 'Saturday',
   ]
 
   const getYAxisLabelPadding = (data: { count: number }[]) => {
@@ -60,9 +60,9 @@ const ConversationsPerDayOfWeekChart: React.FC<ChartProps> = ({
     return <Text>{t('analysis.noDataAvailable', 'No data available')}</Text>
   }
 
-  const chartData = daysOfWeek.map((day, idx) => ({
+  const chartData = daysOfWeek.map((day) => ({
     day,
-    count: data[daysOfWeek[idx]] || 0,
+    count: data[day] || 0,
   }))
 
   return (
@@ -110,7 +110,10 @@ const ConversationsPerDayOfWeekChart: React.FC<ChartProps> = ({
               color: '#fff',
               fontFamily: montserrat_paragraph.style.fontFamily,
             }}
-            formatter={(value) => [t('analysis.conversationsCount', { count: value, defaultValue: 'Conversations: {{count}}' })]}
+            formatter={(value) => {
+              const num = typeof value === 'number' ? value : Number(value);
+              return String(t('analysis.conversationsCount', { count: num, defaultValue: `Conversations: ${num}` }));
+            }}
             labelFormatter={(label) => t('analysis.dayOfWeekLabel', { day: label, defaultValue: 'Day of Week: {{day}}' })}
           />
           <Bar

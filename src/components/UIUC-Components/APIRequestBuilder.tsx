@@ -229,7 +229,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
       <div className="space-y-6">
         <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
           <Select
-            placeholder={t('select_language')}
+            placeholder={t('select_language') || ''}
             data={languageOptions}
             value={selectedLanguage}
             radius={'md'}
@@ -282,7 +282,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
           />
           <div className="flex w-full items-center gap-2">
             <Select
-              placeholder={t('select_model')}
+              placeholder={t('select_model') || ''}
               data={modelOptions}
               value={selectedModel}
               onChange={(value) => setSelectedModel(value || '')}
@@ -353,7 +353,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
             {t('system_prompt')}
           </Title>
           <Textarea
-            placeholder={t('system_prompt')}
+            placeholder={t('system_prompt') || ''}
             value={systemPrompt}
             onChange={(e) => setSystemPrompt(e.currentTarget.value)}
             minRows={2}
@@ -381,7 +381,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
             {t('user_query')}
           </Title>
           <Textarea
-            placeholder={t('user_query')}
+            placeholder={t('user_query') || ''}
             value={userQuery}
             onChange={(e) => setUserQuery(e.currentTarget.value)}
             minRows={2}

@@ -481,7 +481,7 @@ export default function WebsiteIngestForm({
                         <TextInput
                           name="maximumUrls"
                           radius="md"
-                          placeholder={t('default_50')}
+                          placeholder={t('default_50') || ''}
                           value={maxUrls}
                           onChange={(e) => {
                             handleInputChange(e, 'maxUrls')

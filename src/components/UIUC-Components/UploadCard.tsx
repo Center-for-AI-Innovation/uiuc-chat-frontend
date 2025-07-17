@@ -281,7 +281,7 @@ export const UploadCard = memo(function UploadCard({
                 {t('project_description')}
               </Title>
               <Textarea
-                placeholder={t('describe_project_placeholder')}
+                placeholder={t('describe_project_placeholder') || ''}
                 radius={'sm'}
                 value={projectDescription}
                 onChange={(e) => setProjectDescription(e.target.value)}
@@ -345,7 +345,7 @@ export const UploadCard = memo(function UploadCard({
                   autosize
                   minRows={2}
                   maxRows={4}
-                  placeholder={t('greeting_placeholder')}
+                  placeholder={t('greeting_placeholder') || ''}
                   className={`w-full ${montserrat_paragraph.variable} font-montserratParagraph`}
                   styles={{
                     input: {

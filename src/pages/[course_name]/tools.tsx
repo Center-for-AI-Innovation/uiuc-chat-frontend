@@ -18,15 +18,16 @@ import { useAuth } from 'react-oidc-context'
 import { ProtectedRoute } from '~/components/ProtectedRoute'
 import { useTranslation } from 'next-i18next'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { GetServerSidePropsContext } from 'next'
 
 const montserrat = Montserrat({
   weight: '700',
   subsets: ['latin'],
 })
 
-export const getServerSideProps = async ({ locale }) => ({
+export const getServerSideProps = async ({ locale }: GetServerSidePropsContext) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common'])),
+    ...(await serverSideTranslations(locale ?? 'en', ['common'])),
   },
 });
 

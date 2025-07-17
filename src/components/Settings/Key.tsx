@@ -45,7 +45,7 @@ export const Key: FC<Props> = ({ apiKey, onApiKeyChange }) => {
         value={newKey}
         onChange={(e) => setNewKey(e.target.value)}
         onKeyDown={handleEnterDown}
-        placeholder={t('api_key')}
+        placeholder={t('api_key') || ''}
       />
 
       <div className="flex w-[40px]">

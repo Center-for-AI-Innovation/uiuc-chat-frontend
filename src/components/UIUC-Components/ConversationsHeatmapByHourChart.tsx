@@ -61,8 +61,12 @@ const ConversationsHeatmapByHourChart: React.FC<ChartProps> = ({
     return <Text>{t('analysis.noDataAvailable', 'No data available')}</Text>
   }
 
-  const formattedData = daysOfWeek.map((day, idx) =>
-    hours.map((hour, hIdx) => data[daysOfWeek[idx]]?.[hIdx] || 0),
+  // Filter out any undefined or falsy values from daysOfWeek and hours
+  const filteredDaysOfWeek = daysOfWeek.filter(Boolean)
+  const filteredHours = hours.filter(Boolean)
+
+  const formattedData = filteredDaysOfWeek.map((day) =>
+    filteredHours.map((hour) => data[day]?.[hour] || 0),
   )
 
   const numColumns = hours.length
@@ -91,8 +95,8 @@ const ConversationsHeatmapByHourChart: React.FC<ChartProps> = ({
       <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
         <HeatMapGrid
           data={formattedData}
-          xLabels={hours}
-          yLabels={daysOfWeek}
+          xLabels={hours.map(String)}
+          yLabels={daysOfWeek.map(String)}
           cellRender={(x, y, value) => `${value}`}
           xLabelsStyle={() => ({
             fontFamily: montserrat_paragraph.style.fontFamily,

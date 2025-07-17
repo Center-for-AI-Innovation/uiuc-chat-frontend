@@ -597,7 +597,7 @@ export const WebScrape = ({
                 arrowSize={8}
                 withArrow
                 position="bottom-start"
-                label={t('max_urls_tooltip')}
+                label={t('max_urls_tooltip') || ''}
               >
                 <div>
                   <Text
@@ -610,7 +610,7 @@ export const WebScrape = ({
                     styles={{ input: { backgroundColor: '#1A1B1E' } }}
                     name="maximumUrls"
                     radius="md"
-                    placeholder={t('default_50')}
+                    placeholder={t('default_50') || ''}
                     value={maxUrls}
                     onChange={(e) => {
                       handleInputChange(e, 'maxUrls')

@@ -66,7 +66,7 @@ export default function SambaNovaProviderInput({
                 labelPosition="left"
                 onLabel={t('on')}
                 offLabel={t('off')}
-                aria-label={t('enable_sambanova_provider')}
+                aria-label={t('enable_sambanova_provider') || ''}
                 checked={field.state.value}
                 onChange={(event) => {
                   event.preventDefault()
@@ -131,7 +131,7 @@ export default function SambaNovaProviderInput({
                     {(apiKeyField: any) => (
                       <APIKeyInput
                         field={apiKeyField}
-                        placeholder={t('sambanova_api_key')}
+                        placeholder={t('sambanova_api_key') || ''}
                       />
                     )}
                   </form.Field>

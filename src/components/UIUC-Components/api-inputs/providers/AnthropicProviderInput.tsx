@@ -133,7 +133,7 @@ export default function AnthropicProviderInput({
                     {(field: any) => (
                       <APIKeyInput
                         field={field}
-                        placeholder={t('anthropic_api_key')}
+                        placeholder={t('anthropic_api_key') || ''}
                         // onValidate={validateApiKey}
                       />
                     )}

@@ -63,7 +63,7 @@ export default function NCSAHostedLLmsProviderInput({
                 labelPosition="left"
                 onLabel={t('on')}
                 offLabel={t('off')}
-                aria-label={t('enable_ncsa_hosted_llms_provider')}
+                aria-label={t('enable_ncsa_hosted_llms_provider') || ''}
                 checked={field.state.value}
                 onChange={(event) => {
                   field.handleChange(event.currentTarget.checked)

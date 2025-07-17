@@ -63,7 +63,7 @@ export default function WebLLMProviderInput({
                 labelPosition="left"
                 onLabel={t('on')}
                 offLabel={t('off')}
-                aria-label={t('enable_webllm_provider')}
+                aria-label={t('enable_webllm_provider') || ''}
                 checked={field.state.value}
                 onChange={(event) => {
                   field.handleChange(event.currentTarget.checked)
