@@ -64,6 +64,7 @@ function DocumentsCard({
   const [exportModalOpened, setExportModalOpened] = useState(false)
   const router = useRouter()
   const { classes, theme } = useStyles()
+  const { t } = useTranslation('common')
 
   // Get responsive card width classes based on sidebar state
   const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed || false)
@@ -121,7 +122,7 @@ function DocumentsCard({
               order={3}
               className={`${montserrat_heading.variable} font-montserratHeading text-lg text-[--foreground] sm:text-2xl`}
             >
-              Project Files
+              {t('dashboard.project_files')}
             </Title>
 
             <Button
@@ -136,7 +137,7 @@ function DocumentsCard({
               `}
             >
               <span className="hidden sm:inline">
-                Export All Documents & Embeddings
+                {t('dashboard.export_all_documents')}
               </span>
               <span className="inline sm:hidden">Export All</span>
             </Button>

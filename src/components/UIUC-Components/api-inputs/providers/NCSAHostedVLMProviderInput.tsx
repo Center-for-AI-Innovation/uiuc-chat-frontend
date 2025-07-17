@@ -7,6 +7,7 @@ import {
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'next-i18next'
 
 export default function NCSAHostedVLMProviderInput({
   provider,
@@ -17,6 +18,7 @@ export default function NCSAHostedVLMProviderInput({
   form: any
   isLoading: boolean
 }) {
+  const { t } = useTranslation('common')
   if (isLoading) {
     return <Skeleton height={200} width={330} radius={'lg'} />
   }
@@ -48,7 +50,7 @@ export default function NCSAHostedVLMProviderInput({
                   mb="xs"
                   style={{ paddingRight: '8px' }}
                 >
-                  NCSA Hosted VLMs
+                  {t('ncsa_hosted_vlms_title')}
                 </Text>
                 <IconExternalLink size={16} className="mb-3" />
               </div>
@@ -59,9 +61,9 @@ export default function NCSAHostedVLMProviderInput({
               <Switch
                 size="md"
                 labelPosition="left"
-                onLabel="ON"
-                offLabel="OFF"
-                aria-label="Enable NCSA Hosted VLMs provider"
+                onLabel={t('on')}
+                offLabel={t('off')}
+                aria-label={t('enable_ncsa_hosted_vlms_provider')}
                 checked={field.state.value}
                 onChange={(event) => {
                   field.handleChange(event.currentTarget.checked)
@@ -94,8 +96,7 @@ export default function NCSAHostedVLMProviderInput({
           </form.Field>
         </div>
         <Text size="sm" color="dimmed" mb="md">
-          Vision Language Models hosted by NCSA. These models can understand and
-          analyze images in addition to text. Free for UIUC students.
+          {t('ncsa_hosted_vlms_helper_text')}
         </Text>
         {provider?.error &&
           (form.state.values?.providers?.NCSAHostedVLM?.enabled ||

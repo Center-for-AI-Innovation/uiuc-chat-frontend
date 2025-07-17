@@ -105,6 +105,7 @@ export function ProjectFilesTable({
   const [showDeleteButton, setShowDeleteButton] = useState(false)
   const [selectedCount, setSelectedCount] = useState(0)
   const router = useRouter()
+  const { t } = useTranslation('common');
 
   const getCurrentPageName = () => {
     return router.asPath.slice(1).split('/')[0] as string
@@ -523,7 +524,7 @@ export function ProjectFilesTable({
                   : 'bg-[--dashboard-background] text-[--foreground] hover:bg-[--dashboard-background-faded] hover:text-[--foreground]'
               } ${montserrat_heading.variable} font-montserratHeading`}
             >
-              Success
+              {t('success')}
             </button>
 
             <Indicator
@@ -542,7 +543,7 @@ export function ProjectFilesTable({
                     : 'bg-[--dashboard-background] text-[--foreground] hover:bg-[--dashboard-background-faded] hover:text-[--foreground]'
                 } ${montserrat_heading.variable} font-montserratHeading`}
               >
-                Failed
+                {t('failed')}
               </button>
             </Indicator>
           </div>
@@ -552,7 +553,7 @@ export function ProjectFilesTable({
               <Paper className="w-full bg-transparent sm:w-auto">
                 <div className="relative mb-2 flex w-full flex-col items-start gap-4 sm:flex-row sm:items-center">
                   <Tooltip
-                    label="All selected documents will be added to the group"
+                    label={t('all_selected_docs_added')}
                     position="top"
                     withArrow
                     style={{
@@ -566,9 +567,9 @@ export function ProjectFilesTable({
                       }}
                       className={`mb-2 w-full bg-[--dashboard-button] px-4 py-2 text-xs transition-colors duration-300 hover:bg-[--dashboard-button-hover] sm:mb-0 sm:w-auto sm:px-6 sm:py-3 ${montserrat_paragraph.variable} border-0 font-montserratParagraph focus:outline-none focus:ring-0`}
                     >
-                      <span className="block sm:hidden">Add to Groups</span>
+                      <span className="block sm:hidden">{t('add_to_groups')}</span>
                       <span className="hidden sm:block">
-                        Add Document to Groups
+                        {t('add_document_to_groups')}
                       </span>
                     </Button>
                   </Tooltip>
@@ -894,7 +895,7 @@ export function ProjectFilesTable({
             {
               titleStyle: dataTableTitleStyles,
               accessor: 'readable_filename',
-              title: 'File Name',
+              title: t('dashboard.file_name'),
               // render: ({ readable_filename }) =>
               //   readable_filename ? `${readable_filename}` : '',
               render: ({ readable_filename }) =>
@@ -910,7 +911,7 @@ export function ProjectFilesTable({
               sortable: true,
               filter: (
                 <TextInput
-                  label="File Name"
+                  label={t('dashboard.file_name')}
                   description="Show uploaded files that include the specified text"
                   placeholder="Search files..."
                   rightSection={
@@ -938,7 +939,7 @@ export function ProjectFilesTable({
             {
               titleStyle: dataTableTitleStyles,
               accessor: 'url',
-              title: 'URL',
+              title: t('dashboard.url'),
               render: ({ url }) =>
                 url ? (
                   <div style={{ wordWrap: 'break-word', maxWidth: '14vw' }}>
@@ -951,7 +952,7 @@ export function ProjectFilesTable({
               width: isBetweenSmallAndMediumScreen ? '12vw' : '14vw',
               filter: (
                 <TextInput
-                  label="URL"
+                  label={t('dashboard.url')}
                   description="Show all urls that include the specified text"
                   placeholder="Search urls..."
                   rightSection={
@@ -979,7 +980,7 @@ export function ProjectFilesTable({
             {
               titleStyle: dataTableTitleStyles,
               accessor: 'base_url',
-              title: 'The Starting URL of Web Scraping',
+              title: t('dashboard.starting_url_web_scraping'),
               render: ({ base_url }) =>
                 base_url ? (
                   <div style={{ wordWrap: 'break-word' }}>{base_url}</div>
@@ -991,7 +992,7 @@ export function ProjectFilesTable({
               width: isBetweenSmallAndMediumScreen ? '11vw' : '14vw',
               filter: (
                 <TextInput
-                  label="The Starting URL of Web Scraping"
+                  label={t('dashboard.starting_url_web_scraping')}
                   description="Show all urls that include the specified text"
                   placeholder="Search urls..."
                   rightSection={
@@ -1019,7 +1020,7 @@ export function ProjectFilesTable({
             {
               titleStyle: dataTableTitleStyles,
               accessor: 'created_at',
-              title: 'Date created',
+              title: t('dashboard.date_created'),
               render: ({ created_at }) =>
                 created_at ? (
                   <div style={{ wordWrap: 'break-word' }}>
@@ -1195,7 +1196,7 @@ export function ProjectFilesTable({
                   {
                     titleStyle: dataTableTitleStyles,
                     accessor: 'actions',
-                    title: <Box mr={6}>Actions</Box>,
+                    title: <Box mr={6}>{t('dashboard.actions')}</Box>,
                     width: 75,
                     render: (materials: any, index: number) => {
                       const openModal = async (action: string) => {

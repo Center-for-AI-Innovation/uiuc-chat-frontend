@@ -9,6 +9,7 @@ import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import Link from 'next/link'
 import React from 'react'
 import { useMediaQuery } from '@mantine/hooks'
+import { useTranslation } from 'next-i18next'
 import {
   IconChevronUp,
   IconChevronDown,
@@ -90,6 +91,7 @@ const ListProjectTable: React.FC = () => {
   const [rawData, setRawData] = useState<{ [key: string]: CourseMetadata }[]>(
     [],
   )
+  const { t } = useTranslation('common')
 
   const handleSort = (column: SortableColumn) => {
     if (sortColumn === column) {
@@ -196,7 +198,7 @@ const ListProjectTable: React.FC = () => {
             style={{ cursor: 'pointer', color: 'var(--illinois-blue)' }}
           >
             <td>{courseName}</td>
-            <td>{courseMetadata.is_private ? 'Private' : 'Public'}</td>
+            <td>{courseMetadata.is_private ? t('homepage.private') : t('homepage.public')}</td>
             <td>{courseMetadata.course_owner}</td>
             <td>{filteredAdmins.join(', ')}</td>
           </StyledRow>
@@ -278,10 +280,10 @@ const ListProjectTable: React.FC = () => {
                   <thead>
                     <tr>
                       {[
-                        { label: 'Chatbot Name', key: 'name' },
-                        { label: 'Privacy', key: 'privacy' },
-                        { label: 'Owner', key: 'owner' },
-                        { label: 'Admins', key: 'admins' },
+                        { label: t('homepage.chatbot_name'), key: 'name' },
+                        { label: t('homepage.privacy'), key: 'privacy' },
+                        { label: t('homepage.owner'), key: 'owner' },
+                        { label: t('homepage.admins'), key: 'admins' },
                       ].map(({ label, key }) => (
                         <th
                           key={key}
@@ -322,15 +324,15 @@ const ListProjectTable: React.FC = () => {
                 color: 'var(--illinois-blue)',
               }}
             >
-              You haven&apos;t created any projects yet. Let&apos;s{' '}
+              {t('homepage.no_projects_yet')}{' '}
               <Link
                 className="underline"
                 href="/new"
                 style={{ color: 'var(--illinois-orange)' }}
               >
-                go make one here
+                {t('homepage.go_make_one_here')}
               </Link>
-              , don&apos;t worry it&apos;s easy.
+              {t('homepage.dont_worry_easy')}
             </Text>
           )}
         </div>

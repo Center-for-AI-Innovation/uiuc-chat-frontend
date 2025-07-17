@@ -80,13 +80,13 @@ export default function WebsiteIngestForm({
 
       let errorMessage = ''
       if (!value) {
-        errorMessage = 'Please provide an input for Max URLs'
+        errorMessage = t('website_ingest_input_required')
       } else if (!/^\d+$/.test(value)) {
-        errorMessage = 'Max URLs should be a valid number'
+        errorMessage = t('website_ingest_number_required')
       } else {
         const numValue = parseInt(value)
         if (numValue < 1 || numValue > 500) {
-          errorMessage = 'Max URLs should be between 1 and 500'
+          errorMessage = t('website_ingest_range_error')
         }
       }
 
@@ -122,7 +122,7 @@ export default function WebsiteIngestForm({
     setOpen(false)
 
     if (inputErrors.maxUrls.error) {
-      alert('Invalid max URLs input (1 to 500)')
+      alert(t(inputErrors.maxUrls.message))
       return
     }
 
@@ -153,7 +153,7 @@ export default function WebsiteIngestForm({
         // Remove the timeout since we're handling errors properly now
       }
     } else {
-      alert('Invalid URL (please include https://)')
+      alert(t('website_ingest_invalid_url_error'))
     }
 
     await new Promise((resolve) => setTimeout(resolve, 8000))
@@ -326,7 +326,7 @@ export default function WebsiteIngestForm({
         autoClose: 12000,
         title: (
           <Text size={'lg'} className={`${montserrat_med.className}`}>
-            {'Error during web scraping. Please try again.'}
+            {t('website_ingest_scraping_error')}
           </Text>
         ),
         message: (
@@ -350,6 +350,8 @@ export default function WebsiteIngestForm({
       // throw error
     }
   }
+
+  const { t } = useTranslation('common');
 
   return (
     <motion.div layout>
@@ -473,13 +475,13 @@ export default function WebsiteIngestForm({
                           style={{ fontSize: '16px' }}
                           className={`${montserrat_heading.variable} font-montserratHeading`}
                         >
-                          Max URLs (1 to 500)
+                          {t('max_urls_label')}
                         </Text>
 
                         <TextInput
                           name="maximumUrls"
                           radius="md"
-                          placeholder="Default 50"
+                          placeholder={t('default_50')}
                           value={maxUrls}
                           onChange={(e) => {
                             handleInputChange(e, 'maxUrls')
@@ -512,12 +514,12 @@ export default function WebsiteIngestForm({
                   </div>
                   {inputErrors.maxUrls.error && (
                     <p style={{ color: 'red' }}>
-                      {inputErrors.maxUrls.message}
+                      {t(inputErrors.maxUrls.message)}
                     </p>
                   )}
                   {inputErrors.maxDepth.error && (
                     <p style={{ color: 'red' }}>
-                      {inputErrors.maxDepth.message}
+                      {t(inputErrors.maxDepth.message)}
                     </p>
                   )}
 
@@ -525,25 +527,18 @@ export default function WebsiteIngestForm({
                     style={{ fontSize: '16px' }}
                     className={`${montserrat_heading.variable} mt-4 font-montserratHeading`}
                   >
-                    Limit web crawl
+                    {t('limit_web_crawl')}
                   </Text>
                   <div className="mt-2 pl-3">
                     <List className="text-[--modal-text]">
                       <List.Item>
-                        <strong>Equal and Below:</strong> Only scrape content
-                        that starts will the given URL. E.g. nasa.gov/blogs will
-                        scrape all blogs like nasa.gov/blogs/new-rocket but
-                        never go to nasa.gov/events.
+                        <strong>{t('equal_and_below')}:</strong> {t('equal_and_below_desc')}
                       </List.Item>
                       <List.Item>
-                        <strong>Same subdomain:</strong> Crawl the entire
-                        subdomain. E.g. docs.nasa.gov will grab that entire
-                        subdomain, but not nasa.gov or api.nasa.gov.
+                        <strong>{t('same_subdomain')}:</strong> {t('same_subdomain_desc')}
                       </List.Item>
                       <List.Item>
-                        <strong>Entire domain:</strong> Crawl as much of this
-                        entire website as possible. E.g. nasa.gov also includes
-                        docs.nasa.gov
+                        <strong>{t('entire_domain')}:</strong> {t('entire_domain_desc')}
                       </List.Item>
                       <List.Item>
                         <span>
@@ -557,7 +552,7 @@ export default function WebsiteIngestForm({
                               target="_blank"
                               rel="noopener noreferrer"
                             >
-                              read the docs
+                              {t('read_the_docs')}
                             </a>
                             .
                           </Text>
@@ -600,7 +595,7 @@ export default function WebsiteIngestForm({
                             <IconSitemap
                               style={{ width: rem(16), height: rem(16) }}
                             />
-                            <span>Equal and Below</span>
+                            <span>{t('equal_and_below')}</span>
                           </Center>
                         ),
                       },
@@ -611,7 +606,7 @@ export default function WebsiteIngestForm({
                             <IconSubtask
                               style={{ width: rem(16), height: rem(16) }}
                             />
-                            <span>Subdomain</span>
+                            <span>{t('same_subdomain')}</span>
                           </Center>
                         ),
                       },
@@ -622,7 +617,7 @@ export default function WebsiteIngestForm({
                             <IconHome
                               style={{ width: rem(16), height: rem(16) }}
                             />
-                            <span>Entire domain</span>
+                            <span>{t('entire_domain')}</span>
                           </Center>
                         ),
                       },
@@ -633,7 +628,7 @@ export default function WebsiteIngestForm({
                             <IconWorld
                               style={{ width: rem(16), height: rem(16) }}
                             />
-                            <span>All</span>
+                            <span>{t('all')}</span>
                           </Center>
                         ),
                       },
@@ -649,7 +644,7 @@ export default function WebsiteIngestForm({
               disabled={!isUrlValid}
               className="h-11 w-full rounded-xl bg-[--dashboard-button] text-[--dashboard-button-foreground] transition-colors hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--background-dark]"
             >
-              Ingest the Website
+              {t('ingest_the_website')}
             </Button>
           </div>
         </DialogContent>

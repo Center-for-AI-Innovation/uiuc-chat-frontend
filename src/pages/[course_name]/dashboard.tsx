@@ -16,6 +16,13 @@ import { type CourseMetadata } from '~/types/courseMetadata'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 import { initiateSignIn } from '~/utils/authHelpers'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+
+export const getServerSideProps = async ({ locale }) => ({
+  props: {
+    ...(await serverSideTranslations(locale, ['common'])),
+  },
+});
 
 const CourseMain: NextPage = () => {
   const router = useRouter()

@@ -7,6 +7,7 @@ import {
   type WebLLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'next-i18next'
 
 export default function WebLLMProviderInput({
   provider,
@@ -17,6 +18,7 @@ export default function WebLLMProviderInput({
   form: any
   isLoading: boolean
 }) {
+  const { t } = useTranslation('common')
   if (isLoading) {
     return <Skeleton height={200} width={330} radius={'lg'} />
   }
@@ -48,7 +50,7 @@ export default function WebLLMProviderInput({
                   mb="xs"
                   style={{ paddingRight: '8px' }}
                 >
-                  WebLLM
+                  {t('webllm_title')}
                 </Text>
                 <IconExternalLink size={16} className="mb-3" />
               </div>
@@ -59,9 +61,9 @@ export default function WebLLMProviderInput({
               <Switch
                 size="md"
                 labelPosition="left"
-                onLabel="ON"
-                offLabel="OFF"
-                aria-label="Enable WebLLM provider"
+                onLabel={t('on')}
+                offLabel={t('off')}
+                aria-label={t('enable_webllm_provider')}
                 checked={field.state.value}
                 onChange={(event) => {
                   field.handleChange(event.currentTarget.checked)
@@ -94,7 +96,7 @@ export default function WebLLMProviderInput({
           </form.Field>
         </div>
         <Text size="sm" color="dimmed" mb="md">
-          WebLLM is a framework for building and deploying LLMs in the browser.
+          {t('webllm_helper_text')}
         </Text>
         <form.Field name={`providers.${ProviderNames.WebLLM}.enabled`}>
           {(field: any) => (

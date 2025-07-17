@@ -416,6 +416,7 @@ export function findDefaultModel(
 }
 
 export default function APIKeyInputForm() {
+  const { t } = useTranslation('common')
   const projectName = GetCurrentPageName()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     getInitialCollapsedState(),
@@ -643,7 +644,7 @@ export default function APIKeyInputForm() {
                       className={`pl-4 pr-2 pt-4 ${montserrat_heading.variable} font-montserratHeading text-[--foreground]`}
                     >
                       {/* API Keys: Add LLMs to your Chatbot */}
-                      Configure LLM Providers for your Chatbot
+                      {t('configure_llm_providers')}
                     </Title>
                     <Title
                       className={`${montserrat_heading.variable} flex-[1_1_50%] font-montserratHeading text-[--foreground]`}
@@ -677,14 +678,13 @@ export default function APIKeyInputForm() {
                               className={`${montserrat_heading.variable} mt-4 font-montserratHeading text-[--foreground]`}
                               order={3}
                             >
-                              Closed source LLMs
+                              {t('closed_source_llms')}
                             </Title>
                             <Text
                               className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
                               size="md"
                             >
-                              The best performers, but you gotta pay their
-                              prices and follow their rules.
+                              {t('closed_source_llms_helper')}
                             </Text>
                             <Flex
                               direction={{ base: 'column', '75rem': 'row' }}
@@ -740,13 +740,13 @@ export default function APIKeyInputForm() {
                               className={`-mb-3 ${montserrat_heading.variable} mt-4 font-montserratHeading text-[--foreground]`}
                               order={3}
                             >
-                              Open source LLMs
+                              {t('open_source_llms')}
                             </Title>
                             <Text
                               className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
                               size="md"
                             >
-                              Your weights, your rules.
+                              {t('open_source_llms_helper')}
                             </Text>
                             <Flex
                               direction={{ base: 'column', '75rem': 'row' }}
@@ -811,16 +811,14 @@ export default function APIKeyInputForm() {
                           className={`label ${montserrat_heading.variable} font-montserratHeading`}
                           order={3}
                         >
-                          Default Model
+                          {t('default_model')}
                         </Title>
                         <br />
                         <Text
                           className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
                           size="md"
                         >
-                          Choose the default model for your chatbot. Users can
-                          still override this default to use any of the models
-                          enabled on the left.
+                          {t('default_model_helper')}
                         </Text>
                         <br />
                         <div className="flex justify-center">

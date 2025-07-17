@@ -228,12 +228,10 @@ const Home: NextPage = () => {
                 `}
               >
                 <h2>
-                  Create a chatbot with{' '}
-                  <span className="whitespace-nowrap">your content.</span>
+                  {t('homepage_create_chatbot_with')} <span className="whitespace-nowrap">{t('homepage_your_content')}</span>
                 </h2>
                 <h2 className="mt-4">
-                  Share it with{' '}
-                  <span className="whitespace-nowrap">a click.</span>
+                  {t('homepage_share_with')} <span className="whitespace-nowrap">{t('homepage_a_click')}</span>
                 </h2>
               </div>
 
@@ -255,8 +253,7 @@ const Home: NextPage = () => {
                   router.push('/chat')
                 }}
               >
-                Try it out{' '}
-                <ArrowNarrowRight size={32} strokeWidth={1} color={'white'} />
+                {t('homepage_try_it_out')} <ArrowNarrowRight size={32} strokeWidth={1} color={'white'} />
               </Button>
             </div>
 
@@ -288,7 +285,7 @@ const Home: NextPage = () => {
                 className="mr-8 mt-[2px] hidden text-right text-xs sm:mr-4 sm:mt-[-8px]"
                 style={{ color: 'var(--illinois-orange)' }}
               >
-                Upload almost anything
+                {t('homepage_upload_almost_anything')}
               </div>
             </div>
           </div>
@@ -351,7 +348,7 @@ const Home: NextPage = () => {
             {/* Adjusted container with better spacing */}
             <div className="flex w-full flex-col items-center justify-center sm:flex-row">
               <div className="pr-2 sm:flex-shrink-0 sm:text-right">
-                Your AI trained on your
+                {t('homepage_your_ai_trained_on_your')}
               </div>
 
               <div className="sm:max-w-[300px] sm:flex-grow">
@@ -371,8 +368,8 @@ const Home: NextPage = () => {
               ${montserrat_heading.variable} font-montserratHeading
           `}
           >
-            It&apos;s the easiest way to make your{' '}
-            <span className="whitespace-nowrap">own Chatbot</span>
+            {t('homepage_its_the_easiest_way_to_make_your')}
+            <span className="whitespace-nowrap">{t('homepage_own_chatbot')}</span>
           </h2>
 
           {/* step 1 */}
@@ -403,7 +400,7 @@ const Home: NextPage = () => {
                     `}
                     style={{ color: 'var(--illinois-orange)' }}
                   >
-                    1
+                    {t('homepage_step1_title')}
                   </div>
                   <div
                     className={`
@@ -411,36 +408,29 @@ const Home: NextPage = () => {
                     ${montserrat_heading.variable} font-montserratHeading
                   `}
                   >
-                    Bring your documents{' '}
-                    <span className="whitespace-nowrap">and tools</span>
+                    {t('homepage_step1_heading')}
                   </div>
                 </div>
 
                 <div className="mt-4 flex flex-col gap-2 text-sm">
                   <div className="">
-                    Simply{' '}
-                    <span
-                      className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                    >
-                      Drag-n-Drop
-                    </span>{' '}
-                    your files for analysis.
+                    {t('homepage_step1_desc1')}
                   </div>
                   <div className="">
                     <span
                       className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
                     >
-                      Connect
+                      {t('homepage_connect')}
                     </span>{' '}
-                    to Canvas, GitHub, Notion and more.
+                    {t('homepage_to_canvas_github_notion')}
                   </div>
                   <div className="">
                     <span
                       className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
                     >
-                      Web crawl
+                      {t('homepage_web_crawl')}
                     </span>{' '}
-                    your favorite articles and blogs.
+                    {t('homepage_your_favorite_articles_blogs')}
                   </div>
                 </div>
                 {/*
@@ -492,7 +482,7 @@ const Home: NextPage = () => {
                     `}
                     style={{ color: 'var(--illinois-orange)' }}
                   >
-                    2
+                    {t('homepage_step2_title')}
                   </div>
                   <div
                     className={`
@@ -500,33 +490,12 @@ const Home: NextPage = () => {
                     ${montserrat_heading.variable} font-montserratHeading
                   `}
                   >
-                    Customize LLMs, prompts, and{' '}
-                    <span className="whitespace-nowrap">
-                      tools <span className="font-normal">(optional)</span>
-                    </span>
+                    {t('homepage_step2_heading')}
                   </div>
                 </div>
 
                 <div className="mt-4 text-sm">
-                  Updated with the{' '}
-                  <span
-                    className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                  >
-                    world&apos;s
-                  </span>{' '}
-                  best AI models at your fingertips, enhanced with{' '}
-                  <span
-                    className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                  >
-                    tools
-                  </span>{' '}
-                  and advanced{' '}
-                  <span
-                    className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                  >
-                    prompt engineering
-                  </span>
-                  .
+                  {t('homepage_step2_desc')}
                 </div>
                 {/*
                 <Button
@@ -585,24 +554,15 @@ const Home: NextPage = () => {
                     ${montserrat_heading.variable} font-montserratHeading
                   `}
                   >
-                    Share with anyone
+                    {t('homepage_share_with_anyone')}
                   </div>
                 </div>
 
                 <div className="mt-4 text-sm">
-                  Collaborate and{' '}
-                  <span
-                    className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                  >
-                    publish your chatbot
-                  </span>{' '}
-                  for whoever you want to use it or{' '}
-                  <span
-                    className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                  >
-                    discover other chatbots
-                  </span>{' '}
-                  from the Illinois Chat community.
+                  {t('homepage_collaborate_publish_your_chatbot')}
+                  {t('homepage_for_whoever_you_want_to_use_it')}
+                  {t('homepage_or_discover_other_chatbots')}
+                  {t('homepage_from_the_illinois_chat_community')}
                 </div>
                 {/*
                 <Button
@@ -654,7 +614,7 @@ const Home: NextPage = () => {
                 ${montserrat_heading.variable} font-montserratHeading
               `}
               >
-                Ready to build?
+                {t('homepage_ready_to_build')}
               </h2>
               <h2
                 className={`
@@ -662,15 +622,11 @@ const Home: NextPage = () => {
                 ${montserrat_heading.variable} font-montserratHeading
               `}
               >
-                Use our API.
+                {t('homepage_use_our_api')}
               </h2>
 
               <div className="mt-4">
-                If you&apos;re tired of the OpenAI API and want an AI
-                that&apos;s trained to understand your data, come build on our
-                API with 52+ models to choose from. We&apos;re always updated
-                with the latest State of the Art (SOTA) open source LLMs for
-                free, hosted here at Illinois.
+                {t('homepage_api_pitch')}
               </div>
 
               <Button
@@ -687,7 +643,7 @@ const Home: NextPage = () => {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Read the docs{' '}
+                {t('homepage_read_the_docs')}
                 <ExternalLink
                   size={20}
                   strokeWidth={1.75}
@@ -791,7 +747,7 @@ const Home: NextPage = () => {
                 ${montserrat_heading.variable} font-montserratHeading
               `}
               >
-                Want something custom?
+                {t('homepage_want_custom')}
               </h2>
 
               <div className="mt-4">
@@ -818,7 +774,7 @@ const Home: NextPage = () => {
             ${montserrat_heading.variable} font-montserratHeading
           `}
           >
-            About Us
+            {t('homepage_about_us')}
           </h4>
           <div className="mt-4 grid grid-cols-1 gap-14 sm:grid-cols-3 md:gap-8">
             <div className="flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6">
@@ -897,47 +853,42 @@ const Home: NextPage = () => {
   )
 }
 
+export const getStaticProps = async ({ locale }: { locale: string }) => {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale, ['common'])),
+    },
+  };
+};
+
 export default Home
 
 function FlagshipChatbots() {
+  const { t } = useTranslation('common');
   const cards = [
-    // {
-    //   course_slug: 'Illinois', // TODO: Replace the "research finder" to Illinois when ready
-    //   imageSrc: '/media/hero_courses_banners/UofI.png',
-    //   title: 'University of Illinois',
-    //   badge: 'Illinois',
-    //   tagline: 'Ask anything about U of I',
-    //   description:
-    //     "Using all of Illinois's documentation, get detailed examples, advice and information about the conference.",
-    // },
     {
-      course_slug: 'Research', // TODO: Replace the "research finder" to Illinois when ready
+      course_slug: 'Research',
       imageSrc: '/media/hero_courses_banners/UofI.png',
-      title: 'Illinois Research Finder',
-      badge: 'Illinois',
-      tagline: 'Find professors based on your research interests',
-      description:
-        "Using all of Illinois's documentation, get detailed examples, advice and information about the conference.",
+      title: t('flagship_research_title'),
+      badge: t('flagship_research_badge'),
+      tagline: t('flagship_research_tagline'),
+      description: t('flagship_research_description'),
     },
     {
       course_slug: 'NeurIPS-2024',
       imageSrc: '/media/hero_courses_banners/NEURIPS.png',
-      title: 'NeurIPS 2024',
-      badge: 'NeurIPS',
-      tagline:
-        'Trained on all 4,000+ papers from the largest AI conference in the world',
-      description:
-        "Using all of NeurIPS 2024's documentation, get detailed examples, advice and information about the conference.",
+      title: t('flagship_neurips2024_title'),
+      badge: t('flagship_neurips2024_badge'),
+      tagline: t('flagship_neurips2024_tagline'),
+      description: t('flagship_neurips2024_description'),
     },
     {
       course_slug: 'NCSADelta',
       imageSrc: '/media/hero_courses_banners/delta_hero.jpg',
-      title: 'NCSA Delta Supercomputer',
-      badge: 'NCSA Docs',
-      tagline:
-        "Quickstart on our Delta supercomputer, it'll write SLRUM scripts for you 😁",
-      description:
-        "Using all of Delta's documentation, get detailed examples, advice and information about how to use the Delta supercomputer.",
+      title: t('flagship_ncsadelta_title'),
+      badge: t('flagship_ncsadelta_badge'),
+      tagline: t('flagship_ncsadelta_tagline'),
+      description: t('flagship_ncsadelta_description'),
     },
     /*
     {

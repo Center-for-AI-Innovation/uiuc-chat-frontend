@@ -1,15 +1,24 @@
 import { useState } from 'react'
 import { MLCEngine } from '@mlc-ai/web-llm'
 import ChatUI from '~/utils/modelProviders/WebLLM'
+import { useTranslation } from 'next-i18next'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+
+export const getStaticProps = async ({ locale }) => ({
+  props: {
+    ...(await serverSideTranslations(locale, ['common'])),
+  },
+});
 
 const ChatComponent = () => {
+  const { t } = useTranslation('common')
   const [messages, setMessages] = useState<{ kind: string; text: string }[]>([])
   const [prompt, setPrompt] = useState('')
   const [runtimeStats, setRuntimeStats] = useState('')
   const [chat_ui] = useState(new ChatUI(new MLCEngine()))
   const updateMessage = (kind: string, text: string, append: boolean) => {
     if (kind == 'init') {
-      text = '[System Initalize] ' + text
+      text = t('system_initialize_prefix') + text
     }
     const msgCopy = [...messages]
     if (msgCopy.length == 0 || append) {
@@ -29,7 +38,7 @@ const ChatComponent = () => {
           })
         }}
       >
-        Download Model
+        {t('download_model')}
       </button>
 
       <div className="chatui">
@@ -37,7 +46,7 @@ const ChatComponent = () => {
           {messages.map((value, index) => (
             <div key={index} className={`msg ${value.kind}-msg`}>
               <div className="msg-bubble">
-                <div className="msg-text">${value.text}</div>
+                <div className="msg-text">{value.text}</div>
               </div>
             </div>
           ))}
@@ -48,7 +57,7 @@ const ChatComponent = () => {
             id="chatui-input"
             type="text"
             className="chatui-input"
-            placeholder="Enter your message..."
+            placeholder={t('enter_your_message')}
             onKeyDown={(event) => {
               if (event.key === 'Enter') {
                 chat_ui
@@ -67,7 +76,7 @@ const ChatComponent = () => {
                 .catch((error) => console.log(error))
             }}
           >
-            Send
+            {t('send')}
           </button>
         </div>
       </div>
@@ -83,7 +92,7 @@ const ChatComponent = () => {
               .catch((error) => console.log(error))
           }}
         >
-          Reset Chat
+          {t('reset_chat')}
         </button>
         <label id="chatui-info-label">{runtimeStats}</label>
       </div>

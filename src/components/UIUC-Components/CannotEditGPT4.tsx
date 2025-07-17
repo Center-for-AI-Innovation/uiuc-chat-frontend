@@ -16,6 +16,7 @@ import {
   Flex,
 } from '@mantine/core'
 import { montserrat_heading } from 'fonts'
+import { useTranslation } from 'next-i18next';
 // const rubikpuddles = Rubik_Puddles({ weight: '400', subsets: ['latin'] })
 
 export const CannotEditGPT4Page = ({
@@ -23,6 +24,7 @@ export const CannotEditGPT4Page = ({
 }: {
   course_name: string
 }) => {
+  const { t } = useTranslation('common');
   return (
     <>
       <main className="justify-center; course-page-main flex min-h-screen flex-col items-center">
@@ -46,10 +48,9 @@ export const CannotEditGPT4Page = ({
               order={2}
               p="xl"
             >
-              {' '}
-              You cannot edit the gpt4 page.
+              {t('cannot_edit_gpt4_page')}
               <br></br>
-              It&apos;s for using GPT-4 by itself with no extra knowledge base.
+              {t('gpt4_page_info')}
             </Title>
 
             <Title
@@ -59,12 +60,11 @@ export const CannotEditGPT4Page = ({
               order={3}
               p="xl"
             >
-              {' '}
-              Go to{' '}
+              {t('go_to_new_page')}{' '}
               <Link href={'/new'} className="goldUnderline">
                 uiuc.chat/new
               </Link>{' '}
-              to make a new page.
+              {t('to_make_new_page')}
             </Title>
           </Flex>
         </div>

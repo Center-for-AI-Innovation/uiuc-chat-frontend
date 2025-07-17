@@ -3,6 +3,8 @@ import Image from 'next/image'
 import { ThemeToggle } from './ThemeToggle'
 
 export default function Footer({ isNavbar = false }: { isNavbar?: boolean }) {
+  const { t } = useTranslation('common')
+  
   return (
     <footer className="footer footer-center rounded p-10 text-base-content">
       {/*       <div className="grid grid-flow-col gap-4"> */}
@@ -14,7 +16,7 @@ export default function Footer({ isNavbar = false }: { isNavbar?: boolean }) {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Disclaimer
+          {t('footer.disclaimer')}
         </Link>
         <Link
           href="https://www.vpaa.uillinois.edu/digital_risk_management/generative_ai/"
@@ -22,7 +24,7 @@ export default function Footer({ isNavbar = false }: { isNavbar?: boolean }) {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Generative AI Policy
+          {t('footer.generative_ai_policy')}
         </Link>
         <Link
           href="https://www.vpaa.uillinois.edu/resources/terms_of_use"
@@ -30,7 +32,7 @@ export default function Footer({ isNavbar = false }: { isNavbar?: boolean }) {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Terms
+          {t('footer.terms')}
         </Link>
         <Link
           href="https://www.vpaa.uillinois.edu/resources/web_privacy"
@@ -38,28 +40,28 @@ export default function Footer({ isNavbar = false }: { isNavbar?: boolean }) {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Privacy
+          {t('footer.privacy')}
         </Link>
         <span>
-          MIT Licensed{' '}
+          {t('footer.mit_licensed')}{' '}
           <Link
             href="https://github.com/Center-for-AI-Innovation/uiuc-chat-frontend"
             className="link-hover link text-[--footer-link] hover:text-[--footer-link-hover]"
             target="_blank"
             rel="noopener noreferrer"
           >
-            frontend
+            {t('footer.frontend')}
           </Link>{' '}
-          and{' '}
+          {t('footer.and')}{' '}
           <Link
             href="https://github.com/Center-for-AI-Innovation/ai-ta-backendhttps://github.com/UIUC-Chatbot/ai-ta-backend"
             className="link-hover link text-[--footer-link] hover:text-[--footer-link-hover]"
             target="_blank"
             rel="noopener noreferrer"
           >
-            backend
+            {t('footer.backend')}
           </Link>{' '}
-          code.
+          {t('footer.code')}
         </span>
         <div>
           <Link

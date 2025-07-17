@@ -15,6 +15,7 @@ import { useRouter } from 'next/router'
 import { type FileUpload } from './UploadNotification'
 import { type QueryClient } from '@tanstack/react-query'
 import Image from 'next/image'
+import { useTranslation } from 'next-i18next';
 
 export default function CanvasIngestForm({
   project_name,
@@ -47,6 +48,7 @@ export default function CanvasIngestForm({
     return regex.test(input)
   }
   const router = useRouter()
+  const { t } = useTranslation('common');
 
   const getCurrentPageName = () => {
     return router.query.course_name as string
@@ -173,7 +175,7 @@ export default function CanvasIngestForm({
         <DialogContent className="mx-auto h-auto max-h-[85vh] w-[95%] max-w-2xl overflow-y-auto !rounded-2xl border-0 bg-[--modal] px-4 py-6 text-[--modal-text] sm:px-6">
           <DialogHeader>
             <DialogTitle className="mb-1 text-left text-xl font-bold">
-              Import Canvas Content
+              {t('import_canvas_content')}
             </DialogTitle>
           </DialogHeader>
 
@@ -189,8 +191,7 @@ export default function CanvasIngestForm({
             }}
           >
             <span className="font-semibold">
-              Before proceeding, you MUST add the UIUC Chatbot as a student to
-              your Canvas course at{' '}
+              {t('canvas_permission_instructions')}
               <NextLink
                 href="https://canvas.illinois.edu/"
                 target="_blank"
@@ -296,12 +297,12 @@ export default function CanvasIngestForm({
               <Label className="block ">Select Content to Import</Label>
               <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {[
-                  'Files',
-                  'Pages',
-                  'Modules',
-                  'Syllabus',
-                  'Assignments',
-                  'Discussions',
+                  t('files'),
+                  t('pages'),
+                  t('modules'),
+                  t('syllabus'),
+                  t('assignments'),
+                  t('discussions'),
                 ].map((option) => (
                   <div
                     key={option}

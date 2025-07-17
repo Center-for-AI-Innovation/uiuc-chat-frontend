@@ -39,7 +39,7 @@ export const ChatbarSettings = () => {
       ) : null}
 
       <SidebarButton
-        text={t('Export history')}
+        text={t('export_history')}
         icon={<IconFileExport size={18} />}
         onClick={() => handleExportData()}
         loading={isExporting}

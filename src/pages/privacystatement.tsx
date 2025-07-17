@@ -1,12 +1,21 @@
 import { type NextPage } from 'next'
 
 const PrivacyStatement: NextPage = (props) => {
+  const { t } = useTranslation('common')
   return (
     <div>
-      <h1>Privacy Statement</h1>
-      <p>This is the privacy statement.</p>
+      <h1>{t('privacy_statement')}</h1>
+      <p>{t('this_is_privacy_statement')}</p>
     </div>
   )
 }
+
+export const getStaticProps = async ({ locale }: { locale: string }) => {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale, ['common'])),
+    },
+  };
+};
 
 export default PrivacyStatement

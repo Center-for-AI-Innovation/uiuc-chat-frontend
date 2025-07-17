@@ -3,8 +3,10 @@ import { Title, Text, Flex, Divider, ActionIcon } from '@mantine/core'
 import React, { useEffect, useState } from 'react'
 import { IconInfoCircle } from '@tabler/icons-react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { useTranslation } from 'next-i18next'
 
 function NomicDocumentMap({ course_name }: { course_name: string }) {
+  const { t } = useTranslation('common')
   const [accordionOpened, setAccordionOpened] = useState(false)
 
   const [nomicMapData, setNomicMapData] = useState<NomicMapData | null>(null)
@@ -60,7 +62,7 @@ function NomicDocumentMap({ course_name }: { course_name: string }) {
                   order={3}
                   className={`pl-4 ${montserrat_heading.variable} font-montserratHeading text-lg sm:text-2xl`}
                 >
-                  Concept Map of User Queries
+                  {t('analysis.conceptMapOfUserQueries', 'Concept Map of User Queries')}
                 </Title>
 
                 <ActionIcon
@@ -99,27 +101,26 @@ function NomicDocumentMap({ course_name }: { course_name: string }) {
                         <Text
                           className={`${montserrat_paragraph.variable} mb-4 font-montserratParagraph text-[--foreground]`}
                         >
-                          The Concept Map visualizes all queries made in this
-                          project:
+                          {t('analysis.conceptMapDescription', 'The Concept Map visualizes all queries made in this project:')}
                         </Text>
                         <ul className="list-inside list-disc space-y-2 text-[--foreground]">
                           <li className="text-sm">
                             <span className="font-bold text-[--accent]">
                               Similar topics
                             </span>{' '}
-                            cluster together
+                            {t('analysis.clusterTogether', 'cluster together')}
                           </li>
                           <li className="text-sm">
                             <span className="font-bold text-[--accent]">
                               Different topics
                             </span>{' '}
-                            are positioned further apart
+                            {t('analysis.positionedFurtherApart', 'are positioned further apart')}
                           </li>
                           <li className="text-sm">
                             <span className="font-bold text-[--accent]">
                               Common themes
                             </span>{' '}
-                            and knowledge gaps become visible
+                            {t('analysis.knowledgeGapsVisible', 'and knowledge gaps become visible')}
                           </li>
                         </ul>
                         <Text className="mt-3" size="sm">
@@ -130,7 +131,7 @@ function NomicDocumentMap({ course_name }: { course_name: string }) {
                             target="_blank"
                             rel="noopener noreferrer"
                           >
-                            semantic similarity visualizations
+                            {t('analysis.semanticSimilarityVisualizations', 'semantic similarity visualizations')}
                           </a>
                         </Text>
                       </div>
@@ -176,7 +177,7 @@ function NomicDocumentMap({ course_name }: { course_name: string }) {
                   className={`${montserrat_heading.variable} font-montserratHeading`}
                   size="lg"
                 >
-                  Visualization Not Available Yet
+                  {t('visualization_not_available')}
                 </Text>
                 <Text className="mt-2">
                   We need at least 20 questions to generate a meaningful
@@ -191,7 +192,7 @@ function NomicDocumentMap({ course_name }: { course_name: string }) {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    semantic similarity visualizations
+                    {t('learn_more_semantic')}
                   </a>
                 </Text>
               </div>

@@ -4,6 +4,7 @@ import { type FC } from 'react'
 interface Props {}
 
 export const ChatLoader: FC<Props> = () => {
+  const { t } = useTranslation('chat')
   return (
     <div
       className="group border-b border-[--background-dark] bg-[--background-faded] text-[--foreground]"
@@ -13,7 +14,7 @@ export const ChatLoader: FC<Props> = () => {
         <div className="min-w-[40px] items-end">
           <IconRobot size={30} />
         </div>
-        <span className="mt-1 animate-pulse cursor-default">▍</span>
+        <span className="mt-1 animate-pulse cursor-default">{t('loading')}</span>
       </div>
     </div>
   )

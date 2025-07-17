@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Button, Tooltip, Text } from '@mantine/core'
 import { IconCopy, IconInfoCircle } from '@tabler/icons-react'
 import { montserrat_paragraph } from 'fonts'
+import { useTranslation } from 'next-i18next'
 
 interface CustomCopyButtonProps {
   label: string
@@ -14,6 +15,7 @@ const CustomCopyButton: React.FC<CustomCopyButtonProps> = ({
   tooltip,
   onClick,
 }) => {
+  const { t } = useTranslation('common')
   const [isHovered, setIsHovered] = useState(false)
 
   return (
@@ -69,11 +71,11 @@ const CustomCopyButton: React.FC<CustomCopyButtonProps> = ({
           isHovered ? 'text-white' : 'text-gray-200'
         }`}
       >
-        {label}
+        {t(label)}
         <Tooltip
           label={
             <Text size="sm" color="gray.1">
-              {tooltip}
+              {t(tooltip)}
             </Text>
           }
           position="bottom"

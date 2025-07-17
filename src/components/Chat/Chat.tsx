@@ -102,7 +102,7 @@ export const Chat = memo(
     currentEmail,
     documentCount,
   }: Props) => {
-    const { t } = useTranslation('chat')
+    const { t } = useTranslation('common')
     const auth = useAuth()
     const router = useRouter()
     const queryClient = useQueryClient()
@@ -1687,9 +1687,9 @@ export const Chat = memo(
       courseMetadata.example_questions.length > 0
         ? courseMetadata.example_questions
         : [
-            'Make a bullet point list of key takeaways from this project.',
-            'What are the best practices for [Activity or Process] in [Context or Field]?',
-            'Can you explain the concept of [Specific Concept] in simple terms?',
+            t('example_takeaways'),
+            t('example_best_practices'),
+            t('example_explain_concept'),
           ]
 
     // Add this function to create dividers with statements
@@ -1721,7 +1721,7 @@ export const Chat = memo(
                 <CropwizardLicenseDisclaimer />
               )}
               {getCurrentPageName() !== 'chat' && (
-                <p>Start a conversation below or try these examples</p>
+                <p>{t('start_conversation_or_examples')}</p>
               )}
             </h4>
             <div className="mt-4 flex flex-col items-start space-y-2 overflow-hidden">

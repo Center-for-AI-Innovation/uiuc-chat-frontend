@@ -19,6 +19,7 @@ import type ChatUI from '~/utils/modelProviders/WebLLM'
 import { modelCached } from './UserSettings'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'next-i18next'
 import {
   type AllLLMProviders,
   type AnySupportedModel,
@@ -288,6 +289,7 @@ const ModelDropdown: React.FC<
   chat_ui,
 }) => {
   const { state, dispatch: homeDispatch } = useContext(HomeContext)
+  const { t } = useTranslation('common')
 
   // Filter out providers that are not enabled and their models which are disabled
   const { enabledProvidersAndModels, allModels } = Object.keys(
@@ -491,6 +493,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
     const defaultModel = selectBestModel(llmProviders).id
     const [loadingModelId, setLoadingModelId] = useState<string | null>(null)
     const [isAccordionOpen, setIsAccordionOpen] = useState(false)
+    const { t } = useTranslation('common')
 
     // console.log('defaultModelId in chat page: ', defaultModelId)
 
@@ -570,14 +573,13 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               size={'sm'}
                               className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold`}
                             >
-                              NCSA Hosted Models (100% free)
+                              {t('models.ncsa_hosted_models')}
                             </Text>
                             <Text
                               size={'sm'}
                               className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                             >
-                              The best free option is the Qwen 2 72B model,
-                              hosted by NCSA.
+                              {t('models.ncsa_hosted_description')}
                             </Text>
                           </div>
 
@@ -587,7 +589,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               size={'sm'}
                               className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold`}
                             >
-                              OpenAI
+                              {t('models.openai')}
                             </Text>
                             <Text
                               size={'sm'}
@@ -619,7 +621,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               size={'sm'}
                               className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold`}
                             >
-                              Azure OpenAI
+                              {t('models.azure_openai')}
                             </Text>
                             <Text
                               size={'sm'}
@@ -650,7 +652,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               size={'sm'}
                               className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold`}
                             >
-                              Anthropic
+                              {t('models.anthropic')}
                             </Text>
                             <Text
                               size={'sm'}
@@ -681,7 +683,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               size={'sm'}
                               className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold`}
                             >
-                              OpenAI Compatible via Ollama
+                              {t('models.ollama')}
                             </Text>
                             <Text
                               size={'sm'}
@@ -712,7 +714,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               size={'sm'}
                               className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold`}
                             >
-                              On-device AI with WebLLM
+                              {t('models.webllm')}
                             </Text>
                             <Text
                               size={'sm'}
@@ -735,9 +737,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                                 />
                               </Link>
                               <br />
-                              If you see lots of text, it&apos;s working. If you
-                              see &quot;webgpu not available on this
-                              browser&quot;, it&apos;s not working.
+                              {t('models.webllm_working')}
                             </Text>
                           </div>
 
@@ -747,7 +747,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               size={'sm'}
                               className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold`}
                             >
-                              Google Gemini
+                              {t('models.gemini')}
                             </Text>
                             <Text
                               size={'sm'}
@@ -775,7 +775,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               size={'sm'}
                               className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold`}
                             >
-                              AWS Bedrock
+                              {t('models.bedrock')}
                             </Text>
                             <Text
                               size={'sm'}

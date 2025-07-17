@@ -19,6 +19,7 @@ import { type FolderInterface } from '@/types/folder'
 import HomeContext from '~/pages/api/home/home.context'
 
 import SidebarActionButton from '@/components/Buttons/SidebarActionButton'
+import { useTranslation } from 'next-i18next'
 
 interface Props {
   currentFolder: FolderInterface
@@ -33,6 +34,7 @@ const Folder = ({
   handleDrop,
   folderComponent,
 }: Props) => {
+  const { t } = useTranslation('sidebar')
   const { handleDeleteFolder, handleUpdateFolder } = useContext(HomeContext)
 
   const [isDeleting, setIsDeleting] = useState(false)
@@ -108,6 +110,7 @@ const Folder = ({
               onChange={(e) => setRenameValue(e.target.value)}
               onKeyDown={handleEnterDown}
               autoFocus
+              placeholder={t('rename_folder_placeholder')}
             />
           </div>
         ) : (
@@ -146,6 +149,7 @@ const Folder = ({
                 setIsDeleting(false)
                 setIsRenaming(false)
               }}
+              tooltip={isRenaming ? t('confirm') : t('delete')}
             >
               <IconCheck
                 size={18}
@@ -158,6 +162,7 @@ const Folder = ({
                 setIsDeleting(false)
                 setIsRenaming(false)
               }}
+              tooltip={t('cancel')}
             >
               <IconX
                 size={18}
@@ -175,6 +180,7 @@ const Folder = ({
                 setIsRenaming(true)
                 setRenameValue(currentFolder.name)
               }}
+              tooltip={t('rename')}
             >
               <IconPencil size={18} />
             </SidebarActionButton>
@@ -183,6 +189,7 @@ const Folder = ({
                 e.stopPropagation()
                 setIsDeleting(true)
               }}
+              tooltip={t('delete')}
             >
               <IconTrash size={18} />
             </SidebarActionButton>

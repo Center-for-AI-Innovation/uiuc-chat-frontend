@@ -104,9 +104,7 @@ export const TemperatureSlider: FC<Props> = ({
         <span
           className={`mt-8 text-left text-gray-400 dark:text-white/50 ${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`}
         >
-          {t(
-            'Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.',
-          )}
+          {t('temperature_hint')}
         </span>
       </div>
     </div>

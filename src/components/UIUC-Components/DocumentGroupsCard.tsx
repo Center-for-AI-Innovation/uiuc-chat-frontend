@@ -16,6 +16,7 @@ function DocumentGroupsCard({
 }) {
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const [accordionOpened, setAccordionOpened] = useState(false)
+  const { t } = useTranslation('common')
 
   // Get responsive card width classes based on sidebar state
   const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed || false)
@@ -44,7 +45,7 @@ function DocumentGroupsCard({
                 order={3}
                 className={`${montserrat_heading.variable} font-montserratHeading text-lg text-[--foreground] sm:text-2xl`}
               >
-                Document Groups
+                {t('dashboard.document_groups')}
               </Title>
               <ActionIcon
                 variant="subtle"
@@ -77,8 +78,7 @@ function DocumentGroupsCard({
                     <Text
                       className={`${montserrat_paragraph.variable} mb-4 font-montserratParagraph text-[--foreground]`}
                     >
-                      Document Groups help you organize and control your
-                      content:
+                      {t('dashboard.document_groups_description')}
                     </Text>
                     <ul className="list-inside list-disc space-y-2 text-[--foreground]">
                       <li className="text-sm">

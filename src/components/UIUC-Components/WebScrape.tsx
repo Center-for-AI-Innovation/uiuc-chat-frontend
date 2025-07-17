@@ -29,6 +29,7 @@ import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { LoadingSpinner } from './LoadingSpinner'
 import { Montserrat } from 'next/font/google'
+import { useTranslation } from 'next-i18next';
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -354,6 +355,8 @@ export const WebScrape = ({
     }
   }, [url])
 
+  const { t } = useTranslation('common');
+
   return (
     <>
       <Title
@@ -458,7 +461,7 @@ export const WebScrape = ({
                 w={`${isSmallScreen ? 'auto' : 'auto'}`}
                 disabled={isDisabled}
               >
-                Ingest
+                {t('ingest')}
               </Button>
             }
             rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
@@ -469,14 +472,13 @@ export const WebScrape = ({
             style={{ color: '#C1C2C5', fontSize: '16px' }}
             className={`${montserrat_heading.variable} font-montserratHeading`}
           >
-            Web scrape in progress...
+            {t('web_scrape_in_progress')}
           </Text>
           <Text
             style={{ color: '#C1C2C5', textAlign: 'center', maxWidth: '80%' }}
             className={`pb-3 ${montserrat_paragraph.variable} font-montserratParagraph`}
           >
-            Page refreshes upon completion. Your documents stay safe even if you
-            navigate away.
+            {t('web_scrape_refresh_notice')}
           </Text>
           <LoadingSpinner />
         </>
@@ -572,7 +574,7 @@ export const WebScrape = ({
                 w={`${isSmallScreen ? 'auto' : 'auto'}`}
                 disabled={isDisabled}
               >
-                Ingest
+                {t('ingest')}
               </Button>
             }
             rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
@@ -595,20 +597,20 @@ export const WebScrape = ({
                 arrowSize={8}
                 withArrow
                 position="bottom-start"
-                label="We will attempt to visit this number of pages, but not all will be scraped if they're duplicates, broken or otherwise inaccessible."
+                label={t('max_urls_tooltip')}
               >
                 <div>
                   <Text
                     style={{ color: '#C1C2C5', fontSize: '16px' }}
                     className={`${montserrat_heading.variable} font-montserratHeading`}
                   >
-                    Max URLs (1 to 500)
+                    {t('max_urls_label')}
                   </Text>
                   <TextInput
                     styles={{ input: { backgroundColor: '#1A1B1E' } }}
                     name="maximumUrls"
                     radius="md"
-                    placeholder="Default 50"
+                    placeholder={t('default_50')}
                     value={maxUrls}
                     onChange={(e) => {
                       handleInputChange(e, 'maxUrls')
@@ -626,7 +628,7 @@ export const WebScrape = ({
               style={{ color: '#C1C2C5', fontSize: '16px' }}
               className={`${montserrat_heading.variable} font-montserratHeading`}
             >
-              Limit web crawl
+              {t('limit_web_crawl')}
             </Text>
             {/* <Text style={{ color: '#C1C2C5', fontSize: '16px' }} className={`${montserrat_paragraph.variable} font-montserratParagraph`}>Limit web crawl (from least to most inclusive)</Text> */}
             <div className="pl-3">

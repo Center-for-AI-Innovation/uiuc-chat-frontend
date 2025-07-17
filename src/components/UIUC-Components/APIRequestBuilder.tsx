@@ -18,6 +18,7 @@ import {
 import { useGetProjectLLMProviders } from '~/hooks/useProjectAPIKeys'
 import { findDefaultModel } from './api-inputs/LLMsApiKeyInputForm'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import { useTranslation } from 'next-i18next'
 
 interface APIRequestBuilderProps {
   course_name: string
@@ -32,6 +33,7 @@ export default function APIRequestBuilder({
   apiKey,
   courseMetadata,
 }: APIRequestBuilderProps) {
+  const { t } = useTranslation('common')
   const [selectedLanguage, setSelectedLanguage] = useState<
     'curl' | 'python' | 'node'
   >('curl')
@@ -215,7 +217,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
         order={3}
         className={`text-left ${montserrat_heading.variable} font-montserratHeading text-[--dashboard-foreground]`}
       >
-        Request Builder
+        {t('request_builder')}
       </Title>
 
       <Divider
@@ -227,7 +229,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
       <div className="space-y-6">
         <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
           <Select
-            placeholder="Select language"
+            placeholder={t('select_language')}
             data={languageOptions}
             value={selectedLanguage}
             radius={'md'}
@@ -280,7 +282,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
           />
           <div className="flex w-full items-center gap-2">
             <Select
-              placeholder="Select model"
+              placeholder={t('select_model')}
               data={modelOptions}
               value={selectedModel}
               onChange={(value) => setSelectedModel(value || '')}
@@ -348,10 +350,10 @@ fetch('${baseUrl}/api/chat-api/chat', {
             order={4}
             className={`font-medium ${montserrat_paragraph.variable} font-montserratParagraph text-[--dashboard-foreground]`}
           >
-            System Prompt
+            {t('system_prompt')}
           </Title>
           <Textarea
-            placeholder="System Prompt"
+            placeholder={t('system_prompt')}
             value={systemPrompt}
             onChange={(e) => setSystemPrompt(e.currentTarget.value)}
             minRows={2}
@@ -376,10 +378,10 @@ fetch('${baseUrl}/api/chat-api/chat', {
             order={4}
             className={`font-medium ${montserrat_paragraph.variable} font-montserratParagraph text-[--dashboard-foreground]`}
           >
-            User Query
+            {t('user_query')}
           </Title>
           <Textarea
-            placeholder="User Query"
+            placeholder={t('user_query')}
             value={userQuery}
             onChange={(e) => setUserQuery(e.currentTarget.value)}
             minRows={2}
@@ -404,7 +406,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
             order={4}
             className={`font-medium ${montserrat_paragraph.variable} font-montserratParagraph text-[--dashboard-foreground]`}
           >
-            Temperature
+            {t('temperature')}
           </Title>
           <Slider
             value={temperature}
@@ -442,7 +444,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
               onChange={(event) =>
                 setRetrievalOnly(event.currentTarget.checked)
               }
-              label="Retrieval Only"
+              label={t('retrieval_only')}
               size="md"
               className={`mt-4 ${montserrat_paragraph.variable} font-montserratParagraph`}
               styles={(theme) => ({
@@ -461,7 +463,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
               })}
             />
             <Tooltip
-              label="Retrieval Only bypasses the LLM call, making it free to retrieve relevant documents that match your prompt."
+              label={t('retrieval_only_tooltip')}
               position="top"
               multiline
               width={220}
@@ -487,7 +489,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
               onChange={(event) =>
                 setStreamEnabled(event.currentTarget.checked)
               }
-              label="Stream Response"
+              label={t('stream_response')}
               size="md"
               className={`mt-4 ${montserrat_paragraph.variable} font-montserratParagraph`}
               styles={(theme) => ({
@@ -515,7 +517,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
             rel="noopener noreferrer"
             className="text-[--dashboard-button] hover:text-[--dashboard-button-hover]"
           >
-            Using image inputs (docs) →
+            {t('using_image_inputs_docs')}
           </a>
         </div>
 

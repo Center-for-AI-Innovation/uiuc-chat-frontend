@@ -75,6 +75,7 @@ export function LandingPageHeader({
   forGeneralPurposeNotLandingpage?: boolean
 }) {
   const { classes, theme } = useStyles()
+  const { t } = useTranslation('common')
   const headerStyle = forGeneralPurposeNotLandingpage
     ? {
         backgroundColor: 'var(--background)', //illinois-blue
@@ -263,11 +264,11 @@ export function LandingPageHeader({
               >
                 <span style={{ display: 'flex', alignItems: 'center' }}>
                   <IconClipboardTexts />
-                  <span
-                    className={`${montserrat_heading.variable} font-montserratHeading`}
-                  >
-                    Docs
-                  </span>
+                                      <span
+                      className={`${montserrat_heading.variable} font-montserratHeading`}
+                    >
+                      {t('navigation.docs')}
+                    </span>
                 </span>
               </Link>
             </>
@@ -335,7 +336,7 @@ export function LandingPageHeader({
                       className={`${montserrat_heading.variable} font-montserratHeading`}
                       style={{ color: 'var(--illinois-orange)' }}
                     >
-                      Docs
+                      {t('navigation.docs')}
                     </span>
                   </span>
                 </Link>
@@ -360,7 +361,7 @@ export function LandingPageHeader({
                       className={`${montserrat_heading.variable} font-montserratHeading`}
                       style={{ color: 'var(--illinois-orange)' }}
                     >
-                      News
+                      {t('navigation.news')}
                     </span>
                   </span>
                 </Link>
@@ -469,7 +470,7 @@ export function LandingPageHeader({
                           className={`${montserrat_heading.variable} font-montserratHeading`}
                           style={{ color: 'var(--illinois-orange)' }}
                         >
-                          Docs
+                          {t('navigation.docs')}
                         </span>
                       </div>
                     </Link>
@@ -496,7 +497,7 @@ export function LandingPageHeader({
                           className={`${montserrat_heading.variable} font-montserratHeading`}
                           style={{ color: 'var(--illinois-orange)' }}
                         >
-                          News
+                          {t('navigation.news')}
                         </span>
                       </div>
                     </Link>

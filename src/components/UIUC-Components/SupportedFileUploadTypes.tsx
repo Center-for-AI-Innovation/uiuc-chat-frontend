@@ -20,6 +20,7 @@ import {
   TooltipTrigger,
 } from '../Tooltip'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'next-i18next';
 
 interface FileType {
   icon: (props: TablerIconsProps) => JSX.Element
@@ -109,6 +110,7 @@ const useStyles = createStyles((theme) => ({
 const SupportedFileUploadTypes = () => {
   const { classes, theme } = useStyles()
   // className={classes.wrapper}
+  const { t } = useTranslation('common');
   const fileTypes: FileType[] = [
     { icon: IconFileTypePdf, label: 'PDF', color: 'text-red-500' },
     { icon: IconFileTypeDocx, label: 'Word', color: 'text-blue-500' },
@@ -150,7 +152,7 @@ const SupportedFileUploadTypes = () => {
                   </motion.div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{type.label} files supported</p>
+                  <p>{t('files_supported', { type: type.label })}</p>
                 </TooltipContent>
               </Tooltip>
             )

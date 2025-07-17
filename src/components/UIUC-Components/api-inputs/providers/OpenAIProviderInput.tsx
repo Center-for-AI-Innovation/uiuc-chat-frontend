@@ -8,6 +8,7 @@ import {
 } from '~/utils/modelProviders/LLMProvider'
 import { motion, AnimatePresence } from 'framer-motion'
 import { APIKeyInput } from '../LLMsApiKeyInputForm'
+import { useTranslation } from 'next-i18next'
 
 export default function OpenAIProviderInput({
   provider,
@@ -18,6 +19,7 @@ export default function OpenAIProviderInput({
   form: any
   isLoading: boolean
 }) {
+  const { t } = useTranslation('common')
   if (isLoading) {
     return <Skeleton height={200} width={330} radius={'lg'} />
   }
@@ -133,7 +135,7 @@ export default function OpenAIProviderInput({
                     {(apiKeyField: any) => (
                       <APIKeyInput
                         field={apiKeyField}
-                        placeholder="OpenAI API Key"
+                        placeholder={t('openai_api_key')}
                         // onValidate={validateApiKey}
                       />
                     )}

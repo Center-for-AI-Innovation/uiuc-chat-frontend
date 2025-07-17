@@ -352,6 +352,7 @@ export const Chatbar = ({
       setIsExporting(true)
       try {
         await downloadConversationHistoryUser(current_email, courseName)
+        // Add a notification or message here if needed, using t('export_success')
       } finally {
         setIsExporting(false)
       }

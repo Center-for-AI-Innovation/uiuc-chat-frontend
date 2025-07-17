@@ -21,6 +21,7 @@ export default function MITIngestForm({
   setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
   queryClient: QueryClient
 }): JSX.Element {
+  const { t } = useTranslation('common')
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
   const [url, setUrl] = useState('')
@@ -141,14 +142,14 @@ export default function MITIngestForm({
         <DialogContent className="mx-auto h-auto max-h-[85vh] w-[95%] max-w-2xl overflow-y-auto !rounded-2xl border-0 bg-[--modal] px-4 py-6 text-[--modal-text] sm:px-6">
           <DialogHeader>
             <DialogTitle className="mb-4 text-left text-xl font-bold">
-              Ingest MIT Course
+              {t('upload_cards.ingest_website')}
             </DialogTitle>
           </DialogHeader>
           <div className="">
             <div className="">
               <div>
                 <div className="break-words text-sm sm:text-base">
-                  <strong>For MIT Open Course Ware</strong>, just enter a URL
+                  <strong>{t('for_mit_open_course_ware')}</strong>, just enter a URL
                   like{' '}
                   <code className="inline-flex items-center rounded-md bg-[--illinois-orange] px-2 py-1 font-mono text-xs text-[--illinois-white] sm:text-sm">
                     ocw.mit.edu/courses/ANY_COURSE

@@ -9,6 +9,7 @@ import { useAuth } from 'react-oidc-context'
 import { CannotEditCourse } from './CannotEditCourse'
 import GlobalFooter from './GlobalFooter'
 import { montserrat_heading } from 'fonts'
+import { useTranslation } from 'next-i18next'
 
 export const GetCurrentPageName = () => {
   // /CS-125/dashboard --> CS-125
@@ -26,6 +27,7 @@ export const CannotViewCourse = ({
 }) => {
   const auth = useAuth()
   const curr_user_email = auth.user?.profile.email
+  const { t } = useTranslation()
 
   const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
     null,
@@ -111,7 +113,7 @@ export const CannotViewCourse = ({
               // size={20}
             >
               {' '}
-              You are not authorized to view this page.
+              {t('not_authorized_title')}
             </Title>
             <div
               style={{
@@ -131,7 +133,7 @@ export const CannotViewCourse = ({
                   p="lg"
                   // size={20}
                 >
-                  Email the creator or admins to request access:
+                  {t('email_creator_admins')}
                 </Title>
                 {courseMetadata ? (
                   <>
@@ -144,7 +146,7 @@ export const CannotViewCourse = ({
                       pt={2}
                       size={23}
                     >
-                      Creator:{' '}
+                      {t('creator_email')}:{' '}
                       <a
                         className="goldUnderline"
                         href={`mailto:${courseMetadata['course_owner']}`}
@@ -154,7 +156,7 @@ export const CannotViewCourse = ({
                       {courseMetadata['course_admins'].length > 0 && (
                         <>
                           <br></br>
-                          Admins:{' '}
+                          {t('admins_email')}:{' '}
                           <a
                             className="goldUnderline"
                             href={`mailto:${courseMetadata[
@@ -183,14 +185,12 @@ export const CannotViewCourse = ({
               py={35}
             >
               {' '}
-              If <i>you are</i> the creator or an admin, please sign in with the
-              account you used to create this page (in the top right).
+              {t('if_you_are_creator_or_admin')}
               <br></br>
-              Or go to{' '}
+              {t('or_go_to_new_page')}
               <Link href={'/new'} className="goldUnderline">
-                uiuc.chat/new
-              </Link>{' '}
-              to make a new page.
+                {t('uiuc_chat_new')}
+              </Link>
             </Title>
           </Flex>
         </div>

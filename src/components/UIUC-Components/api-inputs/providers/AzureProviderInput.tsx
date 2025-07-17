@@ -8,6 +8,7 @@ import {
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'next-i18next'
 
 export default function AzureProviderInput({
   provider,
@@ -18,9 +19,12 @@ export default function AzureProviderInput({
   form: any
   isLoading: boolean
 }) {
+  const { t } = useTranslation('common')
+  
   if (isLoading) {
     return <Skeleton height={200} width={330} radius={'lg'} />
   }
+  
   return (
     <motion.div layout>
       <Card
@@ -93,11 +97,7 @@ export default function AzureProviderInput({
             )}
           </form.Field>
         </div>
-        {/* <Text size="sm" color="dimmed" mb="md">
-          Azure OpenAI Service provides REST API access to OpenAI&apos;s
-          powerful language models with the security and enterprise promise of
-          Azure.
-        </Text> */}
+        
         {provider?.error &&
           (form.state.values?.providers?.Azure?.enabled ||
             provider.enabled) && (
@@ -115,6 +115,7 @@ export default function AzureProviderInput({
               {provider.error}
             </Text>
           )}
+          
         <form.Field name={`providers.${ProviderNames.Azure}.enabled`}>
           {(field: any) => (
             <AnimatePresence>
@@ -127,7 +128,7 @@ export default function AzureProviderInput({
                 >
                   <form.Field name={`providers.${ProviderNames.Azure}.apiKey`}>
                     {(field: any) => (
-                      <APIKeyInput field={field} placeholder="Azure API Key" />
+                      <APIKeyInput field={field} placeholder={t('azure_api_key')} />
                     )}
                   </form.Field>
                   <form.Field
@@ -151,21 +152,6 @@ export default function AzureProviderInput({
                       />
                     )}
                   </form.Field>
-                  {/* <form.Field
-                    name={`providers.${ProviderNames.Azure}.AzureDeployment`}
-                  >
-                    {(field: any) => (
-                      <TextInput
-                        label="Azure Deployment"
-                        placeholder="your-deployment-name"
-                        value={field.state.value}
-                        onChange={(event) =>
-                          field.handleChange(event.currentTarget.value)
-                        }
-                      />
-                    )}
-                  </form.Field> */}
-                  <ModelToggles form={form} provider={provider} />
                 </motion.div>
               )}
             </AnimatePresence>

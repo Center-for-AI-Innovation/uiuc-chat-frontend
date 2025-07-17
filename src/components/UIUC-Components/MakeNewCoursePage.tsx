@@ -138,6 +138,8 @@ const MakeNewCoursePage = ({
     }
   }
 
+  const { t } = useTranslation('common');
+
   return (
     <>
       <Navbar isPlain={false} />

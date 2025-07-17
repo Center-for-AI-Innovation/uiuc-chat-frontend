@@ -1,0 +1,22 @@
+{
+  "settings": "Settings",
+  "model": "Model",
+  "document_groups": "Document Groups",
+  "tools": "Tools",
+  "Precise": "Precise",
+  "Neutral": "Neutral",
+  "Creative": "Creative",
+  "temperature_hint": "Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.",
+  "multi_query_retrieval_disabled": "Multi-Query Retrieval is disabled for performance reasons, I'm working to bring it back ASAP.",
+  "fancy_retrieval": "Fancy Retrieval",
+  "multi_query_retrieval_label": "Multi Query Retrieval (slow 30 second response time)",
+  "multi_query_retrieval_description": "A LLM generates multiple queries based on your original for improved semantic search. Then every retrieved context is filtered by a smaller LLM (Mistral 7b) so that only high quality and relevant documents are included in the final GPT-4 call.",
+  "openai_usage_link": "View account usage on OpenAI",
+  "loading": "Loading...",
+  "llm_input_limit": "This LLM can only handle {{maxLength}} characters, but you entered {{length}} characters. Please switch to a model with a bigger input limit (like Gemini, Claude or GPT) or shorten your message.",
+  "please_enter_message_or_upload_image": "Please enter a message or upload an image.",
+  "stop_generating": "Stop Generating",
+  "regenerate_response": "Regenerate Response",
+  "remove_file": "Remove File",
+  "message_uiuc_chat": "Message UIUC.chat"
+} 

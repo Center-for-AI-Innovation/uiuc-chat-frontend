@@ -124,6 +124,7 @@ const formatPercentageChange = (value: number | null | undefined) => {
 }
 
 const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
+  const { t } = useTranslation('common')
   const { classes, theme } = useStyles()
   const auth = useAuth()
   const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(

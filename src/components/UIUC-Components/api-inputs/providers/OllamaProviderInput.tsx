@@ -7,6 +7,7 @@ import {
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'next-i18next'
 
 export default function OllamaProviderInput({
   form,
@@ -17,6 +18,7 @@ export default function OllamaProviderInput({
   provider: OllamaProvider
   isLoading: boolean
 }) {
+  const { t } = useTranslation('common')
   if (isLoading) {
     return <Skeleton height={200} width={330} radius={'lg'} />
   }
@@ -94,11 +96,7 @@ export default function OllamaProviderInput({
           </form.Field>
         </div>
         <Text size="sm" color="dimmed" mb="md">
-          Ollama allows you easily self host LLMs. Set up Ollama on your machine
-          and provide the base URL. Note that only the following models are
-          supported, email us if you&apos;d like any others:{' '}
-          <code>llama3.1:8b</code>, <code>llama3.1:70b</code>,{' '}
-          <code>llama3.1:405b</code>.
+          {t('ollama_helper_text')}
         </Text>
         {provider?.error &&
           (form.state.values?.providers?.Ollama?.enabled ||
@@ -139,8 +137,8 @@ export default function OllamaProviderInput({
                   >
                     {(field: any) => (
                       <TextInput
-                        label="Base URL"
-                        placeholder="http://your-domain.com"
+                        label={t('ollama_base_url')}
+                        placeholder={t('ollama_base_url_placeholder')}
                         value={field.state.value}
                         styles={{
                           input: {

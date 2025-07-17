@@ -347,6 +347,7 @@ export default function Navbar({
   const { classes } = useStyles()
   const router = useRouter()
   const [activeLink, setActiveLink] = useState<string>('')
+  const { t } = useTranslation('common')
 
   useEffect(() => {
     if (!router.isReady) return

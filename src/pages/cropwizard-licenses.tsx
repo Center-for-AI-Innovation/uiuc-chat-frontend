@@ -4,11 +4,14 @@ import { type NextPage } from 'next'
 import Link from 'next/link'
 import { MainPageBackground } from '../components/UIUC-Components/MainPageBackground'
 import GlobalFooter from '../components/UIUC-Components/GlobalFooter'
+import { useTranslation } from 'next-i18next'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 
 const CropwizardLicenses: NextPage = () => {
+  const { t } = useTranslation('common')
   return (
     <MainPageBackground>
-      <Title order={2}>CropWizard Document Licenses</Title>
+      <Title order={2}>{t('cropwizard_licenses_title')}</Title>
       <Flex
         mih={50}
         // bg="rgba(0, 0, 0, .3)"
@@ -19,10 +22,7 @@ const CropwizardLicenses: NextPage = () => {
         wrap="wrap"
       >
         <Text className="max-w-[600px]">
-          The documents in CropWizard are collected from many different sources,
-          and each document is subject to its respective license, including the
-          following. Any downstream use of CropWizard&apos;s results must
-          respect the license of the documents that were used.
+          {t('cropwizard_licenses_body')}
         </Text>
         <List className="pl-10">
           <List.Item>
@@ -104,7 +104,16 @@ const CropwizardLicenses: NextPage = () => {
   )
 }
 
+export const getStaticProps = async ({ locale }: { locale: string }) => {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale, ['common'])),
+    },
+  };
+};
+
 export const CropwizardLicenseDisclaimer = () => {
+  const { t } = useTranslation('common')
   return (
     <>
       <span>

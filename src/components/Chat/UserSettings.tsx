@@ -9,7 +9,7 @@ import { FancyRetrieval } from './FancyRetrieval'
 import { DocumentGroupsItem } from './DocumentGroupsItem'
 import { ToolsItem } from './ToolsItem'
 import { ModelParams } from './ModelParams'
-import { useTranslation } from 'react-i18next'
+import { useTranslation } from 'next-i18next'
 import { prebuiltAppConfig } from '~/utils/modelProviders/ConfigWebLLM'
 import * as webllm from '@mlc-ai/web-llm'
 import { type WebllmModel, webLLMModels } from '~/utils/modelProviders/WebLLM'
@@ -113,7 +113,7 @@ export const UserSettings = () => {
           <Modal.Title
             className={`${classes.title} ${montserrat_heading.variable} font-montserratHeading`}
           >
-            Settings
+            {t('settings')}
           </Modal.Title>
           <Modal.CloseButton
             onClick={handleClose}
@@ -137,19 +137,19 @@ export const UserSettings = () => {
                 className={`${classes.tab} ${isSmallScreen ? 'px-2 text-xs' : 'text-md'} ${montserrat_paragraph.variable} font-montserratParagraph text-[--modal-text]`}
                 value="model"
               >
-                Model
+                {t('model')}
               </Tabs.Tab>
               <Tabs.Tab
                 className={`${classes.tab} ${isSmallScreen ? 'px-2 text-xs' : 'text-md'} ${montserrat_paragraph.variable} font-montserratParagraph text-[--modal-text]`}
                 value="documentGroups"
               >
-                Document Groups
+                {t('document_groups')}
               </Tabs.Tab>
               <Tabs.Tab
                 className={`${classes.tab} ${isSmallScreen ? 'px-2 text-xs' : 'text-md'} ${montserrat_paragraph.variable} font-montserratParagraph text-[--modal-text]`}
                 value="tools"
               >
-                Tools
+                {t('tools')}
               </Tabs.Tab>
             </Tabs.List>
 

@@ -8,6 +8,7 @@ import {
 } from '~/utils/modelProviders/LLMProvider'
 import { motion, AnimatePresence } from 'framer-motion'
 import { APIKeyInput } from '../LLMsApiKeyInputForm'
+import { useTranslation } from 'next-i18next'
 
 export default function SambaNovaProviderInput({
   provider,
@@ -18,6 +19,7 @@ export default function SambaNovaProviderInput({
   form: any
   isLoading: boolean
 }) {
+  const { t } = useTranslation('common')
   if (isLoading) {
     return <Skeleton height={200} width={330} radius={'lg'} />
   }
@@ -51,7 +53,7 @@ export default function SambaNovaProviderInput({
                   mb="xs"
                   style={{ paddingRight: '8px' }}
                 >
-                  SambaNova
+                  {t('sambanova_title')}
                 </Text>
                 <IconExternalLink size={16} className="mb-3" />
               </div>
@@ -62,9 +64,9 @@ export default function SambaNovaProviderInput({
               <Switch
                 size="md"
                 labelPosition="left"
-                onLabel="ON"
-                offLabel="OFF"
-                aria-label="Enable SambaNova provider"
+                onLabel={t('on')}
+                offLabel={t('off')}
+                aria-label={t('enable_sambanova_provider')}
                 checked={field.state.value}
                 onChange={(event) => {
                   event.preventDefault()
@@ -129,7 +131,7 @@ export default function SambaNovaProviderInput({
                     {(apiKeyField: any) => (
                       <APIKeyInput
                         field={apiKeyField}
-                        placeholder="SambaNova API Key"
+                        placeholder={t('sambanova_api_key')}
                       />
                     )}
                   </form.Field>

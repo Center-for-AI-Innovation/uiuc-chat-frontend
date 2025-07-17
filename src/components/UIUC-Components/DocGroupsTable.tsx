@@ -17,6 +17,7 @@ import {
   useUpdateDocGroup,
 } from '~/hooks/docGroupsQueries'
 import { useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'next-i18next'
 
 const GlobalStyle = createGlobalStyle`
   .mantine-Checkbox-input:checked {
@@ -84,6 +85,7 @@ const GlobalStyle = createGlobalStyle`
 export function DocGroupsTable({ course_name }: { course_name: string }) {
   const queryClient = useQueryClient()
   const [documentGroupSearch, setDocumentGroupSearch] = useState('')
+  const { t } = useTranslation('common')
 
   const updateDocGroup = useUpdateDocGroup(course_name, queryClient)
 
@@ -119,7 +121,7 @@ export function DocGroupsTable({ course_name }: { course_name: string }) {
       <GlobalStyle />
       <div className="w-full px-0 py-4 md:px-2">
         <TextInput
-          placeholder="Search by Document Group"
+          placeholder={t('documents.search_by_document_group')}
           mb="sm"
           radius="md"
           icon={<IconSearch />}
@@ -154,10 +156,10 @@ export function DocGroupsTable({ course_name }: { course_name: string }) {
             <thead>
               <tr>
                 <th className="w-[50%] sm:w-[60%] md:w-[70%]">
-                  Document Group
+                  {t('documents.document_group')}
                 </th>
                 <th className="w-[30%] sm:w-[25%] md:w-[15%]">
-                  Number of Docs
+                  {t('documents.number_of_docs')}
                 </th>
                 <th className="w-[20%] text-center sm:w-[15%]">
                   <Tooltip
@@ -167,10 +169,10 @@ export function DocGroupsTable({ course_name }: { course_name: string }) {
                     arrowSize={8}
                     width={220}
                     withArrow
-                    label="If a document is included in ANY enabled group, it will be included in chatbot results. Enabled groups take precedence over disabled groups."
+                    label={t('documents.enabled_tooltip')}
                   >
                     <span className="flex items-center justify-center whitespace-nowrap">
-                      <span className="hidden sm:inline">Enabled</span>
+                      <span className="hidden sm:inline">{t('documents.enabled')}</span>
                       <IconHelp size={16} className="ml-1" />
                     </span>
                   </Tooltip>
@@ -222,7 +224,7 @@ export function DocGroupsTable({ course_name }: { course_name: string }) {
               {filteredDocumentGroups.length === 0 && (
                 <tr>
                   <td colSpan={4}>
-                    <Text align="center">No document groups found</Text>
+                    <Text align="center">{t('documents.no_document_groups_found')}</Text>
                   </td>
                 </tr>
               )}

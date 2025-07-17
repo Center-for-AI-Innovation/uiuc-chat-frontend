@@ -9,6 +9,13 @@ import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import APIKeyInputForm from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+
+export const getServerSideProps = async ({ locale }) => ({
+  props: {
+    ...(await serverSideTranslations(locale, ['common'])),
+  },
+});
 
 const CourseMain: NextPage = () => {
   const router = useRouter()

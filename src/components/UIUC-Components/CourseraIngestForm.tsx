@@ -14,7 +14,9 @@ import {
 // import { Checkbox } from '@radix-ui/react-checkbox'
 import NextLink from 'next/link'
 import Image from 'next/image'
+import { useTranslation } from 'next-i18next'
 export default function CourseraIngestForm(): JSX.Element {
+  const { t } = useTranslation('common')
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
   const [url, setUrl] = useState('')
@@ -46,10 +48,7 @@ export default function CourseraIngestForm(): JSX.Element {
   const handleIngest = () => {
     setOpen(false)
     if (url.includes('coursera.org')) {
-      // TODO: coursera ingest
-      alert(
-        'Coursera ingest is not yet automated (auth is hard). Please email rohan13@illinois.edu to do it for you',
-      )
+      alert(t('coursera_ingest_alert'))
     }
   }
   // if (isLoading) {
@@ -106,7 +105,7 @@ export default function CourseraIngestForm(): JSX.Element {
         <DialogContent className="mx-auto h-auto max-h-[85vh] w-[95%] max-w-2xl overflow-y-auto !rounded-2xl border-0 bg-[--modal] px-4 py-6 text-[--modal-text] sm:px-6">
           <DialogHeader>
             <DialogTitle className="mb-4 text-left text-xl font-bold">
-              Ingest Coursera Course
+              {t('coursera_ingest_title')}
             </DialogTitle>
           </DialogHeader>
           <div className="">
@@ -177,7 +176,7 @@ export default function CourseraIngestForm(): JSX.Element {
               disabled={!isUrlValid}
               className="h-11 w-full rounded-xl bg-[--dashboard-button] text-[--dashboard-button-foreground] transition-colors hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--background-dark]"
             >
-              Ingest Course
+              {t('coursera_ingest_button')}
             </Button>
           </div>
         </DialogContent>
