@@ -42,7 +42,8 @@ export const fetchContexts = async (
   // return dummyContexts
 
   //const url = `http://localhost:8000/getTopContexts`
-  const url = `https://flask-production-751b.up.railway.app/getTopContexts`
+  //const url = `https://flask-production-751b.up.railway.app/getTopContexts`
+    const url = `https://flask-pr-316.up.railway.app/getTopContexts`
 
   try {
     const response = await fetch(url, {
