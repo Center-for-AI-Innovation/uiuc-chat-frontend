@@ -101,7 +101,8 @@ const handler = async (
     const response = await fetch(
       //'https://flask-production-751b.up.railway.app/process-chat-file',
       //'http://localhost:8000/process-chat-file',
-      'https://flask-pr-316.up.railway.app/process-chat-file',
+      //'https://flask-pr-316.up.railway.app/process-chat-file',
+      `${process.env.RAILWAY_URL}/process-chat-file`,
       {
         method: 'POST',
         headers: {

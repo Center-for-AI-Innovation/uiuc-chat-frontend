@@ -175,12 +175,16 @@ const FilePreviewModal: React.FC<{
   } = useContext(HomeContext)
 
   const [actualFileUrl, setActualFileUrl] = useState<string>('')
+  const [textContent, setTextContent] = useState<string>('')
 
   const isImage =
     fileType?.includes('image') ||
-    fileName.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)$/i)
+    fileName.toLowerCase().match(/\.(jpg|jpeg|png)$/i)
   const isPdf =
     fileType?.includes('pdf') || fileName.toLowerCase().endsWith('.pdf')
+  const isTextFile =
+    fileType?.includes('text') ||
+    fileName.toLowerCase().match(/\.(txt|md|html|xml|csv|py|srt|vtt)$/i)
 
   useEffect(() => {
     if (fileUrl && isOpen) {
@@ -190,6 +194,32 @@ const FilePreviewModal: React.FC<{
       })
     }
   }, [fileUrl, isOpen, courseName])
+
+  // Load text content for text files
+  useEffect(() => {
+    if (isTextFile && actualFileUrl && isOpen) {
+      fetch(actualFileUrl)
+        .then(response => response.text())
+        .then(text => setTextContent(text))
+        .catch(error => {
+          console.error('Failed to load text content:', error)
+          setTextContent('Failed to load file content')
+        })
+    }
+  }, [isTextFile, actualFileUrl, isOpen])
+
+  // Auto-download non-previewable files when modal opens
+  useEffect(() => {
+    if (actualFileUrl && isOpen && !isImage && !isPdf && !isTextFile) {
+      const link = document.createElement('a')
+      link.href = actualFileUrl
+      link.download = fileName
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      onClose() // Close modal after triggering download
+    }
+  }, [actualFileUrl, isOpen, isImage, isPdf, isTextFile, fileName, onClose])
 
   return (
     <Modal
@@ -220,6 +250,12 @@ const FilePreviewModal: React.FC<{
                 setActualFileUrl('')
               }}
             />
+          ) : isTextFile && actualFileUrl ? (
+            <div className="h-[400px] w-full overflow-auto p-4">
+              <pre className="whitespace-pre-wrap font-mono text-sm text-gray-800 dark:text-gray-200">
+                {textContent}
+              </pre>
+            </div>
           ) : (
             <div className="flex h-[400px] flex-col items-center justify-center text-gray-500 dark:text-gray-400">
               <IconFile size={48} className="mb-2" />
