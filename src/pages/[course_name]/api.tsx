@@ -12,6 +12,13 @@ import { Flex } from '@mantine/core'
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 import { initiateSignIn } from '~/utils/authHelpers'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+
+export const getServerSideProps = async ({ locale }) => ({
+  props: {
+    ...(await serverSideTranslations(locale, ['common'])),
+  },
+});
 
 const ApiPage: NextPage = () => {
   const router = useRouter()

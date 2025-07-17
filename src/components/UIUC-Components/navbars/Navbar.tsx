@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { montserrat_heading } from 'fonts'
+import { useTranslation } from 'next-i18next'
 import GlobalHeader from '~/components/UIUC-Components/navbars/GlobalHeader'
 import {
   Flex,
@@ -378,6 +379,7 @@ export default function Navbar({
   const { classes } = useStyles()
   const router = useRouter()
   const [activeLink, setActiveLink] = useState<string>('')
+  const { t } = useTranslation('common')
 
   useEffect(() => {
     if (!router.isReady) return
@@ -387,12 +389,12 @@ export default function Navbar({
 
   const items: NavItem[] = [
     {
-      name: <NavText>Dashboard</NavText>,
+      name: <NavText>{t('navigation.dashboard')}</NavText>,
       icon: <DashboardIcon />,
       link: course_name ? `/${course_name}/dashboard` : '/dashboard', // Add conditional
     },
     {
-      name: <NavText>LLMs</NavText>,
+      name: <NavText>{t('navigation.llms')}</NavText>,
       icon: <LLMIcon />,
       link: course_name ? `/${course_name}/llms` : '/llms', // Add conditional
     },
@@ -404,24 +406,24 @@ export default function Navbar({
           size={13}
           styles={{ indicator: { top: '-4px !important' } }}
         >
-          <NavText>Analysis</NavText>
+          <NavText>{t('navigation.analysis')}</NavText>
         </Indicator>
       ),
       icon: <ReportIcon />,
       link: course_name ? `/${course_name}/analysis` : '/analysis', // Add conditional
     },
     {
-      name: <NavText>Prompting</NavText>,
+      name: <NavText>{t('navigation.prompting')}</NavText>,
       icon: <MessageCodeIcon />,
       link: course_name ? `/${course_name}/prompt` : '/prompt', // Add conditional
     },
     {
-      name: <NavText>Tools</NavText>,
+      name: <NavText>{t('navigation.tools')}</NavText>,
       icon: <ChartDots3Icon />,
       link: course_name ? `/${course_name}/tools` : '/tools', // Add conditional
     },
     {
-      name: <NavText>API</NavText>,
+      name: <NavText>{t('navigation.api')}</NavText>,
       icon: <ApiIcon />,
       link: course_name ? `/${course_name}/api` : '/api', // Add conditional
     },
@@ -448,12 +450,12 @@ export default function Navbar({
               <div className="hidden items-center md:flex">
                 <Divider orientation="vertical" className={classes.divider} />
                 <div className="flex items-center gap-1 px-2">
-                  <Tooltip label="New Project" position="bottom" withArrow>
+                  <Tooltip label={t('navigation.new_project')} position="bottom" withArrow>
                     <Link href="/new" className={classes.iconButton}>
                       <FileIcon />
                     </Link>
                   </Tooltip>
-                  <Tooltip label="Documentation" position="bottom" withArrow>
+                  <Tooltip label={t('navigation.docs')} position="bottom" withArrow>
                     <Link
                       href="https://docs.uiuc.chat/"
                       className={classes.iconButton}

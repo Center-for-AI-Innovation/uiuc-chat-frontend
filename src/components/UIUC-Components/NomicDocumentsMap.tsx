@@ -3,8 +3,10 @@ import { Title, Text, Flex, Divider, ActionIcon } from '@mantine/core'
 import React, { useEffect, useState } from 'react'
 import { IconInfoCircle } from '@tabler/icons-react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { useTranslation } from 'next-i18next'
 
 function NomicDocumentMap({ course_name }: { course_name: string }) {
+  const { t } = useTranslation('common')
   const [accordionOpened, setAccordionOpened] = useState(false)
 
   const [nomicMapData, setNomicMapData] = useState<NomicMapData | null>(null)
@@ -59,7 +61,7 @@ function NomicDocumentMap({ course_name }: { course_name: string }) {
                   order={3}
                   className={`pl-12 text-[hsl(280,100%,70%)] ${montserrat_heading.variable} font-montserratHeading text-lg sm:text-2xl`}
                 >
-                  Concept Map of User Queries
+                  {t('analysis.conceptMapOfUserQueries', 'Concept Map of User Queries')}
                 </Title>
 
                 <ActionIcon
@@ -67,7 +69,7 @@ function NomicDocumentMap({ course_name }: { course_name: string }) {
                   color="gray"
                   onClick={() => setAccordionOpened(!accordionOpened)}
                   className="hover:bg-white/10"
-                  title="More info on nomic map"
+                  title={t('analysis.moreInfoConceptMap', 'More info on concept map')}
                 >
                   <IconInfoCircle className="text-white/60" />
                 </ActionIcon>
@@ -99,38 +101,37 @@ function NomicDocumentMap({ course_name }: { course_name: string }) {
                         <Text
                           className={`${montserrat_paragraph.variable} mb-4 font-montserratParagraph text-white/80`}
                         >
-                          The Concept Map visualizes all queries made in this
-                          project:
+                          {t('analysis.conceptMapDescription', 'The Concept Map visualizes all queries made in this project:')}
                         </Text>
                         <ul className="list-inside list-disc space-y-2 text-white/80">
                           <li className="text-sm">
                             <span className="text-violet-300">
-                              Similar topics
+                              {t('analysis.similarTopics', 'Similar topics')}
                             </span>{' '}
-                            cluster together
+                            {t('analysis.clusterTogether', 'cluster together')}
                           </li>
                           <li className="text-sm">
                             <span className="text-violet-300">
-                              Different topics
+                              {t('analysis.differentTopics', 'Different topics')}
                             </span>{' '}
-                            are positioned further apart
+                            {t('analysis.positionedFurtherApart', 'are positioned further apart')}
                           </li>
                           <li className="text-sm">
                             <span className="text-violet-300">
-                              Common themes
+                              {t('analysis.commonThemes', 'Common themes')}
                             </span>{' '}
-                            and knowledge gaps become visible
+                            {t('analysis.knowledgeGapsVisible', 'and knowledge gaps become visible')}
                           </li>
                         </ul>
                         <Text className="mt-3 text-gray-400" size="sm">
-                          Learn more about{' '}
+                          {t('analysis.learnMoreSemantic', 'Learn more about')}{' '}
                           <a
                             className="text-purple-400 underline hover:text-purple-300"
                             href="https://atlas.nomic.ai/"
                             target="_blank"
                             rel="noopener noreferrer"
                           >
-                            semantic similarity visualizations
+                            {t('analysis.semanticSimilarityVisualizations', 'semantic similarity visualizations')}
                           </a>
                         </Text>
                       </div>
@@ -176,22 +177,20 @@ function NomicDocumentMap({ course_name }: { course_name: string }) {
                   className={`${montserrat_heading.variable} font-montserratHeading text-gray-200`}
                   size="lg"
                 >
-                  Visualization Not Available Yet
+                  {t('visualization_not_available')}
                 </Text>
                 <Text className="mt-2 text-gray-300">
-                  We need at least 20 questions to generate a meaningful
-                  visualization of how topics relate to each other. Please ask
-                  more questions and check back later!
+                  {t('visualization_not_available_body')}
                 </Text>
                 <Text className="mt-3 text-gray-400" size="sm">
-                  Learn more about{' '}
+                  {t('learn_more_semantic')}{' '}
                   <a
                     className="text-purple-400 underline hover:text-purple-300"
                     href="https://atlas.nomic.ai/"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    semantic similarity visualizations
+                    {t('learn_more_semantic')}
                   </a>
                 </Text>
               </div>

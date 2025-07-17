@@ -36,6 +36,7 @@ import { Montserrat } from 'next/font/google'
 import { useFetchAllWorkflows } from '~/utils/functionCalling/handleFunctionCalling'
 import { IntermediateStateAccordion } from './IntermediateStateAccordion'
 import { useAuth } from 'react-oidc-context'
+import { useTranslation } from 'next-i18next'
 
 export const GetCurrentPageName = () => {
   // /CS-125/dashboard --> CS-125
@@ -255,6 +256,8 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
     })
   }
 
+  const { t } = useTranslation('common')
+
   if (auth.isLoading || !courseMetadata) {
     return <LoadingPlaceholderForAdminPages />
   }
@@ -292,7 +295,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
         <title>{course_name}</title>
         <meta
           name="description"
-          content="The AI teaching assistant built for students at UIUC."
+          content={t('tools.metaDescription', 'The AI teaching assistant built for students at UIUC.')}
         />
         <link rel="icon" href="/favicon.ico" />
         {/* <Header /> */}
@@ -329,7 +332,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                       gradient={{ from: 'gold', to: 'white', deg: 50 }}
                       className={`${montserrat_heading.variable} font-montserratHeading`}
                     >
-                      LLM Tool Use &amp; Function Calling
+                      {t('tools.llmToolUse', 'LLM Tool Use & Function Calling')}
                     </Title>
                     <Stack align="start" justify="start">
                       <div className="flex flex-col lg:flex-row">
@@ -340,7 +343,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                           ml={'md'}
                           style={{ textAlign: 'left' }}
                         >
-                          Use{' '}
+                          {t('tools.useN8n', 'Use')}{' '}
                           <a
                             href="https://n8n.io"
                             target="_blank"
@@ -353,8 +356,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                               style={{ position: 'relative', top: '-3px' }}
                             />
                           </a>
-                          beautiful visual workflow editor to create custom
-                          functions for your project.
+                          {t('tools.visualEditor', 'beautiful visual workflow editor to create custom functions for your project.')}
                         </Title>
                         <Button
                           onClick={(event) =>
@@ -367,7 +369,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                           type="submit"
                           disabled={!n8nApiKey}
                         >
-                          {'Create/Edit Workflows'}
+                          {t('tools.createEditWorkflows', 'Create/Edit Workflows')}
                         </Button>
                       </div>
 
@@ -384,7 +386,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                             size={'xl'}
                             className={`pb-3 pt-3 ${montserrat_paragraph.variable} font-montserratParagraph`}
                           >
-                            Setup Instructions 🤠
+                            {t('tools.setupInstructions', 'Setup Instructions 🤠')}
                           </Title>
                         }
                         isLoading={false}
@@ -400,12 +402,10 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                             className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                           >
                             <List.Item>
-                              Tool use via LLMs is invite-only to prevent abuse.
-                              Please shoot me an email for access:
-                              rohan13@illinois.edu
+                              {t('tools.inviteOnly', 'Tool use via LLMs is invite-only to prevent abuse. Please shoot me an email for access: rohan13@illinois.edu')}
                             </List.Item>
                             <List.Item>
-                              Once you have access, please{' '}
+                              {t('tools.onceAccess', 'Once you have access, please')}{' '}
                               <b>
                                 <a
                                   href="https://tools.uiuc.chat/setup"
@@ -416,14 +416,13 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                                     textDecoration: 'underline',
                                   }}
                                 >
-                                  login with this link
+                                  {t('tools.loginWithLink', 'login with this link')}
                                 </a>
                                 .
                               </b>
                             </List.Item>
                             <List.Item>
-                              Inside n8n,{' '}
-                              <b>create an n8n API key and save it here</b>.
+                              {t('tools.createApiKey', 'Inside n8n, create an n8n API key and save it here.')}
                             </List.Item>
                           </List>
                         }
@@ -446,7 +445,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                               size={'xl'}
                               className={`pb-3 pt-3 ${montserrat_paragraph.variable} font-montserratParagraph`}
                             >
-                              Usage Instructions 🛠️
+                              {t('tools.usageInstructions', 'Usage Instructions 🛠️')}
                             </Title>
                           }
                           isLoading={false}
@@ -469,7 +468,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                                 className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                               >
                                 <List.Item>
-                                  Start by creating your first workflow on{' '}
+                                  {t('tools.startWorkflow', 'Start by creating your first workflow on')}{' '}
                                   <a
                                     href="https://tools.uiuc.chat/workflows"
                                     target="_blank"
@@ -480,28 +479,26 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                                   </a>
                                 </List.Item>
                                 <List.Item>
-                                  Ensure you have the correct trigger node for
-                                  your workflow, check docs for details
+                                  {t('tools.ensureTrigger', 'Ensure you have the correct trigger node for your workflow, check docs for details')}
                                 </List.Item>
                                 <List.Item>
-                                  Add the necessary nodes for your workflow
-                                </List.Item>
-                                <List.Item>Save your workflow</List.Item>
-                                <List.Item>
-                                  Make sure your workflow is active
+                                  {t('tools.addNodes', 'Add the necessary nodes for your workflow')}
                                 </List.Item>
                                 <List.Item>
-                                  Test your workflow to complete usage
-                                  onboarding
+                                  {t('tools.saveWorkflow', 'Save your workflow')}
+                                </List.Item>
+                                <List.Item>
+                                  {t('tools.makeActive', 'Make sure your workflow is active')}
+                                </List.Item>
+                                <List.Item>
+                                  {t('tools.testWorkflow', 'Test your workflow to complete usage onboarding')}
                                 </List.Item>
                                 <Title
                                   order={5}
                                   className={`${montserrat_heading.variable} ps-5 text-center font-montserratHeading font-semibold`}
                                 >
-                                  If your workflow is working as expected,
-                                  Congrats! 🚀
-                                  <br></br>
-                                  Your users can now start using it on the{' '}
+                                  {t('tools.workflowCongrats', 'If your workflow is working as expected, Congrats! 🚀')}<br></br>
+                                  {t('tools.usersCanUse', 'Your users can now start using it on the')}{' '}
                                   <a
                                     href={`/${course_name}/chat`}
                                     // target="_blank"
@@ -511,7 +508,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                                       textDecoration: 'underline',
                                     }}
                                   >
-                                    Chat Page
+                                    {t('tools.chatPage', 'Chat Page')}
                                   </a>
                                   !
                                 </Title>
@@ -542,13 +539,13 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                           gradient={{ from: 'gold', to: 'white', deg: 170 }}
                           order={3}
                         >
-                          Your n8n API Key
+                          {t('tools.yourN8nApiKey', 'Your n8n API Key')}
                         </Title>
                         <TextInput
                           // label="n8n API Key"
                           type="password"
-                          description="We use this to run your workflows. You can find your n8n API Key in your n8n account settings."
-                          placeholder="Enter your n8n API Key here"
+                          description={t('tools.apiKeyDescription', 'We use this to run your workflows. You can find your n8n API Key in your n8n account settings.')}
+                          placeholder={t('tools.apiKeyPlaceholder', 'Enter your n8n API Key here')}
                           value={n8nApiKeyTextbox}
                           onChange={(event) =>
                             setN8nApiKeyTextbox(event.target.value)
@@ -562,7 +559,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                           type="submit"
                           disabled={isLoading}
                         >
-                          {isLoading ? 'Saving...' : 'Save'}
+                          {isLoading ? t('tools.saving', 'Saving...') : t('tools.save', 'Save')}
                         </Button>
                       </div>
                     </div>
@@ -600,7 +597,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                       // size={'xl'}
                       className={`pb-3 pt-3 ${montserrat_paragraph.variable} font-montserratParagraph`}
                     >
-                      Your n8n tools
+                      {t('tools.yourN8nTools', 'Your n8n tools')}
                     </Title>
                   </Title>
                 </div>

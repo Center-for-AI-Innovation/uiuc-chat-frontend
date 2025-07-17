@@ -71,6 +71,7 @@ import { createStyles, rem } from '@mantine/core'
 import { useEffect, useState, useRef } from 'react'
 import { usePostHog } from 'posthog-js/react'
 import { IconFilePlus } from '@tabler/icons-react'
+import { useTranslation } from 'next-i18next'
 
 export function LandingPageHeader({
   forGeneralPurposeNotLandingpage = false,
@@ -78,6 +79,7 @@ export function LandingPageHeader({
   forGeneralPurposeNotLandingpage?: boolean
 }) {
   const { classes, theme } = useStyles()
+  const { t } = useTranslation('common')
   const headerStyle = forGeneralPurposeNotLandingpage
     ? {
         backgroundColor: 'var(--background)', //illinois-blue
@@ -239,7 +241,7 @@ export function LandingPageHeader({
                   <span
                     className={`${montserrat_heading.variable} font-montserratHeading`}
                   >
-                    New project
+                    {t('navigation.new_project')}
                   </span>
                 </span>
               </Link>
@@ -251,11 +253,11 @@ export function LandingPageHeader({
               >
                 <span style={{ display: 'flex', alignItems: 'center' }}>
                   <IconClipboardTexts />
-                  <span
-                    className={`${montserrat_heading.variable} font-montserratHeading`}
-                  >
-                    Docs
-                  </span>
+                                      <span
+                      className={`${montserrat_heading.variable} font-montserratHeading`}
+                    >
+                      {t('navigation.docs')}
+                    </span>
                 </span>
               </Link>
             </>
@@ -315,7 +317,7 @@ export function LandingPageHeader({
                       className={`${montserrat_heading.variable} font-montserratHeading`}
                       style={{ color: 'var(--illinois-orange)' }}
                     >
-                      Docs
+                      {t('navigation.docs')}
                     </span>
                   </span>
                 </Link>
@@ -340,7 +342,7 @@ export function LandingPageHeader({
                       className={`${montserrat_heading.variable} font-montserratHeading`}
                       style={{ color: 'var(--illinois-orange)' }}
                     >
-                      News
+                      {t('navigation.news')}
                     </span>
                   </span>
                 </Link>
@@ -361,7 +363,7 @@ export function LandingPageHeader({
                       className={`${montserrat_heading.variable} font-montserratHeading`}
                       style={{ color: 'var(--illinois-orange)' }}
                     >
-                      New Project
+                      {t('navigation.new_project')}
                     </span>
                   </span>
                 </Link>
@@ -428,7 +430,7 @@ export function LandingPageHeader({
                           className={`${montserrat_heading.variable} font-montserratHeading`}
                           style={{ color: 'var(--illinois-orange)' }}
                         >
-                          Docs
+                          {t('navigation.docs')}
                         </span>
                       </div>
                     </Link>
@@ -455,7 +457,7 @@ export function LandingPageHeader({
                           className={`${montserrat_heading.variable} font-montserratHeading`}
                           style={{ color: 'var(--illinois-orange)' }}
                         >
-                          News
+                          {t('navigation.news')}
                         </span>
                       </div>
                     </Link>
@@ -480,7 +482,7 @@ export function LandingPageHeader({
                           className={`${montserrat_heading.variable} font-montserratHeading`}
                           style={{ color: 'var(--illinois-orange)' }}
                         >
-                          New Project
+                          {t('navigation.new_project')}
                         </span>
                       </div>
                     </Link>

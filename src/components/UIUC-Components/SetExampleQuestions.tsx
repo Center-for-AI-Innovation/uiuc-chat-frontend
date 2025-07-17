@@ -2,6 +2,7 @@ import { TextInput, Button, Group, Box } from '@mantine/core'
 import { useState, useEffect } from 'react'
 import { CourseMetadataOptionalForUpsert } from '~/types/courseMetadata'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
+import { useTranslation } from 'next-i18next'
 
 export default function SetExampleQuestions({
   course_name,
@@ -10,6 +11,7 @@ export default function SetExampleQuestions({
   course_name: string
   course_metadata: CourseMetadataOptionalForUpsert
 }) {
+  const { t } = useTranslation('common')
   const example_questions = course_metadata?.example_questions || ['']
   const [inputList, setInputList] = useState(
     example_questions.length > 0 ? example_questions : [''],
@@ -75,9 +77,9 @@ export default function SetExampleQuestions({
             <TextInput
               key={i}
               // withAsterisk
-              label="Example question"
+              label={t('example_questions.example_question_label')}
               name="question"
-              placeholder="Contrast Shakespeare against Kierkegaard..."
+              placeholder={t('example_questions.example_question_placeholder')}
               value={value}
               onChange={(e) => handleInputChange(e, i)}
               onFocus={() => handleInputFocus(i)}
@@ -90,7 +92,7 @@ export default function SetExampleQuestions({
             className="bg-purple-800 hover:border-indigo-600 hover:bg-indigo-600"
             type="submit"
           >
-            Submit
+            {t('example_questions.submit_button')}
           </Button>
         </Group>
       </form>

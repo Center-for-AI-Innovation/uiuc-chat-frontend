@@ -30,8 +30,8 @@ const nextI18NextConfig = {
   },
   localePath:
     typeof window === 'undefined'
-      ? path.resolve('./src/public/locales')
-      : '/src/public/locales',
+      ? path.resolve('./public/locales')
+      : '/public/locales',
 }
 
 export default nextI18NextConfig

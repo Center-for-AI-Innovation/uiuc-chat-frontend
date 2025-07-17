@@ -29,6 +29,7 @@ import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { v4 as uuidv4 } from 'uuid'
 import { FileUpload } from './UploadNotification'
 import { AuthContextProps } from 'react-oidc-context'
+import { useTranslation } from 'next-i18next'
 
 const useStyles = createStyles((theme) => ({
   wrapper: {
@@ -86,6 +87,7 @@ export function LargeDropzone({
   const { classes, theme } = useStyles()
   const openRef = useRef<() => void>(null)
   const [files, setFiles] = useState<File[]>([])
+  const { t } = useTranslation('common')
 
   const refreshOrRedirect = async (redirect_to_gpt_4: boolean) => {
     if (is_new_course) {
@@ -404,14 +406,12 @@ export function LargeDropzone({
                 mt={isSmallScreen ? 'md' : 'xl'}
                 className="text-gray-200"
               >
-                <Dropzone.Accept>Drop files here</Dropzone.Accept>
-                <Dropzone.Reject>
-                  Upload rejected, not proper file type or too large.
-                </Dropzone.Reject>
+                <Dropzone.Accept>{t('dropzone_accept')}</Dropzone.Accept>
+                <Dropzone.Reject>{t('dropzone_reject')}</Dropzone.Reject>
                 <Dropzone.Idle>
                   {isDisabled
-                    ? 'Enter an available project name above! 👀'
-                    : 'Upload materials'}
+                    ? t('dropzone_idle_project_name')
+                    : t('dropzone_idle_upload_materials')}
                 </Dropzone.Idle>
               </Text>
 
@@ -422,7 +422,7 @@ export function LargeDropzone({
                   mt="xs"
                   className="text-gray-400"
                 >
-                  Drag&apos;n&apos;drop files or a whole folder here
+                  {t('dropzone_drag_helper')}
                 </Text>
               )}
 
@@ -431,7 +431,7 @@ export function LargeDropzone({
               </div>
             </div>
           </Dropzone>
-          {/* {uploadInProgress && (
+          {uploadInProgress && (
             <div className="flex flex-col items-center justify-center px-4 text-center">
               <Title
                 order={4}
@@ -442,12 +442,10 @@ export function LargeDropzone({
                   lineHeight: '1.4',
                 }}
               >
-                Remain on this page until upload is complete
-                <br />
-                or ingest will fail.
+                {t('remain_until_upload_complete')}
               </Title>
             </div>
-          )} */}
+          )}
         </div>
         <div
           style={{

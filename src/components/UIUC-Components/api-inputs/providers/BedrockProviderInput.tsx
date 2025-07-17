@@ -17,8 +17,10 @@ import {
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'next-i18next'
 
 function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
+  const { t } = useTranslation('common')
   return (
     <>
       {field.state.meta.isTouched && field.state.meta.errors.length ? (
@@ -27,7 +29,7 @@ function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
         </Text>
       ) : null}
       {field.state.meta.isValidating ? (
-        <Text size="xs">Validating...</Text>
+        <Text size="xs">{t('validating')}</Text>
       ) : null}
     </>
   )
@@ -94,6 +96,7 @@ export default function BedrockProviderInput({
   form: any
   isLoading: boolean
 }) {
+  const { t } = useTranslation('common')
   const [isSaving, setIsSaving] = useState(false)
 
   if (isLoading) {
@@ -138,7 +141,7 @@ export default function BedrockProviderInput({
                   mb="xs"
                   style={{ paddingRight: '8px' }}
                 >
-                  Amazon Bedrock
+                  {t('bedrock_title')}
                 </Text>
                 <IconExternalLink size={16} className="mb-3" />
               </div>
@@ -149,9 +152,9 @@ export default function BedrockProviderInput({
               <Switch
                 size="md"
                 labelPosition="left"
-                onLabel="ON"
-                offLabel="OFF"
-                aria-label="Enable Bedrock provider"
+                onLabel={t('on')}
+                offLabel={t('off')}
+                aria-label={t('enable_bedrock_provider')}
                 checked={field.state.value}
                 onChange={(event) => {
                   event.preventDefault()
@@ -214,7 +217,7 @@ export default function BedrockProviderInput({
                     {(field: any) => (
                       <CredentialInput
                         field={field}
-                        placeholder="AWS Access Key ID"
+                        placeholder={t('bedrock_access_key_id')}
                         onEnterPress={handleSaveCredentials}
                       />
                     )}
@@ -226,7 +229,7 @@ export default function BedrockProviderInput({
                     {(field: any) => (
                       <CredentialInput
                         field={field}
-                        placeholder="AWS Secret Access Key"
+                        placeholder={t('bedrock_secret_access_key')}
                         onEnterPress={handleSaveCredentials}
                       />
                     )}
@@ -238,7 +241,7 @@ export default function BedrockProviderInput({
                     {(field: any) => (
                       <CredentialInput
                         field={field}
-                        placeholder="AWS Region"
+                        placeholder={t('bedrock_region')}
                         onEnterPress={handleSaveCredentials}
                       />
                     )}

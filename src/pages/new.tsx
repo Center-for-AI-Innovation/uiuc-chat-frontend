@@ -6,6 +6,13 @@ import { useAuth } from 'react-oidc-context'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+
+export const getServerSideProps = async ({ locale }) => ({
+  props: {
+    ...(await serverSideTranslations(locale, ['common'])),
+  },
+});
 
 const NewCoursePage = () => {
   const router = useRouter()

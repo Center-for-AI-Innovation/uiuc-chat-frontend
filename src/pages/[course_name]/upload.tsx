@@ -27,6 +27,13 @@ import MITIngestForm from '~/components/UIUC-Components/MITIngestForm'
 import CourseraIngestForm from '~/components/UIUC-Components/CourseraIngestForm'
 import SupportedFileUploadTypes from '~/components/UIUC-Components/SupportedFileUploadTypes'
 import { CannotEditCourse } from '~/components/UIUC-Components/CannotEditCourse'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+
+export const getServerSideProps = async ({ locale }) => ({
+  props: {
+    ...(await serverSideTranslations(locale, ['common'])),
+  },
+});
 
 const CourseMain: NextPage = () => {
   const router = useRouter()
