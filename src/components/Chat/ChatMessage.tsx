@@ -221,6 +221,11 @@ const FilePreviewModal: React.FC<{
     }
   }, [actualFileUrl, isOpen, isImage, isPdf, isTextFile, fileName, onClose])
 
+  // Don't render modal for non-previewable files
+  if (isOpen && !isImage && !isPdf && !isTextFile) {
+    return null
+  }
+
   return (
     <Modal
       opened={isOpen}
@@ -256,14 +261,7 @@ const FilePreviewModal: React.FC<{
                 {textContent}
               </pre>
             </div>
-          ) : (
-            <div className="flex h-[400px] flex-col items-center justify-center text-gray-500 dark:text-gray-400">
-              <IconFile size={48} className="mb-2" />
-              <p className="text-sm">
-                Preview not available for this file type
-              </p>
-            </div>
-          )}
+          ) : null}
         </div>
       </div>
     </Modal>
