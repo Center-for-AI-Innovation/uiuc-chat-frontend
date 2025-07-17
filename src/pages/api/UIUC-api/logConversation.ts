@@ -22,13 +22,16 @@ const logConversation = async (req: any, res: any) => {
   // Sanitize the entire conversation object
   const sanitizedConversation = sanitizeForLogging(conversation)
 
-  try{
-    const result = await db.insert(llmConvoMonitor).values({
-      convo: sanitizedConversation,
-      convo_id: await sanitizedConversation.id.toString(),
-      course_name: course_name,
-      user_email: sanitizedConversation.userEmail,
-      }).onConflictDoUpdate({
+  try {
+    const result = await db
+      .insert(llmConvoMonitor)
+      .values({
+        convo: sanitizedConversation,
+        convo_id: await sanitizedConversation.id.toString(),
+        course_name: course_name,
+        user_email: sanitizedConversation.userEmail,
+      })
+      .onConflictDoUpdate({
         target: [llmConvoMonitor.convo_id],
         set: {
           convo: sanitizedConversation,
@@ -38,27 +41,24 @@ const logConversation = async (req: any, res: any) => {
         },
       })
   } catch (error: any) {
-    console.log('new error form database in logConversation:', error)
+    console.log('new error from database in logConversation:', error)
   }
 
   // Send to our custom monitor
   try {
-    const response = await fetch(
-      getBackendUrl() + '/llm-monitor-message',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          // messages: sanitizedConversation.messages, // we get these from database on the backend.
-          course_name: course_name,
-          conversation_id: conversation.id,
-          model_name: conversation.model.name,
-          user_email: sanitizedConversation.userEmail,
-        }),
+    const response = await fetch(getBackendUrl() + '/llm-monitor-message', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    )
+      body: JSON.stringify({
+        // messages: sanitizedConversation.messages, // we get these from database on the backend.
+        course_name: course_name,
+        conversation_id: conversation.id,
+        model_name: conversation.model.name,
+        user_email: sanitizedConversation.userEmail,
+      }),
+    })
 
     if (!response.ok) {
       console.error('Error sending to AI TA backend:', response.statusText)
