@@ -38,7 +38,7 @@ const handler = async (
 
     const s3_filepath = `courses/${courseName}/${uniqueFileName}`
 
-    const response = await fetch(`${process.env.RABBITMQ_API_URL}`, {
+    const response = await fetch(`${process.env.INGEST_URL}`, {
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -58,7 +58,7 @@ const handler = async (
     )
 
     // Send to ingest-in-progress table
-    try{
+    try {
       const result = await db.insert(documentsInProgress).values({
         s3_path: s3_filepath,
         course_name: courseName,
