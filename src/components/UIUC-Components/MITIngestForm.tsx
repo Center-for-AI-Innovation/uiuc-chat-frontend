@@ -201,7 +201,7 @@ export default function MITIngestForm({
                       width: '100%',
                     },
                   }}
-                  placeholder={t('enter_url')}
+                  placeholder={t('enter_url') || ''}
                   radius="xl"
                   type="url"
                   value={url}

@@ -66,7 +66,7 @@ export default function GeminiProviderInput({
                 labelPosition="left"
                 onLabel={t('on')}
                 offLabel={t('off')}
-                aria-label={t('enable_gemini_provider')}
+                aria-label={t('enable_gemini_provider') || ''}
                 checked={field.state.value}
                 onChange={(event) => {
                   event.preventDefault()
@@ -125,7 +125,7 @@ export default function GeminiProviderInput({
                 >
                   <form.Field name={`providers.${ProviderNames.Gemini}.apiKey`}>
                     {(field: any) => (
-                      <APIKeyInput field={field} placeholder={t('gemini_api_key')} />
+                      <APIKeyInput field={field} placeholder={t('gemini_api_key') || ''} />
                     )}
                   </form.Field>
 

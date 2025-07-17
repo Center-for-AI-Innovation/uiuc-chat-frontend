@@ -103,10 +103,13 @@ const ConversationsPerHourChart: React.FC<ChartProps> = ({
               color: '#fff',
               fontFamily: montserrat_paragraph.style.fontFamily,
             }}
-            formatter={(value) => [t('analysis.conversationsCount', { count: value, defaultValue: 'Conversations: {{count}}' })]}
+            formatter={(value) => {
+              const num = typeof value === 'number' ? value : Number(value);
+              return String(t('analysis.conversationsCount', { count: num, defaultValue: `Conversations: ${num}` }));
+            }}
             labelFormatter={(label) => t('analysis.hourLabel', { hour: label, defaultValue: 'Hour: {{hour}}' })}
           />
-          <Bar dataKey="count" fill="#7e57c2" name={t('analysis.numberOfConversations', 'Number of Conversations')} />
+          <Bar dataKey="count" fill="#7e57c2" name={t('analysis.numberOfConversations', 'Number of Conversations') || 'Number of Conversations'} />
         </BarChart>
       </ResponsiveContainer>
     </div>

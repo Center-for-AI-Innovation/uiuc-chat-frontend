@@ -198,7 +198,7 @@ const MakeNewCoursePage = ({
                         marginBottom: '1rem',
                       },
                     }}
-                    placeholder={t('project_name_placeholder')}
+                    placeholder={t('project_name_placeholder') || ''}
                     radius={'lg'}
                     type="text"
                     value={projectName}
@@ -227,7 +227,7 @@ const MakeNewCoursePage = ({
                     </label>
                   </Flex>
                   <Textarea
-                    placeholder={t('describe_project_placeholder')}
+                    placeholder={t('describe_project_placeholder') || ''}
                     radius={'lg'}
                     value={projectDescription}
                     onChange={(e) => setProjectDescription(e.target.value)}

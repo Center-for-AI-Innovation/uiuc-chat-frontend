@@ -91,7 +91,7 @@ const Sidebar = <T,>({
           </button>
         </div>
         <Search
-          placeholder={t('search')}
+          placeholder={t('search') || ''}
           searchTerm={searchTerm}
           onSearch={handleSearchTerm}
         />

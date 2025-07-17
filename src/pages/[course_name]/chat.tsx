@@ -13,10 +13,11 @@ import { montserrat_heading } from 'fonts'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { GetServerSidePropsContext } from 'next'
 
-export const getServerSideProps = async ({ locale }) => ({
+export const getServerSideProps = async ({ locale }: GetServerSidePropsContext) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common', 'chat', 'sidebar'])),
+    ...(await serverSideTranslations(locale ?? 'en', ['common', 'chat', 'sidebar'])),
   },
 });
 

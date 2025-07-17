@@ -125,7 +125,7 @@ export default function AzureProviderInput({
                 >
                   <form.Field name={`providers.${ProviderNames.Azure}.apiKey`}>
                     {(field: any) => (
-                      <APIKeyInput field={field} placeholder={t('azure_api_key')} />
+                      <APIKeyInput field={field} placeholder={t('azure_api_key') || ''} />
                     )}
                   </form.Field>
                   <form.Field
@@ -134,7 +134,7 @@ export default function AzureProviderInput({
                     {(field: any) => (
                       <TextInput
                         label={t('azure_endpoint')}
-                        placeholder={t('azure_endpoint_placeholder')}
+                        placeholder={t('azure_endpoint_placeholder') || ''}
                         value={field.state.value}
                         onChange={(event) =>
                           field.handleChange(event.currentTarget.value)

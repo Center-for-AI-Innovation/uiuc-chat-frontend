@@ -145,8 +145,8 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
           onChange={(event) => setUseLogScale(event.currentTarget.checked)}
           size="sm"
           color="violet"
-          aria-label={t('analysis.toggleLinearLog', 'Toggle between linear and logarithmic scale')}
-          title={t('analysis.switchLinearLog', 'Switch between linear and logarithmic scale visualization')}
+          aria-label={t('analysis.toggleLinearLog', 'Toggle between linear and logarithmic scale') || ''}
+          title={t('analysis.switchLinearLog', 'Switch between linear and logarithmic scale visualization') || ''}
         />
         <Text size="sm" color="dimmed">
           {t('analysis.logarithmic', 'Logarithmic')}
@@ -156,7 +156,7 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
       <div
         style={{ width: '100%', height: 400 }}
         role="region"
-        aria-label={t('analysis.conversationsPerDayVisualization', 'Conversations per day visualization')}
+        aria-label={t('analysis.conversationsPerDayVisualization', 'Conversations per day visualization') || ''}
       >
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
@@ -223,7 +223,7 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
             <Bar
               dataKey="count"
               fill="#7e57c2"
-              name={t('analysis.numberOfConversations', 'Number of Conversations')}
+              name={t('analysis.numberOfConversations', 'Number of Conversations') || 'Number of Conversations'}
             />
           </BarChart>
         </ResponsiveContainer>

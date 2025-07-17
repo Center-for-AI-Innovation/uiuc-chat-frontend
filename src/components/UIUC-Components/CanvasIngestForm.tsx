@@ -183,7 +183,7 @@ export default function CanvasIngestForm({
           <Alert
             icon={<IconAlertTriangle size={18} />}
             color="red"
-            title={t('canvas_permission_required')}
+            title={t('canvas_permission_required') || ''}
             className="mb-4 border border-red-500/50 bg-red-900/20"
           >
             <span className="font-semibold">
@@ -235,10 +235,10 @@ export default function CanvasIngestForm({
                   <NextLink
                     target="_blank"
                     rel="noreferrer"
-                    href={t('canvas_url_sample')}
+                    href={t('canvas_url_sample') || ''}
                     onClick={(e: React.MouseEvent) => e.stopPropagation()}
                   >
-                    {t('canvas_url_sample')}
+                    {t('canvas_url_sample') || ''}
                   </NextLink>
                 </span>
                 .
@@ -270,7 +270,7 @@ export default function CanvasIngestForm({
                     width: '100%',
                   },
                 }}
-                placeholder={t('canvas_url_placeholder')}
+                placeholder={t('canvas_url_placeholder') || ''}
                 radius="xl"
                 type="url"
                 value={url}

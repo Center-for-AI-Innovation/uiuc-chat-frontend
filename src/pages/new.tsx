@@ -7,10 +7,11 @@ import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackgro
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { GetServerSidePropsContext } from 'next'
 
-export const getServerSideProps = async ({ locale }) => ({
+export const getServerSideProps = async ({ locale }: GetServerSidePropsContext) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common'])),
+    ...(await serverSideTranslations(locale ?? 'en', ['common'])),
   },
 });
 

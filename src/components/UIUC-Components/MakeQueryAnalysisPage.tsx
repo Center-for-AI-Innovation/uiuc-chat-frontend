@@ -401,7 +401,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
         <title>{course_name}</title>
         <meta
           name="description"
-          content={t('analysis.metaDescription', 'The AI teaching assistant built for students at UIUC.')}
+          content={t('analysis.metaDescription', 'The AI teaching assistant built for students at UIUC.') || 'The AI teaching assistant built for students at UIUC.'}
         />
         <link rel="icon" href="/favicon.ico" />
         {/* <Header /> */}
@@ -861,11 +861,11 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           }
                         }}
                         data={[
-                          { value: 'all', label: t('analysis.allTime', 'All Time') },
-                          { value: 'last_week', label: t('analysis.lastWeek', 'Last Week') },
-                          { value: 'last_month', label: t('analysis.lastMonth', 'Last Month') },
-                          { value: 'last_year', label: t('analysis.lastYear', 'Last Year') },
-                          { value: 'custom', label: t('analysis.customRange', 'Custom Range') },
+                          { value: 'all', label: t('analysis.allTime', 'All Time') || 'All Time' },
+                          { value: 'last_week', label: t('analysis.lastWeek', 'Last Week') || 'Last Week' },
+                          { value: 'last_month', label: t('analysis.lastMonth', 'Last Month') || 'Last Month' },
+                          { value: 'last_year', label: t('analysis.lastYear', 'Last Year') || 'Last Year' },
+                          { value: 'custom', label: t('analysis.customRange', 'Custom Range') || 'Custom Range' },
                         ]}
                         styles={(theme: MantineTheme) => ({
                           input: {
@@ -1024,8 +1024,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           value={view}
                           onChange={(value) => setView(value || 'hour')}
                           data={[
-                            { value: 'hour', label: t('analysis.byHour', 'By Hour') },
-                            { value: 'weekday', label: t('analysis.byDayOfWeek', 'By Day of Week') },
+                            { value: 'hour', label: t('analysis.byHour', 'By Hour') || 'By Hour' },
+                            { value: 'weekday', label: t('analysis.byDayOfWeek', 'By Day of Week') || 'By Day of Week' },
                           ]}
                           className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                           styles={(theme) => ({

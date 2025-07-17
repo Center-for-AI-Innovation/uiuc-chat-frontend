@@ -114,15 +114,15 @@ const SupportedFileUploadTypes = () => {
   // className={classes.wrapper}
   const { t } = useTranslation('common');
   const fileTypes: FileType[] = [
-    { icon: IconFileTypePdf, label: t('pdf'), color: 'text-red-500' },
-    { icon: IconFileTypeDocx, label: t('word'), color: 'text-blue-500' },
-    { icon: IconFileTypePpt, label: t('ppt'), color: 'text-orange-500' },
-    { icon: IconFileTypeXls, label: t('excel'), color: 'text-green-500' },
-    { icon: IconVideo, label: t('video'), color: 'text-purple-500' },
-    { icon: IconPhoto, label: t('image'), color: 'text-pink-500' },
-    { icon: IconMusic, label: t('audio'), color: 'text-yellow-500' },
-    { icon: IconCode, label: t('code'), color: 'text-cyan-500' },
-    { icon: IconFileTypeTxt, label: t('text'), color: 'text-white' }
+    { icon: IconFileTypePdf, label: t('pdf') || 'PDF', color: 'text-red-500' },
+    { icon: IconFileTypeDocx, label: t('word') || 'Word', color: 'text-blue-500' },
+    { icon: IconFileTypePpt, label: t('ppt') || 'PPT', color: 'text-orange-500' },
+    { icon: IconFileTypeXls, label: t('excel') || 'Excel', color: 'text-green-500' },
+    { icon: IconVideo, label: t('video') || 'Video', color: 'text-purple-500' },
+    { icon: IconPhoto, label: t('image') || 'Image', color: 'text-pink-500' },
+    { icon: IconMusic, label: t('audio') || 'Audio', color: 'text-yellow-500' },
+    { icon: IconCode, label: t('code') || 'Code', color: 'text-cyan-500' },
+    { icon: IconFileTypeTxt, label: t('text') || 'Text', color: 'text-white' }
   ]
 
   return (

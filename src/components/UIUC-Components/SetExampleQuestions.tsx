@@ -77,9 +77,9 @@ export default function SetExampleQuestions({
             <TextInput
               key={i}
               // withAsterisk
-              label={t('example_questions.example_question_label')}
+              label={t('example_questions.example_question_label') || ''}
               name="question"
-              placeholder={t('example_questions.example_question_placeholder')}
+              placeholder={t('example_questions.example_question_placeholder') || ''}
               value={value}
               onChange={(e) => handleInputChange(e, i)}
               onFocus={() => handleInputFocus(i)}

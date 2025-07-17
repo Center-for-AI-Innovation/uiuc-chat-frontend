@@ -39,7 +39,7 @@ function DocumentGroupsCard({ course_name }: { course_name: string }) {
                 color="gray"
                 onClick={() => setAccordionOpened(!accordionOpened)}
                 className="hover:bg-white/10"
-                title={t('dashboard.document_groups_info')}
+                title={t('dashboard.document_groups_info') || ''}
               >
                 <IconInfoCircle className="text-white/60" />
               </ActionIcon>

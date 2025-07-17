@@ -3,10 +3,11 @@ import { MLCEngine } from '@mlc-ai/web-llm'
 import ChatUI from '~/utils/modelProviders/WebLLM'
 import { useTranslation } from 'next-i18next'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { GetStaticPropsContext } from 'next'
 
-export const getStaticProps = async ({ locale }) => ({
+export const getStaticProps = async ({ locale }: GetStaticPropsContext) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common'])),
+    ...(await serverSideTranslations(locale ?? 'en', ['common'])),
   },
 });
 
@@ -57,7 +58,7 @@ const ChatComponent = () => {
             id="chatui-input"
             type="text"
             className="chatui-input"
-            placeholder={t('enter_your_message')}
+            placeholder={t('enter_your_message') || ''}
             onKeyDown={(event) => {
               if (event.key === 'Enter') {
                 chat_ui

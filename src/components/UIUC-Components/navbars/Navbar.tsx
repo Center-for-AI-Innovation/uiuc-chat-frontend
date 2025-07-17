@@ -450,12 +450,12 @@ export default function Navbar({
               <div className="hidden items-center md:flex">
                 <Divider orientation="vertical" className={classes.divider} />
                 <div className="flex items-center gap-1 px-2">
-                  <Tooltip label={t('navigation.new_project')} position="bottom" withArrow>
+                  <Tooltip label={t('navigation.new_project') || ''} position="bottom" withArrow>
                     <Link href="/new" className={classes.iconButton}>
                       <FileIcon />
                     </Link>
                   </Tooltip>
-                  <Tooltip label={t('navigation.docs')} position="bottom" withArrow>
+                  <Tooltip label={t('navigation.docs') || ''} position="bottom" withArrow>
                     <Link
                       href="https://docs.uiuc.chat/"
                       className={classes.iconButton}

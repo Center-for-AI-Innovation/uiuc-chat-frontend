@@ -427,7 +427,7 @@ export default function WebsiteIngestForm({
                         width: '100%',
                       },
                     }}
-                    placeholder={t('enter_url_placeholder')}
+                    placeholder={t('enter_url_placeholder') || ''}
                     radius="xl"
                     type="url"
                     value={url}
@@ -445,7 +445,7 @@ export default function WebsiteIngestForm({
                       arrowSize={8}
                       withArrow
                       position="bottom-start"
-                      label={t('max_urls_tooltip')}
+                      label={t('max_urls_tooltip') || ''}
                     >
                       <div>
                         <Text
@@ -462,7 +462,7 @@ export default function WebsiteIngestForm({
                           }}
                           name="maximumUrls"
                           radius="md"
-                          placeholder={t('default_50')}
+                          placeholder={t('default_50') || ''}
                           value={maxUrls}
                           onChange={(e) => {
                             handleInputChange(e, 'maxUrls')

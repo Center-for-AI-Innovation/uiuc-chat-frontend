@@ -3,6 +3,7 @@ import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackgro
 // import { Card, Image, Text, Title, Badge, Button, Group } from '@mantine/core'
 import { useTranslation } from 'react-i18next'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { GetStaticPropsContext } from 'next'
 
 const PrivacyStatementPage: NextPage = () => {
   const { t } = useTranslation('common')
@@ -13,9 +14,9 @@ const PrivacyStatementPage: NextPage = () => {
   )
 }
 
-export const getStaticProps = async ({ locale }) => ({
+export const getStaticProps = async ({ locale }: GetStaticPropsContext) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common'])),
+    ...(await serverSideTranslations(locale ?? 'en', ['common'])),
   },
 });
 

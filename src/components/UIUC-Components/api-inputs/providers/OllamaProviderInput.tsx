@@ -135,7 +135,7 @@ export default function OllamaProviderInput({
                     {(field: any) => (
                       <TextInput
                         label={t('ollama_base_url')}
-                        placeholder={t('ollama_base_url_placeholder')}
+                        placeholder={t('ollama_base_url_placeholder') || ''}
                         value={field.state.value}
                         onChange={(event) =>
                           field.handleChange(event.currentTarget.value)

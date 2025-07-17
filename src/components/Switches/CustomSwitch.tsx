@@ -103,11 +103,11 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
           !disabled && isContainerHovered ? 'text-white' : 'text-gray-200'
         }`}
       >
-        {t(label)}
+        {t(label) || ''}
         <Tooltip
           label={
             <Text size="sm" color="gray.1">
-              {t(tooltip)}
+              {t(tooltip) || ''}
             </Text>
           }
           position="bottom"

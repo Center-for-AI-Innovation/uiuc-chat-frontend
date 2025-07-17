@@ -918,7 +918,7 @@ export const ChatInput = ({
                     className="h-full w-full rounded-lg object-cover"
                   />
                   <Tooltip
-                    label={t('remove_file')}
+                    label={t('remove_file') || ''}
                     position="top"
                     withArrow
                     style={{
@@ -983,7 +983,7 @@ export const ChatInput = ({
                   overflow: 'hidden',
                   pointerEvents: 'auto',
                 }}
-                placeholder={t('message_uiuc_chat')}
+                placeholder={t('message_uiuc_chat') || ''}
                 value={content}
                 rows={1}
                 onCompositionStart={() => setIsTyping(true)}
