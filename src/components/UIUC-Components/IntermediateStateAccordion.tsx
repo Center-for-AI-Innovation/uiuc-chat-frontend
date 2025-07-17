@@ -50,7 +50,7 @@ export const IntermediateStateAccordion = ({
           style={{
             border: 0,
             color: 'var(--foreground)',
-            backgroundColor: 'var(--background-dark)',
+            backgroundColor: 'var(--background-faded)',
             borderRadius: '0.5rem',
           }}
         >
@@ -67,7 +67,7 @@ export const IntermediateStateAccordion = ({
             {title}
           </Accordion.Control>
           <Accordion.Panel
-            className={`${montserrat_paragraph.variable} rounded-lg bg-[--background-dark] pt-2 font-montserratParagraph text-sm text-white ${error ? 'border-2 border-red-500' : ''}`}
+            className={`${montserrat_paragraph.variable} rounded-lg bg-[--background-faded] pt-2 font-montserratParagraph text-sm text-white ${error ? 'border-2 border-red-500' : ''}`}
           >
             <div style={{ position: 'relative' }}>
               <pre

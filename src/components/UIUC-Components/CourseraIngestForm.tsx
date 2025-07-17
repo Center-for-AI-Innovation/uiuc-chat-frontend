@@ -103,21 +103,22 @@ export default function CourseraIngestForm(): JSX.Element {
           </Card>
         </DialogTrigger>
 
-        <DialogContent className="mx-auto h-auto w-[95%] max-w-2xl !rounded-2xl border-0 bg-[#1c1c2e] px-4 py-6 text-white sm:px-6">
+        <DialogContent className="mx-auto h-auto max-h-[85vh] w-[95%] max-w-2xl overflow-y-auto !rounded-2xl border-0 bg-[--modal] px-4 py-6 text-[--modal-text] sm:px-6">
           <DialogHeader>
             <DialogTitle className="mb-4 text-left text-xl font-bold">
               Ingest Coursera Course
             </DialogTitle>
           </DialogHeader>
-          <div className="border-t border-gray-800 pt-4">
-            <div className="space-y-4">
+          <div className="">
+            <div className="">
               <div>
                 <div className="break-words text-sm sm:text-base">
                   <strong>For Coursera</strong>, just enter a URL like{' '}
-                  <code className="inline-flex items-center rounded-md bg-[#020307] px-2 py-1 font-mono text-xs sm:text-sm">
+                  <code className="inline-flex items-center rounded-md bg-[--illinois-orange] px-2 py-1 font-mono text-xs text-[--illinois-white] sm:text-sm">
                     coursera.org/learn/COURSE_NAME
                   </code>
-                  , for example:{' '}
+                  ,<br />
+                  for example:{' '}
                   <span className="break-all text-[--dashboard-button]">
                     <NextLink
                       target="_blank"
@@ -130,7 +131,7 @@ export default function CourseraIngestForm(): JSX.Element {
                   </span>
                   .
                 </div>
-                <div className="py-3"></div>
+
                 <Input
                   icon={
                     <Image
@@ -141,15 +142,17 @@ export default function CourseraIngestForm(): JSX.Element {
                       className="object-contain"
                     />
                   }
-                  className="w-full rounded-full"
+                  className="mt-4 w-full rounded-full"
                   styles={{
                     input: {
-                      backgroundColor: '#1A1B1E',
+                      color: 'var(--foreground)',
+                      backgroundColor: 'var(--background-faded)',
+                      borderColor: 'var(--background-dark)',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       '&:focus': {
-                        borderColor: '#9370DB',
+                        borderColor: 'var(--illinois-orange)',
                       },
                     },
                     wrapper: {
@@ -157,7 +160,7 @@ export default function CourseraIngestForm(): JSX.Element {
                     },
                   }}
                   placeholder="Enter URL..."
-                  radius="xl"
+                  radius="md"
                   type="url"
                   value={url}
                   size="lg"
@@ -168,11 +171,11 @@ export default function CourseraIngestForm(): JSX.Element {
               </div>
             </div>
           </div>
-          <div className="mt-4 border-t border-gray-800 pt-2">
+          <div className="mt-4">
             <Button
               onClick={handleIngest}
               disabled={!isUrlValid}
-              className="h-11 w-full rounded-xl bg-[--dashboard-button] text-[--dashboard-button-foreground] transition-colors hover:bg-[--dashboard-button-hover]"
+              className="h-11 w-full rounded-xl bg-[--dashboard-button] text-[--dashboard-button-foreground] transition-colors hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--background-dark]"
             >
               Ingest Course
             </Button>

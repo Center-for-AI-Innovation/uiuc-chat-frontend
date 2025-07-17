@@ -19,7 +19,11 @@ import {
 } from '@tabler/icons-react'
 
 import { useTranslation } from 'next-i18next'
-import { type Content, type ContextWithMetadata, type Message } from '@/types/chat'
+import {
+  type Content,
+  type ContextWithMetadata,
+  type Message,
+} from '@/types/chat'
 import HomeContext from '~/pages/api/home/home.context'
 import { CodeBlock } from '../Markdown/CodeBlock'
 import { MemoizedReactMarkdown } from '../Markdown/MemoizedReactMarkdown'
@@ -52,7 +56,7 @@ const useStyles = createStyles((theme) => ({
     height: '100px',
     objectFit: 'cover',
     borderRadius: '0.5rem',
-    borderColor: theme.colors.gray[6],
+    borderColor: 'var(--dashboard-border)',
     borderWidth: '1px',
     borderStyle: 'solid',
   },
@@ -1261,7 +1265,7 @@ export const ChatMessage = memo(
           } max-w-[100%]`}
           style={{ overflowWrap: 'anywhere' }}
         >
-          <div className="overflow-visible relative flex w-full px-2 py-2 pt-4 text-base md:mx-[5%] md:max-w-[90%] md:gap-6  lg:mx-[10%]">
+          <div className="relative flex w-full overflow-visible px-2 py-2 pt-4 text-base md:mx-[5%] md:max-w-[90%] md:gap-6  lg:mx-[10%]">
             <div className="min-w-[40px] text-left">
               {message.role === 'assistant' ? (
                 <>
@@ -1273,7 +1277,7 @@ export const ChatMessage = memo(
               )}
             </div>
 
-            <div className="overflow-visible prose mt-[-2px] flex w-full max-w-full flex-wrap lg:w-[90%]">
+            <div className="prose mt-[-2px] flex w-full max-w-full flex-wrap overflow-visible lg:w-[90%]">
               {message.role === 'user' ? (
                 <div className="flex w-[90%] flex-col">
                   {isEditing ? (
@@ -1316,7 +1320,7 @@ export const ChatMessage = memo(
                     </div>
                   ) : (
                     <>
-                      <div className="overflow-visible prose w-full flex-1 whitespace-pre-wrap">
+                      <div className="prose w-full flex-1 overflow-visible whitespace-pre-wrap">
                         {Array.isArray(message.content) ? (
                           <>
                             <div className="mb-0 flex w-full flex-col items-start space-y-2">
@@ -1348,7 +1352,7 @@ export const ChatMessage = memo(
                                       key={index}
                                       className={classes.imageContainerStyle}
                                     >
-                                      <div className="overflow-hidden rounded-lg shadow-lg">
+                                      <div className="overflow-hidden rounded-lg">
                                         <ImagePreview
                                           src={
                                             Array.from(imageUrls)[
@@ -1521,9 +1525,16 @@ export const ChatMessage = memo(
                                       <>
                                         Routing the request to{' '}
                                         <Badge
-                                          color="var(--badge)"
+                                          color="var(--background-dark)"
                                           radius="md"
                                           size="sm"
+                                          styles={{
+                                            root: {
+                                              color: 'var(--foreground)',
+                                              backgroundColor:
+                                                'var(--background-dark)',
+                                            },
+                                          }}
                                         >
                                           {response.readableName}
                                         </Badge>
@@ -1558,7 +1569,7 @@ export const ChatMessage = memo(
                                                         classes.imageContainerStyle
                                                       }
                                                     >
-                                                      <div className="overflow-hidden rounded-lg shadow-lg">
+                                                      <div className="overflow-hidden rounded-lg">
                                                         <ImagePreview
                                                           src={imageUrl}
                                                           alt={`Tool image argument ${index}`}
@@ -1606,13 +1617,19 @@ export const ChatMessage = memo(
                                     <>
                                       Tool output from{' '}
                                       <Badge
-                                        color={
-                                          response.error
-                                            ? 'var(--badge-error)'
-                                            : 'var(--badge)'
-                                        }
+                                        color="var(--background-dark)"
                                         radius="md"
                                         size="sm"
+                                        styles={{
+                                          root: {
+                                            color: response.error
+                                              ? 'var(--illinois-white)'
+                                              : 'var(--foreground)',
+                                            backgroundColor: response.error
+                                              ? 'var(--badge-error)'
+                                              : 'var(--background-dark)',
+                                          },
+                                        }}
                                       >
                                         {response.readableName}
                                       </Badge>
@@ -1645,7 +1662,7 @@ export const ChatMessage = memo(
                                                       classes.imageContainerStyle
                                                     }
                                                   >
-                                                    <div className="overflow-hidden rounded-lg shadow-lg">
+                                                    <div className="overflow-hidden rounded-lg">
                                                       <ImagePreview
                                                         src={imageUrl}
                                                         alt={`Tool output image ${index}`}
@@ -1795,7 +1812,7 @@ export const ChatMessage = memo(
                       ) && (
                         <div className="relative z-0 mb-1 flex justify-start">
                           <button
-                            className="group/button relative flex items-center gap-0 rounded-xl bg-[--dashboard-button] px-3 py-1.5 text-sm font-medium text-[--dashboard-button-foreground] shadow-sm transition-all duration-200 hover:bg-[--dashboard-button-hover]"
+                            className="group/button relative flex items-center gap-0 rounded-xl bg-[--dashboard-button] px-3 py-1.5 text-sm font-medium text-[--dashboard-button-foreground] transition-all duration-200 hover:bg-[--dashboard-button-hover]"
                             onClick={() => handleSourcesSidebarToggle(true)}
                           >
                             <span className="whitespace-nowrap">
@@ -1812,7 +1829,7 @@ export const ChatMessage = memo(
                                   {sourceThumbnails.map((thumbnail, index) => (
                                     <div
                                       key={index}
-                                      className="relative h-7 w-7 overflow-hidden rounded-md border-2 border-gray-200 bg-[--dashboard-button-foreground] shadow-sm transition-transform duration-200"
+                                      className="relative h-7 w-7 overflow-hidden rounded-md border-2 border-gray-200 bg-[--dashboard-button-foreground] transition-transform duration-200"
                                       style={{
                                         marginLeft:
                                           index > 0 ? '-0.75rem' : '0',
@@ -1868,6 +1885,10 @@ export const ChatMessage = memo(
               )}
             </div>
           </div>
+
+          {/* for testing citation styling, can remove later
+<div class="supMarkDown p-8">For grapevines, consider using imidacloprid (Merit) or other appropriate insecticides, but be cautious or their impact on pollinators <a href="#">KY_Apple_CropProfile.pdf</a>; <a href="#">mw-grape-productn-b919-1.pdf, p.108</a>; <a href="#">mw-grape-productn-b919.pdf, p.108</a>;</div>
+*/}
         </div>
 
         {/* Move SourcesSidebar outside the message div but keep it in the fragment */}
