@@ -236,6 +236,7 @@ export const Chatbar = ({
       setIsExporting(true)
       try {
         await downloadConversationHistoryUser(current_email, courseName)
+        // Add a notification or message here if needed, using t('export_success')
       } finally {
         setIsExporting(false)
       }
@@ -322,7 +323,7 @@ export const Chatbar = ({
       <Sidebar<Conversation>
         side={'left'}
         isOpen={showChatbar}
-        addItemButtonTitle={t('New chat')}
+        addItemButtonTitle={t('New chat') || ''}
         itemComponent={
           <Suspense
             fallback={

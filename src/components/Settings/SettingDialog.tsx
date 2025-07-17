@@ -16,7 +16,7 @@ interface Props {
 }
 
 export const SettingDialog: FC<Props> = ({ open, onClose }) => {
-  const { t } = useTranslation('settings')
+  const { t } = useTranslation('common')
   const settings: Settings = getSettings()
   const { state, dispatch } = useCreateReducer<Settings>({
     initialState: settings,
@@ -69,11 +69,11 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
             role="dialog"
           >
             <div className="pb-4 text-lg font-bold text-black dark:text-neutral-200">
-              {t('Settings')}
+              {t('settings')}
             </div>
 
             <div className="mb-2 text-sm font-bold text-black dark:text-neutral-200">
-              {t('Theme')}
+              {t('theme')}
             </div>
 
             <select
@@ -83,8 +83,8 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
                 dispatch({ field: 'theme', value: event.target.value })
               }
             >
-              <option value="dark">{t('Dark mode')}</option>
-              <option value="light">{t('Light mode')}</option>
+              <option value="dark">{t('dark_mode')}</option>
+              <option value="light">{t('light_mode')}</option>
             </select>
 
             <button
@@ -95,7 +95,7 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
                 onClose()
               }}
             >
-              {t('Save')}
+              {t('save')}
             </button>
           </div>
         </div>

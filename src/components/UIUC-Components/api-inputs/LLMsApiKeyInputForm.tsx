@@ -61,6 +61,7 @@ import { t } from 'i18next'
 import BedrockProviderInput from './providers/BedrockProviderInput'
 import GeminiProviderInput from './providers/GeminiProviderInput'
 import SambaNovaProviderInput from './providers/SambaNovaProviderInput'
+import { useTranslation } from 'next-i18next'
 
 const isSmallScreen = false
 
@@ -409,6 +410,7 @@ export function findDefaultModel(
 }
 
 export default function APIKeyInputForm() {
+  const { t } = useTranslation('common')
   const projectName = GetCurrentPageName()
 
   // ------------ <TANSTACK QUERIES> ------------
@@ -628,7 +630,7 @@ export default function APIKeyInputForm() {
                       className={`pl-8 pt-8 ${montserrat_heading.variable} font-montserratHeading`}
                     >
                       {/* API Keys: Add LLMs to your Chatbot */}
-                      Configure LLM Providers for your Chatbot
+                      {t('configure_llm_providers')}
                     </Title>
                     <Title
                       className={`${montserrat_heading.variable} flex-[1_1_50%] font-montserratHeading`}
@@ -637,8 +639,7 @@ export default function APIKeyInputForm() {
                       ml={'md'}
                       style={{ textAlign: 'left' }}
                     >
-                      Configure which LLMs are available to you users. Enable or
-                      disable models to balance price and performance.
+                      {t('configure_llms_helper')}
                     </Title>
                     <Stack align="center" justify="start">
                       <form
@@ -668,14 +669,13 @@ export default function APIKeyInputForm() {
                               }}
                               order={3}
                             >
-                              Closed source LLMs
+                              {t('closed_source_llms')}
                             </Title>
                             <Text
                               className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
                               size="md"
                             >
-                              The best performers, but you gotta pay their
-                              prices and follow their rules.
+                              {t('closed_source_llms_helper')}
                             </Text>
                             <Flex
                               direction={{ base: 'column', '75rem': 'row' }}
@@ -737,13 +737,13 @@ export default function APIKeyInputForm() {
                               }}
                               order={3}
                             >
-                              Open source LLMs
+                              {t('open_source_llms')}
                             </Title>
                             <Text
                               className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
                               size="md"
                             >
-                              Your weights, your rules.
+                              {t('open_source_llms_helper')}
                             </Text>
                             <Flex
                               direction={{ base: 'column', '75rem': 'row' }}
@@ -807,16 +807,14 @@ export default function APIKeyInputForm() {
                           gradient={{ from: 'gold', to: 'white', deg: 170 }}
                           order={3}
                         >
-                          Default Model
+                          {t('default_model')}
                         </Title>
                         <br />
                         <Text
                           className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
                           size="md"
                         >
-                          Choose the default model for your chatbot. Users can
-                          still override this default to use any of the models
-                          enabled on the left.
+                          {t('default_model_helper')}
                         </Text>
                         <br />
                         <div className="flex justify-center">

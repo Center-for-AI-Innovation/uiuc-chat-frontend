@@ -46,6 +46,7 @@ import {
 import { getWeeklyTrends } from '../../pages/api/UIUC-api/getWeeklyTrends'
 import ModelUsageChart from './ModelUsageChart'
 import { getModelUsageCounts } from '../../pages/api/UIUC-api/getModelUsageCounts'
+import { useTranslation } from 'next-i18next'
 
 const useStyles = createStyles((theme: MantineTheme) => ({
   downloadButton: {
@@ -125,6 +126,7 @@ const formatPercentageChange = (value: number | null | undefined) => {
 }
 
 const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
+  const { t } = useTranslation('common')
   const { classes, theme } = useStyles()
   const auth = useAuth()
   const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
@@ -399,7 +401,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
         <title>{course_name}</title>
         <meta
           name="description"
-          content="The AI teaching assistant built for students at UIUC."
+          content={t('analysis.metaDescription', 'The AI teaching assistant built for students at UIUC.') || 'The AI teaching assistant built for students at UIUC.'}
         />
         <link rel="icon" href="/favicon.ico" />
         {/* <Header /> */}
@@ -435,7 +437,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                   className={`px-4 text-[hsl(280,100%,70%)] ${montserrat_heading.variable} font-montserratHeading`}
                   style={{ flexGrow: 2 }}
                 >
-                  Usage Overview
+                  {t('analysis.usageOverview', 'Usage Overview')}
                 </Title>
                 <Button
                   className={`${montserrat_paragraph.variable} font-montserratParagraph ${classes.downloadButton} w-full px-2 text-sm sm:w-auto sm:px-4 sm:text-base`}
@@ -449,9 +451,9 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                   onClick={() => handleDownload(course_name)}
                 >
                   <span className="hidden sm:inline">
-                    Download Conversation History
+                    {t('analysis.downloadConversationHistory', 'Download Conversation History')}
                   </span>
-                  <span className="sm:hidden">Download History</span>
+                  <span className="sm:hidden">{t('analysis.downloadHistory', 'Download History')}</span>
                 </Button>
               </div>
 
@@ -464,10 +466,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     order={4}
                     className={`${montserrat_heading.variable} font-montserratHeading text-white`}
                   >
-                    Project Analytics
+                    {t('analysis.projectAnalytics', 'Project Analytics')}
                   </Title>
                   <Text size="sm" color="dimmed" mt={2}>
-                    Overview of project engagement and usage statistics
+                    {t('analysis.projectAnalyticsDesc', 'Overview of project engagement and usage statistics')}
                   </Text>
                 </div>
 
@@ -478,10 +480,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     <div className="mb-3 flex items-center justify-between">
                       <div>
                         <Text size="sm" color="dimmed" weight={500} mb={1}>
-                          Total Conversations
+                          {t('analysis.totalConversations', 'Total Conversations')}
                         </Text>
                         <Text size="xs" color="dimmed" opacity={0.7}>
-                          All-time chat sessions
+                          {t('analysis.allTimeChatSessions', 'All-time chat sessions')}
                         </Text>
                       </div>
                       <div className="rounded-full bg-purple-400/10 p-2">
@@ -562,10 +564,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     <div className="mb-3 flex items-center justify-between">
                       <div>
                         <Text size="sm" color="dimmed" weight={500} mb={1}>
-                          Total Users
+                          {t('analysis.totalUsers', 'Total Users')}
                         </Text>
                         <Text size="xs" color="dimmed" opacity={0.7}>
-                          All-time unique participants
+                          {t('analysis.allTimeUniqueParticipants', 'All-time unique participants')}
                         </Text>
                       </div>
                       <div className="rounded-full bg-purple-400/10 p-2">
@@ -642,10 +644,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     <div className="mb-3 flex items-center justify-between">
                       <div>
                         <Text size="sm" color="dimmed" weight={500} mb={1}>
-                          Messages
+                          {t('analysis.messages', 'Messages')}
                         </Text>
                         <Text size="xs" color="dimmed" opacity={0.7}>
-                          Total exchanges
+                          {t('analysis.totalExchanges', 'Total exchanges')}
                         </Text>
                       </div>
                       <div className="rounded-full bg-purple-400/10 p-2">
@@ -727,10 +729,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         weight={600}
                         className={`${montserrat_heading.variable} font-montserratHeading`}
                       >
-                        User Engagement Metrics
+                        {t('analysis.userEngagementMetrics', 'User Engagement Metrics')}
                       </Text>
                       <Text size="sm" color="dimmed" mt={1}>
-                        Detailed breakdown of user interaction patterns
+                        {t('analysis.userEngagementDesc', 'Detailed breakdown of user interaction patterns')}
                       </Text>
                     </div>
                   </div>
@@ -741,10 +743,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                       <div className="mb-3 flex items-center justify-between">
                         <div>
                           <Text size="sm" color="dimmed" weight={500} mb={1}>
-                            Conversations per User
+                            {t('analysis.conversationsPerUser', 'Conversations per User')}
                           </Text>
                           <Text size="xs" color="dimmed" opacity={0.7}>
-                            Average engagement frequency
+                            {t('analysis.avgEngagementFrequency', 'Average engagement frequency')}
                           </Text>
                         </div>
                         <div className="rounded-full bg-purple-400/10 p-2">
@@ -765,7 +767,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           ) || '0'}
                         </Text>
                         <Text size="sm" color="dimmed">
-                          conversations / user
+                          {t('analysis.conversationsPerUserUnit', 'conversations / user')}
                         </Text>
                       </div>
                     </div>
@@ -775,10 +777,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                       <div className="mb-3 flex items-center justify-between">
                         <div>
                           <Text size="sm" color="dimmed" weight={500} mb={1}>
-                            Messages per User
+                            {t('analysis.messagesPerUser', 'Messages per User')}
                           </Text>
                           <Text size="xs" color="dimmed" opacity={0.7}>
-                            Average interaction depth
+                            {t('analysis.avgInteractionDepth', 'Average interaction depth')}
                           </Text>
                         </div>
                         <div className="rounded-full bg-purple-400/10 p-2">
@@ -795,7 +797,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                             '0'}
                         </Text>
                         <Text size="sm" color="dimmed">
-                          messages / user
+                          {t('analysis.messagesPerUserUnit', 'messages / user')}
                         </Text>
                       </div>
                     </div>
@@ -805,10 +807,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                       <div className="mb-3 flex items-center justify-between">
                         <div>
                           <Text size="sm" color="dimmed" weight={500} mb={1}>
-                            Messages per Conversation
+                            {t('analysis.messagesPerConversation', 'Messages per Conversation')}
                           </Text>
                           <Text size="xs" color="dimmed" opacity={0.7}>
-                            Average conversation length
+                            {t('analysis.avgConversationLength', 'Average conversation length')}
                           </Text>
                         </div>
                         <div className="rounded-full bg-purple-400/10 p-2">
@@ -826,7 +828,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           ) || '0'}
                         </Text>
                         <Text size="sm" color="dimmed">
-                          messages / conversation
+                          {t('analysis.messagesPerConversationUnit', 'messages / conversation')}
                         </Text>
                       </div>
                     </div>
@@ -841,10 +843,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                   <div className="flex items-center justify-between">
                     <div>
                       <Title order={4} className="text-white">
-                        Conversation Visualizations
+                        {t('analysis.conversationVisualizations', 'Conversation Visualizations')}
                       </Title>
                       <Text size="sm" color="dimmed" mt={1}>
-                        Select a time range to filter the visualizations below
+                        {t('analysis.selectTimeRange', 'Select a time range to filter the visualizations below')}
                       </Text>
                     </div>
                     <div className="flex flex-col items-end gap-2">
@@ -859,11 +861,11 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           }
                         }}
                         data={[
-                          { value: 'all', label: 'All Time' },
-                          { value: 'last_week', label: 'Last Week' },
-                          { value: 'last_month', label: 'Last Month' },
-                          { value: 'last_year', label: 'Last Year' },
-                          { value: 'custom', label: 'Custom Range' },
+                          { value: 'all', label: t('analysis.allTime', 'All Time') || 'All Time' },
+                          { value: 'last_week', label: t('analysis.lastWeek', 'Last Week') || 'Last Week' },
+                          { value: 'last_month', label: t('analysis.lastMonth', 'Last Month') || 'Last Month' },
+                          { value: 'last_year', label: t('analysis.lastYear', 'Last Year') || 'Last Year' },
+                          { value: 'custom', label: t('analysis.customRange', 'Custom Range') || 'Custom Range' },
                         ]}
                         styles={(theme: MantineTheme) => ({
                           input: {
@@ -946,7 +948,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                       )}
                       {totalCount > 0 && (
                         <Text size="sm" color="dimmed">
-                          {totalCount} conversations in selected range
+                          {t('analysis.conversationsInSelectedRange', { count: totalCount, defaultValue: '{{count}} conversations in selected range' })}
                         </Text>
                       )}
                     </div>
@@ -959,11 +961,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                       order={4}
                       className={`${montserrat_heading.variable} font-montserratHeading`}
                     >
-                      No conversation data available for selected time range
+                      {t('analysis.noConversationData', 'No conversation data available for selected time range')}
                     </Title>
                     <Text size="lg" color="dimmed" mt="md">
-                      Try selecting a different time range to view the
-                      visualizations
+                      {t('analysis.tryDifferentTimeRange', 'Try selecting a different time range to view the visualizations')}
                     </Text>
                   </div>
                 ) : (
@@ -976,10 +977,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         align="left"
                         className="text-white"
                       >
-                        Model Usage Distribution
+                        {t('analysis.modelUsageDistribution', 'Model Usage Distribution')}
                       </Title>
                       <Text size="sm" color="dimmed" mb="xl">
-                        Distribution of AI models used across all conversations
+                        {t('analysis.aiModelsUsed', 'Distribution of AI models used across all conversations')}
                       </Text>
                       <ModelUsageChart
                         data={modelUsageData}
@@ -996,11 +997,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         align="left"
                         className="text-white"
                       >
-                        Conversations Per Day
+                        {t('analysis.conversationsPerDay', 'Conversations Per Day')}
                       </Title>
                       <Text size="sm" color="dimmed" mb="xl">
-                        Shows the total number of conversations that occurred on
-                        each calendar day
+                        {t('analysis.showsTotalConversations', 'Shows the total number of conversations that occurred on each calendar day')}
                       </Text>
                       <ConversationsPerDayChart
                         data={filteredConversationStats?.per_day}
@@ -1014,19 +1014,18 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                       <div className="mb-4 flex items-center justify-between">
                         <div>
                           <Title order={4} className="text-white">
-                            Aggregated Conversation Breakdown
+                            {t('analysis.aggregatedConversationBreakdown', 'Aggregated Conversation Breakdown')}
                           </Title>
                           <Text size="sm" color="dimmed" mt={1}>
-                            View conversation patterns by hour of day or day of
-                            week
+                            {t('analysis.viewConversationPatterns', 'View conversation patterns by hour of day or day of week')}
                           </Text>
                         </div>
                         <Select
                           value={view}
                           onChange={(value) => setView(value || 'hour')}
                           data={[
-                            { value: 'hour', label: 'By Hour' },
-                            { value: 'weekday', label: 'By Day of Week' },
+                            { value: 'hour', label: t('analysis.byHour', 'By Hour') || 'By Hour' },
+                            { value: 'weekday', label: t('analysis.byDayOfWeek', 'By Day of Week') || 'By Day of Week' },
                           ]}
                           className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                           styles={(theme) => ({
@@ -1077,11 +1076,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         align="left"
                         className="text-white"
                       >
-                        Conversations Per Day and Hour
+                        {t('analysis.conversationsPerDayAndHour', 'Conversations Per Day and Hour')}
                       </Title>
                       <Text size="sm" color="dimmed" mb="xl">
-                        A heatmap showing conversation density across both days
-                        and hours
+                        {t('analysis.heatmapConversationDensity', 'A heatmap showing conversation density across both days and hours')}
                       </Text>
                       <ConversationsHeatmapByHourChart
                         data={filteredConversationStats?.heatmap}

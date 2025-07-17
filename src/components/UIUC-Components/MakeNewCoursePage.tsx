@@ -19,6 +19,7 @@ import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { createProject } from '~/pages/api/UIUC-api/createProject'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { CourseMetadata } from '~/types/courseMetadata'
+import { useTranslation } from 'next-i18next';
 
 const MakeNewCoursePage = ({
   project_name,
@@ -104,6 +105,8 @@ const MakeNewCoursePage = ({
     }
   }
 
+  const { t } = useTranslation('common');
+
   return (
     <>
       <Navbar isPlain={true} />
@@ -155,7 +158,7 @@ const MakeNewCoursePage = ({
                     gradient={{ from: 'gold', to: 'white', deg: 50 }}
                     className={`${montserrat_heading.variable} text-left font-montserratHeading`}
                   >
-                    {!is_new_course ? `${projectName}` : 'Create a new project'}
+                    {!is_new_course ? `${projectName}` : t('create_new_project')}
                   </Title>
                 </Flex>
 
@@ -195,11 +198,11 @@ const MakeNewCoursePage = ({
                         marginBottom: '1rem',
                       },
                     }}
-                    placeholder="Project name"
+                    placeholder={t('project_name_placeholder') || ''}
                     radius={'lg'}
                     type="text"
                     value={projectName}
-                    label="What is the project name?"
+                    label={t('project_name_label')}
                     size={'lg'}
                     disabled={!is_new_course}
                     onChange={(e) =>
@@ -215,16 +218,16 @@ const MakeNewCoursePage = ({
                       className={`${montserrat_paragraph.variable} mt-4 font-montserratParagraph font-bold`}
                       style={{ fontSize: isSmallScreen ? '14px' : '20px' }}
                     >
-                      What do you want to achieve?
+                      {t('what_do_you_want_to_achieve')}
                     </label>
                     <label
                       className={`${montserrat_paragraph.variable} mt-5 pl-2 font-montserratParagraph text-gray-400`}
                     >
-                      (optional)
+                      {t('optional')}
                     </label>
                   </Flex>
                   <Textarea
-                    placeholder="Describe your project, goals, expected impact etc..."
+                    placeholder={t('describe_project_placeholder') || ''}
                     radius={'lg'}
                     value={projectDescription}
                     onChange={(e) => setProjectDescription(e.target.value)}
@@ -252,14 +255,14 @@ const MakeNewCoursePage = ({
                       order={isSmallScreen ? 5 : 4}
                       className={`w-full pr-2 pr-7 text-right ${montserrat_paragraph.variable} mt-2 font-montserratParagraph`}
                     >
-                      Next: let&apos;s upload some documents
+                      {t('next_upload_documents')}
                     </Title>
                     <Tooltip
                       label={
                         projectName === ''
-                          ? 'Add a project name above :)'
+                          ? t('add_project_name_above')
                           : !isCourseAvailable
-                            ? 'This project name is already taken!'
+                            ? t('project_name_taken')
                             : ''
                       }
                       withArrow
@@ -294,7 +297,7 @@ const MakeNewCoursePage = ({
                             ) : null
                           }
                         >
-                          {isLoading ? 'Creating...' : 'Create'}
+                          {isLoading ? t('creating') : t('create')}
                         </Button>
                       </span>
                     </Tooltip>

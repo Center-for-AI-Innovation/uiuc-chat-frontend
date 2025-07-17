@@ -4,7 +4,7 @@ import { ModelParams } from './ModelParams'
 import { IconExternalLink } from '@tabler/icons-react'
 import { useContext, useEffect, useState } from 'react'
 import HomeContext from '~/pages/api/home/home.context'
-import { useTranslation } from 'react-i18next'
+import { useTranslation } from 'next-i18next'
 import Link from 'next/link'
 import { useMediaQuery } from '@mantine/hooks'
 
@@ -46,7 +46,7 @@ export const FancyRetrieval = () => {
           position="top-start"
           arrowSize={8}
           withArrow
-          label="Multi-Query Retrieval is disabled for performance reasons, I'm working to bring it back ASAP."
+          label={t('multi_query_retrieval_disabled') || ''}
           classNames={{
             tooltip: `${isSmallScreen ? 'text-xs' : 'text-sm'} ${montserrat_paragraph.variable} font-montserratParagraph`,
           }}
@@ -57,7 +57,7 @@ export const FancyRetrieval = () => {
               color="white"
               order={isSmallScreen ? 5 : 4}
             >
-              Fancy Retrieval
+              {t('fancy_retrieval')}
             </Title>
             <Switch
               disabled={true}
@@ -68,13 +68,11 @@ export const FancyRetrieval = () => {
                 label: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : ''}`,
                 description: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : ''}`,
               }}
-              label={t('Multi Query Retrieval (slow 30 second response time)')}
+              label={t('multi_query_retrieval_label') || ''}
               onChange={(event) =>
                 setUseMQRetrieval(event.currentTarget.checked)
               }
-              description={t(
-                'A LLM generates multiple queries based on your original for improved semantic search. Then every retrieved context is filtered by a smaller LLM (Mistral 7b) so that only high quality and relevant documents are included in the final GPT-4 call.',
-              )}
+              description={t('multi_query_retrieval_description')}
               color="violet.7"
             />
           </div>
@@ -94,7 +92,7 @@ export const FancyRetrieval = () => {
               target="_blank"
               className="hover:underline"
             >
-              View account usage on OpenAI{' '}
+              {t('openai_usage_link')}
               <IconExternalLink
                 size={15}
                 style={{ position: 'relative', top: '2px' }}

@@ -19,6 +19,7 @@ import type ChatUI from '~/utils/modelProviders/WebLLM'
 import { modelCached } from './UserSettings'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'next-i18next'
 import {
   type AllLLMProviders,
   type AnySupportedModel,
@@ -288,6 +289,7 @@ const ModelDropdown: React.FC<
   chat_ui,
 }) => {
   const { state, dispatch: homeDispatch } = useContext(HomeContext)
+  const { t } = useTranslation('common')
 
   // Filter out providers that are not enabled and their models which are disabled
   const { enabledProvidersAndModels, allModels } = Object.keys(
@@ -477,6 +479,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
     const defaultModel = selectBestModel(llmProviders).id
     const [loadingModelId, setLoadingModelId] = useState<string | null>(null)
     const [isAccordionOpen, setIsAccordionOpen] = useState(false)
+    const { t } = useTranslation('common')
 
     // console.log('defaultModelId in chat page: ', defaultModelId)
 
@@ -534,7 +537,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                     }}
                     order={5}
                   >
-                    More details about the AI models
+                                              {t('models.more_details_about_ai_models')}
                   </Title>
                   <IconChevronDown
                     className={`text-white/60 transition-transform duration-200 ${
@@ -564,14 +567,13 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               size={'sm'}
                               className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
                             >
-                              NCSA Hosted Models (100% free)
+                              {t('models.ncsa_hosted_models')}
                             </Text>
                             <Text
                               size={'sm'}
                               className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
                             >
-                              The best free option is the Qwen 2 72B model,
-                              hosted by NCSA.
+                              {t('models.ncsa_hosted_description')}
                             </Text>
                           </div>
 
@@ -581,29 +583,13 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               size={'sm'}
                               className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
                             >
-                              OpenAI
+                              {t('models.openai')}
                             </Text>
                             <Text
                               size={'sm'}
                               className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
                             >
-                              OpenAI{' '}
-                              <Link
-                                href="https://platform.openai.com/docs/models"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-500 visited:text-purple-600 hover:text-blue-700 hover:underline"
-                              >
-                                model details and pricing.{' '}
-                                <IconExternalLink
-                                  size={15}
-                                  style={{ position: 'relative', top: '2px' }}
-                                  className={'mb-2 inline'}
-                                />
-                              </Link>{' '}
-                              An OpenAI API key is required, and you may face
-                              rate-limit issues until you complete your first
-                              billing cycle.
+                              {t('models.openai_description')}
                             </Text>
                           </div>
 
@@ -613,28 +599,13 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               size={'sm'}
                               className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
                             >
-                              Azure OpenAI
+                              {t('models.azure_openai')}
                             </Text>
                             <Text
                               size={'sm'}
                               className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
                             >
-                              Azure OpenAI Service provides enterprise-grade
-                              security and regional availability. Check out{' '}
-                              <Link
-                                href="https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-500 visited:text-purple-600 hover:text-blue-700 hover:underline"
-                              >
-                                Azure OpenAI models{' '}
-                                <IconExternalLink
-                                  size={15}
-                                  style={{ position: 'relative', top: '2px' }}
-                                  className={'mb-2 inline'}
-                                />
-                              </Link>{' '}
-                              for details on available models and features.
+                              {t('models.azure_openai_description')}
                             </Text>
                           </div>
 
@@ -644,28 +615,13 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               size={'sm'}
                               className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
                             >
-                              Anthropic
+                              {t('models.anthropic')}
                             </Text>
                             <Text
                               size={'sm'}
                               className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
                             >
-                              Access Claude models through{' '}
-                              <Link
-                                href="https://www.anthropic.com/api"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-500 visited:text-purple-600 hover:text-blue-700 hover:underline"
-                              >
-                                Anthropic&apos;s API{' '}
-                                <IconExternalLink
-                                  size={15}
-                                  style={{ position: 'relative', top: '2px' }}
-                                  className={'mb-2 inline'}
-                                />
-                              </Link>
-                              . Claude excels at complex reasoning and analysis
-                              tasks.
+                              {t('models.anthropic_description')}
                             </Text>
                           </div>
 
@@ -675,28 +631,13 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               size={'sm'}
                               className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
                             >
-                              OpenAI Compatible via Ollama
+                              {t('models.ollama')}
                             </Text>
                             <Text
                               size={'sm'}
                               className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
                             >
-                              Run various open-source models locally through{' '}
-                              <Link
-                                href="https://ollama.ai"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-500 visited:text-purple-600 hover:text-blue-700 hover:underline"
-                              >
-                                Ollama{' '}
-                                <IconExternalLink
-                                  size={15}
-                                  style={{ position: 'relative', top: '2px' }}
-                                  className={'mb-2 inline'}
-                                />
-                              </Link>
-                              . Supports models like Llama 2, Mistral, and more
-                              with OpenAI-compatible API.
+                              {t('models.ollama_description')}
                             </Text>
                           </div>
 
@@ -706,32 +647,15 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               size={'sm'}
                               className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
                             >
-                              On-device AI with WebLLM
+                              {t('models.webllm')}
                             </Text>
                             <Text
                               size={'sm'}
                               className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
                             >
-                              We support running some models in your web browser
-                              on your device. That&apos;s 100% local, on-device
-                              AI. It even uses your GPU. For this, your browser{' '}
-                              <Link
-                                href={'https://webgpureport.org/'}
-                                className="text-blue-500 visited:text-purple-600 hover:text-blue-700 hover:underline"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                must pass this compatability check for WebGPU.{' '}
-                                <IconExternalLink
-                                  size={15}
-                                  style={{ position: 'relative', top: '2px' }}
-                                  className={'mb-2 inline'}
-                                />
-                              </Link>
+                              {t('models.webllm_description')}
                               <br />
-                              If you see lots of text, it&apos;s working. If you
-                              see &quot;webgpu not available on this
-                              browser&quot;, it&apos;s not working.
+                              {t('models.webllm_working')}
                             </Text>
                           </div>
 
@@ -741,27 +665,13 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               size={'sm'}
                               className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
                             >
-                              Google Gemini
+                              {t('models.gemini')}
                             </Text>
                             <Text
                               size={'sm'}
                               className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
                             >
-                              We support{' '}
-                              <Link
-                                href="https://ai.google.dev/gemini-api/docs/models/gemini"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-500 visited:text-purple-600 hover:text-blue-700 hover:underline"
-                              >
-                                Gemini&apos;s full suite{' '}
-                                <IconExternalLink
-                                  size={15}
-                                  style={{ position: 'relative', top: '2px' }}
-                                  className={'mb-2 inline'}
-                                />
-                              </Link>
-                              .
+                              {t('models.gemini_description')}
                             </Text>
                           </div>
                           <div>
@@ -769,27 +679,13 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               size={'sm'}
                               className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
                             >
-                              AWS Bedrock
+                              {t('models.bedrock')}
                             </Text>
                             <Text
                               size={'sm'}
                               className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
                             >
-                              We support{' '}
-                              <Link
-                                href="https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html"
-                                className="text-blue-500 visited:text-purple-600 hover:text-blue-700 hover:underline"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                Bedrock&apos;s full suite{' '}
-                                <IconExternalLink
-                                  size={15}
-                                  style={{ position: 'relative', top: '2px' }}
-                                  className={'mb-2 inline'}
-                                />
-                              </Link>
-                              .
+                              {t('models.bedrock_description')}
                             </Text>
                           </div>
                         </div>

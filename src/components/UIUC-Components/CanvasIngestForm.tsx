@@ -15,6 +15,7 @@ import { useRouter } from 'next/router'
 import { type FileUpload } from './UploadNotification'
 import { type QueryClient } from '@tanstack/react-query'
 import Image from 'next/image'
+import { useTranslation } from 'next-i18next';
 
 export default function CanvasIngestForm({
   project_name,
@@ -47,6 +48,7 @@ export default function CanvasIngestForm({
     return regex.test(input)
   }
   const router = useRouter()
+  const { t } = useTranslation('common');
 
   const getCurrentPageName = () => {
     return router.query.course_name as string
@@ -153,17 +155,16 @@ export default function CanvasIngestForm({
                   />
                 </div>
                 <Text className="text-xl font-semibold text-gray-100">
-                  Canvas
+                  {t('canvas')}
                 </Text>
               </div>
             </div>
 
             <Text className="mb-4 text-sm leading-relaxed text-gray-400">
-              Import content directly from your Canvas course, including
-              assignments, discussions, files, and more.
+              {t('import_canvas_description')}
             </Text>
             <div className="mt-auto flex items-center text-sm text-purple-400">
-              <span>Configure import</span>
+              <span>{t('configure_import')}</span>
               <IconArrowRight
                 size={16}
                 className="ml-2 transition-transform group-hover:translate-x-1"
@@ -175,19 +176,18 @@ export default function CanvasIngestForm({
         <DialogContent className="mx-auto h-auto max-h-[85vh] w-[95%] max-w-2xl overflow-y-auto !rounded-2xl border-0 bg-[#1c1c2e] px-4 py-6 text-white sm:px-6">
           <DialogHeader>
             <DialogTitle className="mb-1 text-left text-xl font-bold">
-              Import Canvas Content
+              {t('import_canvas_content')}
             </DialogTitle>
           </DialogHeader>
 
           <Alert
             icon={<IconAlertTriangle size={18} />}
             color="red"
-            title="IMPORTANT: Canvas Permission Required"
+            title={t('canvas_permission_required') || ''}
             className="mb-4 border border-red-500/50 bg-red-900/20"
           >
             <span className="font-semibold">
-              Before proceeding, you MUST add the UIUC Chatbot as a student to
-              your Canvas course at{' '}
+              {t('canvas_permission_instructions')}
               <NextLink
                 href="https://canvas.illinois.edu/"
                 target="_blank"
@@ -198,16 +198,15 @@ export default function CanvasIngestForm({
               </NextLink>
             </span>
             <div className="mt-1">
-              • Bot email:{' '}
+              • {t('bot_email')}{' '}
               <span className="font-mono text-yellow-300">
-                uiuc.chat@ad.uillinois.edu
+                {t('bot_email_address')}
               </span>
-              <br />• Bot name:{' '}
-              <span className="font-mono text-yellow-300">UIUC Course AI</span>
+              <br />• {t('bot_name')}{' '}
+              <span className="font-mono text-yellow-300">{t('bot_name_value')}</span>
             </div>
             <div className="mt-1 text-xs italic">
-              This is required for access to any of your Canvas content. The AI
-              can only see what students/TAs have access to.
+              {t('canvas_permission_note')}
             </div>
           </Alert>
 
@@ -227,19 +226,19 @@ export default function CanvasIngestForm({
           <div className="space-y-4">
             <div>
               <div className="text-md break-words">
-                Enter your Canvas course URL, it should look like{' '}
+                {t('enter_canvas_url')}
                 <code className="inline-flex items-center rounded-md bg-[#020307] px-2 py-1 font-mono text-xs sm:text-sm">
-                  canvas.illinois.edu/courses/COURSE_CODE
+                  {t('canvas_url_example')}
                 </code>
-                , for example:{' '}
+                , {t('for_example')}
                 <span className="break-all text-purple-600">
                   <NextLink
                     target="_blank"
                     rel="noreferrer"
-                    href={'https://canvas.illinois.edu/courses/37348'}
+                    href={t('canvas_url_sample') || ''}
                     onClick={(e: React.MouseEvent) => e.stopPropagation()}
                   >
-                    https://canvas.illinois.edu/courses/37348
+                    {t('canvas_url_sample') || ''}
                   </NextLink>
                 </span>
                 .
@@ -271,7 +270,7 @@ export default function CanvasIngestForm({
                     width: '100%',
                   },
                 }}
-                placeholder="https://canvas.illinois.edu/courses/12345"
+                placeholder={t('canvas_url_placeholder') || ''}
                 radius="xl"
                 type="url"
                 value={url}
@@ -283,16 +282,16 @@ export default function CanvasIngestForm({
             </div>
             <div className="space-y-2">
               <Label className="mb-2 block text-white">
-                Select Content to Import
+                {t('select_content_to_import')}
               </Label>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {[
-                  'Files',
-                  'Pages',
-                  'Modules',
-                  'Syllabus',
-                  'Assignments',
-                  'Discussions',
+                  t('files'),
+                  t('pages'),
+                  t('modules'),
+                  t('syllabus'),
+                  t('assignments'),
+                  t('discussions'),
                 ].map((option) => (
                   <div
                     key={option}
@@ -325,7 +324,7 @@ export default function CanvasIngestForm({
             disabled={!isUrlValid}
             className="h-11 w-full rounded-xl bg-purple-600 text-white transition-colors hover:bg-purple-700"
           >
-            Import Canvas Content
+            {t('import_canvas_content')}
           </Button>
         </DialogContent>
       </Dialog>

@@ -18,6 +18,7 @@ import { IconFileExport } from '@tabler/icons-react'
 import { useRouter } from 'next/router'
 import { handleExport } from '~/pages/api/UIUC-api/exportAllDocuments'
 import { showToastOnUpdate } from './MakeQueryAnalysisPage'
+import { useTranslation } from 'next-i18next'
 
 const useStyles = createStyles(() => ({
   tabsList: {
@@ -71,6 +72,7 @@ function DocumentsCard({
   const [exportModalOpened, setExportModalOpened] = useState(false)
   const router = useRouter()
   const { classes, theme } = useStyles()
+  const { t } = useTranslation('common')
 
   const getCurrentPageName = () => {
     return router.asPath.slice(1).split('/')[0] as string
@@ -120,7 +122,7 @@ function DocumentsCard({
               order={3}
               className={`${montserrat_heading.variable} font-montserratHeading text-lg text-white/90 sm:text-2xl`}
             >
-              Project Files
+              {t('dashboard.project_files')}
             </Title>
 
             <Button
@@ -135,7 +137,7 @@ function DocumentsCard({
               `}
             >
               <span className="hidden sm:inline">
-                Export All Documents & Embeddings
+                {t('dashboard.export_all_documents')}
               </span>
               <span className="inline sm:hidden">Export All</span>
             </Button>

@@ -28,6 +28,7 @@ import ShareSettingsModal from './ShareSettingsModal'
 import UploadNotification, { type FileUpload } from './UploadNotification'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
+import { useTranslation } from 'next-i18next';
 
 const montserrat_light = Montserrat({
   weight: '400',
@@ -102,6 +103,7 @@ export const UploadCard = memo(function UploadCard({
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [uploadFiles, setUploadFiles] = useState<FileUpload[]>([])
   const [metadata, setMetadata] = useState(initialMetadata)
+  const { t } = useTranslation('common');
 
   useEffect(() => {
     // Set initial query data
@@ -157,7 +159,7 @@ export const UploadCard = memo(function UploadCard({
                   order={2}
                   className={`${montserrat_heading.variable} font-montserratHeading text-lg text-white/90 sm:text-2xl`}
                 >
-                  Dashboard
+                  {t('dashboard.title')}
                 </Title>
                 <Text className="text-white/60">/</Text>
                 <Title
@@ -186,8 +188,8 @@ export const UploadCard = memo(function UploadCard({
                     sm:px-4 sm:text-base
                   `}
                 >
-                  <span className="hidden sm:inline">Share Chatbot</span>
-                  <span className="inline sm:hidden">Share</span>
+                  <span className="hidden sm:inline">{t('share.share_chatbot')}</span>
+                  <span className="inline sm:hidden">{t('share.share')}</span>
                   <IconShare size={12} className="ml-1 inline sm:hidden" />
                   <IconShare size={20} className="ml-2 hidden sm:inline" />
                 </Button>
@@ -266,10 +268,10 @@ export const UploadCard = memo(function UploadCard({
                 gradient={{ from: 'gold', to: 'white', deg: 170 }}
                 order={3}
               >
-                Project Description
+                {t('project_description')}
               </Title>
               <Textarea
-                placeholder="Describe your project, goals, expected impact etc..."
+                placeholder={t('describe_project_placeholder') || ''}
                 radius={'sm'}
                 value={projectDescription}
                 onChange={(e) => setProjectDescription(e.target.value)}
@@ -302,7 +304,7 @@ export const UploadCard = memo(function UploadCard({
                   }
                 }}
               >
-                Update
+                {t('update')}
               </Button>
             </div>
 
@@ -313,7 +315,7 @@ export const UploadCard = memo(function UploadCard({
                 gradient={{ from: 'gold', to: 'white', deg: 170 }}
                 order={3}
               >
-                Branding
+                {t('branding')}
               </Title>
 
               <div className="form-control relative">
@@ -321,20 +323,20 @@ export const UploadCard = memo(function UploadCard({
                   className={`label ${montserrat_heading.variable} font-montserratHeading`}
                 >
                   <span className="label-text text-lg text-neutral-200">
-                    Set a greeting
+                    {t('set_greeting')}
                   </span>
                 </label>
                 <Text
                   className={`label ${montserrat_light.className} pt-0`}
                   size={'sm'}
                 >
-                  Shown before users send their first chat.
+                  {t('shown_before_first_chat')}
                 </Text>
                 <Textarea
                   autosize
                   minRows={2}
                   maxRows={4}
-                  placeholder="Enter a greeting to help users get started with your bot"
+                  placeholder={t('greeting_placeholder') || ''}
                   className={`w-full ${montserrat_paragraph.variable} font-montserratParagraph`}
                   value={introMessage}
                   onChange={(e) => {
@@ -366,7 +368,7 @@ export const UploadCard = memo(function UploadCard({
                         }
                       }}
                     >
-                      Submit
+                      {t('submit')}
                     </Button>
                   </>
                 )}
@@ -375,7 +377,7 @@ export const UploadCard = memo(function UploadCard({
                 className={`label ${montserrat_heading.variable} font-montserratHeading`}
               >
                 <span className="label-text text-lg text-neutral-200">
-                  Set example questions
+                  {t('set_example_questions')}
                 </span>
               </label>
               <Text
@@ -383,7 +385,7 @@ export const UploadCard = memo(function UploadCard({
                 mb={-3}
                 size={'sm'}
               >
-                Users will likely try these first to get a feel for your bot.
+                {t('users_try_example_questions')}
               </Text>
               <SetExampleQuestions
                 course_name={projectName}
@@ -394,33 +396,48 @@ export const UploadCard = memo(function UploadCard({
                   className={`label ${montserrat_heading.variable} font-montserratHeading`}
                 >
                   <span className="label-text text-lg text-neutral-200">
-                    Upload your logo
+                    {t('upload_logo')}
                   </span>
                 </label>
                 <Text
                   size={'sm'}
                   className={`label ${montserrat_light.className}`}
                 >
-                  This logo will appear in the header of the chat page.
+                  {t('logo_header_notice')}
                 </Text>
-                <input
-                  type="file"
-                  className={`file-input-bordered file-input w-full border-violet-800 bg-violet-800 text-white  shadow-inner hover:border-violet-600 hover:bg-violet-800 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                  onChange={async (e) => {
-                    // Assuming the file is converted to a URL somewhere else
-                    if (e.target.files?.length) {
-                      console.log('Uploading to s3')
-                      const banner_s3_image = await uploadToS3(
-                        e.target.files?.[0] ?? null,
-                        projectName,
-                      )
-                      if (banner_s3_image && metadata) {
-                        metadata.banner_image_s3 = banner_s3_image
-                        await callSetCourseMetadata(projectName, metadata)
+                <div className="relative">
+                  <input
+                    type="file"
+                    id="logo-upload"
+                    className="sr-only"
+                    onChange={async (e) => {
+                      // Assuming the file is converted to a URL somewhere else
+                      if (e.target.files?.length) {
+                        console.log('Uploading to s3')
+                        const banner_s3_image = await uploadToS3(
+                          e.target.files?.[0] ?? null,
+                          projectName,
+                        )
+                        if (banner_s3_image && metadata) {
+                          metadata.banner_image_s3 = banner_s3_image
+                          await callSetCourseMetadata(projectName, metadata)
+                        }
                       }
-                    }
-                  }}
-                />
+                    }}
+                  />
+                  <Button
+                    variant="outline"
+                    className={`w-full border-violet-800 bg-violet-800 text-white shadow-inner hover:border-violet-600 hover:bg-violet-800 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                    onClick={() => {
+                      const fileInput = document.getElementById('logo-upload') as HTMLInputElement
+                      if (fileInput) {
+                        fileInput.click()
+                      }
+                    }}
+                  >
+                    {t('file_upload.browse_button')}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

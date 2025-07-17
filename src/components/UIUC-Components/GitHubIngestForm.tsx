@@ -23,6 +23,7 @@ import { Montserrat } from 'next/font/google'
 import { type FileUpload } from './UploadNotification'
 import Link from 'next/link'
 import { type QueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'next-i18next'
 const montserrat_med = Montserrat({
   weight: '500',
   subsets: ['latin'],
@@ -36,6 +37,7 @@ export default function GitHubIngestForm({
   setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
   queryClient: QueryClient
 }): JSX.Element {
+  const { t } = useTranslation('common')
   const useStyles = createStyles((theme) => ({
     // For Logos
     logos: {
@@ -343,7 +345,7 @@ export default function GitHubIngestForm({
         autoClose: 12000,
         title: (
           <Text size={'lg'} className={`${montserrat_med.className}`}>
-            {'Error during web scraping. Please try again.'}
+            {t('errorDuringWebScraping')}
           </Text>
         ),
         message: (
@@ -393,16 +395,15 @@ export default function GitHubIngestForm({
                   <IconBrandGithub className="h-8 w-8" />
                 </div>
                 <Text className="text-xl font-semibold text-gray-100">
-                  GitHub
+                  {t('upload_cards.github')}
                 </Text>
               </div>
             </div>
-            <Text className="mb-4 text-sm leading-relaxed text-gray-400">
-              Import content from GitHub repositories, including documentation,
-              code, and README files.
-            </Text>
+                          <Text className="mb-4 text-sm leading-relaxed text-gray-400">
+                {t('upload_cards.github_description')}
+              </Text>
             <div className="mt-auto flex items-center text-sm text-purple-400">
-              <span>Configure import</span>
+              <span>{t('upload_cards.configure_import')}</span>
               <IconArrowRight
                 size={16}
                 className="ml-2 transition-transform group-hover:translate-x-1"
@@ -413,19 +414,19 @@ export default function GitHubIngestForm({
 
         <DialogContent className="mx-auto h-auto w-[95%] max-w-2xl !rounded-2xl border-0 bg-[#1c1c2e] px-4 py-6 text-white sm:px-6">
           <DialogHeader>
-            <DialogTitle className="mb-4 text-left text-xl font-bold">
-              Ingest GitHub Website
-            </DialogTitle>
+                          <DialogTitle className="mb-4 text-left text-xl font-bold">
+                {t('upload_cards.ingest_website')}
+              </DialogTitle>
           </DialogHeader>
           <div className="border-t border-gray-800 pt-4">
             <div className="space-y-4">
               <div>
                 <div className="break-words text-sm sm:text-base">
-                  <strong>For GitHub</strong>, just enter a URL like{' '}
+                  <strong>{t('forGitHub')}</strong>, {t('justEnterURL')}
                   <code className={classes.codeStyledText}>
                     github.com/USER/REPO
                   </code>
-                  , for example:{' '}
+                  , {t('forExample')}{' '}
                   <span className={'text-purple-600'}>
                     <Link
                       target="_blank"
@@ -436,8 +437,7 @@ export default function GitHubIngestForm({
                       https://github.com/langchain-ai/langchain
                     </Link>
                   </span>
-                  . We&apos;ll ingest all files in the main branch. Ensure the
-                  repository is public.
+                  . {t('weWillIngestAllFilesInTheMainBranch')}. {t('ensureTheRepositoryIsPublic')}.
                 </div>
                 <div className="py-3"></div>
                 <Input
@@ -457,7 +457,7 @@ export default function GitHubIngestForm({
                       width: '100%',
                     },
                   }}
-                  placeholder="Enter URL..."
+                  placeholder={t('enterURL') || ''}
                   radius="xl"
                   type="url"
                   value={url}
@@ -475,7 +475,7 @@ export default function GitHubIngestForm({
               disabled={!isUrlValid}
               className="h-11 w-full rounded-xl bg-purple-600 text-white transition-colors hover:bg-purple-700"
             >
-              Ingest the Website
+              {t('ingest_the_website')}
             </Button>
           </div>
         </DialogContent>
