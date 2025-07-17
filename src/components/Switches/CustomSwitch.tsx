@@ -117,8 +117,8 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
           withinPortal
           styles={(theme) => ({
             tooltip: {
-              backgroundColor: 'var(--background)',
-              color: 'var(--foreground)',
+              backgroundColor: 'var(--tooltip-background)',
+              color: 'var(--tooltip)',
               fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
               borderRadius: theme.radius.md,
               fontSize: theme.fontSizes.sm,

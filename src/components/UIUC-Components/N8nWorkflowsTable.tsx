@@ -36,6 +36,14 @@ const montserrat_med = Montserrat({
   subsets: ['latin'],
 })
 
+const dataTableTitleStyles = {
+  color: 'var(--table-header)',
+}
+
+const dataTableCellsStyles = {
+  color: 'var(--foreground)',
+}
+
 const notificationStyles = (isError = false) => {
   return {
     root: {
@@ -163,7 +171,7 @@ export const N8nWorkflowsTable = ({
   }, [])
 
   const dataTableStyle = {
-    width: isWideScreen ? '65%' : '92%',
+    //    width: isWideScreen ? '85%' : '92%',
   }
 
   let currentRecords
@@ -189,7 +197,7 @@ export const N8nWorkflowsTable = ({
         Your n8n tools
       </Title> */}
       <Text
-        w={isWideScreen ? '65%' : '92%'}
+        w={isWideScreen ? '85%' : '92%'}
         className="pb-2 text-[--dashboard-foreground]"
       >
         These tools can be automatically invoked by the LLM to fetch additional
@@ -207,25 +215,34 @@ export const N8nWorkflowsTable = ({
         </a>
         .
       </Text>
+
       {/* dataTable styling options https://icflorescu.github.io/mantine-datatable/examples/overriding-the-default-styles/  */}
-      <DataTable
-        height={500}
-        style={dataTableStyle}
-        className="bg-[--background] text-[--foreground]"
-        styles={{
-          root: {
-            color: 'var(--text-grey-500)',
-          },
-        }}
-        // style={{
-        //   width: '50%',
-        // }}
-        withBorder
-        fetching={isLoadingRecords}
-        customLoader={<LoadingSpinner />}
-        // keyField="id"
-        records={isEmptyWorkflowTable ? [] : (currentRecords as UIUCTool[])}
-        /* //just testing the output, safe to remove in the future
+      <div className="n8n_workflows_table w-full max-w-[85%]">
+        <DataTable
+          height={500}
+          styles={{
+            pagination: {
+              backgroundColor: 'var(--background)',
+            },
+          }}
+          rowStyle={(row, index) => {
+            return index % 2 === 0
+              ? { backgroundColor: 'var(--background)' }
+              : { backgroundColor: 'var(--background-faded)' }
+          }}
+          sx={{
+            color: 'var(--foreground)',
+            backgroundColor: 'var(--background)',
+          }}
+          withColumnBorders
+          borderColor="var(--table-border)"
+          rowBorderColor="var(--table-border)"
+          withBorder={false}
+          fetching={isLoadingRecords}
+          customLoader={<LoadingSpinner />}
+          // keyField="id"
+          records={isEmptyWorkflowTable ? [] : (currentRecords as UIUCTool[])}
+          /* //just testing the output, safe to remove in the future
         records={[{
           "id": "1323addd-a4ac-4dd2-8de2-6f934969a0f1",
           "name": "Feest, Bogan and Herzog",
@@ -235,81 +252,96 @@ export const N8nWorkflowsTable = ({
           "missionStatement": "Innovate bricks-and-clicks metrics."
         }]}
 */
-        columns={[
-          // { accessor: 'id', width: 175 },
-          { accessor: 'name' },
-          {
-            accessor: 'enabled',
-            width: 100,
-            render: (record, index) => (
-              <Switch
-                // @ts-ignore -- for some reason N8N returns "active" and we use "enabled" but I can't get them to agree
-                checked={!!record.active}
-                onChange={(event) => {
-                  mutate_active_flows.mutate({
-                    id: record.id,
-                    checked: event.target.checked,
-                  })
-                }}
-                className="cursor-pointer"
-                styles={{
-                  track: {
-                    backgroundColor: record.enabled
-                      ? 'var(--dashboard-button) !important'
-                      : 'var(--dashboard-background-faded)',
-                    borderColor: record.enabled
-                      ? 'var(--dashboard-button) !important'
-                      : 'var(--dashboard-background-faded)',
-                  },
-                }}
-              />
-            ),
-          },
-          {
-            accessor: 'tags',
-            width: 100,
-            render: (record, index) => {
-              return record.tags
-                ? record.tags.map((tag) => tag.name).join(', ')
-                : ''
+          columns={[
+            // { titleStyle: dataTableTitleStyles, accessor: 'id', width: 175 },
+            {
+              titleStyle: dataTableTitleStyles,
+              cellsStyle: dataTableCellsStyles,
+              accessor: 'name',
             },
-          },
-          {
-            accessor: 'createdAt',
-            // textAlign: 'left',
-            width: 120,
-            render: (record, index) => {
-              const { createdAt } = record as { createdAt: string }
-              return dayjs(createdAt).format('MMM D YYYY, h:mm A')
+            {
+              titleStyle: dataTableTitleStyles,
+              cellsStyle: dataTableCellsStyles,
+              accessor: 'enabled',
+              width: 100,
+              render: (record, index) => (
+                <Switch
+                  // @ts-ignore -- for some reason N8N returns "active" and we use "enabled" but I can't get them to agree
+                  checked={!!record.active}
+                  onChange={(event) => {
+                    mutate_active_flows.mutate({
+                      id: record.id,
+                      checked: event.target.checked,
+                    })
+                  }}
+                  size="sm"
+                  className="cursor-pointer"
+                  styles={(theme) => ({
+                    track: {
+                      backgroundColor: record.enabled
+                        ? 'var(--dashboard-button) !important'
+                        : 'transparent',
+                      borderColor: record.enabled
+                        ? 'var(--dashboard-button) !important'
+                        : 'var(--foreground-faded)',
+                    },
+                    label: {
+                      color: 'var(--dashboard-foreground)',
+                      fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+                    },
+                  })}
+                />
+              ),
             },
-          },
-          {
-            accessor: 'updatedAt',
-            // textAlign: 'left',
-            width: 120,
-            render: (record, index) => {
-              const { updatedAt } = record as { updatedAt: string }
-              return dayjs(updatedAt).format('MMM D YYYY, h:mm A')
+            {
+              titleStyle: dataTableTitleStyles,
+              cellsStyle: dataTableCellsStyles,
+              accessor: 'tags',
+              render: (record, index) => {
+                return record.tags
+                  ? record.tags.map((tag) => tag.name).join(', ')
+                  : ''
+              },
             },
-          },
-        ]}
-        // totalRecords={records.length}
-        totalRecords={records?.length || 0}
-        recordsPerPage={PAGE_SIZE}
-        page={page}
-        onPageChange={(p) => setPage(p)}
-        // 👇 uncomment the next line to use a custom pagination size
-        // paginationSize="md"
-        // 👇 uncomment the next line to use a custom loading text
-        loadingText="Loading..."
-        // 👇 uncomment the next line to display a custom text when no records were found
-        noRecordsText="No records found"
-        // 👇 uncomment the next line to use a custom pagination text
-        // paginationText={({ from, to, totalRecords }) => `Records ${from} - ${to} of ${totalRecords}`}
-        // 👇 uncomment the next lines to use custom pagination colors
-        // paginationActiveBackgroundColor="green"
-        // paginationActiveTextColor="#e6e348"
-      />
+            {
+              titleStyle: dataTableTitleStyles,
+              cellsStyle: dataTableCellsStyles,
+              accessor: 'createdAt',
+              // textAlign: 'left',
+              render: (record, index) => {
+                const { createdAt } = record as { createdAt: string }
+                return dayjs(createdAt).format('MMM D YYYY, h:mm A')
+              },
+            },
+            {
+              titleStyle: dataTableTitleStyles,
+              cellsStyle: dataTableCellsStyles,
+              accessor: 'updatedAt',
+              // textAlign: 'left',
+              render: (record, index) => {
+                const { updatedAt } = record as { updatedAt: string }
+                return dayjs(updatedAt).format('MMM D YYYY, h:mm A')
+              },
+            },
+          ]}
+          // totalRecords={records.length}
+          totalRecords={records?.length || 0}
+          recordsPerPage={PAGE_SIZE}
+          page={page}
+          onPageChange={(p) => setPage(p)}
+          // 👇 uncomment the next line to use a custom pagination size
+          // paginationSize="md"
+          // 👇 uncomment the next line to use a custom loading text
+          loadingText="Loading..."
+          // 👇 uncomment the next line to display a custom text when no records were found
+          noRecordsText="No records found"
+          // 👇 uncomment the next line to use a custom pagination text
+          // paginationText={({ from, to, totalRecords }) => `Records ${from} - ${to} of ${totalRecords}`}
+          // 👇 uncomment the next lines to use custom pagination colors
+          // paginationActiveBackgroundColor="green"
+          // paginationActiveTextColor="#e6e348"
+        />
+      </div>
     </>
   )
 }

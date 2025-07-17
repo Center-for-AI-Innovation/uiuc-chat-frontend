@@ -569,6 +569,23 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                     </Button>
                   }
                   rightSectionWidth={'auto'}
+                  className="mt-4 w-full rounded-full"
+                  styles={{
+                    input: {
+                      color: 'var(--foreground)',
+                      backgroundColor: 'var(--background-faded)',
+                      borderColor: 'var(--background-dark)',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      '&:focus': {
+                        borderColor: 'var(--illinois-orange)',
+                      },
+                    },
+                    wrapper: {
+                      width: '100%',
+                    },
+                  }}
                 />
               )}
             </div>

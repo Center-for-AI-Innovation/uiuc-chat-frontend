@@ -42,11 +42,8 @@ import { fetchPresignedUrl, uploadToS3 } from 'src/utils/apiUtils'
 import { ImagePreview } from './ImagePreview'
 import { montserrat_heading } from 'fonts'
 import { useMediaQuery } from '@mantine/hooks'
-import type ChatUI from '~/utils/modelProviders/WebLLM';
-import {
-  WebllmModel,
-  webLLMModels,
-} from '~/utils/modelProviders/WebLLM'
+import type ChatUI from '~/utils/modelProviders/WebLLM'
+import { WebllmModel, webLLMModels } from '~/utils/modelProviders/WebLLM'
 import {
   selectBestModel,
   VisionCapableModels,
@@ -833,8 +830,8 @@ export const ChatInput = ({
             selectedConversation.messages.length - 1
           ]?.role === 'user' && (
             <button
-              className={`absolute ${isSmallScreen ? '-top-28' : '-top-20'} left-0 right-0 mx-auto mb-12 flex w-fit items-center gap-3 rounded border border-[--primary] bg-[--primary] px-4 py-2 text-[--background] opacity-[.85] hover:opacity-100 md:mb-0 md:mt-2`}
-              style={{ backdropFilter: 'blur(4px)', pointerEvents: 'auto' }}
+              className={`absolute ${isSmallScreen ? '-top-28' : '-top-20'} left-0 right-0 mx-auto mb-12 flex w-fit items-center gap-3 rounded border border-[--primary] bg-[--primary] px-4 py-2 text-[--illinois-white] opacity-[.85] hover:opacity-100 md:mb-0 md:mt-2`}
+              style={{ pointerEvents: 'auto' }}
               onClick={onRegenerate}
             >
               <IconRepeat size={16} /> {t('Regenerate Response')}

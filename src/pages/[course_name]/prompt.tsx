@@ -1395,6 +1395,7 @@ CRITICAL: The optimized prompt must:
                                   >
                                     <IconLayoutSidebarRightExpand
                                       stroke={2}
+                                      className="text-[--foreground-faded] transition-colors duration-200 hover:text-[--foreground]"
                                       onClick={() =>
                                         setIsRightSideVisible(true)
                                       }
@@ -1461,44 +1462,59 @@ CRITICAL: The optimized prompt must:
                                 >
                                   Update System Prompt
                                 </Button>
-                                <Button
-                                  onClick={handleSubmitPromptOptimization}
-                                  disabled={!llmProviders || isOptimizing}
-                                  variant="filled"
-                                  radius="md"
-                                  leftIcon={
-                                    isOptimizing ? (
-                                      <LoadingSpinner size="sm" />
-                                    ) : (
-                                      <IconSparkles stroke={1} />
-                                    )
-                                  }
-                                  className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                                  sx={(theme) => ({
-                                    background:
-                                      'var(--dashboard-button) !important',
-                                    border: 'none',
-                                    color: '#fff',
-                                    padding: '10px 20px',
-                                    fontWeight: 600,
-                                    transition: 'all 0.2s ease',
-                                    '&:hover': {
-                                      background:
-                                        'var(--dashboard-button-hover) !important',
-                                    },
-                                    '&:active': {},
-                                    '&:disabled': {
-                                      opacity: 0.7,
-                                      cursor: 'not-allowed',
-                                      transform: 'none',
-                                    },
-                                  })}
-                                  style={{ minWidth: 'fit-content' }}
+
+                                <span
+                                  style={{
+                                    '--spinner':
+                                      'var(--dashboard-button-foreground)',
+                                  }}
                                 >
-                                  {isOptimizing
-                                    ? 'Optimizing...'
-                                    : 'Optimize System Prompt'}
-                                </Button>
+                                  <Button
+                                    onClick={handleSubmitPromptOptimization}
+                                    disabled={!llmProviders || isOptimizing}
+                                    variant="filled"
+                                    radius="md"
+                                    leftIcon={
+                                      isOptimizing ? (
+                                        <LoadingSpinner
+                                          size="sm"
+                                          color="var(--dashboard-button-foreground)"
+                                        />
+                                      ) : (
+                                        <IconSparkles
+                                          stroke={1}
+                                          color="var(--dashboard-button-foreground)"
+                                        />
+                                      )
+                                    }
+                                    className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                    sx={(theme) => ({
+                                      background:
+                                        'var(--dashboard-button) !important',
+                                      border: 'none',
+                                      color:
+                                        'var(--dashboard-button-foreground) !important',
+                                      padding: '10px 20px',
+                                      fontWeight: 600,
+                                      transition: 'all 0.2s ease',
+                                      '&:hover': {
+                                        background:
+                                          'var(--dashboard-button-hover) !important',
+                                      },
+                                      '&:active': {},
+                                      '&:disabled': {
+                                        opacity: 0.7,
+                                        cursor: 'not-allowed',
+                                        transform: 'none',
+                                      },
+                                    })}
+                                    style={{ minWidth: 'fit-content' }}
+                                  >
+                                    {isOptimizing
+                                      ? 'Optimizing...'
+                                      : 'Optimize System Prompt'}
+                                  </Button>
+                                </span>
                               </Group>
 
                               <Modal
@@ -1520,12 +1536,14 @@ CRITICAL: The optimized prompt must:
                                 styles={{
                                   title: { marginBottom: '0' },
                                   header: {
-                                    backgroundColor: '#15162c',
-                                    borderBottom: '1px solid #2D2F48',
+                                    backgroundColor: 'var(--modal)',
+                                    borderBottom:
+                                      '1px solid var(--modal-border)',
                                     padding: '20px 24px',
                                   },
                                   content: {
-                                    backgroundColor: '#15162c',
+                                    color: 'var(--modal-text)',
+                                    backgroundColor: 'var(--modal)',
                                     border: '1px solid #2D2F48',
                                   },
                                   body: {
@@ -1537,10 +1555,13 @@ CRITICAL: The optimized prompt must:
                                     flexDirection: 'column',
                                   },
                                   close: {
-                                    color: '#D1D1D1',
+                                    color: 'var(--modal-text)',
+                                    border: '0px',
+
                                     '&:hover': {
+                                      color: 'var(--modal)',
                                       backgroundColor:
-                                        'rgba(255, 255, 255, 0.1)',
+                                        'var(--dashboard-button)',
                                     },
                                   },
                                 }}
@@ -1558,9 +1579,8 @@ CRITICAL: The optimized prompt must:
                                     p="md"
                                     radius="md"
                                     style={{
-                                      backgroundColor: '#1a1b34',
-                                      border:
-                                        '1px solid rgba(147, 51, 234, 0.3)',
+                                      backgroundColor:
+                                        'var(--background-faded)',
                                       flex: 1,
                                       overflow: 'auto',
                                       minHeight: '200px',
@@ -1580,7 +1600,7 @@ CRITICAL: The optimized prompt must:
                                               padding: '16px',
                                               borderRadius: '8px',
                                               whiteSpace: 'pre-wrap',
-                                              color: '#D1D1D1',
+                                              color: 'var(--modal-text)',
                                               lineHeight: '1.6',
                                               fontSize: '0.95rem',
                                             }}
@@ -1601,11 +1621,12 @@ CRITICAL: The optimized prompt must:
                                       className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                                       styles={(theme) => ({
                                         root: {
-                                          borderColor: theme.colors.gray[6],
-                                          color: '#fff',
+                                          color: 'var(--foreground)',
+                                          borderColor:
+                                            'var(--background-faded)',
                                           '&:hover': {
                                             backgroundColor:
-                                              theme.colors.gray[8],
+                                              'var(--background-faded)',
                                           },
                                         },
                                       })}
@@ -1635,26 +1656,20 @@ CRITICAL: The optimized prompt must:
                                         close()
                                       }}
                                       sx={(theme) => ({
+                                        color:
+                                          'var(--dashboard-button-foreground)',
                                         background:
-                                          'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%) !important',
+                                          'var(--dashboard-button) !important',
                                         border: 'none',
-                                        color: '#fff',
                                         padding: '10px 20px',
                                         fontWeight: 600,
-                                        boxShadow:
-                                          '0 2px 4px rgba(0, 0, 0, 0.2)',
                                         transition: 'all 0.2s ease',
                                         '&:hover': {
                                           background:
-                                            'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%) !important',
-                                          transform: 'translateY(-1px)',
-                                          boxShadow:
-                                            '0 4px 8px rgba(0, 0, 0, 0.3)',
+                                            'var(--dashboard-button-hover) !important',
                                         },
                                         '&:active': {
                                           transform: 'translateY(0)',
-                                          boxShadow:
-                                            '0 2px 4px rgba(0, 0, 0, 0.2)',
                                         },
                                       })}
                                     >

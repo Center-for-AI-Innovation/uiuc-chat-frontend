@@ -620,7 +620,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
 
             <div
               // Course files header/background
-              className="mx-auto mt-[2%] w-[90%] items-start rounded-2xl bg-[--background] text-[--foreground]"
+              className="mx-auto mt-[2%] w-[85%] items-start rounded-2xl bg-[--background] text-[--foreground]"
               style={{ zIndex: 1 }}
             >
               <Flex direction="row" justify="space-between">
@@ -628,7 +628,6 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                   <Title
                     className={`${montserrat_heading.variable} font-montserratHeading`}
                     order={3}
-                    p="sm"
                     style={{
                       display: 'flex',
                       justifyContent: 'space-between',
@@ -654,8 +653,6 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                 </div>
               </Flex>
             </div>
-
-            <div className="pt-5"></div>
 
             <N8nWorkflowsTable
               n8nApiKey={n8nApiKey}

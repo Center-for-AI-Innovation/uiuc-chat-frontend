@@ -113,7 +113,7 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.25);
 
-  --badge: #f00;
+  --badge: var(--illinois-orange);
   --badge-error: #f00;
 
   --link: var(--primary);
@@ -142,6 +142,13 @@
     --chat-background
   ); /* color-mix(in srgb, var(--background), black 10%); */
   --chat-user: var(--primary); /* var(--foreground); */
+
+  --citation-foreground: var(--link);
+  --citation-background: color-mix(in srgb, var(--background), var(--link) 5%);
+  --citation-border: color-mix(in srgb, var(--background), var(--link) 15%);
+  --citation-hover-foreground: var(--illinois-white);
+  --citation-hover-background: var(--link);
+  --citation-hover-border: var(--link);
 
   --message: white;
   --message-faded: rgba(from var(--message-color) r g b / 0.5);
@@ -640,7 +647,7 @@ li {
 
   65% {
     color: var(--pulsate-secondary);
-    text-shadow: 0 0 10px;
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
   }
 
   100% {
@@ -678,16 +685,18 @@ a[data-footnote-backref] {
   display: inline;
   font-size: 100%;
   line-height: 1.5;
-  color: rgb(175, 180, 184);
+  color: var(--citation-foreground); /* rgb(175, 180, 184); */
   text-decoration: none;
   white-space: normal;
   font-weight: 400;
+  font-style: italic;
+  font-size: 85%;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
-  background-color: rgba(157, 78, 221, 0.15);
-  border: 1px solid rgba(157, 78, 221, 0.3);
+  background-color: var(--citation-background); /* rgba(157, 78, 221, 0.15); */
+  border: 1px solid var(--citation-border); /* rgba(157, 78, 221, 0.3); */
   border-radius: 4px;
-  padding: 0 0px;
+  padding: 0 2px;
   margin: 0;
   overflow-wrap: anywhere;
   word-wrap: break-word;
@@ -705,11 +714,13 @@ a[data-footnote-backref] {
 /* Simple, consistent hover state for all citation links */
 .supMarkDown a:hover,
 .supMarkDown a:focus {
-  background-color: rgba(157, 78, 221, 0.3);
-  color: rgb(180, 185, 190);
+  background-color: var(
+    --citation-hover-background
+  ); /* rgba(157, 78, 221, 0.3); */
+  color: var(--citation-hover-foreground); /* rgb(180, 185, 190); */
   /* Slightly lighter version of the base color */
   cursor: pointer;
-  border-color: rgba(157, 78, 221, 0.4);
+  border-color: var(--citation-hover-border); /* rgba(157, 78, 221, 0.4); */
 }
 
 /* Add responsive adjustments for small screens */
@@ -776,7 +787,7 @@ a[data-footnote-backref] {
   border-radius: 4px;
   font-size: 12px;
   white-space: nowrap;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  /*  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); */
   position: relative;
 }
 
@@ -835,7 +846,7 @@ a[data-footnote-backref] {
   overflow: hidden;
   text-overflow: ellipsis;
   position: relative;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  /*  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); */
 }
 
 /* Simple, consistent hover state for all document buttons */
@@ -843,7 +854,7 @@ a[data-footnote-backref] {
 .linkMarkDown button:not(.codeblock-button):focus {
   background-color: var(--dashboard-button-hover);
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  /*  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); */
 }
 
 /* Visited state for document buttons */
@@ -865,7 +876,7 @@ a[data-footnote-backref] {
   /* Slightly lighter than the button background for contrast */
   border-radius: 10px;
   /* Rounded corners for the card */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  /*  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
   /* Subtle shadow for depth */
   scroll-snap-type: x mandatory;
   /* Snap scrolling */
@@ -941,7 +952,7 @@ button.css-s37qmw {
 .think-tag-dropdown {
   @apply mb-4 w-full rounded-lg border border-gray-200 bg-gray-50/30 shadow-sm transition-all duration-200 hover:border-[--dashboard-button];
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  /*  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); */
 }
 
 .think-tag-header {
@@ -1056,7 +1067,7 @@ button.css-s37qmw {
 /* Add subtle highlight to the container on hover instead */
 .think-tag-dropdown:hover {
   @apply border-[--dashboard-button];
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  /*  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); */
 }
 
 .think-tag-content.expanded:focus {
@@ -1135,12 +1146,14 @@ after changing to v8+, this can be removed and use checkboxProps to style the ch
 https://icflorescu.github.io/mantine-datatable/examples/records-selection/
 */
 
+.n8n_workflows_table .mantine-Checkbox-input,
 .project_files_table .mantine-Checkbox-input {
   color: var(--button-text-color);
   background-color: transparent;
   border: 1px solid var(--button-border);
 }
 
+.n8n_workflows_table .mantine-ActionIcon-root,
 .project_files_table .mantine-ActionIcon-root {
   color: var(--foreground-faded);
   background-color: transparent;
@@ -1156,19 +1169,46 @@ https://icflorescu.github.io/mantine-datatable/examples/records-selection/
   }
 }
 
+.n8n_workflows_table .mantine-Center-root,
 .project_files_table .mantine-Center-root {
   .tabler-icon {
     color: var(--foreground-faded);
   }
 }
 
+.n8n_workflows_table .mantine-ScrollArea-root,
 .project_files_table .mantine-ScrollArea-root {
   border-radius: 0px;
 }
 
+.n8n_workflows_table .mantine-ScrollArea-viewport,
 .project_files_table .mantine-ScrollArea-viewport {
   > div > div {
     display: none; /* hack to hide the scroll shadows */
+  }
+}
+
+/* n8n workflows table was missing connection to the global css variables...not sure why, but if we fix that, these extra hack might not be needed */
+.n8n_workflows_table {
+  thead {
+    th {
+      color: var(--foreground) !important;
+      background-color: var(--background-dark) !important;
+    }
+  }
+
+  .mantine-Switch-track {
+    cursor: pointer;
+    background-color: var(--background-faded);
+    border-color: var(--background-dark);
+  }
+
+  input:checked + .mantine-Switch-track {
+    background-color: var(--dashboard-button);
+    border-color: var(--dashboard-button);
+  }
+
+  .mantine-Pagination-control {
   }
 }
 
