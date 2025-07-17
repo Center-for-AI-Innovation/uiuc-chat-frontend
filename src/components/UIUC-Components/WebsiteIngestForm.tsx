@@ -395,13 +395,13 @@ export default function WebsiteIngestForm({
           </Card>
         </DialogTrigger>
 
-        <DialogContent className="mx-auto w-[95%] max-w-2xl !rounded-2xl border-0 bg-[#1c1c2e] px-4 py-6 text-white sm:px-6">
+        <DialogContent className="mx-auto h-auto max-h-[85vh] w-[95%] max-w-2xl overflow-y-auto !rounded-2xl border-0 bg-[--modal] px-4 py-6 text-[--modal-text] sm:px-6">
           <DialogHeader>
-            <DialogTitle className="mb-4 text-left text-xl font-bold">
+            <DialogTitle className="mb-2 text-left text-xl font-bold">
               Ingest Website
             </DialogTitle>
           </DialogHeader>
-          <div className="border-t border-gray-800 pt-4">
+          <div className="">
             <div className="max-h-[70vh] overflow-y-auto sm:h-auto sm:max-h-none sm:overflow-visible">
               <div className="space-y-4">
                 <form
@@ -415,12 +415,14 @@ export default function WebsiteIngestForm({
                     className="w-full rounded-full"
                     styles={{
                       input: {
-                        backgroundColor: '#1A1B1E',
+                        color: 'var(--foreground)',
+                        backgroundColor: 'var(--background-faded)',
+                        borderColor: 'var(--background-dark)',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         '&:focus': {
-                          borderColor: '#9370DB',
+                          borderColor: 'var(--illinois-orange)',
                         },
                       },
                       wrapper: {
@@ -428,7 +430,7 @@ export default function WebsiteIngestForm({
                       },
                     }}
                     placeholder="Enter URL..."
-                    radius="xl"
+                    radius="md"
                     type="url"
                     value={url}
                     size="lg"
@@ -440,26 +442,28 @@ export default function WebsiteIngestForm({
                     <Tooltip
                       multiline
                       w={400}
-                      color="#15162b"
+                      color="var(--tooltip-background)"
                       arrowPosition="side"
                       arrowSize={8}
                       withArrow
                       position="bottom-start"
                       label="We will attempt to visit this number of pages, but not all will be scraped if they're duplicates, broken or otherwise inaccessible."
+                      styles={{
+                        tooltip: {
+                          color: 'var(--tooltip)',
+                          backgroundColor: 'var(--tooltip-background)',
+                        },
+                      }}
                     >
-                      <div>
+                      <div className="mt-4">
                         <Text
-                          style={{ color: '#C1C2C5', fontSize: '16px' }}
+                          style={{ fontSize: '16px' }}
                           className={`${montserrat_heading.variable} font-montserratHeading`}
                         >
                           Max URLs (1 to 500)
                         </Text>
+
                         <TextInput
-                          styles={{
-                            input: {
-                              backgroundColor: '#1A1B1E',
-                            },
-                          }}
                           name="maximumUrls"
                           radius="md"
                           placeholder="Default 50"
@@ -468,6 +472,26 @@ export default function WebsiteIngestForm({
                             handleInputChange(e, 'maxUrls')
                           }}
                           error={inputErrors.maxUrls.error}
+                          className="mt-2 w-full rounded-full"
+                          styles={{
+                            input: {
+                              color: 'var(--foreground)',
+                              backgroundColor:
+                                'var(--background-faded) !important',
+                              borderColor: 'var(--background-dark)',
+                              padding:
+                                'calc(var(--padding) * 1.5) calc(var(--padding) * .75)',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              '&:focus': {
+                                borderColor: 'var(--illinois-orange)',
+                              },
+                            },
+                            wrapper: {
+                              width: '100%',
+                            },
+                          }}
                         />
                       </div>
                     </Tooltip>
@@ -484,13 +508,13 @@ export default function WebsiteIngestForm({
                   )}
 
                   <Text
-                    style={{ color: '#C1C2C5', fontSize: '16px' }}
-                    className={`${montserrat_heading.variable} font-montserratHeading`}
+                    style={{ fontSize: '16px' }}
+                    className={`${montserrat_heading.variable} mt-4 font-montserratHeading`}
                   >
                     Limit web crawl
                   </Text>
-                  <div className="pl-3">
-                    <List>
+                  <div className="mt-2 pl-3">
+                    <List className="text-[--modal-text]">
                       <List.Item>
                         <strong>Equal and Below:</strong> Only scrape content
                         that starts will the given URL. E.g. nasa.gov/blogs will
@@ -511,10 +535,10 @@ export default function WebsiteIngestForm({
                         <span>
                           <strong>All:</strong> Start on the given URL and
                           wander the web...{' '}
-                          <Text style={{ color: '#C1C2C5' }}>
+                          <Text>
                             For more detail{' '}
                             <a
-                              className={'text-[--dashboard-button]'}
+                              className={'font-bold text-[--link]'}
                               href="https://docs.uiuc.chat/features/web-crawling-details"
                               target="_blank"
                               rel="noopener noreferrer"
@@ -528,18 +552,32 @@ export default function WebsiteIngestForm({
                     </List>
                   </div>
 
-                  <Text style={{ color: '#C1C2C5' }}>
+                  <Text className="mt-4">
                     <strong>I suggest starting with Equal and Below</strong>,
                     then just re-run this if you need more later.
                   </Text>
-                  <div className="pt-2"></div>
+
                   <SegmentedControl
                     fullWidth
                     orientation="vertical"
                     size="sm"
-                    radius="md"
+                    radius="none"
                     value={scrapeStrategy}
                     onChange={(strat) => setScrapeStrategy(strat)}
+                    className="mt-4 bg-[--background-faded]"
+                    styles={{
+                      indicator: {
+                        color: 'var(--dashboard-button-foreground)',
+                        backgroundColor: 'var(--dashboard-button)',
+                      },
+                      label: {
+                        color: 'var(--foreground)',
+
+                        '&:hover': {
+                          color: 'var(--dashboard-button)',
+                        },
+                      },
+                    }}
                     data={[
                       {
                         value: 'equal-and-below',
@@ -591,11 +629,11 @@ export default function WebsiteIngestForm({
               </div>
             </div>
           </div>
-          <div className="mt-4 border-t border-gray-800 pt-2">
+          <div className="mt-4">
             <Button
               onClick={handleIngest}
               disabled={!isUrlValid}
-              className="h-11 w-full rounded-xl bg-[--dashboard-button] text-[--dashboard-button-foreground] transition-colors hover:bg-[--dashboard-button-hover]"
+              className="h-11 w-full rounded-xl bg-[--dashboard-button] text-[--dashboard-button-foreground] transition-colors hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--background-dark]"
             >
               Ingest the Website
             </Button>
