@@ -1469,6 +1469,52 @@ export const ChatMessage = memo(
                               />
                             )}
 
+                          {/* Exa.ai Search Results for all messages */}
+
+                          {Array.isArray(message.searchResults) &&
+                            message.searchResults.length > 0 && (
+                              <IntermediateStateAccordion
+                                accordionKey="search results"
+                                title="Web Search Results"
+                                isLoading={false}
+                                error={false}
+                                content={
+                                  <div>
+                                    {message.searchResults.map(
+                                      (result, idx) => {
+                                        return (
+                                          <div
+                                            key={idx}
+                                            style={{ marginBottom: 8 }}
+                                          >
+                                            <a
+                                              href={result.url || result.link}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                            >
+                                              {result.title ||
+                                                result.url ||
+                                                result.link}
+                                            </a>
+                                            {result.snippet && (
+                                              <div
+                                                style={{
+                                                  fontSize: 12,
+                                                  color: '#aaa',
+                                                }}
+                                              >
+                                                {result.snippet}
+                                              </div>
+                                            )}
+                                          </div>
+                                        )
+                                      },
+                                    )}
+                                  </div>
+                                }
+                              />
+                            )}
+
                           {/* Retrieval loading state for last message */}
                           {isRetrievalLoading &&
                             (messageIndex ===

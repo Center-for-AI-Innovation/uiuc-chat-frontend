@@ -13,10 +13,12 @@ export interface PluginKey {
 
 export enum PluginID {
   GOOGLE_SEARCH = 'google-search',
+  EXA_SEARCH = 'exa-search',
 }
 
 export enum PluginName {
   GOOGLE_SEARCH = 'Google Search',
+  EXA_SEARCH = 'Exa Web Search',
 }
 
 export const Plugins: Record<PluginID, Plugin> = {
@@ -30,6 +32,16 @@ export const Plugins: Record<PluginID, Plugin> = {
       },
       {
         key: 'GOOGLE_CSE_ID',
+        value: '',
+      },
+    ],
+  },
+  [PluginID.EXA_SEARCH]: {
+    id: PluginID.EXA_SEARCH,
+    name: PluginName.EXA_SEARCH,
+    requiredKeys: [
+      {
+        key: 'EXA_API_KEY',
         value: '',
       },
     ],
