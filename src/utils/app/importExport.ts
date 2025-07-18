@@ -1,10 +1,10 @@
 import { Conversation } from '@/types/chat'
 import {
-  ExportFormatV1,
-  ExportFormatV2,
-  ExportFormatV3,
-  ExportFormatV4,
-  LatestExportFormat,
+  type ExportFormatV1,
+  type ExportFormatV2,
+  type ExportFormatV3,
+  type ExportFormatV4,
+  type LatestExportFormat,
   SupportedExportFormats,
 } from '@/types/export'
 import { FolderInterface } from '@/types/folder'

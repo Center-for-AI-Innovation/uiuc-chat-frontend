@@ -1,6 +1,4 @@
-import {
-  createStyles,
-} from '@mantine/core'
+import { createStyles } from '@mantine/core'
 
 import React from 'react'
 import {
@@ -13,7 +11,7 @@ import {
   IconMusic,
   IconCode,
   IconFileTypeTxt,
-  TablerIconsProps
+  type TablerIconsProps,
 } from '@tabler/icons-react'
 import {
   Tooltip,
@@ -24,9 +22,9 @@ import {
 import { motion } from 'framer-motion'
 
 interface FileType {
-  icon: (props: TablerIconsProps) => JSX.Element,
+  icon: (props: TablerIconsProps) => JSX.Element
   // icon: React.FC<TablerIconsProps>,
-  label: string,
+  label: string
   color: string
 }
 const useStyles = createStyles((theme) => ({
@@ -120,19 +118,19 @@ const SupportedFileUploadTypes = () => {
     { icon: IconPhoto, label: 'Image', color: 'text-pink-500' },
     { icon: IconMusic, label: 'Audio', color: 'text-yellow-500' },
     { icon: IconCode, label: 'Code', color: 'text-cyan-500' },
-    { icon: IconFileTypeTxt, label: 'Text', color: 'text-white' }
+    { icon: IconFileTypeTxt, label: 'Text', color: 'text-white' },
   ]
 
   return (
     <>
       <TooltipProvider>
-        <div className="flex flex-wrap justify-center gap-4 mb-6 mt-8">
+        <div className="mb-6 mt-8 flex flex-wrap justify-center gap-4">
           {fileTypes.map((type, index) => {
             if (!type.icon) {
-              console.error(`Missing icon for type: ${type.label}`);
-              return null; // Skip rendering this item if icon is missing
+              console.error(`Missing icon for type: ${type.label}`)
+              return null // Skip rendering this item if icon is missing
             }
-            const IconComponent = type.icon;
+            const IconComponent = type.icon
 
             return (
               <Tooltip key={index}>
@@ -141,15 +139,21 @@ const SupportedFileUploadTypes = () => {
                     whileHover={{ scale: 1.1 }}
                     className="flex flex-col items-center"
                   >
-                    <IconComponent className={`w-6 h-6 ${type.color}`} size={24} stroke={1.5} />
-                    <span className="text-xs text-gray-400 mt-1">{type.label}</span>
+                    <IconComponent
+                      className={`h-6 w-6 ${type.color}`}
+                      size={24}
+                      stroke={1.5}
+                    />
+                    <span className="mt-1 text-xs text-gray-400">
+                      {type.label}
+                    </span>
                   </motion.div>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>{type.label} files supported</p>
                 </TooltipContent>
               </Tooltip>
-            );
+            )
           })}
         </div>
       </TooltipProvider>

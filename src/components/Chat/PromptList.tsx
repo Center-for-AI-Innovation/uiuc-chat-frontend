@@ -1,6 +1,6 @@
-import { FC, MutableRefObject } from 'react'
+import { type FC, type MutableRefObject } from 'react'
 
-import { Prompt } from '@/types/prompt'
+import { type Prompt } from '@/types/prompt'
 
 interface Props {
   prompts: Prompt[]

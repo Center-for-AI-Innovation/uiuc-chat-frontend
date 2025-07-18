@@ -49,15 +49,16 @@ export const IntermediateStateAccordion = ({
           value={accordionKey}
           style={{
             border: 0,
-            backgroundColor: '#101122',
+            color: 'var(--foreground)',
+            backgroundColor: 'var(--background-faded)',
             borderRadius: '0.5rem',
           }}
         >
           <Accordion.Control
             className={`rounded-lg hover:bg-transparent ${montserrat_paragraph.variable} font-montserratParagraph text-sm font-bold`}
             style={{
-              textShadow: '0 0 10px',
-              color: '#9d4edd',
+              textShadow: '0 0 0px' /* 10px */,
+              color: 'var(--dashboard-foreground)',
               display: 'flex',
               alignItems: 'left',
             }}
@@ -66,18 +67,17 @@ export const IntermediateStateAccordion = ({
             {title}
           </Accordion.Control>
           <Accordion.Panel
-            className={`${montserrat_paragraph.variable} rounded-lg bg-[#101122] pt-2 font-montserratParagraph text-sm text-white ${error ? 'border-2 border-red-500' : ''}`}
+            className={`${montserrat_paragraph.variable} rounded-lg bg-[--background-faded] pt-2 font-montserratParagraph text-sm text-white ${error ? 'border-2 border-red-500' : ''}`}
           >
             <div style={{ position: 'relative' }}>
               <pre
-                className="rounded-lg p-2 pr-4"
+                className="rounded-lg bg-[--background] p-2 pr-4 text-[--foreground]"
                 style={{
                   whiteSpace: 'pre-wrap',
                   wordWrap: 'break-word',
                   maxHeight: '20em',
                   maxWidth: '100%',
                   overflowY: 'auto',
-                  backgroundColor: '#1d1f32',
                 }}
               >
                 {content}

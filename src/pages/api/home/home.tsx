@@ -10,7 +10,6 @@ import useErrorService from '@/services/errorService'
 
 import { cleanSelectedConversation } from '@/utils/app/clean'
 import { DEFAULT_SYSTEM_PROMPT, DEFAULT_TEMPERATURE } from '@/utils/app/const'
-import { getSettings } from '@/utils/app/settings'
 
 import { type Conversation } from '@/types/chat'
 import { type KeyValuePair } from '@/types/data'
@@ -27,14 +26,14 @@ import {
   selectBestModel,
   VisionCapableModels,
 } from '~/utils/modelProviders/LLMProvider'
-import { OpenAIModelID } from '~/utils/modelProviders/types/openai'
+import { type OpenAIModelID } from '~/utils/modelProviders/types/openai'
 import {
   useDeleteFolder,
   useFetchFolders,
   useUpdateFolder,
 } from '~/hooks/folderQueries'
 import { useUpdateConversation } from '~/hooks/conversationQueries'
-import { FolderType, FolderWithConversation } from '~/types/folder'
+import { type FolderType, type FolderWithConversation } from '~/types/folder'
 import { useQueryClient } from '@tanstack/react-query'
 import { useCreateFolder } from '~/hooks/folderQueries'
 import { selectBestTemperature } from '~/components/Chat/Temperature'
@@ -143,7 +142,6 @@ const Home = ({
   const {
     state: {
       apiKey,
-      lightMode,
       folders,
       conversations,
       selectedConversation,
@@ -673,16 +671,7 @@ const Home = ({
 
   useEffect(() => {
     const initialSetup = async () => {
-      // console.log('current_email: ', current_email)
-      console.log('isInitialSetupDone: ', isInitialSetupDone)
       if (isInitialSetupDone) return
-      const settings = getSettings()
-      if (settings.theme) {
-        dispatch({
-          field: 'lightMode',
-          value: settings.theme,
-        })
-      }
 
       if (window.innerWidth < 640) {
         dispatch({ field: 'showChatbar', value: false })
@@ -781,7 +770,7 @@ const Home = ({
         </Head>
         {selectedConversation && (
           <main
-            className={`flex h-screen w-screen flex-col text-sm text-white dark:text-white ${lightMode}`}
+            className={`flex h-screen w-screen flex-col text-sm text-white dark:text-white`}
           >
             <div className="flex h-full w-full sm:pt-0">
               {isDragging &&

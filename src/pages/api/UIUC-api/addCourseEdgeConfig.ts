@@ -36,7 +36,7 @@ export async function addEdgeConfigItem(course_name: string): Promise<void> {
 }
 
 // import { NextApiRequest, NextApiResponse } from 'next'
-import axios, { AxiosResponse } from 'axios'
+import axios, { type AxiosResponse } from 'axios'
 
 export const addConfigV2 = async (course_name: string) => {
   try {

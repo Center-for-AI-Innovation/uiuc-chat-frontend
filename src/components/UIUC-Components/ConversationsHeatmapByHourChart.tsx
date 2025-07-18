@@ -96,25 +96,29 @@ const ConversationsHeatmapByHourChart: React.FC<ChartProps> = ({
           yLabels={daysOfWeek}
           cellRender={(x, y, value) => `${value}`}
           xLabelsStyle={() => ({
-            color: '#fff',
             fontFamily: montserrat_paragraph.style.fontFamily,
+            fontSize: '.75rem',
             padding: '0 2px',
             textAlign: 'center',
           })}
           yLabelsStyle={() => ({
-            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
             fontFamily: montserrat_paragraph.style.fontFamily,
-            padding: '0 5px',
+            fontSize: '.75rem',
+            padding: '0 5px 0 0',
             textAlign: 'right',
-            lineHeight: `${40}px`, // Match the fixed cellHeight
+            height: `${40}px`, // Match the fixed cellHeight
           })}
           cellStyle={(_x, _y, ratio) => ({
-            background: `rgba(126, 87, 194, ${ratio})`,
-            color: '#fff',
-            border: '1px solid #3a3a4a',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            color: `color-mix(in srgb, var(--dashboard-button-foreground), var(--foreground) ${ratio < 0.5 ? 100 : 0}%)`,
+            background: `color-mix(in srgb, var(--dashboard-stat), transparent ${100 - ratio * 100}%)` /* rgba(74, 116, 170, ${ratio}) */,
+            border: '1px solid var(--foreground-faded)',
+            fontSize: '.65rem',
           })}
           square={false}
           cellHeight="40px" // Fixed height

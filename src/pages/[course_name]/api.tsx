@@ -1,12 +1,12 @@
 // src/pages/[course_name]/api.tsx
-import { NextPage } from 'next'
+import { type NextPage } from 'next'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import { LoadingPlaceholderForAdminPages } from '~/components/UIUC-Components/MainPageBackground'
 import ApiKeyManagement from '~/components/UIUC-Components/ApiKeyManagament'
-import { CourseMetadata } from '~/types/courseMetadata'
+import { type CourseMetadata } from '~/types/courseMetadata'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { Flex } from '@mantine/core'
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
@@ -80,7 +80,7 @@ const ApiPage: NextPage = () => {
   }
 
   if (!auth.user || !auth.isAuthenticated) {
-    void router.push(`/new?course_name=${courseName}`);
+    void router.push(`/new?course_name=${courseName}`)
     void initiateSignIn(auth, router.asPath)
     return null
   }

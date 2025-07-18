@@ -1,6 +1,6 @@
 import { Group, List, Title, Text, Flex } from '@mantine/core'
 import { IconExternalLink } from '@tabler/icons-react'
-import { NextPage } from 'next'
+import { type NextPage } from 'next'
 import Link from 'next/link'
 import { MainPageBackground } from '../components/UIUC-Components/MainPageBackground'
 import GlobalFooter from '../components/UIUC-Components/GlobalFooter'
@@ -28,7 +28,7 @@ const CropwizardLicenses: NextPage = () => {
           <List.Item>
             <Link
               href="https://creativecommons.org/licenses/by/4.0/"
-              className="text-purple-600 hover:text-purple-800 active:text-purple-500"
+              className="hover:[--dashboard-button-hover] text-[--dashboard-button] active:text-[--dashboard-button]"
               style={{ transition: 'color 0.2s' }}
             >
               CC BY
@@ -37,7 +37,7 @@ const CropwizardLicenses: NextPage = () => {
           <List.Item>
             <Link
               href="http://creativecommons.org/licenses/by-nc/4.0/"
-              className="text-purple-600 hover:text-purple-800 active:text-purple-500"
+              className="hover:[--dashboard-button-hover] text-[--dashboard-button] active:text-[--dashboard-button]"
               style={{ transition: 'color 0.2s' }}
             >
               CC BY-NC
@@ -46,7 +46,7 @@ const CropwizardLicenses: NextPage = () => {
           <List.Item>
             <Link
               href="http://creativecommons.org/licenses/by-nc-nd/4.0/"
-              className="text-purple-600 hover:text-purple-800 active:text-purple-500"
+              className="hover:[--dashboard-button-hover] text-[--dashboard-button] active:text-[--dashboard-button]"
               style={{ transition: 'color 0.2s' }}
             >
               CC BY-NC-ND
@@ -55,7 +55,7 @@ const CropwizardLicenses: NextPage = () => {
           <List.Item>
             <Link
               href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
-              className="text-purple-600 hover:text-purple-800 active:text-purple-500"
+              className="hover:[--dashboard-button-hover] text-[--dashboard-button] active:text-[--dashboard-button]"
               style={{ transition: 'color 0.2s' }}
             >
               CC BY-NC-SA
@@ -64,7 +64,7 @@ const CropwizardLicenses: NextPage = () => {
           <List.Item>
             <Link
               href="https://creativecommons.org/licenses/by-nd/4.0/"
-              className="text-purple-600 hover:text-purple-800 active:text-purple-500"
+              className="hover:[--dashboard-button-hover] text-[--dashboard-button] active:text-[--dashboard-button]"
               style={{ transition: 'color 0.2s' }}
             >
               CC BY-ND
@@ -73,7 +73,7 @@ const CropwizardLicenses: NextPage = () => {
           <List.Item>
             <Link
               href="https://creativecommons.org/licenses/by-sa/4.0/"
-              className="text-purple-600 hover:text-purple-800 active:text-purple-500"
+              className="hover:[--dashboard-button-hover] text-[--dashboard-button] active:text-[--dashboard-button]"
               style={{ transition: 'color 0.2s' }}
             >
               CC BY-SA
@@ -82,7 +82,7 @@ const CropwizardLicenses: NextPage = () => {
           <List.Item>
             <Link
               href="https://creativecommons.org/public-domain/cc0/"
-              className="text-purple-600 hover:text-purple-800 active:text-purple-500"
+              className="hover:[--dashboard-button-hover] text-[--dashboard-button] active:text-[--dashboard-button]"
               style={{ transition: 'color 0.2s' }}
             >
               CC0
@@ -91,7 +91,7 @@ const CropwizardLicenses: NextPage = () => {
           <List.Item>
             <Link
               href="https://www.springeropen.com/get-published/copyright"
-              className="text-purple-600 hover:text-purple-800 active:text-purple-500"
+              className="hover:[--dashboard-button-hover] text-[--dashboard-button] active:text-[--dashboard-button]"
               style={{ transition: 'color 0.2s' }}
             >
               Springer Open Access License
@@ -111,7 +111,7 @@ export const CropwizardLicenseDisclaimer = () => {
         <p>
           CropWizard&apos;s document corpus is subject to{' '}
           <Link
-            className="text-purple-600 hover:text-purple-800 active:text-purple-500"
+            className="hover:[--dashboard-button-hover] text-[--dashboard-button] active:text-[--dashboard-button]"
             href="/cropwizard-licenses"
             style={{ transition: 'color 0.2s' }}
             target="_blank"
@@ -121,7 +121,7 @@ export const CropwizardLicenseDisclaimer = () => {
           </Link>
           . Usage is subject to{' '}
           <Link
-            className="text-purple-600 hover:text-purple-800 active:text-purple-500"
+            className="hover:[--dashboard-button-hover] text-[--dashboard-button] active:text-[--dashboard-button]"
             href="https://www.vpaa.uillinois.edu/resources/terms_of_use"
             style={{ transition: 'color 0.2s' }}
             target="_blank"
@@ -131,7 +131,7 @@ export const CropwizardLicenseDisclaimer = () => {
           </Link>
           , a{' '}
           <Link
-            className="text-purple-600 hover:text-purple-800 active:text-purple-500"
+            className="hover:[--dashboard-button-hover] text-[--dashboard-button] active:text-[--dashboard-button]"
             href="https://www.vpaa.uillinois.edu/resources/web_privacy"
             style={{ transition: 'color 0.2s' }}
             target="_blank"
@@ -141,7 +141,7 @@ export const CropwizardLicenseDisclaimer = () => {
           </Link>
           , and{' '}
           <Link
-            className="text-purple-600 hover:text-purple-800 active:text-purple-500"
+            className="hover:[--dashboard-button-hover] text-[--dashboard-button] active:text-[--dashboard-button]"
             href="https://www.vpaa.uillinois.edu/digital_risk_management/generative_ai/"
             style={{ transition: 'color 0.2s' }}
             target="_blank"

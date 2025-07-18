@@ -1,7 +1,7 @@
 import { type OpenAIChatMessage } from '@/types/chat'
 import {
   ModelIDsThatUseDeveloperMessage,
-  OpenAIModelID,
+  type OpenAIModelID,
   OpenAIModels,
   type OpenAIModel,
 } from '~/utils/modelProviders/types/openai'
@@ -59,7 +59,9 @@ export const OpenAIStream = async (
   if (llmProviders) {
     if (
       llmProviders.OpenAI.enabled &&
-      (llmProviders.OpenAI.models || []).filter((m) => m.enabled).some((oaiModel) => oaiModel.id === model.id)
+      (llmProviders.OpenAI.models || [])
+        .filter((m) => m.enabled)
+        .some((oaiModel) => oaiModel.id === model.id)
     ) {
       // OPENAI
       provider = llmProviders[ProviderNames.OpenAI] as OpenAIProvider
@@ -68,7 +70,9 @@ export const OpenAIStream = async (
       url = `${OPENAI_API_HOST}/v1/chat/completions`
     } else if (
       llmProviders.Azure.enabled &&
-      (llmProviders.Azure.models || []).filter((m) => m.enabled).some((oaiModel) => oaiModel.id === model.id)
+      (llmProviders.Azure.models || [])
+        .filter((m) => m.enabled)
+        .some((oaiModel) => oaiModel.id === model.id)
     ) {
       // AZURE
       apiType = ProviderNames.Azure
@@ -83,9 +87,9 @@ export const OpenAIStream = async (
       })
     } else if (
       llmProviders.NCSAHostedVLM.enabled &&
-      (llmProviders.NCSAHostedVLM.models || []).filter((m) => m.enabled).some(
-        (oaiModel) => oaiModel.id === model.id,
-      )
+      (llmProviders.NCSAHostedVLM.models || [])
+        .filter((m) => m.enabled)
+        .some((oaiModel) => oaiModel.id === model.id)
     ) {
       // NCSA Hosted VLM
       provider = llmProviders[

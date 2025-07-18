@@ -21,8 +21,10 @@ export const AuthComponent = ({ course_name }: { course_name: string }) => {
           <Link href="/">
             <h2 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
               {' '}
-              UIUC.
-              <span className="${inter.style.fontFamily} text-[hsl(280,100%,70%)]">
+              <span className="${inter.style.fontFamily} text-[--illinois-orange]">
+                UIUC.
+              </span>
+              <span className="${inter.style.fontFamily} text-[--white]">
                 chat
               </span>{' '}
             </h2>
@@ -31,9 +33,7 @@ export const AuthComponent = ({ course_name }: { course_name: string }) => {
         <div className="items-left container flex flex-col justify-center gap-2 py-0">
           <Flex direction="column" align="center" justify="center">
             <Title
-              className={`${montserrat_heading.variable} font-montserratHeading`}
-              variant="gradient"
-              gradient={{ from: 'gold', to: 'white', deg: 50 }}
+              className={`${montserrat_heading.variable} font-montserratHeading text-white`}
               order={2}
               p="xl"
             >
@@ -42,7 +42,7 @@ export const AuthComponent = ({ course_name }: { course_name: string }) => {
             </Title>
             <Link href="/sign-in">
               <Button
-                className="kas-gradient-text btn"
+                className=" btn bg-[--button] text-white hover:bg-[--button-hover]"
                 style={{ fontSize: '24px' }}
                 onClick={handleSignIn}
               >

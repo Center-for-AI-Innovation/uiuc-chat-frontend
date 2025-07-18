@@ -1,7 +1,7 @@
 // This is uiuc.chat/chat - useful to everyone as a free alternative to ChatGPT.com and Claude.ai.
 
 import { montserrat_heading } from 'fonts'
-import { NextPage } from 'next'
+import { type NextPage } from 'next'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
@@ -10,7 +10,7 @@ import {
   MainPageBackground,
 } from '~/components/UIUC-Components/MainPageBackground'
 import Home from '~/pages/api/home/home'
-import { CourseMetadata } from '~/types/courseMetadata'
+import { type CourseMetadata } from '~/types/courseMetadata'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { useAuth } from 'react-oidc-context'
 
@@ -77,7 +77,7 @@ const ChatPage: NextPage = () => {
     return (
       <MainPageBackground>
         <div
-          className={`flex items-center justify-center font-montserratHeading ${montserrat_heading.variable}`}
+          className={`flex items-center justify-center font-montserratHeading text-white ${montserrat_heading.variable}`}
         >
           <span className="mr-2">Warming up the knowledge engines...</span>
           <LoadingSpinner size="sm" />

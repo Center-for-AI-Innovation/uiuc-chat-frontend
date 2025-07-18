@@ -1,4 +1,4 @@
-import { Message } from '@/types/chat'
+import { type Message } from '@/types/chat'
 
 export async function upsertMessageToServer(
   message: Message,
@@ -6,8 +6,8 @@ export async function upsertMessageToServer(
   user_email: string,
   course_name: string,
 ) {
-  const MAX_RETRIES = 3;
-  let retryCount = 0;
+  const MAX_RETRIES = 3
+  let retryCount = 0
 
   while (retryCount < MAX_RETRIES) {
     try {
@@ -17,29 +17,32 @@ export async function upsertMessageToServer(
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           message,
           conversationId,
           user_email,
-          course_name 
+          course_name,
         }),
-      });
+      })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        const errorMessage = errorData?.error || response.statusText;
-        throw new Error(`Error upserting message: ${errorMessage}`);
+        const errorData = await response.json().catch(() => null)
+        const errorMessage = errorData?.error || response.statusText
+        throw new Error(`Error upserting message: ${errorMessage}`)
       }
-      
-      return response.json();
+
+      return response.json()
     } catch (error: any) {
-      console.error(`Error upserting message (attempt ${retryCount + 1}/${MAX_RETRIES}):`, error)
+      console.error(
+        `Error upserting message (attempt ${retryCount + 1}/${MAX_RETRIES}):`,
+        error,
+      )
       if (error.code === 'ECONNRESET' && retryCount < MAX_RETRIES - 1) {
-        retryCount++;
-        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount)); // Exponential backoff
-        continue;
+        retryCount++
+        await new Promise((resolve) => setTimeout(resolve, 1000 * retryCount)) // Exponential backoff
+        continue
       }
-      throw error;
+      throw error
     }
   }
 }
@@ -51,9 +54,11 @@ export async function deleteMessagesFromServer(
   user_email: string,
   course_name: string,
 ) {
-  console.warn('deleteMessagesFromServer is deprecated. Use upsertMessageToServer instead');
-  const MAX_RETRIES = 3;
-  let retryCount = 0;
+  console.warn(
+    'deleteMessagesFromServer is deprecated. Use upsertMessageToServer instead',
+  )
+  const MAX_RETRIES = 3
+  let retryCount = 0
 
   while (retryCount < MAX_RETRIES) {
     try {
@@ -67,20 +72,23 @@ export async function deleteMessagesFromServer(
       })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        const errorMessage = errorData?.error || response.statusText;
-        throw new Error(`Error deleting messages: ${errorMessage}`);
+        const errorData = await response.json().catch(() => null)
+        const errorMessage = errorData?.error || response.statusText
+        throw new Error(`Error deleting messages: ${errorMessage}`)
       }
-      
-      return; // Success
+
+      return // Success
     } catch (error: any) {
-      console.error(`Error deleting messages (attempt ${retryCount + 1}/${MAX_RETRIES}):`, error)
+      console.error(
+        `Error deleting messages (attempt ${retryCount + 1}/${MAX_RETRIES}):`,
+        error,
+      )
       if (error.code === 'ECONNRESET' && retryCount < MAX_RETRIES - 1) {
-        retryCount++;
-        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount)); // Exponential backoff
-        continue;
+        retryCount++
+        await new Promise((resolve) => setTimeout(resolve, 1000 * retryCount)) // Exponential backoff
+        continue
       }
-      throw error;
+      throw error
     }
   }
 }

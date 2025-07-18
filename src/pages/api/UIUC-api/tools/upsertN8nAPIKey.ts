@@ -1,7 +1,5 @@
 import { supabase } from '@/utils/supabaseClient'
-import { NextRequest, NextResponse } from 'next/server'
-
-
+import { type NextRequest, NextResponse } from 'next/server'
 
 export default async function handler(req: NextRequest, res: NextResponse) {
   const requestBody = await req.json()
