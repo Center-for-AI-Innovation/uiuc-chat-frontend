@@ -1464,9 +1464,11 @@ CRITICAL: The optimized prompt must:
                                 </Button>
 
                                 <span
-                                  style={{
-                                    '--spinner': 'var(--dashboard-button)',
-                                  } as React.CSSProperties}
+                                  style={
+                                    {
+                                      '--spinner': 'var(--dashboard-button)',
+                                    } as React.CSSProperties
+                                  }
                                 >
                                   <Button
                                     onClick={handleSubmitPromptOptimization}
@@ -1475,9 +1477,7 @@ CRITICAL: The optimized prompt must:
                                     radius="md"
                                     leftIcon={
                                       isOptimizing ? (
-                                        <LoadingSpinner
-                                          size="sm"
-                                        />
+                                        <LoadingSpinner size="sm" />
                                       ) : (
                                         <IconSparkles
                                           stroke={1}
