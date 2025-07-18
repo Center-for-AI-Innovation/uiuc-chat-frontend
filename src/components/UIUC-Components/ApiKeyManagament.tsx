@@ -569,7 +569,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                     </Button>
                   }
                   rightSectionWidth={'auto'}
-                  className="mt-4 w-full rounded-full"
+                  // className="mt-4 w-full rounded-full"
                   styles={{
                     input: {
                       color: 'var(--foreground)',

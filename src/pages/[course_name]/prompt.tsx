@@ -1,85 +1,85 @@
 // src/pages/[course_name]/prompt.tsx
 'use client'
 import { type NextPage } from 'next'
-import MakeNewCoursePage from '~/components/UIUC-Components/MakeNewCoursePage'
-import React, { useEffect, useState, useRef } from 'react'
 import { Montserrat } from 'next/font/google'
 import { useRouter } from 'next/router'
+import React, { useEffect, useRef, useState } from 'react'
+import MakeNewCoursePage from '~/components/UIUC-Components/MakeNewCoursePage'
 
+import {
+  Button,
+  Card,
+  Collapse,
+  Divider,
+  Flex,
+  Group,
+  Image,
+  Indicator,
+  List,
+  Modal,
+  Paper,
+  Select,
+  Text,
+  Textarea,
+  Title,
+  Tooltip,
+  useMantineTheme,
+  type MantineTheme,
+} from '@mantine/core'
 import { useAuth } from 'react-oidc-context'
+import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import {
   LoadingPlaceholderForAdminPages,
   MainPageBackground,
 } from '~/components/UIUC-Components/MainPageBackground'
-import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
-import {
-  Button,
-  Card,
-  Collapse,
-  Flex,
-  Group,
-  Indicator,
-  List,
-  type MantineTheme,
-  Modal,
-  Paper,
-  Text,
-  Textarea,
-  Title,
-  Tooltip,
-  useMantineTheme,
-  Divider,
-  Select,
-  Image,
-} from '@mantine/core'
 
-import {
-  DEFAULT_SYSTEM_PROMPT,
-  GUIDED_LEARNING_PROMPT,
-  DOCUMENT_FOCUS_PROMPT,
-} from '~/utils/app/const'
-import { type CourseMetadata } from '~/types/courseMetadata'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { callSetCourseMetadata } from '~/utils/apiUtils'
-import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 import { useDisclosure, useMediaQuery } from '@mantine/hooks'
-import { LinkGeneratorModal } from '~/components/Modals/LinkGeneratorModal'
+import { notifications } from '@mantine/notifications'
 import {
   IconAlertTriangle,
+  IconAlertTriangleFilled,
+  IconBook,
   IconCheck,
+  IconChevronDown,
   IconExternalLink,
+  IconInfoCircle,
   IconLayoutSidebarRight,
   IconLayoutSidebarRightExpand,
-  IconSparkles,
-  IconInfoCircle,
-  IconChevronDown,
-  IconBook,
   IconLink,
-  IconAlertTriangleFilled,
+  IconSparkles,
 } from '@tabler/icons-react'
-import { notifications } from '@mantine/notifications'
-import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
-import CustomSwitch from '~/components/Switches/CustomSwitch'
-import CustomCopyButton from '~/components/Buttons/CustomCopyButton'
+import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useDebouncedCallback } from 'use-debounce'
-import { findDefaultModel } from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
-import {
-  ReasoningCapableModels,
-  type AllLLMProviders,
-  ProviderNames,
-  LLM_PROVIDER_ORDER,
-  type AnySupportedModel,
-} from '~/utils/modelProviders/LLMProvider'
-import { type AnthropicModel } from '~/utils/modelProviders/types/anthropic'
 import { v4 as uuidv4 } from 'uuid'
-import { type ChatBody } from '~/types/chat'
+import CustomCopyButton from '~/components/Buttons/CustomCopyButton'
 import { getModelLogo } from '~/components/Chat/ModelSelect'
+import { LinkGeneratorModal } from '~/components/Modals/LinkGeneratorModal'
+import CustomSwitch from '~/components/Switches/CustomSwitch'
+import { findDefaultModel } from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
+import Navbar from '~/components/UIUC-Components/navbars/Navbar'
+import { type ChatBody } from '~/types/chat'
+import { type CourseMetadata } from '~/types/courseMetadata'
+import { callSetCourseMetadata } from '~/utils/apiUtils'
+import {
+  DEFAULT_SYSTEM_PROMPT,
+  DOCUMENT_FOCUS_PROMPT,
+  GUIDED_LEARNING_PROMPT,
+} from '~/utils/app/const'
 import {
   recommendedModelIds,
   warningLargeModelIds,
 } from '~/utils/modelProviders/ConfigWebLLM'
+import {
+  LLM_PROVIDER_ORDER,
+  ProviderNames,
+  ReasoningCapableModels,
+  type AllLLMProviders,
+  type AnySupportedModel,
+} from '~/utils/modelProviders/LLMProvider'
+import { type AnthropicModel } from '~/utils/modelProviders/types/anthropic'
+import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
 
 const montserrat = Montserrat({
   weight: '700',
@@ -1465,9 +1465,8 @@ CRITICAL: The optimized prompt must:
 
                                 <span
                                   style={{
-                                    '--spinner':
-                                      'var(--dashboard-button-foreground)',
-                                  }}
+                                    '--spinner': 'var(--dashboard-button)',
+                                  } as React.CSSProperties}
                                 >
                                   <Button
                                     onClick={handleSubmitPromptOptimization}
@@ -1478,7 +1477,6 @@ CRITICAL: The optimized prompt must:
                                       isOptimizing ? (
                                         <LoadingSpinner
                                           size="sm"
-                                          color="var(--dashboard-button-foreground)"
                                         />
                                       ) : (
                                         <IconSparkles
