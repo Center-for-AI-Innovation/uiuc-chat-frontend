@@ -283,9 +283,11 @@ export const WebScrape = ({
         scrapeStrategy,
       })
 
-      console.log('Response from Next.js API web scraping endpoint:', response.data)
+      console.log(
+        'Response from Next.js API web scraping endpoint:',
+        response.data,
+      )
       return response.data
-
     } catch (error: any) {
       console.error('Error during web scraping:', error)
 
@@ -329,16 +331,13 @@ export const WebScrape = ({
     try {
       if (!url || !courseName || !localDir) return null
       console.log('calling downloadMITCourse')
-      const response = await axios.get(
-        `/api/UIUC-api/downloadMITCourse`,
-        {
-          params: {
-            url: url,
-            course_name: courseName,
-            local_dir: localDir,
-          },
+      const response = await axios.get(`/api/UIUC-api/downloadMITCourse`, {
+        params: {
+          url: url,
+          course_name: courseName,
+          local_dir: localDir,
         },
-      )
+      })
       return response.data
     } catch (error) {
       console.error('Error during MIT course download:', error)
@@ -447,9 +446,13 @@ export const WebScrape = ({
                 size="md"
                 radius={'xl'}
                 className={`rounded-s-md ${
-                  isUrlUpdated ? 'bg-[--dashboard-button]' : 'border-[--dashboard-button]'
+                  isUrlUpdated
+                    ? 'bg-[--dashboard-button]'
+                    : 'border-[--dashboard-button]'
                 } overflow-ellipsis text-ellipsis p-2 ${
-                  isUrlUpdated ? 'text-[--dashboard-button-foreground]' : 'text-[--dashboard-button-foreground]'
+                  isUrlUpdated
+                    ? 'text-[--dashboard-button-foreground]'
+                    : 'text-[--dashboard-button-foreground]'
                 } min-w-[5rem] -translate-x-1 transform hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none`}
                 w={`${isSmallScreen ? 'auto' : 'auto'}`}
                 disabled={isDisabled}
@@ -557,9 +560,13 @@ export const WebScrape = ({
                 size="md"
                 radius={'xl'}
                 className={`rounded-s-md ${
-                  isUrlUpdated ? 'bg-[--dashboard-button]' : 'border-[--dashboard-button]'
+                  isUrlUpdated
+                    ? 'bg-[--dashboard-button]'
+                    : 'border-[--dashboard-button]'
                 } overflow-ellipsis text-ellipsis p-2 ${
-                  isUrlUpdated ? 'text-[--dashboard-button-foreground]' : 'text-[--dashboard-button-foreground]'
+                  isUrlUpdated
+                    ? 'text-[--dashboard-button-foreground]'
+                    : 'text-[--dashboard-button-foreground]'
                 } min-w-[5rem] -translate-x-1 transform hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none`}
                 w={`${isSmallScreen ? 'auto' : 'auto'}`}
                 disabled={isDisabled}
@@ -645,7 +652,9 @@ export const WebScrape = ({
                     <Text style={{ color: '#C1C2C5' }}>
                       For more detail{' '}
                       <a
-                        className={'text-[--dashboard-button] hover:text-[--dashboard-button-hover]'}
+                        className={
+                          'text-[--dashboard-button] hover:text-[--dashboard-button-hover]'
+                        }
                         href="https://docs.uiuc.chat/features/web-crawling-details"
                         target="_blank"
                         rel="noopener noreferrer"

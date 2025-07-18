@@ -110,36 +110,36 @@ export const Chatbar = ({
 
   useEffect(() => {
     if (!current_email || !courseName) {
-      return;
+      return
     }
     setDebouncedSearchTerm(searchTerm)
   }, [searchTerm, current_email, courseName])
 
   async function updateConversations(conversationHistory: Conversation[]) {
     if (!current_email || !courseName) {
-      console.warn('Cannot update conversations: missing email or course name');
-      return;
+      console.warn('Cannot update conversations: missing email or course name')
+      return
     }
-    
+
     try {
       await Promise.all(
         conversationHistory.map(async (conversation: Conversation) => {
-          conversation.userEmail = current_email;
-          conversation.projectName = courseName;
+          conversation.userEmail = current_email
+          conversation.projectName = courseName
           try {
-            const response = await saveConversationToServer(conversation);
-            console.log('Response from saveConversationToServer: ', response);
+            const response = await saveConversationToServer(conversation)
+            console.log('Response from saveConversationToServer: ', response)
           } catch (error: any) {
             if (error?.details?.includes('already exists')) {
-              console.log('Conversation already exists, skipping');
-              return;
+              console.log('Conversation already exists, skipping')
+              return
             }
-            throw error;
+            throw error
           }
         }),
       )
     } catch (error) {
-      console.error('Error updating conversations:', error);
+      console.error('Error updating conversations:', error)
     }
   }
 
@@ -305,7 +305,7 @@ export const Chatbar = ({
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   return (

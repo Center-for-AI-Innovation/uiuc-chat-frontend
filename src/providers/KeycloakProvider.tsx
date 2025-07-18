@@ -65,13 +65,16 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
         silent_redirect_uri: `${baseUrl}/silent-renew`,
         post_logout_redirect_uri: baseUrl,
         userStore: new WebStorageStateStore({
-          store: window.localStorage
+          store: window.localStorage,
         }),
         automaticSilentRenew: true,
       }))
 
       // Only save the path when component mounts if we're not on the callback URL
-      if (!window.location.search.includes('state=') && !window.location.search.includes('code=')) {
+      if (
+        !window.location.search.includes('state=') &&
+        !window.location.search.includes('code=')
+      ) {
         saveCurrentPath()
       }
     }
@@ -85,14 +88,16 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
     }
 
     // Find login buttons by commonly used selectors
-    const loginButtons = document.querySelectorAll('.login-btn, [data-login], button[type="login"]')
-    loginButtons.forEach(button => {
+    const loginButtons = document.querySelectorAll(
+      '.login-btn, [data-login], button[type="login"]',
+    )
+    loginButtons.forEach((button) => {
       button.addEventListener('click', handleLoginClick)
     })
 
     return () => {
       // Clean up event listeners on unmount
-      loginButtons.forEach(button => {
+      loginButtons.forEach((button) => {
         button.removeEventListener('click', handleLoginClick)
       })
     }

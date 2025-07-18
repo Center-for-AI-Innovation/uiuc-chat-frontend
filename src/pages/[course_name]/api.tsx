@@ -80,7 +80,7 @@ const ApiPage: NextPage = () => {
   }
 
   if (!auth.user || !auth.isAuthenticated) {
-    void router.push(`/new?course_name=${courseName}`);
+    void router.push(`/new?course_name=${courseName}`)
     void initiateSignIn(auth, router.asPath)
     return null
   }

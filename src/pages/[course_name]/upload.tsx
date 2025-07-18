@@ -66,7 +66,7 @@ const CourseMain: NextPage = () => {
     user_email !== (metadata.course_owner as string) &&
     metadata.course_admins.indexOf(getCurrentPageName()) === -1
   ) {
-    void router.push(`/new?course_name=${projectName}`);
+    void router.push(`/new?course_name=${projectName}`)
 
     return <CannotEditCourse course_name={getCurrentPageName() as string} />
   }

@@ -1,7 +1,6 @@
 import { OpenAIError, OpenAIStream } from '@/utils/server'
 import { type ChatBody, type Message } from '@/types/chat'
 
-
 export const openAIAzureChat = async (
   chatBody: ChatBody,
   stream: boolean,
