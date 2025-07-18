@@ -43,8 +43,8 @@ export const fetchContexts = async (
 
   //const url = `http://localhost:8000/getTopContexts`
   //const url = `https://flask-production-751b.up.railway.app/getTopContexts`
-  //const url = `https://flask-pr-316.up.railway.app/getTopContexts`
-  const url = `${process.env.RAILWAY_URL}/getTopContexts`
+  const url = `https://flask-pr-316.up.railway.app/getTopContexts`
+  //const url = `${process.env.RAILWAY_URL}/getTopContexts`
   try {
     const response = await fetch(url, {
       method: 'POST',
