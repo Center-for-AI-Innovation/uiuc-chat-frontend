@@ -73,12 +73,12 @@ const CourseMain: NextPage = () => {
   }
 
   if (!auth.isAuthenticated && courseName) {
-    void router.push(`/new?course_name=${courseName}`);
+    void router.push(`/new?course_name=${courseName}`)
     return (
       <MainPageBackground>
         <LoadingSpinner />
       </MainPageBackground>
-    );
+    )
   }
 
   if (

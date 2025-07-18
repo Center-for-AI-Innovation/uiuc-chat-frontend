@@ -84,17 +84,19 @@ export async function addDocumentsToDocGroup(
         p_url: doc.url,
         p_readable_filename: doc.readable_filename,
         p_doc_groups: doc.doc_groups,
-      });
+      })
       if (!data) {
         console.error(
           'Failed to add documents to doc group (using URL path):',
           data,
           ' with error:',
           error,
-        );
-        throw new Error(`Failed to add documents to doc group (using URL path): ${error}`);
+        )
+        throw new Error(
+          `Failed to add documents to doc group (using URL path): ${error}`,
+        )
       }
-      return data;
+      return data
     } else {
       // If doc.url is not present, s3_path must be the identifier.
       // Call the RPC that (ostensibly) handles s3_path based lookups.
@@ -106,24 +108,25 @@ export async function addDocumentsToDocGroup(
         p_url: doc.url, // p_url would be null or empty here
         p_readable_filename: doc.readable_filename,
         p_doc_groups: doc.doc_groups,
-      });
+      })
       if (!data) {
         console.error(
           'Failed to add documents to doc group (using s3_path path):',
           data,
           ' with error:',
           error,
-        );
-        throw new Error(`Failed to add documents to doc group (using s3_path path): ${error}`);
+        )
+        throw new Error(
+          `Failed to add documents to doc group (using s3_path path): ${error}`,
+        )
       }
-      return data;
+      return data
     }
   } catch (error) {
-    console.error('Error in addDocumentsToDocGroup:', error);
-    throw error;
+    console.error('Error in addDocumentsToDocGroup:', error)
+    throw error
   }
 }
-
 
 export async function removeDocGroup(
   courseName: string,
