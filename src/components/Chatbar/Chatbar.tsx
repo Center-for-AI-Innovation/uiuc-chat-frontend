@@ -316,7 +316,7 @@ export const Chatbar = ({
     });
   };
 
-  const handleToggleFavoritePrompt = async (promptId: string, isFavorite: boolean) => {
+  const handleTogglePinnedPrompt = async (promptId: string, isPinned: boolean) => {
     if (!courseMetadata?.custom_system_prompts || !courseName) {
       console.error('Cannot toggle favorite: missing course metadata or course name');
       return;
@@ -325,7 +325,7 @@ export const Chatbar = ({
     try {
       // Update the prompts array with the new favorite status
       const updatedPrompts = courseMetadata.custom_system_prompts.map((prompt) =>
-        prompt.id === promptId ? { ...prompt, isFavorite } : prompt,
+        prompt.id === promptId ? { ...prompt, isPinned } : prompt,
       );
 
       // Create updated metadata
@@ -353,7 +353,7 @@ export const Chatbar = ({
     <CustomGPTsList
       customSystemPrompts={courseMetadata.custom_system_prompts}
       onSelectGPT={handleSelectCustomGPT}
-      onToggleFavorite={handleToggleFavoritePrompt}
+                    onTogglePinned={handleTogglePinnedPrompt}
     />
   ) : null;
 

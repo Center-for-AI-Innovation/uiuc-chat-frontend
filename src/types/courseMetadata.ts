@@ -10,7 +10,7 @@ export interface CustomSystemPrompt {
   urlSuffix: string
   promptText: string
   description?: string
-  isFavorite?: boolean
+  isPinned?: boolean
   isEnabled?: boolean
   documentGroups?: string[]
   tools?: string[]

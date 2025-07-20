@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { IconRobot, IconStar, IconStarFilled, IconChevronRight, IconSearch } from '@tabler/icons-react';
+import { IconRobot, IconPin, IconPinFilled, IconChevronRight, IconSearch } from '@tabler/icons-react';
 import { type CustomSystemPrompt } from '~/types/courseMetadata';
 import { UnstyledButton, Tooltip, Group, Text, Modal, ScrollArea, TextInput } from '@mantine/core';
 
 interface CustomGPTsListProps {
   customSystemPrompts: CustomSystemPrompt[];
   onSelectGPT: (prompt: CustomSystemPrompt) => void;
-  onToggleFavorite: (promptId: string, isFavorite: boolean) => void;
+  onTogglePinned: (promptId: string, isPinned: boolean) => void;
 }
 
 const CustomGPTsList: React.FC<CustomGPTsListProps> = ({
   customSystemPrompts,
   onSelectGPT,
-  onToggleFavorite,
+  onTogglePinned,
 }) => {
   // Add debug logger for customSystemPrompts
   useEffect(() => {
@@ -23,12 +23,12 @@ const CustomGPTsList: React.FC<CustomGPTsListProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPrompt, setSelectedPrompt] = useState<CustomSystemPrompt | null>(null);
 
-  // Filter to only enabled prompts, then sort to show favorites first
+  // Filter to only enabled prompts, then sort to show pinned first
   const sortedPrompts = [...customSystemPrompts]
     .filter(prompt => prompt.isEnabled !== false) // Only show enabled GPTs (default to enabled if not set)
     .sort((a, b) => {
-      if (a.isFavorite && !b.isFavorite) return -1;
-      if (!a.isFavorite && b.isFavorite) return 1;
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
       return 0;
     });
 
@@ -78,17 +78,17 @@ const CustomGPTsList: React.FC<CustomGPTsListProps> = ({
                 </div>
               </Group>
               <Group spacing="xs" noWrap>
-                <Tooltip label={prompt.isFavorite ? 'Unfavorite' : 'Favorite'}>
+                <Tooltip label={prompt.isPinned ? 'Unpin' : 'Pin'}>
                   <UnstyledButton
                     onClick={(e) => {
                       e.stopPropagation();
-                      onToggleFavorite(prompt.id, !prompt.isFavorite);
+                      onTogglePinned(prompt.id, !prompt.isPinned);
                     }}
                   >
-                    {prompt.isFavorite ? (
-                      <IconStarFilled size={16} className="text-yellow-400" />
+                    {prompt.isPinned ? (
+                      <IconPinFilled size={16} className="text-blue-400" />
                     ) : (
-                      <IconStar size={16} className="text-gray-500 hover:text-yellow-400" />
+                      <IconPin size={16} className="text-gray-500 hover:text-blue-400" />
                     )}
                   </UnstyledButton>
                 </Tooltip>
@@ -104,7 +104,7 @@ const CustomGPTsList: React.FC<CustomGPTsListProps> = ({
           className="mt-1 flex w-full items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-sm text-gray-400 hover:bg-[#343541]/90"
           onClick={() => setModalOpened(true)}
         >
-          <Text size="sm">Show More</Text>
+          <Text size="sm">Show More ({sortedPrompts.length - 3})</Text>
           <IconChevronRight size={14} />
         </UnstyledButton>
       )}
@@ -163,6 +163,20 @@ const CustomGPTsList: React.FC<CustomGPTsListProps> = ({
                   <div className="relative max-h-5 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
                     {prompt.name}
                   </div>
+                  <Tooltip label={prompt.isPinned ? 'Unpin' : 'Pin'}>
+                    <UnstyledButton
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onTogglePinned(prompt.id, !prompt.isPinned);
+                      }}
+                    >
+                      {prompt.isPinned ? (
+                        <IconPinFilled size={16} className="text-blue-400" />
+                      ) : (
+                        <IconPin size={16} className="text-gray-500 hover:text-blue-400" />
+                      )}
+                    </UnstyledButton>
+                  </Tooltip>
                 </div>
               ))}
             </div>

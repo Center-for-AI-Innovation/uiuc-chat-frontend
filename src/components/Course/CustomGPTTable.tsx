@@ -23,8 +23,8 @@ import {
   IconChevronUp,
   IconChevronDown,
   IconSelector,
-  IconStar,
-  IconStarFilled,
+  IconPin,
+  IconPinFilled,
   IconLink,
 } from '@tabler/icons-react';
 import { type CustomSystemPrompt } from '~/types/courseMetadata';
@@ -37,7 +37,7 @@ interface CustomPromptsTableProps {
   montserrat_paragraph: { className: string; variable?: string };
   onOpenAddEditModal: (prompt?: CustomSystemPrompt) => void;
   onDeletePrompt: (prompt: CustomSystemPrompt) => void;
-  onToggleFavorite: (promptId: string, isFavorite: boolean) => void;
+  onTogglePinned: (promptId: string, isPinned: boolean) => void;
   onToggleEnabled?: (promptId: string, isEnabled: boolean) => void;
   onOpenLinkGeneratorModal: (urlSuffix: string) => void;
   onCopyToClipboard: (text: string, type: 'url' | 'prompt') => void;
@@ -81,7 +81,7 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
   montserrat_paragraph,
   onOpenAddEditModal,
   onDeletePrompt,
-  onToggleFavorite,
+  onTogglePinned,
   onToggleEnabled,
   onOpenLinkGeneratorModal,
   onCopyToClipboard,
@@ -103,15 +103,15 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
   const sortedPrompts = useMemo(() => {
     if (!sortColumn) {
       return [...customSystemPrompts].sort((a, b) => {
-        if (a.isFavorite && !b.isFavorite) return -1;
-        if (!a.isFavorite && b.isFavorite) return 1;
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
         return 0;
       });
     }
 
     return [...customSystemPrompts].sort((a, b) => {
-      if (a.isFavorite && !b.isFavorite) return -1;
-      if (!a.isFavorite && b.isFavorite) return 1;
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
 
       const aValue = a[sortColumn];
       const bValue = b[sortColumn];
@@ -243,7 +243,7 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
                       className="w-12 px-2 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-3"
                       style={{ width: '3rem' }}
                     >
-                      Fav
+                      Pin
                     </th>
                     <th
                       scope="col"
@@ -311,16 +311,16 @@ const CustomPromptsTable: React.FC<CustomPromptsTableProps> = ({
                   {sortedPrompts.map((prompt) => (
                     <tr key={prompt.id}>
                       <td className="px-2 py-4 text-center sm:px-3">
-                        <Tooltip label={prompt.isFavorite ? 'Unfavorite' : 'Favorite'} className={`${montserrat_paragraph.className}`}>
+                        <Tooltip label={prompt.isPinned ? 'Unpin' : 'Pin'} className={`${montserrat_paragraph.className}`}>
                           <ActionIcon
                             variant="subtle"
-                            onClick={() => onToggleFavorite(prompt.id, !prompt.isFavorite)}
+                            onClick={() => onTogglePinned(prompt.id, !prompt.isPinned)}
                             size="sm"
                           >
-                            {prompt.isFavorite ? (
-                              <IconStarFilled size={18} className="text-yellow-400" />
+                            {prompt.isPinned ? (
+                              <IconPinFilled size={18} className="text-blue-400" />
                             ) : (
-                              <IconStar size={18} className="text-gray-500 hover:text-yellow-400" />
+                              <IconPin size={18} className="text-gray-500 hover:text-blue-400" />
                             )}
                           </ActionIcon>
                         </Tooltip>

@@ -258,9 +258,9 @@ const CourseMain: NextPage = () => {
   const [linkGenInitialPromptSuffix, setLinkGenInitialPromptSuffix] = useState<string | undefined>(undefined);
 
   // New handler for toggling favorite status
-  const handleToggleFavoritePrompt = async (promptId: string, newFavoriteStatus: boolean) => {
+  const handleTogglePinnedPrompt = async (promptId: string, newPinnedStatus: boolean) => {
     const updatedPrompts = customSystemPrompts.map((p) =>
-      p.id === promptId ? { ...p, isFavorite: newFavoriteStatus } : p,
+              p.id === promptId ? { ...p, isPinned: newPinnedStatus } : p,
     );
     setCustomSystemPrompts(updatedPrompts);
 
@@ -275,8 +275,8 @@ const CourseMain: NextPage = () => {
         // Optionally, show a success notification
         showToastNotification(
           theme,
-          'Favorite Status Updated',
-          `Prompt marked as ${newFavoriteStatus ? 'favorite' : 'not favorite'}.`,
+          'Pin Status Updated',
+          `Prompt marked as ${newPinnedStatus ? 'pinned' : 'unpinned'}.`,
         );
         // Ensure main courseMetadata state is also updated to reflect the change immediately if not already covered by setCustomSystemPrompts
         // In this case, setCourseMetadata is called by handleSaveCustomPrompt and handleConfirmDeleteCustomPrompt
@@ -288,12 +288,12 @@ const CourseMain: NextPage = () => {
         showToastNotification(
           theme,
           'Error',
-          'Failed to update favorite status.',
+          'Failed to update pin status.',
           true,
         );
       }
     } else {
-      showToastNotification(theme, 'Error', 'Course data not available for updating favorite status.', true);
+      showToastNotification(theme, 'Error', 'Course data not available for updating pin status.', true);
       // Revert UI change if course data is not available
       setCustomSystemPrompts(customSystemPrompts);
     }
@@ -1058,7 +1058,7 @@ CRITICAL: The optimized prompt must:
         documentGroups: documentGroups.map(group => group.trim()),
         tools: tools.map(tool => tool.trim()),
         urlSuffix: linkIdentifier,
-        isFavorite: false
+        isPinned: false
       };
       updatedPrompts.push(newPrompt);
     }
@@ -1381,7 +1381,7 @@ CRITICAL: The optimized prompt must:
               montserrat_paragraph={montserrat_paragraph}
               onOpenAddEditModal={handleOpenCustomPromptModal}
               onDeletePrompt={handleDeletePrompt}
-              onToggleFavorite={handleToggleFavoritePrompt}
+              onTogglePinned={handleTogglePinnedPrompt}
               onToggleEnabled={handleToggleEnabledPrompt}
               onOpenLinkGeneratorModal={handleOpenLinkGeneratorModal}
               onCopyToClipboard={(text, type) => {
