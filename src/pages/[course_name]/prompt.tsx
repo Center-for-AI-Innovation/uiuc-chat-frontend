@@ -58,6 +58,7 @@ import {
   IconBook,
   IconLink,
   IconAlertTriangleFilled,
+  IconWand,
 } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
@@ -75,6 +76,7 @@ import {
 import { type AnthropicModel } from '~/utils/modelProviders/types/anthropic'
 import { v4 as uuidv4 } from 'uuid'
 import { type ChatBody } from '~/types/chat'
+import { fetchContexts } from '~/pages/api/getContexts'
 import { getModelLogo } from '~/components/Chat/ModelSelect'
 import {
   recommendedModelIds,
@@ -169,6 +171,7 @@ const CourseMain: NextPage = () => {
   >([])
   const [input, setInput] = useState(baseSystemPrompt)
   const [isOptimizing, setIsOptimizing] = useState(false)
+  const [isAutoGenerating, setIsAutoGenerating] = useState(false)
 
   const removeThinkSections = (text: string): string => {
     const cleanedText = text.replace(/<think>[\s\S]*?<\/think>/g, '')
@@ -425,6 +428,233 @@ CRITICAL: The optimized prompt must:
         true,
       )
       setIsOptimizing(false) // Keep this here for error cases
+    }
+  }
+
+  const handleAutoGeneratePrompt = async (e: any) => {
+    e.preventDefault()
+    setIsAutoGenerating(true)
+    setMessages([])
+
+    try {
+      // Check LLM provider availability (same validation as optimize button)
+      if (!llmProviders) {
+        showToastNotification(
+          theme,
+          'Configuration Error',
+          'The Auto-Generate System Prompt feature requires provider configuration to be loaded. Please refresh the page and try again.',
+          true,
+        )
+        return
+      }
+
+      const provider = getProviderFromModel(selectedModel, modelOptions)
+      if (!llmProviders[provider]?.enabled) {
+        showToastNotification(
+          theme,
+          `${provider} Required`,
+          `The Auto-Generate System Prompt feature requires ${provider} to be enabled. Please enable ${provider} on the LLM page in your course settings to use this feature.`,
+          true,
+        )
+        return
+      }
+
+      if (isApiKeyRequired(provider)) {
+        if (provider === 'Bedrock') {
+          if (
+            !llmProviders[provider]?.accessKeyId ||
+            !llmProviders[provider]?.secretAccessKey ||
+            !llmProviders[provider]?.region
+          ) {
+            showToastNotification(
+              theme,
+              `${provider} Credentials Required`,
+              `The Auto-Generate System Prompt feature requires AWS credentials (Access Key ID, Secret Access Key, and Region). Please add your AWS credentials on the LLM page in your course settings to use this feature.`,
+              true,
+            )
+            return
+          }
+        } else if (!llmProviders[provider]?.apiKey) {
+          showToastNotification(
+            theme,
+            `${provider} API Key Required`,
+            `The Auto-Generate System Prompt feature requires a ${provider} API key. Please add your ${provider} API key on the LLM page in your course settings to use this feature.`,
+            true,
+          )
+          return
+        }
+      }
+
+      // Sample course documents using multi-query approach
+      const documentSamples = await Promise.all([
+        fetchContexts(course_name, "course overview introduction syllabus", 1000).then(result => {
+          return result?.slice(0, 10) || []; // Limit to 10 samples
+        }),
+        fetchContexts(course_name, "assignment homework project requirements", 1000).then(result => {
+          return result?.slice(0, 10) || []; // Limit to 10 samples
+        })
+      ])
+
+      // Flatten and combine all samples
+      const allSamples = documentSamples.flat()
+      
+      if (allSamples.length === 0) {
+        showToastNotification(
+          theme,
+          'No Course Content Found',
+          'No course documents were found to analyze. Please upload some course materials first.',
+          true,
+        )
+        return
+      }
+
+      // Create document analysis text
+      const sampleText = allSamples
+        .map((ctx, i) => `[Document ${i + 1}: ${ctx.readable_filename}]\n${ctx.text}`)
+        .join('\n\n---\n\n')
+
+      // System prompt for analyzing course content and generating system prompt
+      const systemPrompt = `You are an expert educational AI system prompt engineer. Analyze the provided course documents and generate a comprehensive, professional system prompt for an AI teaching assistant.
+
+**Analysis Framework:**
+1. **Course Identity**: Subject area, academic level, institution context, course duration/structure
+2. **Learning Objectives**: Key concepts, skills, tools, and outcomes students should achieve
+3. **Pedagogical Approach**: Teaching philosophy, learning methods, assessment types
+4. **Student Context**: Target audience, prerequisites, professional applications
+5. **Content Structure**: Course modules, progression, assignments, tools/platforms used
+
+**Required System Prompt Components:**
+
+**SECTION 1: CORE IDENTITY & ROLE**
+- Define AI's role and authority level as teaching assistant
+- Establish course context (title, level, institution, duration, class size if known)
+- Specify primary learning focus and key tools/platforms
+
+**SECTION 2: PEDAGOGICAL APPROACH**
+- Teaching philosophy and learning methods appropriate for the course
+- Response methodology that supports student understanding
+- Support for critical thinking and concept application
+
+**SECTION 3: COURSE-SPECIFIC GUIDANCE**
+- Module/week-specific guidance based on course structure
+- Key concepts and terminology to emphasize
+- Tool-specific support approaches (software, platforms, etc.)
+- Assignment and assessment support strategies
+
+**SECTION 4: COMMUNICATION GUIDELINES**
+- Appropriate tone and style for the academic level
+- Response structure template
+- Language patterns and signature phrases
+- How to encourage and motivate students
+
+**SECTION 5: BOUNDARIES & LIMITATIONS**
+- What NOT to do (academic integrity concerns, grading, personal advice)
+- When to refer to instructor or TA
+- Professional boundaries and ethics
+
+**SECTION 6: QUALITY ASSURANCE**
+- Response checklist for self-evaluation
+- Core principles to maintain in every interaction
+- Success metrics focused on learning outcomes
+
+**Format Requirements:**
+- Use clear section headers and subheaders (no markdown formatting)
+- Include specific examples and language patterns
+- Maintain professional academic tone
+- Length: 400-800 words for comprehensive coverage
+- Structure for easy scanning and reference
+- Use plain text formatting only
+
+**Important**: Generate ONLY the complete system prompt text. Do not include meta-commentary, analysis explanations, or instructions about how to use the prompt. Do not use markdown formatting - use plain text only.`
+
+      // Create chat payload (following same pattern as optimize button)
+      const chatBody: ChatBody = {
+        conversation: {
+          id: uuidv4(),
+          name: 'Auto-Generate System Prompt',
+          messages: [
+            {
+              id: uuidv4(),
+              role: 'system',
+              content: systemPrompt,
+            },
+            {
+              id: uuidv4(),
+              role: 'user',
+              content: `Please analyze these course documents and generate an optimal system prompt:\n\n${sampleText}`,
+            },
+          ],
+          model: {
+            id: selectedModel || 'gpt-4',
+            name: modelOptions.find((opt) => opt.value === selectedModel)?.label || 'GPT-4',
+            tokenLimit: 8192,
+            enabled: true,
+            extendedThinking: modelOptions.find((opt) => opt.value === selectedModel)?.extendedThinking || false,
+          },
+          prompt: baseSystemPrompt,
+          temperature: 0.1,
+          folderId: null,
+          userEmail: user?.profile?.email,
+        },
+        llmProviders: llmProviders,
+        course_name: course_name,
+        mode: 'optimize_prompt',
+        stream: true,
+        key: '',
+      }
+
+      // Send request (same endpoint as optimize button)
+      const response = await fetch('/api/allNewRoutingChat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(chatBody),
+      })
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`)
+      }
+
+      // Handle streaming response (same pattern as optimize button)
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+      let generatedPrompt = ''
+      let isFirstChunk = true
+
+      while (true) {
+        if (!reader) break
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const chunk = decoder.decode(value)
+        generatedPrompt += chunk
+
+        // Open modal and update UI state on first chunk of content
+        if (isFirstChunk && chunk.trim()) {
+          isFirstChunk = false
+          open()
+          setIsAutoGenerating(false)
+        }
+
+        // Check if we're using a model that supports thinking tags
+        const processedPrompt = ReasoningCapableModels.has(selectedModel as any)
+          ? removeThinkSections(generatedPrompt)
+          : generatedPrompt
+
+        // Update messages state for real-time display
+        setMessages([{ role: 'assistant', content: processedPrompt }])
+      }
+    } catch (error) {
+      console.error('Error auto-generating prompt:', error)
+      showToastNotification(
+        theme,
+        'Error',
+        'Failed to auto-generate prompt. Please try again.',
+        true,
+      )
+      setIsAutoGenerating(false) // Keep this here for error cases
     }
   }
 
@@ -1473,7 +1703,7 @@ CRITICAL: The optimized prompt must:
                                   })}
                                   style={{ minWidth: 'fit-content' }}
                                 >
-                                  Update System Prompt
+                                  Update
                                 </Button>
                                 <Button
                                   onClick={handleSubmitPromptOptimization}
@@ -1518,7 +1748,52 @@ CRITICAL: The optimized prompt must:
                                 >
                                   {isOptimizing
                                     ? 'Optimizing...'
-                                    : 'Optimize System Prompt'}
+                                    : 'Optimize'}
+                                </Button>
+                                <Button
+                                  onClick={handleAutoGeneratePrompt}
+                                  disabled={isAutoGenerating}
+                                  variant="filled"
+                                  radius="md"
+                                  leftIcon={
+                                    isAutoGenerating ? (
+                                      <LoadingSpinner size="sm" />
+                                    ) : (
+                                      <IconWand stroke={1} />
+                                    )
+                                  }
+                                  className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                  sx={(theme) => ({
+                                    background:
+                                      'linear-gradient(90deg, #059669 0%, #10b981 50%, #34d399 100%) !important',
+                                    border: 'none',
+                                    color: '#fff',
+                                    padding: '10px 20px',
+                                    fontWeight: 600,
+                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    transition: 'all 0.2s ease',
+                                    '&:hover': {
+                                      background:
+                                        'linear-gradient(90deg, #047857 0%, #059669 50%, #10b981 100%) !important',
+                                      transform: 'translateY(-1px)',
+                                      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
+                                    },
+                                    '&:active': {
+                                      transform: 'translateY(0)',
+                                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    },
+                                    '&:disabled': {
+                                      opacity: 0.7,
+                                      cursor: 'not-allowed',
+                                      transform: 'none',
+                                      boxShadow: 'none',
+                                    },
+                                  })}
+                                  style={{ minWidth: 'fit-content' }}
+                                >
+                                  {isAutoGenerating
+                                    ? 'Generating...'
+                                    : 'Auto-Generate'}
                                 </Button>
                               </Group>
 
