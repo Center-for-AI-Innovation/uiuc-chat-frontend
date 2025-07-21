@@ -35,9 +35,7 @@ export default async function handler(
   }
 
   // Type checking
-  if (
-    typeof courseName !== 'string'
-  ) {
+  if (typeof courseName !== 'string') {
     console.error('Error: Invalid parameter types')
     return res.status(400).json({ error: 'Invalid parameter types' })
   }
@@ -48,10 +46,11 @@ export default async function handler(
   }
 
   try {
-
     // ⚠️ Must JSON.parse the redis data!
     const redisKey = `${courseName}-llms`
-    const existingLLMs = JSON.parse(await redisClient.get(redisKey) || '{}') as ProjectWideLLMProviders
+    const existingLLMs = JSON.parse(
+      (await redisClient.get(redisKey)) || '{}',
+    ) as ProjectWideLLMProviders
 
     // Ensure all keys are encrypted, then save to DB.
     const processProviders = async () => {

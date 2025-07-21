@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'
 import {
   Modal,
   Button,
@@ -9,7 +9,7 @@ import {
   Text,
   Group,
   type MantineTheme,
-} from '@mantine/core';
+} from '@mantine/core'
 
 const useStyles = createStyles((theme: MantineTheme) => ({
   root: {
@@ -49,12 +49,12 @@ const useStyles = createStyles((theme: MantineTheme) => ({
     color: theme.white,
     marginBottom: theme.spacing.xs,
   },
-}));
+}))
 
 interface FeedbackModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (feedback: string, category: string) => void;
+  isOpen: boolean
+  onClose: () => void
+  onSubmit: (feedback: string, category: string) => void
 }
 
 export const FeedbackModal: React.FC<FeedbackModalProps> = ({
@@ -62,25 +62,25 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
   onClose,
   onSubmit,
 }) => {
-  const { classes } = useStyles();
-  const theme = useMantineTheme();
-  const [feedback, setFeedback] = useState<string>('');
-  const [category, setCategory] = useState<string>('other');
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const { classes } = useStyles()
+  const theme = useMantineTheme()
+  const [feedback, setFeedback] = useState<string>('')
+  const [category, setCategory] = useState<string>('other')
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 
   const handleSubmit = async () => {
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     try {
-      await onSubmit(feedback, category);
-      setFeedback('');
-      setCategory('other');
-      onClose();
+      await onSubmit(feedback, category)
+      setFeedback('')
+      setCategory('other')
+      onClose()
     } catch (error) {
-      console.error('Feedback submission failed:', error);
+      console.error('Feedback submission failed:', error)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <Modal
@@ -108,7 +108,10 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
           { value: 'unclear', label: 'Unclear Response' },
           { value: 'ui_bug', label: 'UI bug' },
           { value: 'overactive_refusal', label: 'Overactive refusal' },
-          { value: 'incomplete_request', label: 'Did not fully follow my request' },
+          {
+            value: 'incomplete_request',
+            label: 'Did not fully follow my request',
+          },
           { value: 'other', label: 'Other' },
         ]}
         value={category}
@@ -215,5 +218,5 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
         </Button>
       </Group>
     </Modal>
-  );
-};
+  )
+}

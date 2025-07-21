@@ -1,8 +1,6 @@
 import { supabase } from '@/utils/supabaseClient'
 import { type NextRequest, NextResponse } from 'next/server'
 
-
-
 export default async function handler(req: NextRequest, res: NextResponse) {
   const requestBody = await req.json()
   // console.log('upsertN8nAPIKey course_name and n8n_api_key:', requestBody)

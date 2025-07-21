@@ -19,18 +19,23 @@ export function useFetchConversationHistory(
   courseName: string | undefined,
 ) {
   // Move the type checking outside of Boolean to handle each case explicitly
-  const isValidEmail = typeof user_email === 'string' && user_email.length > 0;
-  const isValidCourse = typeof courseName === 'string' && courseName.length > 0;
-  const isEnabled = isValidEmail && isValidCourse;
+  const isValidEmail = typeof user_email === 'string' && user_email.length > 0
+  const isValidCourse = typeof courseName === 'string' && courseName.length > 0
+  const isEnabled = isValidEmail && isValidCourse
 
   return useInfiniteQuery({
     queryKey: ['conversationHistory', user_email, courseName, searchTerm],
     queryFn: ({ pageParam = 0 }) => {
       // Additional runtime check to prevent invalid calls
       if (!isValidEmail || !isValidCourse) {
-        return Promise.reject(new Error('Invalid email or course name'));
+        return Promise.reject(new Error('Invalid email or course name'))
       }
-      return fetchConversationHistory(user_email!, searchTerm, courseName!, pageParam);
+      return fetchConversationHistory(
+        user_email!,
+        searchTerm,
+        courseName!,
+        pageParam,
+      )
     },
     initialPageParam: 0,
     enabled: isEnabled,

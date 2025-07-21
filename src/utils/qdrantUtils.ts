@@ -33,12 +33,16 @@ export async function addDocumentsToDocGroupQdrant(
             value: courseName,
           },
         },
-        ...(doc.url ? [{
-          key: 'url',
-          match: {
-            value: doc.url,
-          },
-        }] : []),
+        ...(doc.url
+          ? [
+              {
+                key: 'url',
+                match: {
+                  value: doc.url,
+                },
+              },
+            ]
+          : []),
         {
           key: 's3_path',
           match: {
@@ -68,12 +72,15 @@ export async function addDocumentsToDocGroupQdrant(
     // }
     // console.log('Filter used for adding doc to doc group: ', searchFilter, 'payload:', doc.doc_groups)
 
-    const response = await qdrant.setPayload(collection_name ? collection_name : '', {
-      payload: {
-        doc_groups: doc.doc_groups,
+    const response = await qdrant.setPayload(
+      collection_name ? collection_name : '',
+      {
+        payload: {
+          doc_groups: doc.doc_groups,
+        },
+        filter: searchFilter,
       },
-      filter: searchFilter,
-    })
+    )
 
     // const searchResultAfter = await qdrant.search(collection_name ? collection_name : "", {
     //   vector: dummyVector,
