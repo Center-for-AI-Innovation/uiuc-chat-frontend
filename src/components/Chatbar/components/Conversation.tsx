@@ -32,13 +32,39 @@ export const ConversationComponent = ({ conversation }: Props) => {
     handleUpdateConversation,
   } = useContext(HomeContext)
 
-  const courseName = conversation.projectName
-
   const { handleDeleteConversation } = useContext(ChatbarContext)
 
   const [isDeleting, setIsDeleting] = useState(false)
   const [isRenaming, setIsRenaming] = useState(false)
   const [renameValue, setRenameValue] = useState('')
+  const [customGPTName, setCustomGPTName] = useState<string>('')
+
+  useEffect(() => {
+    const fetchCustomGPTName = async () => {
+      if (conversation.customGptId && conversation.projectName) {
+        try {
+          const response = await fetch(`/api/UIUC-api/getCourseMetadata?course_name=${encodeURIComponent(conversation.projectName)}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.course_metadata?.custom_system_prompts) {
+              const customGPT = data.course_metadata.custom_system_prompts.find(
+                (p: { id: string }) => p.id === conversation.customGptId
+              );
+              if (customGPT) {
+                setCustomGPTName(customGPT.name);
+              }
+            }
+          } else {
+            console.error('Failed to fetch course metadata:', response.status, response.statusText);
+          }
+        } catch (error) {
+          console.error('Error fetching course metadata:', error);
+        }
+      }
+    };
+
+    fetchCustomGPTName();
+  }, [conversation.customGptId, conversation.projectName]);
 
   const handleEnterDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter') {
@@ -131,19 +157,14 @@ export const ConversationComponent = ({ conversation }: Props) => {
           onDragStart={(e) => handleDragStart(e, conversation)}
         >
           <IconMessage size={18} />
-          {/* <div
-            className={`relative max-h-5 flex-1 overflow-hidden text-ellipsis whitespace-nowrap break-all text-left text-[12.5px] leading-3 ${selectedConversation?.id === conversation.id ? 'pr-12' : 'pr-1'
-              }`}
-          > */}
           <div
             className={`relative flex-1 overflow-hidden text-ellipsis whitespace-nowrap break-all text-left text-[12.5px] leading-3 ${
               selectedConversation?.id === conversation.id ? 'pr-12' : 'pr-1'
             }`}
           >
             {conversation.name}
-            {/* Add a new div to display the course_name */}
-            {courseName && (
-              <div className="text-xs text-gray-400">{courseName.trim()}</div>
+            {customGPTName && (
+              <div className="text-xs text-gray-400">{customGPTName}</div>
             )}
           </div>
         </button>
