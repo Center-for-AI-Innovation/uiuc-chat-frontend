@@ -318,6 +318,12 @@
     var(--dashboard-background-dark),
     black 20%
   );
+
+  --dashboard-border: color-mix(
+    in srgb,
+    var(--dashboard-background),
+    white 10%
+  );
 }
 
 ::selection {

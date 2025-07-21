@@ -1260,8 +1260,21 @@ export function ProjectFilesTable({
           opened={modalOpened}
           onClose={() => setModalOpened(false)}
           title="Please confirm your action"
+          styles={{
+            header: {
+              backgroundColor: 'var(--modal)',
+            },
+            title: {
+              color: 'var(--modal-text)',
+              fontWeight: 'bold',
+            },
+            content: {
+              color: 'var(--modal-text)',
+              backgroundColor: 'var(--modal)',
+            },
+          }}
         >
-          <Text size="sm" style={{ color: 'white' }}>
+          <Text size="sm" style={{ color: 'var(--modal-text)' }}>
             {`Are you sure you want to delete the selected records?`}
           </Text>
           <div
@@ -1272,7 +1285,7 @@ export function ProjectFilesTable({
             }}
           >
             <Button
-              className="min-w-[3rem] -translate-x-1 transform rounded-s-md text-[--dashboard-button] hover:bg-[--dashboard-button-hover] hover:text-[--dashboard-button-foreground] focus:shadow-none focus:outline-none"
+              className="min-w-[3rem] -translate-x-1 transform rounded-s-md bg-[--background-faded] text-[--foreground] hover:bg-[--dashboard-button-hover] hover:text-[--dashboard-button-foreground] focus:shadow-none focus:outline-none"
               onClick={() => {
                 setModalOpened(false)
               }}

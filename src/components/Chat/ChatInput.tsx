@@ -1003,7 +1003,7 @@ export const ChatInput = ({
             </div>
 
             <button
-              className="absolute bottom-[2.25rem] right-5 rounded-full bg-white/30 p-2 opacity-50 hover:opacity-100"
+              className="absolute bottom-[2.25rem] right-5 rounded-full bg-[white/30] p-2 opacity-50 hover:opacity-100"
               onClick={handleSend}
               style={{ pointerEvents: 'auto' }}
             >
@@ -1017,7 +1017,7 @@ export const ChatInput = ({
             {showScrollDownButton && (
               <div className="absolute bottom-12 right-0 lg:-right-10 lg:bottom-0">
                 <button
-                  className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-300 text-gray-800 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-neutral-200"
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-[--background-faded] text-[--foreground] hover:bg-[--background-dark] focus:outline-none"
                   onClick={onScrollDownClick}
                   style={{ pointerEvents: 'auto' }}
                 >
