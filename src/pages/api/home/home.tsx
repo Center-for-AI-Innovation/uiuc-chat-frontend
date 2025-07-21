@@ -42,13 +42,7 @@ import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackgro
 import { montserrat_heading } from 'fonts'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 
-const Home = ({
-  current_email,
-  course_metadata,
-  course_name,
-  document_count,
-  link_parameters,
-}: {
+interface Props {
   current_email: string
   course_metadata: CourseMetadata | null
   course_name: string
@@ -58,7 +52,31 @@ const Home = ({
     documentsOnly: boolean
     systemPromptOnly: boolean
   }
-}) => {
+  isReadOnly?: boolean
+  sharedConversationId?: string | null
+}
+
+const Home = ({
+  current_email,
+  course_metadata,
+  course_name,
+  document_count,
+  link_parameters,
+  isReadOnly = false,
+  sharedConversationId = null,
+}: Props) => {
+  // State for managing course metadata updates
+  const [currentCourseMetadata, setCurrentCourseMetadata] = useState<CourseMetadata | null>(course_metadata)
+
+  // Update local state when props change
+  useEffect(() => {
+    setCurrentCourseMetadata(course_metadata)
+  }, [course_metadata])
+
+  // Callback to handle course metadata updates from child components
+  const handleCourseMetadataUpdate = useCallback((updatedMetadata: CourseMetadata) => {
+    setCurrentCourseMetadata(updatedMetadata)
+  }, [])
   // States
   const [isInitialSetupDone, setIsInitialSetupDone] = useState(false)
 
@@ -272,6 +290,37 @@ const Home = ({
     }
   }, [foldersData])
 
+  // Handle shared conversation loading
+  const loadedSharedConversationRef = useRef<string | null>(null)
+  
+  useEffect(() => {
+    const loadSharedConversation = async () => {
+      // Prevent loading the same shared conversation multiple times
+      if (sharedConversationId && 
+          sharedConversationId !== loadedSharedConversationRef.current &&
+          selectedConversation?.id !== sharedConversationId) {
+        try {
+          const response = await fetch(`/api/conversation?conversationId=${sharedConversationId}`)
+          const data = await response.json()
+          
+          if (data.conversation) {
+            // Mark this shared conversation as loaded
+            loadedSharedConversationRef.current = sharedConversationId
+            
+            // Set the shared conversation as selected
+            // Note: We don't add shared conversations to the conversations list
+            // This prevents infinite loops and provides better UX for shared links
+            dispatch({ field: 'selectedConversation', value: data.conversation })
+          }
+        } catch (error) {
+          console.error('Error loading shared conversation:', error)
+        }
+      }
+    }
+
+    loadSharedConversation()
+  }, [sharedConversationId, selectedConversation?.id, dispatch])
+
   // FOLDER OPERATIONS  --------------------------------------------
   const handleCreateFolder = (name: string, type: FolderType) => {
     if (current_email == undefined) {
@@ -375,10 +424,15 @@ const Home = ({
     if (selectedConversation?.messages.length === 0) return
   }
 
-  const handleNewConversation = () => {
-    // If we're already in an empty conversation, don't create a new one
-    if (selectedConversation && selectedConversation.messages.length === 0) {
+  const handleNewConversation = (customPrompt?: { text: string; name: string; id?: string }) => {
+    // If we're already in an empty default conversation (no custom GPT) and not switching to a custom GPT, don't create a new one
+    if (selectedConversation && selectedConversation.messages.length === 0 && !customPrompt && !selectedConversation.customGptId) {
       return
+    }
+    
+    // If we're switching to a different custom GPT, always create a new conversation
+    if (customPrompt && selectedConversation && selectedConversation.customGptId === customPrompt.id) {
+      return // Same custom GPT, no need to create new conversation
     }
 
     const lastConversation = conversations[conversations.length - 1]
@@ -395,10 +449,10 @@ const Home = ({
 
     const newConversation: Conversation = {
       id: uuidv4(),
-      name: '',
+      name: customPrompt?.name || '',
       messages: [],
       model: model,
-      prompt: DEFAULT_SYSTEM_PROMPT,
+      prompt: customPrompt?.text || DEFAULT_SYSTEM_PROMPT,
       temperature: selectBestTemperature(lastConversation, model, llmProviders),
       folderId: null,
       userEmail: current_email,
@@ -406,6 +460,8 @@ const Home = ({
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       linkParameters: newLinkParameters,
+      customGptId: customPrompt?.id || null,
+      customGptName: customPrompt?.name || undefined,
     }
 
     // Only update selectedConversation, don't add to conversations list yet
@@ -676,6 +732,14 @@ const Home = ({
       // console.log('current_email: ', current_email)
       console.log('isInitialSetupDone: ', isInitialSetupDone)
       if (isInitialSetupDone) return
+      
+      // Skip normal initialization if we have a shared conversation
+      if (sharedConversationId) {
+        console.log('Skipping normal initialization due to shared conversation')
+        setIsInitialSetupDone(true)
+        return
+      }
+      
       const settings = getSettings()
       if (settings.theme) {
         dispatch({
@@ -691,6 +755,27 @@ const Home = ({
       const showChatbar = localStorage.getItem('showChatbar')
       if (showChatbar) {
         dispatch({ field: 'showChatbar', value: showChatbar === 'true' })
+      }
+
+      // Check for custom GPT in URL parameters and course metadata
+      const urlParams = new URLSearchParams(window.location.search)
+      const gptId = urlParams.get('gpt')
+      
+      if (gptId && currentCourseMetadata?.custom_system_prompts) {
+        // First try to find by gpt_id, then fall back to id
+        const customPrompt = currentCourseMetadata.custom_system_prompts.find(
+          (p) => p.gpt_id === gptId || p.id === gptId
+        )
+        if (customPrompt) {
+          console.log('Found custom prompt in course metadata:', customPrompt)
+          handleNewConversation({
+            text: customPrompt.promptText,
+            name: customPrompt.name,
+            id: customPrompt.gpt_id || customPrompt.id
+          })
+          setIsInitialSetupDone(true)
+          return
+        }
       }
 
       const selectedConversation = localStorage.getItem('selectedConversation')
@@ -722,14 +807,13 @@ const Home = ({
         if (!llmProviders || Object.keys(llmProviders).length === 0) return
         handleNewConversation()
       }
-      // handleNewConversation()
       setIsInitialSetupDone(true)
     }
 
     if (!isInitialSetupDone) {
       initialSetup()
     }
-  }, [dispatch, llmProviders, current_email]) // ! serverSidePluginKeysSet, removed
+  }, [dispatch, llmProviders, current_email, currentCourseMetadata, course_name, sharedConversationId]) // Added course_name to dependencies
   // }, [defaultModelId, dispatch, serverSidePluginKeysSet, models, conversations]) // original!
 
   if (isLoading || !isInitialSetupDone) {
@@ -795,15 +879,24 @@ const Home = ({
                     </span>
                   </div>
                 )}
-              <Chatbar current_email={current_email} courseName={course_name} />
+              {!isReadOnly && (
+                <Chatbar 
+                  current_email={current_email} 
+                  courseName={course_name} 
+                  courseMetadata={currentCourseMetadata} 
+                  onCourseMetadataUpdate={handleCourseMetadataUpdate}
+                />
+              )}
 
-              {course_metadata && (
+              {currentCourseMetadata && (
                 <Chat
                   stopConversationRef={stopConversationRef}
-                  courseMetadata={course_metadata}
+                  courseMetadata={currentCourseMetadata}
                   courseName={course_name}
                   currentEmail={current_email}
                   documentCount={document_count}
+                  isReadOnly={isReadOnly}
+                  sharedConversationId={sharedConversationId}
                 />
               )}
             </div>

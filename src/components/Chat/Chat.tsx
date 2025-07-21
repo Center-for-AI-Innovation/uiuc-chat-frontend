@@ -42,6 +42,8 @@ interface Props {
   courseName: string
   currentEmail: string
   documentCount: number | null
+  isReadOnly?: boolean
+  sharedConversationId?: string | null
 }
 
 import { useRouter } from 'next/router'
@@ -93,6 +95,8 @@ export const Chat = memo(
     courseName,
     currentEmail,
     documentCount,
+    isReadOnly = false,
+    sharedConversationId = null,
   }: Props) => {
     const { t } = useTranslation('chat')
     const auth = useAuth()
@@ -232,6 +236,33 @@ export const Chat = memo(
           .map((action) => action.name),
       )
     }, [documentGroups])
+
+    // Update document groups when custom GPT changes
+    useEffect(() => {
+      if (selectedConversation?.customGptId && courseMetadata?.custom_system_prompts) {
+        // Find the custom GPT by gpt_id or id
+        const customGPT = courseMetadata.custom_system_prompts.find(
+          (p) => p.gpt_id === selectedConversation.customGptId || p.id === selectedConversation.customGptId
+        );
+        
+        if (customGPT) {
+          if (customGPT.documentGroups && customGPT.documentGroups.length > 0) {
+            // Custom GPT has specific document groups - override enabled document groups
+            setEnabledDocumentGroups(customGPT.documentGroups);
+          } else {
+            // Custom GPT has no document groups (undefined or empty array) - use no document groups
+            setEnabledDocumentGroups([]);
+          }
+        }
+      } else if (!selectedConversation?.customGptId) {
+        // No custom GPT - use the normal document groups based on UI selection
+        setEnabledDocumentGroups(
+          documentGroups
+            .filter((action) => action.checked)
+            .map((action) => action.name),
+        )
+      }
+    }, [selectedConversation?.customGptId, courseMetadata?.custom_system_prompts, documentGroups])
 
     // TOOLS
     useEffect(() => {
@@ -391,6 +422,10 @@ export const Chat = memo(
               deletedMessages: messagesToDelete,
             })
           } else {
+            // Add custom GPT ID to all messages if the conversation has one
+            if (selectedConversation.customGptId) {
+              message.custom_gpt_id = selectedConversation.customGptId;
+            }
             updatedConversation = {
               ...selectedConversation,
               messages: [...(selectedConversation.messages || []), message],
@@ -415,6 +450,18 @@ export const Chat = memo(
               }
             }
           }
+          
+          // Ensure the conversation is added to the conversations list immediately
+          const existingConversationIndex = conversations.findIndex(
+            (c) => c.id === updatedConversation.id,
+          )
+          
+          if (existingConversationIndex < 0) {
+            // If this is a new conversation (not in the list), add it immediately
+            const updatedConversations = [updatedConversation, ...conversations]
+            homeDispatch({ field: 'conversations', value: updatedConversations })
+          }
+          
           handleUpdateConversation(updatedConversation, {
             key: 'messages',
             value: updatedConversation.messages,
@@ -905,7 +952,6 @@ export const Chat = memo(
             }
           } else {
             try {
-              // CALL OUR NEW ENDPOINT... /api/allNewRoutingChat
               startOfCallToLLM = performance.now()
               try {
                 response = await fetch('/api/allNewRoutingChat', {
@@ -1067,6 +1113,7 @@ export const Chat = memo(
                       feedback: message.feedback,
                       wasQueryRewritten: message.wasQueryRewritten,
                       queryRewriteText: message.queryRewriteText,
+                      custom_gpt_id: selectedConversation.customGptId || undefined,
                     },
                   ]
 
@@ -1206,6 +1253,7 @@ export const Chat = memo(
                   feedback: message.feedback,
                   wasQueryRewritten: message.wasQueryRewritten,
                   queryRewriteText: message.queryRewriteText,
+                  custom_gpt_id: selectedConversation.customGptId || undefined,
                 },
               ]
               updatedConversation = {
@@ -1323,6 +1371,7 @@ export const Chat = memo(
               contexts: [], // Clear contexts for fresh search
               wasQueryRewritten: undefined, // Clear previous query rewrite information
               queryRewriteText: undefined, // Clear previous query rewrite text
+              custom_gpt_id: selectedConversation.customGptId || undefined,
             } as Message
           } else {
             // If regenerating a user message
@@ -1334,6 +1383,7 @@ export const Chat = memo(
               contexts: [], // Clear contexts for fresh search
               wasQueryRewritten: undefined, // Clear previous query rewrite information
               queryRewriteText: undefined, // Clear previous query rewrite text
+              custom_gpt_id: selectedConversation.customGptId || undefined,
             } as Message
           }
 
@@ -1388,13 +1438,38 @@ export const Chat = memo(
             }
           }
 
+          // Determine which document groups to use based on custom GPT settings
+          let documentGroupsToUse = enabledDocumentGroups;
+          
+          // Get the custom GPT ID from either the conversation or the most recent message
+          let customGptId = selectedConversation?.customGptId;
+          if (!customGptId && selectedConversation?.messages && selectedConversation.messages.length > 0) {
+            // Fallback: check the most recent message for custom_gpt_id
+            const lastMessage = selectedConversation.messages[selectedConversation.messages.length - 1];
+            customGptId = lastMessage?.custom_gpt_id;
+          }
+          
+          // If there's a custom GPT with specific document groups, use those instead
+          if (customGptId && courseMetadata?.custom_system_prompts) {
+            const customGPT = courseMetadata.custom_system_prompts.find(
+              (p) => p.gpt_id === customGptId || p.id === customGptId
+            );
+            
+            if (customGPT?.documentGroups && customGPT.documentGroups.length > 0) {
+              documentGroupsToUse = customGPT.documentGroups;
+            } else if (customGPT) {
+              // Custom GPT exists but has no document groups (undefined or empty array) - don't use any document groups
+              documentGroupsToUse = [];
+            }
+          }
+
           // Call handleSend with the prepared message and delete count
           handleSend(
             userMessageToRegenerate,
             messagesToDeleteCount,
             null,
             tools,
-            enabledDocumentGroups,
+            documentGroupsToUse,
             llmProviders,
           )
 
@@ -1607,8 +1682,37 @@ export const Chat = memo(
 
     // Add this function to create dividers with statements
     const renderIntroductoryStatements = () => {
+      // If there's a custom GPT selected, display its name and description
+      if (selectedConversation?.customGptId && courseMetadata?.custom_system_prompts) {
+        // First try to find by gpt_id, then fall back to id
+        const customGPT = courseMetadata.custom_system_prompts.find(
+          (p) => p.gpt_id === selectedConversation.customGptId || p.id === selectedConversation.customGptId
+        );
+        if (customGPT) {
+          return (
+            <div className="xs:mx-2 mt-4 max-w-3xl gap-3 px-4 last:mb-2 sm:mx-4 md:mx-auto lg:mx-auto">
+              <div className="backdrop-filter-[blur(10px)] rounded-lg border-2 border-[rgba(42,42,120,0.55)] bg-[rgba(42,42,64,0.4)] p-6 text-center">
+                <Text
+                  className={`mb-4 text-2xl font-semibold text-white ${montserrat_heading.variable} font-montserratHeading`}
+                  style={{ whiteSpace: 'pre-wrap' }}
+                >
+                  {customGPT.name}
+                </Text>
+                <Text
+                  className={`text-lg text-white/90 ${montserrat_paragraph.variable} font-montserratParagraph max-w-2xl mx-auto`}
+                >
+                  {customGPT.description}
+                </Text>
+              </div>
+              <div className="h-[162px]" ref={messagesEndRef} />
+            </div>
+          );
+        }
+      }
+
+      // Default view for regular conversations
       return (
-        <div className="xs:mx-2 mt-4 max-w-3xl gap-3 px-4 last:mb-2 sm:mx-4 md:mx-auto lg:mx-auto ">
+        <div className="xs:mx-2 mt-4 max-w-3xl gap-3 px-4 last:mb-2 sm:mx-4 md:mx-auto lg:mx-auto">
           <div className="backdrop-filter-[blur(10px)] rounded-lg border-2 border-[rgba(42,42,120,0.55)] bg-[rgba(42,42,64,0.4)] p-6">
             <Text
               className={`mb-2 text-lg text-white ${montserrat_heading.variable} font-montserratHeading`}
@@ -1655,7 +1759,7 @@ export const Chat = memo(
                   >
                     <Button
                       variant="link"
-                      className={`text-md h-auto p-2 font-bold leading-relaxed text-white hover:underline ${montserrat_paragraph.variable} font-montserratParagraph `}
+                      className={`text-md h-auto p-2 font-bold leading-relaxed text-white hover:underline ${montserrat_paragraph.variable} font-montserParagraph`}
                     >
                       <IconArrowRight size={25} className="mr-2 min-w-[40px]" />
                       <p className="whitespace-break-spaces">{statement}</p>
@@ -1664,16 +1768,9 @@ export const Chat = memo(
                 ))}
             </div>
           </div>
-          <div
-            // This is critical to keep the scrolling proper. We need padding below the messages for the chat bar to sit.
-            // className="h-[162px] bg-gradient-to-b from-[#1a1a2e] via-[#2A2A40] to-[#15162c]"
-            // className="h-[162px] bg-gradient-to-t from-transparent to-[rgba(14,14,21,0.4)]"
-            // className="h-[162px] bg-gradient-to-b dark:from-[#2e026d] dark:via-[#15162c] dark:to-[#15162c]"
-            className="h-[162px]"
-            ref={messagesEndRef}
-          />
+          <div className="h-[162px]" ref={messagesEndRef} />
         </div>
-      )
+      );
     }
     // Inside Chat function before the return statement
     const renderMessageContent = (message: Message) => {
@@ -1902,6 +1999,16 @@ export const Chat = memo(
             <div className="justify-center" style={{ height: '40px' }}>
               <ChatNavbar bannerUrl={bannerUrl as string} isgpt4={true} />
             </div>
+            {isReadOnly && (
+              <div className="bg-blue-500/10 p-3 text-center text-sm text-blue-600 dark:text-blue-400 border-b border-blue-500/20">
+                <div className="flex items-center justify-center gap-2">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                  </svg>
+                  Read-only mode: You have view-only access to this shared conversation
+                </div>
+              </div>
+            )}
             <div className="mt-10 max-w-full flex-grow overflow-y-auto overflow-x-hidden">
               {modelError ? (
                 <ErrorMessageDiv error={modelError} />
@@ -1933,7 +2040,7 @@ export const Chat = memo(
                               key={index}
                               message={message}
                               messageIndex={index}
-                              onEdit={(editedMessage) => {
+                              onEdit={isReadOnly ? undefined : (editedMessage) => {
                                 handleSend(
                                   editedMessage,
                                   selectedConversation?.messages?.length -
@@ -1944,10 +2051,11 @@ export const Chat = memo(
                                   llmProviders,
                                 )
                               }}
-                              onRegenerate={() => handleRegenerate(index)}
-                              onFeedback={handleFeedback}
+                              onRegenerate={isReadOnly ? undefined : () => handleRegenerate(index)}
+                              onFeedback={isReadOnly ? undefined : handleFeedback}
                               onImageUrlsUpdate={onImageUrlsUpdate}
                               courseName={courseName}
+                              isReadOnly={isReadOnly}
                             />
                           ),
                         )}
@@ -1960,27 +2068,54 @@ export const Chat = memo(
                     )}
                   </motion.div>
                   {/* <div className="w-full max-w-[calc(100% - var(--sidebar-width))] mx-auto flex justify-center"> */}
-                  <ChatInput
-                    stopConversationRef={stopConversationRef}
-                    textareaRef={textareaRef}
-                    onSend={(message, plugin) => {
-                      handleSend(
-                        message,
-                        0,
-                        plugin,
-                        tools,
-                        enabledDocumentGroups,
-                        llmProviders,
-                      )
-                    }}
-                    onScrollDownClick={handleScrollDown}
-                    showScrollDownButton={showScrollDownButton}
-                    onRegenerate={() => handleRegenerate()}
-                    inputContent={inputContent}
-                    setInputContent={setInputContent}
-                    courseName={getCurrentPageName()}
-                    chat_ui={chat_ui}
-                  />
+                  {!isReadOnly && (
+                    <ChatInput
+                      stopConversationRef={stopConversationRef}
+                      textareaRef={textareaRef}
+                      onSend={(message, plugin) => {
+                        // Determine which document groups to use based on custom GPT settings
+                        let documentGroupsToUse = enabledDocumentGroups;
+                        
+                        // Get the custom GPT ID from either the conversation or the most recent message
+                        let customGptId = selectedConversation?.customGptId;
+                        if (!customGptId && selectedConversation?.messages && selectedConversation.messages.length > 0) {
+                          // Fallback: check the most recent message for custom_gpt_id
+                          const lastMessage = selectedConversation.messages[selectedConversation.messages.length - 1];
+                          customGptId = lastMessage?.custom_gpt_id;
+                        }
+                        
+                        // If there's a custom GPT with specific document groups, use those instead
+                        if (customGptId && courseMetadata?.custom_system_prompts) {
+                          const customGPT = courseMetadata.custom_system_prompts.find(
+                            (p) => p.gpt_id === customGptId || p.id === customGptId
+                          );
+                          
+                          if (customGPT?.documentGroups && customGPT.documentGroups.length > 0) {
+                            documentGroupsToUse = customGPT.documentGroups;
+                          } else if (customGPT) {
+                            // Custom GPT exists but has no document groups (undefined or empty array) - don't use any document groups
+                            documentGroupsToUse = [];
+                          }
+                        }
+                        
+                        handleSend(
+                          message,
+                          0,
+                          plugin,
+                          tools,
+                          documentGroupsToUse,
+                          llmProviders,
+                        )
+                      }}
+                      onScrollDownClick={handleScrollDown}
+                      showScrollDownButton={showScrollDownButton}
+                      onRegenerate={() => handleRegenerate()}
+                      inputContent={inputContent}
+                      setInputContent={setInputContent}
+                      courseName={getCurrentPageName()}
+                      chat_ui={chat_ui}
+                    />
+                  )}
                 </>
               )}
             </div>
