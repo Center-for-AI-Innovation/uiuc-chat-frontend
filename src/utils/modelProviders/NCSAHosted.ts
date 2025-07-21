@@ -41,10 +41,11 @@ export const getNCSAHostedModels = async (
     }
 
     const ollamaModels = [
-      OllamaModels[OllamaModelIDs.LLAMA31_8b_instruct_fp16],
+      OllamaModels[OllamaModelIDs.GEMMA3_27B],
       OllamaModels[OllamaModelIDs.DEEPSEEK_R1_14b_qwen_fp16],
       OllamaModels[OllamaModelIDs.QWEN25_14b_fp16],
       OllamaModels[OllamaModelIDs.QWEN25_7b_fp16],
+      OllamaModels[OllamaModelIDs.LLAMA31_8b_instruct_fp16],
     ].map((model) => {
       const existingState = existingModelStates.get(model.id)
       return {
