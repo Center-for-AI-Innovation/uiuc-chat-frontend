@@ -1,5 +1,8 @@
-import { QueryClient, useMutation, useQuery } from '@tanstack/react-query'
-import { CourseDocument, DocumentGroup } from '~/types/courseMaterials'
+import { type QueryClient, useMutation, useQuery } from '@tanstack/react-query'
+import {
+  type CourseDocument,
+  type DocumentGroup,
+} from '~/types/courseMaterials'
 import { useAuth } from 'react-oidc-context'
 
 export function useGetDocumentGroups(course_name: string) {

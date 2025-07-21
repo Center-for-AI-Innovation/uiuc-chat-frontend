@@ -1,6 +1,6 @@
-import { ContextWithMetadata, Message } from '~/types/chat'
+import { type ContextWithMetadata, type Message } from '~/types/chat'
 import { fetchPresignedUrl } from './apiUtils'
-import sanitizeHtml, { IOptions } from 'sanitize-html'
+import sanitizeHtml, { type IOptions } from 'sanitize-html'
 
 // Strict sanitization options for text content
 const SANITIZE_OPTIONS: IOptions = {

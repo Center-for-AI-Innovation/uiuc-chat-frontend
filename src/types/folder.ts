@@ -1,4 +1,4 @@
-import { Conversation } from './chat'
+import { type Conversation } from './chat'
 
 export interface FolderInterface {
   id: string

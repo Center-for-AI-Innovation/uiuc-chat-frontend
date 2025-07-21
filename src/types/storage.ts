@@ -1,5 +1,5 @@
-import { Conversation } from './chat'
-import { FolderInterface } from './folder'
+import { type Conversation } from './chat'
+import { type FolderInterface } from './folder'
 import { PluginKey } from './plugin'
 import { Prompt } from './prompt'
 

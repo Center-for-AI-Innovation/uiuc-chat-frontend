@@ -7,14 +7,14 @@ import {
   IconX,
 } from '@tabler/icons-react'
 import {
-  KeyboardEvent,
-  ReactElement,
+  type KeyboardEvent,
+  type ReactElement,
   useContext,
   useEffect,
   useState,
 } from 'react'
 
-import { FolderInterface } from '@/types/folder'
+import { type FolderInterface } from '@/types/folder'
 
 import HomeContext from '~/pages/api/home/home.context'
 

@@ -52,7 +52,6 @@ const HEADER_HEIGHT = rem(90)
 
 const useStyles = createStyles((theme) => ({
   burger: {
-    color: '#f1f5f9',
     [theme.fn.largerThan('md')]: {
       display: 'none',
     },
@@ -81,24 +80,25 @@ const useStyles = createStyles((theme) => ({
     padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
     margin: '0.1rem',
     fontWeight: 700,
+    color: 'var(--navbar-foreground)',
     transition:
       'border-color 100ms ease, color 100ms ease, background-color 100ms ease',
     borderRadius: theme.radius.sm,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#f1f5f9',
+    // color: '#f1f5f9',
 
     '&:hover': {
-      color: 'hsl(280,100%,70%)',
+      color: 'var(--navbar-hover)',
       backgroundColor: 'rgba(255, 255, 255, 0.1)',
       textDecoration: 'none',
       borderRadius: '8px',
     },
 
     '&[data-active="true"]': {
-      color: 'hsl(280,100%,70%)',
-      borderBottom: '2px solid hsl(280,100%,70%)',
+      color: 'var(--navbar-hover)',
+      borderBottom: '2px solid var(--navbar-hover)',
       textDecoration: 'none',
       borderRadius: '8px',
       backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -121,14 +121,14 @@ const useStyles = createStyles((theme) => ({
     borderRadius: '10px',
     overflow: 'hidden',
     width: '200px',
-    backgroundColor: 'rgb(26, 27, 30)',
+    backgroundColor: 'var(--background-faded)',
     [theme.fn.largerThan('lg')]: {
       display: 'none',
     },
   },
 
   iconButton: {
-    color: '#f1f5f9',
+    color: 'var(--navbar-foreground)',
     width: '40px',
     height: '40px',
     display: 'flex',
@@ -138,7 +138,7 @@ const useStyles = createStyles((theme) => ({
     transition: 'all 0.2s ease',
 
     '&:hover': {
-      color: 'hsl(280,100%,70%)',
+      color: 'var(--navbar-hover)',
       backgroundColor: 'rgba(255, 255, 255, 0.1)',
     },
   },
@@ -176,7 +176,8 @@ function Logo() {
     <div className="flex-1">
       <Link href="/">
         <h2 className="ms-4 cursor-pointer text-2xl font-extrabold tracking-tight text-white sm:text-[1.8rem]">
-          Illinois <span className="text-[hsl(280,100%,70%)]">Chat</span>
+          <span className="text-[--illinois-orange]">Illinois</span>{' '}
+          <span className="text-[--foreground]">Chat</span>
         </h2>
       </Link>
     </div>
@@ -284,7 +285,7 @@ function NavigationContent({
         onClick={onToggle}
         className={classes.burger}
         size="sm"
-        color="#f1f5f9"
+        color="var(--foreground)"
       />
     </>
   )
@@ -362,11 +363,25 @@ export function ChartDots3Icon() {
 }
 
 export function FileIcon() {
-  return <IconFilePlus size={20} strokeWidth={2} style={{ margin: '0' }} />
+  return (
+    <IconFilePlus
+      color="var(--foreground)"
+      size={20}
+      strokeWidth={2}
+      style={{ margin: '0' }}
+    />
+  )
 }
 
 export function ClipboardIcon() {
-  return <IconClipboardText size={20} strokeWidth={2} style={{ margin: '0' }} />
+  return (
+    <IconClipboardText
+      color="var(--foreground)"
+      size={20}
+      strokeWidth={2}
+      style={{ margin: '0' }}
+    />
+  )
 }
 
 export default function Navbar({
@@ -400,7 +415,7 @@ export default function Navbar({
       name: (
         <Indicator
           label="New"
-          color="hsl(280,100%,70%)"
+          color="var(--illinois-orange)"
           size={13}
           styles={{ indicator: { top: '-4px !important' } }}
         >
@@ -428,10 +443,10 @@ export default function Navbar({
   ]
 
   return (
-    <div className="bg-[#2e026d]">
+    <div className="bg-[--navbar-background]">
       <Flex direction="row" align="center" justify="center">
-        <div className="mt-2 w-full max-w-[98%]">
-          <div className="navbar rounded-badge h-20 bg-[#15162c] shadow-lg shadow-purple-800">
+        <div className="w-full">
+          <div className="navbar h-20 bg-[--navbar-background] shadow-sm shadow-[--background-faded]">
             <Logo />
             {bannerUrl && <BannerImage url={bannerUrl} />}
             {!isPlain && (

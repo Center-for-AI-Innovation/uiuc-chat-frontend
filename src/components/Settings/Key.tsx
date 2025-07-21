@@ -1,5 +1,5 @@
 import { IconCheck, IconKey, IconX } from '@tabler/icons-react'
-import { FC, KeyboardEvent, useEffect, useRef, useState } from 'react'
+import { type FC, type KeyboardEvent, useEffect, useRef, useState } from 'react'
 
 import { useTranslation } from 'next-i18next'
 

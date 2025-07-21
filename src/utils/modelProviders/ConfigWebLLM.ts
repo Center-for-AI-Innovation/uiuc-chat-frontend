@@ -1,4 +1,4 @@
-import { ChatOptions } from '@mlc-ai/web-llm'
+import { type ChatOptions } from '@mlc-ai/web-llm'
 
 export interface ModelRecord {
   model: string

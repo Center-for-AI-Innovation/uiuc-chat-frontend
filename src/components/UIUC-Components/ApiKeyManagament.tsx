@@ -16,7 +16,7 @@ import {
 } from '@mantine/core'
 import { useClipboard, useMediaQuery } from '@mantine/hooks'
 import { showNotification } from '@mantine/notifications'
-import { AuthContextProps } from 'react-oidc-context'
+import { type AuthContextProps } from 'react-oidc-context'
 import {
   IconCheck,
   IconCopy,
@@ -301,10 +301,14 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
 
   return (
     <Card
-      shadow="xs"
+      withBorder
       padding="none"
       radius="xl"
       className="mt-[2%] w-[96%] md:w-[90%] 2xl:w-[90%]"
+      style={{
+        backgroundColor: 'var(--background)',
+        borderColor: 'var(--dashboard-border)',
+      }}
     >
       <Flex
         direction={isSmallScreen ? 'column' : 'row'}
@@ -316,23 +320,21 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
             border: 'None',
             color: 'white',
           }}
-          className="min-h-full bg-gradient-to-r from-purple-900 via-indigo-800 to-blue-800"
+          className="min-h-full bg-[--background] text-[--foreground]"
         >
-          <div className="w-full border-b border-white/10 bg-black/20 px-4 py-3 sm:px-6 sm:py-4 md:px-8">
+          <div className="w-full border-b border-white/10 px-4 py-3 sm:px-6 sm:py-4 md:px-8">
             <div className="flex items-center justify-between gap-2">
-              <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <div className="flex min-w-0 flex-wrap items-center gap-2 text-[--dashboard-foreground]">
                 <Title
                   order={2}
-                  className={`${montserrat_heading.variable} font-montserratHeading text-lg text-white/90 sm:text-2xl`}
+                  className={`${montserrat_heading.variable} font-montserratHeading text-lg sm:text-2xl`}
                 >
                   API Key Management
                 </Title>
-                <Text className="text-white/60">/</Text>
+                <Text className="">/</Text>
                 <Title
                   order={3}
-                  variant="gradient"
-                  gradient={{ from: 'gold', to: 'white', deg: 50 }}
-                  className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base sm:text-xl ${
+                  className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base text-[--illinois-orange] sm:text-xl ${
                     course_name.length > 40
                       ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
                       : ''
@@ -364,19 +366,11 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                 }}
               >
                 <Paper
-                  className="w-full rounded-xl px-4 sm:px-6 md:px-8"
-                  shadow="xs"
+                  className="w-full rounded-xl bg-[--dashboard-background-faded] px-4 sm:px-6 md:px-8"
                   p="md"
                   sx={{
-                    backgroundColor: '#15162c',
-                    border: '1px solid rgba(147, 51, 234, 0.3)',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
-                    '&:hover': {
-                      backgroundColor: '#1a1b34',
-                      borderColor: 'rgba(147, 51, 234, 0.5)',
-                      transform: 'translateY(-1px)',
-                    },
                   }}
                   onClick={() => setInsightsOpen(!insightsOpen)}
                 >
@@ -392,15 +386,13 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                       <IconBook
                         size={24}
                         style={{
-                          color: 'hsl(280,100%,70%)',
+                          color: 'var(--dashboard-button)',
                         }}
                       />
                       <Text
                         size="md"
                         weight={600}
-                        className={`${montserrat_paragraph.variable} select-text font-montserratParagraph`}
-                        variant="gradient"
-                        gradient={{ from: 'gold', to: 'white', deg: 50 }}
+                        className={`${montserrat_paragraph.variable} select-text font-montserratParagraph text-[--dashboard-foreground]`}
                       >
                         API Documentation
                       </Text>
@@ -411,7 +403,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                         transform: insightsOpen
                           ? 'rotate(180deg)'
                           : 'rotate(0deg)',
-                        color: 'hsl(280,100%,70%)',
+                        color: 'var(--dashboard-foreground)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -422,7 +414,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                   </Flex>
 
                   <Collapse in={insightsOpen} transitionDuration={200}>
-                    <div className="mt-4 px-2">
+                    <div className="mt-4 px-2 text-[--dashboard-foreground]">
                       <Text
                         size="md"
                         className={`${montserrat_paragraph.variable} select-text font-montserratParagraph`}
@@ -441,7 +433,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                                 width: '6px',
                                 height: '6px',
                                 borderRadius: '50%',
-                                backgroundColor: 'hsl(280,100%,70%)',
+                                backgroundColor: 'var(--dashboard-foreground)',
                                 marginTop: '8px',
                               }}
                             />
@@ -449,8 +441,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                         >
                           <List.Item>
                             <a
-                              className={`text-sm transition-colors duration-200 hover:text-purple-400 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                              style={{ color: 'hsl(280,100%,70%)' }}
+                              className={`text-sm text-[--dashboard-button] transition-colors duration-200 hover:text-[--dashboard-button-hover] ${montserrat_paragraph.variable} font-montserratParagraph`}
                               href="https://platform.openai.com/docs/api-reference/chat/create"
                               target="_blank"
                               rel="noopener noreferrer"
@@ -466,8 +457,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                           </List.Item>
                           <List.Item>
                             <a
-                              className={`text-sm transition-colors duration-200 hover:text-purple-400 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                              style={{ color: 'hsl(280,100%,70%)' }}
+                              className={`text-sm text-[--dashboard-button] transition-colors duration-200 hover:text-[--dashboard-button-hover] ${montserrat_paragraph.variable} font-montserratParagraph`}
                               href="https://docs.uiuc.chat/api/endpoints"
                               target="_blank"
                               rel="noopener noreferrer"
@@ -492,7 +482,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                         </Title>
                         <List
                           withPadding
-                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                          className={`${montserrat_paragraph.variable} font-montserratParagraph text-[--dashboard-foreground]`}
                           spacing="xs"
                         >
                           <List.Item>
@@ -522,7 +512,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    background: '#15162c',
+                    background: 'var(--dashboard-background-faded)',
                     paddingTop: '1.5rem',
                     paddingBottom: '1rem',
                     borderRadius: '1rem',
@@ -544,16 +534,17 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
           style={{
             flex: isSmallScreen ? '1 1 100%' : '1 1 40%',
             padding: '1rem',
-            backgroundColor: '#15162c',
-            color: 'white',
+            color: 'var(--dashboard-foreground)',
+            backgroundColor: 'var(--dashboard-sidebar-background)',
+            borderLeft: isSmallScreen
+              ? ''
+              : '1px solid var(--dashboard-border)',
           }}
         >
           <div className="card flex h-full flex-col">
             <div className="flex w-full flex-col items-center px-3 pt-12">
               <Title
                 className={`label ${montserrat_heading.variable} font-montserratHeading`}
-                variant="gradient"
-                gradient={{ from: 'gold', to: 'white', deg: 170 }}
                 order={2}
                 style={{ marginBottom: '1rem' }}
               >
@@ -563,7 +554,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                 <Input
                   value={apiKey}
                   className={`${montserrat_paragraph.variable} mt-4 w-full font-montserratParagraph`}
-                  radius={'xl'}
+                  radius={'md'}
                   size={'md'}
                   readOnly
                   rightSection={
@@ -571,13 +562,30 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                       onClick={() => handleCopyApiKey(apiKey)}
                       variant="subtle"
                       size="sm"
-                      radius={'xl'}
-                      className="min-w-[5rem] -translate-x-1 transform rounded-s-md bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none"
+                      radius={'md'}
+                      className="min-w-[5rem] -translate-x-1 transform rounded-s-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none"
                     >
                       {copiedApiKey ? <IconCheck /> : <IconCopy />}
                     </Button>
                   }
                   rightSectionWidth={'auto'}
+                  // className="mt-4 w-full rounded-full"
+                  styles={{
+                    input: {
+                      color: 'var(--foreground)',
+                      backgroundColor: 'var(--background-faded)',
+                      borderColor: 'var(--background-dark)',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      '&:focus': {
+                        borderColor: 'var(--illinois-orange)',
+                      },
+                    },
+                    wrapper: {
+                      width: '100%',
+                    },
+                  }}
                 />
               )}
             </div>
@@ -587,7 +595,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                 disabled={loading || apiKey !== null}
                 size="lg"
                 radius={'xl'}
-                className="min-w-[5rem] self-center rounded-md bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none"
+                className="min-w-[5rem] self-center rounded-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none"
                 // w={'60%'}
               >
                 Generate API Key
@@ -607,7 +615,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                     disabled={loading || apiKey === null}
                     size="md"
                     radius={'xl'}
-                    className="min-w-[5rem] rounded-md bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none"
+                    className="min-w-[5rem] rounded-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none"
                     w={'auto'}
                   >
                     Rotate API Key
@@ -617,7 +625,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                     disabled={loading || apiKey === null}
                     size="md"
                     radius={'xl'}
-                    className="min-w-[5rem] rounded-md bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none"
+                    className="min-w-[5rem] rounded-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none"
                     w={'auto'}
                   >
                     Delete API Key
