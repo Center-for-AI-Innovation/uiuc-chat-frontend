@@ -1,9 +1,17 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { exaSearch } from '@/services/exaService'
 
+interface ErrorResponse {
+  error: string
+}
+
+interface SuccessResponse {
+  results: any[]
+}
+
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse,
+  res: NextApiResponse<SuccessResponse | ErrorResponse>,
 ) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
