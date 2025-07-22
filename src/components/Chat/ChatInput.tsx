@@ -216,7 +216,6 @@ export const ChatInput = ({
     let imageContent: Content[] = [] // Explicitly declare the type for imageContent
 
     if (isWebSearchEnabled && textContent.trim()) {
-      console.log('[WebSearch] Button is enabled, performing search...')
       try {
         const webSearchResults = await performWebSearch(textContent)
         if (webSearchResults.length > 0) {
@@ -807,17 +806,15 @@ export const ChatInput = ({
   }, [])
 
   const performWebSearch = async (query: string) => {
-    console.log('[WebSearch] Triggered with query:', query)
     try {
       const response = await fetch('/api/exa-search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query }),
       })
-      console.log('[WebSearch] API response status:', response.status)
+
       if (!response.ok) throw new Error('Web search failed')
       const data = await response.json()
-      console.log('[WebSearch] API response data:', data)
       return data.results
     } catch (error) {
       console.error('[WebSearch] Error:', error)

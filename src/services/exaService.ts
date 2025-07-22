@@ -1,7 +1,22 @@
-import ExaClient from 'exa-js'
+import Exa from 'exa-js'
 
 export const exaSearch = async (query: string, apiKey: string) => {
-  const client = new ExaClient(apiKey)
-  const response = await client.search(query, { numResults: 5 })
-  return response.results
+  const response = await fetch('https://api.exa.ai/search', {
+    method: 'POST',
+    headers: {
+      'x-api-key': apiKey,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      query,
+      numResults: 5,
+      contents: {
+        text: true,
+        highlights: true,
+        summary: true,
+      },
+    }),
+  })
+  const data = await response.json()
+  return data.results
 }

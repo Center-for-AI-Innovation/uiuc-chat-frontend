@@ -202,6 +202,39 @@ export const buildPrompt = async ({
       }
     }
 
+    // Get search results from the last message
+    const searchResults =
+      conversation.messages[conversation.messages.length - 1]?.searchResults ||
+      []
+
+    if (searchResults && searchResults.length > 0) {
+      // Check if encoding is initialized
+      if (!encoding) {
+        console.error('Encoding is not initialized.')
+        throw new Error('Encoding initialization failed.')
+      }
+
+      const searchResultsContent = _buildSearchResultsContent({ searchResults })
+
+      if (searchResultsContent) {
+        const searchResultsMsg = `
+          <WebSearchInstructions>
+          The following are web search results that may be relevant to your query. These provide current information from the internet. Evaluate critically, use what's pertinent, and cite sources when using information from these results.
+          </WebSearchInstructions>
+          
+          <WebSearchResults>
+          ${searchResultsContent}
+          </WebSearchResults>`
+
+        // Adjust remaining token budget
+        remainingTokenBudget -= encoding.encode(searchResultsMsg).length
+        // Add to user prompt sections
+        userPromptSections.push(searchResultsMsg)
+      } else {
+        console.log('No search results found - skipping injection')
+      }
+    }
+
     const latestUserMessage =
       conversation.messages[conversation.messages.length - 1]
 
@@ -311,6 +344,38 @@ const _buildToolsOutputResults = ({
     }
   }
   return 'No tools used.'
+}
+const _buildSearchResultsContent = ({
+  searchResults,
+}: {
+  searchResults: any[]
+}): string => {
+  if (!searchResults || searchResults.length === 0) {
+    return ''
+  }
+
+  let content = ''
+  searchResults.forEach((result, index) => {
+    content += `Search Result ${index + 1}:\n`
+    content += `Title: ${result.title || 'No title'}\n`
+    content += `URL: ${result.url || result.link || 'No URL'}\n`
+
+    if (result.snippet) {
+      content += `Snippet: ${result.snippet}\n`
+    }
+
+    if (result.text) {
+      content += `Content: ${result.text}\n`
+    }
+
+    if (result.summary) {
+      content += `Summary: ${result.summary}\n`
+    }
+
+    content += '\n---\n\n'
+  })
+
+  return content
 }
 
 const _buildConvoHistory = ({

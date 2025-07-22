@@ -1479,28 +1479,70 @@ export const ChatMessage = memo(
                                 isLoading={false}
                                 error={false}
                                 content={
-                                  <div>
+                                  <div
+                                    style={{
+                                      display: 'flex',
+                                      flexDirection: 'column',
+                                      gap: '8px',
+                                    }}
+                                  >
                                     {message.searchResults.map(
                                       (result, idx) => {
+                                        const domain = result.url
+                                          ? new URL(result.url).hostname
+                                          : 'Unknown source'
                                         return (
                                           <div
                                             key={idx}
-                                            style={{ marginBottom: 8 }}
+                                            style={{
+                                              padding: '8px 0',
+                                              borderBottom:
+                                                idx <
+                                                (message.searchResults
+                                                  ?.length ?? 0) -
+                                                  1
+                                                  ? '1px solid #374151'
+                                                  : 'none',
+                                              cursor: 'pointer',
+                                            }}
+                                            className="rounded px-2 py-1 transition-all duration-200 hover:bg-gray-800 hover:bg-opacity-50"
+                                            onClick={() =>
+                                              window.open(
+                                                result.url || result.link,
+                                                '_blank',
+                                              )
+                                            }
                                           >
-                                            <a
-                                              href={result.url || result.link}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
+                                            <div
+                                              style={{
+                                                fontSize: '12px',
+                                                color: '#9CA3AF',
+                                                marginBottom: '2px',
+                                              }}
                                             >
-                                              {result.title ||
-                                                result.url ||
-                                                result.link}
-                                            </a>
+                                              {domain}
+                                            </div>
+                                            <div
+                                              style={{
+                                                fontSize: '14px',
+                                                fontWeight: '500',
+                                                color: '#60A5FA',
+                                                marginBottom: '4px',
+                                                lineHeight: '1.3',
+                                              }}
+                                            >
+                                              {result.title || 'Untitled'}
+                                            </div>
                                             {result.snippet && (
                                               <div
                                                 style={{
-                                                  fontSize: 12,
-                                                  color: '#aaa',
+                                                  fontSize: '13px',
+                                                  color: '#D1D5DB',
+                                                  lineHeight: '1.4',
+                                                  overflow: 'hidden',
+                                                  display: '-webkit-box',
+                                                  WebkitLineClamp: 2,
+                                                  WebkitBoxOrient: 'vertical',
                                                 }}
                                               >
                                                 {result.snippet}
