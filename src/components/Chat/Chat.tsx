@@ -813,6 +813,8 @@ export const Chat = memo(
             // Only run if web search is enabled for this message
             if (!message.webSearchEnabled) return
 
+            homeDispatch({ field: 'isWebSearchLoading', value: true })
+
             try {
               const response = await fetch('/api/exa-search', {
                 method: 'POST',
@@ -832,6 +834,8 @@ export const Chat = memo(
             } catch (error) {
               console.error('Error fetching Exa.ai search results:', error)
               message.searchResults = []
+            } finally {
+              homeDispatch({ field: 'isWebSearchLoading', value: false })
             }
           }
           await handleSearchResults(message, selectedConversation)

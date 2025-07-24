@@ -8,6 +8,7 @@ import {
   IconX,
   IconRepeat,
   IconSearch,
+  IconWorld,
 } from '@tabler/icons-react'
 import { Text } from '@mantine/core'
 import {
@@ -214,28 +215,6 @@ export const ChatInput = ({
 
     const textContent = content
     let imageContent: Content[] = [] // Explicitly declare the type for imageContent
-
-    if (isWebSearchEnabled && textContent.trim()) {
-      try {
-        const webSearchResults = await performWebSearch(textContent)
-        if (webSearchResults.length > 0) {
-          const webSearchContent = `\n\nWeb Search Results:\n${webSearchResults
-            .map(
-              (result: { title: string; url: string; text: string }) =>
-                `- ${result.title}: ${result.url}\n${result.text ? result.text.substring(0, 200) + '...' : ''}`,
-            )
-            .join('\n\n')}`
-
-          // textContent += webSearchContent
-          console.log('[WebSearch] Appended search results to message.')
-        } else {
-          console.log('[WebSearch] No results returned.')
-        }
-      } catch (error) {
-        console.error('Web search failed:', error)
-        // Continue without web search results
-      }
-    }
 
     if (imageFiles.length > 0 && !uploadingImage) {
       setUploadingImage(true)
@@ -884,17 +863,28 @@ export const ChatInput = ({
           className="absolute bottom-0 mx-4 flex w-[80%] flex-col self-center rounded-t-3xl border border-black/10 bg-[#070712] px-4 pb-8 pt-4 shadow-[0_0_10px_rgba(0,0,0,0.10)] dark:border-gray-900/50 dark:text-white dark:shadow-[0_0_15px_rgba(0,0,0,0.10)] md:mx-20 md:w-[70%]"
           style={{ pointerEvents: 'auto' }}
         >
-          <button
-            className={`absolute bottom-11 left-5 rounded-full p-1 text-neutral-100 transition-colors duration-200 ${
-              isWebSearchEnabled
-                ? 'bg-blue-600 text-white'
-                : 'opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200'
-            }`}
-            onClick={() => setIsWebSearchEnabled(!isWebSearchEnabled)}
-            style={{ pointerEvents: 'auto' }}
+          <Tooltip
+            label="Web Search"
+            position="top"
+            withArrow
+            style={{
+              backgroundColor: '#2b2b2b',
+              color: 'white',
+            }}
           >
-            <IconSearch size={22} />
-          </button>
+            <button
+              className={`absolute bottom-11 left-5 rounded-full p-1 text-neutral-100 transition-colors duration-200 ${
+                isWebSearchEnabled
+                  ? 'bg-blue-600 text-white'
+                  : 'opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200'
+              }`}
+              onClick={() => setIsWebSearchEnabled(!isWebSearchEnabled)}
+              style={{ pointerEvents: 'auto' }}
+            >
+              <IconWorld size={22} />
+            </button>
+          </Tooltip>
+
           {/* BUTTON 2: Image Icon and Input */}
           {selectedConversation?.model?.id &&
             VisionCapableModels.has(

@@ -213,6 +213,7 @@ export const ChatMessage = memo(
         messageIsStreaming,
         isImg2TextLoading,
         isRouting,
+        isWebSearchLoading,
         isRunningTool,
         isRetrievalLoading,
         isQueryRewriting,
@@ -1428,6 +1429,20 @@ export const ChatMessage = memo(
                                 accordionKey="query-rewrite"
                                 title="Optimizing search query"
                                 isLoading={isQueryRewriting}
+                                error={false}
+                                content={<></>}
+                              />
+                            )}
+
+                          {/* Web Search loading state - only show for current message */}
+                          {isWebSearchLoading &&
+                            messageIndex ===
+                              (selectedConversation?.messages?.length ?? 0) -
+                                1 && (
+                              <IntermediateStateAccordion
+                                accordionKey="web-search"
+                                title="Searching the web"
+                                isLoading={isWebSearchLoading}
                                 error={false}
                                 content={<></>}
                               />
