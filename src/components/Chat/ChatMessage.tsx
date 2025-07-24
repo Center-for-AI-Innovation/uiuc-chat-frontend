@@ -213,6 +213,7 @@ export const ChatMessage = memo(
         messageIsStreaming,
         isImg2TextLoading,
         isRouting,
+        isWebSearchLoading,
         isRunningTool,
         isRetrievalLoading,
         isQueryRewriting,
@@ -1433,6 +1434,20 @@ export const ChatMessage = memo(
                               />
                             )}
 
+                          {/* Web Search loading state - only show for current message */}
+                          {isWebSearchLoading &&
+                            messageIndex ===
+                              (selectedConversation?.messages?.length ?? 0) -
+                                1 && (
+                              <IntermediateStateAccordion
+                                accordionKey="web-search"
+                                title="Searching the web"
+                                isLoading={isWebSearchLoading}
+                                error={false}
+                                content={<></>}
+                              />
+                            )}
+
                           {/* Query rewrite result - show for any message that was optimized */}
                           {(!isQueryRewriting ||
                             messageIndex <
@@ -1466,6 +1481,94 @@ export const ChatMessage = memo(
                                 isLoading={false}
                                 error={false}
                                 content={`Found ${getContextsLength(message.contexts)} document chunks.`}
+                              />
+                            )}
+
+                          {/* Exa.ai Search Results for all messages */}
+
+                          {Array.isArray(message.searchResults) &&
+                            message.searchResults.length > 0 && (
+                              <IntermediateStateAccordion
+                                accordionKey="search results"
+                                title="Web Search Results"
+                                isLoading={false}
+                                error={false}
+                                content={
+                                  <div
+                                    style={{
+                                      display: 'flex',
+                                      flexDirection: 'column',
+                                      gap: '8px',
+                                    }}
+                                  >
+                                    {message.searchResults.map(
+                                      (result, idx) => {
+                                        const domain = result.url
+                                          ? new URL(result.url).hostname
+                                          : 'Unknown source'
+                                        return (
+                                          <div
+                                            key={idx}
+                                            style={{
+                                              padding: '8px 0',
+                                              borderBottom:
+                                                idx <
+                                                (message.searchResults
+                                                  ?.length ?? 0) -
+                                                  1
+                                                  ? '1px solid #374151'
+                                                  : 'none',
+                                              cursor: 'pointer',
+                                            }}
+                                            className="rounded px-2 py-1 transition-all duration-200 hover:bg-gray-800 hover:bg-opacity-50"
+                                            onClick={() =>
+                                              window.open(
+                                                result.url || result.link,
+                                                '_blank',
+                                              )
+                                            }
+                                          >
+                                            <div
+                                              style={{
+                                                fontSize: '12px',
+                                                color: '#9CA3AF',
+                                                marginBottom: '2px',
+                                              }}
+                                            >
+                                              {domain}
+                                            </div>
+                                            <div
+                                              style={{
+                                                fontSize: '14px',
+                                                fontWeight: '500',
+                                                color: '#60A5FA',
+                                                marginBottom: '4px',
+                                                lineHeight: '1.3',
+                                              }}
+                                            >
+                                              {result.title || 'Untitled'}
+                                            </div>
+                                            {result.snippet && (
+                                              <div
+                                                style={{
+                                                  fontSize: '13px',
+                                                  color: '#D1D5DB',
+                                                  lineHeight: '1.4',
+                                                  overflow: 'hidden',
+                                                  display: '-webkit-box',
+                                                  WebkitLineClamp: 2,
+                                                  WebkitBoxOrient: 'vertical',
+                                                }}
+                                              >
+                                                {result.snippet}
+                                              </div>
+                                            )}
+                                          </div>
+                                        )
+                                      },
+                                    )}
+                                  </div>
+                                }
                               />
                             )}
 
