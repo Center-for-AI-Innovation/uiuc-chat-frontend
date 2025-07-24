@@ -18,6 +18,8 @@ import router from 'next/router'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { createProject } from '~/pages/api/UIUC-api/createProject'
 
+import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
+
 const Dashboard = ({
   project_name,
   current_user_email,
@@ -113,9 +115,6 @@ const Dashboard = ({
       <main
         className="course-page-main"
         style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'start',
           minHeight: '100vh',
           padding: '1rem',
         }}
@@ -124,13 +123,13 @@ const Dashboard = ({
           withBorder
           padding="none"
           radius="xl"
-          className="mt-[2%] w-[96%] md:w-[90%] 2xl:w-[90%]"
+          className="mx-auto mt-[2%] w-[96%] md:w-[90%] 2xl:w-[90%]"
           style={{
             backgroundColor: 'var(--background)',
             borderColor: 'var(--dashboard-border)',
           }}
         >
-          <div className="flex min-h-[80vh] flex-col items-center justify-center">
+          <div className="flex min-h-[70vh] flex-col items-center justify-center">
             <div className="text-2xl text-[--illinois-orange]">
               [[ coming soon ]]
             </div>
@@ -140,6 +139,8 @@ const Dashboard = ({
             </div>
           </div>
         </Card>
+
+        <GlobalFooter />
       </main>
     </>
   )

@@ -19,6 +19,7 @@ import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { createProject } from '~/pages/api/UIUC-api/createProject'
 
 import ProjectTable from '~/components/UIUC-Components/ProjectTable'
+import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 
 const Dashboard = ({
   project_name,
@@ -115,14 +116,11 @@ const Dashboard = ({
       <main
         className="course-page-main"
         style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'start',
           minHeight: '100vh',
           padding: '1rem',
         }}
       >
-        <div className="mt-[2%] min-h-[10rem] w-[96%] md:w-[90%] 2xl:w-[90%]">
+        <div className="mx-auto mt-[2%] min-h-[70vh] w-[96%] md:w-[90%] 2xl:w-[90%]">
           <div class="px-8">
             <Title
               order={2}
@@ -150,7 +148,7 @@ const Dashboard = ({
             withBorder
             padding="none"
             radius="xl"
-            className="mt-4"
+            className="mt-8 min-h-[10rem]"
             style={{
               backgroundColor: 'var(--background)',
               borderColor: 'var(--dashboard-border)',
@@ -159,6 +157,8 @@ const Dashboard = ({
             <ProjectTable />
           </Card>
         </div>
+
+        <GlobalFooter />
       </main>
     </>
   )

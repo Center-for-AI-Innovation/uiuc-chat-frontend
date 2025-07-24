@@ -17,16 +17,14 @@ import {
 
 const StyledRow = styled.tr`
   &:hover {
-    background-color: rgba(255, 95, 5, 0.6);
+    color: var(--foreground);
+    background-color: var(--background-faded);
   }
-  color: #c1c2c5;
 `
 
 const StyledTable = styled(Table)`
   table-layout: fixed;
   width: 100%;
-  background-color: white;
-  color: var(--illinois-blue);
 
   th,
   td {
@@ -34,14 +32,24 @@ const StyledTable = styled(Table)`
     overflow-wrap: break-word;
     hyphens: auto;
     padding: 8px;
+
+    color: var(--foreground) !important;
+  }
+
+  thead th {
+    border-bottom-color: var(--table-border) !important;
+  }
+
+  tbody td {
+    border-top-color: var(--table-border) !important;
   }
 `
 
 const ResponsiveTableWrapper = styled.div`
   overflow-x: auto;
   width: 100%;
-  background-color: white;
-  box-shadow: 0px 0px 10px 2px rgba(0, 0, 0, 0.1);
+  color: var(--foreground);
+  background-color: var(--background);
   border-radius: 15px;
   padding: 0;
 
@@ -244,14 +252,13 @@ const ListProjectTable: React.FC = () => {
 
     return (
       <>
-        <div className="mx-auto p-8">
+        <div className="mx-auto px-8 py-6">
           {rows.length > 0 ? (
             <>
               <div
                 style={{
                   overflowX: 'auto',
                   width: '100%',
-                  backgroundColor: 'var(--background-faded)',
                 }}
               >
                 <StyledTable>
@@ -277,7 +284,7 @@ const ListProjectTable: React.FC = () => {
                             }}
                           >
                             <span
-                              className={`text-md text-[var(--illinois-blue)] ${montserrat_heading.variable} font-montserratHeading`}
+                              className={`text-md ${montserrat_heading.variable} font-montserratHeading`}
                             >
                               {label}
                             </span>
