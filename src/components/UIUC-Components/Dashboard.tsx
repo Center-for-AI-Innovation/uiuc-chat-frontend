@@ -122,18 +122,43 @@ const Dashboard = ({
           padding: '1rem',
         }}
       >
-        <Card
-          withBorder
-          padding="none"
-          radius="xl"
-          className="mt-[2%] min-h-[10rem] w-[96%] md:w-[90%] 2xl:w-[90%]"
-          style={{
-            backgroundColor: 'var(--background)',
-            borderColor: 'var(--dashboard-border)',
-          }}
-        >
-          <ProjectTable />
-        </Card>
+        <div className="mt-[2%] min-h-[10rem] w-[96%] md:w-[90%] 2xl:w-[90%]">
+          <div class="px-8">
+            <Title
+              order={2}
+              className={`
+                text-2xl font-bold sm:pt-2 
+                ${montserrat_heading.variable} font-montserratHeading
+              `}
+              style={{ color: 'var(--foreground)' }}
+            >
+              My Dashboard
+            </Title>
+
+            <p
+              className={`
+              text-md mt-2
+              ${montserrat_paragraph.variable} font-montserratParagraph
+            `}
+              style={{ color: 'var(--foreground-faded)' }}
+            >
+              These are projects you&apos;ve created, or where you are an admin.
+            </p>
+          </div>
+
+          <Card
+            withBorder
+            padding="none"
+            radius="xl"
+            className="mt-4"
+            style={{
+              backgroundColor: 'var(--background)',
+              borderColor: 'var(--dashboard-border)',
+            }}
+          >
+            <ProjectTable />
+          </Card>
+        </div>
       </main>
     </>
   )

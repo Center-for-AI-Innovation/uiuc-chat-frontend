@@ -245,30 +245,8 @@ const ListProjectTable: React.FC = () => {
     return (
       <>
         <div className="mx-auto p-8">
-          <Title
-            order={2}
-            className={`
-              text-2xl font-bold sm:pt-2 
-              ${montserrat_heading.variable} font-montserratHeading
-            `}
-            style={{ color: 'var(--foreground)' }}
-          >
-            My Dashboard
-          </Title>
-
           {rows.length > 0 ? (
             <>
-              <p
-                className={`
-                text-md pb-8 pt-2
-                ${montserrat_paragraph.variable} font-montserratParagraph
-              `}
-                style={{ color: 'var(--foreground-faded)' }}
-              >
-                These are projects you&apos;ve created, or where you are an
-                admin.
-              </p>
-
               <div
                 style={{
                   overflowX: 'auto',
