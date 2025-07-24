@@ -61,9 +61,9 @@ const Sidebar = <T,>({
   }
 
   return isOpen ? (
-    <div>
+    <div className="relative">
       <div
-        className={`fixed top-0 ${side}-0 z-40 flex h-full w-[260px] flex-none flex-col space-y-2 border-r border-[--dashboard-border] bg-[--sidebar-background] p-2 text-[14px] transition-all sm:relative sm:top-0`}
+        className={`absolute top-0 ${side}-0 z-40 flex h-full w-[260px] flex-none flex-col space-y-2 border-r border-[--dashboard-border] bg-[--sidebar-background] p-2 text-[14px] shadow-xl transition-all sm:relative sm:top-0`}
       >
         <div className="flex items-center">
           <button
@@ -134,7 +134,9 @@ const Sidebar = <T,>({
       <CloseSidebarButton onClick={toggleOpen} side={side} />
     </div>
   ) : (
-    <OpenSidebarButton onClick={toggleOpen} side={side} />
+    <div className="relative">
+      <OpenSidebarButton onClick={toggleOpen} side={side} />
+    </div>
   )
 }
 
