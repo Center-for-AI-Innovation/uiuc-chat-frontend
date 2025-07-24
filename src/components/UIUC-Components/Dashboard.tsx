@@ -121,7 +121,7 @@ const Dashboard = ({
         }}
       >
         <div className="mx-auto mt-[2%] min-h-[70vh] w-[96%] md:w-[90%] 2xl:w-[90%]">
-          <div class="px-8">
+          <div className="px-8">
             <Title
               order={2}
               className={`

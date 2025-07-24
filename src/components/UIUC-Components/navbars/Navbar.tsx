@@ -40,6 +40,7 @@ interface NavbarProps {
   course_name?: string
   bannerUrl?: string
   isPlain?: boolean
+  showSettingsNav?: boolean
 }
 
 interface NavItem {
@@ -141,6 +142,10 @@ const useStyles = createStyles((theme) => ({
   },
 
   settingsLink: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '.2rem',
+
     [theme.fn.smallerThan('md')]: {
       display: 'flex',
 
@@ -273,10 +278,12 @@ function NavText({ children }: { children: React.ReactNode }) {
   )
 }
 
-function getCurrentPageName(link: String, items: []) {
-  let found = items.filter((item) => link == item.link)
+function getCurrentPageName(link: string, items: NavItem[]) {
+  const found: any = items.filter(
+    (item: NavItem) => item.link && link == item.link,
+  )
 
-  return found.length > 0 ? found[0].name : ''
+  return found.length > 0 ? found.shift().name : ''
 }
 
 function NavigationContent({
@@ -303,7 +310,13 @@ function NavigationContent({
                 data-active={activeLink === item.link}
                 className={classes.link}
               >
-                <span style={{ display: 'flex', alignItems: 'center' }}>
+                <span
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '.2rem',
+                  }}
+                >
                   {item.icon}
                   {item.name}
                 </span>
@@ -323,7 +336,9 @@ function NavigationContent({
               data-active={activeLink === item.link}
               className={classes.link}
             >
-              <span style={{ display: 'flex', alignItems: 'center' }}>
+              <span
+                style={{ display: 'flex', alignItems: 'center', gap: '.2rem' }}
+              >
                 {item.icon}
                 {item.name}
               </span>
