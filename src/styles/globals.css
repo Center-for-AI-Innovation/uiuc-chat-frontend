@@ -175,8 +175,11 @@
   --navbar-foreground: var(--foreground);
   --navbar-background: var(--background);
   --navbar-text: var(--foreground);
+  --navbar-border: var(--dashboard-border);
   --navbar-shadow: color-mix(in srgb, var(--background), black 30%);
-  --navbar-hover: var(--illinois-orange);
+  --navbar-active: var(--illinois-orange);
+  --navbar-hover: var(--foreground-dark);
+  --navbar-hover-background: var(--background-faded);
 
   --notification: rgba(
     from color-mix(in srgb, var(--illinois-blue), black 30%) r g b / 0.8

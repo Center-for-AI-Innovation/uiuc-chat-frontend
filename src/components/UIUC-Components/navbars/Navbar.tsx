@@ -7,6 +7,7 @@ import GlobalHeader from '~/components/UIUC-Components/navbars/GlobalHeader'
 import {
   Flex,
   Indicator,
+  Collapse,
   Container,
   Burger,
   Paper,
@@ -25,7 +26,15 @@ import {
   Code,
   Brain,
 } from 'tabler-icons-react'
-import { IconHome, IconFilePlus, IconClipboardText } from '@tabler/icons-react'
+import {
+  IconChevronDown,
+  IconChevronLeft,
+  IconCompass,
+  IconHome,
+  IconFilePlus,
+  IconClipboardText,
+  IconSparkles,
+} from '@tabler/icons-react'
 
 interface NavbarProps {
   course_name?: string
@@ -57,6 +66,14 @@ const useStyles = createStyles((theme) => ({
     },
   },
 
+  settingsToggle: {
+    marginLeft: '-6rem', //offset further to counter the chatButton wrapper width of w-[6rem]. really should change this to a css variable!!
+
+    [theme.fn.largerThan('md')]: {
+      display: 'none',
+    },
+  },
+
   links: {
     padding: '0em',
     display: 'flex',
@@ -68,18 +85,31 @@ const useStyles = createStyles((theme) => ({
     },
   },
 
-  inner: {
-    height: HEADER_HEIGHT,
+  settingsLinks: {
     display: 'flex',
-    alignItems: 'center',
+    gap: '0rem 0rem',
+
+    marginTop: '.75rem',
+    marginLeft: '-1rem', //offset so button text lines up
+    padding: '0px',
+
+    [theme.fn.smallerThan('md')]: {
+      display: 'none',
+    },
+  },
+
+  inner: {
+    //    height: HEADER_HEIGHT,
+    display: 'flex',
+    alignItems: 'start',
     justifyContent: 'space-between',
   },
 
   link: {
     fontSize: rem(13),
     padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
-    margin: '0.1rem',
-    fontWeight: 700,
+    //    margin: '0.1rem',
+    fontWeight: 500,
     color: 'var(--navbar-foreground)',
     transition:
       'border-color 100ms ease, color 100ms ease, background-color 100ms ease',
@@ -87,44 +117,79 @@ const useStyles = createStyles((theme) => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    // color: '#f1f5f9',
 
     '&:hover': {
       color: 'var(--navbar-hover)',
-      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      backgroundColor: 'var(--navbar-hover-background)',
       textDecoration: 'none',
-      borderRadius: '8px',
     },
 
     '&[data-active="true"]': {
-      color: 'var(--navbar-hover)',
-      borderBottom: '2px solid var(--navbar-hover)',
+      color: 'var(--navbar-active)',
+      /*      borderBottom: '2px solid var(--navbar-hover)',*/
       textDecoration: 'none',
-      borderRadius: '8px',
-      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-      textAlign: 'right',
+      backgroundColor: 'var(--navbar-background)', //keep the same background color, so only changes on hover of non-active links
+      //      textAlign: 'left',
     },
 
     [theme.fn.smallerThan('md')]: {
-      display: 'list-item',
-      textAlign: 'center',
+      justifyContent: 'flex-start',
       borderRadius: 0,
-      padding: theme.spacing.xs,
+      backgroundColor: 'var(--navbar-background)',
+      padding: `${theme.spacing.lg} ${theme.spacing.sm}`, //extra padding for larger tap area
+    },
+  },
+
+  settingsLink: {
+    [theme.fn.smallerThan('md')]: {
+      display: 'flex',
+
+      backgroundColor: 'transparent',
+
+      borderRadius: theme.radius.sm,
+    },
+  },
+
+  chatButton: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+
+    fontSize: rem(13),
+    fontWeight: 500,
+
+    color: 'var(--foreground-faded)',
+
+    padding: `.4rem ${theme.spacing.sm}`,
+    border: '1px solid var(--navbar-border)',
+    borderRadius: theme.radius.sm,
+
+    transition:
+      'border-color 100ms ease, color 100ms ease, background-color 100ms ease',
+
+    '&:hover': {
+      color: 'var(--dashboard-button)',
+      borderColor: 'var(--dashboard-button)',
+      textDecoration: 'none',
     },
   },
 
   dropdown: {
     position: 'absolute',
-    top: HEADER_HEIGHT,
-    right: '20px',
+    top: '4rem',
+    right: '.5rem',
     zIndex: 2,
+    border: '1px solid var(--navbar-border)',
     borderRadius: '10px',
     overflow: 'hidden',
-    width: '200px',
+    width: 'calc(100% - 1rem)',
+    maxWidth: '330px',
     backgroundColor: 'var(--background-faded)',
+    boxShadow: theme.shadows.lg,
     [theme.fn.largerThan('lg')]: {
       display: 'none',
     },
+    '& a': {},
   },
 
   iconButton: {
@@ -208,6 +273,12 @@ function NavText({ children }: { children: React.ReactNode }) {
   )
 }
 
+function getCurrentPageName(link: String, items: []) {
+  let found = items.filter((item) => link == item.link)
+
+  return found.length > 0 ? found[0].name : ''
+}
+
 function NavigationContent({
   items,
   opened,
@@ -241,27 +312,7 @@ function NavigationContent({
           </Paper>
         )}
       </Transition>
-      <button
-        className={classes.link}
-        onClick={() => {
-          if (courseName) router.push(`/${courseName}/chat`)
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-          <MessageChatIcon />
-          <span
-            style={{
-              whiteSpace: 'nowrap',
-              marginRight: '-5px',
-              paddingRight: '2px',
-              padding: '4px 0',
-            }}
-            className={`${montserrat_heading.variable} font-montserratHeading`}
-          >
-            Chat
-          </span>
-        </div>
-      </button>
+
       <Container className={classes.inner} style={{ paddingLeft: '0px' }}>
         <div className={classes.links}>
           {items.map((item, index) => (
@@ -280,6 +331,7 @@ function NavigationContent({
           ))}
         </div>
       </Container>
+
       <Burger
         opened={opened}
         onClick={onToggle}
@@ -287,6 +339,111 @@ function NavigationContent({
         size="sm"
         color="var(--foreground)"
       />
+    </>
+  )
+}
+
+function SettingsNavigationContent({
+  items,
+  opened,
+  activeLink,
+  onLinkClick,
+  onToggle,
+  courseName,
+}: NavigationContentProps) {
+  const { classes } = useStyles()
+  const router = useRouter()
+
+  const [settingsNavOpen, setSettingsNavOpen] = useState(false)
+
+  return (
+    <>
+      <Paper
+        className={`${classes.settingsToggle} mb-4 mt-4 rounded-xl bg-[--dashboard-background-faded] px-4 sm:px-6 md:px-8`}
+        p="md"
+        sx={{
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+        }}
+        onClick={() => setSettingsNavOpen(!settingsNavOpen)}
+      >
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-[--navbar-foreground]">
+            {getCurrentPageName(activeLink, items)}
+          </div>
+
+          <div
+            className="transition-transform duration-200"
+            style={{
+              transform: settingsNavOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+              color: 'var(--dashboard-foreground)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <IconChevronDown size={24} />
+          </div>
+        </div>
+
+        <Collapse in={settingsNavOpen} transitionDuration={200}>
+          <div className="mt-4">
+            {items.map((item, index) => (
+              <Link
+                key={index}
+                href={item.link}
+                onClick={() => onLinkClick()}
+                data-active={activeLink === item.link}
+                className={`${classes.link} ${classes.settingsLink}`}
+              >
+                {item.icon}
+                {item.name}
+              </Link>
+            ))}
+          </div>
+        </Collapse>
+      </Paper>
+
+      {/*
+      <button
+        className={classes.chatButton}
+        onClick={() => {
+          if (courseName) router.push(`/${courseName}/chat`)
+        }}
+      >
+        <div className={`flex items-center gap-1 ${montserrat_heading.variable} font-montserratHeading`}>
+          <IconChevronLeft />
+          <div>Chat</div>
+        </div>
+      </button>
+*/}
+
+      <Container className={classes.settingsLinks}>
+        {items.map((item, index) => (
+          <Link
+            key={index}
+            href={item.link}
+            onClick={() => onLinkClick()}
+            data-active={activeLink === item.link}
+            className={classes.link}
+          >
+            <div className="flex items-center">
+              {item.icon}
+              {item.name}
+            </div>
+          </Link>
+        ))}
+      </Container>
+
+      {/*
+      <Burger
+        opened={opened}
+        onClick={onToggle}
+        className={classes.burger}
+        size="sm"
+        color="var(--foreground)"
+      />
+*/}
     </>
   )
 }
@@ -388,6 +545,7 @@ export default function Navbar({
   course_name = '',
   bannerUrl = '',
   isPlain = false,
+  showSettingsNav = false,
 }: NavbarProps) {
   const [opened, { toggle, close }] = useDisclosure(false)
   const { classes } = useStyles()
@@ -400,7 +558,25 @@ export default function Navbar({
     if (path) setActiveLink(path)
   }, [router.asPath, router.isReady])
 
-  const items: NavItem[] = [
+  const navItems: NavItem[] = [
+    {
+      name: <NavText>My Dashboard</NavText>,
+      icon: <DashboardIcon />,
+      link: course_name ? `/${course_name}/dashboard` : '/dashboard', // Add conditional
+    },
+    {
+      name: <NavText>Explore Chatbots</NavText>,
+      icon: <IconCompass />,
+      link: '/explore',
+    },
+    {
+      name: <NavText>Create Your Own Bot</NavText>,
+      icon: <IconSparkles />,
+      link: '/new',
+    },
+  ]
+
+  const settingsNavItems: NavItem[] = [
     {
       name: <NavText>Dashboard</NavText>,
       icon: <DashboardIcon />,
@@ -444,47 +620,109 @@ export default function Navbar({
 
   return (
     <div className="bg-[--navbar-background]">
+      {/***************** top navigation for all pages *****************/}
+
       <Flex direction="row" align="center" justify="center">
-        <div className="w-full">
-          <div className="navbar h-20 bg-[--navbar-background] shadow-sm shadow-[--background-faded]">
-            <Logo />
-            {bannerUrl && <BannerImage url={bannerUrl} />}
-            {!isPlain && (
-              <NavigationContent
-                items={items}
-                opened={opened}
-                activeLink={activeLink}
-                onLinkClick={close}
-                onToggle={toggle}
-                courseName={course_name}
-              />
-            )}
-            <div className="flex items-center">
-              <div className="hidden items-center md:flex">
-                <Divider orientation="vertical" className={classes.divider} />
-                <div className="flex items-center gap-1 px-2">
-                  <Tooltip label="New Project" position="bottom" withArrow>
-                    <Link href="/new" className={classes.iconButton}>
-                      <FileIcon />
-                    </Link>
-                  </Tooltip>
-                  <Tooltip label="Documentation" position="bottom" withArrow>
-                    <Link
-                      href="https://docs.uiuc.chat/"
-                      className={classes.iconButton}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <ClipboardIcon />
-                    </Link>
-                  </Tooltip>
-                </div>
-              </div>
+        <div className="navbar h-20 w-full border-b border-[--navbar-border] bg-[--navbar-background]">
+          <Logo />
+
+          {/* no longer show the banner logo image here
+          {bannerUrl && <BannerImage url={bannerUrl} />}
+*/}
+
+          {!isPlain && (
+            <NavigationContent
+              items={navItems}
+              opened={opened}
+              activeLink={activeLink}
+              onLinkClick={close}
+              onToggle={toggle}
+              courseName={course_name}
+            />
+          )}
+
+          <div className="flex items-center">
+            <div className="hidden items-center md:flex">
               <GlobalHeader isNavbar={true} />
             </div>
           </div>
         </div>
       </Flex>
+
+      {showSettingsNav && (
+        <div className="mx-auto mt-4 w-[96%] bg-[--navbar-background] md:w-[90%] 2xl:w-[90%]">
+          {/***************** sub navigation for admin settings *****************/}
+          <div className="flex items-start gap-2">
+            <div className="w-[6rem]">
+              <button
+                className={classes.chatButton}
+                onClick={() => {
+                  if (course_name) router.push(`/${course_name}/chat`)
+                }}
+              >
+                <div
+                  className={`flex items-center gap-1 ${montserrat_heading.variable} font-montserratHeading`}
+                >
+                  <IconChevronLeft />
+                  {/*                  <MessageChatIcon /> */}
+                  <div>Chat</div>
+                </div>
+              </button>
+            </div>
+
+            <div className="mt-[.5rem] w-full text-[--navbar-foreground]">
+              <div className="flex w-full items-start gap-2">
+                <div className="whitespace-nowrap text-[--foreground-faded]">
+                  Admin Settings
+                </div>
+                <div className="text-[--foreground-faded]">/</div>
+                <div className="grow font-bold">{course_name}</div>
+              </div>
+
+              {/* no longer show the banner logo image here
+                {bannerUrl && <BannerImage url={bannerUrl} />}
+*/}
+
+              {!isPlain && (
+                <SettingsNavigationContent
+                  items={settingsNavItems}
+                  opened={opened}
+                  activeLink={activeLink}
+                  onLinkClick={close}
+                  onToggle={toggle}
+                  courseName={course_name}
+                />
+              )}
+              {/*
+                <div className="flex items-center">
+                  <div className="hidden items-center md:flex">
+                    <Divider orientation="vertical" className={classes.divider} />
+
+                    <div className="flex items-center gap-1 px-2">
+                      <Tooltip label="New Project" position="bottom" withArrow>
+                        <Link href="/new" className={classes.iconButton}>
+                          <FileIcon />
+                        </Link>
+                      </Tooltip>
+
+                      <Tooltip label="Documentation" position="bottom" withArrow>
+                        <Link
+                          href="https://docs.uiuc.chat/"
+                          className={classes.iconButton}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <ClipboardIcon />
+                        </Link>
+                      </Tooltip>
+                    </div>
+                  </div>
+                </div>
+*/}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

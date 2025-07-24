@@ -87,7 +87,10 @@ const ApiPage: NextPage = () => {
 
   return (
     <>
-      <Navbar course_name={router.query.course_name as string} />
+      <Navbar
+        course_name={router.query.course_name as string}
+        showSettingsNav={true}
+      />
       <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
         <div className="items-left flex w-full flex-col justify-center py-0">
           <Flex direction="column" align="center" w="100%">

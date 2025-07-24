@@ -41,6 +41,8 @@ import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackgro
 import { montserrat_heading } from 'fonts'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 
+import Navbar from '~/components/UIUC-Components/navbars/Navbar'
+
 const Home = ({
   current_email,
   course_metadata,
@@ -772,6 +774,8 @@ const Home = ({
           <main
             className={`flex h-screen w-screen flex-col text-sm text-white dark:text-white`}
           >
+            <Navbar isPlain={false} />
+
             <div className="flex h-full w-full sm:pt-0">
               {isDragging &&
                 VisionCapableModels.has(
@@ -784,6 +788,7 @@ const Home = ({
                     </span>
                   </div>
                 )}
+
               <Chatbar current_email={current_email} courseName={course_name} />
 
               {course_metadata && (

@@ -106,7 +106,7 @@ const MakeNewCoursePage = ({
 
   return (
     <>
-      <Navbar isPlain={true} />
+      <Navbar isPlain={false} />
       <Head>
         <title>{project_name}</title>
         <meta name="description" content="Create a new project on UIUC.chat." />

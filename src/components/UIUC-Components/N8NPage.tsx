@@ -315,7 +315,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
 
   return (
     <>
-      <Navbar course_name={course_name} />
+      <Navbar course_name={course_name} showSettingsNav={true} />
 
       <Head>
         <title>{course_name}</title>
@@ -334,7 +334,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
               padding="none"
               radius="xl"
               style={{
-                maxWidth: '85%',
+                maxWidth: '90%',
                 width: '100%',
                 marginTop: '2%',
                 backgroundColor: 'var(--background)',
@@ -353,7 +353,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                 >
                   <Group
                     spacing="lg"
-                    m="3rem"
+                    m="1rem"
                     // align="center"
                     // style={{ justifyContent: 'center' }}
                   >
@@ -575,7 +575,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                   }}
                 >
                   <div className="card flex h-full flex-col justify-center">
-                    <div className="card-body">
+                    <div className="card-body" style={{ padding: '.5rem' }}>
                       <div className="pb-4">
                         <Title
                           // className={`label ${montserrat.className}`}

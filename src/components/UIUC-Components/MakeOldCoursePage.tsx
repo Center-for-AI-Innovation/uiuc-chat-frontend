@@ -82,7 +82,11 @@ const MakeOldCoursePage = ({
 
   return (
     <>
-      <Navbar course_name={course_name} bannerUrl={bannerUrl} />
+      <Navbar
+        course_name={course_name}
+        bannerUrl={bannerUrl}
+        showSettingsNav={true}
+      />
 
       <Head>
         <title>{course_name} - Admin page - UIUC.chat</title>
