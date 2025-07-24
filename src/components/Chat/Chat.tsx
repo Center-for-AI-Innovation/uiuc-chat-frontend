@@ -1,5 +1,9 @@
 // src/components/Chat/Chat.tsx
-import { IconArrowRight, IconAlertCircle } from '@tabler/icons-react'
+import {
+  IconArrowRight,
+  IconAlertCircle,
+  IconSettings,
+} from '@tabler/icons-react'
 import {
   type MutableRefObject,
   memo,
@@ -1897,16 +1901,28 @@ export const Chat = memo(
           />
           <link rel="icon" href="/favicon.ico" />
         </Head>
+
         <SourcesSidebarProvider>
-          <div className="overflow-wrap relative flex h-screen w-full flex-col overflow-hidden bg-[--background] text-[--foreground]">
+          <div className="overflow-wrap relative flex h-full w-full flex-col overflow-hidden bg-[--background] text-[--foreground]">
+            {/*
             <div className="justify-center" style={{ height: '40px' }}>
               <ChatNavbar bannerUrl={bannerUrl as string} isgpt4={true} />
             </div>
-            <div className="mt-10 max-w-full flex-grow overflow-y-auto overflow-x-hidden">
+*/}
+            <div className="relative max-w-full flex-grow overflow-y-auto overflow-x-hidden">
               {modelError ? (
                 <ErrorMessageDiv error={modelError} />
               ) : (
                 <>
+                  <button
+                    className="absolute right-4 top-4 rounded-md border border-[--background-faded] p-[.15rem] text-[--foreground] hover:bg-[--background-faded] hover:text-[--foreground]"
+                    onClick={() => {
+                      if (courseName) router.push(`/${courseName}/dashboard`)
+                    }}
+                  >
+                    <IconSettings stroke={1} className="scale-75" />
+                  </button>
+
                   <motion.div
                     key={selectedConversation?.id}
                     className="mt-4 max-h-full"

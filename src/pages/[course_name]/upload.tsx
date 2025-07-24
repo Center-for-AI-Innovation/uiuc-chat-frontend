@@ -91,7 +91,7 @@ const CourseMain: NextPage = () => {
   return (
     <>
       {' '}
-      <Navbar course_name={projectName} />
+      <Navbar course_name={projectName} showSettingsNav={true} />
       <Head>
         <title>{projectName}/upload</title>
         <meta

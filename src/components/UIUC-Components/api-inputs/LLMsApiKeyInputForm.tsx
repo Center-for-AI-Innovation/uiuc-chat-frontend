@@ -591,7 +591,7 @@ export default function APIKeyInputForm() {
 
   return (
     <>
-      <Navbar course_name={projectName} />
+      <Navbar course_name={projectName} showSettingsNav={true} />
 
       <Head>
         <title>{projectName}/LLMs</title>
@@ -604,12 +604,7 @@ export default function APIKeyInputForm() {
 
       <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
         <div className="items-left flex w-full flex-col justify-center py-0">
-          <Flex
-            direction="column"
-            align="center"
-            w="100%"
-            className="mt-8 lg:mt-4"
-          >
+          <Flex direction="column" align="center" w="100%">
             <Card
               withBorder
               padding="none"
@@ -635,12 +630,12 @@ export default function APIKeyInputForm() {
                     direction="column"
                     justify="flex-start"
                     align="flex-start"
-                    className="lg:ml-8"
+                    className="lg:ml-4"
                   >
                     <Title
                       order={2}
                       align="left"
-                      className={`pl-8 pr-2 pt-8 ${montserrat_heading.variable} font-montserratHeading text-[--foreground]`}
+                      className={`pl-4 pr-2 pt-4 ${montserrat_heading.variable} font-montserratHeading text-[--foreground]`}
                     >
                       {/* API Keys: Add LLMs to your Chatbot */}
                       Configure LLM Providers for your Chatbot
@@ -805,7 +800,7 @@ export default function APIKeyInputForm() {
                   }}
                 >
                   <div className="card flex h-full flex-col justify-center">
-                    <div className="card-body">
+                    <div className="card-body" style={{ padding: '.5rem' }}>
                       <div className="pb-4">
                         <Title
                           className={`label ${montserrat_heading.variable} font-montserratHeading`}

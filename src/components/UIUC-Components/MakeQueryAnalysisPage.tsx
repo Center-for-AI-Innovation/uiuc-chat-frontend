@@ -392,7 +392,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
   return (
     <>
-      <Navbar course_name={course_name} />
+      <Navbar course_name={course_name} showSettingsNav={true} />
 
       <Head>
         <title>{course_name}</title>
