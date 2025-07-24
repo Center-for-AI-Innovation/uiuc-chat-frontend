@@ -4,7 +4,6 @@ import Head from 'next/head'
 import Link from 'next/link'
 import React, { useState, useEffect } from 'react'
 import { ArrowNarrowRight, ExternalLink } from 'tabler-icons-react'
-import ProjectTable from '~/components/UIUC-Components/ProjectTable'
 import { Card, Button } from '@mantine/core'
 
 import { LandingPageHeader } from '~/components/UIUC-Components/navbars/GlobalHeader'
@@ -289,7 +288,7 @@ const Home: NextPage = () => {
           </div>
 
           <div className="mt-12 w-[100vw] rounded-lg bg-[--dashboard-background-faded] p-8 pb-14">
-            <div className="mb-6 w-full text-center ">
+            <div className="mb-0 w-full text-center ">
               <h2
                 className={`
                   text-2xl font-bold sm:pt-2 
@@ -315,10 +314,6 @@ const Home: NextPage = () => {
               </div>
             </div>
           </div>
-        </div>
-
-        <div className="mb-12 w-full px-2 pt-4 text-center sm:mt-[-24px] sm:px-4">
-          <ProjectTable />
         </div>
 
         {/* orange banner */}

@@ -562,7 +562,7 @@ export default function Navbar({
     {
       name: <NavText>My Dashboard</NavText>,
       icon: <DashboardIcon />,
-      link: course_name ? `/${course_name}/dashboard` : '/dashboard', // Add conditional
+      link: '/dashboard', // Add conditional course_name ? `/${course_name}/dashboard` :
     },
     {
       name: <NavText>Explore Chatbots</NavText>,
@@ -578,9 +578,9 @@ export default function Navbar({
 
   const settingsNavItems: NavItem[] = [
     {
-      name: <NavText>Dashboard</NavText>,
+      name: <NavText>Settings</NavText>,
       icon: <DashboardIcon />,
-      link: course_name ? `/${course_name}/dashboard` : '/dashboard', // Add conditional
+      link: course_name ? `/${course_name}/settings` : '/settings', // Add conditional
     },
     {
       name: <NavText>LLMs</NavText>,

@@ -244,18 +244,18 @@ const ListProjectTable: React.FC = () => {
 
     return (
       <>
-        <div className="mx-auto w-full max-w-[950px] md:w-11/12 lg:w-5/6">
+        <div className="mx-auto p-8">
           <Title
             order={2}
-            ta="center"
             className={`
               text-2xl font-bold sm:pt-2 
               ${montserrat_heading.variable} font-montserratHeading
             `}
             style={{ color: 'var(--foreground)' }}
           >
-            Your Chatbots
+            My Dashboard
           </Title>
+
           {rows.length > 0 ? (
             <>
               <p
@@ -268,13 +268,12 @@ const ListProjectTable: React.FC = () => {
                 These are projects you&apos;ve created, or where you are an
                 admin.
               </p>
+
               <div
                 style={{
                   overflowX: 'auto',
                   width: '100%',
-                  backgroundColor: 'white',
-                  boxShadow: '0px 0px 10px 2px rgba(0, 0, 0, 0.1)',
-                  borderRadius: '15px',
+                  backgroundColor: 'var(--background-faded)',
                 }}
               >
                 <StyledTable>
@@ -295,7 +294,7 @@ const ListProjectTable: React.FC = () => {
                             style={{
                               display: 'flex',
                               alignItems: 'center',
-                              justifyContent: 'center',
+                              justifyContent: 'flex-start',
                               gap: '4px',
                             }}
                           >
