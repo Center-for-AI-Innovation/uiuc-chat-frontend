@@ -75,6 +75,7 @@ export async function processChunkWithStateMachine(
   stateMachineContext: { state: State; buffer: string },
   citationLinkCache: Map<number, string>,
   courseName: string,
+  removeCitations?: boolean,
 ): Promise<string> {
   let { state, buffer } = stateMachineContext
   let processedChunk = ''
@@ -160,6 +161,7 @@ export async function processChunkWithStateMachine(
                 lastMessage,
                 citationLinkCache,
                 courseName,
+                removeCitations,
               )
               processedChunk += processedCitation
               buffer = ''
@@ -225,6 +227,7 @@ export async function processChunkWithStateMachine(
             lastMessage,
             citationLinkCache,
             courseName,
+            removeCitations,
           )
           buffer = ''
           if (

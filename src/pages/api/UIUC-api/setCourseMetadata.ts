@@ -69,6 +69,7 @@ const setCourseMetadata = async (req: any, res: any) => {
       guidedLearning,
       systemPromptOnly,
       vector_search_rewrite_disabled,
+      removeCitations: false,
     }
     console.log('Right before setting course_metadata with: ', course_metadata)
     await redisClient.hSet('course_metadatas', {

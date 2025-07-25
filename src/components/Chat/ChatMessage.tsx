@@ -40,6 +40,137 @@ import { FeedbackModal } from './FeedbackModal'
 import { saveConversationToServer } from '@/utils/app/conversation'
 import SourcesSidebar from '../UIUC-Components/SourcesSidebar'
 
+// Add MarkdownLink component definition
+const MarkdownLink: React.FC<{
+  href?: string
+  title?: string
+  children: React.ReactNode
+  removeCitations?: boolean
+  messageContexts?: ContextWithMetadata[]
+  messageIsStreaming?: boolean
+  messageIndex?: number
+  selectedConversationLength?: number
+}> = ({
+  href,
+  title,
+  children,
+  removeCitations,
+  messageContexts,
+  messageIsStreaming,
+  messageIndex,
+  selectedConversationLength,
+}) => {
+  // All hooks at the top!
+  const linkRef = React.useRef<HTMLAnchorElement>(null)
+  const [tooltipAlignment, setTooltipAlignment] = React.useState<
+    'center' | 'left' | 'right'
+  >('center')
+  const [showTooltip, setShowTooltip] = React.useState(false)
+
+  const handleClick = React.useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      e.preventDefault()
+      if (href) {
+        window.open(href, '_blank')?.focus()
+      }
+    },
+    [href],
+  )
+
+  const handleMouseEnter = React.useCallback(() => {
+    if (!linkRef.current || !title) return
+    setShowTooltip(true)
+    const linkRect = linkRef.current.getBoundingClientRect()
+    const tooltipWidth = 200
+    if (linkRect.left < tooltipWidth / 2) {
+      setTooltipAlignment('left')
+    } else if (linkRect.right + tooltipWidth / 2 > window.innerWidth) {
+      setTooltipAlignment('right')
+    } else {
+      setTooltipAlignment('center')
+    }
+  }, [title])
+
+  const handleMouseLeave = React.useCallback(() => {
+    setShowTooltip(false)
+  }, [])
+
+  const firstChild = children && Array.isArray(children) ? children[0] : null
+
+  const isCitationByTitle =
+    title && (title.startsWith('Citation ') || title.startsWith('Citations '))
+  const isCitationByContent =
+    typeof firstChild === 'string' &&
+    (Array.isArray(messageContexts)
+      ? messageContexts.some(
+          (ctx) =>
+            ctx.readable_filename && firstChild.includes(ctx.readable_filename),
+        )
+      : false)
+  const isOldFormatCitation =
+    typeof firstChild === 'string' && firstChild.includes(' | ')
+
+  const isValidCitation =
+    isCitationByTitle || isCitationByContent || isOldFormatCitation
+
+  const isCurrentlyStreaming =
+    messageIsStreaming && messageIndex === (selectedConversationLength ?? 0) - 1
+
+  const commonProps = {
+    id: 'styledLink',
+    href,
+    target: '_blank',
+    rel: 'noopener noreferrer',
+    onMouseUp: handleClick,
+    onMouseEnter: handleMouseEnter,
+    onMouseLeave: handleMouseLeave,
+    onClick: (e: React.MouseEvent) => e.preventDefault(),
+    style: { pointerEvents: 'all' as const },
+    ref: linkRef,
+  }
+
+  if (removeCitations && isValidCitation) {
+    return <span>{children}</span>
+  }
+
+  if (isValidCitation) {
+    const tooltipClass = `citation-tooltip-container ${
+      tooltipAlignment === 'left'
+        ? 'left-align'
+        : tooltipAlignment === 'right'
+          ? 'right-align'
+          : ''
+    } ${isCurrentlyStreaming ? 'streaming-tooltip' : ''}`
+
+    return (
+      <span className="citation-wrapper" style={{ display: 'inline' }}>
+        <a {...commonProps} className={'supMarkDown'}>
+          {children}
+          {title && (
+            <span
+              className={tooltipClass}
+              style={{
+                visibility:
+                  isCurrentlyStreaming && showTooltip ? 'visible' : undefined,
+                opacity: isCurrentlyStreaming && showTooltip ? 1 : undefined,
+              }}
+            >
+              <span className="citation-tooltip">{title}</span>
+            </span>
+          )}
+        </a>
+      </span>
+    )
+  } else {
+    return (
+      <a {...commonProps} className={'linkMarkDown'}>
+        {children}
+      </a>
+    )
+  }
+}
+
 const useStyles = createStyles((theme) => ({
   imageContainerStyle: {
     maxWidth: '25%',
@@ -1104,7 +1235,21 @@ export const ChatMessage = memo(
                   )
                 },
                 a({ node, className, children, ...props }) {
-                  return <MarkdownLink {...props}>{children}</MarkdownLink>
+                  // Only add new props, do not change any logic
+                  return (
+                    <MarkdownLink
+                      {...props}
+                      removeCitations={removeCitations}
+                      messageContexts={message.contexts}
+                      messageIsStreaming={messageIsStreaming}
+                      messageIndex={messageIndex}
+                      selectedConversationLength={
+                        selectedConversation?.messages.length
+                      }
+                    >
+                      {children}
+                    </MarkdownLink>
+                  )
                 },
               }}
             >
@@ -1116,148 +1261,6 @@ export const ChatMessage = memo(
           )}
         </>
       )
-    }
-
-    // Add MarkdownLink component definition
-    const MarkdownLink: React.FC<{
-      href?: string
-      title?: string
-      children: React.ReactNode
-    }> = ({ href, title, children }) => {
-      const firstChild =
-        children && Array.isArray(children) ? children[0] : null
-
-      // Check if this is a citation link by looking for:
-      // 1. Title attribute containing "Citation" or "Citations"
-      // 2. Content that includes document titles from contexts
-      // 3. The old format with pipe and citation number
-      const isCitationByTitle =
-        title &&
-        (title.startsWith('Citation ') || title.startsWith('Citations '))
-      const isCitationByContent =
-        typeof firstChild === 'string' &&
-        (Array.isArray(message.contexts)
-          ? message.contexts.some(
-              (ctx) =>
-                ctx.readable_filename &&
-                firstChild.includes(ctx.readable_filename),
-            )
-          : false)
-      const isOldFormatCitation =
-        typeof firstChild === 'string' && firstChild.includes(' | ')
-
-      const isValidCitation =
-        isCitationByTitle || isCitationByContent || isOldFormatCitation
-
-      // ADD THIS CONDITION: Hide citation links if removeCitations is true
-      if (removeCitations && isValidCitation) {
-        // Return just the text content without the link
-        return <span>{children}</span>
-      }
-
-      const handleClick = useCallback(
-        (e: React.MouseEvent) => {
-          e.stopPropagation()
-          e.preventDefault()
-          if (href) {
-            window.open(href, '_blank')?.focus()
-          }
-        },
-        [href],
-      )
-
-      // Reference to the link element
-      const linkRef = React.useRef<HTMLAnchorElement>(null)
-      // State to track tooltip alignment
-      const [tooltipAlignment, setTooltipAlignment] = React.useState<
-        'center' | 'left' | 'right'
-      >('center')
-      // State to track if tooltip should be shown
-      const [showTooltip, setShowTooltip] = useState(false)
-
-      // Check if tooltip needs alignment adjustment when link is hovered
-      const handleMouseEnter = useCallback(() => {
-        if (!linkRef.current || !title) return
-
-        // Set tooltip visibility
-        setShowTooltip(true)
-
-        const linkRect = linkRef.current.getBoundingClientRect()
-        const tooltipWidth = 200 // Approximate width of tooltip
-
-        // Check if tooltip would overflow left or right side of viewport
-        if (linkRect.left < tooltipWidth / 2) {
-          setTooltipAlignment('left')
-        } else if (linkRect.right + tooltipWidth / 2 > window.innerWidth) {
-          setTooltipAlignment('right')
-        } else {
-          setTooltipAlignment('center')
-        }
-      }, [title])
-
-      // Handle mouse leave to hide tooltip
-      const handleMouseLeave = useCallback(() => {
-        setShowTooltip(false)
-      }, [])
-
-      // Check if this message is currently streaming
-      const isCurrentlyStreaming =
-        messageIsStreaming &&
-        messageIndex === (selectedConversation?.messages.length ?? 0) - 1
-
-      const commonProps = {
-        id: 'styledLink',
-        href,
-        target: '_blank',
-        rel: 'noopener noreferrer',
-        onMouseUp: handleClick,
-        onMouseEnter: handleMouseEnter,
-        onMouseLeave: handleMouseLeave,
-        onClick: (e: React.MouseEvent) => e.preventDefault(), // Prevent default click behavior
-        style: { pointerEvents: 'all' as const },
-        ref: linkRef,
-      }
-
-      if (isValidCitation) {
-        // Determine tooltip class based on streaming state
-        const tooltipClass = `citation-tooltip-container ${
-          tooltipAlignment === 'left'
-            ? 'left-align'
-            : tooltipAlignment === 'right'
-              ? 'right-align'
-              : ''
-        } ${isCurrentlyStreaming ? 'streaming-tooltip' : ''}`
-
-        return (
-          <span className="citation-wrapper" style={{ display: 'inline' }}>
-            <a {...commonProps} className={'supMarkDown'}>
-              {children}
-              {title && (
-                <span
-                  className={tooltipClass}
-                  style={{
-                    // Force visibility based on hover state when streaming
-                    visibility:
-                      isCurrentlyStreaming && showTooltip
-                        ? 'visible'
-                        : undefined,
-                    opacity:
-                      isCurrentlyStreaming && showTooltip ? 1 : undefined,
-                  }}
-                >
-                  <span className="citation-tooltip">{title}</span>
-                </span>
-              )}
-            </a>
-          </span>
-        )
-      } else {
-        return (
-          <a {...commonProps} className={'linkMarkDown'}>
-            {children}
-          </a>
-        )
-      }
     }
 
     // Fix the handleFeedbackSubmit function to match the expected signature

@@ -133,6 +133,7 @@ export const WebScrape = ({
           guidedLearning: undefined,
           systemPromptOnly: undefined,
           vector_search_rewrite_disabled: undefined,
+          removeCitations: false,
         })
         if (!response) {
           throw new Error('Error while setting course metadata')
@@ -283,9 +284,11 @@ export const WebScrape = ({
         scrapeStrategy,
       })
 
-      console.log('Response from Next.js API web scraping endpoint:', response.data)
+      console.log(
+        'Response from Next.js API web scraping endpoint:',
+        response.data,
+      )
       return response.data
-
     } catch (error: any) {
       console.error('Error during web scraping:', error)
 
@@ -329,16 +332,13 @@ export const WebScrape = ({
     try {
       if (!url || !courseName || !localDir) return null
       console.log('calling downloadMITCourse')
-      const response = await axios.get(
-        `/api/UIUC-api/downloadMITCourse`,
-        {
-          params: {
-            url: url,
-            course_name: courseName,
-            local_dir: localDir,
-          },
+      const response = await axios.get(`/api/UIUC-api/downloadMITCourse`, {
+        params: {
+          url: url,
+          course_name: courseName,
+          local_dir: localDir,
         },
-      )
+      })
       return response.data
     } catch (error) {
       console.error('Error during MIT course download:', error)
