@@ -15,7 +15,7 @@ import { ClearConversations } from './ClearConversations'
 // import { PluginKeys } from './PluginKeys'
 
 export const ChatbarSettings = () => {
-  const { t } = useTranslation('sidebar')
+  const { t } = useTranslation('common')
   const [isSettingDialogOpen, setIsSettingDialog] = useState<boolean>(false)
 
   const {
@@ -43,7 +43,7 @@ export const ChatbarSettings = () => {
       ) : null}
 
       <SidebarButton
-        text={t('export_history')}
+        text={t('sidebar.exportHistory')}
         icon={<IconFileExport size={18} />}
         onClick={() => handleExportData()}
         loading={isExporting}

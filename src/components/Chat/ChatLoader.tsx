@@ -5,7 +5,7 @@ import { useTranslation } from 'next-i18next'
 interface Props { }
 
 export const ChatLoader: FC<Props> = () => {
-  const { t } = useTranslation('chat')
+  const { t } = useTranslation('common')
   return (
     <div
       className="group border-b border-black/10 bg-gray-50 text-gray-800 dark:border-gray-900/50 dark:bg-[#202134] dark:text-gray-100"

@@ -53,7 +53,7 @@ export default function GeminiProviderInput({
                   mb="xs"
                   style={{ paddingRight: '8px' }}
                 >
-                  {t('gemini_title')}
+                  {t('models.gemini.title')}
                 </Text>
                 <IconExternalLink size={16} className="mb-3" />
               </div>
@@ -64,9 +64,9 @@ export default function GeminiProviderInput({
               <Switch
                 size="md"
                 labelPosition="left"
-                onLabel={t('on')}
-                offLabel={t('off')}
-                aria-label={t('enable_gemini_provider') || ''}
+                onLabel={t('models.on')}
+                offLabel={t('models.off')}
+                aria-label={t('models.enable_model', { model: 'Gemini' })}
                 checked={field.state.value}
                 onChange={(event) => {
                   event.preventDefault()
@@ -113,6 +113,10 @@ export default function GeminiProviderInput({
             </Text>
           )}
 
+        <Text size="sm" color="dimmed" mb="md">
+          {t('models.gemini.description')}
+        </Text>
+
         <form.Field name={`providers.${ProviderNames.Gemini}.enabled`}>
           {(field: any) => (
             <AnimatePresence>
@@ -125,7 +129,10 @@ export default function GeminiProviderInput({
                 >
                   <form.Field name={`providers.${ProviderNames.Gemini}.apiKey`}>
                     {(field: any) => (
-                      <APIKeyInput field={field} placeholder={t('gemini_api_key') || ''} />
+                      <APIKeyInput
+                        field={field}
+                        placeholder={t('models.gemini.title')}
+                      />
                     )}
                   </form.Field>
 

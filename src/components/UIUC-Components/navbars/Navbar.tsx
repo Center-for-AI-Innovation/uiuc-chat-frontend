@@ -401,7 +401,7 @@ export default function Navbar({
     {
       name: (
         <Indicator
-          label="New"
+          label={t('common.new')}
           color="hsl(280,100%,70%)"
           size={13}
           styles={{ indicator: { top: '-4px !important' } }}

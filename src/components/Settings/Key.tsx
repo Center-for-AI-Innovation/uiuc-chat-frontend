@@ -11,7 +11,7 @@ interface Props {
 }
 
 export const Key: FC<Props> = ({ apiKey, onApiKeyChange }) => {
-  const { t } = useTranslation('sidebar')
+  const { t } = useTranslation('common')
   const [isChanging, setIsChanging] = useState(false)
   const [newKey, setNewKey] = useState(apiKey)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -45,7 +45,7 @@ export const Key: FC<Props> = ({ apiKey, onApiKeyChange }) => {
         value={newKey}
         onChange={(e) => setNewKey(e.target.value)}
         onKeyDown={handleEnterDown}
-        placeholder={t('api_key') || ''}
+        placeholder={t('sidebar.apiKey') || ''}
       />
 
       <div className="flex w-[40px]">
@@ -71,7 +71,7 @@ export const Key: FC<Props> = ({ apiKey, onApiKeyChange }) => {
     </div>
   ) : (
     <SidebarButton
-      text={t('openai_api_key')}
+      text={t('sidebar.openaiApiKeyLabel')}
       icon={<IconKey size={18} />}
       onClick={() => setIsChanging(true)}
     />

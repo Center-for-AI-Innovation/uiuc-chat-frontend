@@ -202,7 +202,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
       } else {
         showNotification({
           title: t('error'),
-          message: t('failed_to_fetch_api_key'),
+          message: t('api.error.failed_to_fetch'),
           color: 'red',
         })
       }
@@ -225,13 +225,13 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
       const data = await response.json()
       setApiKey(data.apiKey)
       showNotification({
-        title: t('success'),
-        message: t('api_key_generated_successfully'),
+        title: t('api.success.title'),
+        message: t('api.success.key_generated'),
       })
     } else {
       showNotification({
         title: t('error'),
-        message: t('failed_to_generate_api_key'),
+        message: t('api.error.failed_to_generate'),
         color: 'red',
       })
     }
@@ -250,13 +250,13 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
       const data = await response.json()
       setApiKey(data.newApiKey)
       showNotification({
-        title: t('success'),
-        message: t('api_key_rotated_successfully'),
+        title: t('api.success.title'),
+        message: t('api.success.key_rotated'),
       })
     } else {
       showNotification({
         title: t('error'),
-        message: t('failed_to_rotate_api_key'),
+        message: t('api.error.failed_to_rotate'),
         color: 'red',
       })
     }
@@ -274,13 +274,13 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
     if (response.ok) {
       setApiKey(null)
       showNotification({
-        title: t('success'),
-        message: t('api_key_deleted_successfully'),
+        title: t('api.success.title'),
+        message: t('api.success.key_deleted'),
       })
     } else {
       showNotification({
         title: t('error'),
-        message: t('failed_to_delete_api_key'),
+        message: t('api.error.failed_to_delete'),
         color: 'red',
       })
     }
@@ -327,7 +327,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                   order={2}
                   className={`${montserrat_heading.variable} font-montserratHeading text-lg text-white/90 sm:text-2xl`}
                 >
-                  {t('api_key_management')}
+                  {t('api.key_management')}
                 </Title>
                 <Text className="text-white/60">/</Text>
                 <Title
@@ -404,7 +404,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                         variant="gradient"
                         gradient={{ from: 'gold', to: 'white', deg: 50 }}
                       >
-                        {t('api_documentation')}
+                        {t('api.documentation')}
                       </Text>
                     </Flex>
                     <div
@@ -429,7 +429,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                         size="md"
                         className={`${montserrat_paragraph.variable} select-text font-montserratParagraph`}
                       >
-                        {t('api_stateless_info')}
+                        {t('api.stateless_info')}
                       </Text>
                       <List
                         withPadding
@@ -456,7 +456,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            {t('openai_api_documentation')}
+                            {t('api.openai_docs')}
                             <IconExternalLink
                               size={18}
                               className="inline-block pl-1"
@@ -473,7 +473,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            {t('uiuc_chat_api_documentation')}
+                            {t('api.uiuc_docs')}
                             <IconExternalLink
                               size={18}
                               className="inline-block pl-1"
@@ -488,17 +488,17 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                         order={5}
                         style={{ marginTop: '1.5rem' }}
                       >
-                        {t('notes')}
+                        {t('api.notes')}
                       </Title>
                       <List
                         withPadding
                         className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                         spacing="xs"
                       >
-                        <List.Item>{t('note_ncsa_models')}</List.Item>
-                        <List.Item>{t('note_gpt4o_mini')}</List.Item>
-                        <List.Item>{t('note_llm_keys')}</List.Item>
-                        <List.Item>{t('note_rag_results')}</List.Item>
+                        <List.Item>{t('api.note_ncsa_models')}</List.Item>
+                        <List.Item>{t('api.note_gpt4o_mini')}</List.Item>
+                        <List.Item>{t('api.note_llm_keys')}</List.Item>
+                        <List.Item>{t('api.note_rag_results')}</List.Item>
                       </List>
                     </div>
                   </Collapse>
@@ -545,7 +545,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                 order={2}
                 style={{ marginBottom: '1rem' }}
               >
-                {t('your_api_key')}
+                {t('api.your_key')}
               </Title>
               {apiKey && (
                 <Input
@@ -578,7 +578,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                 className="min-w-[5rem] self-center rounded-md bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none"
                 // w={'60%'}
               >
-                {t('generate_api_key')}
+                {t('api.generate_key')}
               </Button>
             )}
             {apiKey && !loading && (
@@ -598,7 +598,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                     className="min-w-[5rem] rounded-md bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none"
                     w={'auto'}
                   >
-                    {t('rotate_api_key')}
+                    {t('api.rotate_key')}
                   </Button>
                   <Button
                     onClick={handleDelete}
@@ -608,7 +608,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                     className="min-w-[5rem] rounded-md bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none"
                     w={'auto'}
                   >
-                    {t('delete_api_key')}
+                    {t('api.delete_key')}
                   </Button>
                 </Group>
               </>

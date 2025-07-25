@@ -188,8 +188,8 @@ export const UploadCard = memo(function UploadCard({
                     sm:px-4 sm:text-base
                   `}
                 >
-                  <span className="hidden sm:inline">{t('share.share_chatbot')}</span>
-                  <span className="inline sm:hidden">{t('share.share')}</span>
+                  <span className="hidden sm:inline">{t('upload_cards.share_chatbot')}</span>
+                  <span className="inline sm:hidden">{t('upload_cards.share')}</span>
                   <IconShare size={12} className="ml-1 inline sm:hidden" />
                   <IconShare size={20} className="ml-2 hidden sm:inline" />
                 </Button>
@@ -268,10 +268,10 @@ export const UploadCard = memo(function UploadCard({
                 gradient={{ from: 'gold', to: 'white', deg: 170 }}
                 order={3}
               >
-                {t('project_description')}
+                {t('upload.project_description')}
               </Title>
               <Textarea
-                placeholder={t('describe_project_placeholder') || ''}
+                placeholder={t('upload.describe_project_placeholder') as string}
                 radius={'sm'}
                 value={projectDescription}
                 onChange={(e) => setProjectDescription(e.target.value)}
@@ -304,7 +304,7 @@ export const UploadCard = memo(function UploadCard({
                   }
                 }}
               >
-                {t('update')}
+                {t('upload.update')}
               </Button>
             </div>
 
@@ -315,7 +315,7 @@ export const UploadCard = memo(function UploadCard({
                 gradient={{ from: 'gold', to: 'white', deg: 170 }}
                 order={3}
               >
-                {t('branding')}
+                {t('upload.branding')}
               </Title>
 
               <div className="form-control relative">
@@ -323,20 +323,20 @@ export const UploadCard = memo(function UploadCard({
                   className={`label ${montserrat_heading.variable} font-montserratHeading`}
                 >
                   <span className="label-text text-lg text-neutral-200">
-                    {t('set_greeting')}
+                    {t('upload.set_greeting')}
                   </span>
                 </label>
                 <Text
                   className={`label ${montserrat_light.className} pt-0`}
                   size={'sm'}
                 >
-                  {t('shown_before_first_chat')}
+                  {t('upload.shown_before_first_chat')}
                 </Text>
                 <Textarea
                   autosize
                   minRows={2}
                   maxRows={4}
-                  placeholder={t('greeting_placeholder') || ''}
+                  placeholder={t('upload.greeting_placeholder') as string}
                   className={`w-full ${montserrat_paragraph.variable} font-montserratParagraph`}
                   value={introMessage}
                   onChange={(e) => {
@@ -368,7 +368,7 @@ export const UploadCard = memo(function UploadCard({
                         }
                       }}
                     >
-                      {t('submit')}
+                      {t('upload.submit')}
                     </Button>
                   </>
                 )}
@@ -377,7 +377,7 @@ export const UploadCard = memo(function UploadCard({
                 className={`label ${montserrat_heading.variable} font-montserratHeading`}
               >
                 <span className="label-text text-lg text-neutral-200">
-                  {t('set_example_questions')}
+                  {t('upload.set_example_questions')}
                 </span>
               </label>
               <Text
@@ -385,7 +385,7 @@ export const UploadCard = memo(function UploadCard({
                 mb={-3}
                 size={'sm'}
               >
-                {t('users_try_example_questions')}
+                {t('upload.users_try_example_questions')}
               </Text>
               <SetExampleQuestions
                 course_name={projectName}
@@ -396,14 +396,14 @@ export const UploadCard = memo(function UploadCard({
                   className={`label ${montserrat_heading.variable} font-montserratHeading`}
                 >
                   <span className="label-text text-lg text-neutral-200">
-                    {t('upload_logo')}
+                    {t('upload.upload_logo')}
                   </span>
                 </label>
                 <Text
                   size={'sm'}
                   className={`label ${montserrat_light.className}`}
                 >
-                  {t('logo_header_notice')}
+                  {t('upload.logo_header_notice')}
                 </Text>
                 <div className="relative">
                   <input

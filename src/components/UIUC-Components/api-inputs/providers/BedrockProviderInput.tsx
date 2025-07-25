@@ -141,7 +141,7 @@ export default function BedrockProviderInput({
                   mb="xs"
                   style={{ paddingRight: '8px' }}
                 >
-                  {t('bedrock_title')}
+                  {t('models.bedrock.title')}
                 </Text>
                 <IconExternalLink size={16} className="mb-3" />
               </div>
@@ -152,9 +152,9 @@ export default function BedrockProviderInput({
               <Switch
                 size="md"
                 labelPosition="left"
-                onLabel={t('on') || ''}
-                offLabel={t('off') || ''}
-                aria-label={t('enable_bedrock_provider') || ''}
+                onLabel={t('models.on')}
+                offLabel={t('models.off')}
+                aria-label={t('models.enable_model', { model: 'Bedrock' }) || ''}
                 checked={field.state.value}
                 onChange={(event) => {
                   event.preventDefault()
@@ -182,6 +182,10 @@ export default function BedrockProviderInput({
             )}
           </form.Field>
         </div>
+
+        <Text size="sm" color="dimmed" mb="md">
+          {t('models.bedrock.description')}
+        </Text>
 
         {provider?.error &&
           (form.state.values?.providers?.Bedrock?.enabled ||
@@ -217,7 +221,7 @@ export default function BedrockProviderInput({
                     {(field: any) => (
                       <CredentialInput
                         field={field}
-                        placeholder={t('bedrock_access_key_id') || ''}
+                        placeholder={t('models.fields.bedrock_access_key_id')}
                         onEnterPress={handleSaveCredentials}
                       />
                     )}
@@ -229,7 +233,7 @@ export default function BedrockProviderInput({
                     {(field: any) => (
                       <CredentialInput
                         field={field}
-                        placeholder={t('bedrock_secret_access_key') || ''}
+                        placeholder={t('models.fields.bedrock_secret_access_key')}
                         onEnterPress={handleSaveCredentials}
                       />
                     )}
@@ -241,7 +245,7 @@ export default function BedrockProviderInput({
                     {(field: any) => (
                       <CredentialInput
                         field={field}
-                        placeholder={t('bedrock_region') || ''}
+                        placeholder={t('models.fields.bedrock_region')}
                         onEnterPress={handleSaveCredentials}
                       />
                     )}

@@ -12,7 +12,7 @@ interface Props {
 export const ClearConversations: FC<Props> = ({ onClearConversations }) => {
   const [isConfirming, setIsConfirming] = useState<boolean>(false)
 
-  const { t } = useTranslation('sidebar')
+  const { t } = useTranslation('common')
 
   const handleClearConversations = () => {
     onClearConversations()
@@ -24,7 +24,7 @@ export const ClearConversations: FC<Props> = ({ onClearConversations }) => {
       <IconTrash size={18} />
 
       <div className="ml-3 flex-1 text-left text-[12.5px] leading-3 text-white">
-        {t('are_you_sure')}
+        {t('sidebar.areYouSure')}
       </div>
 
       <div className="flex w-[40px]">
@@ -49,7 +49,7 @@ export const ClearConversations: FC<Props> = ({ onClearConversations }) => {
     </div>
   ) : (
     <SidebarButton
-      text={t('clear_conversations')}
+      text={t('sidebar.clearConversations')}
       icon={<IconTrash size={18} />}
       onClick={() => setIsConfirming(true)}
     />

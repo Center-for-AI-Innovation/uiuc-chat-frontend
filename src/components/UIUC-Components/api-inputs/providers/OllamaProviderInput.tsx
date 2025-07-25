@@ -51,7 +51,7 @@ export default function OllamaProviderInput({
                   mb="xs"
                   style={{ paddingRight: '8px' }}
                 >
-                  Ollama
+                  {t('models.ollama.title')}
                 </Text>
                 <IconExternalLink size={16} className="mb-3" />
               </div>
@@ -62,9 +62,9 @@ export default function OllamaProviderInput({
               <Switch
                 size="md"
                 labelPosition="left"
-                onLabel="ON"
-                offLabel="OFF"
-                aria-label="Enable Ollama provider"
+                onLabel={t('models.on')}
+                offLabel={t('models.off')}
+                aria-label={t('models.enable_model', { model: 'Ollama' })}
                 checked={field.state.value}
                 onChange={(event) => {
                   field.handleChange(event.currentTarget.checked)
@@ -93,7 +93,7 @@ export default function OllamaProviderInput({
           </form.Field>
         </div>
         <Text size="sm" color="dimmed" mb="md">
-          {t('ollama_helper_text')}
+          {t('models.ollama.description')}
         </Text>
         {provider?.error &&
           (form.state.values?.providers?.Ollama?.enabled ||
@@ -134,8 +134,8 @@ export default function OllamaProviderInput({
                   >
                     {(field: any) => (
                       <TextInput
-                        label={t('ollama_base_url')}
-                        placeholder={t('ollama_base_url_placeholder') || ''}
+                        label={t('models.fields.base_url')}
+                        placeholder={t('models.fields.base_url_placeholder')}
                         value={field.state.value}
                         onChange={(event) =>
                           field.handleChange(event.currentTarget.value)

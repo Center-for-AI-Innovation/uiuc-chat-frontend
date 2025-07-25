@@ -137,7 +137,7 @@ const isApiKeyRequired = (provider: ProviderNames): boolean => {
 }
 
 const CourseMain: NextPage = () => {
-  const { t } = useTranslation('common')
+  const { t } = useTranslation(['common', 'prompt'])
   const theme = useMantineTheme()
   const router = useRouter()
 
@@ -867,7 +867,7 @@ CRITICAL: The optimized prompt must:
                           order={2}
                           className={`${montserrat_heading.variable} font-montserratHeading text-lg text-white/90 sm:text-2xl`}
                         >
-                          {t('prompting')}
+                          {t('common:prompting')}
                         </Title>
                         <Text className="text-white/60">/</Text>
                         <Title
@@ -950,7 +950,7 @@ CRITICAL: The optimized prompt must:
                                   deg: 50,
                                 }}
                               >
-                                {t('prompt_engineering_guide')}
+                                {t('prompt.engineering.guide')}
                               </Text>
                             </Flex>
                             <div
@@ -975,7 +975,7 @@ CRITICAL: The optimized prompt must:
                                 size="md"
                                 className={`${montserrat_paragraph.variable} select-text font-montserratParagraph`}
                               >
-                                {t('prompt_creation_insights')}
+                                {t('prompt.engineering.insights')}
                                 <List
                                   withPadding
                                   className="mt-2"
@@ -1001,7 +1001,7 @@ CRITICAL: The optimized prompt must:
                                       rel="noopener noreferrer"
                                       onClick={(e) => e.stopPropagation()}
                                     >
-                                      {t('openai_prompt_guide')}
+                                      {t('prompt.engineering.openai_guide')}
                                       <IconExternalLink
                                         size={18}
                                         className="inline-block pl-1"
@@ -1021,7 +1021,7 @@ CRITICAL: The optimized prompt must:
                                       rel="noopener noreferrer"
                                       onClick={(e) => e.stopPropagation()}
                                     >
-                                      {t('anthropic_prompt_library')}
+                                      {t('prompt.engineering.anthropic_library')}
                                       <IconExternalLink
                                         size={18}
                                         className="inline-block pl-1"
@@ -1038,7 +1038,7 @@ CRITICAL: The optimized prompt must:
                                   size="md"
                                   style={{ marginTop: '1.5rem' }}
                                 >
-                                  {t('system_prompt_description')}
+                                  {t('prompt.system.description')}
                                   <List
                                     withPadding
                                     className="mt-2"
@@ -1055,15 +1055,9 @@ CRITICAL: The optimized prompt must:
                                       />
                                     }
                                   >
-                                    <List.Item>
-                                      {t('key_instructions_examples')}
-                                    </List.Item>
-                                    <List.Item>
-                                      {t('warm_welcome_message')}
-                                    </List.Item>
-                                    <List.Item>
-                                      {t('helpful_links_learning')}
-                                    </List.Item>
+                                    <List.Item>{t('prompt.system.key_instructions')}</List.Item>
+                                    <List.Item>{t('prompt.system.welcome_message')}</List.Item>
+                                    <List.Item>{t('prompt.system.helpful_links')}</List.Item>
                                   </List>
                                 </Text>
                               </Text>
@@ -1106,10 +1100,10 @@ CRITICAL: The optimized prompt must:
                                   }}
                                   order={4}
                                 >
-                                  {t('system_prompt')}
+                                  {t('prompt.system.title')}
                                 </Title>
                                 <Select
-                                  placeholder="Select model"
+                                  placeholder={t('prompt.system.model_select') || 'Select model'}
                                   data={modelOptions}
                                   value={selectedModel}
                                   onChange={(value) =>
@@ -1351,7 +1345,7 @@ CRITICAL: The optimized prompt must:
                                   }
                                 />
                                 <Tooltip
-                                  label="The selected model will be used when Optimizing System Prompt"
+                                  label={t('prompt.system.model_tooltip')}
                                   position="top"
                                   multiline
                                   withArrow
@@ -1424,7 +1418,7 @@ CRITICAL: The optimized prompt must:
                                 autosize
                                 minRows={3}
                                 maxRows={20}
-                                placeholder={t('enter_system_prompt') || ''}
+                                placeholder={t('prompt.system.enter') || 'Enter the system prompt...'}
                                 className="px-1 pt-3 md:px-0"
                                 value={baseSystemPrompt}
                                 onChange={(e) => {
@@ -1471,7 +1465,7 @@ CRITICAL: The optimized prompt must:
                                   })}
                                   style={{ minWidth: 'fit-content' }}
                                 >
-                                  {t('update_system_prompt')}
+                                  {t('prompt.system.update')}
                                 </Button>
                                 <Button
                                   onClick={handleSubmitPromptOptimization}
@@ -1515,8 +1509,8 @@ CRITICAL: The optimized prompt must:
                                   style={{ minWidth: 'fit-content' }}
                                 >
                                   {isOptimizing
-                                    ? t('optimizing')
-                                    : t('optimize_system_prompt')}
+                                    ? t('prompt.system.optimizing')
+                                    : t('prompt.system.optimize')}
                                 </Button>
                               </Group>
 
@@ -1536,7 +1530,7 @@ CRITICAL: The optimized prompt must:
                                     }}
                                     variant="gradient"
                                   >
-                                    {t('optimized_system_prompt')}
+                                    {t('prompt.system.optimized')}
                                   </Text>
                                 }
                                 className={`${montserrat_heading.variable} rounded-xl font-montserratHeading`}
@@ -1635,7 +1629,7 @@ CRITICAL: The optimized prompt must:
                                         },
                                       })}
                                     >
-                                      {t('cancel')}
+                                      {t('common:cancel')}
                                     </Button>
                                     <Button
                                       radius="md"
@@ -1673,8 +1667,7 @@ CRITICAL: The optimized prompt must:
                                           background:
                                             'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%) !important',
                                           transform: 'translateY(-1px)',
-                                          boxShadow:
-                                            '0 4px 8px rgba(0, 0, 0, 0.3)',
+                                          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
                                         },
                                         '&:active': {
                                           transform: 'translateY(0)',
@@ -1683,7 +1676,7 @@ CRITICAL: The optimized prompt must:
                                         },
                                       })}
                                     >
-                                      {t('update_system_prompt')}
+                                      {t('prompt.system.update')}
                                     </Button>
                                   </Group>
                                 </div>
@@ -1723,14 +1716,14 @@ CRITICAL: The optimized prompt must:
                               pb={'xs'}
                               style={{ alignSelf: 'left', marginLeft: '-11px' }}
                             >
-                              {t('document_search_optimization')}
+                              {t('prompt.search.optimization')}
                             </Title>
                             <Indicator
                               label={
                                 <Text
                                   className={`${montserrat_heading.variable} font-montserratHeading`}
                                 >
-                                  {t('new')}
+                                  {t('common.new')}
                                 </Text>
                               }
                               color="hsl(280,100%,70%)"
@@ -1749,11 +1742,11 @@ CRITICAL: The optimized prompt must:
                           </Flex>
 
                           <CustomSwitch
-                            label={t('smart_document_search') || ''}
-                            tooltip={t('smart_document_search_tooltip') || ''}
+                            label={t('prompt.search.smart')}
+                            tooltip={t('prompt.search.smart_tooltip')}
                             checked={vectorSearchRewrite}
                             onChange={(value: boolean) => {
-                              handleSettingChange({
+                              handleCheckboxChange({
                                 vector_search_rewrite_disabled: !value,
                               })
                             }}
@@ -1768,14 +1761,14 @@ CRITICAL: The optimized prompt must:
                               gradient={{ from: 'gold', to: 'white', deg: 170 }}
                               order={3}
                             >
-                              {t('ai_behavior_settings')}
+                              {t('prompt.behavior.settings')}
                             </Title>
                             <Indicator
                               label={
                                 <Text
                                   className={`${montserrat_heading.variable} font-montserratHeading`}
                                 >
-                                  {t('new')}
+                                  {t('common.new')}
                                 </Text>
                               }
                               color="hsl(280,100%,70%)"
@@ -1799,8 +1792,8 @@ CRITICAL: The optimized prompt must:
                           <Flex direction="column" gap="md">
                             <div className="flex flex-col gap-1">
                               <CustomSwitch
-                                label={t('guided_learning') || ''}
-                                tooltip={t('guided_learning_tooltip') || ''}
+                                label={t('prompt.behavior.guided_learning')}
+                                tooltip={t('prompt.behavior.guided_learning_tooltip')}
                                 checked={guidedLearning}
                                 onChange={(value: boolean) =>
                                   handleCheckboxChange({
@@ -1810,8 +1803,8 @@ CRITICAL: The optimized prompt must:
                               />
 
                               <CustomSwitch
-                                label={t('document_based_references_only') || ''}
-                                tooltip={t('document_based_references_only_tooltip') || ''}
+                                label={t('prompt.behavior.document_based_only')}
+                                tooltip={t('prompt.behavior.document_based_only_tooltip')}
                                 checked={documentsOnly}
                                 onChange={(value: boolean) =>
                                   handleCheckboxChange({ documentsOnly: value })
@@ -1819,8 +1812,8 @@ CRITICAL: The optimized prompt must:
                               />
 
                               <CustomSwitch
-                                label={t('bypass_internal_prompting') || ''}
-                                tooltip={t('bypass_internal_prompting_tooltip') || ''}
+                                label={t('prompt.behavior.bypass_internal')}
+                                tooltip={t('prompt.behavior.bypass_internal_tooltip')}
                                 checked={systemPromptOnly}
                                 onChange={(value: boolean) =>
                                   handleCheckboxChange({
@@ -1838,8 +1831,8 @@ CRITICAL: The optimized prompt must:
                                   className="mt-[-4px] pl-[82px]"
                                 >
                                   <CustomCopyButton
-                                    label={t('copy_internal_prompt') || ''}
-                                    tooltip={t('copy_internal_prompt_tooltip') || ''}
+                                    label={t('prompt.behavior.copy_internal')}
+                                    tooltip={t('prompt.behavior.copy_internal_tooltip')}
                                     onClick={handleCopyDefaultPrompt}
                                   />
                                 </Flex>
@@ -1861,7 +1854,7 @@ CRITICAL: The optimized prompt must:
                                     }}
                                     variant="gradient"
                                   >
-                                    {t('reset_prompting_settings')}
+                                    {t('prompt.reset.settings')}
                                   </Text>
                                 }
                                 centered
@@ -1909,7 +1902,7 @@ CRITICAL: The optimized prompt must:
                                         lineHeight: 1.5,
                                       }}
                                     >
-                                      {t('reset_prompting_settings_confirm')}
+                                      {t('prompt.reset.confirm')}
                                     </Text>
                                   </Flex>
 
@@ -1929,7 +1922,7 @@ CRITICAL: The optimized prompt must:
                                         marginBottom: '12px',
                                       }}
                                     >
-                                      {t('this_action_will')}
+                                      {t('prompt.reset.action_will')}
                                     </Text>
                                     <List
                                       size="sm"
@@ -1947,12 +1940,8 @@ CRITICAL: The optimized prompt must:
                                         />
                                       }
                                     >
-                                      <List.Item>
-                                        {t('restore_system_prompt_default')}
-                                      </List.Item>
-                                      <List.Item>
-                                        {t('disable_guided_learning_and_custom')}
-                                      </List.Item>
+                                      <List.Item>{t('prompt.reset.restore_default')}</List.Item>
+                                      <List.Item>{t('prompt.reset.disable_settings')}</List.Item>
                                     </List>
                                   </div>
 
@@ -1961,7 +1950,7 @@ CRITICAL: The optimized prompt must:
                                     style={{ color: '#D1D1D1' }}
                                     className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                                   >
-                                    {t('cannot_be_undone_confirm')}
+                                    {t('prompt.reset.cannot_undo')}
                                   </Text>
 
                                   <Group position="right" mt="md">
@@ -1982,7 +1971,7 @@ CRITICAL: The optimized prompt must:
                                         },
                                       })}
                                     >
-                                      {t('cancel')}
+                                      {t('common:cancel')}
                                     </Button>
                                     <Button
                                       variant="filled"
@@ -2015,7 +2004,7 @@ CRITICAL: The optimized prompt must:
                                         closeResetModal()
                                       }}
                                     >
-                                      {t('confirm')}
+                                      {t('prompt.reset.confirm')}
                                     </Button>
                                   </Group>
                                 </Flex>
@@ -2054,7 +2043,7 @@ CRITICAL: The optimized prompt must:
                                   })}
                                   onClick={openResetModal}
                                 >
-                                  {t('reset_prompting_settings')}
+                                  {t('prompt.reset.settings')}
                                 </Button>
 
                                 <Button
@@ -2084,7 +2073,7 @@ CRITICAL: The optimized prompt must:
                                     },
                                   })}
                                 >
-                                  {t('generate_share_link')}
+                                  {t('prompt.share.generate_link')}
                                 </Button>
                               </Flex>
 
@@ -2193,6 +2182,6 @@ export default CourseMain
 
 export const getServerSideProps = async ({ locale }: GetServerSidePropsContext) => ({
   props: {
-    ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+    ...(await serverSideTranslations(locale ?? 'en', ['common', 'prompt'])),
   },
 });

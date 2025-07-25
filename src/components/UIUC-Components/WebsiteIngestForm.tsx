@@ -76,13 +76,13 @@ export default function WebsiteIngestForm({
 
       let errorMessage = ''
       if (!value) {
-        errorMessage = t('website_ingest_input_required')
+        errorMessage = t('website_ingest.input_required')
       } else if (!/^\d+$/.test(value)) {
-        errorMessage = t('website_ingest_number_required')
+        errorMessage = t('website_ingest.number_required')
       } else {
         const numValue = parseInt(value)
         if (numValue < 1 || numValue > 500) {
-          errorMessage = t('website_ingest_range_error')
+          errorMessage = t('website_ingest.range_error')
         }
       }
 
@@ -149,7 +149,7 @@ export default function WebsiteIngestForm({
         // Remove the timeout since we're handling errors properly now
       }
     } else {
-      alert(t('website_ingest_invalid_url_error'))
+      alert(t('website_ingest.invalid_url_error'))
     }
 
     await new Promise((resolve) => setTimeout(resolve, 8000))
@@ -320,7 +320,7 @@ export default function WebsiteIngestForm({
         autoClose: 12000,
         title: (
           <Text size={'lg'} className={`${montserrat_med.className}`}>
-            {t('website_ingest_scraping_error')}
+            {t('website_ingest.scraping_error')}
           </Text>
         ),
         message: (
@@ -427,7 +427,7 @@ export default function WebsiteIngestForm({
                         width: '100%',
                       },
                     }}
-                    placeholder={t('enter_url_placeholder') || ''}
+                    placeholder={t('website_ingest.enter_url_placeholder')}
                     radius="xl"
                     type="url"
                     value={url}
@@ -452,7 +452,7 @@ export default function WebsiteIngestForm({
                           style={{ color: '#C1C2C5', fontSize: '16px' }}
                           className={`${montserrat_heading.variable} font-montserratHeading`}
                         >
-                          {t('max_urls_label')}
+                          {t('website_ingest.max_urls_label')}
                         </Text>
                         <TextInput
                           styles={{
@@ -462,7 +462,7 @@ export default function WebsiteIngestForm({
                           }}
                           name="maximumUrls"
                           radius="md"
-                          placeholder={t('default_50') || ''}
+                          placeholder={t('website_ingest.default_50')}
                           value={maxUrls}
                           onChange={(e) => {
                             handleInputChange(e, 'maxUrls')
@@ -487,31 +487,31 @@ export default function WebsiteIngestForm({
                     style={{ color: '#C1C2C5', fontSize: '16px' }}
                     className={`${montserrat_heading.variable} font-montserratHeading`}
                   >
-                    {t('limit_web_crawl')}
+                    {t('website_ingest.limit_web_crawl')}
                   </Text>
                   <div className="pl-3">
                     <List>
                       <List.Item>
-                        <strong>{t('equal_and_below')}:</strong> {t('equal_and_below_desc')}
+                        <strong>{t('website_ingest.equal_and_below')}:</strong> {t('website_ingest.equal_and_below_desc')}
                       </List.Item>
                       <List.Item>
-                        <strong>{t('same_subdomain')}:</strong> {t('same_subdomain_desc')}
+                        <strong>{t('website_ingest.same_subdomain')}:</strong> {t('website_ingest.same_subdomain_desc')}
                       </List.Item>
                       <List.Item>
-                        <strong>{t('entire_domain')}:</strong> {t('entire_domain_desc')}
+                        <strong>{t('website_ingest.entire_domain')}:</strong> {t('website_ingest.entire_domain_desc')}
                       </List.Item>
                       <List.Item>
                         <span>
-                          <strong>{t('all')}:</strong> {t('all_desc')}
+                          <strong>{t('website_ingest.all')}:</strong> {t('website_ingest.all_desc')}
                           <Text style={{ color: '#C1C2C5' }}>
-                            {t('for_more_detail')}{' '}
+                            {t('website_ingest.for_more_detail')}{' '}
                             <a
                               className={'text-purple-600'}
                               href="https://docs.uiuc.chat/features/web-crawling-details"
                               target="_blank"
                               rel="noopener noreferrer"
                             >
-                              {t('read_the_docs')}
+                              {t('website_ingest.read_the_docs')}
                             </a>
                             .
                           </Text>
@@ -521,7 +521,7 @@ export default function WebsiteIngestForm({
                   </div>
 
                   <Text style={{ color: '#C1C2C5' }}>
-                    <strong>{t('suggest_equal_and_below')}</strong>, {t('rerun_if_needed')}
+                    <strong>{t('website_ingest.suggest_equal_and_below')}</strong>, {t('website_ingest.rerun_if_needed')}
                   </Text>
                   <div className="pt-2"></div>
                   <SegmentedControl

@@ -132,8 +132,7 @@ export default function OpenAIProviderInput({
                     {(apiKeyField: any) => (
                       <APIKeyInput
                         field={apiKeyField}
-                        placeholder={t('openai_api_key') || ''}
-                        // onValidate={validateApiKey}
+                        placeholder={t('models.openai.title')}
                       />
                     )}
                   </form.Field>

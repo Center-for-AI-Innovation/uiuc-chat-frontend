@@ -155,7 +155,7 @@ export default function MITIngestForm({
             <div className="space-y-4">
               <div>
                 <div className="break-words text-sm sm:text-base">
-                  <strong>{t('for_mit_open_course_ware')}</strong>, just enter a URL
+                  <strong>{t('mit_ingest.for_mit_open_course_ware')}</strong>, just enter a URL
                   like{' '}
                   <code className="inline-flex items-center rounded-md bg-[#020307] px-2 py-1 font-mono text-xs sm:text-sm">
                     ocw.mit.edu/courses/ANY_COURSE
@@ -201,7 +201,7 @@ export default function MITIngestForm({
                       width: '100%',
                     },
                   }}
-                  placeholder={t('enter_url') || ''}
+                  placeholder={t('mit_ingest.enter_url')}
                   radius="xl"
                   type="url"
                   value={url}

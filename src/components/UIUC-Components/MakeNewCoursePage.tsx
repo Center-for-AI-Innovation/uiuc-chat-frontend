@@ -158,7 +158,7 @@ const MakeNewCoursePage = ({
                     gradient={{ from: 'gold', to: 'white', deg: 50 }}
                     className={`${montserrat_heading.variable} text-left font-montserratHeading`}
                   >
-                    {!is_new_course ? `${projectName}` : t('create_new_project')}
+                    {!is_new_course ? `${projectName}` : t('new_project.create_new_project')}
                   </Title>
                 </Flex>
 
@@ -198,11 +198,11 @@ const MakeNewCoursePage = ({
                         marginBottom: '1rem',
                       },
                     }}
-                    placeholder={t('project_name_placeholder') || ''}
+                    placeholder={t('new_project.project_name_placeholder') || ''}
                     radius={'lg'}
                     type="text"
                     value={projectName}
-                    label={t('project_name_label')}
+                    label={t('new_project.project_name_label')}
                     size={'lg'}
                     disabled={!is_new_course}
                     onChange={(e) =>
@@ -218,7 +218,7 @@ const MakeNewCoursePage = ({
                       className={`${montserrat_paragraph.variable} mt-4 font-montserratParagraph font-bold`}
                       style={{ fontSize: isSmallScreen ? '14px' : '20px' }}
                     >
-                      {t('what_do_you_want_to_achieve')}
+                      {t('new_project.what_do_you_want_to_achieve')}
                     </label>
                     <label
                       className={`${montserrat_paragraph.variable} mt-5 pl-2 font-montserratParagraph text-gray-400`}
@@ -227,7 +227,7 @@ const MakeNewCoursePage = ({
                     </label>
                   </Flex>
                   <Textarea
-                    placeholder={t('describe_project_placeholder') || ''}
+                    placeholder={t('new_project.describe_project_placeholder') || ''}
                     radius={'lg'}
                     value={projectDescription}
                     onChange={(e) => setProjectDescription(e.target.value)}
@@ -255,14 +255,14 @@ const MakeNewCoursePage = ({
                       order={isSmallScreen ? 5 : 4}
                       className={`w-full pr-2 pr-7 text-right ${montserrat_paragraph.variable} mt-2 font-montserratParagraph`}
                     >
-                      {t('next_upload_documents')}
+                      {t('new_project.next_upload_documents')}
                     </Title>
                     <Tooltip
                       label={
                         projectName === ''
-                          ? t('add_project_name_above')
+                          ? t('new_project.add_project_name_above')
                           : !isCourseAvailable
-                            ? t('project_name_taken')
+                            ? t('new_project.project_name_taken')
                             : ''
                       }
                       withArrow
@@ -297,7 +297,7 @@ const MakeNewCoursePage = ({
                             ) : null
                           }
                         >
-                          {isLoading ? t('creating') : t('create')}
+                          {isLoading ? t('new_project.creating') : t('new_project.create')}
                         </Button>
                       </span>
                     </Tooltip>

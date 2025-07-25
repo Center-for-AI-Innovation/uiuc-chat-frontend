@@ -125,10 +125,100 @@ const formatPercentageChange = (value: number | null | undefined) => {
   return value.toFixed(1)
 }
 
+const createShowToastOnFileDeleted = (t: (key: string) => string) => (theme: MantineTheme, was_error = false) => {
+  return notifications.show({
+      id: 'file-deleted-from-materials',
+      withCloseButton: true,
+      onClose: () => console.log('unmounted'),
+      onOpen: () => console.log('mounted'),
+      autoClose: 5000,
+      // position="top-center",
+      title: was_error ? t('alerts.error_deleting_file') : t('alerts.deleting_file'),
+      message: was_error
+        ? t('alerts.error_deleting_file_message')
+        : t('alerts.file_deleting_bg'),
+      icon: <IconCheck />,
+      // className: 'my-notification-class',
+      styles: {
+        root: {
+          backgroundColor: was_error
+            ? theme.colors.errorBackground
+            : theme.colors.nearlyWhite,
+          borderColor: was_error
+            ? theme.colors.errorBorder
+            : theme.colors.aiPurple,
+        },
+        title: {
+          color: theme.colors.nearlyBlack,
+        },
+        description: {
+          color: theme.colors.nearlyBlack,
+        },
+        closeButton: {
+          color: theme.colors.nearlyBlack,
+          '&:hover': {
+            backgroundColor: theme.colors.dark[1],
+          },
+        },
+      },
+      loading: false,
+  });
+};
+
+const createShowToastOnUpdate = (t: (key: string) => string) => (
+  theme: MantineTheme,
+  was_error = false,
+  isReset = false,
+  message: string,
+) => {
+  return notifications.show({
+    id: 'convo-or-documents-export',
+    withCloseButton: true,
+    closeButtonProps: { color: 'green' },
+    onClose: () => console.log('error unmounted'),
+    onOpen: () => console.log('error mounted'),
+    autoClose: 30000,
+    title: (
+      <Text size={'lg'} className={`${montserrat_heading.className}`}>
+        {message}
+      </Text>
+    ),
+    message: (
+      <Text className={`${montserrat_paragraph.className}`}>
+        {t('alerts.check_docs')}{' '}
+        <Link
+          href={
+            'https://docs.uiuc.chat/features/bulk-export-documents-or-conversation-history'
+          }
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ textDecoration: 'underline', color: 'lightpurple' }}
+        >
+          {t('alerts.our_docs')}
+        </Link>{' '}
+        {t('alerts.process_data')}
+      </Text>
+    ),
+    color: 'green',
+    radius: 'lg',
+    icon: <IconCheck />,
+    className: 'my-notification-class',
+    style: {
+      backgroundColor: 'rgba(42,42,64,0.6)',
+      backdropFilter: 'blur(10px)',
+      borderLeft: '5px solid green',
+    },
+    withBorder: true,
+    loading: false,
+  })
+}
+
 const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   const { t } = useTranslation('common')
   const { classes, theme } = useStyles()
   const auth = useAuth()
+  const showToastOnFileDeleted = createShowToastOnFileDeleted(t)
+  const showToastOnUpdate = createShowToastOnUpdate(t)
   const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
     null,
   )
@@ -1149,96 +1239,4 @@ async function fetchCourseMetadata(course_name: string) {
   }
 }
 
-const showToastOnFileDeleted = (theme: MantineTheme, was_error = false) => {
-  return (
-    // docs: https://mantine.dev/others/notifications/
-
-    notifications.show({
-      id: 'file-deleted-from-materials',
-      withCloseButton: true,
-      onClose: () => console.log('unmounted'),
-      onOpen: () => console.log('mounted'),
-      autoClose: 5000,
-      // position="top-center",
-      title: was_error ? 'Error deleting file' : 'Deleting file...',
-      message: was_error
-        ? "An error occurred while deleting the file. Please try again and I'd be so grateful if you email rohan13@illinois.edu to report this bug."
-        : 'The file is being deleted in the background.',
-      icon: <IconCheck />,
-      // className: 'my-notification-class',
-      styles: {
-        root: {
-          backgroundColor: was_error
-            ? theme.colors.errorBackground
-            : theme.colors.nearlyWhite,
-          borderColor: was_error
-            ? theme.colors.errorBorder
-            : theme.colors.aiPurple,
-        },
-        title: {
-          color: theme.colors.nearlyBlack,
-        },
-        description: {
-          color: theme.colors.nearlyBlack,
-        },
-        closeButton: {
-          color: theme.colors.nearlyBlack,
-          '&:hover': {
-            backgroundColor: theme.colors.dark[1],
-          },
-        },
-      },
-      loading: false,
-    })
-  )
-}
-
 export default MakeQueryAnalysisPage
-
-export const showToastOnUpdate = (
-  theme: MantineTheme,
-  was_error = false,
-  isReset = false,
-  message: string,
-) => {
-  return notifications.show({
-    id: 'convo-or-documents-export',
-    withCloseButton: true,
-    closeButtonProps: { color: 'green' },
-    onClose: () => console.log('error unmounted'),
-    onOpen: () => console.log('error mounted'),
-    autoClose: 30000,
-    title: (
-      <Text size={'lg'} className={`${montserrat_heading.className}`}>
-        {message}
-      </Text>
-    ),
-    message: (
-      <Text className={`${montserrat_paragraph.className}`}>
-        Check{' '}
-        <Link
-          href={
-            'https://docs.uiuc.chat/features/bulk-export-documents-or-conversation-history'
-          }
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ textDecoration: 'underline', color: 'lightpurple' }}
-        >
-          our docs
-        </Link>{' '}
-        for example code to process this data.
-      </Text>
-    ),
-    color: 'green',
-    radius: 'lg',
-    icon: <IconCheck />,
-    className: 'my-notification-class',
-    style: {
-      backgroundColor: 'rgba(42,42,64,0.6)',
-      backdropFilter: 'blur(10px)',
-      borderLeft: '5px solid green',
-    },
-    withBorder: true,
-    loading: false,
-  })
-}

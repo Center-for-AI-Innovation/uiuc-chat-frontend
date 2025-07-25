@@ -61,7 +61,7 @@ function NomicDocumentMap({ course_name }: { course_name: string }) {
                   order={3}
                   className={`pl-12 text-[hsl(280,100%,70%)] ${montserrat_heading.variable} font-montserratHeading text-lg sm:text-2xl`}
                 >
-                  {t('analysis.conceptMapOfUserQueries', 'Concept Map of User Queries')}
+                  {t('analysis.conceptMapOfUserQueries')}
                 </Title>
 
                 <ActionIcon
@@ -177,20 +177,20 @@ function NomicDocumentMap({ course_name }: { course_name: string }) {
                   className={`${montserrat_heading.variable} font-montserratHeading text-gray-200`}
                   size="lg"
                 >
-                  {t('visualization_not_available')}
+                  {t('analysis.notEnoughDataTitle')}
                 </Text>
                 <Text className="mt-2 text-gray-300">
-                  {t('visualization_not_available_body')}
+                  {t('analysis.notEnoughDataBody')}
                 </Text>
                 <Text className="mt-3 text-gray-400" size="sm">
-                  {t('learn_more_semantic')}{' '}
+                  {t('analysis.learnMoreSemanticLink')}{' '}
                   <a
                     className="text-purple-400 underline hover:text-purple-300"
                     href="https://atlas.nomic.ai/"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    {t('learn_more_semantic')}
+                    {t('analysis.semanticSimilarityVisualizations')}
                   </a>
                 </Text>
               </div>

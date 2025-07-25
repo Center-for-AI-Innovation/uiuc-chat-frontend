@@ -17,14 +17,12 @@ export const FancyRetrieval = () => {
     state: {
       selectedConversation,
       defaultModelId,
-      // showModelSettings,
       prompts,
     },
     handleUpdateConversation,
-    // dispatch: homeDispatch,
   } = useContext(HomeContext)
 
-  const { t } = useTranslation('chat')
+  const { t } = useTranslation('common')
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
 
   // Update localStorage whenever useMQRetrieval changes
@@ -40,13 +38,12 @@ export const FancyRetrieval = () => {
       >
         <Tooltip
           multiline
-          // color="#15162b"
           color="grape"
           arrowPosition="side"
           position="top-start"
           arrowSize={8}
           withArrow
-          label={t('multi_query_retrieval_disabled') || ''}
+          label={t('chat.retrieval.multi_query.disabled')}
           classNames={{
             tooltip: `${isSmallScreen ? 'text-xs' : 'text-sm'} ${montserrat_paragraph.variable} font-montserratParagraph`,
           }}
@@ -57,32 +54,25 @@ export const FancyRetrieval = () => {
               color="white"
               order={isSmallScreen ? 5 : 4}
             >
-              {t('fancy_retrieval')}
+              {t('chat.retrieval.fancy')}
             </Title>
             <Switch
               disabled={true}
-              // checked={useMQRetrieval}
               checked={false}
               className="mx-4 pl-2 pt-2"
               classNames={{
                 label: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : ''}`,
                 description: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : ''}`,
               }}
-              label={t('multi_query_retrieval_label') || ''}
+              label={t('chat.retrieval.multi_query.label')}
               onChange={(event) =>
                 setUseMQRetrieval(event.currentTarget.checked)
               }
-              description={t('multi_query_retrieval_description')}
+              description={t('chat.retrieval.multi_query.description')}
               color="violet.7"
             />
           </div>
         </Tooltip>
-        {/* <ModelParams
-          selectedConversation={selectedConversation}
-          prompts={prompts}
-          handleUpdateConversation={handleUpdateConversation}
-          t={t}
-        /> */}
         <div className="flex h-full flex-col space-y-4 rounded-lg p-2">
           <Input.Description
             className={`text-right ${isSmallScreen ? 'text-xs' : 'text-sm'} ${montserrat_paragraph.variable} font-montserratParagraph`}
@@ -92,7 +82,7 @@ export const FancyRetrieval = () => {
               target="_blank"
               className="hover:underline"
             >
-              {t('openai_usage_link')}
+              {t('models.openai.usage_link')}
               <IconExternalLink
                 size={15}
                 style={{ position: 'relative', top: '2px' }}

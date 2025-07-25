@@ -98,6 +98,38 @@ export const Chat = memo(
     const auth = useAuth()
     const router = useRouter()
     const queryClient = useQueryClient()
+
+    const errorToast = ({ title, message }: { title: string; message: string }) => {
+      notifications.show({
+        id: 'error-notification-reused',
+        withCloseButton: true,
+        closeButtonProps: { color: 'red' },
+        onClose: () => console.log('error unmounted'),
+        onOpen: () => console.log('error mounted'),
+        autoClose: 12000,
+        title: (
+          <Text size={'lg'} className={`${montserrat_med.className}`}>
+            {t(`alerts.${title}`) || title}
+          </Text>
+        ),
+        message: (
+          <Text className={`${montserrat_med.className} text-neutral-200`}>
+            {t(`alerts.${message}`) || message}
+          </Text>
+        ),
+        color: 'red',
+        radius: 'lg',
+        icon: <IconAlertCircle />,
+        className: 'my-notification-class',
+        style: {
+          backgroundColor: 'rgba(42,42,64,0.3)',
+          backdropFilter: 'blur(10px)',
+          borderLeft: '5px solid red',
+        },
+        withBorder: true,
+        loading: false,
+      })
+    }
     // const
     const [bannerUrl, setBannerUrl] = useState<string | null>(null)
     const getCurrentPageName = () => {
@@ -1634,7 +1666,7 @@ export const Chat = memo(
                 <CropwizardLicenseDisclaimer />
               )}
               {getCurrentPageName() !== 'chat' && (
-                <p>{t('start_conversation_or_examples')}</p>
+                <p>{t('examples.start_conversation')}</p>
               )}
             </h4>
             <div className="mt-4 flex flex-col items-start space-y-2 overflow-hidden">
@@ -1991,41 +2023,3 @@ export const Chat = memo(
     Chat.displayName = 'Chat'
   },
 )
-
-export function errorToast({
-  title,
-  message,
-}: {
-  title: string
-  message: string
-}) {
-  notifications.show({
-    id: 'error-notification-reused',
-    withCloseButton: true,
-    closeButtonProps: { color: 'red' },
-    onClose: () => console.log('error unmounted'),
-    onOpen: () => console.log('error mounted'),
-    autoClose: 12000,
-    title: (
-      <Text size={'lg'} className={`${montserrat_med.className}`}>
-        {title}
-      </Text>
-    ),
-    message: (
-      <Text className={`${montserrat_med.className} text-neutral-200`}>
-        {message}
-      </Text>
-    ),
-    color: 'red',
-    radius: 'lg',
-    icon: <IconAlertCircle />,
-    className: 'my-notification-class',
-    style: {
-      backgroundColor: 'rgba(42,42,64,0.3)',
-      backdropFilter: 'blur(10px)',
-      borderLeft: '5px solid red',
-    },
-    withBorder: true,
-    loading: false,
-  })
-}

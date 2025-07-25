@@ -52,7 +52,7 @@ export default function SetExampleQuestions({
 
   const upsertCourseMetadata = async (example_questions: string[]) => {
     if (!course_name || course_name.toString().trim() === '') {
-      alert('Course name is required')
+      alert(t('example_questions.course_name_required'))
       return
     }
 
@@ -61,7 +61,6 @@ export default function SetExampleQuestions({
     } as CourseMetadataOptionalForUpsert
 
     await callSetCourseMetadata(course_name, new_course_metadata)
-    // console.log("FINISHED SETTING THE EXAMPLE QUESTIONS")
   }
 
   return (
@@ -76,14 +75,12 @@ export default function SetExampleQuestions({
           return (
             <TextInput
               key={i}
-              // withAsterisk
-              label={t('example_questions.example_question_label') || ''}
+              label={t('example_questions.example_question_label')}
               name="question"
-              placeholder={t('example_questions.example_question_placeholder') || ''}
+              placeholder={t('example_questions.example_question_placeholder') as string}
               value={value}
               onChange={(e) => handleInputChange(e, i)}
               onFocus={() => handleInputFocus(i)}
-              // onBlur={() => handleInputBlur(i)} I couldn't get this working to remove boxes...
             />
           )
         })}

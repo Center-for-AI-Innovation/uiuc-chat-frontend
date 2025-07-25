@@ -14,6 +14,7 @@ import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackgro
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetServerSidePropsContext } from 'next'
+import { useTranslation } from 'next-i18next'
 
 export const getServerSideProps = async ({ locale }: GetServerSidePropsContext) => ({
   props: {
@@ -22,6 +23,7 @@ export const getServerSideProps = async ({ locale }: GetServerSidePropsContext) 
 });
 
 const ChatPage: NextPage = () => {
+  const { t } = useTranslation('common')
   const auth = useAuth()
   const router = useRouter()
   const getCurrentPageName = () => {
@@ -112,12 +114,6 @@ const ChatPage: NextPage = () => {
   // UseEffect to check user permissions and fetch user email
   useEffect(() => {
     const checkAuthorization = async () => {
-      // console.log('Starting authorization check', {
-      //   isAuthLoading: auth.isLoading,
-      //   isRouterReady: router.isReady,
-      //   authUser: auth.user?.profile.email || 'No user email',
-      // })
-
       if (!auth.isLoading && router.isReady) {
         const courseName = router.query.course_name as string
         try {
@@ -161,7 +157,7 @@ const ChatPage: NextPage = () => {
             if (auth.user?.profile.email) {
               setCurrentEmail(auth.user.profile.email);
             } else {
-              console.error('Authenticated user has no email');
+              console.error(t('chat.loading.authenticated_user_error'));
               router.replace(`/${courseName}/not_authorized`);
               return;
             }
@@ -187,6 +183,8 @@ const ChatPage: NextPage = () => {
 
   return (
     <>
+      {/* Dummy usage to ensure common namespace is loaded for translations in modals */}
+      <div style={{ display: 'none' }}>{t('settings')}</div>
       {!isLoading &&
         !auth.isLoading &&
         router.isReady &&
@@ -212,7 +210,7 @@ const ChatPage: NextPage = () => {
             <div
               className={`flex items-center justify-center font-montserratHeading ${montserrat_heading.variable}`}
             >
-              <span className="mr-2">Warming up the knowledge engines...</span>
+              <span className="mr-2">{t('chat.loading.knowledge_engines')}</span>
               <LoadingSpinner size="sm" />
             </div>
           </MainPageBackground>

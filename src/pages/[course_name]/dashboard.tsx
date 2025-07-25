@@ -2,7 +2,7 @@ import { type NextPage } from 'next'
 import MakeOldCoursePage from '~/components/UIUC-Components/MakeOldCoursePage'
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-
+import { useTranslation } from 'next-i18next'
 import { useAuth } from 'react-oidc-context'
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
@@ -27,6 +27,7 @@ export const getServerSideProps = async ({ locale }: GetServerSidePropsContext) 
 
 const CourseMain: NextPage = () => {
   const router = useRouter()
+  const { t } = useTranslation('common')
 
   const getCurrentPageName = () => {
     return router.query.course_name as string
@@ -60,11 +61,12 @@ const CourseMain: NextPage = () => {
         setMetadata(local_metadata)
       } catch (error) {
         console.error(error)
-        // alert('An error occurred while fetching course metadata. Please try again later.')
+        // Using translation for error message
+        // alert(t('dashboard.error_fetching_metadata'))
       }
     }
     fetchCourseData()
-  }, [router.isReady, courseName])
+  }, [router.isReady, courseName, t])
 
   useEffect(() => {
     if (!router.isReady) return

@@ -51,7 +51,7 @@ export default function WebLLMProviderInput({
                   mb="xs"
                   style={{ paddingRight: '8px' }}
                 >
-                  {t('webllm_title')}
+                  {t('models.webllm.title')}
                 </Text>
                 <IconExternalLink size={16} className="mb-3" />
               </div>
@@ -62,9 +62,9 @@ export default function WebLLMProviderInput({
               <Switch
                 size="md"
                 labelPosition="left"
-                onLabel={t('on')}
-                offLabel={t('off')}
-                aria-label={t('enable_webllm_provider') || ''}
+                onLabel={t('models.on')}
+                offLabel={t('models.off')}
+                aria-label={t('models.enable_model', { model: 'WebLLM' })}
                 checked={field.state.value}
                 onChange={(event) => {
                   field.handleChange(event.currentTarget.checked)
@@ -93,7 +93,7 @@ export default function WebLLMProviderInput({
           </form.Field>
         </div>
         <Text size="sm" color="dimmed" mb="md">
-          {t('webllm_helper_text')}
+          {t('models.webllm.description')}
         </Text>
         <form.Field name={`providers.${ProviderNames.WebLLM}.enabled`}>
           {(field: any) => (

@@ -422,11 +422,11 @@ export default function GitHubIngestForm({
             <div className="space-y-4">
               <div>
                 <div className="break-words text-sm sm:text-base">
-                  <strong>{t('forGitHub')}</strong>, {t('justEnterURL')}
+                  <strong>{t('github_ingest.for_github')}</strong>, {t('github_ingest.just_enter_url')}
                   <code className={classes.codeStyledText}>
                     github.com/USER/REPO
                   </code>
-                  , {t('forExample')}{' '}
+                  , {t('github_ingest.for_example')}{' '}
                   <span className={'text-purple-600'}>
                     <Link
                       target="_blank"
@@ -437,7 +437,7 @@ export default function GitHubIngestForm({
                       https://github.com/langchain-ai/langchain
                     </Link>
                   </span>
-                  . {t('weWillIngestAllFilesInTheMainBranch')}. {t('ensureTheRepositoryIsPublic')}.
+                  . {t('github_ingest.we_will_ingest_all_files')}. {t('github_ingest.ensure_repository_public')}.
                 </div>
                 <div className="py-3"></div>
                 <Input
@@ -457,7 +457,7 @@ export default function GitHubIngestForm({
                       width: '100%',
                     },
                   }}
-                  placeholder={t('enterURL') || ''}
+                  placeholder={t('github_ingest.enter_url')}
                   radius="xl"
                   type="url"
                   value={url}

@@ -4,12 +4,15 @@ import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useContext, useEffect, useMemo, useState } from 'react'
 import HomeContext from '~/pages/api/home/home.context'
 import { useMediaQuery } from '@mantine/hooks'
+import { useTranslation } from 'next-i18next'
 
 export const DocumentGroupsItem = ({}) => {
   const {
     state: { documentGroups },
     dispatch: homeDispatch,
   } = useContext(HomeContext)
+
+  const { t } = useTranslation('common')
 
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const [documentGroupSearch, setDocumentGroupSearch] = useState('')
@@ -64,12 +67,12 @@ export const DocumentGroupsItem = ({}) => {
             color="white"
             order={isSmallScreen ? 5 : 3}
           >
-            Document Groups
+            {t('settings.sections.document_groups.title')}
           </Title>
           <div className="flex flex-col items-center justify-center rounded-lg">
             <TextInput
               type="search"
-              placeholder="Search by Document Group"
+              placeholder={String(t('settings.sections.document_groups.search'))}
               my="sm"
               radius="md"
               icon={<IconSearch size={isSmallScreen ? 15 : 20} />}
@@ -91,7 +94,7 @@ export const DocumentGroupsItem = ({}) => {
                   className={`${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`}
                 >
                   <th style={{ width: '60%', wordWrap: 'break-word' }}>
-                    Document Group
+                    {t('settings.sections.document_groups.table.name')}
                   </th>
                   <th
                     style={{
@@ -101,7 +104,7 @@ export const DocumentGroupsItem = ({}) => {
                     }}
                   >
                     <span className="flex flex-col items-center justify-center">
-                      <span className="self-center">Enabled</span>
+                      <span className="self-center">{t('settings.sections.document_groups.table.enabled')}</span>
                     </span>
                   </th>
                 </tr>
@@ -135,7 +138,7 @@ export const DocumentGroupsItem = ({}) => {
                 {filteredDocumentGroups.length === 0 && (
                   <tr>
                     <td colSpan={4}>
-                      <Text align="center">No document groups found</Text>
+                      <Text align="center">{t('settings.sections.document_groups.table.no_groups')}</Text>
                     </td>
                   </tr>
                 )}

@@ -219,7 +219,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
         gradient={{ from: 'gold', to: 'white', deg: 50 }}
         className={`text-left ${montserrat_heading.variable} font-montserratHeading`}
       >
-        {t('request_builder')}
+        {t('api.request_builder')}
       </Title>
 
       <Divider
@@ -231,7 +231,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
       <div className="space-y-6">
         <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
           <Select
-            placeholder={t('select_language') || ''}
+            placeholder={t('api.select_language') || ''}
             data={languageOptions}
             value={selectedLanguage}
             radius={'md'}
@@ -270,7 +270,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
           />
           <div className="flex w-full items-center gap-2">
             <Select
-              placeholder={t('select_model') || ''}
+              placeholder={t('chat.model.select') || ''}
               data={modelOptions}
               value={selectedModel}
               onChange={(value) => setSelectedModel(value || '')}
@@ -329,10 +329,10 @@ fetch('${baseUrl}/api/chat-api/chat', {
             order={4}
             className={`font-medium text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
           >
-            {t('system_prompt')}
+            {t('api.system_prompt')}
           </Title>
           <Textarea
-            placeholder={t('system_prompt') || ''}
+            placeholder={t('api.system_prompt') || ''}
             value={systemPrompt}
             onChange={(e) => setSystemPrompt(e.currentTarget.value)}
             minRows={2}
@@ -356,10 +356,10 @@ fetch('${baseUrl}/api/chat-api/chat', {
             order={4}
             className={`font-medium text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
           >
-            {t('user_query')}
+            {t('api.user_query')}
           </Title>
           <Textarea
-            placeholder={t('user_query') || ''}
+            placeholder={t('api.user_query') || ''}
             value={userQuery}
             onChange={(e) => setUserQuery(e.currentTarget.value)}
             minRows={2}
@@ -383,7 +383,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
             order={4}
             className={`font-medium text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
           >
-            {t('temperature')}
+            {t('api.temperature')}
           </Title>
           <Slider
             value={temperature}
@@ -419,7 +419,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
               onChange={(event) =>
                 setRetrievalOnly(event.currentTarget.checked)
               }
-              label={t('retrieval_only')}
+              label={t('api.retrieval_only')}
               size="md"
               color="grape"
               className={`mt-4 ${montserrat_paragraph.variable} font-montserratParagraph`}
@@ -433,7 +433,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
               })}
             />
             <Tooltip
-              label={t('retrieval_only_tooltip')}
+              label={t('api.retrieval_only_tooltip')}
               position="top"
               multiline
               width={220}
@@ -459,7 +459,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
               onChange={(event) =>
                 setStreamEnabled(event.currentTarget.checked)
               }
-              label={t('stream_response')}
+              label={t('api.stream_response')}
               size="md"
               color="grape"
               className={`mt-4 ${montserrat_paragraph.variable} font-montserratParagraph`}
@@ -482,7 +482,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
             rel="noopener noreferrer"
             className="text-blue-400 hover:text-blue-300"
           >
-            {t('using_image_inputs_docs')}
+            {t('api.using_image_inputs_docs')}
           </a>
         </div>
 

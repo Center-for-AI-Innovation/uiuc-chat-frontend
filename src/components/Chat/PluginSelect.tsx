@@ -15,7 +15,7 @@ export const PluginSelect: FC<Props> = ({
   onPluginChange,
   onKeyDown,
 }) => {
-  const { t } = useTranslation('chat')
+  const { t } = useTranslation('common')
 
   const selectRef = useRef<HTMLSelectElement>(null)
 

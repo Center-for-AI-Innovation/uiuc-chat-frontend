@@ -88,6 +88,7 @@ export const APIKeyInput = ({
   placeholder: string
 }) => {
   const [error, setError] = useState<string | null>(null)
+  const { t } = useTranslation('common')
 
   useEffect(() => {
     setError(null)
@@ -95,7 +96,7 @@ export const APIKeyInput = ({
 
   return (
     <div style={{ position: 'relative', width: '100%' }}>
-      <Input.Wrapper id="API-key-input" label={placeholder}>
+      <Input.Wrapper id="API-key-input" label={t('models.fields.api_key')}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <TextInput
             type="password"
@@ -433,9 +434,8 @@ export default function APIKeyInputForm() {
     // handle errors
     if (isErrorLLMProviders) {
       showConfirmationToast({
-        title: 'Error',
-        message:
-          'Failed your api keys. Our database must be having a bad day. Please refresh or try again later.',
+        title: t('alerts.llm_providers.fetch_error.title'),
+        message: t('alerts.llm_providers.fetch_error.message'),
         isError: true,
       })
     }
@@ -537,7 +537,6 @@ export default function APIKeyInputForm() {
       mutation.mutate(
         {
           projectName,
-          // queryClient,
           llmProviders,
         },
         {
@@ -546,14 +545,14 @@ export default function APIKeyInputForm() {
               queryKey: ['projectLLMProviders', projectName],
             })
             showConfirmationToast({
-              title: 'Updated LLM providers',
-              message: `Now your project's users can use the supplied LLMs!`,
+              title: t('alerts.llm_providers.update_success.title'),
+              message: t('alerts.llm_providers.update_success.message'),
             })
           },
           onError: (error, variables, context) =>
             showConfirmationToast({
-              title: 'Error updating LLM providers',
-              message: `Update failed with error: ${error.name} -- ${error.message}`,
+              title: t('alerts.llm_providers.update_error.title'),
+              message: t('alerts.llm_providers.update_error.message'),
               isError: true,
             }),
         },
@@ -629,8 +628,7 @@ export default function APIKeyInputForm() {
                       gradient={{ from: 'gold', to: 'white', deg: 50 }}
                       className={`pl-8 pt-8 ${montserrat_heading.variable} font-montserratHeading`}
                     >
-                      {/* API Keys: Add LLMs to your Chatbot */}
-                      {t('configure_llm_providers')}
+                      {t('models.more_details_about_ai_models')}
                     </Title>
                     <Title
                       className={`${montserrat_heading.variable} flex-[1_1_50%] font-montserratHeading`}
@@ -639,7 +637,7 @@ export default function APIKeyInputForm() {
                       ml={'md'}
                       style={{ textAlign: 'left' }}
                     >
-                      {t('configure_llms_helper')}
+                      {t('models.ncsa_hosted.description')}
                     </Title>
                     <Stack align="center" justify="start">
                       <form
@@ -669,13 +667,13 @@ export default function APIKeyInputForm() {
                               }}
                               order={3}
                             >
-                              {t('closed_source_llms')}
+                              {t('models.openai.title')}
                             </Title>
                             <Text
                               className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
                               size="md"
                             >
-                              {t('closed_source_llms_helper')}
+                              {t('models.openai.description')}
                             </Text>
                             <Flex
                               direction={{ base: 'column', '75rem': 'row' }}
@@ -737,13 +735,13 @@ export default function APIKeyInputForm() {
                               }}
                               order={3}
                             >
-                              {t('open_source_llms')}
+                              {t('models.ncsa_hosted.title')}
                             </Title>
                             <Text
                               className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
                               size="md"
                             >
-                              {t('open_source_llms_helper')}
+                              {t('models.ncsa_hosted.description')}
                             </Text>
                             <Flex
                               direction={{ base: 'column', '75rem': 'row' }}
@@ -807,14 +805,14 @@ export default function APIKeyInputForm() {
                           gradient={{ from: 'gold', to: 'white', deg: 170 }}
                           order={3}
                         >
-                          {t('default_model')}
+                          {t('models.default_model')}
                         </Title>
                         <br />
                         <Text
                           className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
                           size="md"
                         >
-                          {t('default_model_helper')}
+                          {t('models.default_model_helper')}
                         </Text>
                         <br />
                         <div className="flex justify-center">
@@ -990,8 +988,8 @@ export const showConfirmationToast = ({
     onClose: () => console.log('unmounted'),
     onOpen: () => console.log('mounted'),
     autoClose: autoClose,
-    title: title,
-    message: message,
+    title: t(`alerts.${title}`) || title,
+    message: t(`alerts.${message}`) || message,
     color: isError ? 'red' : 'green',
     radius: 'lg',
     icon: isError ? <IconAlertCircle /> : <IconCheck />,

@@ -1,7 +1,7 @@
 import { type NextPage } from 'next'
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-
+import { useTranslation } from 'next-i18next'
 import { useAuth } from 'react-oidc-context'
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
 import { LoadingPlaceholderForAdminPages } from '~/components/UIUC-Components/MainPageBackground'
@@ -21,6 +21,7 @@ export const getServerSideProps = async ({ locale }: GetServerSidePropsContext) 
 const CourseMain: NextPage = () => {
   const router = useRouter()
   const [courseName, setCourseName] = useState<string | null>(null)
+  const { t } = useTranslation('common')
 
   const auth = useAuth()
   const [isFetchingCourseMetadata, setIsFetchingCourseMetadata] = useState(true)

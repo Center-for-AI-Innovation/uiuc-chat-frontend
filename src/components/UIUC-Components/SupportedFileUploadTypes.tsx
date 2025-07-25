@@ -111,18 +111,17 @@ const useStyles = createStyles((theme) => ({
 
 const SupportedFileUploadTypes = () => {
   const { classes, theme } = useStyles()
-  // className={classes.wrapper}
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('common')
   const fileTypes: FileType[] = [
-    { icon: IconFileTypePdf, label: t('pdf') || 'PDF', color: 'text-red-500' },
-    { icon: IconFileTypeDocx, label: t('word') || 'Word', color: 'text-blue-500' },
-    { icon: IconFileTypePpt, label: t('ppt') || 'PPT', color: 'text-orange-500' },
-    { icon: IconFileTypeXls, label: t('excel') || 'Excel', color: 'text-green-500' },
-    { icon: IconVideo, label: t('video') || 'Video', color: 'text-purple-500' },
-    { icon: IconPhoto, label: t('image') || 'Image', color: 'text-pink-500' },
-    { icon: IconMusic, label: t('audio') || 'Audio', color: 'text-yellow-500' },
-    { icon: IconCode, label: t('code') || 'Code', color: 'text-cyan-500' },
-    { icon: IconFileTypeTxt, label: t('text') || 'Text', color: 'text-white' }
+    { icon: IconFileTypePdf, label: t('file_types.pdf'), color: 'text-red-500' },
+    { icon: IconFileTypeDocx, label: t('file_types.word'), color: 'text-blue-500' },
+    { icon: IconFileTypePpt, label: t('file_types.ppt'), color: 'text-orange-500' },
+    { icon: IconFileTypeXls, label: t('file_types.excel'), color: 'text-green-500' },
+    { icon: IconVideo, label: t('file_types.video'), color: 'text-purple-500' },
+    { icon: IconPhoto, label: t('file_types.image'), color: 'text-pink-500' },
+    { icon: IconMusic, label: t('file_types.audio'), color: 'text-yellow-500' },
+    { icon: IconCode, label: t('file_types.code'), color: 'text-cyan-500' },
+    { icon: IconFileTypeTxt, label: t('file_types.text'), color: 'text-white' }
   ]
 
   return (
@@ -148,7 +147,7 @@ const SupportedFileUploadTypes = () => {
                   </motion.div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{t('files_supported', { type: type.label })}</p>
+                  <p>{t('file_types.files_supported', { type: type.label })}</p>
                 </TooltipContent>
               </Tooltip>
             );

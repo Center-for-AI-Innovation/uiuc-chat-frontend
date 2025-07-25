@@ -155,16 +155,16 @@ export default function CanvasIngestForm({
                   />
                 </div>
                 <Text className="text-xl font-semibold text-gray-100">
-                  {t('canvas')}
+                  {t('canvas_ingest.title')}
                 </Text>
               </div>
             </div>
 
             <Text className="mb-4 text-sm leading-relaxed text-gray-400">
-              {t('import_canvas_description')}
+              {t('canvas_ingest.description')}
             </Text>
             <div className="mt-auto flex items-center text-sm text-purple-400">
-              <span>{t('configure_import')}</span>
+              <span>{t('canvas_ingest.configure_import')}</span>
               <IconArrowRight
                 size={16}
                 className="ml-2 transition-transform group-hover:translate-x-1"
@@ -176,18 +176,18 @@ export default function CanvasIngestForm({
         <DialogContent className="mx-auto h-auto max-h-[85vh] w-[95%] max-w-2xl overflow-y-auto !rounded-2xl border-0 bg-[#1c1c2e] px-4 py-6 text-white sm:px-6">
           <DialogHeader>
             <DialogTitle className="mb-1 text-left text-xl font-bold">
-              {t('import_canvas_content')}
+              {t('canvas_ingest.import_content')}
             </DialogTitle>
           </DialogHeader>
 
           <Alert
             icon={<IconAlertTriangle size={18} />}
             color="red"
-            title={t('canvas_permission_required') || ''}
+            title={t('canvas_ingest.permission_required')}
             className="mb-4 border border-red-500/50 bg-red-900/20"
           >
             <span className="font-semibold">
-              {t('canvas_permission_instructions')}
+              {t('canvas_ingest.permission_instructions')}{' '}
               <NextLink
                 href="https://canvas.illinois.edu/"
                 target="_blank"
@@ -198,15 +198,17 @@ export default function CanvasIngestForm({
               </NextLink>
             </span>
             <div className="mt-1">
-              • {t('bot_email')}{' '}
+              • {t('canvas_ingest.bot_email')}{' '}
               <span className="font-mono text-yellow-300">
-                {t('bot_email_address')}
+                {t('canvas_ingest.bot_email_address')}
               </span>
-              <br />• {t('bot_name')}{' '}
-              <span className="font-mono text-yellow-300">{t('bot_name_value')}</span>
+              <br />• {t('canvas_ingest.bot_name')}{' '}
+              <span className="font-mono text-yellow-300">
+                {t('canvas_ingest.bot_name_value')}
+              </span>
             </div>
             <div className="mt-1 text-xs italic">
-              {t('canvas_permission_note')}
+              {t('canvas_ingest.permission_note')}
             </div>
           </Alert>
 
@@ -226,19 +228,19 @@ export default function CanvasIngestForm({
           <div className="space-y-4">
             <div>
               <div className="text-md break-words">
-                {t('enter_canvas_url')}
+                {t('canvas_ingest.enter_canvas_url')}
                 <code className="inline-flex items-center rounded-md bg-[#020307] px-2 py-1 font-mono text-xs sm:text-sm">
-                  {t('canvas_url_example')}
+                  {t('canvas_ingest.canvas_url_example')}
                 </code>
-                , {t('for_example')}
+                , {t('canvas_ingest.for_example')}
                 <span className="break-all text-purple-600">
                   <NextLink
                     target="_blank"
                     rel="noreferrer"
-                    href={t('canvas_url_sample') || ''}
+                    href={t('canvas_ingest.canvas_url_sample')}
                     onClick={(e: React.MouseEvent) => e.stopPropagation()}
                   >
-                    {t('canvas_url_sample') || ''}
+                    {t('canvas_ingest.canvas_url_sample')}
                   </NextLink>
                 </span>
                 .
@@ -270,7 +272,7 @@ export default function CanvasIngestForm({
                     width: '100%',
                   },
                 }}
-                placeholder={t('canvas_url_placeholder') || ''}
+                placeholder={t('canvas_ingest.canvas_url_placeholder')}
                 radius="xl"
                 type="url"
                 value={url}
@@ -282,16 +284,16 @@ export default function CanvasIngestForm({
             </div>
             <div className="space-y-2">
               <Label className="mb-2 block text-white">
-                {t('select_content_to_import')}
+                {t('canvas_ingest.select_content_to_import')}
               </Label>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {[
-                  t('files'),
-                  t('pages'),
-                  t('modules'),
-                  t('syllabus'),
-                  t('assignments'),
-                  t('discussions'),
+                  t('canvas_ingest.files'),
+                  t('canvas_ingest.pages'),
+                  t('canvas_ingest.modules'),
+                  t('canvas_ingest.syllabus'),
+                  t('canvas_ingest.assignments'),
+                  t('canvas_ingest.discussions'),
                 ].map((option) => (
                   <div
                     key={option}
@@ -324,7 +326,7 @@ export default function CanvasIngestForm({
             disabled={!isUrlValid}
             className="h-11 w-full rounded-xl bg-purple-600 text-white transition-colors hover:bg-purple-700"
           >
-            {t('import_canvas_content')}
+            {t('canvas_ingest.import_content')}
           </Button>
         </DialogContent>
       </Dialog>
