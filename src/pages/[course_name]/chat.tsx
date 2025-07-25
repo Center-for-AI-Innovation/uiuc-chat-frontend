@@ -5,13 +5,16 @@ import { type NextPage } from 'next'
 import { useEffect, useState } from 'react'
 import Home from '../api/home/home'
 import { useRouter } from 'next/router'
+import { v4 as uuidv4 } from 'uuid'
 
-import { type CourseMetadata } from '~/types/courseMetadata'
+import { type CourseMetadata, type CustomSystemPrompt } from '~/types/courseMetadata'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { montserrat_heading } from 'fonts'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
+import { OpenAIModels, OpenAIModelID } from '~/utils/modelProviders/types/openai'
+import { DEFAULT_TEMPERATURE } from '~/utils/app/const'
 
 const ChatPage: NextPage = () => {
   const auth = useAuth()
@@ -22,66 +25,96 @@ const ChatPage: NextPage = () => {
   const courseName = getCurrentPageName() as string
   const [currentEmail, setCurrentEmail] = useState('')
   const [isLoading, setIsLoading] = useState(true)
-  const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
-    null,
-  )
+  const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(null)
   const [isCourseMetadataLoading, setIsCourseMetadataLoading] = useState(true)
   const [urlGuidedLearning, setUrlGuidedLearning] = useState(false)
   const [urlDocumentsOnly, setUrlDocumentsOnly] = useState(false)
   const [urlSystemPromptOnly, setUrlSystemPromptOnly] = useState(false)
+  const [urlActivePrompt, setUrlActivePrompt] = useState<string | null>(null)
   const [documentCount, setDocumentCount] = useState<number | null>(null)
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
+  const [sharedConversationId, setSharedConversationId] = useState<string | null>(null)
+  const [isReadOnly, setIsReadOnly] = useState(false)
 
-  // UseEffect to check URL parameters
+  // UseEffect to check URL parameters and fetch initial data
   useEffect(() => {
     const fetchData = async () => {
       if (!router.isReady) return
+
+      setIsLoading(true)
+      setIsCourseMetadataLoading(true)
 
       // Get URL parameters
       const urlParams = new URLSearchParams(window.location.search)
       const guidedLearning = urlParams.get('guidedLearning') === 'true'
       const documentsOnly = urlParams.get('documentsOnly') === 'true'
       const systemPromptOnly = urlParams.get('systemPromptOnly') === 'true'
+      const gptId = urlParams.get('gpt')
+      const conversationId = urlParams.get('conversation')
+      const isReadOnlyParam = urlParams.get('readonly') === 'true'
 
-      // Update the state with URL parameters
+      // Update the state with boolean URL parameters
       setUrlGuidedLearning(guidedLearning)
       setUrlDocumentsOnly(documentsOnly)
       setUrlSystemPromptOnly(systemPromptOnly)
-
-      setIsLoading(true)
-      setIsCourseMetadataLoading(true)
+      setUrlActivePrompt(gptId)
+      setSharedConversationId(conversationId)
 
       // Special case: Cropwizard redirect
-      if (
-        ['cropwizard', 'cropwizard-1.0', 'cropwizard-1'].includes(
-          courseName.toLowerCase(),
-        )
-      ) {
+      if (['cropwizard', 'cropwizard-1.0', 'cropwizard-1'].includes(courseName.toLowerCase())) {
         await router.push(`/cropwizard-1.5`)
+        setIsLoading(false)
+        setIsCourseMetadataLoading(false)
+        return
       }
 
-      // Fetch course metadata
-      const metadataResponse = await fetch(
-        `/api/UIUC-api/getCourseMetadata?course_name=${courseName}`,
-      )
+      // Fetch course metadata from Redis using course name
+      const metadataResponse = await fetch(`/api/UIUC-api/getCourseMetadata?course_name=${courseName}`)
       const metadataData = await metadataResponse.json()
+      const fetchedCourseMetadata: CourseMetadata | null = metadataData.course_metadata
 
-      // Log original course metadata settings without modifying them
-      if (metadataData.course_metadata) {
-        console.log('Course metadata settings:', {
-          guidedLearning: metadataData.course_metadata.guidedLearning,
-          documentsOnly: metadataData.course_metadata.documentsOnly,
-          systemPromptOnly: metadataData.course_metadata.systemPromptOnly,
-          system_prompt: metadataData.course_metadata.system_prompt,
+      if (fetchedCourseMetadata) {
+        console.log('Course metadata from Redis:', {
+          courseName,
+          guidedLearning: fetchedCourseMetadata.guidedLearning,
+          documentsOnly: fetchedCourseMetadata.documentsOnly,
+          systemPromptOnly: fetchedCourseMetadata.systemPromptOnly,
+          system_prompt: fetchedCourseMetadata.system_prompt,
+          custom_system_prompts_count: fetchedCourseMetadata.custom_system_prompts?.length ?? 0
         })
+
+       
+        // If there's a shared conversation ID, determine read-only mode based on user permissions
+        if (conversationId && fetchedCourseMetadata) {
+          try {
+            // Check if this is a shared conversation ID (starts with 'share_')
+            const isSharedConversation = conversationId.startsWith('share_')
+            
+            if (isSharedConversation) {
+              // For shared conversations, default to readonly but allow editing if user has permissions
+              const permission = get_user_permission(fetchedCourseMetadata, auth)
+              
+              // Allow editing only if user has edit permission on the course
+              setIsReadOnly(permission !== 'edit')
+            } else {
+              // For regular conversations (not shared), user can edit
+              setIsReadOnly(false)
+            }
+          } catch (error) {
+            console.error('Error checking user permissions for shared conversation:', error)
+            // Default to readonly for shared conversations if there's an error
+            const isSharedConversation = conversationId.startsWith('share_')
+            setIsReadOnly(isSharedConversation)
+          }
+        }
       }
 
-      setCourseMetadata(metadataData.course_metadata)
+      setCourseMetadata(fetchedCourseMetadata)
       setIsCourseMetadataLoading(false)
       setIsLoading(false)
     }
     fetchData()
-  }, [courseName, urlGuidedLearning, urlDocumentsOnly, urlSystemPromptOnly])
+  }, [courseName, router.isReady, auth.user?.profile.email])
 
   // UseEffect to fetch document count in the background
   useEffect(() => {
@@ -197,6 +230,8 @@ const ChatPage: NextPage = () => {
               documentsOnly: urlDocumentsOnly,
               systemPromptOnly: urlSystemPromptOnly,
             }}
+            isReadOnly={isReadOnly}
+            sharedConversationId={sharedConversationId}
           />
         )}
       {isLoading ||

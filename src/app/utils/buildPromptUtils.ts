@@ -92,6 +92,7 @@ export const buildPrompt = async ({
   courseMetadata: CourseMetadata | undefined
   mode?: BuildPromptMode
 }): Promise<Conversation> => {
+
   /*
     System prompt -- defined by user. If documents are provided, add the citations instructions to it.
   
@@ -106,6 +107,7 @@ export const buildPrompt = async ({
     7. ✅ Conversation history
     */
   if (conversation == undefined) {
+    console.error('❌ Conversation is undefined when building prompt.')
     throw new Error('Conversation is undefined when building prompt.')
   }
 
@@ -128,10 +130,12 @@ export const buildPrompt = async ({
       }
       return conversation
     }
+    
     const allPromises = []
     allPromises.push(_getLastUserTextInput({ conversation }))
     allPromises.push(_getLastToolResult({ conversation }))
-    allPromises.push(_getSystemPrompt({ courseMetadata, conversation }))
+    allPromises.push(_getSystemPrompt({ courseMetadata, conversation, projectName }))
+    
     const [lastUserTextInput, lastToolResult, systemPrompt] =
       (await Promise.all(allPromises)) as [
         string,
@@ -442,17 +446,36 @@ const _getLastToolResult = async ({
 const _getSystemPrompt = async ({
   courseMetadata,
   conversation,
+  projectName,
 }: {
   courseMetadata: CourseMetadata | undefined
   conversation: Conversation
+  projectName: string
 }): Promise<string> => {
-  // First get the user defined system prompt
+  
+  // Priority order for system prompt:
+  // 1. conversation.prompt (highest priority - conversation-specific prompt)
+  // 2. courseMetadata.system_prompt (course-level prompt)
+  // 3. fetched course metadata system_prompt (fallback)
+  // 4. DEFAULT_SYSTEM_PROMPT (lowest priority)
+  
   let userDefinedSystemPrompt: string | undefined | null
-  if (courseMetadata?.system_prompt) {
+  
+  // First priority: Use conversation.prompt if it exists and is not the default
+  if (conversation.prompt && conversation.prompt.trim() !== DEFAULT_SYSTEM_PROMPT.trim()) {
+    userDefinedSystemPrompt = conversation.prompt
+  }
+  // Second priority: Use courseMetadata.system_prompt
+  else if (courseMetadata?.system_prompt) {
     userDefinedSystemPrompt = courseMetadata.system_prompt
-  } else {
-    userDefinedSystemPrompt = await getCourseMetadata(conversation.name)
-      .then((metadata) => metadata?.system_prompt)
+  }
+  // Third priority: Fetch course metadata
+  else {
+    // Use projectName instead of conversation.name for fetching course metadata
+    userDefinedSystemPrompt = await getCourseMetadata(projectName)
+      .then((metadata) => {
+        return metadata?.system_prompt
+      })
       .catch((error) => {
         console.warn('Failed to fetch course metadata:', error)
         return undefined
