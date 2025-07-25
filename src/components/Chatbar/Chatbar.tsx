@@ -33,6 +33,7 @@ import { downloadConversationHistoryUser } from '~/pages/api/UIUC-api/downloadCo
 import CustomGPTsList from './components/CustomGPTsList'
 import { CourseMetadata, CustomSystemPrompt } from '~/types/courseMetadata'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
+import { callSetCustomGPTPinned } from '~/utils/customGPTUtils'
 import { showNotification } from '@mantine/notifications'
 
 export const Chatbar = ({
@@ -46,6 +47,28 @@ export const Chatbar = ({
   courseMetadata: CourseMetadata | null
   onCourseMetadataUpdate?: (updatedMetadata: CourseMetadata) => void
 }) => {
+  const [customGPTs, setCustomGPTs] = useState<CustomSystemPrompt[]>([])
+
+  // Fetch custom GPTs when course metadata changes
+  useEffect(() => {
+    const fetchCustomGPTs = async () => {
+      if (courseName && courseMetadata?.custom_gpt_ids && courseMetadata.custom_gpt_ids.length > 0) {
+        try {
+          const response = await fetch(`/api/UIUC-api/getCustomGPTs?gptIds=${courseMetadata.custom_gpt_ids.map((id: string) => encodeURIComponent(id)).join(',')}`)
+          if (response.ok) {
+            const data = await response.json()
+            setCustomGPTs(data.custom_gpts || [])
+          }
+        } catch (error) {
+          console.error('Error fetching custom GPTs:', error)
+        }
+      } else {
+        setCustomGPTs([])
+      }
+    }
+
+    fetchCustomGPTs()
+  }, [courseName, courseMetadata?.custom_gpt_ids])
   const { t } = useTranslation('sidebar')
   const chatBarContextValue = useCreateReducer<ChatbarInitialState>({
     initialState,
@@ -317,31 +340,31 @@ export const Chatbar = ({
   };
 
   const handleTogglePinnedPrompt = async (promptId: string, isPinned: boolean) => {
-    if (!courseMetadata?.custom_system_prompts || !courseName) {
-      console.error('Cannot toggle favorite: missing course metadata or course name');
+    if (!courseName) {
+      console.error('Cannot toggle favorite: missing course name');
       return;
     }
 
     try {
-      // Update the prompts array with the new favorite status
-      const updatedPrompts = courseMetadata.custom_system_prompts.map((prompt) =>
-        prompt.id === promptId ? { ...prompt, isPinned } : prompt,
-      );
+      // Find the prompt to update
+      const promptToUpdate = customGPTs.find((p: CustomSystemPrompt) => p.id === promptId);
+      if (!promptToUpdate) {
+        console.error('Prompt not found');
+        return;
+      }
 
-      // Create updated metadata
-      const updatedMetadata = {
-        ...courseMetadata,
-        custom_system_prompts: updatedPrompts,
-      } as CourseMetadata;
+      // Update the prompt
+      const updatedPrompt = { ...promptToUpdate, isPinned };
 
-      // Save to backend
-      const success = await callSetCourseMetadata(courseName, updatedMetadata);
+      // Save to separate custom GPTs hash using specialized endpoint
+      const gptId = updatedPrompt.gpt_id || updatedPrompt.id;
+      const success = await callSetCustomGPTPinned(gptId, courseName, isPinned);
       
       if (success) {
-        // Update parent component's metadata if callback is provided
-        if (onCourseMetadataUpdate) {
-          onCourseMetadataUpdate(updatedMetadata);
-        }
+        // Update local state
+        setCustomGPTs(prev => prev.map((prompt: CustomSystemPrompt) =>
+          prompt.id === promptId ? updatedPrompt : prompt,
+        ));
       } 
     } catch (error) {
       console.error('Error toggling favorite:', error);
@@ -349,11 +372,11 @@ export const Chatbar = ({
   };
 
   // Create the custom GPTs component
-  const customGPTsComponent = courseMetadata?.custom_system_prompts && courseMetadata.custom_system_prompts.length > 0 ? (
+  const customGPTsComponent = customGPTs.length > 0 ? (
     <CustomGPTsList
-      customSystemPrompts={courseMetadata.custom_system_prompts}
+      customSystemPrompts={customGPTs}
       onSelectGPT={handleSelectCustomGPT}
-                    onTogglePinned={handleTogglePinnedPrompt}
+      onTogglePinned={handleTogglePinnedPrompt}
     />
   ) : null;
 

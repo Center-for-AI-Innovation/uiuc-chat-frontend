@@ -32,7 +32,7 @@ import { ErrorMessageDiv } from './ErrorMessageDiv'
 import { MemoizedChatMessage } from './MemoizedChatMessage'
 import { fetchPresignedUrl } from '~/utils/apiUtils'
 
-import { type CourseMetadata } from '~/types/courseMetadata'
+import { type CourseMetadata, type CustomSystemPrompt } from '~/types/courseMetadata'
 
 import { SourcesSidebarProvider } from './ChatMessage'
 
@@ -116,6 +116,28 @@ export const Chat = memo(
       string[]
     >([])
     const [enabledTools, setEnabledTools] = useState<string[]>([])
+    const [customGPTs, setCustomGPTs] = useState<CustomSystemPrompt[]>([])
+
+    // Fetch custom GPTs when course metadata changes
+    useEffect(() => {
+      const fetchCustomGPTs = async () => {
+        if (courseName && courseMetadata?.custom_gpt_ids && courseMetadata.custom_gpt_ids.length > 0) {
+          try {
+            const response = await fetch(`/api/UIUC-api/getCustomGPTs?gptIds=${courseMetadata.custom_gpt_ids.map((id: string) => encodeURIComponent(id)).join(',')}`)
+            if (response.ok) {
+              const data = await response.json()
+              setCustomGPTs(data.custom_gpts || [])
+            }
+          } catch (error) {
+            console.error('Error fetching custom GPTs:', error)
+          }
+        } else {
+          setCustomGPTs([])
+        }
+      }
+
+      fetchCustomGPTs()
+    }, [courseName, courseMetadata?.custom_gpt_ids])
 
     const {
       data: documentGroupsHook,
@@ -239,10 +261,10 @@ export const Chat = memo(
 
     // Update document groups when custom GPT changes
     useEffect(() => {
-      if (selectedConversation?.customGptId && courseMetadata?.custom_system_prompts) {
+      if (selectedConversation?.customGptId && customGPTs.length > 0) {
         // Find the custom GPT by gpt_id or id
-        const customGPT = courseMetadata.custom_system_prompts.find(
-          (p) => p.gpt_id === selectedConversation.customGptId || p.id === selectedConversation.customGptId
+        const customGPT = customGPTs.find(
+          (p: CustomSystemPrompt) => p.gpt_id === selectedConversation.customGptId || p.id === selectedConversation.customGptId
         );
         
         if (customGPT) {
@@ -262,7 +284,7 @@ export const Chat = memo(
             .map((action) => action.name),
         )
       }
-    }, [selectedConversation?.customGptId, courseMetadata?.custom_system_prompts, documentGroups])
+    }, [selectedConversation?.customGptId, customGPTs, documentGroups])
 
     // TOOLS
     useEffect(() => {
@@ -1450,9 +1472,9 @@ export const Chat = memo(
           }
           
           // If there's a custom GPT with specific document groups, use those instead
-          if (customGptId && courseMetadata?.custom_system_prompts) {
-            const customGPT = courseMetadata.custom_system_prompts.find(
-              (p) => p.gpt_id === customGptId || p.id === customGptId
+          if (customGptId && customGPTs.length > 0) {
+            const customGPT = customGPTs.find(
+              (p: CustomSystemPrompt) => p.gpt_id === customGptId || p.id === customGptId
             );
             
             if (customGPT?.documentGroups && customGPT.documentGroups.length > 0) {
@@ -1502,6 +1524,7 @@ export const Chat = memo(
         deleteMessagesMutation,
         apiKey,
         courseMetadata,
+        customGPTs,
       ],
     )
 
@@ -1683,10 +1706,10 @@ export const Chat = memo(
     // Add this function to create dividers with statements
     const renderIntroductoryStatements = () => {
       // If there's a custom GPT selected, display its name and description
-      if (selectedConversation?.customGptId && courseMetadata?.custom_system_prompts) {
+      if (selectedConversation?.customGptId && customGPTs.length > 0) {
         // First try to find by gpt_id, then fall back to id
-        const customGPT = courseMetadata.custom_system_prompts.find(
-          (p) => p.gpt_id === selectedConversation.customGptId || p.id === selectedConversation.customGptId
+        const customGPT = customGPTs.find(
+          (p: CustomSystemPrompt) => p.gpt_id === selectedConversation.customGptId || p.id === selectedConversation.customGptId
         );
         if (customGPT) {
           return (
@@ -2085,9 +2108,9 @@ export const Chat = memo(
                         }
                         
                         // If there's a custom GPT with specific document groups, use those instead
-                        if (customGptId && courseMetadata?.custom_system_prompts) {
-                          const customGPT = courseMetadata.custom_system_prompts.find(
-                            (p) => p.gpt_id === customGptId || p.id === customGptId
+                        if (customGptId && customGPTs.length > 0) {
+                          const customGPT = customGPTs.find(
+                            (p: CustomSystemPrompt) => p.gpt_id === customGptId || p.id === customGptId
                           );
                           
                           if (customGPT?.documentGroups && customGPT.documentGroups.length > 0) {

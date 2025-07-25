@@ -14,6 +14,7 @@ export interface CustomSystemPrompt {
   isEnabled?: boolean
   documentGroups?: string[]
   tools?: string[]
+  project_name: string // Add project name to track which course owns this GPT
 }
 
 // courseMetadata.ts
@@ -35,7 +36,8 @@ export interface CourseMetadata {
   vector_search_rewrite_disabled: boolean | undefined
   document_group?: string
   tool?: string
-  custom_system_prompts?: CustomSystemPrompt[]
+  custom_gpt_ids?: string[] // List of GPT IDs instead of full objects
+  custom_system_prompts?: CustomSystemPrompt[] // Optional: legacy or transitional support for full objects
 }
 
 export type ProjectWideLLMProviders = {
@@ -49,7 +51,7 @@ export type ProjectWideLLMProviders = {
   guidedLearning: boolean | undefined
   systemPromptOnly: boolean | undefined
   vector_search_rewrite_disabled: boolean | undefined
-  custom_system_prompts?: CustomSystemPrompt[] | undefined
+  custom_gpt_ids?: string[] | undefined
 }
 
 export interface CourseMetadataOptionalForUpsert {
@@ -68,5 +70,10 @@ export interface CourseMetadataOptionalForUpsert {
   guidedLearning: boolean | undefined
   systemPromptOnly: boolean | undefined
   vector_search_rewrite_disabled: boolean | undefined
-  custom_system_prompts?: CustomSystemPrompt[] | undefined
+  custom_gpt_ids?: string[] | undefined
+}
+
+// New interface for the custom GPTs hash structure
+export interface CustomGPTsHash {
+  [gptId: string]: CustomSystemPrompt
 }

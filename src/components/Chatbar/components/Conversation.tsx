@@ -101,33 +101,26 @@ export const ConversationComponent = ({ conversation }: Props) => {
 
   useEffect(() => {
     const fetchCustomGPTName = async () => {
-      // Only show custom GPT name if the conversation has a customGptId
       if (conversation.customGptId && conversation.projectName) {
         try {
-          const response = await fetch(`/api/UIUC-api/getCourseMetadata?course_name=${encodeURIComponent(conversation.projectName)}`);
+          const response = await fetch(`/api/UIUC-api/getCustomGPTs?gptIds=${encodeURIComponent(conversation.customGptId)}`);
           if (response.ok) {
             const data = await response.json();
-            if (data.course_metadata?.custom_system_prompts) {
-              // First try to find by gpt_id, then fall back to id
-              const customGPT = data.course_metadata.custom_system_prompts.find(
-                (p: { id: string; gpt_id?: string }) => p.gpt_id === conversation.customGptId || p.id === conversation.customGptId
-              );
-              if (customGPT) {
-                setCustomGPTName(customGPT.name);
-              }
-            }
+            const customGPT = data.custom_gpts?.find(
+              (gpt: { id: string; gpt_id?: string }) =>
+                gpt.gpt_id === conversation.customGptId || gpt.id === conversation.customGptId
+            );
+            setCustomGPTName(customGPT?.name || '');
           } else {
-            console.error('Failed to fetch course metadata:', response.status, response.statusText);
+            setCustomGPTName('');
           }
         } catch (error) {
-          console.error('Error fetching course metadata:', error);
+          setCustomGPTName('');
         }
       } else {
-        // Clear custom GPT name if no customGptId
         setCustomGPTName('');
       }
     };
-
     fetchCustomGPTName();
   }, [conversation.customGptId, conversation.projectName]);
 

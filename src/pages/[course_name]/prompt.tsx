@@ -32,6 +32,7 @@ import {
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
+import { callUpsertCustomGPT, callSetCustomGPTPinned } from '~/utils/customGPTUtils'
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 import { useDisclosure, useMediaQuery } from '@mantine/hooks'
 import {
@@ -264,33 +265,28 @@ const CourseMain: NextPage = () => {
     );
     setCustomSystemPrompts(updatedPrompts);
 
-    if (courseMetadataRef.current && course_name) {
-      const updatedMetadata = {
-        ...courseMetadataRef.current,
-        custom_system_prompts: updatedPrompts,
-      } as CourseMetadata;
-
-      const success = await callSetCourseMetadata(course_name, updatedMetadata);
-      if (success) {
-        // Optionally, show a success notification
-        showToastNotification(
-          theme,
-          'Pin Status Updated',
-          `Prompt marked as ${newPinnedStatus ? 'pinned' : 'unpinned'}.`,
-        );
-        // Ensure main courseMetadata state is also updated to reflect the change immediately if not already covered by setCustomSystemPrompts
-        // In this case, setCourseMetadata is called by handleSaveCustomPrompt and handleConfirmDeleteCustomPrompt
-        // We should also call it here to ensure consistency, or ensure courseMetadataRef is always up-to-date.
-        setCourseMetadata(updatedMetadata); 
-      } else {
-        // Revert UI change on failure and show error
-        setCustomSystemPrompts(customSystemPrompts);
-        showToastNotification(
-          theme,
-          'Error',
-          'Failed to update pin status.',
-          true,
-        );
+    if (course_name) {
+      const promptToUpdate = updatedPrompts.find(p => p.id === promptId);
+      if (promptToUpdate) {
+        const gptId = promptToUpdate.gpt_id || promptToUpdate.id;
+        const success = await callSetCustomGPTPinned(gptId, course_name, newPinnedStatus);
+        
+        if (success) {
+          showToastNotification(
+            theme,
+            'Pin Status Updated',
+            `Prompt marked as ${newPinnedStatus ? 'pinned' : 'unpinned'}.`,
+          );
+        } else {
+          // Revert UI change on failure and show error
+          setCustomSystemPrompts(customSystemPrompts);
+          showToastNotification(
+            theme,
+            'Error',
+            'Failed to update pin status.',
+            true,
+          );
+        }
       }
     } else {
       showToastNotification(theme, 'Error', 'Course data not available for updating pin status.', true);
@@ -667,8 +663,18 @@ CRITICAL: The optimized prompt must:
       setBaseSystemPrompt(
         fetchedMetadata.system_prompt ?? DEFAULT_SYSTEM_PROMPT ?? '',
       )
-      // Initialize custom gpts
-      setCustomSystemPrompts(fetchedMetadata.custom_system_prompts || [])
+      // Initialize custom gpts - fetch from separate hash
+      if (fetchedMetadata.custom_gpt_ids && fetchedMetadata.custom_gpt_ids.length > 0) {
+        const customGPTsResponse = await fetch(`/api/UIUC-api/getCustomGPTs?gptIds=${fetchedMetadata.custom_gpt_ids.map((id: string) => encodeURIComponent(id)).join(',')}`)
+        if (customGPTsResponse.ok) {
+          const customGPTsData = await customGPTsResponse.json()
+          setCustomSystemPrompts(customGPTsData.custom_gpts || [])
+        } else {
+          setCustomSystemPrompts([])
+        }
+      } else {
+        setCustomSystemPrompts([])
+      }
 
       // Initialize all state variables
       setGuidedLearning(fetchedMetadata.guidedLearning || false)
@@ -1046,6 +1052,7 @@ CRITICAL: The optimized prompt must:
           documentGroups: documentGroups.map(group => group.trim()),
           tools: tools.map(tool => tool.trim()),
           urlSuffix: linkIdentifier,
+          project_name: course_name!, // Add project name
         };
       }
     } else {
@@ -1058,35 +1065,37 @@ CRITICAL: The optimized prompt must:
         documentGroups: documentGroups.map(group => group.trim()),
         tools: tools.map(tool => tool.trim()),
         urlSuffix: linkIdentifier,
-        isPinned: false
+        isPinned: false,
+        project_name: course_name!, // Add project name
       };
       updatedPrompts.push(newPrompt);
     }
 
     setCustomSystemPrompts(updatedPrompts);
 
-    // Save to course metadata
-    if (courseMetadataRef.current && course_name) {
-      const updatedMetadata = {
-        ...courseMetadataRef.current,
-        custom_system_prompts: updatedPrompts,
-      } as CourseMetadata;
-
-      const success = await callSetCourseMetadata(course_name, updatedMetadata);
-      if (success) {
-        setCourseMetadata(updatedMetadata);
-        showToastNotification(
-          theme,
-          'Success',
-          `Custom GPT ${editingCustomPromptId ? 'updated' : 'saved'} successfully.`,
-        );
-      } else {
-        showToastNotification(
-          theme,
-          'Error',
-          `Failed to ${editingCustomPromptId ? 'update' : 'save'} custom GPT.`,
-          true,
-        );
+    // Save to separate custom GPTs hash using upsert pattern
+    if (course_name) {
+      const gptToSave = editingCustomPromptId 
+        ? updatedPrompts.find(p => p.id === editingCustomPromptId)
+        : updatedPrompts[updatedPrompts.length - 1];
+      
+      if (gptToSave) {
+        const { success } = await callUpsertCustomGPT(gptToSave, course_name);
+        
+        if (success) {
+          showToastNotification(
+            theme,
+            'Success',
+            `Custom GPT ${editingCustomPromptId ? 'updated' : 'saved'} successfully.`,
+          );
+        } else {
+          showToastNotification(
+            theme,
+            'Error',
+            `Failed to ${editingCustomPromptId ? 'update' : 'save'} custom GPT.`,
+            true,
+          );
+        }
       }
     } else {
       showToastNotification(theme, 'Error', 'Course data not available.', true);
@@ -1106,21 +1115,20 @@ CRITICAL: The optimized prompt must:
   }
 
   const handleConfirmDeleteCustomPrompt = async () => {
-    if (!promptToDelete || !courseMetadataRef.current || !course_name) return
+    if (!promptToDelete || !course_name) return
 
     const updatedPrompts = customSystemPrompts.filter(
       (p) => p.id !== promptToDelete.id,
     )
 
-    const updatedMetadata = {
-      ...courseMetadataRef.current,
-      custom_system_prompts: updatedPrompts,
-    } as CourseMetadata
-
-    const success = await callSetCourseMetadata(course_name, updatedMetadata)
-    if (success) {
+    // Delete from separate custom GPTs hash
+    const gptId = promptToDelete.gpt_id || promptToDelete.id
+    const response = await fetch(`/api/UIUC-api/deleteCustomGPT?gptId=${encodeURIComponent(gptId)}&projectName=${encodeURIComponent(course_name)}`, {
+      method: 'DELETE',
+    });
+    
+    if (response.ok) {
       setCustomSystemPrompts(updatedPrompts)
-      setCourseMetadata(updatedMetadata)
       showToastNotification(theme, 'Success', 'Custom GPT deleted successfully.')
       closeDeleteConfirmModal()
       setPromptToDelete(null)
