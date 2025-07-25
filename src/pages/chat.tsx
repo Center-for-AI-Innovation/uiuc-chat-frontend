@@ -13,6 +13,13 @@ import Home from '~/pages/api/home/home'
 import { CourseMetadata } from '~/types/courseMetadata'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { useAuth } from 'react-oidc-context'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+
+export const getServerSideProps = async ({ locale }: { locale: string }) => ({
+  props: {
+    ...(await serverSideTranslations(locale, ['common', 'chat', 'sidebar'])),
+  },
+});
 
 const ChatPage: NextPage = () => {
   const [metadata, setMetadata] = useState<CourseMetadata | null>()

@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Switch, Tooltip, Text } from '@mantine/core'
 import { IconCheck, IconInfoCircle, IconX } from '@tabler/icons-react'
 import { montserrat_paragraph } from 'fonts'
+import { useTranslation } from 'next-i18next'
 
 interface CustomSwitchProps {
   label: string
@@ -18,6 +19,7 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
   onChange,
   disabled = false,
 }) => {
+  const { t } = useTranslation('common')
   const [isContainerHovered, setIsContainerHovered] = useState(false)
 
   const handleToggle = (event: React.MouseEvent) => {
@@ -101,11 +103,11 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
           !disabled && isContainerHovered ? 'text-white' : 'text-gray-200'
         }`}
       >
-        {label}
+        {t(label) || ''}
         <Tooltip
           label={
             <Text size="sm" color="gray.1">
-              {tooltip}
+              {t(tooltip) || ''}
             </Text>
           }
           position="bottom"

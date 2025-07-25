@@ -34,7 +34,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
   onFeedback,
   onOpenFeedbackModal,
 }) => {
-  const { t } = useTranslation('chat')
+  const { t } = useTranslation('common')
   const [messagedCopied, setMessageCopied] = useState(false)
   const [isThumbsUp, setIsThumbsUp] = useState(false)
   const [isThumbsDown, setIsThumbsDown] = useState(false)
@@ -135,7 +135,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
   return (
     <div className="flex items-center justify-start gap-2">
       <Tooltip
-        label={messagedCopied ? 'Copied!' : 'Copy'}
+        label={messagedCopied ? t('copied') : t('copy')}
         position="bottom"
         withArrow
         arrowSize={6}
@@ -168,7 +168,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
       </Tooltip>
 
       <Tooltip
-        label={isThumbsUp ? 'Remove Good Response' : 'Good Response'}
+        label={isThumbsUp ? t('remove_good_response') : t('good_response')}
         position="bottom"
         withArrow
         arrowSize={6}
@@ -206,7 +206,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
       </Tooltip>
 
       <Tooltip
-        label={isThumbsDown ? 'Remove Bad Response' : 'Bad Response'}
+        label={isThumbsDown ? t('remove_bad_response') : t('bad_response')}
         position="bottom"
         withArrow
         arrowSize={6}
@@ -236,7 +236,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
       </Tooltip>
 
       <Tooltip
-        label="Regenerate Response"
+        label={t('regenerate_response')}
         position="bottom"
         withArrow
         arrowSize={6}

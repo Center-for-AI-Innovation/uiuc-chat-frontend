@@ -14,7 +14,9 @@ import {
 // import { Checkbox } from '@radix-ui/react-checkbox'
 import NextLink from 'next/link'
 import Image from 'next/image'
+import { useTranslation } from 'next-i18next'
 export default function CourseraIngestForm(): JSX.Element {
+  const { t } = useTranslation('common')
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
   const [url, setUrl] = useState('')
@@ -46,10 +48,7 @@ export default function CourseraIngestForm(): JSX.Element {
   const handleIngest = () => {
     setOpen(false)
     if (url.includes('coursera.org')) {
-      // TODO: coursera ingest
-      alert(
-        'Coursera ingest is not yet automated (auth is hard). Please email rohan13@illinois.edu to do it for you',
-      )
+      alert(t('coursera_ingest_alert'))
     }
   }
   // if (isLoading) {
@@ -92,11 +91,10 @@ export default function CourseraIngestForm(): JSX.Element {
               </div>
             </div>
             <Text className="mb-4 text-sm leading-relaxed text-gray-400">
-              Import content from Coursera courses, including lectures,
-              assignments, and course materials.
+              {t('coursera_ingest.helper')}
             </Text>
             <div className="mt-auto flex items-center text-sm text-purple-400">
-              <span>Configure import</span>
+              <span>{t('upload_cards.configure_import')}</span>
               <IconArrowRight
                 size={16}
                 className="ml-2 transition-transform group-hover:translate-x-1"
@@ -108,18 +106,18 @@ export default function CourseraIngestForm(): JSX.Element {
         <DialogContent className="mx-auto h-auto w-[95%] max-w-2xl !rounded-2xl border-0 bg-[#1c1c2e] px-4 py-6 text-white sm:px-6">
           <DialogHeader>
             <DialogTitle className="mb-4 text-left text-xl font-bold">
-              Ingest Coursera Course
+              {t('coursera_ingest.title')}
             </DialogTitle>
           </DialogHeader>
           <div className="border-t border-gray-800 pt-4">
             <div className="space-y-4">
               <div>
                 <div className="break-words text-sm sm:text-base">
-                  <strong>For Coursera</strong>, just enter a URL like{' '}
+                  {t('coursera_ingest.instructions_1')}
                   <code className="inline-flex items-center rounded-md bg-[#020307] px-2 py-1 font-mono text-xs sm:text-sm">
                     coursera.org/learn/COURSE_NAME
                   </code>
-                  , for example:{' '}
+                  {t('coursera_ingest.instructions_2')}
                   <span className="break-all text-purple-600">
                     <NextLink
                       target="_blank"
@@ -176,7 +174,7 @@ export default function CourseraIngestForm(): JSX.Element {
               disabled={!isUrlValid}
               className="h-11 w-full rounded-xl bg-purple-600 text-white transition-colors hover:bg-purple-700"
             >
-              Ingest Course
+              {t('coursera_ingest.button')}
             </Button>
           </div>
         </DialogContent>

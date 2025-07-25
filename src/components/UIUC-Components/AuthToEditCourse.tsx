@@ -4,9 +4,11 @@ import { Button, Title, Flex } from '@mantine/core'
 import { useAuth } from 'react-oidc-context'
 import { montserrat_heading } from 'fonts'
 import { initiateSignIn } from '~/utils/authHelpers'
+import { useTranslation } from 'next-i18next';
 
 export const AuthComponent = ({ course_name }: { course_name: string }) => {
   const auth = useAuth()
+  const { t } = useTranslation('common');
 
   const handleSignIn = () => {
     void initiateSignIn(
@@ -37,8 +39,7 @@ export const AuthComponent = ({ course_name }: { course_name: string }) => {
               order={2}
               p="xl"
             >
-              {' '}
-              You must sign in to create or edit content.
+              {t('must_sign_in_to_edit')}
             </Title>
             <Link href="/sign-in">
               <Button
@@ -46,7 +47,7 @@ export const AuthComponent = ({ course_name }: { course_name: string }) => {
                 style={{ fontSize: '24px' }}
                 onClick={handleSignIn}
               >
-                Sign in →
+                {t('sign_in_arrow')}
               </Button>
             </Link>
           </Flex>

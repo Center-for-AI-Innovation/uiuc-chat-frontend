@@ -4,6 +4,8 @@ import { IconSearch } from '@tabler/icons-react'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useContext, useMemo, useState } from 'react'
 import HomeContext from '~/pages/api/home/home.context'
+import { useTranslation } from 'next-i18next'
+import i18n from 'i18next'
 
 export const ToolsItem = ({}) => {
   const {
@@ -13,6 +15,7 @@ export const ToolsItem = ({}) => {
 
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const [toolSearch, setToolSearch] = useState('')
+  const { t } = useTranslation('common')
 
   // Logic to filter tools based on the search query
   const filteredTools = useMemo(() => {
@@ -41,30 +44,31 @@ export const ToolsItem = ({}) => {
       ),
     })
   }
+
+  const searchPlaceholder = t('common.search', { defaultValue: 'Search...' }) as string
+
   return (
     <>
-      <div
-        className="flex h-full w-[100%] flex-col space-y-4 rounded-lg bg-[#1d1f33] p-4 dark:bg-[#1d1f33]"
-        style={{ position: 'relative', zIndex: 100 }}
-      >
-        <div>
-          <div className="flex flex-col"></div>
-          <Title
-            className={`px-4 pt-4 ${montserrat_heading.variable} rounded-lg bg-[#15162c] p-4 font-montserratHeading`}
-            color="white"
-            order={isSmallScreen ? 5 : 3}
-          >
-            Tools
-          </Title>
-          <div className="flex flex-col items-center justify-center rounded-lg">
+      <div className="flex flex-col items-center justify-center">
+        <div className="flex w-full flex-col items-center justify-center">
+          <div className="flex w-full flex-col">
+            <Title
+              className={`px-4 pt-4 ${montserrat_heading.variable} rounded-lg bg-[#15162c] p-4 font-montserratHeading`}
+              color="white"
+              order={isSmallScreen ? 5 : 3}
+            >
+              {t('settings.sections.tools.title')}
+            </Title>
+
             <TextInput
               type="search"
-              placeholder="Search Tools"
-              my="sm"
+              placeholder={String(t('settings.sections.tools.search'))}
+              mb="sm"
               radius="md"
-              icon={<IconSearch size={isSmallScreen ? 15 : 20} />}
+              icon={<IconSearch />}
               value={toolSearch}
               onChange={handleToolSearchChange}
+              className="sticky top-0 z-10"
               w={'90%'}
               size={isSmallScreen ? 'xs' : 'sm'}
             />
@@ -80,7 +84,9 @@ export const ToolsItem = ({}) => {
                 <tr
                   className={`${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`}
                 >
-                  <th style={{ width: '60%', wordWrap: 'break-word' }}>Tool</th>
+                  <th style={{ width: '60%', wordWrap: 'break-word' }}>
+                    {t('settings.sections.tools.table.name')}
+                  </th>
                   <th
                     style={{
                       width: '40%',
@@ -89,7 +95,9 @@ export const ToolsItem = ({}) => {
                     }}
                   >
                     <span className="flex flex-col items-center justify-center">
-                      <span className="self-center">Enabled</span>
+                      <span className="self-center">
+                        {t('settings.sections.tools.table.enabled')}
+                      </span>
                     </span>
                   </th>
                 </tr>
@@ -123,7 +131,9 @@ export const ToolsItem = ({}) => {
                 {filteredTools.length === 0 && (
                   <tr>
                     <td colSpan={4}>
-                      <Text align="center">No tools found</Text>
+                      <Text align="center">
+                        {t('settings.sections.tools.table.no_tools')}
+                      </Text>
                     </td>
                   </tr>
                 )}

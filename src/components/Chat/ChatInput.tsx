@@ -91,7 +91,7 @@ export const ChatInput = ({
   chat_ui,
   onRegenerate,
 }: Props) => {
-  const { t } = useTranslation('chat')
+  const { t } = useTranslation('common')
 
   const {
     state: {
@@ -192,9 +192,7 @@ export const ChatInput = ({
     const maxLength = selectedConversation?.model?.tokenLimit
 
     if (maxLength && value.length > maxLength) {
-      alert(
-        `This LLM can only handle ${maxLength} characters, but you entered ${value.length} characters. Please switch to a model with a bigger input limit (like Gemini, Claude or GPT) or shorten your message.`,
-      )
+      alert(t('chat.input.llm_input_limit', { maxLength, valueLength: value.length }))
       return
     }
 
@@ -249,7 +247,7 @@ export const ChatInput = ({
     }
 
     if (!textContent && imageContent.length === 0) {
-      alert(t('Please enter a message or upload an image'))
+      alert(t('chat.input.please_enter_message_or_upload_image'))
       return
     }
 
@@ -423,7 +421,7 @@ export const ChatInput = ({
           errorResponse.error ||
           'An error occurred while processing your request'
         notifications.show({
-          message: errorMessage,
+          message: t('chat.' + errorMessage),
           color: 'red',
         })
         return
@@ -436,7 +434,7 @@ export const ChatInput = ({
         message:
           error instanceof Error
             ? error.message
-            : 'Failed to send message. Please try again.',
+            : t('chat.Failed to send message. Please try again.'),
         color: 'red',
       })
     } finally {
@@ -491,9 +489,7 @@ export const ChatInput = ({
       const invalidFilesCount = files.length - validFiles.length
 
       if (invalidFilesCount > 0) {
-        setImageError(
-          `${invalidFilesCount} invalid file type(s). Please upload .jpg or .png images.`,
-        )
+        setImageError(t('chat.input.invalid_image_file_type', { count: invalidFilesCount }))
         showToastOnInvalidImage()
       }
 
@@ -817,7 +813,7 @@ export const ChatInput = ({
             onClick={handleStopConversation}
             style={{ pointerEvents: 'auto' }}
           >
-            <IconPlayerStop size={16} /> {t('Stop Generating')}
+            <IconPlayerStop size={16} /> {t('chat.input.stop_generating')}
           </button>
         )}
 
@@ -833,7 +829,7 @@ export const ChatInput = ({
               onClick={onRegenerate}
               style={{ pointerEvents: 'auto' }}
             >
-              <IconRepeat size={16} /> {t('Regenerate Response')}
+              <IconRepeat size={16} /> {t('chat.input.regenerate_response')}
             </button>
           )}
 
@@ -922,7 +918,7 @@ export const ChatInput = ({
                     className="h-full w-full rounded-lg object-cover"
                   />
                   <Tooltip
-                    label="Remove File"
+                    label={String(t('chat.input.remove_file'))}
                     position="top"
                     withArrow
                     style={{
@@ -987,7 +983,7 @@ export const ChatInput = ({
                   overflow: 'hidden',
                   pointerEvents: 'auto',
                 }}
-                placeholder={'Message UIUC.chat'}
+                placeholder={t('chat.input.message_placeholder')}
                 value={content}
                 rows={1}
                 onCompositionStart={() => setIsTyping(true)}

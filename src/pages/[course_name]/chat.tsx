@@ -12,8 +12,18 @@ import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { montserrat_heading } from 'fonts'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { GetServerSidePropsContext } from 'next'
+import { useTranslation } from 'next-i18next'
+
+export const getServerSideProps = async ({ locale }: GetServerSidePropsContext) => ({
+  props: {
+    ...(await serverSideTranslations(locale ?? 'en', ['common', 'chat', 'sidebar'])),
+  },
+});
 
 const ChatPage: NextPage = () => {
+  const { t } = useTranslation('common')
   const auth = useAuth()
   const router = useRouter()
   const getCurrentPageName = () => {
@@ -104,12 +114,6 @@ const ChatPage: NextPage = () => {
   // UseEffect to check user permissions and fetch user email
   useEffect(() => {
     const checkAuthorization = async () => {
-      // console.log('Starting authorization check', {
-      //   isAuthLoading: auth.isLoading,
-      //   isRouterReady: router.isReady,
-      //   authUser: auth.user?.profile.email || 'No user email',
-      // })
-
       if (!auth.isLoading && router.isReady) {
         const courseName = router.query.course_name as string
         try {
@@ -117,70 +121,70 @@ const ChatPage: NextPage = () => {
           const metadata = await fetchCourseMetadata(courseName)
 
           if (!metadata) {
-            router.replace(`/new?course_name=${courseName}`)
-            return
+            router.replace(`/new?course_name=${courseName}`);
+            return;
           }
 
           // Check if course is public
           if (!metadata.is_private) {
-            setIsAuthorized(true)
+            setIsAuthorized(true);
 
             // Set email for public access
             if (auth.user?.profile.email) {
-              setCurrentEmail(auth.user.profile.email)
+              setCurrentEmail(auth.user.profile.email);
             } else {
               // Use PostHog ID when user is not logged in for public courses
-              const key = process.env.NEXT_PUBLIC_POSTHOG_KEY as string
-              const postHogUserObj = localStorage.getItem(
-                'ph_' + key + '_posthog',
-              )
+              const key = process.env.NEXT_PUBLIC_POSTHOG_KEY as string;
+              const postHogUserObj = localStorage.getItem('ph_' + key + '_posthog');
 
               if (postHogUserObj) {
-                const postHogUser = JSON.parse(postHogUserObj)
-                setCurrentEmail(postHogUser.distinct_id)
+                const postHogUser = JSON.parse(postHogUserObj);
+                setCurrentEmail(postHogUser.distinct_id);
               } else {
                 // When user is not logged in and posthog user is not found
-                setCurrentEmail('')
+                setCurrentEmail('');
               }
             }
-            return
+            return;
           } else {
             // For private courses, user must be authenticated
             if (!auth.isAuthenticated) {
-              router.replace(`/${courseName}/not_authorized`)
-              return
+              router.replace(`/${courseName}/not_authorized`);
+              return;
             }
 
             // Set email for authenticated users
             if (auth.user?.profile.email) {
-              setCurrentEmail(auth.user.profile.email)
+              setCurrentEmail(auth.user.profile.email);
             } else {
-              console.error('Authenticated user has no email')
-              router.replace(`/${courseName}/not_authorized`)
-              return
+              console.error(t('chat.loading.authenticated_user_error'));
+              router.replace(`/${courseName}/not_authorized`);
+              return;
             }
           }
 
-          const permission = get_user_permission(metadata, auth)
+          const permission = get_user_permission(metadata, auth);
 
           if (permission === 'no_permission') {
-            router.replace(`/${courseName}/not_authorized`)
-            return
+            router.replace(`/${courseName}/not_authorized`);
+            return;
           }
 
-          setIsAuthorized(true)
+          setIsAuthorized(true);
         } catch (error) {
-          console.error('Authorization check failed:', error)
-          setIsAuthorized(false)
+          console.error('Authorization check failed:', error);
+          setIsAuthorized(false);
         }
       }
-    }
+    };
 
-    checkAuthorization()
-  }, [auth.isLoading, auth.isAuthenticated, router.isReady, auth, router])
+    checkAuthorization();
+  }, [auth.isLoading, auth.isAuthenticated, router.isReady, auth, router]);
 
   return (
     <>
+      {/* Dummy usage to ensure common namespace is loaded for translations in modals */}
+      <div style={{ display: 'none' }}>{t('settings')}</div>
       {!isLoading &&
         !auth.isLoading &&
         router.isReady &&
@@ -199,20 +203,20 @@ const ChatPage: NextPage = () => {
             }}
           />
         )}
-      {isLoading ||
+      {(isLoading ||
         !currentEmail ||
         (currentEmail === '' && (
           <MainPageBackground>
             <div
               className={`flex items-center justify-center font-montserratHeading ${montserrat_heading.variable}`}
             >
-              <span className="mr-2">Warming up the knowledge engines...</span>
+              <span className="mr-2">{t('chat.loading.knowledge_engines')}</span>
               <LoadingSpinner size="sm" />
             </div>
           </MainPageBackground>
-        ))}
+        )))}
     </>
-  )
-}
+  );
+};
 
-export default ChatPage
+export default ChatPage;

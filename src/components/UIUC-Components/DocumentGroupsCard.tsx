@@ -5,10 +5,12 @@ import { IconInfoCircle } from '@tabler/icons-react'
 import { useMediaQuery } from '@mantine/hooks'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'next-i18next'
 
 function DocumentGroupsCard({ course_name }: { course_name: string }) {
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const [accordionOpened, setAccordionOpened] = useState(false)
+  const { t } = useTranslation('common')
 
   return (
     <Card
@@ -30,14 +32,14 @@ function DocumentGroupsCard({ course_name }: { course_name: string }) {
                 order={3}
                 className={`${montserrat_heading.variable} font-montserratHeading text-lg text-white/90 sm:text-2xl`}
               >
-                Document Groups
+                {t('dashboard.document_groups')}
               </Title>
               <ActionIcon
                 variant="subtle"
                 color="gray"
                 onClick={() => setAccordionOpened(!accordionOpened)}
                 className="hover:bg-white/10"
-                title="More info on document groups"
+                title={t('dashboard.document_groups_info') || ''}
               >
                 <IconInfoCircle className="text-white/60" />
               </ActionIcon>
@@ -63,8 +65,7 @@ function DocumentGroupsCard({ course_name }: { course_name: string }) {
                     <Text
                       className={`${montserrat_paragraph.variable} mb-4 font-montserratParagraph text-white/80`}
                     >
-                      Document Groups help you organize and control your
-                      content:
+                      {t('dashboard.document_groups_description')}
                     </Text>
                     <ul className="list-inside list-disc space-y-2 text-white/80">
                       <li className="text-sm">
