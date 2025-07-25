@@ -23,14 +23,19 @@ export const getBaseUrl = () => {
  * @throws {Error} - If RAILWAY_URL is not set
  */
 export const getBackendUrl = (): string => {
+  // For development, use local backend
+  //if (process.env.NODE_ENV === 'development') {
+  //  return 'http://127.0.0.1:8000'
+  //}
+
   const backendUrl = process.env.RAILWAY_URL
-  
+
   if (!backendUrl) {
     throw new Error(
-      'Backend URL is not configured. Please set the RAILWAY_URL environment variable.'
+      'Backend URL is not configured. Please set the RAILWAY_URL environment variable.',
     )
   }
-  
+
   // Remove trailing slash if present for consistency
   return backendUrl.endsWith('/') ? backendUrl.slice(0, -1) : backendUrl
 }
