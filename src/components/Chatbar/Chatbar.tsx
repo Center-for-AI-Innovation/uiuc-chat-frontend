@@ -41,7 +41,7 @@ export const Chatbar = ({
   courseName: string | undefined
   courseMetadata?: CourseMetadata | null
 }) => {
-  const { t } = useTranslation('sidebar')
+  const { t } = useTranslation('common')
   const chatBarContextValue = useCreateReducer<ChatbarInitialState>({
     initialState,
   })
@@ -439,7 +439,7 @@ export const Chatbar = ({
       <Sidebar<Conversation>
         side={'left'}
         isOpen={showChatbar}
-        addItemButtonTitle={t('New chat') || ''}
+        addItemButtonTitle={t('sidebar.newChat') || ''}
         itemComponent={
           <Suspense
             fallback={
@@ -497,7 +497,7 @@ export const Chatbar = ({
         }
         toggleOpen={handleToggleChatbar}
         handleCreateItem={handleNewConversation}
-        handleCreateFolder={() => handleCreateFolder(t('New folder'), 'chat')}
+        handleCreateFolder={() => handleCreateFolder(t('sidebar.newFolder'), 'chat')}
         handleDrop={handleDrop}
         footerComponent={<ChatbarSettings />}
         onScroll={handleScroll}

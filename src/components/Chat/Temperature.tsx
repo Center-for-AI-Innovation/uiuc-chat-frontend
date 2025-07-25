@@ -62,7 +62,7 @@ export const TemperatureSlider: FC<Props> = ({
       llmProviders,
     ),
   )
-  const { t } = useTranslation('chat')
+  const { t } = useTranslation('common')
   const handleChange = (value: number) => {
     setTemperature(value)
     onChangeTemperature(value)
@@ -74,7 +74,7 @@ export const TemperatureSlider: FC<Props> = ({
         className={`px-4 pt-4 ${montserrat_heading.variable} rounded-lg bg-[--modal-dark] p-4 font-montserratHeading text-[--modal-text] md:rounded-lg`}
         order={isSmallScreen ? 5 : 4}
       >
-        {label}
+        {t('settings.sections.temperature.title')}
       </Title>
       <div className="mx-6 my-4 flex flex-col">
         <div className={`mb-1 mt-2 text-center`}>
@@ -89,9 +89,9 @@ export const TemperatureSlider: FC<Props> = ({
           max={1}
           step={0.1}
           marks={[
-            { value: 0, label: t('Precise') },
-            { value: 0.5, label: t('Neutral') },
-            { value: 1, label: t('Creative') },
+            { value: 0, label: t('settings.sections.temperature.marks.precise') },
+            { value: 0.5, label: t('settings.sections.temperature.marks.neutral') },
+            { value: 1, label: t('settings.sections.temperature.marks.creative') },
           ]}
           showLabelOnHover
           className="m-2"
@@ -104,7 +104,7 @@ export const TemperatureSlider: FC<Props> = ({
         <span
           className={`mt-8 text-left text-gray-400 dark:text-white/50 ${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`}
         >
-          {t('temperature_hint')}
+          {t('settings.sections.temperature.hint')}
         </span>
       </div>
     </div>

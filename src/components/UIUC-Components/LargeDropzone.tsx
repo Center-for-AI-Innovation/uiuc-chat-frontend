@@ -418,12 +418,12 @@ export function LargeDropzone({
                 mt={isSmallScreen ? 'md' : 'xl'}
                 className="text-[--dashboard-foreground]"
               >
-                <Dropzone.Accept>{t('dropzone_accept')}</Dropzone.Accept>
-                <Dropzone.Reject>{t('dropzone_reject')}</Dropzone.Reject>
+                <Dropzone.Accept>{t('dropzone.accept')}</Dropzone.Accept>
+                <Dropzone.Reject>{t('dropzone.reject')}</Dropzone.Reject>
                 <Dropzone.Idle>
                   {isDisabled
-                    ? t('dropzone_idle_project_name')
-                    : t('dropzone_idle_upload_materials')}
+                    ? t('dropzone.idle_project_name')
+                    : t('dropzone.idle_upload_materials')}
                 </Dropzone.Idle>
               </Text>
 
@@ -434,7 +434,7 @@ export function LargeDropzone({
                   mt="xs"
                   className="text-[--foreground-faded]"
                 >
-                  {t('dropzone_drag_helper')}
+                  {t('dropzone.drag_helper')}
                 </Text>
               )}
 
@@ -454,7 +454,7 @@ export function LargeDropzone({
                   lineHeight: '1.4',
                 }}
               >
-                {t('remain_until_upload_complete')}
+                {t('dropzone.remain_until_upload_complete')}
               </Title>
             </div>
           )}

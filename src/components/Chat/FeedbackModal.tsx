@@ -87,7 +87,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
     <Modal
       opened={isOpen}
       onClose={onClose}
-      title={<Text className={classes.title}>Feedback</Text>}
+      title={<Text className={classes.title}>{t('feedback')}</Text>}
       classNames={classes}
       centered
       withCloseButton={false}
@@ -109,8 +109,8 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
       }}
     >
       <Select
-        label="Feedback Category"
-        placeholder="Select a category"
+        label={t('feedback_category')}
+        placeholder={t('feedback_category_placeholder')}
         data={[
           { value: 'inaccurate', label: 'Not factually correct' },
           { value: 'inappropriate', label: 'Harmful content' },
@@ -166,7 +166,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
             marginBottom: theme.spacing.xs,
           },
         })}
-        aria-label="Feedback category select"
+        aria-label={t('feedback_category')}
       />
       <Textarea
         label={
@@ -177,20 +177,20 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
             </Text>
           </Group>
         }
-        placeholder="Share any additional details about your feedback"
+        placeholder={t('feedback_details_placeholder')}
         value={feedback}
         onChange={(event) => setFeedback(event.currentTarget.value)}
         minRows={4}
         mb="md"
         classNames={{ input: classes.textarea }}
-        aria-label="Optional feedback details textarea"
+        aria-label={t('feedback_details')}
       />
 
       <Group className={classes.buttonGroup}>
         <Button
           onClick={onClose}
           variant="outline"
-          aria-label="Cancel"
+          aria-label={t('cancel')}
           sx={{
             backgroundColor: 'transparent',
             color: 'var(--foreground-faded)',
@@ -201,13 +201,13 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
             },
           }}
         >
-          Cancel
+          {t('cancel')}
         </Button>
         <Button
           onClick={handleSubmit}
           disabled={isSubmitting}
           loading={isSubmitting}
-          aria-label="Submit Feedback"
+          aria-label={t('feedback.submit_aria')}
           sx={{
             backgroundColor: `var(--dashboard-button) !important`,
             color: 'var(--dashboard-button-foreground)',
@@ -229,7 +229,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
             },
           }}
         >
-          Submit
+          {t('submit')}
         </Button>
       </Group>
     </Modal>

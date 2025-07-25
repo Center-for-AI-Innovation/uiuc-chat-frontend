@@ -175,7 +175,7 @@ export default function CanvasIngestForm({
         <DialogContent className="mx-auto h-auto max-h-[85vh] w-[95%] max-w-2xl overflow-y-auto !rounded-2xl border-0 bg-[--modal] px-4 py-6 text-[--modal-text] sm:px-6">
           <DialogHeader>
             <DialogTitle className="mb-1 text-left text-xl font-bold">
-              {t('import_canvas_content')}
+              {t('canvas_ingest.import_content')}
             </DialogTitle>
           </DialogHeader>
 
@@ -191,7 +191,7 @@ export default function CanvasIngestForm({
             }}
           >
             <span className="font-semibold">
-              {t('canvas_permission_instructions')}
+              {t('canvas_ingest.permission_instructions')}{' '}
               <NextLink
                 href="https://canvas.illinois.edu/"
                 target="_blank"
@@ -297,12 +297,12 @@ export default function CanvasIngestForm({
               <Label className="block ">Select Content to Import</Label>
               <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {[
-                  t('files'),
-                  t('pages'),
-                  t('modules'),
-                  t('syllabus'),
-                  t('assignments'),
-                  t('discussions'),
+                  t('canvas_ingest.files'),
+                  t('canvas_ingest.pages'),
+                  t('canvas_ingest.modules'),
+                  t('canvas_ingest.syllabus'),
+                  t('canvas_ingest.assignments'),
+                  t('canvas_ingest.discussions'),
                 ].map((option) => (
                   <div
                     key={option}

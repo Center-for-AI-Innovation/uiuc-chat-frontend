@@ -242,7 +242,7 @@ const Sidebar = <T,>({
         </Tooltip>
 
         <Search
-          placeholder={t('search') || ''}
+          placeholder={t('sidebar.search') || ''}
           searchTerm={searchTerm}
           onSearch={handleSearchTerm}
         />
@@ -268,7 +268,7 @@ const Sidebar = <T,>({
             <div className="mt-8 select-none text-center text-[--foreground] opacity-50">
               <IconMistOff className="mx-auto mb-3" />
               <span className="text-[14px] leading-normal">
-                {t('no_data')}
+                {t('sidebar.noData')}
               </span>
             </div>
           )}

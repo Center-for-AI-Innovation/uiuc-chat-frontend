@@ -341,8 +341,8 @@ function UploadNotificationContent({
                       <Tooltip
                         label={
                           file.status === 'uploading'
-                            ? 'Uploading to secure storage'
-                            : 'Processing for chat'
+                            ? t('uploading_to_secure_storage')
+                            : t('processing_for_chat')
                         }
                         classNames={{
                           tooltip: `${montserrat_paragraph.variable} font-montserratParagraph`,
@@ -354,7 +354,7 @@ function UploadNotificationContent({
 
                     {file.status === 'complete' && (
                       <Tooltip
-                        label="Ready for chat"
+                        label={t('ready_for_chat')}
                         classNames={{
                           tooltip: `${montserrat_paragraph.variable} font-montserratParagraph`,
                         }}
@@ -367,7 +367,7 @@ function UploadNotificationContent({
                     )}
                     {file.status === 'error' && (
                       <Tooltip
-                        label="Upload failed"
+                        label={t('upload_failed')}
                         classNames={{
                           tooltip: `${montserrat_paragraph.variable} font-montserratParagraph`,
                         }}

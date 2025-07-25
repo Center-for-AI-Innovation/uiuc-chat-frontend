@@ -228,7 +228,7 @@ export const ChatInput = ({
   chat_ui,
   onRegenerate,
 }: Props) => {
-  const { t } = useTranslation('chat')
+  const { t } = useTranslation('common')
 
   const {
     state: {
@@ -319,7 +319,7 @@ export const ChatInput = ({
     const maxLength = selectedConversation?.model?.tokenLimit
 
     if (maxLength && value.length > maxLength) {
-      alert(t('llm_input_limit', { maxLength, length: value.length }))
+      alert(t('chat.input.llm_input_limit', { maxLength, valueLength: value.length }))
       return
     }
 

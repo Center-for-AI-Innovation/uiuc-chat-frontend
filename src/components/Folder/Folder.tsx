@@ -34,7 +34,7 @@ const Folder = ({
   handleDrop,
   folderComponent,
 }: Props) => {
-  const { t } = useTranslation('sidebar')
+  const { t } = useTranslation('common')
   const { handleDeleteFolder, handleUpdateFolder } = useContext(HomeContext)
 
   const [isDeleting, setIsDeleting] = useState(false)
@@ -110,7 +110,7 @@ const Folder = ({
               onChange={(e) => setRenameValue(e.target.value)}
               onKeyDown={handleEnterDown}
               autoFocus
-              placeholder={t('rename_folder_placeholder') || ''}
+              placeholder={t('sidebar.rename_folder_placeholder') || ''}
             />
           </div>
         ) : (
@@ -149,7 +149,7 @@ const Folder = ({
                 setIsDeleting(false)
                 setIsRenaming(false)
               }}
-              tooltip={(isRenaming ? t('confirm') : t('delete')) || ''}
+              tooltip={(isRenaming ? t('sidebar.confirm') : t('sidebar.delete')) || ''}
             >
               <IconCheck
                 size={18}
@@ -162,7 +162,7 @@ const Folder = ({
                 setIsDeleting(false)
                 setIsRenaming(false)
               }}
-              tooltip={t('cancel') || ''}
+              tooltip={t('sidebar.cancel') || ''}
             >
               <IconX
                 size={18}
@@ -180,7 +180,7 @@ const Folder = ({
                 setIsRenaming(true)
                 setRenameValue(currentFolder.name)
               }}
-              tooltip={t('rename') || ''}
+              tooltip={t('sidebar.rename') || ''}
             >
               <IconPencil size={18} />
             </SidebarActionButton>
@@ -189,7 +189,7 @@ const Folder = ({
                 e.stopPropagation()
                 setIsDeleting(true)
               }}
-              tooltip={t('delete') || ''}
+              tooltip={t('sidebar.delete') || ''}
             >
               <IconTrash size={18} />
             </SidebarActionButton>

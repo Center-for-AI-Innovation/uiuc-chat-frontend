@@ -4,7 +4,7 @@ import { type FC } from 'react'
 interface Props {}
 
 export const ChatLoader: FC<Props> = () => {
-  const { t } = useTranslation('chat')
+  const { t } = useTranslation('common')
   return (
     <div
       className="group border-b border-[--background-dark] bg-[--background-faded] text-[--foreground]"

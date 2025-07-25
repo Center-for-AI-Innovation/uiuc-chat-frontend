@@ -5,10 +5,6 @@ import { useEffect, useState } from 'react'
 import { Switch, Text } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import {
-  // IconArrowsSort,
-  // IconCaretDown,
-  // IconCaretUp,
-  // IconSquareArrowUp,
   IconAlertCircle,
 } from '@tabler/icons-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -82,6 +78,7 @@ export const N8nWorkflowsTable = ({
 }: N8nWorkflowsTableProps) => {
   const [page, setPage] = useState(1)
   const queryClient = useQueryClient()
+  const { t } = useTranslation('common')
 
   // Get responsive width classes based on sidebar state
   const widthClasses = sidebarCollapsed
@@ -111,13 +108,9 @@ export const N8nWorkflowsTable = ({
     },
 
     onMutate: (variables) => {
-      // A mutation is about to happen!
-
-      // Optionally return a context containing data to use when for example rolling back
       return { id: 1 }
     },
     onError: (error, variables, context) => {
-      // An error happened!
       console.log(`Error happened ${error}`)
       notifications.show({
         id: 'error-notification',
@@ -128,7 +121,7 @@ export const N8nWorkflowsTable = ({
         autoClose: 12000,
         title: (
           <Text size={'lg'} className={`${montserrat_med.className}`}>
-            Error with activation
+            {t('tools_section.alerts.error.activation_failed')}
           </Text>
         ),
         message: (
@@ -146,11 +139,9 @@ export const N8nWorkflowsTable = ({
       })
     },
     onSuccess: (data, variables, context) => {
-      // Boom baby!
       console.log(`success`, data)
     },
     onSettled: (data, error, variables, context) => {
-      // Error or success... doesn't matter!
       queryClient.invalidateQueries({
         queryKey: ['tools', n8nApiKey],
       })
@@ -158,7 +149,6 @@ export const N8nWorkflowsTable = ({
   })
 
   useEffect(() => {
-    // Refetch if API key changes
     refetchWorkflows()
   }, [n8nApiKey])
 
@@ -189,8 +179,63 @@ export const N8nWorkflowsTable = ({
       const dateB = new Date(b.createdAt as string)
       return dateB.getTime() - dateA.getTime()
     })
-    currentRecords = (sortedRecords as UIUCTool[]).slice(startIndex, endIndex)
+    currentRecords = (sortedRecords as WorkflowRecord[]).slice(startIndex, endIndex)
   }
+
+  const tableColumns = [
+    { 
+      accessor: 'name', 
+      title: t('tools_section.table.name', { defaultValue: 'Name' }),
+      render: (record: WorkflowRecord) => record.name || ''
+    },
+    {
+      accessor: 'enabled',
+      title: t('tools_section.table.enabled', { defaultValue: 'Enabled' }),
+      width: 100,
+      render: (record: WorkflowRecord) => (
+        <Switch
+          checked={!!record.active}
+          onChange={(event) => {
+            mutate_active_flows.mutate({
+              id: record.id,
+              checked: event.target.checked,
+            })
+          }}
+        />
+      ),
+    },
+    {
+      accessor: 'tags',
+      title: t('tools_section.table.tags', { defaultValue: 'Tags' }),
+      width: 100,
+      render: (record: WorkflowRecord) => {
+        return record.tags
+          ? record.tags.map((tag: Tag) => tag.name).join(', ')
+          : ''
+      },
+    },
+    {
+      accessor: 'createdAt',
+      title: t('tools_section.table.created_at', { defaultValue: 'Created at' }),
+      width: 120,
+      render: (record: WorkflowRecord) => {
+        const { createdAt } = record
+        return dayjs(createdAt).format('MMM D YYYY, h:mm A')
+      },
+    },
+    {
+      accessor: 'updatedAt',
+      title: t('tools_section.table.updated_at', { defaultValue: 'Updated at' }),
+      width: 120,
+      render: (record: WorkflowRecord) => {
+        const { updatedAt } = record
+        return dayjs(updatedAt).format('MMM D YYYY, h:mm A')
+      },
+    },
+  ]
+
+  const loadingText = t('common.loading', { defaultValue: 'Loading...' }) as string
+  const noRecordsText = t('tools_section.no_tools_found', { defaultValue: 'No tools found' }) as string
 
   return (
     <>
@@ -210,16 +255,14 @@ export const N8nWorkflowsTable = ({
         data to answer user questions on the{' '}
         <a
           href={`/${course_name}/chat`}
-          // target="_blank"
           rel="noopener noreferrer"
           className="text-[--dashboard-button] hover:text-[--dashboard-button-hover]"
           style={{
             textDecoration: 'underline',
           }}
         >
-          chat page
+          {t('tools_section.chatPage', { defaultValue: 'Chat Page' })}
         </a>
-        .
       </Text>
 
       {/* dataTable styling options https://icflorescu.github.io/mantine-datatable/examples/overriding-the-default-styles/  */}

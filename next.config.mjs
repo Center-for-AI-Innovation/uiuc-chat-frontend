@@ -3,7 +3,7 @@
  * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially useful
  * for Docker builds.
  */
-import nextI18NextConfig from './next-i18next.config.mjs'
+import nextI18NextConfig from './next-i18next.config.js'
 import withBundleAnalyzer from '@next/bundle-analyzer'
 
 const bundleAnalyzerConfig = {

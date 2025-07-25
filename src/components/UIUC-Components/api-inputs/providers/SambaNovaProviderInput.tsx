@@ -36,13 +36,12 @@ export default function SambaNovaProviderInput({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            width: '100%',
           }}
         >
           <div>
             <a
               className="mb-3"
-              href="https://sambanova.ai/api"
+              href="https://sambanova.ai/"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -53,7 +52,7 @@ export default function SambaNovaProviderInput({
                   mb="xs"
                   style={{ paddingRight: '8px' }}
                 >
-                  {t('sambanova_title')}
+                  {t('models.sambanova.title')}
                 </Text>
                 <IconExternalLink size={16} className="mb-3" />
               </div>
@@ -64,9 +63,9 @@ export default function SambaNovaProviderInput({
               <Switch
                 size="md"
                 labelPosition="left"
-                onLabel={t('on')}
-                offLabel={t('off')}
-                aria-label={t('enable_sambanova_provider') || ''}
+                onLabel={t('models.on')}
+                offLabel={t('models.off')}
+                aria-label={t('models.enable_model', { model: 'SambaNova' }) || ''}
                 checked={field.state.value}
                 onChange={(event) => {
                   event.preventDefault()
@@ -131,7 +130,7 @@ export default function SambaNovaProviderInput({
                     {(apiKeyField: any) => (
                       <APIKeyInput
                         field={apiKeyField}
-                        placeholder={t('sambanova_api_key') || ''}
+                        placeholder={t('models.sambanova.title')}
                       />
                     )}
                   </form.Field>

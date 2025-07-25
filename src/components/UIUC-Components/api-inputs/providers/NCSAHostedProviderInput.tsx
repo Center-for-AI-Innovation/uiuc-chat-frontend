@@ -50,7 +50,7 @@ export default function NCSAHostedLLmsProviderInput({
                   mb="xs"
                   style={{ paddingRight: '8px' }}
                 >
-                  {t('ncsa_hosted_llms_title')}
+                  {t('models.ncsa_hosted.title')}
                 </Text>
                 <IconExternalLink size={16} className="mb-3" />
               </div>
@@ -61,9 +61,9 @@ export default function NCSAHostedLLmsProviderInput({
               <Switch
                 size="md"
                 labelPosition="left"
-                onLabel={t('on')}
-                offLabel={t('off')}
-                aria-label={t('enable_ncsa_hosted_llms_provider') || ''}
+                onLabel={t('models.on')}
+                offLabel={t('models.off')}
+                aria-label={t('models.enable_model', { model: 'NCSA Hosted' })}
                 checked={field.state.value}
                 onChange={(event) => {
                   field.handleChange(event.currentTarget.checked)
@@ -96,7 +96,7 @@ export default function NCSAHostedLLmsProviderInput({
           </form.Field>
         </div>
         <Text size="sm" color="dimmed" mb="md">
-          {t('ncsa_hosted_llms_helper_text')}
+          {t('models.ncsa_hosted.description')}
         </Text>
         {provider?.error &&
           (form.state.values?.providers?.NCSAHosted?.enabled ||

@@ -149,58 +149,55 @@ export function DocGroupsTable({ course_name }: { course_name: string }) {
               borderCollapse: 'separate',
               borderSpacing: 0,
               overflow: 'hidden',
-            }}
+          }}
             // withBorder
             withColumnBorders
           >
             <thead>
               <tr>
                 <th className="w-[50%] sm:w-[60%] md:w-[70%]">
-                  {t('documents.document_group')}
-                </th>
+                {t('documents.document_group')}
+              </th>
                 <th className="w-[30%] sm:w-[25%] md:w-[15%]">
-                  {t('documents.number_of_docs')}
-                </th>
+                {t('documents.number_of_docs')}
+              </th>
                 <th className="w-[20%] text-center sm:w-[15%]">
                   <Tooltip
                     multiline
                     color="var(--illinois-orange)"
                     arrowPosition="center"
-                    arrowSize={8}
+                  arrowSize={8}
                     width={220}
-                    withArrow
-                    label={t('documents.enabled_tooltip') || ''}
-                  >
+                  withArrow
+                  label={t('documents.enabled_tooltip')}
+                >
                     <span className="flex items-center justify-center whitespace-nowrap">
                       <span className="hidden sm:inline">{t('documents.enabled')}</span>
                       <IconHelp size={16} className="ml-1" />
-                    </span>
-                  </Tooltip>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredDocumentGroups.map((doc_group_obj, index) => (
-                <tr key={index}>
-                  <td style={{ wordWrap: 'break-word' }}>
+                  </span>
+                </Tooltip>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredDocumentGroups.map((doc_group_obj, index) => (
+              <tr key={index}>
+                <td style={{ wordWrap: 'break-word' }}>
                     <Text>{doc_group_obj.name}</Text>
-                  </td>
-                  {/* <td style={{ wordWrap: 'break-word' }}>
-                      <Text>{doc_group_obj.description}</Text>
-                    </td> */}
-                  <td style={{ wordWrap: 'break-word' }}>
+                </td>
+                <td style={{ wordWrap: 'break-word' }}>
                     <Text>{doc_group_obj.doc_count}</Text>
-                  </td>
-                  <td
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'center',
-                      wordWrap: 'break-word',
-                    }}
-                  >
-                    <Switch
-                      checked={doc_group_obj.enabled}
-                      onChange={(event) =>
+                </td>
+                <td
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    wordWrap: 'break-word',
+                  }}
+                >
+                  <Switch
+                    checked={doc_group_obj.enabled}
+                    onChange={(event) =>
                         updateDocGroup.mutate({
                           doc_group_obj,
                           enabled: event.currentTarget.checked,

@@ -109,8 +109,7 @@ const useStyles = createStyles((theme) => ({
 
 const SupportedFileUploadTypes = () => {
   const { classes, theme } = useStyles()
-  // className={classes.wrapper}
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('common')
   const fileTypes: FileType[] = [
     { icon: IconFileTypePdf, label: 'PDF', color: 'text-red-500' },
     { icon: IconFileTypeDocx, label: 'Word', color: 'text-blue-500' },
@@ -152,7 +151,7 @@ const SupportedFileUploadTypes = () => {
                   </motion.div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{t('files_supported', { type: type.label })}</p>
+                  <p>{t('file_types.files_supported', { type: type.label })}</p>
                 </TooltipContent>
               </Tooltip>
             )

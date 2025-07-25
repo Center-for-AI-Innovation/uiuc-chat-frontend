@@ -105,7 +105,7 @@ export default function CourseraIngestForm(): JSX.Element {
         <DialogContent className="mx-auto h-auto max-h-[85vh] w-[95%] max-w-2xl overflow-y-auto !rounded-2xl border-0 bg-[--modal] px-4 py-6 text-[--modal-text] sm:px-6">
           <DialogHeader>
             <DialogTitle className="mb-4 text-left text-xl font-bold">
-              {t('coursera_ingest_title')}
+              {t('coursera_ingest.title')}
             </DialogTitle>
           </DialogHeader>
           <div className="">
@@ -176,7 +176,7 @@ export default function CourseraIngestForm(): JSX.Element {
               disabled={!isUrlValid}
               className="h-11 w-full rounded-xl bg-[--dashboard-button] text-[--dashboard-button-foreground] transition-colors hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--background-dark]"
             >
-              {t('coursera_ingest_button')}
+              {t('coursera_ingest.button')}
             </Button>
           </div>
         </DialogContent>

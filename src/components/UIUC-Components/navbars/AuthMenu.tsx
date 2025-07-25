@@ -86,6 +86,7 @@ interface AuthMenuProps {
 export const AuthMenu = ({ size = 34 }: AuthMenuProps) => {
   const { classes } = useStyles()
   const auth = useAuth()
+  const { t } = useTranslation('common')
 
   if (auth.isAuthenticated) {
     return (
@@ -122,9 +123,9 @@ export const AuthMenu = ({ size = 34 }: AuthMenuProps) => {
               )
             }}
           >
-            Manage Account
+            {t('auth.manage_account')}
           </Menu.Item>
-          <Menu.Item onClick={() => auth.signoutRedirect()}>Sign Out</Menu.Item>
+          <Menu.Item onClick={() => auth.signoutRedirect()}>{t('auth.sign_out')}</Menu.Item>
         </Menu.Dropdown>
       </Menu>
     )

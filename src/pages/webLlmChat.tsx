@@ -39,7 +39,7 @@ const ChatComponent = () => {
           })
         }}
       >
-        {t('download_model')}
+        {t('downloadModel')}
       </button>
 
       <div className="chatui">
@@ -58,7 +58,7 @@ const ChatComponent = () => {
             id="chatui-input"
             type="text"
             className="chatui-input"
-            placeholder={t('enter_your_message') || ''}
+            placeholder={t('enterYourMessage') || ''}
             onKeyDown={(event) => {
               if (event.key === 'Enter') {
                 chat_ui
@@ -93,7 +93,7 @@ const ChatComponent = () => {
               .catch((error) => console.log(error))
           }}
         >
-          {t('reset_chat')}
+          {t('resetChat')}
         </button>
         <label id="chatui-info-label">{runtimeStats}</label>
       </div>

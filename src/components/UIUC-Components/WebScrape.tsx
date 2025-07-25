@@ -144,10 +144,7 @@ export const WebScrape = ({
       let data = null
       // Make API call based on URL
       if (url.includes('coursera.org')) {
-        // TODO: coursera ingest
-        alert(
-          'Coursera ingest is not yet automated (auth is hard). Please email rohan13@illinois.edu to do it for you',
-        )
+        alert(t('alerts.coursera_ingest'));
       } else if (url.includes('ocw.mit.edu')) {
         data = downloadMITCourse(url, courseName, 'local_dir') // no await -- do in background
 
@@ -189,7 +186,7 @@ export const WebScrape = ({
         await new Promise((resolve) => setTimeout(resolve, 8000))
       }
     } else {
-      alert('Invalid URL (please include https://)')
+      alert(t('alerts.invalid_url'));
     }
     setLoadingSpinner(false)
     setUrl('') // clear url
@@ -241,9 +238,8 @@ export const WebScrape = ({
         onOpen: () => console.log('mounted'),
         autoClose: 15000,
         // position="top-center",
-        title: 'Web scraping started',
-        message:
-          "It'll scrape in the background, just wait for the results to show up in your project (~3 minutes total).\nThis feature is stable but the web is a messy place. If you have trouble, I'd love to fix it. Just shoot me an email: rohan13@illinois.edu.",
+        title: t('alerts.web_scrape_started'),
+        message: t('alerts.web_scrape_message'),
         icon: <IconWorldDownload />,
         styles: {
           root: {
@@ -302,7 +298,7 @@ export const WebScrape = ({
         autoClose: 12000,
         title: (
           <Text size={'lg'} className={`${montserrat_med.className}`}>
-            {'Error during web scraping. Please try again.'}
+            {t('alerts.web_scrape_error')}
           </Text>
         ),
         message: (

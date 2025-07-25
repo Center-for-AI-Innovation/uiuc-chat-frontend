@@ -69,7 +69,7 @@ export const UserSettings = () => {
     dispatch: homeDispatch,
   } = useContext(HomeContext)
 
-  const { t } = useTranslation('chat')
+  const { t, i18n } = useTranslation('common')
   const { classes } = useStyles()
   const [opened, { open, close }] = useDisclosure(false)
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
@@ -97,6 +97,10 @@ export const UserSettings = () => {
     }
   }, [showModelSettings, open, close, loadModelCache])
 
+  useEffect(() => {
+    i18n.loadNamespaces('common')
+  }, [i18n])
+
   const handleClose = () => {
     homeDispatch({ field: 'showModelSettings', value: false })
   }
@@ -113,7 +117,7 @@ export const UserSettings = () => {
           <Modal.Title
             className={`${classes.title} ${montserrat_heading.variable} font-montserratHeading`}
           >
-            {t('settings')}
+            {t('settings.title')}
           </Modal.Title>
           <Modal.CloseButton
             onClick={handleClose}
@@ -137,19 +141,19 @@ export const UserSettings = () => {
                 className={`${classes.tab} ${isSmallScreen ? 'px-2 text-xs' : 'text-md'} ${montserrat_paragraph.variable} font-montserratParagraph text-[--modal-text]`}
                 value="model"
               >
-                {t('model')}
+                {t('settings.tabs.model')}
               </Tabs.Tab>
               <Tabs.Tab
                 className={`${classes.tab} ${isSmallScreen ? 'px-2 text-xs' : 'text-md'} ${montserrat_paragraph.variable} font-montserratParagraph text-[--modal-text]`}
                 value="documentGroups"
               >
-                {t('document_groups')}
+                {t('settings.tabs.document_groups')}
               </Tabs.Tab>
               <Tabs.Tab
                 className={`${classes.tab} ${isSmallScreen ? 'px-2 text-xs' : 'text-md'} ${montserrat_paragraph.variable} font-montserratParagraph text-[--modal-text]`}
                 value="tools"
               >
-                {t('tools')}
+                {t('settings.tabs.tools')}
               </Tabs.Tab>
             </Tabs.List>
 

@@ -18,7 +18,8 @@ const PUBLIC_ROUTES = [
   // '/sign-up',
   '/silent-renew',
   '/api/(.*)',
-  '/:singleLevel([^/]+)',
+  '/:locale([a-z]{2})/:singleLevel([^/]+)',
+  '/:locale([a-z]{2})/:singleLevel([^/]+)/chat',
   '/:singleLevel([^/]+)',
   '/:singleLevel([^/]+)/chat',
 ]
@@ -139,6 +140,7 @@ export const config = {
      * - public files (public directory)
      */
     '/((?!_next/static|_next/image|favicon.ico|.*\\..*|api/auth).*)',
+    '/:locale*', // Add this line to match locale paths
   ],
 }
 

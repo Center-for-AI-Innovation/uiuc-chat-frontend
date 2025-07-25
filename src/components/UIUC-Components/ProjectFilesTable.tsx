@@ -370,10 +370,45 @@ export function ProjectFilesTable({
         )
       }
 
-      showToastOnFileDeleted(theme, true)
+      showNotification({
+        title: 'Error',
+        message: 'Failed to delete documents',
+        color: 'red',
+        icon: <IconTrash size={24} />,
+      })
     },
     onSettled: async () => {
-      showToastOnFileDeleted(theme)
+      showNotification({
+        id: 'file-deleted-from-materials',
+        withCloseButton: true,
+        autoClose: 5000,
+        title: t('alerts.deleting_file'),
+        message: t('alerts.file_deleting_bg'),
+        icon: <IconCheck />,
+        styles: {
+          root: {
+            backgroundColor: theme.colors.nearlyWhite,
+            borderColor: theme.colors.aiPurple,
+          },
+          title: {
+            color: theme.colors.nearlyBlack,
+          },
+          description: {
+            color: theme.colors.nearlyBlack,
+          },
+          closeButton: {
+            color: theme.colors.nearlyBlack,
+            '&:hover': {
+              backgroundColor: theme.colors.dark[1],
+            },
+          },
+          icon: {
+            backgroundColor: theme.colors.successBackground,
+            padding: '4px',
+          },
+        },
+        loading: false,
+      })
       setShowDeleteButton(false)
       setSelectedCount(0)
       const sleep = (ms: number) =>
@@ -396,7 +431,7 @@ export function ProjectFilesTable({
       icon: <IconTrash size={24} />,
     })
 
-    return errorStateForProjectFilesTable()
+    return <ErrorStateForProjectFilesTable />
   }
 
   const showToastOnFileDeleted = (theme: MantineTheme, was_error = false) => {
@@ -409,10 +444,10 @@ export function ProjectFilesTable({
         // onOpen: () => console.debug('mounted'),
         autoClose: 5000,
         // position="top-center",
-        title: was_error ? 'Error deleting file' : 'Deleting file...',
+        title: was_error ? t('alerts.error_deleting_file') : t('alerts.deleting_file'),
         message: was_error
-          ? "An error occurred while deleting the file. Please try again and I'd be so grateful if you email rohan13@illinois.edu to report this bug."
-          : 'The file is being deleted in the background.',
+          ? t('alerts.error_deleting_file_message')
+          : t('alerts.file_deleting_bg'),
         icon: was_error ? <IconAlertTriangle /> : <IconCheck />,
         styles: {
           root: {
@@ -524,7 +559,7 @@ export function ProjectFilesTable({
                   : 'bg-[--dashboard-background] text-[--foreground] hover:bg-[--dashboard-background-faded] hover:text-[--foreground]'
               } ${montserrat_heading.variable} font-montserratHeading`}
             >
-              {t('success')}
+              {t('project_files.success')}
             </button>
 
             <Indicator
@@ -543,7 +578,7 @@ export function ProjectFilesTable({
                     : 'bg-[--dashboard-background] text-[--foreground] hover:bg-[--dashboard-background-faded] hover:text-[--foreground]'
                 } ${montserrat_heading.variable} font-montserratHeading`}
               >
-                {t('failed')}
+                {t('project_files.failed')}
               </button>
             </Indicator>
           </div>
@@ -553,7 +588,7 @@ export function ProjectFilesTable({
               <Paper className="w-full bg-transparent sm:w-auto">
                 <div className="relative mb-2 flex w-full flex-col items-start gap-4 sm:flex-row sm:items-center">
                   <Tooltip
-                    label={t('all_selected_docs_added')}
+                    label={t('project_files.all_selected_docs_added')}
                     position="top"
                     withArrow
                     style={{
@@ -567,9 +602,9 @@ export function ProjectFilesTable({
                       }}
                       className={`mb-2 w-full bg-[--dashboard-button] px-4 py-2 text-xs transition-colors duration-300 hover:bg-[--dashboard-button-hover] sm:mb-0 sm:w-auto sm:px-6 sm:py-3 ${montserrat_paragraph.variable} border-0 font-montserratParagraph focus:outline-none focus:ring-0`}
                     >
-                      <span className="block sm:hidden">{t('add_to_groups')}</span>
+                      <span className="block sm:hidden">{t('project_files.add_to_groups')}</span>
                       <span className="hidden sm:block">
-                        {t('add_document_to_groups')}
+                        {t('project_files.add_document_to_groups')}
                       </span>
                     </Button>
                   </Tooltip>
@@ -591,17 +626,17 @@ export function ProjectFilesTable({
                         value={selectedDocGroups}
                         placeholder={
                           isLoadingDocumentGroups
-                            ? 'Loading...'
-                            : 'Select Group'
+                            ? t('project_files.loading') as string
+                            : t('project_files.select_group') as string
                         }
                         searchable={!isLoadingDocumentGroups}
                         nothingFound={
                           isLoadingDocumentGroups
-                            ? 'Loading...'
-                            : 'No groups... Start typing to create a new one ✨'
+                            ? t('project_files.loading')
+                            : t('project_files.no_groups_create')
                         }
                         creatable
-                        getCreateLabel={(query) => `+ Create "${query}"`}
+                        getCreateLabel={(query) => t('project_files.create_group', { name: query })}
                         onCreate={(doc_group_name) => ({
                           value: doc_group_name,
                           label: doc_group_name,
@@ -805,12 +840,37 @@ export function ProjectFilesTable({
                       disabled={!selectedCount}
                       onClick={() => {
                         if (selectedCount > 100) {
-                          showToast(
-                            theme,
-                            'Selection Limit Exceeded',
-                            'You have selected more than 100 documents. Please select less than or equal to 100 documents.',
-                            true,
-                          )
+                          notifications.show({
+                            id: 'selection-limit-exceeded',
+                            withCloseButton: true,
+                            autoClose: 12000,
+                            title: t('project_files.selection_limit_title'),
+                            message: t('project_files.selection_limit_message'),
+                            icon: <IconAlertTriangle />,
+                            styles: {
+                              root: {
+                                backgroundColor: theme.colors.nearlyWhite,
+                                borderColor: theme.colors.errorBorder,
+                              },
+                              title: {
+                                color: theme.colors.nearlyBlack,
+                              },
+                              description: {
+                                color: theme.colors.nearlyBlack,
+                              },
+                              closeButton: {
+                                color: theme.colors.nearlyBlack,
+                                '&:hover': {
+                                  backgroundColor: theme.colors.dark[1],
+                                },
+                              },
+                              icon: {
+                                backgroundColor: theme.colors.errorBackground,
+                                padding: '4px',
+                              },
+                            },
+                            loading: false,
+                          })
                         } else {
                           setRecordsToDelete(selectedRecords)
                           setModalOpened(true)
@@ -823,16 +883,14 @@ export function ProjectFilesTable({
                       } transition-colors duration-300 ${montserrat_paragraph.variable} font-montserratParagraph`}
                     >
                       <span className="block sm:hidden">
-                        Delete {selectedCount}
+                        {t('project_files.delete_short', { count: selectedCount })}
                       </span>
                       <span className="hidden sm:block">
                         {selectedCount
-                          ? `Delete ${
-                              selectedCount === 1
-                                ? '1 selected record'
-                                : `${selectedCount} selected records`
-                            }`
-                          : 'Select records to delete'}
+                          ? selectedCount === 1
+                            ? t('project_files.delete_one')
+                            : t('project_files.delete_selected', { count: selectedCount })
+                          : t('project_files.select_to_delete')}
                       </span>
                     </Button>
                   )}
@@ -912,8 +970,8 @@ export function ProjectFilesTable({
               filter: (
                 <TextInput
                   label={t('dashboard.file_name')}
-                  description="Show uploaded files that include the specified text"
-                  placeholder="Search files..."
+                  description={t('project_files.search_files_description') as string}
+                  placeholder={t('project_files.search_files') as string}
                   rightSection={
                     <ActionIcon
                       size="sm"
@@ -953,8 +1011,8 @@ export function ProjectFilesTable({
               filter: (
                 <TextInput
                   label={t('dashboard.url')}
-                  description="Show all urls that include the specified text"
-                  placeholder="Search urls..."
+                  description={t('project_files.search_urls_description') as string}
+                  placeholder={t('project_files.search_urls') as string}
                   rightSection={
                     <ActionIcon
                       size="sm"
@@ -1310,7 +1368,7 @@ export function ProjectFilesTable({
                 marginRight: '7px',
               }}
             >
-              Cancel
+              {t('project_files.cancel')}
             </Button>
             <Button
               className="btext-[--dashboard-button-foreground] min-w-[3rem] -translate-x-1 transform rounded-s-md bg-[--dashboard-button] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none"
@@ -1332,14 +1390,14 @@ export function ProjectFilesTable({
                 setIsDeletingDocuments(false)
               }}
             >
-              Delete
+              {t('project_files.delete')}
             </Button>
           </div>
         </Modal>
         <Modal
           opened={errorModalOpened}
           onClose={() => setErrorModalOpened(false)}
-          title="Error Details"
+          title={t('project_files.error_details')}
           size={'xl'}
           closeOnEscape={true}
           transitionProps={{ transition: 'fade', duration: 200 }}
@@ -1417,7 +1475,7 @@ export function ProjectFilesTable({
           centered
         >
           <Text size="sm" style={{ color: 'white' }}>
-            {`Are you sure you want to export all the documents and embeddings?`}
+            {t('project_files.export_confirm_message')}
           </Text>
           <div
             style={{
@@ -1436,7 +1494,7 @@ export function ProjectFilesTable({
                 marginRight: '7px',
               }}
             >
-              Cancel
+              {t('project_files.cancel')}
             </Button>
             <Button
               className="min-w-[3rem] -translate-x-1 transform rounded-s-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none"
@@ -1444,11 +1502,41 @@ export function ProjectFilesTable({
                 setExportModalOpened(false)
                 const result = await handleExport(getCurrentPageName())
                 if (result && result.message) {
-                  showToastOnUpdate(theme, false, false, result.message)
+                  notifications.show({
+                    id: 'export-result',
+                    withCloseButton: true,
+                    autoClose: 12000,
+                    title: t('project_files.export_result'),
+                    message: result.message,
+                    icon: <IconCheck />,
+                    styles: {
+                      root: {
+                        backgroundColor: theme.colors.nearlyWhite,
+                        borderColor: theme.colors.aiPurple,
+                      },
+                      title: {
+                        color: theme.colors.nearlyBlack,
+                      },
+                      description: {
+                        color: theme.colors.nearlyBlack,
+                      },
+                      closeButton: {
+                        color: theme.colors.nearlyBlack,
+                        '&:hover': {
+                          backgroundColor: theme.colors.dark[1],
+                        },
+                      },
+                      icon: {
+                        backgroundColor: theme.colors.successBackground,
+                        padding: '4px',
+                      },
+                    },
+                    loading: false,
+                  })
                 }
               }}
             >
-              Export
+              {t('project_files.export')}
             </Button>
           </div>
         </Modal>
@@ -1457,7 +1545,8 @@ export function ProjectFilesTable({
   )
 }
 
-function errorStateForProjectFilesTable() {
+function ErrorStateForProjectFilesTable() {
+  const { t } = useTranslation('common')
   return (
     <DataTable
       records={[]}
@@ -1467,23 +1556,19 @@ function errorStateForProjectFilesTable() {
       striped
       highlightOnHover
       height="80vh"
-      // Error state:
       noRecordsIcon={
         <Stack align="center" p={30}>
           <Text c="dimmed" size="md">
-            Ah! We hit a wall when fetching your documents. The database must be
-            on fire 🔥
+            {t('project_files.error_message')}
           </Text>
           <Image
-            // width={"20vw"}
             style={{ minWidth: 300, maxWidth: '30vw' }}
             radius="lg"
             src="https://assets.kastan.ai/this-is-fine.jpg"
             alt="No data found"
-            // style={{ filter: 'grayscale(1)' }}
           />
           <Text c="dimmed" size="md">
-            So.. please try again later.
+            {t('project_files.try_again')}
           </Text>
         </Stack>
       }

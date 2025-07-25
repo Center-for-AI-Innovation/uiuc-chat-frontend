@@ -128,7 +128,10 @@ export default function AzureProviderInput({
                 >
                   <form.Field name={`providers.${ProviderNames.Azure}.apiKey`}>
                     {(field: any) => (
-                      <APIKeyInput field={field} placeholder={t('azure_api_key') || ''} />
+                      <APIKeyInput
+                        field={field}
+                        placeholder={t('models.azure.title')}
+                      />
                     )}
                   </form.Field>
                   <form.Field
