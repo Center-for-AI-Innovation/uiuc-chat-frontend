@@ -178,7 +178,7 @@
   --navbar-border: var(--dashboard-border);
   --navbar-shadow: color-mix(in srgb, var(--background), black 30%);
   --navbar-active: var(--illinois-orange);
-  --navbar-hover: var(--foreground-dark);
+  --navbar-hover: var(--navbar-text);
   --navbar-hover-background: var(--background-faded);
 
   --notification: rgba(
@@ -256,6 +256,8 @@
 
   --table-border: rgba(from var(--foreground-faded) r g b / 0.2);
   --table-header: var(--foreground);
+  --table-header-background: var(--background-faded);
+  --table-header-hover-background: var(--background-dark);
 
   --tooltip: var(--background);
   --tooltip-background: var(--foreground-dark);
@@ -1162,6 +1164,18 @@ https://icflorescu.github.io/mantine-datatable/examples/records-selection/
   border: 1px solid var(--button-border);
 }
 
+.project_files_table .mantine-Table-root {
+  thead {
+    th {
+      background-color: var(--table-header-background);
+
+      &:hover {
+        background-color: var(--table-header-hover-background);
+      }
+    }
+  }
+}
+
 .n8n_workflows_table .mantine-ActionIcon-root,
 .project_files_table .mantine-ActionIcon-root {
   color: var(--foreground-faded);
@@ -1180,6 +1194,10 @@ https://icflorescu.github.io/mantine-datatable/examples/records-selection/
 
 .n8n_workflows_table .mantine-Center-root,
 .project_files_table .mantine-Center-root {
+  > div {
+    background-color: transparent; /* hack to remove no records icon */
+  }
+
   .tabler-icon {
     color: var(--foreground-faded);
   }
@@ -1187,6 +1205,8 @@ https://icflorescu.github.io/mantine-datatable/examples/records-selection/
 
 .n8n_workflows_table .mantine-ScrollArea-root,
 .project_files_table .mantine-ScrollArea-root {
+  background-color: var(--dashboard-background-faded);
+
   border-radius: 0px;
 }
 

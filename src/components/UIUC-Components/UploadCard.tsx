@@ -161,7 +161,7 @@ export const UploadCard = memo(function UploadCard({
                   order={2}
                   className={`${montserrat_heading.variable} font-montserratHeading text-lg text-[--foreground] sm:text-2xl`}
                 >
-                  Settings
+                  Dashboard
                 </Title>
                 <Text className="text-[--foreground]">/</Text>
                 <Title

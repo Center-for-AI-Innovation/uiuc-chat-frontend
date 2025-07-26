@@ -118,6 +118,7 @@ const useStyles = createStyles((theme) => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: '.4rem',
 
     '&:hover': {
       color: 'var(--navbar-hover)',
@@ -142,10 +143,6 @@ const useStyles = createStyles((theme) => ({
   },
 
   settingsLink: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '.2rem',
-
     [theme.fn.smallerThan('md')]: {
       display: 'flex',
 
@@ -310,16 +307,8 @@ function NavigationContent({
                 data-active={activeLink === item.link}
                 className={classes.link}
               >
-                <span
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '.2rem',
-                  }}
-                >
-                  {item.icon}
-                  {item.name}
-                </span>
+                {item.icon}
+                {item.name}
               </Link>
             ))}
           </Paper>
@@ -336,12 +325,8 @@ function NavigationContent({
               data-active={activeLink === item.link}
               className={classes.link}
             >
-              <span
-                style={{ display: 'flex', alignItems: 'center', gap: '.2rem' }}
-              >
-                {item.icon}
-                {item.name}
-              </span>
+              {item.icon}
+              {item.name}
             </Link>
           ))}
         </div>
@@ -440,12 +425,10 @@ function SettingsNavigationContent({
             href={item.link}
             onClick={() => onLinkClick()}
             data-active={activeLink === item.link}
-            className={classes.link}
+            className={`${classes.link} ${classes.settingsLink}`}
           >
-            <div className="flex items-center">
-              {item.icon}
-              {item.name}
-            </div>
+            {item.icon}
+            {item.name}
           </Link>
         ))}
       </Container>
@@ -475,13 +458,7 @@ export function MessageChatIcon() {
 }
 
 export function DashboardIcon() {
-  return (
-    <IconHome
-      size={20}
-      strokeWidth={2}
-      style={{ marginRight: '4px', marginLeft: '4px' }}
-    />
-  )
+  return <IconHome size={20} strokeWidth={2} />
 }
 
 export function LLMIcon() {
@@ -575,9 +552,9 @@ export default function Navbar({
 
   const navItems: NavItem[] = [
     {
-      name: <NavText>My Dashboard</NavText>,
+      name: <NavText>My Chatbots</NavText>,
       icon: <DashboardIcon />,
-      link: '/dashboard', // Add conditional course_name ? `/${course_name}/dashboard` :
+      link: '/chatbots', // Add conditional course_name ? `/${course_name}/dashboard` :
     },
     {
       name: <NavText>Explore Chatbots</NavText>,
@@ -593,9 +570,9 @@ export default function Navbar({
 
   const settingsNavItems: NavItem[] = [
     {
-      name: <NavText>Settings</NavText>,
+      name: <NavText>Dashboard</NavText>,
       icon: <DashboardIcon />,
-      link: course_name ? `/${course_name}/settings` : '/settings', // Add conditional
+      link: course_name ? `/${course_name}/dashboard` : '/dashboard',
     },
     {
       name: <NavText>LLMs</NavText>,
@@ -641,7 +618,7 @@ export default function Navbar({
         <div className="navbar h-20 w-full border-b border-[--navbar-border] bg-[--navbar-background]">
           <Logo />
 
-          {/* no longer show the banner logo image here
+          {/* TODO determine where to show the uploaded banner logo image (assume on the chat sidebar above or replace the project name?)
           {bannerUrl && <BannerImage url={bannerUrl} />}
 */}
 
@@ -655,6 +632,32 @@ export default function Navbar({
               courseName={course_name}
             />
           )}
+          {/* TODO decide where to move the link to documents (new project button alrady exists in new nav)
+                <div className="flex items-center">
+                  <div className="hidden items-center md:flex">
+                    <Divider orientation="vertical" className={classes.divider} />
+
+                    <div className="flex items-center gap-1 px-2">
+                      <Tooltip label="New Project" position="bottom" withArrow>
+                        <Link href="/new" className={classes.iconButton}>
+                          <FileIcon />
+                        </Link>
+                      </Tooltip>
+
+                      <Tooltip label="Documentation" position="bottom" withArrow>
+                        <Link
+                          href="https://docs.uiuc.chat/"
+                          className={classes.iconButton}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <ClipboardIcon />
+                        </Link>
+                      </Tooltip>
+                    </div>
+                  </div>
+                </div>
+*/}
 
           <div className="flex items-center">
             <div className="hidden items-center md:flex">
@@ -688,15 +691,11 @@ export default function Navbar({
             <div className="mt-[.5rem] w-full text-[--navbar-foreground]">
               <div className="flex w-full items-start gap-2">
                 <div className="whitespace-nowrap text-[--foreground-faded]">
-                  Admin Settings
+                  Chatbot
                 </div>
                 <div className="text-[--foreground-faded]">/</div>
                 <div className="grow font-bold">{course_name}</div>
               </div>
-
-              {/* no longer show the banner logo image here
-                {bannerUrl && <BannerImage url={bannerUrl} />}
-*/}
 
               {!isPlain && (
                 <SettingsNavigationContent
@@ -708,32 +707,6 @@ export default function Navbar({
                   courseName={course_name}
                 />
               )}
-              {/*
-                <div className="flex items-center">
-                  <div className="hidden items-center md:flex">
-                    <Divider orientation="vertical" className={classes.divider} />
-
-                    <div className="flex items-center gap-1 px-2">
-                      <Tooltip label="New Project" position="bottom" withArrow>
-                        <Link href="/new" className={classes.iconButton}>
-                          <FileIcon />
-                        </Link>
-                      </Tooltip>
-
-                      <Tooltip label="Documentation" position="bottom" withArrow>
-                        <Link
-                          href="https://docs.uiuc.chat/"
-                          className={classes.iconButton}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <ClipboardIcon />
-                        </Link>
-                      </Tooltip>
-                    </div>
-                  </div>
-                </div>
-*/}
             </div>
           </div>
         </div>

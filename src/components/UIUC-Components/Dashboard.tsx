@@ -130,7 +130,7 @@ const Dashboard = ({
               `}
               style={{ color: 'var(--foreground)' }}
             >
-              My Dashboard
+              My Chatbots
             </Title>
 
             <p
@@ -140,7 +140,7 @@ const Dashboard = ({
             `}
               style={{ color: 'var(--foreground-faded)' }}
             >
-              These are projects you&apos;ve created, or where you are an admin.
+              These are chatbots you&apos;ve created, or where you are an admin.
             </p>
           </div>
 

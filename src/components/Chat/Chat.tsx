@@ -1917,7 +1917,7 @@ export const Chat = memo(
                   <button
                     className="absolute right-4 top-4 rounded-md border border-[--background-faded] p-[.15rem] text-[--foreground] hover:bg-[--background-faded] hover:text-[--foreground]"
                     onClick={() => {
-                      if (courseName) router.push(`/${courseName}/settings`)
+                      if (courseName) router.push(`/${courseName}/dashboard`)
                     }}
                   >
                     <IconSettings stroke={1} className="scale-75" />
