@@ -518,14 +518,14 @@ export function ProjectFilesTable({
       <GlobalStyle />
       {/* Fixed Header Section */}
       <div className="flex-none">
-        <div className="mb-2 flex items-center justify-between border-b border-[--dashboard-border] px-4 pt-4 sm:px-6 md:px-8 ">
+        <div className="flex items-center justify-between px-4 pt-4 sm:px-6 md:px-8 ">
           <div className="flex items-center md:space-x-4">
             <button
               onClick={() => onTabChange('success')}
               className={`rounded-t-lg px-4 py-3 font-medium transition-colors duration-200 ${
                 tabValue === 'success'
-                  ? 'border-b-2 border-[--dashboard-background-dark] bg-[--dashboard-background-dark] text-[--dashboard-foreground]'
-                  : 'bg-[--dashboard-background] text-[--foreground-faded] hover:bg-[--dashboard-background-dark] hover:text-[--foreground]'
+                  ? 'border-b-2 border-[--table-header-background] bg-[--table-header-background] text-[--dashboard-foreground]'
+                  : 'bg-[--dashboard-background] text-[--foreground] hover:bg-[--dashboard-background-faded] hover:text-[--foreground]'
               } ${montserrat_heading.variable} font-montserratHeading`}
             >
               Success
@@ -543,8 +543,8 @@ export function ProjectFilesTable({
                 onClick={() => onTabChange('failed')}
                 className={`rounded-t-lg px-4 py-3 font-medium duration-200 ${
                   tabValue === 'failed'
-                    ? 'border-b-2 border-[--dashboard-background-darker] bg-[--dashboard-background-darker] text-[--dashboard-foreground]'
-                    : 'bg-[--dashboard-background] text-[--foreground-faded] hover:bg-[--dashboard-background-dark] hover:text-[--foreground]'
+                    ? 'border-b-2 border-[--table-header-background] bg-[--table-header-background] text-[--dashboard-foreground]'
+                    : 'bg-[--dashboard-background] text-[--foreground] hover:bg-[--dashboard-background-faded] hover:text-[--foreground]'
                 } ${montserrat_heading.variable} font-montserratHeading`}
               >
                 Failed
@@ -552,20 +552,24 @@ export function ProjectFilesTable({
             </Indicator>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 px-2 md:gap-4">
+          <div className="flex flex-wrap items-center gap-2">
             {tabValue !== 'failed' && selectedRecords.length > 0 && (
               <Paper className="w-full bg-transparent sm:w-auto">
-                <div className="relative flex w-full flex-col items-start sm:flex-row sm:items-center">
+                <div className="relative mb-2 flex w-full flex-col items-start gap-4 sm:flex-row sm:items-center">
                   <Tooltip
                     label="All selected documents will be added to the group"
                     position="top"
                     withArrow
+                    style={{
+                      color: 'var(--tooltip)',
+                      backgroundColor: 'var(--tooltip-background)',
+                    }}
                   >
                     <Button
                       onClick={() => {
                         setShowMultiSelect(true)
                       }}
-                      className={`mb-2 w-full bg-[--dashboard-button] px-4 py-2 text-xs transition-colors duration-300 hover:bg-[--dashboard-button-hover] sm:mb-0 sm:mr-4 sm:w-auto sm:px-6 sm:py-3 ${montserrat_paragraph.variable} border-0 font-montserratParagraph focus:outline-none focus:ring-0`}
+                      className={`mb-2 w-full bg-[--dashboard-button] px-4 py-2 text-xs transition-colors duration-300 hover:bg-[--dashboard-button-hover] sm:mb-0 sm:w-auto sm:px-6 sm:py-3 ${montserrat_paragraph.variable} border-0 font-montserratParagraph focus:outline-none focus:ring-0`}
                     >
                       <span className="block sm:hidden">Add to Groups</span>
                       <span className="hidden sm:block">
@@ -845,7 +849,7 @@ export function ProjectFilesTable({
 
       {/* Main Table Container */}
       {/* <div className="flex-1 flex flex-col overflow-hidden h-[90%]"> */}
-      <div className="project_files_table flex h-[90%] flex-1 flex-col overflow-hidden px-4 py-4 sm:px-6 sm:py-6 md:px-8">
+      <div className="project_files_table flex h-[90%] flex-1 flex-col overflow-hidden pb-4">
         <DataTable
           records={
             tabValue === 'failed'
