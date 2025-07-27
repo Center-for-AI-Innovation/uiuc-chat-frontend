@@ -1,7 +1,7 @@
 import { IconFolderPlus, IconMistOff, IconPlus } from '@tabler/icons-react'
 import { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Switch } from '@mantine/core'
+import { Switch, Text } from '@mantine/core'
 
 import {
   CloseSidebarButton,
@@ -27,6 +27,7 @@ interface Props<T> {
   handleCreateFolder: () => void
   handleDrop: (e: any) => void
   onScroll: (e: any) => void
+  customGPTsComponent?: ReactNode
 }
 
 const Sidebar = <T,>({
@@ -45,6 +46,7 @@ const Sidebar = <T,>({
   handleCreateFolder,
   handleDrop,
   onScroll,
+  customGPTsComponent,
 }: Props<T>) => {
   const { t } = useTranslation('promptbar')
 
@@ -95,23 +97,34 @@ const Sidebar = <T,>({
           searchTerm={searchTerm}
           onSearch={handleSearchTerm}
         />
+        
+        {/* Custom GPTs Component - Display below search and above folders */}
+        {customGPTsComponent}
+        
         <div className="flex-grow overflow-auto" onScroll={onScroll}>
           {folders?.length > 0 && (
-            <div className="flex border-b border-white/20 pb-2">
-              {folderComponent}
+            <div className="mt-4 border-t border-white/20 pt-4">
+              <Text size="sm" color="dimmed" className="mb-2 px-3">
+                Folders
+              </Text>
+                {folderComponent}
             </div>
           )}
 
           {items?.length > 0 ? (
-            <div
-              className="pt-2"
-              onDrop={handleDrop}
-              onDragOver={allowDrop}
-              onDragEnter={highlightDrop}
-              onDragLeave={removeHighlight}
-              // onScroll={onScroll}
-            >
-              {itemComponent}
+            <div className="mt-4 border-t border-white/20 pt-4">
+              <Text size="sm" color="dimmed" className="mb-2 px-3">
+                Conversations
+              </Text>
+              <div
+                className="pt-2"
+                onDrop={handleDrop}
+                onDragOver={allowDrop}
+                onDragEnter={highlightDrop}
+                onDragLeave={removeHighlight}
+              >
+                {itemComponent}
+              </div>
             </div>
           ) : (
             <div className="mt-8 select-none text-center text-white opacity-50">

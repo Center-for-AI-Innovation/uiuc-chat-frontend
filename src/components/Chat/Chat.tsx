@@ -391,6 +391,10 @@ export const Chat = memo(
               deletedMessages: messagesToDelete,
             })
           } else {
+            // Add custom GPT ID to all messages if the conversation has one
+            if (selectedConversation.customGptId) {
+              message.custom_gpt_id = selectedConversation.customGptId;
+            }
             updatedConversation = {
               ...selectedConversation,
               messages: [...(selectedConversation.messages || []), message],
@@ -1067,6 +1071,7 @@ export const Chat = memo(
                       feedback: message.feedback,
                       wasQueryRewritten: message.wasQueryRewritten,
                       queryRewriteText: message.queryRewriteText,
+                      custom_gpt_id: selectedConversation.customGptId || undefined,
                     },
                   ]
 
@@ -1206,6 +1211,7 @@ export const Chat = memo(
                   feedback: message.feedback,
                   wasQueryRewritten: message.wasQueryRewritten,
                   queryRewriteText: message.queryRewriteText,
+                  custom_gpt_id: selectedConversation.customGptId || undefined,
                 },
               ]
               updatedConversation = {
@@ -1323,6 +1329,7 @@ export const Chat = memo(
               contexts: [], // Clear contexts for fresh search
               wasQueryRewritten: undefined, // Clear previous query rewrite information
               queryRewriteText: undefined, // Clear previous query rewrite text
+              custom_gpt_id: selectedConversation.customGptId || undefined,
             } as Message
           } else {
             // If regenerating a user message
@@ -1334,6 +1341,7 @@ export const Chat = memo(
               contexts: [], // Clear contexts for fresh search
               wasQueryRewritten: undefined, // Clear previous query rewrite information
               queryRewriteText: undefined, // Clear previous query rewrite text
+              custom_gpt_id: selectedConversation.customGptId || undefined,
             } as Message
           }
 

@@ -2,6 +2,17 @@
 
 import { LLMProvider, ProviderNames } from '../utils/modelProviders/LLMProvider'
 
+// Define the CustomSystemPrompt interface here so it can be reused
+export interface CustomSystemPrompt {
+  id: string
+  name: string
+  urlSuffix: string
+  promptText: string
+  isFavorite?: boolean
+  documentGroups?: string[]
+  tools?: string[]
+}
+
 // courseMetadata.ts
 export interface CourseMetadata {
   is_private: boolean
@@ -19,6 +30,9 @@ export interface CourseMetadata {
   guidedLearning: boolean | undefined
   systemPromptOnly: boolean | undefined
   vector_search_rewrite_disabled: boolean | undefined
+  document_group?: string
+  tool?: string
+  custom_system_prompts?: CustomSystemPrompt[]
 }
 
 export type ProjectWideLLMProviders = {
@@ -27,6 +41,12 @@ export type ProjectWideLLMProviders = {
   llmProviders?: LLMProvider[]
   defaultModel?: string
   defaultTemp?: number
+  project_description: string | undefined
+  documentsOnly: boolean | undefined
+  guidedLearning: boolean | undefined
+  systemPromptOnly: boolean | undefined
+  vector_search_rewrite_disabled: boolean | undefined
+  custom_system_prompts?: CustomSystemPrompt[] | undefined
 }
 
 export interface CourseMetadataOptionalForUpsert {
@@ -45,4 +65,5 @@ export interface CourseMetadataOptionalForUpsert {
   guidedLearning: boolean | undefined
   systemPromptOnly: boolean | undefined
   vector_search_rewrite_disabled: boolean | undefined
+  custom_system_prompts?: CustomSystemPrompt[] | undefined
 }

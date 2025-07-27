@@ -5,13 +5,16 @@ import { type NextPage } from 'next'
 import { useEffect, useState } from 'react'
 import Home from '../api/home/home'
 import { useRouter } from 'next/router'
+import { v4 as uuidv4 } from 'uuid'
 
-import { type CourseMetadata } from '~/types/courseMetadata'
+import { type CourseMetadata, type CustomSystemPrompt } from '~/types/courseMetadata'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { montserrat_heading } from 'fonts'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
+import { OpenAIModels, OpenAIModelID } from '~/utils/modelProviders/types/openai'
+import { DEFAULT_TEMPERATURE } from '~/utils/app/const'
 
 const ChatPage: NextPage = () => {
   const auth = useAuth()
@@ -29,27 +32,30 @@ const ChatPage: NextPage = () => {
   const [urlGuidedLearning, setUrlGuidedLearning] = useState(false)
   const [urlDocumentsOnly, setUrlDocumentsOnly] = useState(false)
   const [urlSystemPromptOnly, setUrlSystemPromptOnly] = useState(false)
+  const [urlActivePrompt, setUrlActivePrompt] = useState<string | null>(null)
   const [documentCount, setDocumentCount] = useState<number | null>(null)
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
 
-  // UseEffect to check URL parameters
+  // UseEffect to check URL parameters and fetch initial data
   useEffect(() => {
     const fetchData = async () => {
       if (!router.isReady) return
+
+      setIsLoading(true)
+      setIsCourseMetadataLoading(true)
 
       // Get URL parameters
       const urlParams = new URLSearchParams(window.location.search)
       const guidedLearning = urlParams.get('guidedLearning') === 'true'
       const documentsOnly = urlParams.get('documentsOnly') === 'true'
       const systemPromptOnly = urlParams.get('systemPromptOnly') === 'true'
+      const gptId = urlParams.get('gpt')
 
-      // Update the state with URL parameters
+      // Update the state with boolean URL parameters (these are passed to Home component later)
       setUrlGuidedLearning(guidedLearning)
       setUrlDocumentsOnly(documentsOnly)
       setUrlSystemPromptOnly(systemPromptOnly)
-
-      setIsLoading(true)
-      setIsCourseMetadataLoading(true)
+      setUrlActivePrompt(gptId)
 
       // Special case: Cropwizard redirect
       if (
@@ -58,30 +64,61 @@ const ChatPage: NextPage = () => {
         )
       ) {
         await router.push(`/cropwizard-1.5`)
+        // No need to proceed further if redirecting
+        setIsLoading(false) 
+        setIsCourseMetadataLoading(false)
+        return
       }
 
-      // Fetch course metadata
+      // Fetch course metadata from Redis using course name
       const metadataResponse = await fetch(
         `/api/UIUC-api/getCourseMetadata?course_name=${courseName}`,
       )
       const metadataData = await metadataResponse.json()
+      let fetchedCourseMetadata: CourseMetadata | null = metadataData.course_metadata;
 
-      // Log original course metadata settings without modifying them
-      if (metadataData.course_metadata) {
-        console.log('Course metadata settings:', {
-          guidedLearning: metadataData.course_metadata.guidedLearning,
-          documentsOnly: metadataData.course_metadata.documentsOnly,
-          systemPromptOnly: metadataData.course_metadata.systemPromptOnly,
-          system_prompt: metadataData.course_metadata.system_prompt,
-        })
+      if (fetchedCourseMetadata) {
+        console.log('Course metadata from Redis:', {
+          courseName,
+          guidedLearning: fetchedCourseMetadata.guidedLearning,
+          documentsOnly: fetchedCourseMetadata.documentsOnly,
+          systemPromptOnly: fetchedCourseMetadata.systemPromptOnly,
+          system_prompt: fetchedCourseMetadata.system_prompt,
+          custom_system_prompts_count: fetchedCourseMetadata.custom_system_prompts?.length ?? 0
+        });
+        console.log('URL gptId read:', gptId);
+
+        // Override system prompt if gptId is present and valid
+        if (gptId && fetchedCourseMetadata.custom_system_prompts) {
+          // Find the custom prompt in Redis using the course name as key
+          const customPrompt = fetchedCourseMetadata.custom_system_prompts.find(
+            (p: CustomSystemPrompt) => p.id === gptId
+          );
+          
+          if (customPrompt) {
+            console.log('Found custom prompt in Redis for course:', courseName, customPrompt);
+            // Create a new object for the state to ensure reactivity
+            fetchedCourseMetadata = {
+              ...fetchedCourseMetadata,
+              system_prompt: customPrompt.promptText,
+              document_group: customPrompt.documentGroups?.[0] || undefined,
+              tool: customPrompt.tools?.[0] || undefined,
+            };
+          } else {
+            console.log(`Custom prompt with ID ${gptId} not found in Redis for course ${courseName}. Using default system prompt.`);
+          }
+        } else if (gptId) {
+            console.log(`gptId present in URL, but no custom_system_prompts array in Redis for course ${courseName} or it is empty.`)
+        }
       }
 
-      setCourseMetadata(metadataData.course_metadata)
+      setCourseMetadata(fetchedCourseMetadata)
       setIsCourseMetadataLoading(false)
       setIsLoading(false)
     }
     fetchData()
-  }, [courseName, urlGuidedLearning, urlDocumentsOnly, urlSystemPromptOnly])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courseName, router.isReady]);
 
   // UseEffect to fetch document count in the background
   useEffect(() => {
