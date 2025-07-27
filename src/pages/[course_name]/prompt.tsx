@@ -33,6 +33,9 @@ import {
   Divider,
   Select,
   Image,
+  TextInput,
+  Box,
+  ActionIcon,
 } from '@mantine/core'
 
 import {
@@ -58,6 +61,8 @@ import {
   IconBook,
   IconLink,
   IconAlertTriangleFilled,
+  IconTrash,
+  IconPlus,
 } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
@@ -133,6 +138,15 @@ const isApiKeyRequired = (provider: ProviderNames): boolean => {
   return providersRequiringApiKey.includes(provider)
 }
 
+interface VariablePair {
+  id: string
+  key: string
+  value: string
+}
+
+const VARIABLES_START_TAG = '### Start User Defined Variables ###'
+const VARIABLES_END_TAG = '### End User Defined Variables ###'
+
 const CourseMain: NextPage = () => {
   const theme = useMantineTheme()
   const router = useRouter()
@@ -169,6 +183,10 @@ const CourseMain: NextPage = () => {
   >([])
   const [input, setInput] = useState(baseSystemPrompt)
   const [isOptimizing, setIsOptimizing] = useState(false)
+  const [
+    variablesModalOpened,
+    { open: openVariablesModal, close: closeVariablesModal },
+  ] = useDisclosure(false)
 
   const removeThinkSections = (text: string): string => {
     const cleanedText = text.replace(/<think>[\s\S]*?<\/think>/g, '')
@@ -1476,6 +1494,35 @@ CRITICAL: The optimized prompt must:
                                   Update System Prompt
                                 </Button>
                                 <Button
+                                  variant="filled"
+                                  radius="md"
+                                  className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                  onClick={openVariablesModal}
+                                  sx={(theme) => ({
+                                    background:
+                                      'linear-gradient(90deg, #1e3a8a 0%, #2563eb 100%) !important',
+                                    border: 'none',
+                                    color: '#fff',
+                                    padding: '10px 20px',
+                                    fontWeight: 600,
+                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    transition: 'all 0.2s ease',
+                                    '&:hover': {
+                                      background:
+                                        'linear-gradient(90deg, #2563eb 0%, #1e3a8a 100%) !important',
+                                      transform: 'translateY(-1px)',
+                                      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
+                                    },
+                                    '&:active': {
+                                      transform: 'translateY(0)',
+                                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    },
+                                  })}
+                                  style={{ minWidth: 'fit-content' }}
+                                >
+                                  Variables
+                                </Button>
+                                <Button
                                   onClick={handleSubmitPromptOptimization}
                                   disabled={!llmProviders || isOptimizing}
                                   variant="filled"
@@ -1521,6 +1568,17 @@ CRITICAL: The optimized prompt must:
                                     : 'Optimize System Prompt'}
                                 </Button>
                               </Group>
+
+                              {/* Variables Modal */}
+                              <PromptVariablesModal
+                                isModalOpen={variablesModalOpened}
+                                closeModal={closeVariablesModal}
+                                systemPrompt={baseSystemPrompt}
+                                onUpdateSystemPrompt={async (newPrompt) => {
+                                  setBaseSystemPrompt(newPrompt)
+                                  await handleSystemPromptSubmit(newPrompt)
+                                }}
+                              />
 
                               <Modal
                                 opened={opened}
@@ -1694,9 +1752,6 @@ CRITICAL: The optimized prompt must:
                           </div>
                         </div>
                       </Group>
-                      {/* <Alert icon={<IconAlertCircle size="1rem" />} title="Attention!" color="pink" style={{ width: isRightSideVisible ? '90%' : '73%', margin: 'auto', marginTop: '0px', color: 'pink' }}>
-                        <span style={{ color: 'pink' }}>Remember to save and update the system prompt before you leave this page.</span>
-                      </Alert> */}
                     </div>
                   </div>
                 </div>
@@ -1782,7 +1837,6 @@ CRITICAL: The optimized prompt must:
                               }
                               color="hsl(280,100%,70%)"
                               size={13}
-                              // styles={{ indicator: { top: '-10px !important', right: '265px !important' } }}
                               styles={{
                                 indicator: {
                                   top: '-17px !important',
@@ -2122,6 +2176,252 @@ CRITICAL: The optimized prompt must:
         <GlobalFooter />
       </main>
     </>
+  )
+}
+
+// Define the PromptVariablesModal component here to keep it minimal
+const PromptVariablesModal: React.FC<{
+  systemPrompt: string
+  onUpdateSystemPrompt: (newPrompt: string) => Promise<void>
+  isModalOpen: boolean
+  closeModal: () => void
+}> = ({ systemPrompt, onUpdateSystemPrompt, isModalOpen, closeModal }) => {
+  const [variables, setVariables] = useState<VariablePair[]>([])
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const theme = useMantineTheme()
+
+  useEffect(() => {
+    if (systemPrompt) {
+      const extractedVars = extractVariablesFromPrompt(systemPrompt)
+      setVariables(extractedVars)
+    }
+  }, [systemPrompt, isModalOpen])
+
+  const extractVariablesFromPrompt = (prompt: string): VariablePair[] => {
+    const startIdx = prompt.indexOf(VARIABLES_START_TAG)
+    const endIdx = prompt.indexOf(VARIABLES_END_TAG)
+    if (startIdx === -1 || endIdx === -1 || startIdx >= endIdx) return []
+
+    return prompt
+      .slice(startIdx + VARIABLES_START_TAG.length, endIdx)
+      .split('\n')
+      .filter((line) => line.trim() && line.includes(':'))
+      .map((line) => {
+        const parts = line.split(':')
+        return {
+          id: Math.random().toString(36).substr(2, 9),
+          key: parts[0]?.trim() || '',
+          value: parts[1]?.trim() || '',
+        }
+      })
+  }
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true)
+    try {
+      const varsSection = `${VARIABLES_START_TAG}\n${variables
+        .map((v) => `${v.key}: ${v.value}`)
+        .join('\n')}\n${VARIABLES_END_TAG}`
+
+      let newPrompt = systemPrompt
+      const startIdx = systemPrompt.indexOf(VARIABLES_START_TAG)
+      const endIdx = systemPrompt.indexOf(VARIABLES_END_TAG)
+
+      if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+        newPrompt =
+          systemPrompt.slice(0, startIdx) +
+          varsSection +
+          systemPrompt.slice(endIdx + VARIABLES_END_TAG.length)
+      } else {
+        newPrompt = `${systemPrompt}\n\n${varsSection}`
+      }
+
+      await onUpdateSystemPrompt(newPrompt)
+      closeModal()
+    } catch (error) {
+      console.error('Error updating variables:', error)
+      showToastNotification(theme, 'Error', 'Failed to update variables', true)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <Modal
+      opened={isModalOpen}
+      onClose={closeModal}
+      title={
+        <Text
+          className={`${montserrat_heading.variable} font-montserratHeading`}
+          size="lg"
+          weight={700}
+          gradient={{ from: 'gold', to: 'white', deg: 45 }}
+          variant="gradient"
+        >
+          User Defined Variables
+        </Text>
+      }
+      centered
+      size="lg"
+      styles={{
+        header: {
+          backgroundColor: '#15162c',
+          borderBottom: '1px solid #2D2F48',
+          padding: '20px 24px',
+        },
+        content: {
+          backgroundColor: '#15162c',
+          border: '1px solid #2D2F48',
+        },
+        body: {
+          padding: '24px',
+        },
+      }}
+    >
+      <Paper
+        p="md"
+        mb="md"
+        style={{
+          backgroundColor: '#1a1b34',
+          border: '1px solid rgba(147, 51, 234, 0.3)',
+          marginTop: '16px',
+        }}
+      >
+        <Flex align="center" mb="xs">
+          <IconInfoCircle size={18} style={{ color: 'hsl(280,100%,70%)' }} />
+          <Text
+            ml="xs"
+            className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+          >
+            Define variables that will be injected into your prompt.
+          </Text>
+        </Flex>
+        <Text
+          size="sm"
+          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+          color="gray.4"
+        >
+          Variables will be added in a special section at the end of your prompt
+          in the format: KEY: VALUE
+        </Text>
+      </Paper>
+
+      <Box mb="md">
+        {variables.map((variable) => (
+          <Flex key={variable.id} mb="xs" align="center">
+            <TextInput
+              placeholder="Variable Name"
+              value={variable.key}
+              onChange={(e) =>
+                setVariables((prev) =>
+                  prev.map((v) =>
+                    v.id === variable.id ? { ...v, key: e.target.value } : v,
+                  ),
+                )
+              }
+              required
+              style={{ flex: 1, marginRight: '8px' }}
+              styles={{
+                input: {
+                  backgroundColor: '#1d1f33',
+                  color: 'white',
+                  border: '1px solid #2D2F48',
+                },
+              }}
+            />
+            <Text mx="xs">:</Text>
+            <TextInput
+              placeholder="Value"
+              value={variable.value}
+              onChange={(e) =>
+                setVariables((prev) =>
+                  prev.map((v) =>
+                    v.id === variable.id ? { ...v, value: e.target.value } : v,
+                  ),
+                )
+              }
+              required
+              style={{ flex: 1 }}
+              styles={{
+                input: {
+                  backgroundColor: '#1d1f33',
+                  color: 'white',
+                  border: '1px solid #2D2F48',
+                },
+              }}
+            />
+            <ActionIcon
+              ml="sm"
+              color="red"
+              variant="subtle"
+              onClick={() =>
+                setVariables((prev) => prev.filter((v) => v.id !== variable.id))
+              }
+            >
+              <IconTrash size={18} />
+            </ActionIcon>
+          </Flex>
+        ))}
+
+        <Button
+          mt="md"
+          variant="subtle"
+          leftIcon={<IconPlus size={18} />}
+          onClick={() =>
+            setVariables((prev) => [
+              ...prev,
+              {
+                id: Math.random().toString(36).substr(2, 9),
+                key: '',
+                value: '',
+              },
+            ])
+          }
+          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+          color="blue"
+        >
+          Add Variable
+        </Button>
+      </Box>
+
+      <Group position="right" mt="xl">
+        <Button
+          variant="outline"
+          onClick={closeModal}
+          styles={(theme) => ({
+            root: {
+              borderColor: theme.colors.gray[6],
+              color: '#fff',
+              '&:hover': {
+                backgroundColor: theme.colors.gray[8],
+              },
+            },
+          })}
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          loading={isSubmitting}
+          sx={(theme) => ({
+            background:
+              'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%) !important',
+            border: 'none',
+            color: '#fff',
+            fontWeight: 600,
+            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              background:
+                'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%) !important',
+              transform: 'translateY(-1px)',
+            },
+          })}
+        >
+          Update Variables
+        </Button>
+      </Group>
+    </Modal>
   )
 }
 
