@@ -806,6 +806,39 @@ export const Chat = memo(
 
             homeDispatch({ field: 'isRetrievalLoading', value: false })
           }
+          const handleSearchResults = async (
+            message: Message,
+            selectedConversation: Conversation,
+          ) => {
+            // Only run if web search is enabled for this message
+            if (!message.webSearchEnabled) return
+
+            homeDispatch({ field: 'isWebSearchLoading', value: true })
+
+            try {
+              const response = await fetch('/api/exa-search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  query:
+                    typeof message.content[0] === 'object' &&
+                    'text' in message.content[0]
+                      ? message.content[0].text
+                      : '',
+                }),
+              })
+              const data = await response.json()
+
+              // Attach results to the message
+              message.searchResults = data.results || []
+            } catch (error) {
+              console.error('Error fetching Exa.ai search results:', error)
+              message.searchResults = []
+            } finally {
+              homeDispatch({ field: 'isWebSearchLoading', value: false })
+            }
+          }
+          await handleSearchResults(message, selectedConversation)
 
           // Action 3: Tool Execution
           if (tools.length > 0) {
@@ -1064,6 +1097,8 @@ export const Chat = memo(
                       role: 'assistant',
                       content: chunkValue,
                       contexts: message.contexts,
+                      searchResults: message.searchResults,
+                      webSearchEnabled: message.webSearchEnabled,
                       feedback: message.feedback,
                       wasQueryRewritten: message.wasQueryRewritten,
                       queryRewriteText: message.queryRewriteText,

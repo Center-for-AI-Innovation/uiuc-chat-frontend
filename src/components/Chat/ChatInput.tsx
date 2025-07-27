@@ -7,6 +7,8 @@ import {
   IconAlertCircle,
   IconX,
   IconRepeat,
+  IconSearch,
+  IconWorld,
 } from '@tabler/icons-react'
 import { Text } from '@mantine/core'
 import {
@@ -117,6 +119,7 @@ export const ChatInput = ({
   const [uploadingImage, setUploadingImage] = useState<boolean>(false)
   const [imageError, setImageError] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState<boolean>(false)
+  const [isWebSearchEnabled, setIsWebSearchEnabled] = useState(false)
   const imageUploadRef = useRef<HTMLInputElement | null>(null)
   const promptListRef = useRef<HTMLUListElement | null>(null)
   const [imageFiles, setImageFiles] = useState<File[]>([])
@@ -266,6 +269,7 @@ export const ChatInput = ({
       id: uuidv4(),
       role: 'user',
       content: contentArray,
+      webSearchEnabled: isWebSearchEnabled,
     }
 
     // Use the onSend prop to send the structured message
@@ -780,6 +784,23 @@ export const ChatInput = ({
     }
   }, [])
 
+  const performWebSearch = async (query: string) => {
+    try {
+      const response = await fetch('/api/exa-search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query }),
+      })
+
+      if (!response.ok) throw new Error('Web search failed')
+      const data = await response.json()
+      return data.results
+    } catch (error) {
+      console.error('[WebSearch] Error:', error)
+      return []
+    }
+  }
+
   // Add resize observer effect
   useEffect(() => {
     const textarea = textareaRef.current
@@ -842,13 +863,35 @@ export const ChatInput = ({
           className="absolute bottom-0 mx-4 flex w-[80%] flex-col self-center rounded-t-3xl border border-black/10 bg-[#070712] px-4 pb-8 pt-4 shadow-[0_0_10px_rgba(0,0,0,0.10)] dark:border-gray-900/50 dark:text-white dark:shadow-[0_0_15px_rgba(0,0,0,0.10)] md:mx-20 md:w-[70%]"
           style={{ pointerEvents: 'auto' }}
         >
+          <Tooltip
+            label="Web Search"
+            position="top"
+            withArrow
+            style={{
+              backgroundColor: '#2b2b2b',
+              color: 'white',
+            }}
+          >
+            <button
+              className={`absolute bottom-11 left-5 rounded-full p-1 text-neutral-100 transition-colors duration-200 ${
+                isWebSearchEnabled
+                  ? 'bg-blue-600 text-white'
+                  : 'opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200'
+              }`}
+              onClick={() => setIsWebSearchEnabled(!isWebSearchEnabled)}
+              style={{ pointerEvents: 'auto' }}
+            >
+              <IconWorld size={22} />
+            </button>
+          </Tooltip>
+
           {/* BUTTON 2: Image Icon and Input */}
           {selectedConversation?.model?.id &&
             VisionCapableModels.has(
               selectedConversation.model?.id as OpenAIModelID,
             ) && (
               <button
-                className="absolute bottom-11 left-5 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
+                className="absolute bottom-11 left-14 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
                 onClick={() => document.getElementById('imageUpload')?.click()}
                 style={{ pointerEvents: 'auto' }}
               >
@@ -976,7 +1019,7 @@ export const ChatInput = ({
             >
               <textarea
                 ref={textareaRef}
-                className={`chat-input m-0 h-[24px] max-h-[400px] w-full resize-none bg-transparent py-2 pl-2 pr-8 text-white outline-none ${
+                className={`chat-input m-0 h-[24px] max-h-[400px] w-full resize-none bg-transparent py-2 pl-12 pr-8 text-white outline-none ${
                   isFocused ? 'border-blue-500' : ''
                 }`}
                 style={{

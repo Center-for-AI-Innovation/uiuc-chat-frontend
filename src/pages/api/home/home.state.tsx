@@ -38,6 +38,7 @@ export interface HomeInitialState {
   isRunningTool: boolean | undefined
   isRetrievalLoading: boolean | undefined
   isQueryRewriting: boolean | undefined
+  isWebSearchLoading: boolean | undefined
   wasQueryRewritten: boolean | undefined
   queryRewriteText: string | undefined
   documentGroups: Action[]
@@ -74,6 +75,7 @@ export const initialState: HomeInitialState = {
   showModelSettings: false,
   isRouting: undefined,
   isRunningTool: undefined,
+  isWebSearchLoading: undefined,
   isRetrievalLoading: undefined,
   isQueryRewriting: undefined,
   wasQueryRewritten: undefined,
