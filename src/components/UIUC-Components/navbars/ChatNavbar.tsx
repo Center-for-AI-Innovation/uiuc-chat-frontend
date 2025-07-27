@@ -204,7 +204,6 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
         const courseMetadata = await response.json().then((data) => {
           return data['course_metadata']
         })
-
         if (
           currUserEmails.includes(courseMetadata.course_owner) ||
           currUserEmails.some((email) =>

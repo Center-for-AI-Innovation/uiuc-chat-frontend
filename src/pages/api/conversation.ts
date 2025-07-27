@@ -44,10 +44,10 @@ export function convertChatToDBConversation(
   }
 }
 
-export function convertDBToChatConversation(
+export async function convertDBToChatConversation(
   dbConversation: DBConversation,
   dbMessages: DBMessage[],
-): ChatConversation {
+): Promise<ChatConversation> {
   // First sort the messages by creation time
   const sortedMessages = (dbMessages || []).sort((a, b) => {
     const aTime = new Date(a.created_at || 0).getTime()
@@ -55,29 +55,102 @@ export function convertDBToChatConversation(
     return aTime - bTime
   })
 
-  // Validate that we have the first message (usually system or user)
-  if (sortedMessages.length > 0) {
-    const firstMessage: DBMessage | undefined = sortedMessages[0]
-    if (firstMessage?.role && firstMessage?.created_at) {
-      // console.debug('First message in conversation:', {
-      //   id: firstMessage?.id,
-      //   role: firstMessage?.role,
-      //   created_at: firstMessage?.created_at,
-      //   isSystem: firstMessage?.role === 'system',
-      //   isUser: firstMessage?.role === 'user'
-      // });
-    } else {
-      console.warn(
-        'No valid first message found in conversation:',
-        dbConversation.id,
-      )
+  // Find the most recent message with a custom GPT ID
+  const lastCustomGPTMessage = sortedMessages
+    .filter(msg => msg.custom_gpt_id)
+    .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())[0]
+
+
+  // Get the custom GPT name from course metadata if available
+  let customGPTName = '';
+  if (lastCustomGPTMessage?.custom_gpt_id && dbConversation.project_name) {
+    try {
+      
+      const response = await fetch(`/api/UIUC-api/getCourseMetadata?course_name=${encodeURIComponent(dbConversation.project_name)}`);
+      if (response.ok) {
+        const courseMetadata = await response.json();
+        if (courseMetadata?.course_metadata?.custom_system_prompts) {
+          // First try to find by gpt_id, then fall back to id
+          const customGPT = courseMetadata.course_metadata.custom_system_prompts.find(
+            (p: { id: string; gpt_id?: string }) => p.gpt_id === lastCustomGPTMessage.custom_gpt_id || p.id === lastCustomGPTMessage.custom_gpt_id
+          );
+          if (customGPT) {
+            customGPTName = customGPT.name;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching course metadata:', error);
     }
   }
 
-  // Now convert the sorted messages
+  // Convert messages to chat format
+  const messages = sortedMessages.map((msg: any) => {
+    const content: Content[] = []
+    if (msg.content_text) {
+      content.push({
+        type: 'text',
+        text: msg.content_text,
+      })
+    }
+    if (msg.image_description) {
+      content.push({
+        type: 'text',
+        text: `Image description: ${msg.image_description}`,
+      })
+    }
+    if (msg.content_image_url && msg.content_image_url.length > 0) {
+      for (const imageUrl of msg.content_image_url) {
+        content.push({
+          type: 'image_url',
+          image_url: {
+            url: imageUrl,
+          },
+        })
+      }
+    }
+
+    const feedbackObj = msg.feedback
+      ? {
+          isPositive: msg.feedback.feedback_is_positive,
+          category: msg.feedback.feedback_category,
+          details: msg.feedback.feedback_details,
+        }
+      : undefined
+
+    // Process contexts to ensure both page number fields are preserved
+    const processedContexts =
+      (msg.contexts as any as ContextWithMetadata[])?.map((context) => {
+        return {
+          ...context,
+          pagenumber: context.pagenumber || '',
+          pagenumber_or_timestamp:
+            context.pagenumber_or_timestamp || undefined,
+        }
+      }) || []
+
+    return {
+      id: msg.id,
+      role: msg.role as Role,
+      content: content,
+      contexts: processedContexts,
+      tools: (msg.tools as any as UIUCTool[]) || [],
+      latestSystemMessage: msg.latest_system_message || undefined,
+      finalPromtEngineeredMessage:
+        msg.final_prompt_engineered_message || undefined,
+      responseTimeSec: msg.response_time_sec || undefined,
+      created_at: msg.created_at || undefined,
+      updated_at: msg.updated_at || undefined,
+      feedback: feedbackObj,
+      wasQueryRewritten: msg.was_query_rewritten ?? null,
+      queryRewriteText: msg.query_rewrite_text ?? null,
+      custom_gpt_id: msg.custom_gpt_id || null,
+    }
+  })
+
   return {
     id: dbConversation.id,
-    name: dbConversation.name,
+    name: dbConversation.name || 'New Conversation',
     model: Array.from(AllSupportedModels).find(
       (model) => model.id === dbConversation.model,
     ) as GenericSupportedModel,
@@ -86,71 +159,11 @@ export function convertDBToChatConversation(
     userEmail: dbConversation.user_email || undefined,
     projectName: dbConversation.project_name,
     folderId: dbConversation.folder_id,
-    messages: sortedMessages.map((msg: any) => {
-      const content: Content[] = []
-      if (msg.content_text) {
-        content.push({
-          type: 'text',
-          text: msg.content_text,
-        })
-      }
-      if (msg.image_description) {
-        content.push({
-          type: 'text',
-          text: `Image description: ${msg.image_description}`,
-        })
-      }
-      if (msg.content_image_url && msg.content_image_url.length > 0) {
-        for (const imageUrl of msg.content_image_url) {
-          content.push({
-            type: 'image_url',
-            image_url: {
-              url: imageUrl,
-            },
-          })
-        }
-      }
-
-      const feedbackObj = msg.feedback
-        ? {
-            isPositive: msg.feedback.feedback_is_positive,
-            category: msg.feedback.feedback_category,
-            details: msg.feedback.feedback_details,
-          }
-        : undefined
-
-      // Process contexts to ensure both page number fields are preserved
-      const processedContexts =
-        (msg.contexts as any as ContextWithMetadata[])?.map((context) => {
-          return {
-            ...context,
-            pagenumber: context.pagenumber || '',
-            pagenumber_or_timestamp:
-              context.pagenumber_or_timestamp || undefined,
-          }
-        }) || []
-
-      const messageObj = {
-        id: msg.id,
-        role: msg.role as Role,
-        content: content,
-        contexts: processedContexts,
-        tools: (msg.tools as any as UIUCTool[]) || [],
-        latestSystemMessage: msg.latest_system_message || undefined,
-        finalPromtEngineeredMessage:
-          msg.final_prompt_engineered_message || undefined,
-        responseTimeSec: msg.response_time_sec || undefined,
-        created_at: msg.created_at || undefined,
-        updated_at: msg.updated_at || undefined,
-        feedback: feedbackObj,
-        wasQueryRewritten: msg.was_query_rewritten ?? null,
-        queryRewriteText: msg.query_rewrite_text ?? null,
-      }
-
-      return messageObj
-    }),
+    messages: messages,
     createdAt: dbConversation.created_at || undefined,
     updatedAt: dbConversation.updated_at || undefined,
+    customGptId: lastCustomGPTMessage?.custom_gpt_id || null,
+    customGptName: customGPTName || undefined,
   }
 }
 
@@ -253,7 +266,18 @@ export function convertChatToDBMessage(
     query_rewrite_text: chatMessage.queryRewriteText
       ? sanitizeText(chatMessage.queryRewriteText)
       : null,
+    custom_gpt_id: chatMessage.custom_gpt_id || null,
   }
+}
+
+// Utility function to decode shared conversation ID back to original ID
+const decodeSharedConversationId = (sharedId: string): string => {
+  // Extract the original ID from the shared ID
+  if (sharedId.startsWith('share_')) {
+    const reversed = sharedId.substring(6) // Remove 'share_' prefix
+    return reversed.split('').reverse().join('') // Reverse back to original
+  }
+  return sharedId // Fallback to treating it as a regular ID
 }
 
 export default async function handler(
@@ -381,17 +405,52 @@ export default async function handler(
       break
 
     case 'GET':
+      // Check if this is a request for a single conversation by ID
+      const conversationId = req.query.conversationId as string
+      if (conversationId) {
+        try {
+          // Decode the conversation ID in case it's a shared ID
+          const actualConversationId = decodeSharedConversationId(conversationId)
+          
+          // Fetch single conversation by actual ID
+          const { data: conversationData, error: conversationError } = await supabase
+            .from('conversations')
+            .select('*')
+            .eq('id', actualConversationId)
+            .single()
+
+          if (conversationError) throw conversationError
+          if (!conversationData) {
+            return res.status(404).json({ error: 'Conversation not found' })
+          }
+
+          // Fetch messages for this conversation
+          const { data: messagesData, error: messagesError } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('conversation_id', actualConversationId)
+            .order('created_at', { ascending: true })
+
+          if (messagesError) throw messagesError
+
+          // Convert to chat format
+          const conversation = await convertDBToChatConversation(conversationData, messagesData || [])
+
+          return res.status(200).json({ conversation })
+        } catch (error) {
+          console.error('Error fetching single conversation:', error)
+          return res.status(500).json({ error: 'Error fetching conversation' })
+        }
+      }
+
+      // Original logic for fetching multiple conversations
       const user_email = req.query.user_email as string
       const searchTerm = req.query.searchTerm as string
       const courseName = req.query.courseName as string
       const pageParam = parseInt(req.query.pageParam as string, 0)
+      
       // Search term is optional
       if (!user_email || !courseName || isNaN(pageParam)) {
-        console.log('first boolean:', !user_email)
-        console.log('second boolean:', !searchTerm)
-        console.log('third boolean:', !courseName)
-        console.log('fourth boolean:', isNaN(pageParam))
-        console.log('Invalid query parameters:', req.query)
         res.status(400).json({ error: 'Invalid query parameters' })
         return
       }
@@ -407,8 +466,6 @@ export default async function handler(
           p_offset: pageParam * pageSize,
         })
 
-        // console.log('data:', data)
-
         const count = data?.total_count || 0
 
         if (error) {
@@ -418,14 +475,9 @@ export default async function handler(
           )
           throw error
         }
-        // console.log(
-        //   'Fetched conversations before conversion in /conversation:',
-        //   data,
-        // )
 
         const fetchedConversations = (data.conversations || []).map(
           (conv: any) => {
-            // console.log('Fetched conversation:', conv)
             const convMessages = conv.messages || []
             return convertDBToChatConversation(conv, convMessages)
           },
@@ -437,13 +489,7 @@ export default async function handler(
           count > fetchedConversations.length
             ? pageParam + 1
             : null
-
-        // console.log(
-        //   'Fetched conversations:',
-        //   fetchedConversations.length,
-        //   'for user_email:',
-        //   user_email,
-        // )
+        
         res.status(200).json({
           conversations: fetchedConversations,
           nextCursor: nextCursor,

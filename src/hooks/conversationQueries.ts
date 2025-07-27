@@ -25,18 +25,45 @@ export function useFetchConversationHistory(
 
   return useInfiniteQuery({
     queryKey: ['conversationHistory', user_email, courseName, searchTerm],
-    queryFn: ({ pageParam = 0 }) => {
+    queryFn: async ({ pageParam = 0 }) => {
       // Additional runtime check to prevent invalid calls
       if (!isValidEmail || !isValidCourse) {
-        return Promise.reject(new Error('Invalid email or course name'));
+        console.warn('Invalid email or course name in fetchConversationHistory');
+        return { conversations: [], nextCursor: null };
       }
-      return fetchConversationHistory(user_email!, searchTerm, courseName!, pageParam);
+      
+      try {
+        const result = await fetchConversationHistory(user_email!, searchTerm, courseName!, pageParam);
+        // Ensure the result has the expected structure
+        return {
+          conversations: result?.conversations || [],
+          nextCursor: result?.nextCursor || null
+        };
+      } catch (error) {
+        console.error('Error in fetchConversationHistory:', error);
+        // Return empty result instead of throwing to prevent app crash
+        return { conversations: [], nextCursor: null };
+      }
     },
     initialPageParam: 0,
     enabled: isEnabled,
-    getNextPageParam: (lastPage: ConversationPage) =>
-      lastPage.nextCursor ?? null,
+    getNextPageParam: (lastPage: ConversationPage) => {
+      // Add safety check for lastPage
+      if (!lastPage || typeof lastPage.nextCursor === 'undefined') {
+        return null;
+      }
+      return lastPage.nextCursor;
+    },
     refetchInterval: 20_000,
+    // Add retry configuration to handle temporary failures
+    retry: (failureCount, error) => {
+      // Don't retry if it's a validation error
+      if (!isValidEmail || !isValidCourse) {
+        return false;
+      }
+      // Retry up to 3 times for other errors
+      return failureCount < 3;
+    },
   })
 }
 

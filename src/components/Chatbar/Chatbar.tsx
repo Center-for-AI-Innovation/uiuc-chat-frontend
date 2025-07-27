@@ -3,7 +3,7 @@ import { useTranslation } from 'next-i18next'
 import { useCreateReducer } from '@/hooks/useCreateReducer'
 import { DEFAULT_SYSTEM_PROMPT, DEFAULT_TEMPERATURE } from '@/utils/app/const'
 import { exportData } from '@/utils/app/importExport'
-import { Conversation } from '@/types/chat'
+import { Conversation, Message } from '~/types/chat'
 import { LatestExportFormat, SupportedExportFormats } from '@/types/export'
 import { OpenAIModels } from '~/utils/modelProviders/types/openai'
 import { PluginKey } from '@/types/plugin'
@@ -30,13 +30,21 @@ import { useDebouncedState } from '@mantine/hooks'
 import posthog from 'posthog-js'
 import { saveConversationToServer } from '~/utils/app/conversation'
 import { downloadConversationHistoryUser } from '~/pages/api/UIUC-api/downloadConvoHistoryUser'
+import CustomGPTsList from './components/CustomGPTsList'
+import { CourseMetadata, CustomSystemPrompt } from '~/types/courseMetadata'
+import { callSetCourseMetadata } from '~/utils/apiUtils'
+import { showNotification } from '@mantine/notifications'
 
 export const Chatbar = ({
   current_email,
   courseName,
+  courseMetadata,
+  onCourseMetadataUpdate,
 }: {
   current_email: string | undefined
   courseName: string | undefined
+  courseMetadata: CourseMetadata | null
+  onCourseMetadataUpdate?: (updatedMetadata: CourseMetadata) => void
 }) => {
   const { t } = useTranslation('sidebar')
   const chatBarContextValue = useCreateReducer<ChatbarInitialState>({
@@ -45,7 +53,7 @@ export const Chatbar = ({
   const [isExporting, setIsExporting] = useState<boolean>(false)
 
   const {
-    state: { conversations, showChatbar, defaultModelId, folders },
+    state: { conversations, showChatbar, defaultModelId, folders, selectedConversation },
     dispatch: homeDispatch,
     handleCreateFolder,
     handleNewConversation,
@@ -148,14 +156,16 @@ export const Chatbar = ({
       if (
         isConversationHistoryFetched &&
         !isConversationHistoryLoading &&
-        conversationHistory
+        conversationHistory &&
+        conversationHistory.pages
       ) {
-        // console.log('Raw conversation history:', conversationHistory)
         const allConversations = conversationHistory.pages
-          .flatMap((page) => (Array.isArray(page) ? page : []))
+          .flatMap((page) => {
+            if (!page || !page.conversations) return [];
+            return Array.isArray(page.conversations) ? page.conversations : [];
+          })
           .filter((conversation) => conversation !== undefined)
         homeDispatch({ field: 'conversations', value: allConversations })
-        // console.log('Dispatching conversations: ', allConversations)
 
         const convoMigrationComplete = localStorage.getItem(
           'convoMigrationComplete',
@@ -295,6 +305,58 @@ export const Chatbar = ({
     }
   }
 
+  const handleSelectCustomGPT = (customGPT: CustomSystemPrompt) => {
+    console.log('Selected custom GPT:', customGPT);
+    
+    // Create a new conversation with the custom GPT's prompt
+    handleNewConversation({
+      text: customGPT.promptText,
+      name: customGPT.name || 'Custom GPT Chat',
+      id: customGPT.gpt_id || customGPT.id
+    });
+  };
+
+  const handleToggleFavoritePrompt = async (promptId: string, isFavorite: boolean) => {
+    if (!courseMetadata?.custom_system_prompts || !courseName) {
+      console.error('Cannot toggle favorite: missing course metadata or course name');
+      return;
+    }
+
+    try {
+      // Update the prompts array with the new favorite status
+      const updatedPrompts = courseMetadata.custom_system_prompts.map((prompt) =>
+        prompt.id === promptId ? { ...prompt, isFavorite } : prompt,
+      );
+
+      // Create updated metadata
+      const updatedMetadata = {
+        ...courseMetadata,
+        custom_system_prompts: updatedPrompts,
+      } as CourseMetadata;
+
+      // Save to backend
+      const success = await callSetCourseMetadata(courseName, updatedMetadata);
+      
+      if (success) {
+        // Update parent component's metadata if callback is provided
+        if (onCourseMetadataUpdate) {
+          onCourseMetadataUpdate(updatedMetadata);
+        }
+      } 
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    }
+  };
+
+  // Create the custom GPTs component
+  const customGPTsComponent = courseMetadata?.custom_system_prompts && courseMetadata.custom_system_prompts.length > 0 ? (
+    <CustomGPTsList
+      customSystemPrompts={courseMetadata.custom_system_prompts}
+      onSelectGPT={handleSelectCustomGPT}
+      onToggleFavorite={handleToggleFavoritePrompt}
+    />
+  ) : null;
+
   if (!current_email || !courseName) {
     return (
       <div className="flex-1 overflow-hidden">
@@ -384,6 +446,7 @@ export const Chatbar = ({
         handleDrop={handleDrop}
         footerComponent={<ChatbarSettings />}
         onScroll={handleScroll}
+        customGPTsComponent={customGPTsComponent}
       />
     </ChatbarContext.Provider>
   )
