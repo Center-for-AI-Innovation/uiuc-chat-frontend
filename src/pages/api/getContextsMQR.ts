@@ -48,7 +48,7 @@ export const fetchMQRContexts = async (
   search_query: string,
   token_limit = 6000,
   doc_groups: string[] = [],
-  conversation_id?: string,
+  conversation_id: string,
 ): Promise<ContextWithMetadata[]> => {
   try {
     const params = new URLSearchParams({
@@ -60,9 +60,8 @@ export const fetchMQRContexts = async (
     // Handle doc_groups array
     doc_groups.forEach(group => params.append('doc_groups', group))
 
-    if (conversation_id) {
       params.append('conversation_id', conversation_id)
-    }
+    
     
     const response = await fetch(`/api/getContextsMQR?${params.toString()}`)
 
