@@ -49,6 +49,7 @@ export const createProject = async (
   project_name: string,
   project_description: string | undefined,
   project_owner_email: string,
+  is_private = false
 ): Promise<boolean> => {
   try {
     const response = await fetch('/api/UIUC-api/createProject', {
@@ -60,6 +61,7 @@ export const createProject = async (
         project_name,
         project_description,
         project_owner_email,
+        is_private
       }),
     })
     

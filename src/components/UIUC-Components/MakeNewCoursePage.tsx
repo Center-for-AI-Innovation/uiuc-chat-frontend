@@ -1,5 +1,5 @@
 import Head from 'next/head'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 
 import Navbar from './navbars/Navbar'
 import {
@@ -43,6 +43,11 @@ const MakeNewCoursePage = ({
   const [allExistingCourseNames, setAllExistingCourseNames] = useState<
     string[]
   >([])
+
+  const useIllinoisChatConfig = useMemo(() => {
+    return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
+  }, [])
+
   const checkCourseAvailability = () => {
     const courseExists =
       projectName != '' &&
@@ -84,13 +89,16 @@ const MakeNewCoursePage = ({
     project_name: string,
     project_description: string | undefined,
     current_user_email: string,
+    is_private = false
   ) => {
+
     setIsLoading(true)
     try {
       const result = await createProject(
         project_name,
         project_description,
         current_user_email,
+        is_private
       )
       console.log('Project created successfully:', result)
       if (is_new_course) {
@@ -272,6 +280,7 @@ const MakeNewCoursePage = ({
                               projectName,
                               projectDescription,
                               current_user_email,
+                              useIllinoisChatConfig, // isPrivate: illinois chat project default to private
                             )
                           }}
                           size="md"
