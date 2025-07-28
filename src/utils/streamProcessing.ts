@@ -9,7 +9,7 @@ import { runAnthropicChat } from '~/app/utils/anthropic'
 import { runOllamaChat } from '~/app/utils/ollama'
 import { runVLLM } from '~/app/utils/vllm'
 import { fetchContexts } from '~/pages/api/getContexts'
-import fetchMQRContexts from '~/pages/api/getContextsMQR'
+import { fetchMQRContexts }from '~/pages/api/getContextsMQR'
 import { fetchImageDescription } from '~/pages/api/UIUC-api/fetchImageDescription'
 import {
   type ChatApiBody,
