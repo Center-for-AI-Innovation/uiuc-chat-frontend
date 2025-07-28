@@ -65,6 +65,7 @@ function DocumentsCard({
   const router = useRouter()
   const { classes, theme } = useStyles()
   const { t } = useTranslation('common')
+  const showToastOnUpdate = createShowToastOnUpdate(t)
 
   // Get responsive card width classes based on sidebar state
   const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed || false)
@@ -92,14 +93,14 @@ function DocumentsCard({
           centered
         >
           <Text size="sm" style={{ color: 'white' }}>
-            {`Are you sure you want to export all the documents and embeddings?`}
+            {t('project_files.export_confirm_message') || 'Are you sure you want to export all the documents and embeddings?'}
           </Text>
           <div className="mt-5 flex justify-end gap-2">
             <Button
               className="rounded-md bg-transparent text-white hover:bg-[--dashboard-button-hover]"
               onClick={() => setExportModalOpened(false)}
             >
-              Cancel
+              {t('common.cancel') || 'Cancel'}
             </Button>
             <Button
               className="rounded-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover]"
@@ -111,7 +112,7 @@ function DocumentsCard({
                 }
               }}
             >
-              Export
+              {t('project_files.export') || 'Export'}
             </Button>
           </div>
         </Modal>
@@ -122,7 +123,7 @@ function DocumentsCard({
               order={3}
               className={`${montserrat_heading.variable} font-montserratHeading text-lg text-[--foreground] sm:text-2xl`}
             >
-              {t('dashboard.project_files')}
+              {t('dashboard.project_files') || 'Project Files'}
             </Title>
 
             <Button
@@ -137,9 +138,11 @@ function DocumentsCard({
               `}
             >
               <span className="hidden sm:inline">
-                {t('dashboard.export_all_documents')}
+                {t('dashboard.export_all_documents') || 'Export all documents and embeddings'}
               </span>
-              <span className="inline sm:hidden">Export All</span>
+              <span className="inline sm:hidden">
+                {t('project_files.export_short', 'Export All') || 'Export All'}
+              </span>
             </Button>
           </div>
         </div>

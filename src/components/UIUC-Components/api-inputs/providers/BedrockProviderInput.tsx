@@ -160,8 +160,8 @@ export default function BedrockProviderInput({
               <Switch
                 size="md"
                 labelPosition="left"
-                onLabel={t('models.on')}
-                offLabel={t('models.off')}
+                onLabel={t('models.on') || ''}
+                offLabel={t('models.off') || ''}
                 aria-label={t('models.enable_model', { model: 'Bedrock' }) || ''}
                 checked={field.state.value}
                 onChange={(event) => {
@@ -233,7 +233,7 @@ export default function BedrockProviderInput({
                     {(field: any) => (
                       <CredentialInput
                         field={field}
-                        placeholder={t('models.fields.bedrock_access_key_id')}
+                        placeholder={t('models.fields.bedrock_access_key_id') || ''}
                         onEnterPress={handleSaveCredentials}
                       />
                     )}
@@ -245,7 +245,7 @@ export default function BedrockProviderInput({
                     {(field: any) => (
                       <CredentialInput
                         field={field}
-                        placeholder={t('models.fields.bedrock_secret_access_key')}
+                        placeholder={t('models.fields.bedrock_secret_access_key') || ''}
                         onEnterPress={handleSaveCredentials}
                       />
                     )}
@@ -257,7 +257,7 @@ export default function BedrockProviderInput({
                     {(field: any) => (
                       <CredentialInput
                         field={field}
-                        placeholder={t('models.fields.bedrock_region')}
+                        placeholder={t('models.fields.bedrock_region') || ''}
                         onEnterPress={handleSaveCredentials}
                       />
                     )}

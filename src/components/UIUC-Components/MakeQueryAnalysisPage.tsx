@@ -163,11 +163,11 @@ const createShowToastOnFileDeleted = (t: (key: string) => string) => (theme: Man
   });
 };
 
-const createShowToastOnUpdate = (t: (key: string) => string) => (
+export const createShowToastOnUpdate = (t: (key: string) => string) => (
   theme: MantineTheme,
   was_error = false,
-  isReset = false,
-  message: string,
+  isDelete = false,
+  message?: string,
 ) => {
   return notifications.show({
     id: 'convo-or-documents-export',

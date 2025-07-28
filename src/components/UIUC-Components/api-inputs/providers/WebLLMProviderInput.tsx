@@ -61,9 +61,9 @@ export default function WebLLMProviderInput({
               <Switch
                 size="md"
                 labelPosition="left"
-                onLabel={t('models.on')}
-                offLabel={t('models.off')}
-                aria-label={t('models.enable_model', { model: 'WebLLM' })}
+                onLabel={t('models.on') || ''}
+                offLabel={t('models.off') || ''}
+                aria-label={t('models.enable_model', { model: 'WebLLM' }) || ''}
                 checked={field.state.value}
                 onChange={(event) => {
                   field.handleChange(event.currentTarget.checked)

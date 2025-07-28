@@ -1839,7 +1839,7 @@ export const ChatMessage = memo(
                                       2) && (
                                   <IntermediateStateAccordion
                                     accordionKey="imageDescription"
-                                    title={t('chat.message.image_description')}
+                                    title={t('chat.message.image_description') || ''}
                                     isLoading={isImg2TextLoading}
                                     error={false}
                                     content={
@@ -1864,7 +1864,7 @@ export const ChatMessage = memo(
                               ) && (
                                 <IntermediateStateAccordion
                                   accordionKey="imageDescription"
-                                  title={t('chat.message.image_description')}
+                                  title={t('chat.message.image_description') || ''}
                                   isLoading={false}
                                   error={false}
                                   content={
@@ -1891,7 +1891,7 @@ export const ChatMessage = memo(
                                 1 && (
                               <IntermediateStateAccordion
                                 accordionKey="query-rewrite"
-                                title={t('chat.retrieval.optimizing')}
+                                title={t('chat.retrieval.optimizing') || ''}
                                 isLoading={isQueryRewriting}
                                 error={false}
                                 content={<></>}
@@ -1927,7 +1927,7 @@ export const ChatMessage = memo(
                             message.contexts.length > 0 && (
                               <IntermediateStateAccordion
                                 accordionKey="retrieval loading"
-                                title={t('chat.retrieval.retrieved')}
+                                title={t('chat.retrieval.retrieved') || ''}
                                 isLoading={false}
                                 error={false}
                                 content={t('chat.retrieval.found_chunks', {
@@ -1946,7 +1946,7 @@ export const ChatMessage = memo(
                                   2) && (
                               <IntermediateStateAccordion
                                 accordionKey="retrieval loading"
-                                title={t('chat.retrieval.retrieving')}
+                                title={t('chat.retrieval.retrieving') || ''}
                                 isLoading={isRetrievalLoading}
                                 error={false}
                                 content={t('chat.retrieval.found_chunks', {
@@ -1965,7 +1965,7 @@ export const ChatMessage = memo(
                                   2) && (
                               <IntermediateStateAccordion
                                 accordionKey="tool routing"
-                                title={t('chat.tools.routing')}
+                                title={t('chat.tools.routing') || ''}
                                 isLoading={isRouting}
                                 error={false}
                                 content={<></>}

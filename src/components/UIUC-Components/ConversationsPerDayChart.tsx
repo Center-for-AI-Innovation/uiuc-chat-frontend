@@ -101,7 +101,7 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
   if (isLoading) {
     return (
       <Text>
-        {t('analysis.loadingChart', 'Loading chart')} <LoadingSpinner size="xs" />
+        {t('analysis.loadingChart', 'Loading chart') || 'Loading chart'} <LoadingSpinner size="xs" />
       </Text>
     )
   }
@@ -111,7 +111,7 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
   }
 
   if (!data || Object.keys(data).length === 0) {
-    return <Text>{t('analysis.noDataAvailable', 'No data available')}</Text>
+    return <Text>{t('analysis.noDataAvailable', 'No data available') || 'No data available'}</Text>
   }
 
   const yAxisDomain = useLogScale
@@ -189,7 +189,7 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
               }}
               angle={chartData.length > 15 ? -45 : 0}
               label={{
-                value: t('analysis.date', 'Date'),
+                value: t('analysis.date', 'Date') || 'Date',
                 position: 'insideBottom',
                 offset: -20,
                 fill: 'var(--dashboard-foreground)',
@@ -209,8 +209,8 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
               }}
               label={{
                 value: useLogScale
-                  ? t('analysis.numberOfConversationsLog', 'Number of Conversations (log scale)')
-                  : t('analysis.numberOfConversations', 'Number of Conversations'),
+                  ? t('analysis.numberOfConversationsLog', 'Number of Conversations (log scale)') || 'Number of Conversations (log scale)'
+                  : t('analysis.numberOfConversations', 'Number of Conversations') || 'Number of Conversations',
                 angle: -90,
                 position: 'center',
                 fill: 'var(--dashboard-foreground)',

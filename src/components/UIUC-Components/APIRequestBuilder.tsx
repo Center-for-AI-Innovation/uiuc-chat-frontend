@@ -444,7 +444,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
               onChange={(event) =>
                 setRetrievalOnly(event.currentTarget.checked)
               }
-              label={t('api.retrieval_only')}
+              label={t('api.retrieval_only') || ''}
               size="md"
               className={`mt-4 ${montserrat_paragraph.variable} font-montserratParagraph`}
               styles={(theme) => ({
@@ -463,7 +463,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
               })}
             />
             <Tooltip
-              label={t('api.retrieval_only_tooltip')}
+              label={t('api.retrieval_only_tooltip') || ''}
               position="top"
               multiline
               width={220}
@@ -489,7 +489,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
               onChange={(event) =>
                 setStreamEnabled(event.currentTarget.checked)
               }
-              label={t('api.stream_response')}
+              label={t('api.stream_response') || ''}
               size="md"
               className={`mt-4 ${montserrat_paragraph.variable} font-montserratParagraph`}
               styles={(theme) => ({

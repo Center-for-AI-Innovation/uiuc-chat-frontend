@@ -588,7 +588,7 @@ export function ProjectFilesTable({
               <Paper className="w-full bg-transparent sm:w-auto">
                 <div className="relative mb-2 flex w-full flex-col items-start gap-4 sm:flex-row sm:items-center">
                   <Tooltip
-                    label={t('project_files.all_selected_docs_added')}
+                    label={t('project_files.all_selected_docs_added') || ''}
                     position="top"
                     withArrow
                     style={{
@@ -953,7 +953,7 @@ export function ProjectFilesTable({
             {
               titleStyle: dataTableTitleStyles,
               accessor: 'readable_filename',
-              title: t('dashboard.file_name'),
+              title: t('dashboard.file_name') || '',
               // render: ({ readable_filename }) =>
               //   readable_filename ? `${readable_filename}` : '',
               render: ({ readable_filename }) =>
@@ -969,7 +969,7 @@ export function ProjectFilesTable({
               sortable: true,
               filter: (
                 <TextInput
-                  label={t('dashboard.file_name')}
+                  label={t('dashboard.file_name') || ''}
                   description={t('project_files.search_files_description') as string}
                   placeholder={t('project_files.search_files') as string}
                   rightSection={
@@ -997,7 +997,7 @@ export function ProjectFilesTable({
             {
               titleStyle: dataTableTitleStyles,
               accessor: 'url',
-              title: t('dashboard.url'),
+              title: t('dashboard.url') || '',
               render: ({ url }) =>
                 url ? (
                   <div style={{ wordWrap: 'break-word', maxWidth: '14vw' }}>
@@ -1010,7 +1010,7 @@ export function ProjectFilesTable({
               width: isBetweenSmallAndMediumScreen ? '12vw' : '14vw',
               filter: (
                 <TextInput
-                  label={t('dashboard.url')}
+                  label={t('dashboard.url') || ''}
                   description={t('project_files.search_urls_description') as string}
                   placeholder={t('project_files.search_urls') as string}
                   rightSection={
@@ -1038,7 +1038,7 @@ export function ProjectFilesTable({
             {
               titleStyle: dataTableTitleStyles,
               accessor: 'base_url',
-              title: t('dashboard.starting_url_web_scraping'),
+              title: t('dashboard.starting_url_web_scraping') || '',
               render: ({ base_url }) =>
                 base_url ? (
                   <div style={{ wordWrap: 'break-word' }}>{base_url}</div>
@@ -1050,7 +1050,7 @@ export function ProjectFilesTable({
               width: isBetweenSmallAndMediumScreen ? '11vw' : '14vw',
               filter: (
                 <TextInput
-                  label={t('dashboard.starting_url_web_scraping')}
+                  label={t('dashboard.starting_url_web_scraping') || ''}
                   description="Show all urls that include the specified text"
                   placeholder="Search urls..."
                   rightSection={
@@ -1397,7 +1397,7 @@ export function ProjectFilesTable({
         <Modal
           opened={errorModalOpened}
           onClose={() => setErrorModalOpened(false)}
-          title={t('project_files.error_details')}
+          title={t('project_files.error_details') || ''}
           size={'xl'}
           closeOnEscape={true}
           transitionProps={{ transition: 'fade', duration: 200 }}

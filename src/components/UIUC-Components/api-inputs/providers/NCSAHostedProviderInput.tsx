@@ -61,9 +61,9 @@ export default function NCSAHostedLLmsProviderInput({
               <Switch
                 size="md"
                 labelPosition="left"
-                onLabel={t('models.on')}
-                offLabel={t('models.off')}
-                aria-label={t('models.enable_model', { model: 'NCSA Hosted' })}
+                onLabel={t('models.on') || ''}
+                offLabel={t('models.off') || ''}
+                aria-label={t('models.enable_model', { model: 'NCSA Hosted' }) || ''}
                 checked={field.state.value}
                 onChange={(event) => {
                   field.handleChange(event.currentTarget.checked)

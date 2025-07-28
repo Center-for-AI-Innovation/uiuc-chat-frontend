@@ -44,7 +44,7 @@ export const FancyRetrieval = () => {
           position="top-start"
           arrowSize={8}
           withArrow
-          label={t('chat.retrieval.multi_query.disabled')}
+          label={t('chat.retrieval.multi_query.disabled') || ''}
           classNames={{
             tooltip: `${isSmallScreen ? 'text-xs' : 'text-sm'} text-[--tooltip] bg-[--tooltip-background] ${montserrat_paragraph.variable} font-montserratParagraph`,
           }}
@@ -66,7 +66,7 @@ export const FancyRetrieval = () => {
                 label: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : ''}`,
                 description: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : ''}`,
               }}
-              label={t('chat.retrieval.multi_query.label')}
+              label={t('chat.retrieval.multi_query.label') || ''}
               onChange={(event) =>
                 setUseMQRetrieval(event.currentTarget.checked)
               }

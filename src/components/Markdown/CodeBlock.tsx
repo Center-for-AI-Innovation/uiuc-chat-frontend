@@ -73,10 +73,10 @@ export const CodeBlock: FC<Props> = memo(({ language, value }) => {
           <button
             className="codeblock-button flex items-center gap-1.5 rounded bg-none p-1 text-xs text-white"
             onClick={copyToClipboard}
-            title={isCopied ? t('Copied!') : t('Copy code')}
+            title={isCopied ? t('Copied!') || '' : t('Copy code') || ''}
           >
             {isCopied ? <IconCheck size={18} /> : <IconClipboard size={18} />}
-            {isCopied ? t('Copied!') : t('Copy code')}
+            {isCopied ? t('Copied!') || '' : t('Copy code') || ''}
           </button>
           <button
             className="codeblock-button flex items-center rounded bg-none p-1 text-xs text-white"

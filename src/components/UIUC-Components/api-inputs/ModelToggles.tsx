@@ -27,9 +27,9 @@ export function ModelToggles({
               <Switch
                 label={modelData.name}
                 checked={field.state.value}
-                onLabel={t('models.on')}
-                offLabel={t('models.off')}
-                aria-label={t('models.enable_model', { model: modelData.name })}
+                onLabel={t('models.on') || ''}
+                offLabel={t('models.off') || ''}
+                aria-label={t('models.enable_model', { model: modelData.name }) || ''}
                 onChange={(event) => {
                   field.handleChange(event.currentTarget.checked)
                   // Trigger form submission

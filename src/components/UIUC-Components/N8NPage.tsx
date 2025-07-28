@@ -648,7 +648,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                         <TextInput
                           // label="n8n API Key"
                           type="password"
-                          description={t('tools_section.apiKeyDescription', 'We use this to run your workflows. You can find your n8n API Key in your n8n account settings.')}
+                          description={t('tools_section.apiKeyDescription', 'We use this to run your workflows. You can find your n8n API Key in your n8n account settings.') || 'We use this to run your workflows. You can find your n8n API Key in your n8n account settings.'}
                           placeholder={t('tools_section.apiKeyPlaceholder', 'Enter your n8n API Key here') || ''}
                           value={n8nApiKeyTextbox}
                           onChange={(event) =>

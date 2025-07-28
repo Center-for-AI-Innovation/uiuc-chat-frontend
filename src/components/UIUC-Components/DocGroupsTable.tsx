@@ -169,7 +169,7 @@ export function DocGroupsTable({ course_name }: { course_name: string }) {
                   arrowSize={8}
                     width={220}
                   withArrow
-                  label={t('documents.enabled_tooltip')}
+                  label={t('documents.enabled_tooltip') || ''}
                 >
                     <span className="flex items-center justify-center whitespace-nowrap">
                       <span className="hidden sm:inline">{t('documents.enabled')}</span>

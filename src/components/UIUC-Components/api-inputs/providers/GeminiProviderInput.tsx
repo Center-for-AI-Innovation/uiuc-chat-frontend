@@ -63,9 +63,9 @@ export default function GeminiProviderInput({
               <Switch
                 size="md"
                 labelPosition="left"
-                onLabel={t('models.on')}
-                offLabel={t('models.off')}
-                aria-label={t('models.enable_model', { model: 'Gemini' })}
+                onLabel={t('models.on') || ''}
+                offLabel={t('models.off') || ''}
+                aria-label={t('models.enable_model', { model: 'Gemini' }) || ''}
                 checked={field.state.value}
                 onChange={(event) => {
                   event.preventDefault()

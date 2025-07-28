@@ -354,7 +354,7 @@ function UploadNotificationContent({
 
                     {file.status === 'complete' && (
                       <Tooltip
-                        label={t('ready_for_chat')}
+                        label={t('ready_for_chat') || ''}
                         classNames={{
                           tooltip: `${montserrat_paragraph.variable} font-montserratParagraph`,
                         }}
@@ -367,7 +367,7 @@ function UploadNotificationContent({
                     )}
                     {file.status === 'error' && (
                       <Tooltip
-                        label={t('upload_failed')}
+                        label={t('upload_failed') || ''}
                         classNames={{
                           tooltip: `${montserrat_paragraph.variable} font-montserratParagraph`,
                         }}

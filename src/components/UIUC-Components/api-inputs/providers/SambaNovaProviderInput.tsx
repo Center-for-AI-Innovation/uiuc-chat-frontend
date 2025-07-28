@@ -63,8 +63,8 @@ export default function SambaNovaProviderInput({
               <Switch
                 size="md"
                 labelPosition="left"
-                onLabel={t('models.on')}
-                offLabel={t('models.off')}
+                onLabel={t('models.on') || ''}
+                offLabel={t('models.off') || ''}
                 aria-label={t('models.enable_model', { model: 'SambaNova' }) || ''}
                 checked={field.state.value}
                 onChange={(event) => {
