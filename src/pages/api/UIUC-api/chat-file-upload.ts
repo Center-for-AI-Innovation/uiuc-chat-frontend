@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '~/utils/supabaseClient'
 import { v4 as uuidv4 } from 'uuid'
+import { getBackendUrl } from '~/utils/apiUtils'
 
 type ChatFileUploadResponse = {
   success?: boolean
@@ -98,11 +99,14 @@ const handler = async (
     // 3. Call your new chat file processing endpoint
     const s3_filepath = s3Key // s3Key should already be the full path
 
+    const backendUrl = getBackendUrl()
+
     const response = await fetch(
       //'https://flask-production-751b.up.railway.app/process-chat-file',
       //'http://localhost:8000/process-chat-file',
-      'https://flask-pr-316.up.railway.app/process-chat-file',
+      //'https://flask-pr-316.up.railway.app/process-chat-file',
       //`${process.env.RAILWAY_URL}/process-chat-file`,
+      `${backendUrl}/process-chat-file`,
       {
         method: 'POST',
         headers: {
