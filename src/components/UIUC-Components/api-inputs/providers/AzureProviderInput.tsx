@@ -136,8 +136,8 @@ export default function AzureProviderInput({
                   >
                     {(field: any) => (
                       <TextInput
-                        label={t('models.fields.azure_endpoint')}
-                        placeholder={t('models.fields.azure_endpoint_placeholder')}
+                        label={t('models.fields.azure_endpoint') || ''}
+                        placeholder={t('models.fields.azure_endpoint_placeholder') || ''}
                         value={field.state.value}
                         onChange={(event) =>
                           field.handleChange(event.currentTarget.value)

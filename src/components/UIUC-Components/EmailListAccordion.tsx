@@ -39,7 +39,7 @@ function EmailInput({
       </div>
       <input
         type="text"
-        placeholder={t('email_list.add_people')}
+        placeholder={t('email_list.add_people') || ''}
         className={`${montserrat_paragraph.variable} w-full rounded-lg bg-[#1e1f3d]/50 px-10 py-2.5 font-montserratParagraph text-sm text-gray-200 placeholder-gray-500 ring-1 ring-white/10 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-violet-500`}
         value={value}
         onKeyDown={onKeyDown}

@@ -427,7 +427,7 @@ export default function WebsiteIngestForm({
                         width: '100%',
                       },
                     }}
-                    placeholder={t('website_ingest.enter_url_placeholder')}
+                    placeholder={t('website_ingest.enter_url_placeholder') || ''}
                     radius="xl"
                     type="url"
                     value={url}
@@ -462,7 +462,7 @@ export default function WebsiteIngestForm({
                           }}
                           name="maximumUrls"
                           radius="md"
-                          placeholder={t('website_ingest.default_50')}
+                          placeholder={t('website_ingest.default_50') || ''}
                           value={maxUrls}
                           onChange={(e) => {
                             handleInputChange(e, 'maxUrls')

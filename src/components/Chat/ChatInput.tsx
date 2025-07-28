@@ -983,7 +983,7 @@ export const ChatInput = ({
                   overflow: 'hidden',
                   pointerEvents: 'auto',
                 }}
-                placeholder={t('chat.input.message_placeholder')}
+                placeholder={t('chat.input.message_placeholder') || ''}
                 value={content}
                 rows={1}
                 onCompositionStart={() => setIsTyping(true)}

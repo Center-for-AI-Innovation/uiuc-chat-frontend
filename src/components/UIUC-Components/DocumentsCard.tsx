@@ -17,7 +17,7 @@ import { useMediaQuery } from '@mantine/hooks'
 import { IconFileExport } from '@tabler/icons-react'
 import { useRouter } from 'next/router'
 import { handleExport } from '~/pages/api/UIUC-api/exportAllDocuments'
-import { showToastOnUpdate } from './MakeQueryAnalysisPage'
+import { createShowToastOnUpdate } from './MakeQueryAnalysisPage'
 import { useTranslation } from 'next-i18next'
 
 const useStyles = createStyles(() => ({
@@ -73,6 +73,7 @@ function DocumentsCard({
   const router = useRouter()
   const { classes, theme } = useStyles()
   const { t } = useTranslation('common')
+  const showToastOnUpdate = createShowToastOnUpdate(t)
 
   const getCurrentPageName = () => {
     return router.asPath.slice(1).split('/')[0] as string
@@ -89,17 +90,17 @@ function DocumentsCard({
         <Modal
           opened={exportModalOpened}
           onClose={() => setExportModalOpened(false)}
-          title="Please confirm your action"
+          title={t('project_files.confirm_delete_title') || 'Please confirm your action'}
         >
           <Text size="sm" style={{ color: 'white' }}>
-            {`Are you sure you want to export all the documents and embeddings?`}
+            {t('project_files.export_confirm_message') || 'Are you sure you want to export all the documents and embeddings?'}
           </Text>
           <div className="mt-5 flex justify-end gap-2">
             <Button
               className="rounded-md bg-transparent text-white hover:bg-indigo-600"
               onClick={() => setExportModalOpened(false)}
             >
-              Cancel
+              {t('common.cancel') || 'Cancel'}
             </Button>
             <Button
               className="rounded-md bg-purple-800 text-white hover:bg-indigo-600"
@@ -111,7 +112,7 @@ function DocumentsCard({
                 }
               }}
             >
-              Export
+              {t('project_files.export') || 'Export'}
             </Button>
           </div>
         </Modal>
@@ -122,7 +123,7 @@ function DocumentsCard({
               order={3}
               className={`${montserrat_heading.variable} font-montserratHeading text-lg text-white/90 sm:text-2xl`}
             >
-              {t('dashboard.project_files')}
+              {t('dashboard.project_files') || 'Project Files'}
             </Title>
 
             <Button
@@ -137,9 +138,11 @@ function DocumentsCard({
               `}
             >
               <span className="hidden sm:inline">
-                {t('dashboard.export_all_documents')}
+                {t('dashboard.export_all_documents') || 'Export all documents and embeddings'}
               </span>
-              <span className="inline sm:hidden">Export All</span>
+              <span className="inline sm:hidden">
+                {t('project_files.export_short', 'Export All') || 'Export All'}
+              </span>
             </Button>
           </div>
         </div>

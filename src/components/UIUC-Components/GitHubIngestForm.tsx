@@ -457,7 +457,7 @@ export default function GitHubIngestForm({
                       width: '100%',
                     },
                   }}
-                  placeholder={t('github_ingest.enter_url')}
+                  placeholder={t('github_ingest.enter_url') || ''}
                   radius="xl"
                   type="url"
                   value={url}

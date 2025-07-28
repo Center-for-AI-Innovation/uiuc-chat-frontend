@@ -101,7 +101,7 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
   if (isLoading) {
     return (
       <Text>
-        {t('analysis.loadingChart', 'Loading chart')} <LoadingSpinner size="xs" />
+        {t('analysis.loadingChart', 'Loading chart') || 'Loading chart'} <LoadingSpinner size="xs" />
       </Text>
     )
   }
@@ -111,7 +111,7 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
   }
 
   if (!data || Object.keys(data).length === 0) {
-    return <Text>{t('analysis.noDataAvailable', 'No data available')}</Text>
+    return <Text>{t('analysis.noDataAvailable', 'No data available') || 'No data available'}</Text>
   }
 
   const yAxisDomain = useLogScale
@@ -138,7 +138,7 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
     <div>
       <div className="mb-4 flex items-center justify-end gap-2">
         <Text size="sm" color="dimmed">
-          {t('analysis.linear', 'Linear')}
+          {t('analysis.linear', 'Linear') || 'Linear'}
         </Text>
         <Switch
           checked={useLogScale}
@@ -149,7 +149,7 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
           title={t('analysis.switchLinearLog', 'Switch between linear and logarithmic scale visualization') || ''}
         />
         <Text size="sm" color="dimmed">
-          {t('analysis.logarithmic', 'Logarithmic')}
+          {t('analysis.logarithmic', 'Logarithmic') || 'Logarithmic'}
         </Text>
       </div>
 
@@ -175,7 +175,7 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
               }}
               angle={chartData.length > 15 ? -45 : 0}
               label={{
-                value: t('analysis.date', 'Date'),
+                value: t('analysis.date', 'Date') || 'Date',
                 position: 'insideBottom',
                 offset: -20,
                 fill: '#fff',
@@ -195,8 +195,8 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
               }}
               label={{
                 value: useLogScale
-                  ? t('analysis.numberOfConversationsLog', 'Number of Conversations (log scale)')
-                  : t('analysis.numberOfConversations', 'Number of Conversations'),
+                  ? t('analysis.numberOfConversationsLog', 'Number of Conversations (log scale)') || 'Number of Conversations (log scale)'
+                  : t('analysis.numberOfConversations', 'Number of Conversations') || 'Number of Conversations',
                 angle: -90,
                 position: 'center',
                 fill: '#fff',

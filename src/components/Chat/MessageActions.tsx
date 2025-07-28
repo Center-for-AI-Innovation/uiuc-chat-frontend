@@ -236,7 +236,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
       </Tooltip>
 
       <Tooltip
-        label={t('regenerate_response')}
+        label={t('regenerate_response') || ''}
         position="bottom"
         withArrow
         arrowSize={6}
