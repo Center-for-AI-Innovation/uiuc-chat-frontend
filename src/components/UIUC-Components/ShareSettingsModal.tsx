@@ -13,6 +13,7 @@ import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Accordion } from '@/components/shadcn/accordion'
 import { useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'next-i18next'
 
 // Props interface for the ShareSettingsModal component
 interface ShareSettingsModalProps {
@@ -37,6 +38,7 @@ export default function ShareSettingsModal({
   projectName,
   metadata: initialMetadata,
 }: ShareSettingsModalProps) {
+  const { t } = useTranslation('common')
   const queryClient = useQueryClient()
   const [metadata, setMetadata] = useState<CourseMetadata>(initialMetadata)
 
@@ -119,12 +121,12 @@ export default function ShareSettingsModal({
             <h2
               className={`${montserrat_heading.variable} font-montserratHeading text-xl font-semibold text-white`}
             >
-              Share your chatbot
+              {t('share_modal.title')}
             </h2>
             <p
               className={`${montserrat_paragraph.variable} mt-1 font-montserratParagraph text-sm text-gray-400`}
             >
-              Collaborate with members on this project
+              {t('share_modal.subtitle')}
             </p>
           </div>
           <button
@@ -144,7 +146,7 @@ export default function ShareSettingsModal({
             <h3
               className={`${montserrat_heading.variable} mb-3 font-montserratHeading text-sm font-medium text-gray-400`}
             >
-              Chatbot Link
+              {t('share_modal.chatbot_link')}
             </h3>
             <div className="relative flex gap-2">
               <div className="group relative flex-1">
@@ -169,7 +171,7 @@ export default function ShareSettingsModal({
             <h3
               className={`${montserrat_heading.variable} font-montserratHeading text-sm font-medium text-gray-400`}
             >
-              Access Control
+              {t('share_modal.access_control')}
             </h3>
 
             {/* Privacy toggle */}
@@ -189,14 +191,12 @@ export default function ShareSettingsModal({
                     <p
                       className={`${montserrat_heading.variable} font-montserratHeading text-sm font-medium text-white`}
                     >
-                      {isPrivate ? 'Private Project' : 'Public Project'}
+                      {t(isPrivate ? 'share_modal.private_project' : 'share_modal.public_project')}
                     </p>
                     <p
                       className={`${montserrat_paragraph.variable} font-montserratParagraph text-xs text-gray-400`}
                     >
-                      {isPrivate
-                        ? 'Only specified people can access'
-                        : 'Anyone with the link can access'}
+                      {t(isPrivate ? 'share_modal.private_description' : 'share_modal.public_description')}
                     </p>
                   </div>
                 </div>

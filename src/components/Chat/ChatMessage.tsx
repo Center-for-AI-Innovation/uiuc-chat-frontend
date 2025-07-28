@@ -203,7 +203,7 @@ export const ChatMessage = memo(
     onImageUrlsUpdate,
     courseName,
   }: Props) => {
-    const { t } = useTranslation('chat')
+    const { t } = useTranslation('common')
     const { activeSidebarMessageId, setActiveSidebarMessageId } =
       useReactContext(SourcesSidebarContext)
 
@@ -1302,7 +1302,7 @@ export const ChatMessage = memo(
                           }}
                         >
                           <IconX size={16} />
-                          {t('Cancel')}
+                          {t('chat.message.cancel')}
                         </button>
                         <button
                           className="flex items-center gap-2 rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-purple-500 dark:hover:bg-purple-600"
@@ -1310,7 +1310,7 @@ export const ChatMessage = memo(
                           disabled={messageContent.trim().length <= 0}
                         >
                           <IconCheck size={16} />
-                          {t('Save & Submit')}
+                          {t('chat.message.save_submit')}
                         </button>
                       </div>
                     </div>
@@ -1374,7 +1374,7 @@ export const ChatMessage = memo(
                                       2) && (
                                   <IntermediateStateAccordion
                                     accordionKey="imageDescription"
-                                    title="Image Description"
+                                    title={t('chat.message.image_description') || ''}
                                     isLoading={isImg2TextLoading}
                                     error={false}
                                     content={
@@ -1399,7 +1399,7 @@ export const ChatMessage = memo(
                               ) && (
                                 <IntermediateStateAccordion
                                   accordionKey="imageDescription"
-                                  title="Image Description"
+                                  title={t('chat.message.image_description') || ''}
                                   isLoading={false}
                                   error={false}
                                   content={
@@ -1426,7 +1426,7 @@ export const ChatMessage = memo(
                                 1 && (
                               <IntermediateStateAccordion
                                 accordionKey="query-rewrite"
-                                title="Optimizing search query"
+                                title={t('chat.retrieval.optimizing') || ''}
                                 isLoading={isQueryRewriting}
                                 error={false}
                                 content={<></>}
@@ -1444,15 +1444,15 @@ export const ChatMessage = memo(
                                 accordionKey="query-rewrite-result"
                                 title={
                                   message.wasQueryRewritten
-                                    ? 'Optimized search query'
-                                    : 'No query optimization necessary'
+                                    ? t('chat.retrieval.optimized')
+                                    : t('chat.retrieval.no_optimization_needed')
                                 }
                                 isLoading={false}
                                 error={false}
                                 content={
                                   message.wasQueryRewritten
                                     ? message.queryRewriteText
-                                    : "The LLM determined no optimization was necessary. We only optimize when it's necessary to turn a single message into a stand-alone search to retrieve the best documents."
+                                    : t('chat.retrieval.llm_no_optimization')
                                 }
                               />
                             )}
@@ -1462,10 +1462,12 @@ export const ChatMessage = memo(
                             message.contexts.length > 0 && (
                               <IntermediateStateAccordion
                                 accordionKey="retrieval loading"
-                                title="Retrieved documents"
+                                title={t('chat.retrieval.retrieved') || ''}
                                 isLoading={false}
                                 error={false}
-                                content={`Found ${getContextsLength(message.contexts)} document chunks.`}
+                                content={t('chat.retrieval.found_chunks', {
+                                  count: getContextsLength(message.contexts),
+                                })}
                               />
                             )}
 
@@ -1479,10 +1481,12 @@ export const ChatMessage = memo(
                                   2) && (
                               <IntermediateStateAccordion
                                 accordionKey="retrieval loading"
-                                title="Retrieving documents"
+                                title={t('chat.retrieval.retrieving') || ''}
                                 isLoading={isRetrievalLoading}
                                 error={false}
-                                content={`Found ${getContextsLength(message.contexts)} document chunks.`}
+                                content={t('chat.retrieval.found_chunks', {
+                                  count: getContextsLength(message.contexts),
+                                })}
                               />
                             )}
 
@@ -1495,8 +1499,8 @@ export const ChatMessage = memo(
                                 (selectedConversation?.messages.length ?? 0) -
                                   2) && (
                               <IntermediateStateAccordion
-                                accordionKey={`routing tools`}
-                                title={'Routing the request to relevant tools'}
+                                accordionKey="tool routing"
+                                title={t('chat.tools.routing') || ''}
                                 isLoading={isRouting}
                                 error={false}
                                 content={<></>}
@@ -1519,7 +1523,7 @@ export const ChatMessage = memo(
                                     accordionKey={`routing-${index}`}
                                     title={
                                       <>
-                                        Routing the request to{' '}
+                                        {t('chat.message.routing_request')}{' '}
                                         <Badge
                                           color="grape"
                                           radius="md"
@@ -1533,7 +1537,7 @@ export const ChatMessage = memo(
                                     error={false}
                                     content={
                                       <>
-                                        Arguments :{' '}
+                                        {t('chat.message.tool_arguments')}:{' '}
                                         {response.aiGeneratedArgumentValues
                                           ?.image_urls ? (
                                           <div>
@@ -1604,7 +1608,7 @@ export const ChatMessage = memo(
                                   accordionKey={`tool-${index}`}
                                   title={
                                     <>
-                                      Tool output from{' '}
+                                      {t('chat.message.tool_output')}{' '}
                                       <Badge
                                         color={response.error ? 'red' : 'grape'}
                                         radius="md"
@@ -1725,7 +1729,7 @@ export const ChatMessage = memo(
                                     }}
                                     className={`pulsate text-base ${montserrat_paragraph.variable} font-montserratParagraph`}
                                   >
-                                    Generating final response:
+                                    {t('chat.message.generating_final_response')}
                                   </p>
                                   <LoadingSpinner size="xs" />
                                 </div>
@@ -1736,7 +1740,7 @@ export const ChatMessage = memo(
                       {!isEditing && (
                         <div className="mt-2 flex items-center justify-start gap-4">
                           <Tooltip
-                            label="Edit Message"
+                            label={t('chat.message.edit')}
                             position="bottom"
                             withArrow
                             arrowSize={6}
@@ -1789,9 +1793,9 @@ export const ChatMessage = memo(
                             onClick={() => handleSourcesSidebarToggle(true)}
                           >
                             <span className="whitespace-nowrap">
-                              Sources
+                              {t('chat.message.sources')}
                               <span className="ml-0.5 rounded-md bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600 group-hover/button:bg-purple-100 group-hover/button:text-purple-600 dark:bg-gray-700/50 dark:text-gray-400 dark:group-hover/button:bg-purple-900/30 dark:group-hover/button:text-purple-300">
-                                {getContextsLength(message.contexts)}
+                                {t('chat.message.sources_count', { count: getContextsLength(message.contexts) })}
                               </span>
                             </span>
 

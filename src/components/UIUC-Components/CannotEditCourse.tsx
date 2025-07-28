@@ -16,9 +16,11 @@ import {
   Flex,
 } from '@mantine/core'
 import { montserrat_heading } from 'fonts'
+import { useTranslation } from 'next-i18next'
 // const rubikpuddles = Rubik_Puddles({ weight: '400', subsets: ['latin'] })
 
 export const CannotEditCourse = ({ course_name }: { course_name: string }) => {
+  const { t } = useTranslation('common')
   return (
     <>
       <Flex direction="column" align="center" justify="center">
@@ -29,12 +31,8 @@ export const CannotEditCourse = ({ course_name }: { course_name: string }) => {
           order={2}
           p="xl"
         >
-          {' '}
-          You cannot edit this page because you don&apos;t own it.
-          <br></br>
-          {/* It&apos;s for using GPT-4 by itself with no extra knowledge base. */}
+          {t('cannot_edit_course')}
         </Title>
-
         <Title
           className={`${montserrat_heading.variable} font-montserratHeading`}
           variant="gradient"
@@ -42,14 +40,7 @@ export const CannotEditCourse = ({ course_name }: { course_name: string }) => {
           order={3}
           p="xl"
         >
-          {' '}
-          Either sign in with a different account (in the top right) or
-          <br></br>
-          Go to{' '}
-          <Link href={'/new'} className="goldUnderline">
-            uiuc.chat/new
-          </Link>{' '}
-          to make a new page.
+          {t('sign_in_or_new_page', { new_page_link: <Link href={'/new'} className="goldUnderline">uiuc.chat/new</Link> })}
         </Title>
       </Flex>
     </>

@@ -10,6 +10,8 @@ import {
   Group,
   MantineTheme,
 } from '@mantine/core';
+import { useTranslation } from 'next-i18next';
+import { useRouter } from 'next/router';
 
 const useStyles = createStyles((theme: MantineTheme) => ({
   root: {
@@ -67,6 +69,9 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
   const [feedback, setFeedback] = useState<string>('');
   const [category, setCategory] = useState<string>('other');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const { t, i18n } = useTranslation('common');
+  const router = useRouter();
+  const lang = i18n.language || router.locale || 'en';
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -86,7 +91,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
     <Modal
       opened={isOpen}
       onClose={onClose}
-      title={<Text className={classes.title}>Feedback</Text>}
+      title={<Text className={classes.title}>{t('feedback') || ''}</Text>}
       classNames={classes}
       centered
       withCloseButton={false}
@@ -100,16 +105,16 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
       }}
     >
       <Select
-        label="Feedback Category"
-        placeholder="Select a category"
+        label={t('feedback_category') || ''}
+        placeholder={t('feedback_category_placeholder') || ''}
         data={[
-          { value: 'inaccurate', label: 'Not factually correct' },
-          { value: 'inappropriate', label: 'Harmful content' },
-          { value: 'unclear', label: 'Unclear Response' },
-          { value: 'ui_bug', label: 'UI bug' },
-          { value: 'overactive_refusal', label: 'Overactive refusal' },
-          { value: 'incomplete_request', label: 'Did not fully follow my request' },
-          { value: 'other', label: 'Other' },
+          { value: 'inaccurate', label: t('feedback_inaccurate') || '' },
+          { value: 'inappropriate', label: t('feedback_inappropriate') || '' },
+          { value: 'unclear', label: t('feedback_unclear') || '' },
+          { value: 'ui_bug', label: t('feedback_ui_bug') || '' },
+          { value: 'overactive_refusal', label: t('feedback_overactive_refusal') || '' },
+          { value: 'incomplete_request', label: t('feedback_incomplete_request') || '' },
+          { value: 'other', label: t('feedback_other') || '' },
         ]}
         value={category}
         onChange={(value) => setCategory(value || 'other')}
@@ -149,31 +154,31 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
             marginBottom: theme.spacing.xs,
           },
         })}
-        aria-label="Feedback category select"
+        aria-label={t('feedback_category') || ''}
       />
       <Textarea
         label={
           <Group spacing={4}>
-            <Text>Feedback Details</Text>
+            <Text>{t('feedback_details') || ''}</Text>
             <Text size="sm" color="dimmed">
-              (Optional)
+              {t('optional') || ''}
             </Text>
           </Group>
         }
-        placeholder="Share any additional details about your feedback"
+        placeholder={t('feedback_details_placeholder') || ''}
         value={feedback}
         onChange={(event) => setFeedback(event.currentTarget.value)}
         minRows={4}
         mb="md"
         classNames={{ input: classes.textarea }}
-        aria-label="Optional feedback details textarea"
+        aria-label={t('feedback_details') || ''}
       />
 
       <Group className={classes.buttonGroup}>
         <Button
           onClick={onClose}
           variant="outline"
-          aria-label="Cancel"
+          aria-label={t('cancel') || ''}
           sx={{
             backgroundColor: 'transparent',
             color: theme.white,
@@ -183,13 +188,13 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
             },
           }}
         >
-          Cancel
+          {t('cancel') || ''}
         </Button>
         <Button
           onClick={handleSubmit}
           disabled={isSubmitting}
           loading={isSubmitting}
-          aria-label="Submit Feedback"
+          aria-label={t('feedback.submit_aria') || ''}
           sx={{
             backgroundColor: `${theme.colors.violet[5]} !important`,
             color: theme.white,
@@ -211,7 +216,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
             },
           }}
         >
-          Submit
+          {t('submit') || ''}
         </Button>
       </Group>
     </Modal>

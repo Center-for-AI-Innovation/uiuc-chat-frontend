@@ -1,1 +1,957 @@
-{}
+{
+  "prompting": "Prompting",
+  
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "close": "Close",
+    "save": "Save",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "update": "Update",
+    "search": "Search...",
+    "download": "Download",
+    "downloaded": "Downloaded",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "recommended": "Recommended",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "optional": "(Optional)",
+    "validating": "Validating...",
+    "hi": "Hi",
+    "new": "New"
+  },
+
+  "navigation": {
+    "docs": "Docs",
+    "news": "News",
+    "new_project": "New Project",
+    "new_chat": "New Chat",
+    "admin_dashboard": "Admin Dashboard",
+    "chat": "Chat",
+    "dashboard": "Dashboard",
+    "llms": "LLMs",
+    "analysis": "Analysis",
+    "prompting": "Prompting",
+    "tools": "Tools",
+    "api": "API",
+    "share_chatbot": "Share Chatbot",
+    "settings": "Settings"
+  },
+
+  "auth": {
+    "manage_account": "Manage Account",
+    "sign_out": "Sign Out",
+    "must_sign_in": "You must sign in to create or edit content.",
+    "sign_in_arrow": "Sign in →",
+    "account_bug_message": "You've encountered a software bug! Your account has no email address. Please shoot me an email so I can fix it for you: rohan13@illinois.edu"
+  },
+
+  "chat": {
+    "message": {
+      "enter": "Enter your message...",
+      "type": "Type a message...",
+      "limit": "Message limit is {{maxLength}} characters. You have entered {{valueLength}} characters.",
+      "please_enter": "Please enter a message",
+      "please_enter_or_upload": "Please enter a message or upload an image.",
+      "edit": "Edit Message",
+      "save_submit": "Save & Submit",
+      "cancel": "Cancel",
+      "sources": "Sources",
+      "sources_count": "{{count}}",
+      "generating_final_response": "Generating final response:",
+      "image_description": "Image Description",
+      "tool_output": "Tool output from",
+      "routing_request": "Routing the request to",
+      "tool_arguments": "Arguments",
+      "no_arguments": "No arguments provided"
+    },
+    "temperature": {
+      "label": "Temperature",
+      "hint": "Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic."
+    },
+    "retrieval": {
+      "fancy": "Fancy Retrieval",
+      "multi_query": {
+        "label": "Multi-Query Retrieval (30 second slow response time)",
+        "description": "An LLM generates multiple queries based on your original to improve semantic search. Then each retrieved context is filtered by a smaller LLM (Mistral 7b) to include only high quality and relevant documents in the final GPT-4 call.",
+        "disabled": "Multi-query retrieval is disabled for performance reasons, working to get it back up asap."
+      },
+      "retrieving": "Retrieving documents...",
+      "retrieved": "Documents retrieved",
+      "found_chunks": "Found {{count}} document chunks.",
+      "optimizing": "Optimizing search query",
+      "optimized": "Search query optimized",
+      "no_optimization_needed": "No query optimization needed",
+      "llm_no_optimization": "The LLM determined optimization wasn't needed. We only optimize when we need to convert a single message into a standalone search to retrieve the best documents."
+    },
+    "response": {
+      "generating": "Generating final response:",
+      "stop": "Stop Generation",
+      "regenerate": "Regenerate response",
+      "good": "Good response",
+      "remove_good": "Remove good response",
+      "bad": "Bad response",
+      "remove_bad": "Remove bad response"
+    },
+    "system_prompt": {
+      "label": "System Prompt",
+      "default": "You are a helpful AI assistant. Follow instructions carefully. Respond using markdown."
+    },
+    "tools": {
+      "section": "Tools",
+      "routing": "Routing request to relevant tools",
+      "no_tools_found": "No tools found"
+    },
+    "document_groups": {
+      "section": "Document Groups",
+      "no_groups": "No groups found"
+    },
+    "file": {
+      "remove": "Remove File",
+      "uploading": "Uploading to secure storage",
+      "processing": "Processing for chat",
+      "ready": "Ready for chat",
+      "upload_failed": "Upload failed"
+    },
+    "loading": {
+      "knowledge_engines": "Warming up the knowledge engines...",
+      "authenticated_user_error": "Authenticated user has no email"
+    },
+    "new_conversation": "New Conversation",
+    "input": {
+      "message_placeholder": "Type a message...",
+      "llm_input_limit": "Message limit is {{maxLength}} characters. You have entered {{valueLength}} characters.",
+      "please_enter_message": "Please enter a message",
+      "please_enter_message_or_upload_image": "Please enter a message or upload an image",
+      "stop_generating": "Stop Generation",
+      "regenerate_response": "Regenerate Response",
+      "remove_file": "Remove File",
+      "message_uiuc_chat": "Message UIUC.chat",
+      "failed_to_send": "Failed to send message. Please try again."
+    },
+    "model": {
+      "select": "Select a model",
+      "tab": "Model",
+      "error_fetching": "Error fetching models.",
+      "invalid_image_file_type": "{{count}} invalid file type(s). Please upload .jpg or .png images.",
+      "warning_large_vram": "warning, requires large vRAM GPU",
+      "loading": "loading",
+      "styles": {
+        "precise": "Precise",
+        "neutral": "Neutral",
+        "creative": "Creative"
+      }
+    }
+  },
+
+  "feedback": {
+    "title": "Feedback",
+    "category": "Feedback Category",
+    "details": "Feedback Details",
+    "details_placeholder": "Share any additional details about your feedback",
+    "types": {
+      "other": "Other",
+      "inaccurate": "Not factually correct",
+      "inappropriate": "Harmful content",
+      "unclear": "Unclear Response",
+      "ui_bug": "UI bug",
+      "overactive_refusal": "Overactive refusal",
+      "incomplete_request": "Did not fully follow my request"
+    }
+  },
+
+  "tooltips": {
+    "copy_code": "Copy code",
+    "copied": "Copied!",
+    "download_file": "Download file",
+    "edit_message": "Edit Message",
+    "remove_file": "Remove File",
+    "sidebar_action": "Sidebar action"
+  },
+
+  "file_types": {
+    "pdf": "PDF",
+    "word": "Word",
+    "ppt": "PPT",
+    "excel": "Excel",
+    "video": "Video",
+    "image": "Image",
+    "audio": "Audio",
+    "code": "Code",
+    "text": "Text",
+    "files_supported": "Files supported: {{type}}"
+  },
+
+  "sidebar": {
+    "newFolder": "New folder",
+    "newChat": "New chat",
+    "noConversations": "No conversations.",
+    "searchConversations": "Search conversations...",
+    "openaiApiKey": "OpenAI API key",
+    "importData": "Import conversations",
+    "areYouSure": "Are you sure?",
+    "clearConversations": "Clear conversations",
+    "exportData": "Export conversations",
+    "search": "Search...",
+    "noData": "No data.",
+    "exportHistory": "Export history",
+    "renameFolderPlaceholder": "Rename folder...",
+    "rename": "Rename",
+    "apiKey": "API Key",
+    "openaiApiKeyLabel": "OpenAI API Key",
+    "importHistory": "Import history"
+  },
+
+  "tools_section": {
+    "metaDescription": "The AI teaching assistant built for students at UIUC.",
+    "llmToolUse": "LLM Tool Use & Function Calling",
+    "useN8n": "Use",
+    "visualEditor": "beautiful visual workflow editor to create custom functions for your project.",
+    "createEditWorkflows": "Create/Edit Workflows",
+    "setupInstructions": "Setup Instructions 🤠",
+    "inviteOnly": "Tool use via LLMs is invite-only to prevent abuse. Please shoot me an email for access: rohan13@illinois.edu",
+    "onceAccess": "Once you have access, please",
+    "loginWithLink": "login with this link",
+    "createApiKey": "Inside n8n, create an n8n API key and save it here.",
+    "usageInstructions": "Usage Instructions 🛠️",
+    "startWorkflow": "Start by creating your first workflow on",
+    "ensureTrigger": "Ensure you have the correct trigger node for your workflow, check docs for details",
+    "addNodes": "Add the necessary nodes for your workflow",
+    "saveWorkflow": "Save your workflow",
+    "makeActive": "Make sure your workflow is active",
+    "testWorkflow": "Test your workflow to complete usage onboarding",
+    "workflowCongrats": "If your workflow is working as expected, Congrats! 🚀",
+    "usersCanUse": "Your users can now start using it on the",
+    "chatPage": "Chat Page",
+    "yourN8nApiKey": "Your n8n API Key",
+    "apiKeyDescription": "We use this to run your workflows. You can find your n8n API Key in your n8n account settings.",
+    "apiKeyPlaceholder": "Enter your n8n API Key here",
+    "saving": "Saving...",
+    "save": "Save",
+    "yourN8nTools": "Your n8n tools",
+    "section": "Tools",
+    "routing": "Routing request to relevant tools",
+    "no_tools_found": "No tools found",
+    "enabled_text": "Enabled",
+    "tool": "Tool",
+    "description": "These tools can be automatically invoked by the LLM to fetch additional data to answer user questions on the chat page.",
+    "table": {
+      "name": "Name",
+      "enabled": "Enabled",
+      "tags": "Tags",
+      "created_at": "Created at",
+      "updated_at": "Updated at"
+    },
+    "alerts": {
+      "error": {
+        "title": "Error",
+        "save_failed": "Failed to save n8n API Key. Please try again later.",
+        "activation_failed": "Error with activation",
+        "fetch_failed": "Error fetching workflows",
+        "no_records": "No records found. Please check your API key and try again."
+      },
+      "success": {
+        "title": "Success",
+        "key_saved": "n8n API Key saved successfully!"
+      }
+    }
+  },
+
+  "api": {
+    "key_management": "API Key Management",
+    "documentation": "API Documentation",
+    "openai_docs": "OpenAI API documentation",
+    "uiuc_docs": "UIUC.chat API documentation",
+    "notes": "Notes:",
+    "your_key": "Your API Key",
+    "generate_key": "Generate API Key",
+    "rotate_key": "Rotate API Key",
+    "delete_key": "Delete API Key",
+    "request_builder": "Request Builder",
+    "select_language": "Select language",
+    "temperature": "Temperature",
+    "retrieval_only": "Retrieval Only",
+    "retrieval_only_tooltip": "Retrieval Only bypasses the LLM call, making it free to retrieve relevant documents that match your prompt.",
+    "stream_response": "Stream Response",
+    "using_image_inputs_docs": "Using image inputs (docs) →",
+    "system_prompt": "System Prompt",
+    "user_query": "User Query",
+    "stateless_info": "This API is stateless, meaning each request is independent of others. For multi-turn conversations, simply append new messages to the 'messages' array in the next call.",
+    "note_ncsa_models": "NCSA hosted models like Qwen and Llama are hosted by NCSA and they are free!",
+    "note_gpt4o_mini": "GPT-4o-mini offers the best price/performance ratio",
+    "note_llm_keys": "UIUC.chat automatically manages LLM provider keys - just add them in the LLMs page.",
+    "note_rag_results": "For getting only RAG results, set retrieval_only to true. This will not invoke the LLM."
+  },
+
+  "examples": {
+    "takeaways": "Make a bullet point list of key takeaways from this project.",
+    "best_practices": "What are the best practices for [Activity or Process] in [Context or Field]?",
+    "explain_concept": "Can you explain the concept of [Specific Concept] in simple terms?",
+    "start_conversation": "Start a conversation below or try these examples"
+  },
+
+  "footer": {
+    "disclaimer": "Disclaimer",
+    "generative_ai_policy": "Generative AI Policy",
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "mit_licensed": "MIT Licensed",
+    "frontend": "frontend",
+    "and": "and",
+    "backend": "backend",
+    "code": "code."
+  },
+
+  "homepage": {
+    "your_chatbots": "Your Chatbots",
+    "projects_description": "These are projects you've created, or where you are an admin.",
+    "no_projects_yet": "You haven't created any projects yet. Let's",
+    "go_make_one_here": "go make one here",
+    "dont_worry_easy": ", don't worry it's easy.",
+    "chatbot_name": "Chatbot Name",
+    "privacy": "Privacy",
+    "owner": "Owner",
+    "admins": "Admins",
+    "private": "Private",
+    "public": "Public",
+    "easiest_way": "It's the easiest way to make your own Chatbot",
+    "step1": {
+      "title": "1",
+      "heading": "Bring your documents and tools",
+      "desc1": "Simply Drag-n-Drop your files for analysis.",
+      "desc2": "Connect to Canvas, GitHub, Notion and more.",
+      "desc3": "Web crawl your favorite articles and blogs."
+    },
+    "step2": {
+      "title": "2",
+      "heading": "Customize LLMs, prompts, and tools (optional)",
+      "desc": "Updated with the world's best AI models at your fingertips, enhanced with tools and advanced prompt engineering."
+    },
+    "api": {
+      "ready_to_build": "Ready to build?",
+      "use_our_api": "Use our API.",
+      "pitch": "If you're tired of the OpenAI API and want an AI that's trained to understand your data, come build on our API with 52+ models to choose from. We're always updated with the latest State of the Art (SOTA) open source LLMs for free, hosted here at Illinois.",
+      "code": "import requests\n\ndata = {\n  \"model\": \"llama3.1:70b\",\n  \"apiKey\": \"<********>\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"How do I use the Illinois Chat API?\"\n    }\n  ],\n}\n\nresponse = requests.post(\n  \"https://uiuc.chat/api/chat-api/chat\",\n  json=data\n)\nprint(response.text)"
+    },
+    "custom": {
+      "want_custom": "Want something custom?",
+      "industry_pitch": "We build features for industry partners to bring GenAI to their org. Reach out at hi@uiuc.chat"
+    },
+    "features": {
+      "create_chatbot_with": "Create a chatbot with",
+      "your_content": "your content",
+      "share_with": "Share with",
+      "a_click": "a click",
+      "deep_search_docs": "Deep search your docs",
+      "and_get_creative": "and get creative",
+      "try_it_out": "Try it out",
+      "upload_almost_anything": "Upload almost anything"
+    },
+    "flagship": {
+      "chatbots": "Flagship Chatbots",
+      "dive_right_into_bots": "Dive right into our bots trained on everything Illinois",
+      "your_ai_trained_on_your": "Your AI trained on your",
+      "its_the_easiest_way_to_make_your": "It's the easiest way to make your",
+      "own_chatbot": "own Chatbot"
+    },
+    "connect": {
+      "title": "Connect",
+      "to_canvas_github_notion": "to Canvas, GitHub, Notion and more.",
+      "web_crawl": "Web crawl",
+      "your_favorite_articles_blogs": "your favorite articles and blogs."
+    },
+    "share": {
+      "share_with_anyone": "Share with anyone",
+      "collaborate_publish_your_chatbot": "Collaborate and publish your chatbot",
+      "for_whoever_you_want_to_use_it": "for whoever you want to use it",
+      "or_discover_other_chatbots": "or discover other chatbots",
+      "from_the_illinois_chat_community": "from the Illinois Chat community."
+    },
+    "about": {
+      "read_the_docs": "Read the docs",
+      "about_us": "About Us",
+      "read_the_code": "Read the code",
+      "code_free": "100% free",
+      "code_open_source": "100% open source (MIT License)",
+      "code_awesome": "100% awesome",
+      "sponsored_by_center_of": "Sponsored by the Center of",
+      "ai_innovation": "AI Innovation",
+      "ncsa_part_of": "Part of the National Center for Supercomputing Applications.",
+      "bio": "Bio",
+      "started_by_rohan_marwaha": "Started by Rohan Marwaha at the University of Illinois. But it",
+      "takes_a_village": "takes a village",
+      "status_page": "Status page"
+    },
+    "rebrand": {
+      "announcement": "Heads up: we've rebranded to Illinois Chat",
+      "tooltip": "We're on our way to becoming a production service for all U of I campuses."
+    },
+    "typing": {
+      "words": [
+        "personal portfolio",
+        "favorite websites",
+        "research",
+        "academic journals",
+        "GitHub",
+        "business",
+        "favorite blogs",
+        "clubs"
+      ]
+    }
+  },
+
+  "documents": {
+    "search_by_document_group": "Search by Document Group",
+    "document_group": "Document Group",
+    "number_of_docs": "Number of Docs",
+    "enabled": "Enabled",
+    "enabled_tooltip": "If a document is included in ANY enabled group, it will be included in chatbot results. Enabled groups take precedence over disabled groups.",
+    "no_document_groups_found": "No document groups found"
+  },
+
+  "email_list": {
+    "add_people": "Add people by email",
+    "can_manage": "Can manage",
+    "can_view": "Can view",
+    "administrators": "Administrators",
+    "admins_description": "Admins have full edit permissions",
+    "members": "Members",
+    "members_description": "Only these email addresses can access the content",
+    "already_added": "{{email}} has already been added.",
+    "invalid_email": "{{email}} is not a valid email address."
+  },
+
+  "models": {
+    "more_details_about_ai_models": "More details about the AI models",
+    "default_model": "Default Model",
+    "default_model_helper": "This model will be used by default for all new conversations. You can change the model for individual conversations in the chat interface.",
+    "on": "ON",
+    "off": "OFF",
+    "enable_model": "Enable {{model}} model",
+    "fields": {
+      "api_key": "API Key",
+      "base_url": "Base URL",
+      "base_url_placeholder": "Enter the base URL for your Ollama instance (e.g., http://localhost:11434)",
+      "azure_endpoint": "Azure Endpoint",
+      "azure_endpoint_placeholder": "Enter your Azure OpenAI endpoint",
+      "bedrock_access_key_id": "AWS Access Key ID",
+      "bedrock_secret_access_key": "AWS Secret Access Key",
+      "bedrock_region": "AWS Region"
+    },
+    "ncsa_hosted": {
+      "title": "NCSA Hosted Models (100% free)",
+      "description": "The best free option is the Qwen 2 72B model, hosted by NCSA."
+    },
+    "ncsa_hosted_vlm": {
+      "title": "NCSA Hosted Vision Models (100% free)",
+      "description": "Access NCSA's vision-language models for multimodal tasks."
+    },
+    "openai": {
+      "title": "OpenAI",
+      "description": "OpenAI model details and pricing. An OpenAI API key is required, and you may face rate-limit issues until you complete your first billing cycle."
+    },
+    "azure": {
+      "title": "Azure OpenAI",
+      "description": "Azure OpenAI Service provides enterprise-grade security and regional availability. Check out Azure OpenAI models for details on available models and features."
+    },
+    "anthropic": {
+      "title": "Anthropic",
+      "description": "Access Claude models through Anthropic's API. Claude excels at complex reasoning and analysis tasks."
+    },
+    "ollama": {
+      "title": "OpenAI Compatible via Ollama",
+      "description": "Run various open-source models locally through Ollama. Supports models like Llama 2, Mistral, and more with OpenAI-compatible API."
+    },
+    "webllm": {
+      "title": "On-device AI with WebLLM",
+      "description": "We support running some models in your web browser on your device. That's 100% local, on-device AI. It even uses your GPU. For this, your browser must pass this compatability check for WebGPU.",
+      "working": "If you see lots of text, it's working. If you see \"webgpu not available on this browser\", it's not working."
+    },
+    "gemini": {
+      "title": "Google Gemini",
+      "description": "We support Gemini's full suite."
+    },
+    "bedrock": {
+      "title": "AWS Bedrock",
+      "description": "We support Bedrock's full suite."
+    },
+    "sambanova": {
+      "title": "SambaNova"
+    }
+  },
+
+  "dashboard": {
+    "title": "Dashboard",
+    "document_groups": "Document Groups",
+    "project_files": "Project Files",
+    "document_groups_info": "More info on document groups",
+    "document_groups_description": "Document Groups help you organize and control your documents. You can enable or disable specific document groups",
+    "export_all_documents": "Export all documents and embeddings",
+    "file_name": "File Name",
+    "url": "URL",
+    "starting_url_web_scraping": "The Starting URL of Web Scraping",
+    "date_created": "Date created",
+    "actions": "Actions",
+    "loading": "Loading...",
+    "error_fetching_metadata": "An error occurred while fetching course metadata. Please try again later."
+  },
+
+  "upload": {
+    "project_description": "Project Description",
+    "describe_project_placeholder": "Describe your project, goals, expected impact etc...",
+    "branding": "Branding",
+    "set_greeting": "Set Greeting",
+    "shown_before_first_chat": "This message is shown before the first chat",
+    "greeting_placeholder": "Enter a greeting message for your users...",
+    "submit": "Submit",
+    "set_example_questions": "Set Example Questions",
+    "users_try_example_questions": "Users can try these example questions to get started",
+    "upload_logo": "Upload Logo",
+    "logo_header_notice": "This logo will appear in the header of your chatbot",
+    "share": "Share",
+    "update": "Update"
+  },
+  "file_upload": {
+    "browse_button": "Browse...",
+    "no_file_selected": "No file selected"
+  },
+
+  "canvas": {
+    "permission_required": "IMPORTANT: Canvas Permission Required",
+    "permission_instructions": "Before proceeding, you MUST add the UIUC Chatbot as a student to your Canvas course at",
+    "bot_email": "Bot email:",
+    "bot_email_address": "uiuc.chat@ad.uillinois.edu",
+    "bot_name": "Bot name:",
+    "bot_name_value": "UIUC Course AI",
+    "permission_note": "This is required for access to any of your Canvas content. The AI can only see what students/TAs have access to."
+  },
+
+  "prompt": {
+    "engineering": {
+      "guide": "Prompt Engineering Guide",
+      "insights": "For additional insights and best practices on prompt creation, please review:",
+      "openai_guide": "The Official OpenAI Prompt Engineering Guide",
+      "anthropic_library": "The Official Anthropic Prompt Library"
+    },
+    "system": {
+      "title": "System Prompt",
+      "description": "The System Prompt provides the foundation for every conversation in this project. It defines the model's role, tone, and behavior. Consider including:",
+      "key_instructions": "Key instructions or examples",
+      "welcome_message": "A warm welcome message",
+      "helpful_links": "Helpful links for further learning",
+      "enter": "Enter the system prompt...",
+      "update": "Update System Prompt",
+      "optimize": "Optimize System Prompt",
+      "optimizing": "Optimizing...",
+      "optimized": "Optimized System Prompt",
+      "model_select": "Select model",
+      "model_tooltip": "The selected model will be used when optimizing the system prompt"
+    },
+    "search": {
+      "optimization": "Document Search Optimization",
+      "smart": "Smart Document Search",
+      "smart_tooltip": "When enabled, UIUC.chat optimizes your queries to better search through course materials and find relevant content. Note: This only affects how documents are searched - your chat messages remain exactly as you write them.",
+      "new": "New"
+    },
+    "behavior": {
+      "settings": "AI Behavior Settings",
+      "guided_learning": "Guided Learning",
+      "guided_learning_tooltip": "When enabled course-wide, this setting applies to all students and cannot be disabled by them. The AI will encourage independent problem-solving by providing hints and questions instead of direct answers, while still finding and citing relevant course materials. This promotes critical thinking while ensuring students have access to proper resources.",
+      "document_based_only": "Document-Based References Only",
+      "document_based_only_tooltip": "Restricts the AI to use only information from the provided documents. Useful for maintaining accuracy in fields like legal research where external knowledge could be problematic.",
+      "bypass_internal": "Bypass UIUC.chat's internal prompting",
+      "bypass_internal_tooltip": "Internally, we prompt the model to (1) add citations and (2) always be as helpful as possible. You can bypass this for full un-modified control over your bot.",
+      "copy_internal": "Copy UIUC.chat's internal prompt",
+      "copy_internal_tooltip": "You can use and customize our default internal prompting to suit your needs. Note, only the specific citation formatting described will work with our citation 'find and replace' system. This provides a solid starting point for defining AI behavior in raw prompt mode.",
+      "new": "New"
+    }
+  },
+
+  "flagship": {
+    "research": {
+      "title": "Illinois Research Finder",
+      "badge": "Illinois",
+      "tagline": "Find professors based on your research interests",
+      "description": "Using all of Illinois's documentation, get detailed examples, advice and information about the conference."
+    },
+    "neurips2024": {
+      "title": "NeurIPS 2024",
+      "badge": "NeurIPS",
+      "tagline": "Trained on all 4,000+ papers from the largest AI conference in the world",
+      "description": "Using all of NeurIPS 2024's documentation, get detailed examples, advice and information about the conference."
+    },
+    "ncsadelta": {
+      "title": "NCSA Delta Supercomputer",
+      "badge": "NCSA Docs",
+      "tagline": "Quickstart on our Delta supercomputer, it'll write SLRUM scripts for you 😁",
+      "description": "Using all of Delta's documentation, get detailed examples, advice and information about how to use the Delta supercomputer."
+    }
+  },
+
+  "new_project": {
+    "create_new_project": "Create a new project",
+    "project_name_placeholder": "Project name",
+    "project_name_label": "What is the project name?",
+    "what_do_you_want_to_achieve": "What do you want to achieve?",
+    "describe_project_placeholder": "Describe your project, goals, expected impact etc...",
+    "next_upload_documents": "Next: let's upload some documents",
+    "add_project_name_above": "Add a project name above :)",
+    "project_name_taken": "This project name is already taken!",
+    "creating": "Creating...",
+    "create": "Create"
+  },
+
+  "analysis": {
+    "metaDescription": "The AI teaching assistant built for students at UIUC.",
+    "usageOverview": "Usage Overview",
+    "downloadConversationHistory": "Download Conversation History",
+    "downloadHistory": "Download History",
+    "projectAnalytics": "Project Analytics",
+    "projectAnalyticsDesc": "Overview of project engagement and usage statistics",
+    "totalConversations": "Total Conversations",
+    "allTimeChatSessions": "All-time chat sessions",
+    "totalUsers": "Total Users",
+    "allTimeUniqueParticipants": "All-time unique participants",
+    "messages": "Messages",
+    "totalExchanges": "Total exchanges",
+    "userEngagementMetrics": "User Engagement Metrics",
+    "userEngagementDesc": "Detailed breakdown of user interaction patterns",
+    "conversationsPerUser": "Conversations per User",
+    "avgEngagementFrequency": "Average engagement frequency",
+    "conversationsPerUserUnit": "conversations / user",
+    "messagesPerUser": "Messages per User",
+    "avgInteractionDepth": "Average interaction depth",
+    "messagesPerUserUnit": "messages / user",
+    "messagesPerConversation": "Messages per Conversation",
+    "avgConversationLength": "Average conversation length",
+    "messagesPerConversationUnit": "messages / conversation",
+    "conversationVisualizations": "Conversation Visualizations",
+    "selectTimeRange": "Select a time range to filter the visualizations below",
+    "allTime": "All Time",
+    "lastWeek": "Last Week",
+    "lastMonth": "Last Month",
+    "lastYear": "Last Year",
+    "customRange": "Custom Range",
+    "conversationsInSelectedRange": "{{count}} conversations in selected range",
+    "noConversationData": "No conversation data available for selected time range",
+    "tryDifferentTimeRange": "Try selecting a different time range to view the visualizations",
+    "modelUsageDistribution": "Model Usage Distribution",
+    "aiModelsUsed": "Distribution of AI models used across all conversations",
+    "conversationsPerDay": "Conversations Per Day",
+    "showsTotalConversations": "Shows the total number of conversations that occurred on each calendar day",
+    "aggregatedConversationBreakdown": "Aggregated Conversation Breakdown",
+    "viewConversationPatterns": "View conversation patterns by hour of day or day of week",
+    "byHour": "By Hour",
+    "byDayOfWeek": "By Day of Week",
+    "conversationsPerDayAndHour": "Conversations Per Day and Hour",
+    "heatmapConversationDensity": "A heatmap showing conversation density across both days and hours",
+    "linear": "Linear",
+    "logarithmic": "Logarithmic",
+    "sunday": "Sunday",
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday",
+    "numberOfConversations": "Number of Conversations",
+    "date": "Date",
+    "hour": "Hour",
+    "loadingChart": "Loading chart",
+    "loadingHeatmap": "Loading heatmap",
+    "noDataAvailable": "No data available",
+    "toggleLinearLog": "Toggle between linear and logarithmic scale",
+    "switchLinearLog": "Switch between linear and logarithmic scale visualization",
+    "conversationsPerDayVisualization": "Conversations per day visualization",
+    "numberOfConversationsLog": "Number of Conversations (log scale)",
+    "conversationsCount": "Conversations: {{count}}",
+    "dateLabel": "Date: {{date}}",
+    "hourLabel": "Hour: {{hour}}",
+    "dayOfWeek": "Day of Week",
+    "dayOfWeekLabel": "Day of Week: {{day}}",
+    "hourShort": "{{hour}}",
+    "conceptMapTitle": "Concept Map of User Queries",
+    "conceptMapOfUserQueries": "Concept Map of User Queries",
+    "conceptMapDescription": "The Concept Map visualizes all queries made in this project:",
+    "conceptMapBullets": {
+      "similar": "Similar topics cluster together",
+      "different": "Different topics are positioned further apart",
+      "themes": "Common themes and knowledge gaps become visible"
+    },
+    "learnMoreSemantic": "Learn more about semantic similarity visualizations",
+    "visualizationNotAvailable": "Visualization not available",
+    "visualizationNotAvailableBody": "The visualization is not available at this time. Please try again later.",
+    "moreInfoConceptMap": "More info on concept map",
+    "similarTopics": "Similar topics",
+    "differentTopics": "Different topics",
+    "commonThemes": "Common themes",
+    "clusterTogether": "cluster together",
+    "positionedFurtherApart": "are positioned further apart",
+    "knowledgeGapsVisible": "and knowledge gaps become visible",
+    "semanticSimilarityVisualizations": "semantic similarity visualizations",
+    "notEnoughDataTitle": "Visualization Not Available Yet",
+    "notEnoughDataBody": "We need at least 20 questions to generate a meaningful visualization of how topics relate to each other. Please ask more questions and check back later!",
+    "learnMoreSemanticLink": "Learn more about semantic similarity visualizations"
+  },
+  "alerts": {
+    "error_deleting_file": "Error Deleting File",
+    "deleting_file": "Deleting File",
+    "error_deleting_file_message": "There was an error deleting the file. Please try again.",
+    "file_deleting_bg": "The file is being deleted in the background.",
+    "check_docs": "Check",
+    "our_docs": "our docs",
+    "process_data": "for example code to process this data.",
+    "llm_providers": {
+      "update_success": {
+        "title": "Updated LLM providers",
+        "message": "Now your project's users can use the supplied LLMs!"
+      },
+      "update_error": {
+        "title": "Error updating LLM providers",
+        "message": "Failed to update LLM providers. Please try again later."
+      },
+      "fetch_error": {
+        "title": "Error",
+        "message": "Failed to fetch your API keys. Our database must be having a bad day. Please refresh or try again later."
+      }
+    }
+  },
+  "example_questions": {
+    "example_question_label": "Example Question",
+    "example_question_placeholder": "Enter an example question that users can try...",
+    "submit_button": "Save Questions",
+    "course_name_required": "Course name is required"
+  },
+  "upload_cards": {
+    "website": "Website",
+    "website_description": "Import content from any website by providing the URL. Supports recursive crawling with customizable depth.",
+    "github": "GitHub",
+    "github_description": "Import content from GitHub repositories, including documentation, code, and README files.",
+    "mit_course": "MIT Course",
+    "mit_course_description": "Import content from MIT OpenCourseWare, including lecture notes, assignments, and course materials.",
+    "coursera": "Coursera",
+    "coursera_description": "Import content from Coursera courses, including lectures, assignments, and course materials.",
+    "configure_import": "Configure import",
+    "ingest_website": "Ingest Website",
+    "share_chatbot": "Share Chatbot",
+    "share": "Share"
+  },
+  "website_ingest": {
+    "input_required": "Input is required",
+    "number_required": "Must be a number",
+    "range_error": "Must be between 1 and 500",
+    "invalid_url_error": "Invalid URL (please include https://)",
+    "scraping_error": "Error during web scraping",
+    "enter_url_placeholder": "Enter URL...",
+    "max_urls_label": "Maximum URLs to crawl",
+    "max_urls_tooltip": "The maximum number of URLs that will be crawled and processed. Higher numbers mean more content but longer processing time.",
+    "default_50": "Default: 50",
+    "limit_web_crawl": "Limit web crawl to:",
+    "equal_and_below": "Equal and Below",
+    "equal_and_below_desc": "Only crawl pages at or below the current URL path",
+    "same_subdomain": "Same Subdomain",
+    "same_subdomain_desc": "Crawl all pages on the same subdomain",
+    "entire_domain": "Entire Domain",
+    "entire_domain_desc": "Crawl all pages on the same domain and its subdomains",
+    "all": "All",
+    "all_desc": "Crawl all linked pages regardless of domain",
+    "for_more_detail": "For more detail",
+    "read_the_docs": "read the docs",
+    "suggest_equal_and_below": "We suggest starting with Equal and Below",
+    "rerun_if_needed": "and rerunning if you need more content"
+  },
+  "github_ingest": {
+    "for_github": "For GitHub",
+    "just_enter_url": "just enter a URL like",
+    "for_example": "for example",
+    "we_will_ingest_all_files": "We will ingest all files in the main branch",
+    "ensure_repository_public": "Ensure the repository is public",
+    "enter_url": "Enter URL..."
+  },
+  "mit_ingest": {
+    "for_mit_open_course_ware": "For MIT Open Course Ware",
+    "enter_url": "Enter URL..."
+  },
+  "coursera_ingest": {
+    "title": "Ingest Coursera Course",
+    "helper": "Import content from Coursera courses, including lectures, assignments, and course materials.",
+    "instructions_1": "For Coursera, just enter a URL like",
+    "instructions_2": ", for example",
+    "alert": "Coursera ingestion coming soon!",
+    "button": "Ingest Coursera Course"
+  },
+  "dropzone": {
+    "accept": "Drop files here",
+    "reject": "File type not supported",
+    "idle_project_name": "Please enter a project name first",
+    "idle_upload_materials": "Upload your materials",
+    "drag_helper": "Drag and drop files here or click to select files",
+    "remain_until_upload_complete": "Please remain on this page until the upload is complete"
+  },
+  "canvas_ingest": {
+    "title": "Canvas",
+    "description": "Import content from your Canvas course, including files, pages, modules, syllabus, assignments, and discussions.",
+    "permission_required": "IMPORTANT: Canvas Permission Required",
+    "permission_instructions": "Before proceeding, you MUST add the UIUC Chatbot as a student to your Canvas course at",
+    "bot_email": "Bot email:",
+    "bot_email_address": "uiuc.chat@ad.uillinois.edu",
+    "bot_name": "Bot name:",
+    "bot_name_value": "UIUC Course AI",
+    "permission_note": "This is required for access to any of your Canvas content. The AI can only see what students/TAs have access to.",
+    "configure_import": "Configure import",
+    "import_content": "Import Canvas Content",
+    "enter_canvas_url": "Enter your Canvas course URL like",
+    "canvas_url_example": "canvas.illinois.edu/courses/12345",
+    "for_example": "for example",
+    "canvas_url_sample": "https://canvas.illinois.edu/courses/12345",
+    "canvas_url_placeholder": "Enter your Canvas course URL...",
+    "select_content_to_import": "Select content to import",
+    "files": "Files",
+    "pages": "Pages",
+    "modules": "Modules",
+    "syllabus": "Syllabus",
+    "assignments": "Assignments",
+    "discussions": "Discussions"
+  },
+  "share_modal": {
+    "title": "Share your chatbot",
+    "subtitle": "Collaborate with members on this project",
+    "chatbot_link": "Chatbot Link",
+    "access_control": "Access Control",
+    "private_project": "Private Project",
+    "public_project": "Public Project",
+    "private_description": "Only specified people can access",
+    "public_description": "Anyone with the link can access",
+    "members": "Members",
+    "administrators": "Administrators",
+    "add_members": "Add members",
+    "add_admins": "Add administrators",
+    "members_description": "These users can view and interact with the chatbot",
+    "admins_description": "These users can edit the chatbot settings and content"
+  },
+  "project_files": {
+    "success": "Success",
+    "failed": "Failed",
+    "add_to_groups": "Add to Groups",
+    "add_document_to_groups": "Add Document to Groups",
+    "all_selected_docs_added": "All selected documents will be added to the chosen groups",
+    "selection_limit_title": "Selection Limit Exceeded",
+    "selection_limit_message": "You have selected more than 100 documents. Please select less than or equal to 100 documents.",
+    "delete_selected": "Delete {{count}} selected records",
+    "delete_one": "Delete 1 selected record",
+    "select_to_delete": "Select records to delete",
+    "delete_short": "Delete {{count}}",
+    "loading": "Loading...",
+    "select_group": "Select Group",
+    "no_groups_create": "No groups... Start typing to create a new one ✨",
+    "create_group": "+ Create \"{{name}}\"",
+    "search_files": "Search files...",
+    "search_files_description": "Show uploaded files that include the specified text",
+    "search_urls": "Search urls...",
+    "search_urls_description": "Show all urls that include the specified text",
+    "confirm_delete_title": "Please confirm your action",
+    "confirm_delete_message": "Are you sure you want to delete the selected records?",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "error_details": "Error Details",
+    "error_message": "Ah! We hit a wall when fetching your documents. The database must be on fire 🔥",
+    "try_again": "So.. please try again later.",
+    "export_confirm_title": "Please confirm your action",
+    "export_confirm_message": "Are you sure you want to export all the documents and embeddings?",
+    "export": "Export",
+    "export_result": "Export Result"
+  },
+  "settings": {
+    "title": "Settings",
+    "close": "Close settings",
+    "tabs": {
+      "model": "Model",
+      "document_groups": "Document Groups",
+      "tools": "Tools"
+    },
+    "sections": {
+      "temperature": {
+        "title": "Temperature",
+        "hint": "Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.",
+        "marks": {
+          "precise": "Precise",
+          "neutral": "Neutral",
+          "creative": "Creative"
+        }
+      },
+      "document_groups": {
+        "title": "Document Groups",
+        "search": "Search...",
+        "table": {
+          "name": "Document Groups",
+          "enabled": "Enabled",
+          "no_groups": "No groups found"
+        }
+      },
+      "tools": {
+        "title": "Tools",
+        "search": "Search...",
+        "table": {
+          "name": "Tool",
+          "enabled": "Enabled",
+          "no_tools": "No tools found"
+        }
+      },
+      "model": {
+        "title": "Model",
+        "select_placeholder": "Select a model",
+        "details": {
+          "title": "More details about the AI models",
+          "ncsa_hosted": {
+            "title": "NCSA Hosted Models (100% free)",
+            "description": "The best free option is the Qwen 2 72B model, hosted by NCSA."
+          },
+          "ncsa_hosted_vlm": {
+            "title": "NCSA Hosted Vision Models (100% free)",
+            "description": "Access NCSA's vision-language models for multimodal tasks."
+          },
+          "openai": {
+            "title": "OpenAI",
+            "description": "OpenAI model details and pricing. An OpenAI API key is required, and you may face rate-limit issues until you complete your first billing cycle."
+          },
+          "azure": {
+            "title": "Azure OpenAI",
+            "description": "Azure OpenAI Service provides enterprise-grade security and regional availability. Check out Azure OpenAI models for details on available models and features."
+          },
+          "anthropic": {
+            "title": "Anthropic",
+            "description": "Access Claude models through Anthropic's API. Claude excels at complex reasoning and analysis tasks."
+          },
+          "ollama": {
+            "title": "OpenAI Compatible via Ollama",
+            "description": "Run various open-source models locally through Ollama. Supports models like Llama 2, Mistral, and more with OpenAI-compatible API."
+          },
+          "webllm": {
+            "title": "On-device AI with WebLLM",
+            "description": "We support running some models in your web browser on your device. That's 100% local, on-device AI. It even uses your GPU. For this, your browser must pass this compatability check for WebGPU.",
+            "working": "If you see lots of text, it's working. If you see \"webgpu not available on this browser\", it's not working."
+          },
+          "gemini": {
+            "title": "Google Gemini",
+            "description": "We support Gemini's full suite."
+          },
+          "bedrock": {
+            "title": "AWS Bedrock",
+            "description": "We support Bedrock's full suite."
+          }
+        },
+        "model_item": {
+          "downloaded": "Downloaded",
+          "download": "Download",
+          "loading": "Loading",
+          "recommended": "Recommended",
+          "warning_large_model": "Warning, requires large vRAM GPU"
+        }
+      }
+    }
+  }
+}

@@ -11,7 +11,11 @@
     "start": "next start",
     "format": "prettier --check --ignore-path .gitignore .",
     "format:fix": "prettier --write --ignore-path .gitignore .",
-    "analyze": "cross-env ANALYZE=true next build"
+    "analyze": "cross-env ANALYZE=true next build",
+    "i18n:check": "node scripts/generate-translations.js check",
+    "i18n:create-empty": "node scripts/generate-translations.js create-empty",
+    "i18n:generate-templates": "node scripts/generate-translations.js generate-templates",
+    "i18n:validate": "node scripts/generate-translations.js validate"
   },
   "dependencies": {
     "@ai-sdk/amazon-bedrock": "^1.0.7",
@@ -82,7 +86,7 @@
     "lucide-react": "^0.447.0",
     "mantine-datatable": "^6.0.0",
     "next": "^13.5.6",
-    "next-i18next": "^13.2.2",
+    "next-i18next": "^13.3.0",
     "ollama": "^0.5.6",
     "ollama-ai-provider": "^0.10.0",
     "openai": "^4.42.0",

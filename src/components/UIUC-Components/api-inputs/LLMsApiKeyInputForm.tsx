@@ -61,6 +61,7 @@ import { t } from 'i18next'
 import BedrockProviderInput from './providers/BedrockProviderInput'
 import GeminiProviderInput from './providers/GeminiProviderInput'
 import SambaNovaProviderInput from './providers/SambaNovaProviderInput'
+import { useTranslation } from 'next-i18next'
 
 const isSmallScreen = false
 
@@ -87,6 +88,7 @@ export const APIKeyInput = ({
   placeholder: string
 }) => {
   const [error, setError] = useState<string | null>(null)
+  const { t } = useTranslation('common')
 
   useEffect(() => {
     setError(null)
@@ -94,7 +96,7 @@ export const APIKeyInput = ({
 
   return (
     <div style={{ position: 'relative', width: '100%' }}>
-      <Input.Wrapper id="API-key-input" label={placeholder}>
+      <Input.Wrapper id="API-key-input" label={t('models.fields.api_key')}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <TextInput
             type="password"
@@ -409,6 +411,7 @@ export function findDefaultModel(
 }
 
 export default function APIKeyInputForm() {
+  const { t } = useTranslation('common')
   const projectName = GetCurrentPageName()
 
   // ------------ <TANSTACK QUERIES> ------------
@@ -431,9 +434,8 @@ export default function APIKeyInputForm() {
     // handle errors
     if (isErrorLLMProviders) {
       showConfirmationToast({
-        title: 'Error',
-        message:
-          'Failed your api keys. Our database must be having a bad day. Please refresh or try again later.',
+        title: t('alerts.llm_providers.fetch_error.title'),
+        message: t('alerts.llm_providers.fetch_error.message'),
         isError: true,
       })
     }
@@ -535,7 +537,6 @@ export default function APIKeyInputForm() {
       mutation.mutate(
         {
           projectName,
-          // queryClient,
           llmProviders,
         },
         {
@@ -544,14 +545,14 @@ export default function APIKeyInputForm() {
               queryKey: ['projectLLMProviders', projectName],
             })
             showConfirmationToast({
-              title: 'Updated LLM providers',
-              message: `Now your project's users can use the supplied LLMs!`,
+              title: t('alerts.llm_providers.update_success.title'),
+              message: t('alerts.llm_providers.update_success.message'),
             })
           },
           onError: (error, variables, context) =>
             showConfirmationToast({
-              title: 'Error updating LLM providers',
-              message: `Update failed with error: ${error.name} -- ${error.message}`,
+              title: t('alerts.llm_providers.update_error.title'),
+              message: t('alerts.llm_providers.update_error.message'),
               isError: true,
             }),
         },
@@ -627,8 +628,7 @@ export default function APIKeyInputForm() {
                       gradient={{ from: 'gold', to: 'white', deg: 50 }}
                       className={`pl-8 pt-8 ${montserrat_heading.variable} font-montserratHeading`}
                     >
-                      {/* API Keys: Add LLMs to your Chatbot */}
-                      Configure LLM Providers for your Chatbot
+                      {t('models.more_details_about_ai_models')}
                     </Title>
                     <Title
                       className={`${montserrat_heading.variable} flex-[1_1_50%] font-montserratHeading`}
@@ -637,8 +637,7 @@ export default function APIKeyInputForm() {
                       ml={'md'}
                       style={{ textAlign: 'left' }}
                     >
-                      Configure which LLMs are available to you users. Enable or
-                      disable models to balance price and performance.
+                      {t('models.ncsa_hosted.description')}
                     </Title>
                     <Stack align="center" justify="start">
                       <form
@@ -668,14 +667,13 @@ export default function APIKeyInputForm() {
                               }}
                               order={3}
                             >
-                              Closed source LLMs
+                              {t('models.openai.title')}
                             </Title>
                             <Text
                               className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
                               size="md"
                             >
-                              The best performers, but you gotta pay their
-                              prices and follow their rules.
+                              {t('models.openai.description')}
                             </Text>
                             <Flex
                               direction={{ base: 'column', '75rem': 'row' }}
@@ -737,13 +735,13 @@ export default function APIKeyInputForm() {
                               }}
                               order={3}
                             >
-                              Open source LLMs
+                              {t('models.ncsa_hosted.title')}
                             </Title>
                             <Text
                               className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
                               size="md"
                             >
-                              Your weights, your rules.
+                              {t('models.ncsa_hosted.description')}
                             </Text>
                             <Flex
                               direction={{ base: 'column', '75rem': 'row' }}
@@ -807,16 +805,14 @@ export default function APIKeyInputForm() {
                           gradient={{ from: 'gold', to: 'white', deg: 170 }}
                           order={3}
                         >
-                          Default Model
+                          {t('models.default_model')}
                         </Title>
                         <br />
                         <Text
                           className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
                           size="md"
                         >
-                          Choose the default model for your chatbot. Users can
-                          still override this default to use any of the models
-                          enabled on the left.
+                          {t('models.default_model_helper')}
                         </Text>
                         <br />
                         <div className="flex justify-center">
@@ -992,8 +988,8 @@ export const showConfirmationToast = ({
     onClose: () => console.log('unmounted'),
     onOpen: () => console.log('mounted'),
     autoClose: autoClose,
-    title: title,
-    message: message,
+    title: t(`alerts.${title}`) || title,
+    message: t(`alerts.${message}`) || message,
     color: isError ? 'red' : 'green',
     radius: 'lg',
     icon: isError ? <IconAlertCircle /> : <IconCheck />,

@@ -24,6 +24,7 @@ import HomeContext from '~/pages/api/home/home.context'
 import { UserSettings } from '../../Chat/UserSettings'
 import { usePostHog } from 'posthog-js/react'
 import { AuthMenu } from './AuthMenu'
+import { useTranslation } from 'next-i18next'
 
 const styles: Record<string, React.CSSProperties> = {
   logoContainerBox: {
@@ -172,6 +173,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
   const [show, setShow] = useState(true)
   const [isAdminOrOwner, setIsAdminOrOwner] = useState(false)
   const auth = useAuth()
+  const { t } = useTranslation('common')
 
   const { classes, theme } = useStyles({ isAdmin: isAdminOrOwner })
   const [windowWidth, setWindowWidth] = useState(
@@ -341,7 +343,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                           className={`${montserrat_heading.variable} font-montserratHeading`}
                           style={{ marginLeft: '8px' }}
                         >
-                          New Chat
+                          {t('navigation.new_chat')}
                         </span>
                       </div>
                     </div>
@@ -376,7 +378,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                           className={`${montserrat_heading.variable} font-montserratHeading`}
                           style={{ marginLeft: '8px' }}
                         >
-                          Settings
+                          {t('settings')}
                         </span>
                       </div>
                     </div>
@@ -411,7 +413,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                             className={`${montserrat_heading.variable} font-montserratHeading`}
                             style={{ marginLeft: '8px' }}
                           >
-                            Admin Dashboard
+                            {t('navigation.admin_dashboard')}
                           </span>
                         </div>
                       </Link>
@@ -476,7 +478,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                         style={{ whiteSpace: 'nowrap' }}
                         className={`${montserrat_heading.variable} font-montserratHeading`}
                       >
-                        New Chat
+                        {t('navigation.new_chat')}
                       </span>
                     </span>
                   </div>
@@ -525,7 +527,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                         style={{ whiteSpace: 'nowrap' }}
                         className={`${montserrat_heading.variable} font-montserratHeading`}
                       >
-                        Settings
+                        {t('navigation.settings')}
                       </span>
                     </span>
                   </div>
@@ -599,7 +601,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                         <span
                           className={`${montserrat_heading.variable} font-montserratHeading`}
                         >
-                          Admin Dashboard
+                          {t('navigation.admin_dashboard')}
                         </span>
                       </span>
                     </div>

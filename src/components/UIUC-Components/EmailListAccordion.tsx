@@ -16,6 +16,8 @@ import {
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useQueryClient } from '@tanstack/react-query'
 import { superAdmins } from '~/utils/superAdmins'
+import { useTranslation } from 'next-i18next'
+
 function EmailInput({
   value,
   error,
@@ -29,6 +31,7 @@ function EmailInput({
   onChange: (evt: ChangeEvent<HTMLInputElement>) => void
   onPaste: (evt: React.ClipboardEvent<HTMLInputElement>) => void
 }) {
+  const { t } = useTranslation('common')
   return (
     <div className="relative">
       <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
@@ -36,7 +39,7 @@ function EmailInput({
       </div>
       <input
         type="text"
-        placeholder="Add people by email"
+        placeholder={t('email_list.add_people') || ''}
         className={`${montserrat_paragraph.variable} w-full rounded-lg bg-[#1e1f3d]/50 px-10 py-2.5 font-montserratParagraph text-sm text-gray-200 placeholder-gray-500 ring-1 ring-white/10 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-violet-500`}
         value={value}
         onKeyDown={onKeyDown}
@@ -65,6 +68,7 @@ function EmailListItem({
   course_owner: string
   course_admins: string[]
 }) {
+  const { t } = useTranslation('common')
   const isAdmin = email === course_owner || course_admins.includes(email)
 
   return (
@@ -86,7 +90,7 @@ function EmailListItem({
           <span
             className={`${montserrat_paragraph.variable} font-montserratParagraph text-xs text-gray-400`}
           >
-            Can {isAdmin ? 'manage' : 'view'}
+            {t(isAdmin ? 'email_list.can_manage' : 'email_list.can_view')}
           </span>
         </div>
       </div>
@@ -116,6 +120,7 @@ function EmailListAccordion({
   ) => void
   is_for_admins: boolean
 }) {
+  const { t } = useTranslation('common')
   const queryClient = useQueryClient()
   const emailAddresses = metadata.approved_emails_list || []
   const courseAdmins = metadata.course_admins || []
@@ -266,11 +271,11 @@ function EmailListAccordion({
     let localError = null
 
     if (isInList(email)) {
-      localError = `${email} has already been added.`
+      localError = t('email_list.already_added', { email })
     }
 
     if (!isEmail(email)) {
-      localError = `${email} is not a valid email address.`
+      localError = t('email_list.invalid_email', { email })
     }
 
     if (localError) {
@@ -308,12 +313,12 @@ function EmailListAccordion({
                   <span
                     className={`${montserrat_heading.variable} font-montserratHeading text-sm text-gray-200`}
                   >
-                    Administrators
+                    {t('email_list.administrators')}
                   </span>
                   <span
                     className={`${montserrat_paragraph.variable} font-montserratParagraph text-xs text-gray-400`}
                   >
-                    Admins have full edit permissions
+                    {t('email_list.admins_description')}
                   </span>
                 </div>
               </div>
@@ -371,12 +376,12 @@ function EmailListAccordion({
                 <span
                   className={`${montserrat_heading.variable} font-montserratHeading text-sm text-gray-200`}
                 >
-                  Members
+                  {t('email_list.members')}
                 </span>
                 <span
                   className={`${montserrat_paragraph.variable} font-montserratParagraph text-xs text-gray-400`}
                 >
-                  Only these email addresses can access the content
+                  {t('email_list.members_description')}
                 </span>
               </div>
             </div>
