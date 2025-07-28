@@ -104,7 +104,7 @@ export const VisionCapableModels: Set<
   AzureModelID.GPT_4_1,
   AzureModelID.GPT_4_1_mini,
   AzureModelID.GPT_4_1_nano,
-  
+
   // claude-3.5....
   AnthropicModelID.Claude_3_7_Sonnet,
   AnthropicModelID.Claude_3_7_Sonnet_Thinking,
@@ -300,8 +300,8 @@ export const preferredModelIds = [
   OpenAIModelID.GPT_4,
   AzureModelID.GPT_4,
   OpenAIModelID.GPT_3_5,
-  NCSAHostedVLMModelID.QWEN2_5VL_32B_INSTRUCT,
-  // NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT,
+  // NCSAHostedVLMModelID.QWEN2_5VL_32B_INSTRUCT,
+  NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT,
 ]
 
 export const selectBestModel = (
@@ -316,6 +316,10 @@ export const selectBestModel = (
     .filter((model) => model.enabled)
 
   const defaultModelId = localStorage.getItem('defaultModel')
+
+  if (defaultModelId === NCSAHostedVLMModelID.QWEN2_5VL_32B_INSTRUCT) {
+    return NCSAHostedVLMModels[NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT]
+  }
 
   if (defaultModelId && allModels.find((m) => m.id === defaultModelId)) {
     const defaultModel = allModels
@@ -344,7 +348,7 @@ export const selectBestModel = (
       return model
     }
   }
-  
-  // If no preferred models are available, fallback to Qwen2.5-VL-32B-Instruct
-  return NCSAHostedVLMModels[NCSAHostedVLMModelID.QWEN2_5VL_32B_INSTRUCT]
+
+  // If no preferred models are available, fallback to Qwen2.5-VL-72B-Instruct
+  return NCSAHostedVLMModels[NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT]
 }
