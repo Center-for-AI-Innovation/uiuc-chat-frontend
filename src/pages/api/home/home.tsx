@@ -9,7 +9,7 @@ import { useCreateReducer } from '@/hooks/useCreateReducer'
 import useErrorService from '@/services/errorService'
 
 import { cleanSelectedConversation } from '@/utils/app/clean'
-import { DEFAULT_SYSTEM_PROMPT, DEFAULT_TEMPERATURE } from '@/utils/app/const'
+import { DEFAULT_SYSTEM_PROMPT } from '@/utils/app/const'
 
 import { type Conversation } from '@/types/chat'
 import { type KeyValuePair } from '@/types/data'
@@ -20,26 +20,26 @@ import { Chatbar } from '@/components/Chatbar/Chatbar'
 import HomeContext from './home.context'
 import { type HomeInitialState, initialState } from './home.state'
 
+import { useQueryClient } from '@tanstack/react-query'
+import { montserrat_heading } from 'fonts'
 import { v4 as uuidv4 } from 'uuid'
+import { selectBestTemperature } from '~/components/Chat/Temperature'
+import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
+import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
+import { useUpdateConversation } from '~/hooks/conversationQueries'
+import {
+  useCreateFolder,
+  useDeleteFolder,
+  useFetchFolders,
+  useUpdateFolder,
+} from '~/hooks/folderQueries'
 import { type CourseMetadata } from '~/types/courseMetadata'
+import { type FolderType, type FolderWithConversation } from '~/types/folder'
 import {
   selectBestModel,
   VisionCapableModels,
 } from '~/utils/modelProviders/LLMProvider'
 import { type OpenAIModelID } from '~/utils/modelProviders/types/openai'
-import {
-  useDeleteFolder,
-  useFetchFolders,
-  useUpdateFolder,
-} from '~/hooks/folderQueries'
-import { useUpdateConversation } from '~/hooks/conversationQueries'
-import { type FolderType, type FolderWithConversation } from '~/types/folder'
-import { useQueryClient } from '@tanstack/react-query'
-import { useCreateFolder } from '~/hooks/folderQueries'
-import { selectBestTemperature } from '~/components/Chat/Temperature'
-import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
-import { montserrat_heading } from 'fonts'
-import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 
@@ -772,7 +772,7 @@ const Home = ({
         </Head>
         {selectedConversation && (
           <main
-            className={`flex h-screen w-screen flex-col text-sm text-white dark:text-white`}
+            className={`flex h-screen w-screen flex-col pt-20 text-sm text-white dark:text-white`}
           >
             <Navbar isPlain={false} />
 

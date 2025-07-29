@@ -55,10 +55,10 @@ import { useDebouncedCallback } from 'use-debounce'
 import { v4 as uuidv4 } from 'uuid'
 import CustomCopyButton from '~/components/Buttons/CustomCopyButton'
 import { getModelLogo } from '~/components/Chat/ModelSelect'
+import SettingsLayout from '~/components/Layout/SettingsLayout'
 import { LinkGeneratorModal } from '~/components/Modals/LinkGeneratorModal'
 import CustomSwitch from '~/components/Switches/CustomSwitch'
 import { findDefaultModel } from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
-import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 import { type ChatBody } from '~/types/chat'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
@@ -837,11 +837,7 @@ CRITICAL: The optimized prompt must:
   }
 
   return (
-    <>
-      <Navbar
-        course_name={router.query.course_name as string}
-        showSettingsNav={true}
-      />
+    <SettingsLayout course_name={router.query.course_name as string}>
       <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
         <div className="items-left flex w-full flex-col justify-center py-0">
           <Flex direction="column" align="center" w="100%">
@@ -2094,7 +2090,7 @@ CRITICAL: The optimized prompt must:
         </div>
         <GlobalFooter />
       </main>
-    </>
+    </SettingsLayout>
   )
 }
 

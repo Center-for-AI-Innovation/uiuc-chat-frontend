@@ -81,7 +81,7 @@ function DocumentsCard({
       withBorder
       padding="none"
       radius="xl"
-      className="mt-[2%] w-[96%] md:w-[90%] 2xl:w-[90%]"
+      className="mt-[2%] w-[96%] md:w-full 2xl:w-[95%]"
       style={{
         backgroundColor: 'var(--background)',
         borderColor: 'var(--dashboard-border)',
