@@ -1,32 +1,18 @@
 import { type NextPage } from 'next'
-import MakeNomicVisualizationPage from '~/components/UIUC-Components/MakeQueryAnalysisPage'
-import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
+import { useEffect, useState } from 'react'
 
-import { useAuth } from 'react-oidc-context'
-import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
-import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
-import {
-  LoadingPlaceholderForAdminPages,
-  MainPageBackground,
-} from '~/components/UIUC-Components/MainPageBackground'
-import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
-import { fetchCourseMetadata } from '~/utils/apiUtils'
-import { type CourseMetadata } from '~/types/courseMetadata'
-import LargeDropzone from '~/components/UIUC-Components/LargeDropzone'
-import Navbar from '~/components/UIUC-Components/navbars/Navbar'
+import { Flex } from '@mantine/core'
 import Head from 'next/head'
-import { Card, Flex, SimpleGrid, Title } from '@mantine/core'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
-import CanvasIngestForm from '~/components/UIUC-Components/CanvasIngestForm'
-import WebsiteIngestForm from '~/components/UIUC-Components/WebsiteIngestForm'
-import GitHubIngestForm from '~/components/UIUC-Components/GitHubIngestForm'
-import UploadNotification from '~/components/UIUC-Components/UploadNotification'
-import MITIngestForm from '~/components/UIUC-Components/MITIngestForm'
-import CourseraIngestForm from '~/components/UIUC-Components/CourseraIngestForm'
-import SupportedFileUploadTypes from '~/components/UIUC-Components/SupportedFileUploadTypes'
+import { useAuth } from 'react-oidc-context'
+import SettingsLayout from '~/components/Layout/SettingsLayout'
+import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 import { CannotEditCourse } from '~/components/UIUC-Components/CannotEditCourse'
+import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
+import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
+import { LoadingPlaceholderForAdminPages } from '~/components/UIUC-Components/MainPageBackground'
+import { type CourseMetadata } from '~/types/courseMetadata'
+import { fetchCourseMetadata } from '~/utils/apiUtils'
 
 const CourseMain: NextPage = () => {
   const router = useRouter()
@@ -89,9 +75,7 @@ const CourseMain: NextPage = () => {
   }
 
   return (
-    <>
-      {' '}
-      <Navbar course_name={projectName} showSettingsNav={true} />
+    <SettingsLayout course_name={projectName}>
       <Head>
         <title>{projectName}/upload</title>
         <meta
@@ -111,7 +95,7 @@ const CourseMain: NextPage = () => {
         </div>
         <GlobalFooter />
       </main>
-    </>
+    </SettingsLayout>
   )
 }
 export default CourseMain
