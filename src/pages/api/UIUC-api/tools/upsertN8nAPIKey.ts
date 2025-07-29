@@ -1,19 +1,24 @@
 import { supabase } from '@/utils/supabaseClient'
-import { type NextRequest, NextResponse } from 'next/server'
+import { NextApiRequest, NextApiResponse } from 'next'
 
-export default async function handler(req: NextRequest, res: NextResponse) {
-  const requestBody = await req.json()
-  // console.log('upsertN8nAPIKey course_name and n8n_api_key:', requestBody)
-  const { course_name, n8n_api_key } = requestBody
-  if (!course_name) {
-    return new NextResponse(
-      JSON.stringify({
-        success: false,
-        error: 'course_name is required',
-      }),
-      { status: 400 },
-    )
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, error: 'Method not allowed' })
   }
+
+  const { course_name, n8n_api_key } = req.body
+  // console.log('upsertN8nAPIKey course_name and n8n_api_key:', req.body)
+  
+  if (!course_name) {
+    return res.status(400).json({
+      success: false,
+      error: 'course_name is required',
+    })
+  }
+
   const { data, error } = await supabase
     .from('projects')
     .upsert(
@@ -31,9 +36,8 @@ export default async function handler(req: NextRequest, res: NextResponse) {
 
   if (error) {
     console.error('Error upserting N8n key to Supabase:', error)
-    return new NextResponse(JSON.stringify({ success: false, error: error }), {
-      status: 500,
-    })
+    return res.status(500).json({ success: false, error: error })
   }
-  return new NextResponse(JSON.stringify({ success: true }), { status: 200 })
+  
+  return res.status(200).json({ success: true })
 }
