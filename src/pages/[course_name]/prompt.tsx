@@ -59,6 +59,7 @@ import {
   IconLink,
   IconAlertTriangleFilled,
   IconWand,
+  IconTrash,
 } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
@@ -172,6 +173,8 @@ const CourseMain: NextPage = () => {
   const [input, setInput] = useState(baseSystemPrompt)
   const [isOptimizing, setIsOptimizing] = useState(false)
   const [isAutoGenerating, setIsAutoGenerating] = useState(false)
+  const [purposeModalOpened, setPurposeModalOpened] = useState(false)
+  const [chatbotPurpose, setChatbotPurpose] = useState('')
 
   const removeThinkSections = (text: string): string => {
     const cleanedText = text.replace(/<think>[\s\S]*?<\/think>/g, '')
@@ -433,6 +436,29 @@ CRITICAL: The optimized prompt must:
 
   const handleAutoGeneratePrompt = async (e: any) => {
     e.preventDefault()
+    // Open the purpose modal instead of starting generation immediately
+    setPurposeModalOpened(true)
+  }
+
+  // Helper function to detect domain from purpose
+  const getDomainFramework = (purpose: string): string => {
+    const lowerPurpose = purpose.toLowerCase()
+    
+    if (lowerPurpose.match(/teach|student|course|learn|education|class|lecture|homework|assignment/)) {
+      return 'educational'
+    } else if (lowerPurpose.match(/research|analyze|paper|study|journal|publication|thesis/)) {
+      return 'research'
+    } else if (lowerPurpose.match(/customer|support|help|troubleshoot|service|ticket/)) {
+      return 'support'
+    } else if (lowerPurpose.match(/code|develop|program|software|technical|api/)) {
+      return 'technical'
+    }
+    return 'general'
+  }
+
+  const handleGenerateWithPurpose = async () => {
+    // Close modal and start generation
+    setPurposeModalOpened(false)
     setIsAutoGenerating(true)
     setMessages([])
 
@@ -513,56 +539,107 @@ CRITICAL: The optimized prompt must:
         .map((ctx, i) => `[Document ${i + 1}: ${ctx.readable_filename}]\n${ctx.text}`)
         .join('\n\n---\n\n')
 
-      // System prompt for analyzing course content and generating system prompt
-      const systemPrompt = `You are an expert educational AI system prompt engineer. Analyze the provided course documents and generate a comprehensive, professional system prompt for an AI teaching assistant.
+      // Detect domain for specialized framework
+      const domain = getDomainFramework(chatbotPurpose)
+      
+      // System prompt for comprehensive document extraction and purpose-driven generation
+      const systemPrompt = `You are an expert AI system prompt engineer. Your task is to perform a two-stage analysis:
 
-**Analysis Framework:**
-1. **Course Identity**: Subject area, academic level, institution context, course duration/structure
-2. **Learning Objectives**: Key concepts, skills, tools, and outcomes students should achieve
-3. **Pedagogical Approach**: Teaching philosophy, learning methods, assessment types
-4. **Student Context**: Target audience, prerequisites, professional applications
-5. **Content Structure**: Course modules, progression, assignments, tools/platforms used
+STAGE 1: COMPREHENSIVE DOCUMENT EXTRACTION
+First, analyze ALL provided documents and extract EVERY specific detail:
+- List every topic, module, chapter, unit, and concept mentioned
+- Identify ALL tools, software, platforms, technologies, or systems referenced
+- Extract any timelines, schedules, deadlines, or progressions
+- Note ALL assignment types, projects, assessments, or deliverables
+- Capture SPECIFIC examples, case studies, scenarios, or use cases
+- Identify prerequisites, dependencies, or required knowledge
+- Extract key terminology with their exact definitions
+- Note communication patterns, tone, and style used in documents
+- List any rules, policies, guidelines, or procedures
+- Capture learning objectives, outcomes, or goals if present
+- Extract any formulas, methodologies, or frameworks
+- Note specific file formats, standards, or conventions mentioned
+
+STAGE 2: PURPOSE-DRIVEN PROMPT GENERATION
+Using the extracted information, create a system prompt for:
+USER'S PURPOSE: ${chatbotPurpose || 'General purpose assistant'}
+DETECTED DOMAIN: ${domain}
+
+The system prompt MUST incorporate ALL specific information extracted from the documents.
+Do not generalize or summarize - use actual names, tools, and concepts found.
+
+${domain === 'educational' ? `EDUCATIONAL FRAMEWORK:
+- Course structure and progression from documents
+- Specific learning objectives and outcomes
+- Assignment types and assessment methods found
+- Prerequisites and student expectations
+- Academic policies and integrity guidelines` : 
+domain === 'research' ? `RESEARCH FRAMEWORK:
+- Research methodologies and approaches found
+- Specific tools and analysis methods
+- Citation standards and academic conventions
+- Data sources and research protocols
+- Collaboration and publication guidelines` :
+domain === 'support' ? `SUPPORT FRAMEWORK:
+- Product/service specifics from documentation
+- Common issues and troubleshooting steps
+- Escalation procedures and boundaries
+- Tools and systems for support delivery
+- Customer interaction guidelines` :
+domain === 'technical' ? `TECHNICAL FRAMEWORK:
+- Programming languages and frameworks found
+- Development tools and environments
+- Code standards and best practices
+- API documentation and integrations
+- Technical workflows and processes` :
+`GENERAL FRAMEWORK:
+- Domain-specific knowledge from documents
+- Key processes and procedures
+- Tools and systems mentioned
+- Standards and guidelines
+- Best practices and examples`}
 
 **Required System Prompt Components:**
 
-**SECTION 1: CORE IDENTITY & ROLE**
-- Define AI's role and authority level as teaching assistant
-- Establish course context (title, level, institution, duration, class size if known)
-- Specify primary learning focus and key tools/platforms
+**SECTION 1: SPECIFIC KNOWLEDGE BASE**
+- List ALL topics/modules from documents with exact names
+- Include EVERY tool, platform, or system found (e.g., "Uses Python 3.8, Jupyter Notebooks, and PyTorch")
+- State the exact context (e.g., "CS 101 Fall 2024 at UIUC" not "introductory computer science")
+- Define role using specific document content
 
-**SECTION 2: PEDAGOGICAL APPROACH**
-- Teaching philosophy and learning methods appropriate for the course
-- Response methodology that supports student understanding
-- Support for critical thinking and concept application
+**SECTION 2: DOCUMENT-BASED METHODOLOGY**
+- Response approach based on document examples
+- Use the exact terminology found in documents
+- Reference specific resources mentioned (with exact names/URLs)
+- Follow communication patterns from source material
 
-**SECTION 3: COURSE-SPECIFIC GUIDANCE**
-- Module/week-specific guidance based on course structure
-- Key concepts and terminology to emphasize
-- Tool-specific support approaches (software, platforms, etc.)
-- Assignment and assessment support strategies
+**SECTION 3: EXTRACTED CONTENT GUIDANCE**
+- List actual concepts with their document definitions
+- Include specific examples and cases from documents
+- Reference exact chapter/module names when helping
+- Use real assignment names and requirements found
 
 **SECTION 4: COMMUNICATION GUIDELINES**
-- Appropriate tone and style for the academic level
-- Response structure template
-- Language patterns and signature phrases
-- How to encourage and motivate students
+- Appropriate tone and style for the target audience
+- Response structure that fits the purpose
+- Language patterns and helpful phrases
 
 **SECTION 5: BOUNDARIES & LIMITATIONS**
-- What NOT to do (academic integrity concerns, grading, personal advice)
-- When to refer to instructor or TA
+- What NOT to do based on the purpose
+- When to acknowledge limitations
 - Professional boundaries and ethics
 
 **SECTION 6: QUALITY ASSURANCE**
 - Response checklist for self-evaluation
-- Core principles to maintain in every interaction
-- Success metrics focused on learning outcomes
+- Core principles to maintain
+- Success metrics aligned with the purpose
 
 **Format Requirements:**
-- Use clear section headers and subheaders (no markdown formatting)
-- Include specific examples and language patterns
-- Maintain professional academic tone
-- Length: 400-800 words for comprehensive coverage
-- Structure for easy scanning and reference
+- Use clear section headers (no markdown formatting)
+- Include ACTUAL examples from documents, not generic ones
+- Use specific names, tools, and terminology found
+- Length: 600-1000 words to capture all specifics
+- Must reference document content throughout
 - Use plain text formatting only
 
 **Important**: Generate ONLY the complete system prompt text. Do not include meta-commentary, analysis explanations, or instructions about how to use the prompt. Do not use markdown formatting - use plain text only.`
@@ -581,7 +658,7 @@ CRITICAL: The optimized prompt must:
             {
               id: uuidv4(),
               role: 'user',
-              content: `Please analyze these course documents and generate an optimal system prompt:\n\n${sampleText}`,
+              content: `TASK: Generate a highly specific system prompt by extracting ALL details from the provided documents.\n\nPURPOSE: ${chatbotPurpose || 'General purpose assistant'}\n\nINSTRUCTIONS:\n1. First, extract EVERY specific detail from the documents (names, tools, concepts, examples)\n2. Then create a system prompt that incorporates ALL extracted information\n3. Do not generalize - use exact names and specific content found\n4. The prompt should demonstrate deep knowledge of the actual documents\n\nDOCUMENTS TO ANALYZE:\n${sampleText}`,
             },
           ],
           model: {
@@ -1676,15 +1753,21 @@ CRITICAL: The optimized prompt must:
                               />
                               <Group mt="md" spacing="sm">
                                 <Button
+                                  onClick={handleAutoGeneratePrompt}
+                                  disabled={isAutoGenerating}
                                   variant="filled"
                                   radius="md"
+                                  leftIcon={
+                                    isAutoGenerating ? (
+                                      <LoadingSpinner size="sm" />
+                                    ) : (
+                                      <IconWand stroke={1} />
+                                    )
+                                  }
                                   className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                                  type="button"
-                                  onClick={(e) => {
-                                    handleSystemPromptSubmit(baseSystemPrompt)
-                                  }}
                                   sx={(theme) => ({
-                                    backgroundColor: `${theme.colors?.purple?.[8] || '#6d28d9'} !important`,
+                                    background:
+                                      'linear-gradient(90deg, #059669 0%, #10b981 50%, #34d399 100%) !important',
                                     border: 'none',
                                     color: '#fff',
                                     padding: '10px 20px',
@@ -1692,7 +1775,8 @@ CRITICAL: The optimized prompt must:
                                     boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
                                     transition: 'all 0.2s ease',
                                     '&:hover': {
-                                      backgroundColor: `${theme.colors?.purple?.[9] || '#5b21b6'} !important`,
+                                      background:
+                                        'linear-gradient(90deg, #047857 0%, #059669 50%, #10b981 100%) !important',
                                       transform: 'translateY(-1px)',
                                       boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
                                     },
@@ -1700,10 +1784,18 @@ CRITICAL: The optimized prompt must:
                                       transform: 'translateY(0)',
                                       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
                                     },
+                                    '&:disabled': {
+                                      opacity: 0.7,
+                                      cursor: 'not-allowed',
+                                      transform: 'none',
+                                      boxShadow: 'none',
+                                    },
                                   })}
                                   style={{ minWidth: 'fit-content' }}
                                 >
-                                  Update
+                                  {isAutoGenerating
+                                    ? 'Generating...'
+                                    : 'Auto-Generate'}
                                 </Button>
                                 <Button
                                   onClick={handleSubmitPromptOptimization}
@@ -1751,21 +1843,15 @@ CRITICAL: The optimized prompt must:
                                     : 'Optimize'}
                                 </Button>
                                 <Button
-                                  onClick={handleAutoGeneratePrompt}
-                                  disabled={isAutoGenerating}
                                   variant="filled"
                                   radius="md"
-                                  leftIcon={
-                                    isAutoGenerating ? (
-                                      <LoadingSpinner size="sm" />
-                                    ) : (
-                                      <IconWand stroke={1} />
-                                    )
-                                  }
                                   className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                  type="button"
+                                  onClick={(e) => {
+                                    handleSystemPromptSubmit(baseSystemPrompt)
+                                  }}
                                   sx={(theme) => ({
-                                    background:
-                                      'linear-gradient(90deg, #059669 0%, #10b981 50%, #34d399 100%) !important',
+                                    backgroundColor: `${theme.colors?.purple?.[8] || '#6d28d9'} !important`,
                                     border: 'none',
                                     color: '#fff',
                                     padding: '10px 20px',
@@ -1773,8 +1859,7 @@ CRITICAL: The optimized prompt must:
                                     boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
                                     transition: 'all 0.2s ease',
                                     '&:hover': {
-                                      background:
-                                        'linear-gradient(90deg, #047857 0%, #059669 50%, #10b981 100%) !important',
+                                      backgroundColor: `${theme.colors?.purple?.[9] || '#5b21b6'} !important`,
                                       transform: 'translateY(-1px)',
                                       boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
                                     },
@@ -1782,18 +1867,42 @@ CRITICAL: The optimized prompt must:
                                       transform: 'translateY(0)',
                                       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
                                     },
-                                    '&:disabled': {
-                                      opacity: 0.7,
-                                      cursor: 'not-allowed',
-                                      transform: 'none',
-                                      boxShadow: 'none',
+                                  })}
+                                  style={{ minWidth: 'fit-content' }}
+                                >
+                                  Update
+                                </Button>
+                                <Button
+                                  onClick={() => {
+                                    setBaseSystemPrompt('')
+                                    setInput('')
+                                    handleSystemPromptSubmit('')
+                                  }}
+                                  variant="filled"
+                                  radius="md"
+                                  leftIcon={<IconTrash stroke={1.5} />}
+                                  className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                  sx={(theme) => ({
+                                    backgroundColor: `${theme.colors.red[6]} !important`,
+                                    border: 'none',
+                                    color: '#fff',
+                                    padding: '10px 20px',
+                                    fontWeight: 600,
+                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    transition: 'all 0.2s ease',
+                                    '&:hover': {
+                                      backgroundColor: `${theme.colors.red[7]} !important`,
+                                      transform: 'translateY(-1px)',
+                                      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
+                                    },
+                                    '&:active': {
+                                      transform: 'translateY(0)',
+                                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
                                     },
                                   })}
                                   style={{ minWidth: 'fit-content' }}
                                 >
-                                  {isAutoGenerating
-                                    ? 'Generating...'
-                                    : 'Auto-Generate'}
+                                  Clear
                                 </Button>
                               </Group>
 
@@ -2298,6 +2407,118 @@ CRITICAL: The optimized prompt must:
                                       }}
                                     >
                                       Confirm
+                                    </Button>
+                                  </Group>
+                                </Flex>
+                              </Modal>
+                              
+                              {/* Purpose Modal for Auto-Generate */}
+                              <Modal
+                                opened={purposeModalOpened}
+                                onClose={() => setPurposeModalOpened(false)}
+                                size="md"
+                                title={
+                                  <Text
+                                    className={`${montserrat_heading.variable} font-montserratHeading`}
+                                    size="lg"
+                                    weight={700}
+                                    style={{ color: '#15B886' }}
+                                  >
+                                    Define Your AI Assistant's Purpose
+                                  </Text>
+                                }
+                                styles={(theme) => ({
+                                  modal: {
+                                    backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[7] : theme.white,
+                                  },
+                                  header: {
+                                    backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[7] : theme.white,
+                                  },
+                                })}
+                              >
+                                <Flex direction="column" gap="md">
+                                  <Text
+                                    size="sm"
+                                    className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                    style={{ color: theme.colorScheme === 'dark' ? '#B8B8B8' : '#666' }}
+                                  >
+                                    Describe the purpose of this AI assistant. The system will analyze your documents 
+                                    to extract all specific knowledge, then tailor how that knowledge is presented 
+                                    based on your purpose.
+                                  </Text>
+                                  <Textarea
+                                    placeholder="e.g., Help students learn calculus concepts, Research assistant for biology papers, Personal cooking mentor, Customer support for our product documentation"
+                                    value={chatbotPurpose}
+                                    onChange={(e) => setChatbotPurpose(e.currentTarget.value)}
+                                    minRows={3}
+                                    maxRows={6}
+                                    className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                    styles={(theme) => ({
+                                      input: {
+                                        backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[6] : theme.colors.gray[0],
+                                        borderColor: theme.colorScheme === 'dark' ? theme.colors.dark[4] : theme.colors.gray[3],
+                                        color: theme.colorScheme === 'dark' ? theme.white : theme.black,
+                                        '&:focus': {
+                                          borderColor: '#15B886',
+                                        },
+                                        '&::placeholder': {
+                                          color: theme.colorScheme === 'dark' ? theme.colors.dark[3] : theme.colors.gray[5],
+                                        },
+                                      },
+                                    })}
+                                  />
+                                  <Group position="right" mt="md">
+                                    <Button
+                                      variant="outline"
+                                      color="gray"
+                                      radius="md"
+                                      onClick={() => {
+                                        setPurposeModalOpened(false)
+                                        setChatbotPurpose('')
+                                      }}
+                                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                      styles={(theme) => ({
+                                        root: {
+                                          borderColor: theme.colors.gray[6],
+                                          color: theme.colorScheme === 'dark' ? '#fff' : theme.black,
+                                          '&:hover': {
+                                            backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[6] : theme.colors.gray[0],
+                                          },
+                                        },
+                                      })}
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      variant="filled"
+                                      radius="md"
+                                      disabled={!chatbotPurpose.trim()}
+                                      onClick={handleGenerateWithPurpose}
+                                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                      sx={(theme) => ({
+                                        backgroundColor: '#15B886 !important',
+                                        border: 'none',
+                                        color: '#fff',
+                                        padding: '10px 20px',
+                                        fontWeight: 600,
+                                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                        transition: 'all 0.2s ease',
+                                        '&:hover': {
+                                          backgroundColor: '#13A077 !important',
+                                          transform: 'translateY(-1px)',
+                                          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
+                                        },
+                                        '&:active': {
+                                          transform: 'translateY(0)',
+                                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                        },
+                                        '&:disabled': {
+                                          backgroundColor: `${theme.colors.gray[5]} !important`,
+                                          color: theme.colors.gray[3],
+                                        },
+                                      })}
+                                    >
+                                      Generate System Prompt
                                     </Button>
                                   </Group>
                                 </Flex>
