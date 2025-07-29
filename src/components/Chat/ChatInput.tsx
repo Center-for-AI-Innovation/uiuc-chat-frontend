@@ -1,14 +1,18 @@
 // chatinput.tsx
-import {
-  IconArrowDown,
-  IconPlayerStop,
-  IconSend,
-  IconPhoto,
-  IconAlertCircle,
-  IconX,
-  IconRepeat,
-} from '@tabler/icons-react'
+import { type Content, type Message, type MessageType } from '@/types/chat'
+import { type Plugin } from '@/types/plugin'
+import { type Prompt } from '@/types/prompt'
 import { Text } from '@mantine/core'
+import {
+  IconAlertCircle,
+  IconArrowDown,
+  IconPhoto,
+  IconPlayerStop,
+  IconRepeat,
+  IconSend,
+  IconX,
+} from '@tabler/icons-react'
+import { useTranslation } from 'next-i18next'
 import {
   type KeyboardEvent,
   type MutableRefObject,
@@ -19,10 +23,6 @@ import {
   useState,
 } from 'react'
 import { v4 as uuidv4 } from 'uuid'
-import { useTranslation } from 'next-i18next'
-import { type Content, type Message, type MessageType } from '@/types/chat'
-import { type Plugin } from '@/types/plugin'
-import { type Prompt } from '@/types/prompt'
 
 import HomeContext from '~/pages/api/home/home.context'
 
@@ -30,29 +30,27 @@ import { PluginSelect } from './PluginSelect'
 import { PromptList } from './PromptList'
 import { VariableModal } from './VariableModal'
 
+import { Tooltip, useMantineTheme } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
-import { useMantineTheme, Tooltip } from '@mantine/core'
 import { Montserrat } from 'next/font/google'
 
 import React from 'react'
 
 import { type CSSProperties } from 'react'
 
-import { fetchPresignedUrl, uploadToS3 } from 'src/utils/apiUtils'
-import { ImagePreview } from './ImagePreview'
-import { montserrat_heading } from 'fonts'
 import { useMediaQuery } from '@mantine/hooks'
-import type ChatUI from '~/utils/modelProviders/WebLLM'
-import { WebllmModel, webLLMModels } from '~/utils/modelProviders/WebLLM'
+import { IconChevronRight } from '@tabler/icons-react'
+import { montserrat_heading } from 'fonts'
+import { fetchPresignedUrl, uploadToS3 } from 'src/utils/apiUtils'
+import { UserSettings } from '~/components/Chat/UserSettings'
 import {
   selectBestModel,
   VisionCapableModels,
 } from '~/utils/modelProviders/LLMProvider'
 import { type OpenAIModelID } from '~/utils/modelProviders/types/openai'
-import { UserSettings } from '~/components/Chat/UserSettings'
-import { IconChevronRight } from '@tabler/icons-react'
-import { findDefaultModel } from '../UIUC-Components/api-inputs/LLMsApiKeyInputForm'
-import { showConfirmationToast } from '../UIUC-Components/api-inputs/LLMsApiKeyInputForm'
+import type ChatUI from '~/utils/modelProviders/WebLLM'
+import { webLLMModels } from '~/utils/modelProviders/WebLLM'
+import { ImagePreview } from './ImagePreview'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -805,7 +803,7 @@ export const ChatInput = ({
 
   return (
     <div
-      className={`absolute bottom-0 left-0 w-full border-transparent bg-transparent pt-6 md:pt-2`}
+      className={`w-full border-transparent bg-transparent pt-6 md:pt-2`}
       style={{ pointerEvents: 'none' }}
     >
       <div
