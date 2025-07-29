@@ -1,9 +1,11 @@
 // src/components/Chat/Chat.tsx
+import { Button, Text } from '@mantine/core'
 import {
-  IconArrowRight,
   IconAlertCircle,
+  IconArrowRight,
   IconSettings,
 } from '@tabler/icons-react'
+import { useTranslation } from 'next-i18next'
 import {
   type MutableRefObject,
   memo,
@@ -13,28 +15,25 @@ import {
   useRef,
   useState,
 } from 'react'
-import { Button, Text } from '@mantine/core'
-import { useTranslation } from 'next-i18next'
 
-import posthog from 'posthog-js'
-import { throttle } from '@/utils/data/throttle'
-import { v4 as uuidv4 } from 'uuid'
 import {
   type ChatBody,
+  type Content,
   type Conversation,
   type Message,
-  type Content,
   type UIUCTool,
 } from '@/types/chat'
 import { type Plugin } from '@/types/plugin'
+import posthog from 'posthog-js'
+import { v4 as uuidv4 } from 'uuid'
 
 import HomeContext from '~/pages/api/home/home.context'
 
+import { fetchPresignedUrl } from '~/utils/apiUtils'
 import { ChatInput } from './ChatInput'
 import { ChatLoader } from './ChatLoader'
 import { ErrorMessageDiv } from './ErrorMessageDiv'
 import { MemoizedChatMessage } from './MemoizedChatMessage'
-import { fetchPresignedUrl } from '~/utils/apiUtils'
 
 import { type CourseMetadata } from '~/types/courseMetadata'
 
@@ -48,36 +47,37 @@ interface Props {
   documentCount: number | null
 }
 
+import { notifications } from '@mantine/notifications'
+import type * as webllm from '@mlc-ai/web-llm'
+import { MLCEngine } from '@mlc-ai/web-llm'
+import { useQueryClient } from '@tanstack/react-query'
+import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import { motion } from 'framer-motion'
+import { Montserrat } from 'next/font/google'
+import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useAuth } from 'react-oidc-context'
-import ChatNavbar from '../UIUC-Components/navbars/ChatNavbar'
-import { notifications } from '@mantine/notifications'
-import { Montserrat } from 'next/font/google'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import {
-  State,
-  getOpenAIKey,
-  handleContextSearch,
-  processChunkWithStateMachine,
-} from '~/utils/streamProcessing'
+import { useUpdateConversation } from '~/hooks/conversationQueries'
+import { useFetchEnabledDocGroups } from '~/hooks/docGroupsQueries'
+import { useDeleteMessages } from '~/hooks/messageQueries'
+import { CropwizardLicenseDisclaimer } from '~/pages/cropwizard-licenses'
 import {
   handleFunctionCall,
   handleToolCall,
   useFetchAllWorkflows,
 } from '~/utils/functionCalling/handleFunctionCalling'
-import { useFetchEnabledDocGroups } from '~/hooks/docGroupsQueries'
-import { CropwizardLicenseDisclaimer } from '~/pages/cropwizard-licenses'
-import Head from 'next/head'
-import ChatUI, { webLLMModels } from '~/utils/modelProviders/WebLLM'
-import { MLCEngine } from '@mlc-ai/web-llm'
-import type * as webllm from '@mlc-ai/web-llm'
-import { type WebllmModel } from '~/utils/modelProviders/WebLLM'
-import { handleImageContent } from '~/utils/streamProcessing'
-import { useQueryClient } from '@tanstack/react-query'
-import { useUpdateConversation } from '~/hooks/conversationQueries'
-import { motion } from 'framer-motion'
-import { useDeleteMessages } from '~/hooks/messageQueries'
 import { type AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
+import ChatUI, {
+  type WebllmModel,
+  webLLMModels,
+} from '~/utils/modelProviders/WebLLM'
+import {
+  State,
+  getOpenAIKey,
+  handleContextSearch,
+  handleImageContent,
+  processChunkWithStateMachine,
+} from '~/utils/streamProcessing'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -1909,7 +1909,7 @@ export const Chat = memo(
               <ChatNavbar bannerUrl={bannerUrl as string} isgpt4={true} />
             </div>
 */}
-            <div className="relative max-w-full flex-grow overflow-y-auto overflow-x-hidden">
+            <div className="relative max-w-full flex-1 overflow-y-auto overflow-x-hidden pb-32">
               {modelError ? (
                 <ErrorMessageDiv error={modelError} />
               ) : (
@@ -1925,7 +1925,7 @@ export const Chat = memo(
 
                   <motion.div
                     key={selectedConversation?.id}
-                    className="mt-4 max-h-full"
+                    className="max-h-full"
                     ref={chatContainerRef}
                     onScroll={handleScroll}
                     initial={{ opacity: 1, scale: 1 }}
@@ -1978,31 +1978,33 @@ export const Chat = memo(
                       </>
                     )}
                   </motion.div>
-
-                  {/* <div className="w-full max-w-[calc(100% - var(--sidebar-width))] mx-auto flex justify-center"> */}
-                  <ChatInput
-                    stopConversationRef={stopConversationRef}
-                    textareaRef={textareaRef}
-                    onSend={(message, plugin) => {
-                      handleSend(
-                        message,
-                        0,
-                        plugin,
-                        tools,
-                        enabledDocumentGroups,
-                        llmProviders,
-                      )
-                    }}
-                    onScrollDownClick={handleScrollDown}
-                    showScrollDownButton={showScrollDownButton}
-                    onRegenerate={() => handleRegenerate()}
-                    inputContent={inputContent}
-                    setInputContent={setInputContent}
-                    courseName={getCurrentPageName()}
-                    chat_ui={chat_ui}
-                  />
                 </>
               )}
+            </div>
+
+            {/* ChatInput moved outside scroll container and positioned at bottom */}
+            <div className="absolute bottom-0 left-0 right-0 z-10">
+              <ChatInput
+                stopConversationRef={stopConversationRef}
+                textareaRef={textareaRef}
+                onSend={(message, plugin) => {
+                  handleSend(
+                    message,
+                    0,
+                    plugin,
+                    tools,
+                    enabledDocumentGroups,
+                    llmProviders,
+                  )
+                }}
+                onScrollDownClick={handleScrollDown}
+                showScrollDownButton={showScrollDownButton}
+                onRegenerate={() => handleRegenerate()}
+                inputContent={inputContent}
+                setInputContent={setInputContent}
+                courseName={getCurrentPageName()}
+                chat_ui={chat_ui}
+              />
             </div>
           </div>
         </SourcesSidebarProvider>
