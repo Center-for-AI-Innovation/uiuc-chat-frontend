@@ -772,7 +772,7 @@ const Home = ({
         </Head>
         {selectedConversation && (
           <main
-            className={`flex h-screen w-screen flex-col pt-20 text-sm text-white dark:text-white`}
+            className={`flex h-screen w-screen flex-col pt-20  text-sm text-white dark:text-white`}
           >
             <Navbar isPlain={false} />
 
