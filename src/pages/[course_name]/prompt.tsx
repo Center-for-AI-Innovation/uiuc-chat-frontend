@@ -2424,7 +2424,7 @@ domain === 'technical' ? `TECHNICAL FRAMEWORK:
                                     weight={700}
                                     style={{ color: '#15B886' }}
                                   >
-                                    Define Your AI Assistant's Purpose
+                                    Define Your AI Assistant&apos;s Purpose
                                   </Text>
                                 }
                                 styles={(theme) => ({
