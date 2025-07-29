@@ -304,7 +304,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
       withBorder
       padding="none"
       radius="xl"
-      className="mt-[2%] w-[96%] md:w-[90%] 2xl:w-[90%]"
+      className="mt-[2%] w-[96%] md:w-full 2xl:w-[95%]"
       style={{
         backgroundColor: 'var(--background)',
         borderColor: 'var(--dashboard-border)',
@@ -347,7 +347,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
           </div>
           <div
             style={{
-              padding: '1rem',
+              // padding: '1rem',
               color: 'white',
               alignItems: 'center',
             }}
@@ -355,7 +355,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
           >
             <div className="card flex h-full flex-col">
               <Group
-                m="2rem"
+                m="1rem"
                 align="start"
                 variant="column"
                 style={{

@@ -1,13 +1,13 @@
 import {
   Button,
-  Title,
+  Card,
   Flex,
+  Group,
   List,
+  Stack,
   Text,
   TextInput,
-  Stack,
-  Card,
-  Group,
+  Title,
 } from '@mantine/core'
 import { useMediaQuery } from '@mantine/hooks'
 
@@ -19,24 +19,24 @@ import {
   IconExternalLink,
 } from '@tabler/icons-react'
 
-import { CannotEditCourse } from './CannotEditCourse'
 import { type CourseMetadata } from '~/types/courseMetadata'
+import { CannotEditCourse } from './CannotEditCourse'
 
-import { LoadingPlaceholderForAdminPages } from './MainPageBackground'
 import { notifications } from '@mantine/notifications'
+import SettingsLayout from '~/components/Layout/SettingsLayout'
 import GlobalFooter from './GlobalFooter'
-import Navbar from './navbars/Navbar'
+import { LoadingPlaceholderForAdminPages } from './MainPageBackground'
 import { N8nWorkflowsTable } from './N8nWorkflowsTable'
 
-import Head from 'next/head'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { fetchCourseMetadata } from '~/utils/apiUtils'
-import React, { useEffect, useState } from 'react'
-import { useRouter } from 'next/router'
 import { Montserrat } from 'next/font/google'
+import Head from 'next/head'
+import { useRouter } from 'next/router'
+import { useEffect, useState } from 'react'
+import { useAuth } from 'react-oidc-context'
+import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { useFetchAllWorkflows } from '~/utils/functionCalling/handleFunctionCalling'
 import { IntermediateStateAccordion } from './IntermediateStateAccordion'
-import { useAuth } from 'react-oidc-context'
 
 export const GetCurrentPageName = () => {
   // /CS-125/dashboard --> CS-125
@@ -314,9 +314,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
   // )
 
   return (
-    <>
-      <Navbar course_name={course_name} showSettingsNav={true} />
-
+    <SettingsLayout course_name={course_name}>
       <Head>
         <title>{course_name}</title>
         <meta
@@ -333,9 +331,10 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
               withBorder
               padding="none"
               radius="xl"
+              className="mt-[2%] w-[96%] md:w-full 2xl:w-[95%]"
               style={{
-                maxWidth: '90%',
-                width: '100%',
+                // maxWidth: '90%',
+                // width: '100%',
                 marginTop: '2%',
                 backgroundColor: 'var(--background)',
                 borderColor: 'var(--dashboard-border)',
@@ -620,7 +619,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
 
             <div
               // Course files header/background
-              className="mx-auto mt-[2%] w-[85%] items-start rounded-2xl bg-[--background] text-[--foreground]"
+              className="mx-auto mt-[2%] w-[96%] items-start rounded-2xl bg-[--background] text-[--foreground] md:w-full 2xl:w-[95%]"
               style={{ zIndex: 1 }}
             >
               <Flex direction="row" justify="space-between">
@@ -663,7 +662,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
         </div>
         <GlobalFooter />
       </main>
-    </>
+    </SettingsLayout>
   )
 }
 

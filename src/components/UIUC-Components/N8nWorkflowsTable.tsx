@@ -197,8 +197,8 @@ export const N8nWorkflowsTable = ({
         Your n8n tools
       </Title> */}
       <Text
-        w={isWideScreen ? '85%' : '92%'}
-        className="pb-2 text-[--dashboard-foreground]"
+        // w={isWideScreen ? '85%' : '92%'}
+        className="w-[96%] pb-2 text-[--dashboard-foreground] md:w-full 2xl:w-[95%]"
       >
         These tools can be automatically invoked by the LLM to fetch additional
         data to answer user questions on the{' '}
@@ -217,7 +217,7 @@ export const N8nWorkflowsTable = ({
       </Text>
 
       {/* dataTable styling options https://icflorescu.github.io/mantine-datatable/examples/overriding-the-default-styles/  */}
-      <div className="n8n_workflows_table w-full max-w-[85%]">
+      <div className="n8n_workflows_table w-[96%] md:w-full 2xl:w-[95%]">
         <DataTable
           height={500}
           styles={{

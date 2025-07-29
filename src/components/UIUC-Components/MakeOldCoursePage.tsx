@@ -1,31 +1,17 @@
+import { Flex } from '@mantine/core'
 import Head from 'next/head'
-import {
-  Title,
-  Flex,
-  Blockquote,
-  Text,
-  List,
-  Tabs,
-  Indicator,
-  Paper,
-  Card,
-} from '@mantine/core'
-import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
+import { useEffect, useState } from 'react'
 
-import Navbar from './navbars/Navbar'
-import GlobalFooter from './GlobalFooter'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import SettingsLayout from '~/components/Layout/SettingsLayout'
 import { fetchPresignedUrl } from '~/utils/apiUtils'
-import { DocGroupsTable } from './DocGroupsTable'
-import { ProjectFilesTable } from './ProjectFilesTable'
-import { IconInfoCircle } from '@tabler/icons-react'
+import GlobalFooter from './GlobalFooter'
 
-import { CannotEditCourse } from './CannotEditCourse'
 import { type CourseMetadata } from '~/types/courseMetadata'
-import { UploadCard } from './UploadCard'
+import { CannotEditCourse } from './CannotEditCourse'
 import DocumentGroupsCard from './DocumentGroupsCard'
 import DocumentsCard from './DocumentsCard'
+import { UploadCard } from './UploadCard'
 
 const MakeOldCoursePage = ({
   course_name,
@@ -81,13 +67,7 @@ const MakeOldCoursePage = ({
   }
 
   return (
-    <>
-      <Navbar
-        course_name={course_name}
-        bannerUrl={bannerUrl}
-        showSettingsNav={true}
-      />
-
+    <SettingsLayout course_name={course_name} bannerUrl={bannerUrl}>
       <Head>
         <title>{course_name} - Admin page - UIUC.chat</title>
         <meta
@@ -117,7 +97,7 @@ const MakeOldCoursePage = ({
         </div>
         <GlobalFooter />
       </main>
-    </>
+    </SettingsLayout>
   )
 }
 

@@ -1,22 +1,11 @@
 import Head from 'next/head'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
-import Navbar from './navbars/Navbar'
-import {
-  Button,
-  Card,
-  Flex,
-  Group,
-  Textarea,
-  TextInput,
-  Title,
-  Tooltip,
-  Loader,
-} from '@mantine/core'
+import { Card } from '@mantine/core'
 import { useMediaQuery } from '@mantine/hooks'
 import router from 'next/router'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { createProject } from '~/pages/api/UIUC-api/createProject'
+import Navbar from './navbars/Navbar'
 
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 
@@ -113,7 +102,7 @@ const Dashboard = ({
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main
-        className="course-page-main"
+        className="course-page-main mt-20"
         style={{
           minHeight: '100vh',
           padding: '1rem',

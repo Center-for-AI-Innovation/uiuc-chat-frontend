@@ -1,66 +1,59 @@
-import React, { useEffect, useState, forwardRef } from 'react'
 import {
+  ActionIcon,
   Button,
-  Text,
-  Slider,
   Card,
   Flex,
-  Title,
-  Stack,
-  Input,
-  ActionIcon,
-  TextInput,
-  Select,
   Group,
+  Input,
+  Select,
+  Stack,
+  Text,
+  TextInput,
+  Title,
 } from '@mantine/core'
-import Image from 'next/image'
-import { useQueryClient } from '@tanstack/react-query'
+import { notifications } from '@mantine/notifications'
+import { IconAlertCircle, IconCheck, IconX } from '@tabler/icons-react'
 import { useForm, type FieldApi } from '@tanstack/react-form'
+import { useQueryClient } from '@tanstack/react-query'
+import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import Head from 'next/head'
+import Image from 'next/image'
+import React, { forwardRef, useEffect, useState } from 'react'
+import { getModelLogo } from '~/components/Chat/ModelSelect'
+import SettingsLayout from '~/components/Layout/SettingsLayout'
 import {
   useGetProjectLLMProviders,
   useSetProjectLLMProviders,
 } from '~/hooks/useProjectAPIKeys'
 import {
+  LLM_PROVIDER_ORDER,
   type AllLLMProviders,
   type AnthropicProvider,
   type AnySupportedModel,
   type AzureProvider,
+  type BedrockProvider,
+  type GeminiProvider,
   type LLMProvider,
   type NCSAHostedProvider,
+  type NCSAHostedVLMProvider,
   type OllamaProvider,
   type OpenAIProvider,
   type ProviderNames,
-  type WebLLMProvider,
-  type NCSAHostedVLMProvider,
-  type BedrockProvider,
-  type GeminiProvider,
   type SambaNovaProvider,
-  LLM_PROVIDER_ORDER,
+  type WebLLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
-import { notifications } from '@mantine/notifications'
-import {
-  IconAlertCircle,
-  IconCheck,
-  IconChevronDown,
-  IconX,
-} from '@tabler/icons-react'
 import { GetCurrentPageName } from '../CanViewOnlyCourse'
 import GlobalFooter from '../GlobalFooter'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import Navbar from '../navbars/Navbar'
-import Head from 'next/head'
-import OpenAIProviderInput from './providers/OpenAIProviderInput'
 import AnthropicProviderInput from './providers/AnthropicProviderInput'
 import AzureProviderInput from './providers/AzureProviderInput'
-import OllamaProviderInput from './providers/OllamaProviderInput'
-import WebLLMProviderInput from './providers/WebLLMProviderInput'
-import NCSAHostedLLmsProviderInput from './providers/NCSAHostedProviderInput'
-import { getModelLogo } from '~/components/Chat/ModelSelect'
-import NCSAHostedVLMProviderInput from './providers/NCSAHostedVLMProviderInput'
-import { t } from 'i18next'
 import BedrockProviderInput from './providers/BedrockProviderInput'
 import GeminiProviderInput from './providers/GeminiProviderInput'
+import NCSAHostedLLmsProviderInput from './providers/NCSAHostedProviderInput'
+import NCSAHostedVLMProviderInput from './providers/NCSAHostedVLMProviderInput'
+import OllamaProviderInput from './providers/OllamaProviderInput'
+import OpenAIProviderInput from './providers/OpenAIProviderInput'
 import SambaNovaProviderInput from './providers/SambaNovaProviderInput'
+import WebLLMProviderInput from './providers/WebLLMProviderInput'
 
 const isSmallScreen = false
 
@@ -590,9 +583,7 @@ export default function APIKeyInputForm() {
   // }
 
   return (
-    <>
-      <Navbar course_name={projectName} showSettingsNav={true} />
-
+    <SettingsLayout course_name={projectName}>
       <Head>
         <title>{projectName}/LLMs</title>
         <meta
@@ -609,9 +600,10 @@ export default function APIKeyInputForm() {
               withBorder
               padding="none"
               radius="xl"
+              className="mt-[2%] w-[96%] md:w-full 2xl:w-[95%]"
               style={{
-                maxWidth: '90%',
-                width: '100%',
+                // maxWidth: '90%',
+                // width: '100%',
                 marginTop: '2%',
                 backgroundColor: 'var(--background)',
                 borderColor: 'var(--dashboard-border)',
@@ -969,7 +961,7 @@ export default function APIKeyInputForm() {
         </div>
         <GlobalFooter />
       </main>
-    </>
+    </SettingsLayout>
   )
 }
 
