@@ -1,4 +1,4 @@
-import { IconFileExport, IconSettings } from '@tabler/icons-react'
+import { IconFileExport } from '@tabler/icons-react'
 import { useContext, useState } from 'react'
 
 import { useTranslation } from 'next-i18next'
@@ -7,6 +7,7 @@ import HomeContext from '~/pages/api/home/home.context'
 
 import { Key } from '../../Settings/Key'
 import { SidebarButton } from '../../Sidebar/SidebarButton'
+import { ThemeToggle } from '../../UIUC-Components/ThemeToggle'
 import ChatbarContext from '../Chatbar.context'
 import { ClearConversations } from './ClearConversations'
 
@@ -47,6 +48,13 @@ export const ChatbarSettings = () => {
       {!serverSideApiKeyIsSet ? (
         <Key apiKey={apiKey} onApiKeyChange={handleApiKeyChange} />
       ) : null}
+
+      {/* Theme Toggle */}
+      <div className="mt-auto w-full border-t border-[--dashboard-border] pt-4">
+        <div className="flex w-full items-center justify-center rounded-lg px-2 py-2">
+          <ThemeToggle />
+        </div>
+      </div>
     </div>
   )
 }

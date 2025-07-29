@@ -1,15 +1,14 @@
 import { IconFolderPlus, IconMistOff, IconPlus } from '@tabler/icons-react'
 import { type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Switch } from '@mantine/core'
 
 import {
   CloseSidebarButton,
   OpenSidebarButton,
 } from './components/OpenCloseButton'
 
-import Search from '../Search'
 import { type FolderWithConversation } from '~/types/folder'
+import Search from '../Search'
 
 interface Props<T> {
   isOpen: boolean
@@ -128,6 +127,7 @@ const Sidebar = <T,>({
             </div>
           )}
         </div>
+
         {footerComponent}
       </div>
 
