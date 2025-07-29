@@ -1914,14 +1914,23 @@ export const Chat = memo(
                 <ErrorMessageDiv error={modelError} />
               ) : (
                 <>
-                  <button
-                    className="absolute right-4 top-4 rounded-md border border-[--background-faded] p-[.15rem] text-[--foreground] hover:bg-[--background-faded] hover:text-[--foreground]"
-                    onClick={() => {
-                      if (courseName) router.push(`/${courseName}/dashboard`)
-                    }}
-                  >
-                    <IconSettings stroke={1} className="scale-75" />
-                  </button>
+                  <div className="group absolute right-4 top-4">
+                    <button
+                      className="rounded-md bg-[--dashboard-button] p-2 text-[--dashboard-button-foreground] transition-opacity hover:opacity-80"
+                      onClick={() => {
+                        if (courseName) router.push(`/${courseName}/dashboard`)
+                      }}
+                    >
+                      <IconSettings
+                        stroke={2}
+                        size={20}
+                        color="var(--dashboard-button-foreground)"
+                      />
+                    </button>
+                    <div className="pointer-events-none absolute right-0 top-full z-50 mt-2 whitespace-nowrap rounded bg-[--background-faded] px-2 py-1 text-sm text-[--foreground] opacity-0 transition-opacity group-hover:opacity-100">
+                      Admin Dashboard
+                    </div>
+                  </div>
 
                   <motion.div
                     key={selectedConversation?.id}

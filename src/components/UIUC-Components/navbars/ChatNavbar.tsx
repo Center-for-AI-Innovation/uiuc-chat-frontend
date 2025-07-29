@@ -248,26 +248,9 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
           className="navbar"
         >
           <Link href="/" style={{ flex: 'none', flexWrap: 'nowrap' }}>
-            <div
-              className={`flex items-center gap-1 font-bold ${montserrat_heading.variable} font-montserratHeading`}
-            >
-              <div style={{ width: '2.5rem', height: '2.5rem' }}>
-                <img
-                  src="/media/logo_illinois.png"
-                  width="auto"
-                  height="100%"
-                  alt="Illinois Logo"
-                  style={{ objectFit: 'contain' }}
-                />
-              </div>
-              <div className="text-2xl font-extrabold tracking-tight text-[--illinois-orange] sm:ml-2 sm:text-[2rem] md:text-3xl">
-                Illinois
-              </div>
-              <br />
-              <div className="text-2xl font-extrabold tracking-tight text-[--foreground] sm:text-[2rem] md:text-3xl">
-                Chat
-              </div>
-            </div>
+            <h2 className="cursor-pointer font-extrabold tracking-tight text-[--primary] sm:ms-3 sm:text-[2rem] sm:text-[2rem] md:text-3xl">
+              Illinois <span className="text-[--navbar-text]">Chat</span>
+            </h2>
           </Link>
 
           <div className="pl-4">

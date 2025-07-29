@@ -210,7 +210,7 @@ function Logo() {
             Illinois
           </div>
           <br />
-          <div className="text-2xl font-extrabold tracking-tight text-white sm:text-[1.8rem]">
+          <div className="text-2xl font-extrabold tracking-tight text-[--foreground] sm:text-[1.8rem]">
             Chat
           </div>
         </div>
