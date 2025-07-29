@@ -1,7 +1,3 @@
-import Link from 'next/link'
-import { useDisclosure } from '@mantine/hooks'
-import Image from 'next/image'
-import { useEffect, useState, useContext, useRef } from 'react'
 import {
   Burger,
   Container,
@@ -11,20 +7,21 @@ import {
   Paper,
   rem,
   Transition,
-  Avatar,
-  Menu,
 } from '@mantine/core'
-import { IconHome, IconSettings, IconPlus } from '@tabler/icons-react'
-import { useRouter } from 'next/router'
+import { useDisclosure } from '@mantine/hooks'
+import { IconHome, IconPlus, IconSettings } from '@tabler/icons-react'
 import { montserrat_heading } from 'fonts'
+import Image from 'next/image'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
+import { useContext, useEffect, useRef, useState } from 'react'
 
+import { usePostHog } from 'posthog-js/react'
 import { useAuth } from 'react-oidc-context'
-import { type CourseMetadata } from '~/types/courseMetadata'
 import HomeContext from '~/pages/api/home/home.context'
 import { UserSettings } from '../../Chat/UserSettings'
-import { usePostHog } from 'posthog-js/react'
-import { AuthMenu } from './AuthMenu'
 import { ThemeToggle } from '../ThemeToggle'
+import { AuthMenu } from './AuthMenu'
 
 const styles: Record<string, React.CSSProperties> = {
   logoContainerBox: {
@@ -251,9 +248,26 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
           className="navbar"
         >
           <Link href="/" style={{ flex: 'none', flexWrap: 'nowrap' }}>
-            <h2 className="cursor-pointer font-extrabold tracking-tight text-[--primary] sm:ms-3 sm:text-[2rem] sm:text-[2rem] md:text-3xl">
-              Illinois <span className="text-[--navbar-text]">Chat</span>
-            </h2>
+            <div
+              className={`flex items-center gap-1 font-bold ${montserrat_heading.variable} font-montserratHeading`}
+            >
+              <div style={{ width: '2.5rem', height: '2.5rem' }}>
+                <img
+                  src="/media/logo_illinois.png"
+                  width="auto"
+                  height="100%"
+                  alt="Illinois Logo"
+                  style={{ objectFit: 'contain' }}
+                />
+              </div>
+              <div className="text-2xl font-extrabold tracking-tight text-[--illinois-orange] sm:ml-2 sm:text-[2rem] md:text-3xl">
+                Illinois
+              </div>
+              <br />
+              <div className="text-2xl font-extrabold tracking-tight text-[--foreground] sm:text-[2rem] md:text-3xl">
+                Chat
+              </div>
+            </div>
           </Link>
 
           <div className="pl-4">

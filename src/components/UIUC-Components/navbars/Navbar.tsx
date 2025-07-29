@@ -195,10 +195,25 @@ function Logo() {
   return (
     <div className="flex-1">
       <Link href="/">
-        <h2 className="ms-4 cursor-pointer text-2xl font-extrabold tracking-tight text-white sm:text-[1.8rem]">
-          <span className="text-[--illinois-orange]">Illinois</span>{' '}
-          <span className="text-[--foreground]">Chat</span>
-        </h2>
+        <div
+          className={`ms-4 flex items-center gap-1 font-bold ${montserrat_heading.variable} font-montserratHeading`}
+        >
+          <div style={{ width: '2.5rem', height: '2.5rem' }}>
+            <img
+              src="/media/logo_illinois.png"
+              width="auto"
+              height="100%"
+              alt="Illinois Logo"
+            />
+          </div>
+          <div className="text-2xl font-extrabold tracking-tight text-[--illinois-orange] sm:ml-2 sm:text-[1.8rem]">
+            Illinois
+          </div>
+          <br />
+          <div className="text-2xl font-extrabold tracking-tight text-white sm:text-[1.8rem]">
+            Chat
+          </div>
+        </div>
       </Link>
     </div>
   )
