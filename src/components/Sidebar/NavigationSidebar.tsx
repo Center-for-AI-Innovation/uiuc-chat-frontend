@@ -10,6 +10,7 @@ import {
   MessageCode,
   ReportAnalytics,
 } from 'tabler-icons-react'
+import { ThemeToggle } from '../UIUC-Components/ThemeToggle'
 
 interface NavItem {
   name: React.ReactNode
@@ -402,6 +403,13 @@ export default function NavigationSidebar({
                 {item.name}
               </Link>
             ))}
+          </div>
+
+          {/* Theme Toggle at the bottom */}
+          <div className="mt-auto border-t border-[--dashboard-border] pt-4">
+            <div className="flex w-full justify-center">
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </div>

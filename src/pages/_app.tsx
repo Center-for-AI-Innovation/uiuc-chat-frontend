@@ -87,7 +87,7 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
             <ReactQueryDevtools
               initialIsOpen={false}
               position="left"
-              buttonPosition="bottom-left"
+              buttonPosition="bottom-right"
             />
             <MantineProvider
               withGlobalStyles
