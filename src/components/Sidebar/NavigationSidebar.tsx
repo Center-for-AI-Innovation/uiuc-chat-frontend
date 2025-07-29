@@ -364,16 +364,14 @@ export default function NavigationSidebar({
             }}
           >
             <IconChevronLeft size={16} />
-            <div
-              className={`${montserrat_heading.variable} font-montserratHeading`}
-            >
-              Back to Chat
-            </div>
+            <NavText>Back to Chat</NavText>
           </button>
 
           {/* Breadcrumb */}
           <div className={classes.breadcrumb}>
-            <div className="flex items-center gap-2">
+            <div
+              className={`flex items-center gap-2 ${montserrat_heading.variable} font-montserratHeading`}
+            >
               <span>Chatbot</span>
               <span>/</span>
               <span className="font-semibold text-[--foreground]">
