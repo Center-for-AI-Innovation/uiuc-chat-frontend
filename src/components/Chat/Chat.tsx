@@ -363,9 +363,17 @@ export const Chat = memo(
 
           let updatedConversation: Conversation
           if (deleteCount) {
+            // ✅ FIXED: Don't clear contexts if they come from a file upload
+            const isFileUploadMessage = Array.isArray(message.content) && message.content.some(c => 
+              typeof c === 'object' && c.text?.includes('📎 Uploaded file:')
+            )
+            
+            if (!isFileUploadMessage) {
+              message.contexts = []
+            }
+
             // Remove tools from message to clear old tools
             message.tools = []
-            message.contexts = []
             tools.forEach((tool) => {
               tool.aiGeneratedArgumentValues = undefined
               tool.output = undefined
@@ -420,7 +428,7 @@ export const Chat = memo(
             value: updatedConversation.messages,
           })
           updateConversationMutation.mutate(updatedConversation)
-
+          
           homeDispatch({ field: 'loading', value: true })
           homeDispatch({ field: 'messageIsStreaming', value: true })
           const controller = new AbortController()
@@ -479,22 +487,34 @@ export const Chat = memo(
             })
           }
 
-          // Updated condition to include conversation files
+          // ✅ FIXED: Check if this is a file upload message with contexts
+          const isFileUploadMessageWithContexts = Array.isArray(message.content) && 
+            message.content.some(c => 
+              typeof c === 'object' && c.text?.includes('📎 Uploaded file:')
+            ) && 
+            message.contexts && 
+            Array.isArray(message.contexts) && 
+            message.contexts.length > 0
+          // Updated condition to include conversation files AND current file upload message with contexts
           const hasAnyDocuments =
             (documentCount || 0) > 0 ||
-            hasConversationFiles(selectedConversation)
+            hasConversationFiles(selectedConversation) ||
+            isFileUploadMessageWithContexts
 
-          // Skip vector search entirely if there are no documents AND no conversation files
+          // Skip vector search entirely if there are no documents AND no conversation files AND no file upload contexts
           if (!hasAnyDocuments) {
             homeDispatch({ field: 'wasQueryRewritten', value: false })
             homeDispatch({ field: 'queryRewriteText', value: null })
             message.wasQueryRewritten = undefined
             message.queryRewriteText = undefined
-            message.contexts = []
+            // ✅ FIXED: Don't clear contexts if this is a file upload message with contexts
+            if (!isFileUploadMessageWithContexts) {
+              message.contexts = []
+            }
           } else {
             // Action 2: Context Retrieval: Vector Search
             let rewrittenQuery = searchQuery // Default to original query
-
+            
             // Skip query rewrite if disabled in course metadata, if it's the first message, or if there are no documents
             if (
               courseMetadata?.vector_search_rewrite_disabled ||

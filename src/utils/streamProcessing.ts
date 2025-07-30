@@ -422,6 +422,10 @@ export const handleContextSearch = async (
   searchQuery: string,
   documentGroups: string[],
 ): Promise<ContextWithMetadata[]> => {
+  // Check if this message already has contexts (from file upload)
+  if (message.contexts && Array.isArray(message.contexts) && message.contexts.length > 0) {
+    return message.contexts
+  }
   if (courseName !== 'gpt4') {
     const token_limit = selectedConversation.model.tokenLimit
     const useMQRetrieval = false
@@ -432,7 +436,7 @@ export const handleContextSearch = async (
       searchQuery,
       token_limit,
       documentGroups,
-      selectedConversation.id,
+      '',
     )
 
     message.contexts = curr_contexts as ContextWithMetadata[]
