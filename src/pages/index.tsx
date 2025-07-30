@@ -806,7 +806,7 @@ const Home: NextPage = () => {
           </h4>
           <div className="mt-4 grid grid-cols-1 gap-14 sm:grid-cols-2 md:gap-8">
             <Link
-              className="duration-600 flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] transition-transform hover:scale-[1.01] sm:p-8"
+              className="duration-600 flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6 transition-transform hover:scale-[1.01]"
               href="https://github.com/Center-for-AI-Innovation/uiuc-chat-frontend"
               target="_blank"
             >
