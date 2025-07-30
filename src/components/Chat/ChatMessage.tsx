@@ -1,15 +1,5 @@
 // ChatMessage.tsx
-import React, {
-  memo,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
-  createContext,
-  useContext as useReactContext,
-} from 'react'
-import { Text, createStyles, Badge, Tooltip } from '@mantine/core'
+import { Badge, Text, Tooltip, createStyles } from '@mantine/core'
 import {
   IconCheck,
   IconEdit,
@@ -17,32 +7,42 @@ import {
   IconUser,
   IconX,
 } from '@tabler/icons-react'
+import React, {
+  createContext,
+  memo,
+  useCallback,
+  useContext,
+  useEffect,
+  useContext as useReactContext,
+  useRef,
+  useState,
+} from 'react'
 
-import { useTranslation } from 'next-i18next'
 import {
   type Content,
   type ContextWithMetadata,
   type Message,
 } from '@/types/chat'
+import { useTranslation } from 'next-i18next'
 import HomeContext from '~/pages/api/home/home.context'
+import { fetchPresignedUrl } from '~/utils/apiUtils'
 import { CodeBlock } from '../Markdown/CodeBlock'
 import { MemoizedReactMarkdown } from '../Markdown/MemoizedReactMarkdown'
-import { ImagePreview } from './ImagePreview'
 import { LoadingSpinner } from '../UIUC-Components/LoadingSpinner'
-import { fetchPresignedUrl } from '~/utils/apiUtils'
-import ThinkTagDropdown, { extractThinkTagContent } from './ThinkTagDropdown'
+import SourcesSidebar from '../UIUC-Components/SourcesSidebar'
+import { ImagePreview } from './ImagePreview'
 import MessageActions from './MessageActions'
+import ThinkTagDropdown, { extractThinkTagContent } from './ThinkTagDropdown'
 
-import rehypeMathjax from 'rehype-mathjax'
-import remarkGfm from 'remark-gfm'
-import remarkMath from 'remark-math'
+import { saveConversationToServer } from '@/utils/app/conversation'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import rehypeMathjax from 'rehype-mathjax'
+import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
 import { IntermediateStateAccordion } from '../UIUC-Components/IntermediateStateAccordion'
 import { FeedbackModal } from './FeedbackModal'
-import { saveConversationToServer } from '@/utils/app/conversation'
-import SourcesSidebar from '../UIUC-Components/SourcesSidebar'
 
 const useStyles = createStyles((theme) => ({
   imageContainerStyle: {
@@ -105,6 +105,16 @@ export const SourcesSidebarProvider: React.FC<{
   const [activeSidebarMessageId, setActiveSidebarMessageId] = useState<
     string | null
   >(null)
+
+  // Close sidebar when conversations change by listening to context changes
+  const {
+    state: { selectedConversation },
+  } = useContext(HomeContext)
+
+  useEffect(() => {
+    // Close sidebar when conversation changes
+    setActiveSidebarMessageId(null)
+  }, [selectedConversation?.id])
 
   return (
     <SourcesSidebarContext.Provider
@@ -1815,9 +1825,11 @@ export const ChatMessage = memo(
                             className="group/button relative flex items-center gap-0 rounded-xl bg-[--dashboard-button] px-3 py-1.5 text-sm font-medium text-[--dashboard-button-foreground] transition-all duration-200 hover:bg-[--dashboard-button-hover]"
                             onClick={() => handleSourcesSidebarToggle(true)}
                           >
-                            <span className="whitespace-nowrap">
+                            <span
+                              className={`whitespace-nowrap ${montserrat_paragraph.variable} font-montserratParagraph font-bold`}
+                            >
                               Sources
-                              <span className="ml-0.5 rounded-full bg-[--background] bg-gray-100 px-1.5 py-0.5 text-xs text-[--foreground]">
+                              <span className="ml-0.5 rounded-full bg-[--background] px-1.5 py-0.5 text-xs text-[--foreground]">
                                 {getContextsLength(message.contexts)}
                               </span>
                             </span>
