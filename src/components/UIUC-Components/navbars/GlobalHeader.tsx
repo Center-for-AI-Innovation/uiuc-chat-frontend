@@ -1,4 +1,9 @@
-import { IconClipboardText, IconNews, IconSparkles } from '@tabler/icons-react'
+import {
+  IconClipboardText,
+  IconHome,
+  IconNews,
+  IconSparkles,
+} from '@tabler/icons-react'
 import { Menu2 } from 'tabler-icons-react'
 
 import { useAuth } from 'react-oidc-context'
@@ -97,13 +102,17 @@ export function LandingPageHeader({
   const [menuPosition, setMenuPosition] = useState({ right: '20px' })
 
   // Determine which elements should be visible based on screen width
-  const showDocsInNav = windowWidth >= 640 // Changed from 768 to 568 (subtract 200px)
-  const showNewsInNav = windowWidth >= 700 // Changed from 900 to 700 (subtract 200px)
-  const showNewProjectInNav = windowWidth >= 824 // Changed from 1024 to 824 (subtract 200px)
+  const showMyChatbotsInNav = windowWidth >= 580 // New: My Chatbots button
+  const showDocsInNav = windowWidth >= 680 // Adjusted to make room for My Chatbots
+  const showNewsInNav = windowWidth >= 740 // Adjusted to make room for My Chatbots
+  const showNewProjectInNav = windowWidth >= 864 // Adjusted to make room for My Chatbots
 
   // Fix for hamburger menu logic to ensure menu is shown until all items are visible in nav
   const showHamburgerMenu =
-    (!showDocsInNav || !showNewsInNav || !showNewProjectInNav) &&
+    (!showMyChatbotsInNav ||
+      !showDocsInNav ||
+      !showNewsInNav ||
+      !showNewProjectInNav) &&
     forGeneralPurposeNotLandingpage === false
 
   // Update window width on resize
@@ -176,11 +185,22 @@ export function LandingPageHeader({
 
   // Modify this effect to only reset the menu when ALL nav items are visible
   useEffect(() => {
-    if (showDocsInNav && showNewsInNav && showNewProjectInNav) {
+    if (
+      showMyChatbotsInNav &&
+      showDocsInNav &&
+      showNewsInNav &&
+      showNewProjectInNav
+    ) {
       setIsMenuOpen(false)
       setMenuVisible(false)
     }
-  }, [windowWidth, showDocsInNav, showNewsInNav, showNewProjectInNav])
+  }, [
+    windowWidth,
+    showMyChatbotsInNav,
+    showDocsInNav,
+    showNewsInNav,
+    showNewProjectInNav,
+  ])
 
   // Handle link click to close menu
   const handleLinkClick = (e: React.MouseEvent) => {
@@ -343,6 +363,27 @@ export function LandingPageHeader({
                 </Link>
               )}
 
+              {showMyChatbotsInNav && (
+                <Link href="/chatbots" className={classes.link}>
+                  <span className="flex items-center">
+                    <IconHome
+                      size={18}
+                      strokeWidth={2}
+                      style={{
+                        marginRight: '8px',
+                        color: 'var(--illinois-orange)',
+                      }}
+                    />
+                    <span
+                      className={`${montserrat_heading.variable} font-montserratHeading`}
+                      style={{ color: 'var(--illinois-orange)' }}
+                    >
+                      My Chatbots
+                    </span>
+                  </span>
+                </Link>
+              )}
+
               {showNewProjectInNav && (
                 <Link href="/new" className={classes.link}>
                   <span className="flex items-center">
@@ -453,6 +494,32 @@ export function LandingPageHeader({
                           style={{ color: 'var(--illinois-orange)' }}
                         >
                           News
+                        </span>
+                      </div>
+                    </Link>
+                  )}
+
+                  {/* Show My Chatbots in dropdown whenever not visible in main nav */}
+                  {!showMyChatbotsInNav && (
+                    <Link
+                      href="/chatbots"
+                      className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
+                      onClick={(e) => handleLinkClick(e)}
+                    >
+                      <div className="menu-item-content flex items-center p-2">
+                        <IconHome
+                          size={18}
+                          strokeWidth={2}
+                          style={{
+                            marginRight: '8px',
+                            color: 'var(--illinois-orange)',
+                          }}
+                        />
+                        <span
+                          className={`${montserrat_heading.variable} font-montserratHeading`}
+                          style={{ color: 'var(--illinois-orange)' }}
+                        >
+                          My Chatbots
                         </span>
                       </div>
                     </Link>
