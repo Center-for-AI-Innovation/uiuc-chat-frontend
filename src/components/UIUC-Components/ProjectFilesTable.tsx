@@ -4,57 +4,52 @@ import {
   ActionIcon,
   Box,
   Button,
-  Modal,
-  Group,
-  MultiSelect,
-  Text,
-  Paper,
-  Center,
-  Stack,
-  Image,
-  createStyles,
-  type MantineTheme,
-  TextInput,
   Code,
   CopyButton,
-  Tooltip,
+  Group,
+  Image,
   Indicator,
+  Modal,
+  MultiSelect,
+  Paper,
+  Stack,
+  Text,
+  TextInput,
+  Tooltip,
+  createStyles,
+  type MantineTheme,
 } from '@mantine/core'
+import { notifications, showNotification } from '@mantine/notifications'
 import {
   IconAlertTriangle,
   IconCheck,
   IconCopy,
   IconEye,
-  IconFileExport,
   IconTrash,
   IconX,
 } from '@tabler/icons-react'
-import Link from 'next/link'
+import axios from 'axios'
 import { DataTable, type DataTableSortStatus } from 'mantine-datatable'
 import { createRef, useEffect, useRef, useState } from 'react'
-import axios from 'axios'
-import { notifications, showNotification } from '@mantine/notifications'
-import styled, { createGlobalStyle } from 'styled-components'
+import { createGlobalStyle } from 'styled-components'
 
+import { useMediaQuery } from '@mantine/hooks'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import { useRouter } from 'next/router'
 import {
   type CourseDocument,
   type DocumentGroup,
 } from 'src/types/courseMaterials'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { fetchPresignedUrl } from '~/utils/apiUtils'
 import {
   useAppendToDocGroup,
   useGetDocumentGroups,
   useRemoveFromDocGroup,
 } from '~/hooks/docGroupsQueries'
-import { LoadingSpinner } from './LoadingSpinner'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { useMediaQuery } from '@mantine/hooks'
-import { IconInfoCircleFilled } from '@tabler/icons-react'
 import { handleExport } from '~/pages/api/UIUC-api/exportAllDocuments'
+import { fetchPresignedUrl } from '~/utils/apiUtils'
+import { LoadingSpinner } from './LoadingSpinner'
 import { showToastOnUpdate } from './MakeQueryAnalysisPage'
-import { useRouter } from 'next/router'
-import { tabWidth } from 'prettier.config.cjs'
 
 // export const getCurrentPageName = () => {
 //   const router = useRouter()
@@ -1280,6 +1275,7 @@ export function ProjectFilesTable({
           opened={modalOpened}
           onClose={() => setModalOpened(false)}
           title="Please confirm your action"
+          centered
           styles={{
             header: {
               backgroundColor: 'var(--modal)',
@@ -1405,6 +1401,7 @@ export function ProjectFilesTable({
           opened={exportModalOpened}
           onClose={() => setExportModalOpened(false)}
           title="Please confirm your action"
+          centered
         >
           <Text size="sm" style={{ color: 'white' }}>
             {`Are you sure you want to export all the documents and embeddings?`}
