@@ -189,6 +189,19 @@
   --notification-border: rgba(255, 255, 255, 20%);
   --notification-highlight: var(--primary);
 
+  --sources-foreground: var(--foreground);
+  --sources-background: var(--background-dark);
+  --sources-border: var(--dashboard-border);
+  --sources-border-hover: var(--illinois-orange);
+  --sources-header-background: var(--background-dark);
+  --sources-item-background: var(--background);
+  --sources-item-header-background: var(--background-faded);
+  --sources-badge: color-mix(
+    in srgb,
+    var(--sources-foreground),
+    var(--sources-background) 60%
+  );
+
   --dashboard-stat: var(
     --accent
   ); /* #3b75af; not offical uiuc colors, --accent is */
@@ -1212,7 +1225,7 @@ https://icflorescu.github.io/mantine-datatable/examples/records-selection/
 
 .n8n_workflows_table .mantine-ScrollArea-viewport,
 .project_files_table .mantine-ScrollArea-viewport {
-  > div > div {
+  > div > div:not(.mantine-MultiSelect-itemsWrapper) {
     display: none; /* hack to hide the scroll shadows */
   }
 }

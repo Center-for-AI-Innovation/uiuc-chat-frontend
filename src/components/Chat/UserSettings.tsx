@@ -35,11 +35,14 @@ const useStyles = createStyles((theme) => ({
     fontFamily: montserrat_paragraph.variable,
     '&:hover': {
       color: 'white',
-      background: 'var(--modal-active)',
+      backgroundColor: 'var(--modal-active)',
     },
     '&[data-active="true"]': {
-      background:
-        'linear-gradient(to right, var(--modal-active), var(--modal))',
+      backgroundColor: 'var(--modal-active)',
+      '&:hover': {
+        color: 'white',
+        backgroundColor: 'var(--modal-active)',
+      },
     },
     whiteSpace: 'normal',
   },
@@ -100,7 +103,9 @@ export const UserSettings = () => {
 
   return (
     <Modal.Root opened={opened} onClose={handleClose} centered size={'800px'}>
-      <Modal.Overlay style={{ width: '100%', color: '#1d1f33' }} />
+      <Modal.Overlay
+        style={{ width: '100%', color: 'var(--background-faded)' }}
+      />
       <Modal.Content
         className={`${classes.modalContent} ${isSmallScreen ? 'p-2' : 'p-4'} overflow-x-hidden bg-[--modal] text-[--modal-text] md:rounded-lg`}
       >
@@ -113,6 +118,7 @@ export const UserSettings = () => {
           <Modal.CloseButton
             onClick={handleClose}
             aria-label="Close settings"
+            className="text-[--foreground-faded] hover:text-[--foreground]"
           />
         </Modal.Header>
         <Modal.Body className="mt-4" p={isSmallScreen ? 'xs' : 'md'}>

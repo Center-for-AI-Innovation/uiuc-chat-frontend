@@ -1206,23 +1206,22 @@ const showToastOnFileDeleted = (theme: MantineTheme, was_error = false) => {
       // className: 'my-notification-class',
       styles: {
         root: {
-          backgroundColor: was_error
-            ? theme.colors.errorBackground
-            : theme.colors.nearlyWhite,
+          backgroundColor: was_error ? 'var(--error)' : 'var(--notification)',
           borderColor: was_error
-            ? theme.colors.errorBorder
-            : 'var(--dashboard-background-dark)',
+            ? 'var(--error)'
+            : 'var(--notification-border)',
         },
         title: {
-          color: theme.colors.nearlyBlack,
+          color: 'var(--notification-title)',
         },
         description: {
-          color: theme.colors.nearlyBlack,
+          color: 'var(--notification-message)',
         },
         closeButton: {
-          color: theme.colors.nearlyBlack,
+          color: 'var(--text-foreground-faded)',
           '&:hover': {
-            backgroundColor: theme.colors.dark[1],
+            color: 'var(--text-foreground)',
+            backgroundColor: 'var(--text-background-faded)',
           },
         },
       },
