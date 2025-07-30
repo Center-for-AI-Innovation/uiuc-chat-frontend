@@ -368,17 +368,13 @@ export function CollapsedThemeToggle() {
   const getCurrentIcon = () => {
     switch (theme) {
       case 'system':
-        return (
-          <IconDeviceLaptop size={16} className="text-[--foreground-faded]" />
-        )
+        return <IconDeviceLaptop size={16} className="text-[--foreground]" />
       case 'light':
-        return <IconSun size={16} className="text-[--foreground-faded]" />
+        return <IconSun size={16} className="text-[--foreground]" />
       case 'dark':
-        return <IconMoon size={16} className="text-[--foreground-faded]" />
+        return <IconMoon size={16} className="text-[--foreground]" />
       default:
-        return (
-          <IconDeviceLaptop size={16} className="text-[--foreground-faded]" />
-        )
+        return <IconDeviceLaptop size={16} className="text-[--foreground]" />
     }
   }
 
@@ -398,7 +394,7 @@ export function CollapsedThemeToggle() {
   return (
     <button
       onClick={cycleTheme}
-      className="rounded-md bg-[--background-faded] p-1.5 transition-colors hover:bg-[--background]"
+      className="rounded-full border border-[--dashboard-border] bg-[--background-faded] p-1.5 transition-all hover:scale-105 hover:border-[--dashboard-faded] hover:bg-[--dashboard-faded]"
       aria-label="Toggle theme"
       title={getCurrentTitle()}
     >
@@ -571,12 +567,7 @@ export default function NavigationSidebar({
 
           {/* Theme Toggle at the bottom */}
           <div className={classes.themeToggleContainer}>
-            <div className={`md:${isCollapsed ? 'hidden' : 'block'}`}>
-              <ThemeToggle />
-            </div>
-            <div className={`hidden md:${isCollapsed ? 'block' : 'hidden'}`}>
-              <CollapsedThemeToggle />
-            </div>
+            {!isCollapsed ? <ThemeToggle /> : <CollapsedThemeToggle />}
           </div>
         </div>
       </div>
