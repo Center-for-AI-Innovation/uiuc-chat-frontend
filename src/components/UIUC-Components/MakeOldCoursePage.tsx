@@ -3,7 +3,9 @@ import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 
-import SettingsLayout from '~/components/Layout/SettingsLayout'
+import SettingsLayout, {
+  getInitialCollapsedState,
+} from '~/components/Layout/SettingsLayout'
 import { fetchPresignedUrl } from '~/utils/apiUtils'
 import GlobalFooter from './GlobalFooter'
 
@@ -23,7 +25,9 @@ const MakeOldCoursePage = ({
   current_email: string
 }) => {
   const [bannerUrl, setBannerUrl] = useState<string>('')
-
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    getInitialCollapsedState,
+  )
   const router = useRouter()
   useEffect(() => {
     const fetchData = async () => {
@@ -67,7 +71,12 @@ const MakeOldCoursePage = ({
   }
 
   return (
-    <SettingsLayout course_name={course_name} bannerUrl={bannerUrl}>
+    <SettingsLayout
+      course_name={course_name}
+      bannerUrl={bannerUrl}
+      sidebarCollapsed={sidebarCollapsed}
+      setSidebarCollapsed={setSidebarCollapsed}
+    >
       <Head>
         <title>{course_name} - Admin page - UIUC.chat</title>
         <meta
@@ -84,13 +93,21 @@ const MakeOldCoursePage = ({
               projectName={course_name}
               current_user_email={current_email}
               metadata={metadata}
+              sidebarCollapsed={sidebarCollapsed}
             />
 
             {/* Document Groups Section */}
-            <DocumentGroupsCard course_name={course_name} />
+            <DocumentGroupsCard
+              course_name={course_name}
+              sidebarCollapsed={sidebarCollapsed}
+            />
 
             {/* Project Files Section */}
-            <DocumentsCard course_name={course_name} metadata={metadata} />
+            <DocumentsCard
+              course_name={course_name}
+              metadata={metadata}
+              sidebarCollapsed={sidebarCollapsed}
+            />
 
             {/* <NomicDocumentsCard course_name={course_name} metadata={metadata} /> */}
           </Flex>

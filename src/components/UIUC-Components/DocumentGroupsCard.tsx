@@ -1,21 +1,31 @@
-import { Card, Title, Text, ActionIcon } from '@mantine/core'
-import { DocGroupsTable } from './DocGroupsTable'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { IconInfoCircle } from '@tabler/icons-react'
+import { ActionIcon, Card, Text, Title } from '@mantine/core'
 import { useMediaQuery } from '@mantine/hooks'
+import { IconInfoCircle } from '@tabler/icons-react'
+import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
+import { DocGroupsTable } from './DocGroupsTable'
 
-function DocumentGroupsCard({ course_name }: { course_name: string }) {
+function DocumentGroupsCard({
+  course_name,
+  sidebarCollapsed = false,
+}: {
+  course_name: string
+  sidebarCollapsed?: boolean
+}) {
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const [accordionOpened, setAccordionOpened] = useState(false)
+
+  // Get responsive card width classes based on sidebar state
+  const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed || false)
 
   return (
     <Card
       withBorder
       padding="none"
       radius="xl"
-      className="mt-[2%] w-[96%] md:w-full 2xl:w-[95%]"
+      className={`mt-[2%] ${cardWidthClasses}`}
       style={{
         backgroundColor: 'var(--background)',
         borderColor: 'var(--dashboard-border)',

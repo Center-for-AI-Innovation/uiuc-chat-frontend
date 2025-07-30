@@ -1,23 +1,14 @@
-import {
-  Card,
-  Title,
-  Tabs,
-  Indicator,
-  Tooltip,
-  Button,
-  Modal,
-  Text,
-  createStyles,
-} from '@mantine/core'
-import { ProjectFilesTable } from './ProjectFilesTable'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { type CourseMetadata } from '~/types/courseMetadata'
-import { useState } from 'react'
+import { Button, Card, Modal, Text, Title, createStyles } from '@mantine/core'
 import { useMediaQuery } from '@mantine/hooks'
 import { IconFileExport } from '@tabler/icons-react'
+import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useRouter } from 'next/router'
+import { useState } from 'react'
 import { handleExport } from '~/pages/api/UIUC-api/exportAllDocuments'
+import { type CourseMetadata } from '~/types/courseMetadata'
+import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import { showToastOnUpdate } from './MakeQueryAnalysisPage'
+import { ProjectFilesTable } from './ProjectFilesTable'
 
 const useStyles = createStyles(() => ({
   tabsList: {
@@ -61,9 +52,11 @@ const useStyles = createStyles(() => ({
 function DocumentsCard({
   course_name,
   metadata,
+  sidebarCollapsed = false,
 }: {
   course_name: string
   metadata: CourseMetadata
+  sidebarCollapsed?: boolean
 }) {
   const [tabValue, setTabValue] = useState<string | null>('success')
   const [failedCount, setFailedCount] = useState<number>(0)
@@ -71,6 +64,9 @@ function DocumentsCard({
   const [exportModalOpened, setExportModalOpened] = useState(false)
   const router = useRouter()
   const { classes, theme } = useStyles()
+
+  // Get responsive card width classes based on sidebar state
+  const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed || false)
 
   const getCurrentPageName = () => {
     return router.asPath.slice(1).split('/')[0] as string
@@ -81,7 +77,7 @@ function DocumentsCard({
       withBorder
       padding="none"
       radius="xl"
-      className="mt-[2%] w-[96%] md:w-full 2xl:w-[95%]"
+      className={`mt-[2%] ${cardWidthClasses}`}
       style={{
         backgroundColor: 'var(--background)',
         borderColor: 'var(--dashboard-border)',

@@ -55,7 +55,9 @@ import { useDebouncedCallback } from 'use-debounce'
 import { v4 as uuidv4 } from 'uuid'
 import CustomCopyButton from '~/components/Buttons/CustomCopyButton'
 import { getModelLogo } from '~/components/Chat/ModelSelect'
-import SettingsLayout from '~/components/Layout/SettingsLayout'
+import SettingsLayout, {
+  getInitialCollapsedState,
+} from '~/components/Layout/SettingsLayout'
 import { LinkGeneratorModal } from '~/components/Modals/LinkGeneratorModal'
 import CustomSwitch from '~/components/Switches/CustomSwitch'
 import { findDefaultModel } from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
@@ -79,6 +81,7 @@ import {
   type AnySupportedModel,
 } from '~/utils/modelProviders/LLMProvider'
 import { type AnthropicModel } from '~/utils/modelProviders/types/anthropic'
+import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
 
 const montserrat = Montserrat({
@@ -169,6 +172,12 @@ const CourseMain: NextPage = () => {
   >([])
   const [input, setInput] = useState(baseSystemPrompt)
   const [isOptimizing, setIsOptimizing] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    getInitialCollapsedState(),
+  )
+
+  // Get responsive card width classes based on sidebar state
+  const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed)
 
   const removeThinkSections = (text: string): string => {
     const cleanedText = text.replace(/<think>[\s\S]*?<\/think>/g, '')
@@ -837,7 +846,11 @@ CRITICAL: The optimized prompt must:
   }
 
   return (
-    <SettingsLayout course_name={router.query.course_name as string}>
+    <SettingsLayout
+      course_name={course_name}
+      sidebarCollapsed={sidebarCollapsed}
+      setSidebarCollapsed={setSidebarCollapsed}
+    >
       <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
         <div className="items-left flex w-full flex-col justify-center py-0">
           <Flex direction="column" align="center" w="100%">
@@ -845,7 +858,7 @@ CRITICAL: The optimized prompt must:
               withBorder
               padding="none"
               radius="xl"
-              className="mt-[2%] w-[96%] md:w-[90%] 2xl:w-[90%]"
+              className={`mt-[2%] ${cardWidthClasses}`}
               style={{
                 backgroundColor: 'var(--background)',
                 borderColor: 'var(--dashboard-border)',
@@ -897,7 +910,7 @@ CRITICAL: The optimized prompt must:
                         m="0rem"
                         align="center"
                         variant="column"
-                        className="w-[100%] md:w-[95%] lg:w-[95%]"
+                        className={cardWidthClasses}
                         style={{
                           justifyContent: 'center',
                           alignSelf: 'center',

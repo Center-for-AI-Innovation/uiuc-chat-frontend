@@ -1,5 +1,14 @@
 import { createStyles, rem } from '@mantine/core'
-import { IconChevronLeft, IconHome, IconMenu2 } from '@tabler/icons-react'
+import {
+  IconChevronLeft,
+  IconDeviceLaptop,
+  IconHome,
+  IconLayoutSidebarLeftCollapse,
+  IconLayoutSidebarLeftExpand,
+  IconMenu2,
+  IconMoon,
+  IconSun,
+} from '@tabler/icons-react'
 import { montserrat_heading } from 'fonts'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -10,6 +19,7 @@ import {
   MessageCode,
   ReportAnalytics,
 } from 'tabler-icons-react'
+import { useTheme } from '~/contexts/ThemeContext'
 import { ThemeToggle } from '../UIUC-Components/ThemeToggle'
 
 interface NavItem {
@@ -23,31 +33,38 @@ interface NavigationSidebarProps {
   isOpen: boolean
   onToggle: () => void
   activeLink: string
+  isCollapsed: boolean
+  onCollapseToggle: () => void
 }
 
 const useStyles = createStyles((theme) => ({
   sidebar: {
+    // Base styles - Mobile first approach
     position: 'fixed',
-    top: rem(80), // Below the main navbar (h-20 = 5rem = 80px)
+    top: rem(80),
     left: 0,
+    bottom: 0,
     width: rem(280),
-    height: 'calc(100vh - 80px)',
+    height: 'auto',
+    minHeight: 'calc(100vh - 80px)',
     backgroundColor: 'var(--sidebar-background)',
     borderRight: '1px solid var(--dashboard-border)',
     zIndex: 30,
     transform: 'translateX(-100%)',
-    transition: 'transform 0.3s ease-in-out',
+    transition: 'all 0.3s ease-in-out',
 
     '&.open': {
       transform: 'translateX(0)',
     },
 
-    [theme.fn.largerThan('md')]: {
-      position: 'fixed',
-      top: rem(80),
-      transform: 'translateX(-100%)',
-      '&.open': {
-        transform: 'translateX(0)',
+    // Desktop (md and up): allow collapse/expand functionality
+    '@media (min-width: 768px)': {
+      height: 'calc(100vh - 80px)',
+      bottom: 'auto',
+      transform: 'translateX(0)',
+
+      '&.collapsed': {
+        width: rem(80),
       },
     },
   },
@@ -60,10 +77,6 @@ const useStyles = createStyles((theme) => ({
     bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     zIndex: 20,
-
-    [theme.fn.largerThan('md')]: {
-      display: 'none',
-    },
   },
 
   toggleButton: {
@@ -88,10 +101,6 @@ const useStyles = createStyles((theme) => ({
       backgroundColor: 'var(--dashboard-button-hover)',
       transform: 'scale(1.05)',
     },
-
-    [theme.fn.largerThan('md')]: {
-      display: 'none',
-    },
   },
 
   sidebarContent: {
@@ -99,6 +108,11 @@ const useStyles = createStyles((theme) => ({
     display: 'flex',
     flexDirection: 'column',
     padding: theme.spacing.md,
+
+    '&.collapsed': {
+      padding: `${theme.spacing.md} ${theme.spacing.xs}`,
+      alignItems: 'center',
+    },
   },
 
   header: {
@@ -108,6 +122,31 @@ const useStyles = createStyles((theme) => ({
     marginBottom: theme.spacing.lg,
     paddingBottom: theme.spacing.sm,
     borderBottom: '1px solid var(--dashboard-border)',
+
+    '&.collapsed': {
+      justifyContent: 'center',
+      marginBottom: theme.spacing.md,
+    },
+  },
+
+  collapseButton: {
+    width: rem(40),
+    height: rem(40),
+    backgroundColor: 'transparent',
+    color: 'var(--foreground)',
+    border: '2px solid var(--dashboard-border)',
+    borderRadius: theme.radius.sm,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+
+    '&:hover': {
+      backgroundColor: 'var(--dashboard-faded)',
+      color: 'var(--foreground)',
+      borderColor: 'var(--dashboard-faded)',
+    },
   },
 
   closeButton: {
@@ -128,10 +167,6 @@ const useStyles = createStyles((theme) => ({
       color: 'var(--dashboard-button-foreground)',
       borderColor: 'var(--dashboard-button)',
     },
-
-    [theme.fn.largerThan('md')]: {
-      display: 'none',
-    },
   },
 
   chatButton: {
@@ -149,6 +184,7 @@ const useStyles = createStyles((theme) => ({
     justifyContent: 'center',
     gap: theme.spacing.xs,
     fontSize: rem(14),
+
     fontWeight: 500,
 
     '&:hover': {
@@ -156,15 +192,28 @@ const useStyles = createStyles((theme) => ({
       transform: 'translateY(-1px)',
       boxShadow: theme.shadows.sm,
     },
+
+    '&.collapsed': {
+      width: rem(48),
+      padding: theme.spacing.sm,
+      justifyContent: 'center',
+      gap: 0,
+      minHeight: rem(40),
+    },
   },
 
   breadcrumb: {
-    marginBottom: theme.spacing.lg,
+    // marginBottom: theme.spacing.lg,
     padding: theme.spacing.sm,
     backgroundColor: 'var(--background-faded)',
     borderRadius: theme.radius.sm,
     fontSize: rem(13),
+    marginRight: theme.spacing.md,
     color: 'var(--foreground-faded)',
+
+    '&.collapsed': {
+      display: 'none',
+    },
   },
 
   navSection: {
@@ -184,6 +233,7 @@ const useStyles = createStyles((theme) => ({
     fontSize: rem(14),
     fontWeight: 500,
     transition: 'all 0.2s ease',
+    position: 'relative',
 
     '&:hover': {
       backgroundColor: 'var(--navbar-hover-background)',
@@ -201,12 +251,47 @@ const useStyles = createStyles((theme) => ({
         color: 'var(--dashboard-button-foreground)',
       },
     },
+
+    '&.collapsed': {
+      padding: theme.spacing.sm,
+      justifyContent: 'center',
+      gap: 0,
+
+      '&:hover': {
+        transform: 'scale(1.05)',
+      },
+    },
+  },
+
+  navText: {
+    transition: 'opacity 0.2s ease',
+
+    '&.collapsed': {
+      display: 'none',
+    },
+  },
+
+  themeToggleContainer: {
+    marginTop: 'auto',
+    borderTop: '1px solid var(--dashboard-border)',
+    paddingTop: theme.spacing.md,
+    display: 'flex',
+    width: '100%',
+    justifyContent: 'center',
   },
 }))
 
-function NavText({ children }: { children: React.ReactNode }) {
+function NavText({
+  children,
+  collapsed,
+}: {
+  children: React.ReactNode
+  collapsed?: boolean
+}) {
   return (
-    <span className={`${montserrat_heading.variable} font-montserratHeading`}>
+    <span
+      className={`${montserrat_heading.variable} font-montserratHeading ${collapsed ? 'hidden' : ''}`}
+    >
       {children}
     </span>
   )
@@ -267,11 +352,68 @@ export function ChartDots3Icon() {
   )
 }
 
+export function CollapsedThemeToggle() {
+  const { theme, setTheme } = useTheme()
+
+  const cycleTheme = () => {
+    if (theme === 'system') {
+      setTheme('light')
+    } else if (theme === 'light') {
+      setTheme('dark')
+    } else {
+      setTheme('system')
+    }
+  }
+
+  const getCurrentIcon = () => {
+    switch (theme) {
+      case 'system':
+        return (
+          <IconDeviceLaptop size={16} className="text-[--foreground-faded]" />
+        )
+      case 'light':
+        return <IconSun size={16} className="text-[--foreground-faded]" />
+      case 'dark':
+        return <IconMoon size={16} className="text-[--foreground-faded]" />
+      default:
+        return (
+          <IconDeviceLaptop size={16} className="text-[--foreground-faded]" />
+        )
+    }
+  }
+
+  const getCurrentTitle = () => {
+    switch (theme) {
+      case 'system':
+        return 'System theme (click for light)'
+      case 'light':
+        return 'Light theme (click for dark)'
+      case 'dark':
+        return 'Dark theme (click for system)'
+      default:
+        return 'Toggle theme'
+    }
+  }
+
+  return (
+    <button
+      onClick={cycleTheme}
+      className="rounded-md bg-[--background-faded] p-1.5 transition-colors hover:bg-[--background]"
+      aria-label="Toggle theme"
+      title={getCurrentTitle()}
+    >
+      {getCurrentIcon()}
+    </button>
+  )
+}
+
 export default function NavigationSidebar({
   course_name,
   isOpen,
   onToggle,
   activeLink,
+  isCollapsed,
+  onCollapseToggle,
 }: NavigationSidebarProps) {
   const { classes } = useStyles()
   const router = useRouter()
@@ -327,32 +469,65 @@ export default function NavigationSidebar({
 
   return (
     <>
-      {/* Mobile Toggle Button */}
+      {/* Mobile Toggle Button - Hidden on md+ */}
       {!isOpen && (
-        <button className={classes.toggleButton} onClick={onToggle}>
+        <button
+          className={`${classes.toggleButton} md:hidden`}
+          onClick={onToggle}
+        >
           <IconMenu2 size={20} />
         </button>
       )}
 
-      {/* Mobile Overlay */}
-      {isOpen && <div className={classes.sidebarOverlay} onClick={onToggle} />}
+      {/* Mobile Overlay - Hidden on md+ */}
+      {isOpen && (
+        <div
+          className={`${classes.sidebarOverlay} md:hidden`}
+          onClick={onToggle}
+        />
+      )}
 
       {/* Sidebar */}
-      <div className={`${classes.sidebar} ${isOpen ? 'open' : ''}`}>
-        <div className={classes.sidebarContent}>
+      <div
+        className={`${classes.sidebar} ${isOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''} md:desktop`}
+      >
+        <div
+          className={`${classes.sidebarContent} ${isCollapsed ? 'collapsed' : ''}`}
+        >
           {/* Header */}
-          {/* <div className={classes.header}> */}
-          {/* <h3 className="text-lg font-semibold text-[--foreground]">
-              Settings
-            </h3> */}
-          {/* <button className={classes.closeButton} onClick={onToggle}> */}
-          {/* <IconX size={16} /> */}
-          {/* </button> */}
-          {/* </div> */}
+          <div
+            className={`${classes.header} ${isCollapsed ? 'collapsed' : ''}`}
+          >
+            {/* Breadcrumb - Always visible on mobile, conditionally on desktop */}
+            <div
+              className={`${classes.breadcrumb} ${isCollapsed ? 'collapsed' : ''}`}
+            >
+              <div
+                className={`flex items-center gap-2 ${montserrat_heading.variable} font-montserratHeading`}
+              >
+                <span>Chatbot</span>
+                <span>/</span>
+                <span className="font-semibold text-[--foreground]">
+                  {course_name}
+                </span>
+              </div>
+            </div>
+            {/* Collapse Button - Hidden on mobile, visible on desktop */}
+            <button
+              className={`${classes.collapseButton} hidden md:flex`}
+              onClick={onCollapseToggle}
+            >
+              {isCollapsed ? (
+                <IconLayoutSidebarLeftExpand size={20} strokeWidth={2} />
+              ) : (
+                <IconLayoutSidebarLeftCollapse size={20} strokeWidth={2} />
+              )}
+            </button>
+          </div>
 
           {/* Chat Button */}
           <button
-            className={classes.chatButton}
+            className={`${classes.chatButton} ${isCollapsed ? 'collapsed' : ''}`}
             onClick={handleChatNavigation}
             onMouseEnter={() => {
               if (course_name) {
@@ -364,21 +539,10 @@ export default function NavigationSidebar({
             }}
           >
             <IconChevronLeft size={16} />
-            <NavText>Back to Chat</NavText>
+            <span className={`md:${isCollapsed ? 'hidden' : 'inline'}`}>
+              Back to Chat
+            </span>
           </button>
-
-          {/* Breadcrumb */}
-          <div className={classes.breadcrumb}>
-            <div
-              className={`flex items-center gap-2 ${montserrat_heading.variable} font-montserratHeading`}
-            >
-              <span>Chatbot</span>
-              <span>/</span>
-              <span className="font-semibold text-[--foreground]">
-                {course_name}
-              </span>
-            </div>
-          </div>
 
           {/* Navigation Links */}
           <div className={classes.navSection}>
@@ -388,7 +552,7 @@ export default function NavigationSidebar({
                 href={item.link}
                 prefetch={false}
                 data-active={activeLink === item.link}
-                className={classes.navLink}
+                className={`${classes.navLink} ${isCollapsed ? 'collapsed' : ''}`}
                 onMouseEnter={() => handleLinkHover(item.link)}
                 onClick={() => {
                   // Close sidebar on mobile after navigation
@@ -398,15 +562,20 @@ export default function NavigationSidebar({
                 }}
               >
                 {item.icon}
-                {item.name}
+                <span className={`md:${isCollapsed ? 'hidden' : 'inline'}`}>
+                  {item.name}
+                </span>
               </Link>
             ))}
           </div>
 
           {/* Theme Toggle at the bottom */}
-          <div className="mt-auto border-t border-[--dashboard-border] pt-4">
-            <div className="flex w-full justify-center">
+          <div className={classes.themeToggleContainer}>
+            <div className={`md:${isCollapsed ? 'hidden' : 'block'}`}>
               <ThemeToggle />
+            </div>
+            <div className={`hidden md:${isCollapsed ? 'block' : 'hidden'}`}>
+              <CollapsedThemeToggle />
             </div>
           </div>
         </div>

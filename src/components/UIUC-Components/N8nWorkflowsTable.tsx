@@ -1,11 +1,9 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import React, { useEffect, useState } from 'react'
 import dayjs from 'dayjs'
+import { useEffect, useState } from 'react'
 
+import { Switch, Text } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
-import { Title, Text, Switch } from '@mantine/core'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { Montserrat } from 'next/font/google'
 import {
   // IconArrowsSort,
   // IconCaretDown,
@@ -13,11 +11,12 @@ import {
   // IconSquareArrowUp,
   IconAlertCircle,
 } from '@tabler/icons-react'
-import { DataTable, DataTableSortStatus } from 'mantine-datatable'
-import { LoadingSpinner } from './LoadingSpinner'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { DataTable } from 'mantine-datatable'
+import { Montserrat } from 'next/font/google'
 import { type UIUCTool } from '~/types/chat'
 import { useFetchAllWorkflows } from '~/utils/functionCalling/handleFunctionCalling'
+import { LoadingSpinner } from './LoadingSpinner'
 
 const PAGE_SIZE = 25
 
@@ -25,6 +24,7 @@ interface N8nWorkflowsTableProps {
   n8nApiKey: string
   course_name: string
   isEmptyWorkflowTable: boolean
+  sidebarCollapsed?: boolean
   // fetchWorkflows: (
   //   limit?: number,
   //   pagination?: boolean,
@@ -78,9 +78,15 @@ export const N8nWorkflowsTable = ({
   n8nApiKey,
   course_name,
   isEmptyWorkflowTable,
+  sidebarCollapsed = false,
 }: N8nWorkflowsTableProps) => {
   const [page, setPage] = useState(1)
   const queryClient = useQueryClient()
+
+  // Get responsive width classes based on sidebar state
+  const widthClasses = sidebarCollapsed
+    ? 'w-[96%] md:w-[98%] lg:w-[96%] xl:w-[94%] 2xl:w-[92%]' // More space when sidebar collapsed
+    : 'w-[96%] md:w-[94%] lg:w-[92%] xl:w-[90%] 2xl:w-[88%]' // Less space when sidebar expanded
 
   const {
     data: records,
@@ -198,7 +204,7 @@ export const N8nWorkflowsTable = ({
       </Title> */}
       <Text
         // w={isWideScreen ? '85%' : '92%'}
-        className="w-[96%] pb-2 text-[--dashboard-foreground] md:w-full 2xl:w-[95%]"
+        className={`pb-2 text-[--dashboard-foreground] ${widthClasses}`}
       >
         These tools can be automatically invoked by the LLM to fetch additional
         data to answer user questions on the{' '}
@@ -217,7 +223,7 @@ export const N8nWorkflowsTable = ({
       </Text>
 
       {/* dataTable styling options https://icflorescu.github.io/mantine-datatable/examples/overriding-the-default-styles/  */}
-      <div className="n8n_workflows_table w-[96%] md:w-full 2xl:w-[95%]">
+      <div className={`n8n_workflows_table ${widthClasses}`}>
         <DataTable
           height={500}
           styles={{

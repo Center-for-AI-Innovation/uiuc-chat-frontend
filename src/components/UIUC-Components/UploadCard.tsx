@@ -1,33 +1,36 @@
 import {
+  Button,
   Card,
-  Title,
-  SimpleGrid,
+  createStyles,
   Flex,
+  SimpleGrid,
   Text,
   Textarea,
-  Button,
-  createStyles,
+  Title,
 } from '@mantine/core'
-import { type CourseMetadata } from '~/types/courseMetadata'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useMediaQuery } from '@mantine/hooks'
-import SetExampleQuestions from './SetExampleQuestions'
+import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import {
+  type CourseMetadata,
+  type CourseMetadataOptionalForUpsert,
+} from '~/types/courseMetadata'
 import { callSetCourseMetadata, uploadToS3 } from '~/utils/apiUtils'
-import { type CourseMetadataOptionalForUpsert } from '~/types/courseMetadata'
+import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
+import SetExampleQuestions from './SetExampleQuestions'
 // import { Checkbox } from '@radix-ui/react-checkbox'
-import { Montserrat } from 'next/font/google'
-import CanvasIngestForm from './CanvasIngestForm'
-import LargeDropzone from './LargeDropzone'
-import WebsiteIngestForm from './WebsiteIngestForm'
-import GitHubIngestForm from './GitHubIngestForm'
-import MITIngestForm from './MITIngestForm'
-import CourseraIngestForm from './CourseraIngestForm'
-import { memo, useState, useEffect } from 'react'
 import { IconShare } from '@tabler/icons-react'
+import { useQueryClient } from '@tanstack/react-query'
+import { Montserrat } from 'next/font/google'
+import { memo, useEffect, useState } from 'react'
+import { useAuth } from 'react-oidc-context'
+import CanvasIngestForm from './CanvasIngestForm'
+import CourseraIngestForm from './CourseraIngestForm'
+import GitHubIngestForm from './GitHubIngestForm'
+import LargeDropzone from './LargeDropzone'
+import MITIngestForm from './MITIngestForm'
 import ShareSettingsModal from './ShareSettingsModal'
 import UploadNotification, { type FileUpload } from './UploadNotification'
-import { useQueryClient } from '@tanstack/react-query'
-import { useAuth } from 'react-oidc-context'
+import WebsiteIngestForm from './WebsiteIngestForm'
 
 const montserrat_light = Montserrat({
   weight: '400',
@@ -83,13 +86,18 @@ export const UploadCard = memo(function UploadCard({
   projectName,
   current_user_email,
   metadata: initialMetadata,
+  sidebarCollapsed = false,
 }: {
   projectName: string
   current_user_email: string
   metadata: CourseMetadata
+  sidebarCollapsed?: boolean
 }) {
   const auth = useAuth()
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
+
+  // Get responsive card width classes based on sidebar state
+  const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed || false)
   const [projectDescription, setProjectDescription] = useState(
     initialMetadata?.project_description || '',
   )
@@ -139,7 +147,7 @@ export const UploadCard = memo(function UploadCard({
       withBorder
       padding="none"
       radius="xl"
-      className="mt-[2%] w-[96%] md:w-full 2xl:w-[95%]"
+      className={`mt-[2%] ${cardWidthClasses}`}
       style={{
         backgroundColor: 'var(--background)',
         borderColor: 'var(--dashboard-border)',
@@ -148,7 +156,7 @@ export const UploadCard = memo(function UploadCard({
       <Flex direction={isSmallScreen ? 'column' : 'row'}>
         <div
           style={{
-            flex: isSmallScreen ? '1 1 100%' : '1 1 95%',
+            flex: '1 1 95%',
             border: 'None',
             color: 'var(--foreground)',
           }}
