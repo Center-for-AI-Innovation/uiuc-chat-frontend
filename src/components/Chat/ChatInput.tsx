@@ -63,6 +63,7 @@ import { UserSettings } from '~/components/Chat/UserSettings'
 import { IconChevronRight } from '@tabler/icons-react'
 import { findDefaultModel } from '../UIUC-Components/api-inputs/LLMsApiKeyInputForm'
 import { showConfirmationToast } from '../UIUC-Components/api-inputs/LLMsApiKeyInputForm'
+import { ContextWithMetadata } from '~/types/chat'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -101,6 +102,7 @@ type FileUploadStatus = {
   file: File
   status: 'uploading' | 'uploaded' | 'processing' | 'completed' | 'error' // Add 'processing' and 'completed'
   url?: string
+  contexts?: ContextWithMetadata[]
 }
 
 interface Props {
@@ -150,6 +152,46 @@ async function createNewConversation(
   })
 
   return newConversation
+}
+
+async function fetchFileUploadContexts(
+  conversationId: string,
+  courseName: string,
+  fileName: string,
+): Promise<ContextWithMetadata[]> {
+  try {
+    const response = await fetch('/api/getContexts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        course_name: courseName,
+        search_query: fileName,
+        token_limit: 4000,
+        doc_groups: ['All Documents'],
+        conversation_id: conversationId,
+      }),
+    })
+
+    if (!response.ok) {
+      console.error('Failed to fetch file contexts:', response.status)
+    }
+
+    const data = await response.json()
+    
+    //Check if data is an array before filtering
+    if (!Array.isArray(data)) {
+      throw new Error('Invalid response format')
+    }
+
+    const filteredContexts = data.filter((context: any) => 
+      context.readable_filename === fileName
+    )
+        
+    return filteredContexts
+  } catch (error) {
+    console.error('Error fetching file contexts:', error)
+    return []
+  }
 }
 
 export const ChatInput = ({
@@ -301,7 +343,7 @@ export const ChatInput = ({
     }
 
     const textContent = content
-    let imageContent: Content[] = []
+    let imageContent: Content[] = []  
     let fileContent: Content[] = []
 
     // Handle image uploads (existing code - keep this as is)
@@ -336,6 +378,8 @@ export const ChatInput = ({
     }
 
     // Handle file uploads: Only proceed if all files are completed
+    const allFileContexts: ContextWithMetadata[] = [] // ✅ Change to const
+    
     if (fileUploads.length > 0) {
       const pendingFiles = fileUploads.filter((fu) => fu.status !== 'completed')
 
@@ -352,10 +396,15 @@ export const ChatInput = ({
       // Create file content for the message (files are already processed)
       fileContent = fileUploads
         .filter((fu) => fu.status === 'completed')
-        .map((fu) => ({
-          type: 'text' as MessageType,
-          text: `📎 Uploaded file: ${fu.file.name}|${fu.url}|${fu.file.type}`,
-        }))
+        .map((fu) => {
+          if (fu.contexts && Array.isArray(fu.contexts)) {
+            allFileContexts.push(...fu.contexts) // This will still work with const
+          }
+          return {
+            type: 'text' as MessageType,
+            text: `📎 Uploaded file: ${fu.file.name}|${fu.url}|${fu.file.type}`,
+          }
+        })
 
       setFileUploads([]) // Clear after using
     }
@@ -379,6 +428,7 @@ export const ChatInput = ({
       id: uuidv4(),
       role: 'user',
       content: contentArray,
+      contexts: allFileContexts.length > 0 ? allFileContexts : undefined, //Include contexts
     }
 
     // Use the onSend prop to send the structured message
@@ -757,7 +807,7 @@ export const ChatInput = ({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             conversationId: conversation.id,
-            courseName,
+            courseName: courseName,
             s3Key: s3Key,
             fileName: file.name,
             fileType: file.type,
@@ -771,11 +821,17 @@ export const ChatInput = ({
 
         const result = await response.json()
         console.log('File processing completed:', result)
-
-        // Update to completed status
+        
+        const contexts = await fetchFileUploadContexts(
+          conversation.id,
+          courseName,
+          file.name,
+        )
         setFileUploads((prev) =>
           prev.map((f) =>
-            f.file.name === file.name ? { ...f, status: 'completed' } : f,
+            f.file.name === file.name
+              ? { ...f, status: 'completed', contexts }
+              : f,
           ),
         )
       } catch (error) {
