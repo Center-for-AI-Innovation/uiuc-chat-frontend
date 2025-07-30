@@ -1,14 +1,14 @@
-import Image from 'next/image'
+import { Button, Card } from '@mantine/core'
 import { type NextPage } from 'next'
 import Head from 'next/head'
+import Image from 'next/image'
 import Link from 'next/link'
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { ArrowNarrowRight, ExternalLink } from 'tabler-icons-react'
-import { Card, Button } from '@mantine/core'
 
-import { LandingPageHeader } from '~/components/UIUC-Components/navbars/GlobalHeader'
+import { doto_font, montserrat_heading, montserrat_paragraph } from 'fonts'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
-import { montserrat_heading, montserrat_paragraph, doto_font } from 'fonts'
+import { LandingPageHeader } from '~/components/UIUC-Components/navbars/GlobalHeader'
 
 // Typing animation component
 const TypingAnimation: React.FC = () => {
