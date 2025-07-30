@@ -143,13 +143,13 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
           transition: 'fade',
           duration: 200,
         }}
-        classNames={{
-          tooltip: 'bg-gray-700 text-white text-sm py-1 px-2',
-          arrow: 'border-gray-700',
+        style={{
+          color: 'var(--tooltip)',
+          backgroundColor: 'var(--tooltip-background)',
         }}
       >
         <button
-          className={`text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 ${
+          className={`text-[--foreground-faded] hover:text-[--foreground] ${
             isLastMessage
               ? 'opacity-100'
               : 'opacity-0 transition-opacity duration-200 focus:opacity-100 group-hover:opacity-100'
@@ -176,13 +176,13 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
           transition: 'fade',
           duration: 200,
         }}
-        classNames={{
-          tooltip: 'bg-gray-700 text-white text-sm py-1 px-2',
-          arrow: 'border-gray-700',
+        style={{
+          color: 'var(--tooltip)',
+          backgroundColor: 'var(--tooltip-background)',
         }}
       >
         <button
-          className={`text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 ${
+          className={`text-[--foreground-faded] hover:text-[--foreground] ${
             isLastMessage
               ? 'opacity-100'
               : 'opacity-0 transition-opacity duration-200 focus:opacity-100 group-hover:opacity-100'
@@ -214,13 +214,13 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
           transition: 'fade',
           duration: 200,
         }}
-        classNames={{
-          tooltip: 'bg-gray-700 text-white text-sm py-1 px-2',
-          arrow: 'border-gray-700',
+        style={{
+          color: 'var(--tooltip)',
+          backgroundColor: 'var(--tooltip-background)',
         }}
       >
         <button
-          className={`text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 ${
+          className={`text-[--foreground-faded] hover:text-[--foreground] ${
             isLastMessage
               ? 'opacity-100'
               : 'opacity-0 transition-opacity duration-200 focus:opacity-100 group-hover:opacity-100'
@@ -244,13 +244,13 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
           transition: 'fade',
           duration: 200,
         }}
-        classNames={{
-          tooltip: 'bg-gray-700 text-white text-sm py-1 px-2',
-          arrow: 'border-gray-700',
+        style={{
+          color: 'var(--tooltip)',
+          backgroundColor: 'var(--tooltip-background)',
         }}
       >
         <button
-          className={`text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 ${
+          className={`text-[--foreground-faded] hover:text-[--foreground] ${
             isLastMessage
               ? 'opacity-100'
               : 'opacity-0 transition-opacity duration-200 focus:opacity-100 group-hover:opacity-100'
