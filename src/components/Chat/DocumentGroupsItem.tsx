@@ -76,6 +76,16 @@ export const DocumentGroupsItem = ({}) => {
               onChange={handleDocumentGroupSearchChange}
               w={'90%'}
               size={isSmallScreen ? 'xs' : 'sm'}
+              styles={{
+                input: {
+                  color: 'var(--foreground)',
+                  backgroundColor: 'var(--background-faded)',
+                  borderColor: 'var(--background-dark)',
+                  '&:focus': {
+                    borderColor: 'var(--background-darker)',
+                  },
+                },
+              }}
             />
 
             {/* unable to use this until v7 of mantine since we can't control the hover color              highlightOnHover */}

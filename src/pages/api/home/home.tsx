@@ -578,7 +578,7 @@ const Home = ({
       height="256"
       viewBox="0 0 24 24"
       strokeWidth="1.5"
-      stroke="url(#gradient)"
+      stroke="var(--foreground)"
       fill="none"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -776,14 +776,14 @@ const Home = ({
           >
             <Navbar isPlain={false} />
 
-            <div className="flex h-full w-full sm:pt-0">
+            <div className="flex h-full w-full overflow-y-auto sm:pt-0">
               {isDragging &&
                 VisionCapableModels.has(
                   selectedConversation?.model.id as OpenAIModelID,
                 ) && (
-                  <div className="absolute inset-0 z-10 flex h-full w-full flex-col items-center justify-center bg-black opacity-75">
+                  <div className="absolute inset-0 z-10 flex h-full w-full flex-col items-center justify-center bg-[--background-dark] opacity-90">
                     <GradientIconPhoto />
-                    <span className="text-3xl font-extrabold text-white">
+                    <span className="text-3xl font-extrabold text-[--foreground]">
                       Drop your image here!
                     </span>
                   </div>
