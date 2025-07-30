@@ -34,7 +34,10 @@ import {
 } from '@tabler/icons-react'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
-import SettingsLayout from '~/components/Layout/SettingsLayout'
+import SettingsLayout, {
+  getInitialCollapsedState,
+} from '~/components/Layout/SettingsLayout'
+import { GRID_CONFIGS, useResponsiveGrid } from '~/utils/responsiveGrid'
 import { downloadConversationHistory } from '../../pages/api/UIUC-api/downloadConvoHistory'
 import { getConversationStats } from '../../pages/api/UIUC-api/getConversationStats'
 import { getModelUsageCounts } from '../../pages/api/UIUC-api/getModelUsageCounts'
@@ -130,8 +133,20 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     null,
   )
   const [currentEmail, setCurrentEmail] = useState('')
-
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    getInitialCollapsedState(),
+  )
   const router = useRouter()
+
+  // Get responsive grid classes based on sidebar state
+  const statsGridClasses = useResponsiveGrid(
+    GRID_CONFIGS.STATS_CARDS,
+    sidebarCollapsed,
+  )
+  const chartsGridClasses = useResponsiveGrid(
+    GRID_CONFIGS.CHARTS,
+    sidebarCollapsed,
+  )
 
   const currentPageName = GetCurrentPageName()
 
@@ -392,7 +407,11 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
   return (
     <>
-      <SettingsLayout course_name={course_name}>
+      <SettingsLayout
+        course_name={course_name}
+        sidebarCollapsed={sidebarCollapsed}
+        setSidebarCollapsed={setSidebarCollapsed}
+      >
         <Head>
           <title>{course_name}</title>
           <meta
@@ -470,7 +489,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                   </div>
 
                   {/* Main Stats Grid with Integrated Weekly Trends */}
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                  <div className={`grid gap-6 ${statsGridClasses}`}>
                     {/* Conversations Card */}
                     <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] transition-all duration-200">
                       <div className="mb-3 flex items-center justify-between">
@@ -746,7 +765,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                    <div className={`grid gap-6 ${statsGridClasses}`}>
                       {/* Average Conversations per User */}
                       <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] transition-all duration-200">
                         <div className="mb-3 flex items-center justify-between">
@@ -852,7 +871,9 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                 </div>
 
                 {/* Charts Section - Using filtered stats */}
-                <div className="grid w-[95%] grid-cols-1 gap-6 pb-10 lg:grid-cols-2">
+                <div
+                  className={`grid w-[95%] gap-6 pb-10 ${chartsGridClasses}`}
+                >
                   {/* Date Range Selector - Always visible */}
                   <div className="rounded-xl bg-[--dashboard-background-faded] p-6 lg:col-span-2">
                     <div className="flex items-center justify-between">

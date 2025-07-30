@@ -23,7 +23,10 @@ import { type CourseMetadata } from '~/types/courseMetadata'
 import { CannotEditCourse } from './CannotEditCourse'
 
 import { notifications } from '@mantine/notifications'
-import SettingsLayout from '~/components/Layout/SettingsLayout'
+import SettingsLayout, {
+  getInitialCollapsedState,
+} from '~/components/Layout/SettingsLayout'
+import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import GlobalFooter from './GlobalFooter'
 import { LoadingPlaceholderForAdminPages } from './MainPageBackground'
 import { N8nWorkflowsTable } from './N8nWorkflowsTable'
@@ -37,6 +40,8 @@ import { useAuth } from 'react-oidc-context'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { useFetchAllWorkflows } from '~/utils/functionCalling/handleFunctionCalling'
 import { IntermediateStateAccordion } from './IntermediateStateAccordion'
+
+// Utility function for responsive card widths based on sidebar state
 
 export const GetCurrentPageName = () => {
   // /CS-125/dashboard --> CS-125
@@ -61,8 +66,13 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
   const [isEmptyWorkflowTable, setIsEmptyWorkflowTable] =
     useState<boolean>(false)
   const [isLoading, setIsLoading] = useState(false)
-
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    getInitialCollapsedState(),
+  )
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
+
+  // Get responsive card width classes
+  const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed)
 
   const {
     data: flows_table,
@@ -314,7 +324,11 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
   // )
 
   return (
-    <SettingsLayout course_name={course_name}>
+    <SettingsLayout
+      course_name={course_name}
+      sidebarCollapsed={sidebarCollapsed}
+      setSidebarCollapsed={setSidebarCollapsed}
+    >
       <Head>
         <title>{course_name}</title>
         <meta
@@ -331,7 +345,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
               withBorder
               padding="none"
               radius="xl"
-              className="mt-[2%] w-[96%] md:w-full 2xl:w-[95%]"
+              className={`mt-[2%] ${cardWidthClasses}`}
               style={{
                 // maxWidth: '90%',
                 // width: '100%',
@@ -619,7 +633,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
 
             <div
               // Course files header/background
-              className="mx-auto mt-[2%] w-[96%] items-start rounded-2xl bg-[--background] text-[--foreground] md:w-full 2xl:w-[95%]"
+              className={`mx-auto mt-[2%] items-start rounded-2xl bg-[--background] text-[--foreground] ${cardWidthClasses}`}
               style={{ zIndex: 1 }}
             >
               <Flex direction="row" justify="space-between">
@@ -657,6 +671,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
               n8nApiKey={n8nApiKey}
               course_name={course_name}
               isEmptyWorkflowTable={isEmptyWorkflowTable}
+              sidebarCollapsed={sidebarCollapsed}
             />
           </Flex>
         </div>

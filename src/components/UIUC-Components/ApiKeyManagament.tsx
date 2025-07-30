@@ -1,44 +1,47 @@
-import React, { useEffect, useState } from 'react'
 import {
-  Card,
-  Title,
   Button,
-  Text,
+  Card,
+  Collapse,
   Flex,
   Group,
   Input,
-  useMantineTheme,
-  Textarea,
-  Select,
-  Paper,
-  Collapse,
   List,
+  Paper,
+  Text,
+  Title,
+  useMantineTheme,
 } from '@mantine/core'
 import { useClipboard, useMediaQuery } from '@mantine/hooks'
 import { showNotification } from '@mantine/notifications'
-import { type AuthContextProps } from 'react-oidc-context'
 import {
+  IconBook,
   IconCheck,
+  IconChevronDown,
   IconCopy,
   IconExternalLink,
-  IconBook,
-  IconChevronDown,
 } from '@tabler/icons-react'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import style from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark'
-import APIRequestBuilder from './APIRequestBuilder'
+import { useEffect, useState } from 'react'
+import { type AuthContextProps } from 'react-oidc-context'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
+import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
+import APIRequestBuilder from './APIRequestBuilder'
 
 const ApiKeyManagement = ({
   course_name,
   auth,
+  sidebarCollapsed = false,
 }: {
   course_name: string
   auth: AuthContextProps
+  sidebarCollapsed?: boolean
 }) => {
   const theme = useMantineTheme()
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const { copy } = useClipboard()
+
+  // Get responsive card width classes based on sidebar state
+  const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed || false)
   const [apiKey, setApiKey] = useState<string | null>(null)
   const baseUrl = process.env.VERCEL_URL || window.location.origin
   const [loading, setLoading] = useState(true)
@@ -304,7 +307,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
       withBorder
       padding="none"
       radius="xl"
-      className="mt-[2%] w-[96%] md:w-full 2xl:w-[95%]"
+      className={`mt-[2%] ${cardWidthClasses}`}
       style={{
         backgroundColor: 'var(--background)',
         borderColor: 'var(--dashboard-border)',
