@@ -20,7 +20,9 @@ import Head from 'next/head'
 import Image from 'next/image'
 import React, { forwardRef, useEffect, useState } from 'react'
 import { getModelLogo } from '~/components/Chat/ModelSelect'
-import SettingsLayout from '~/components/Layout/SettingsLayout'
+import SettingsLayout, {
+  getInitialCollapsedState,
+} from '~/components/Layout/SettingsLayout'
 import {
   useGetProjectLLMProviders,
   useSetProjectLLMProviders,
@@ -42,6 +44,7 @@ import {
   type SambaNovaProvider,
   type WebLLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
+import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import { GetCurrentPageName } from '../CanViewOnlyCourse'
 import GlobalFooter from '../GlobalFooter'
 import AnthropicProviderInput from './providers/AnthropicProviderInput'
@@ -414,6 +417,12 @@ export function findDefaultModel(
 
 export default function APIKeyInputForm() {
   const projectName = GetCurrentPageName()
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    getInitialCollapsedState(),
+  )
+
+  // Get responsive card width classes based on sidebar state
+  const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed)
 
   // ------------ <TANSTACK QUERIES> ------------
   const queryClient = useQueryClient()
@@ -583,7 +592,11 @@ export default function APIKeyInputForm() {
   // }
 
   return (
-    <SettingsLayout course_name={projectName}>
+    <SettingsLayout
+      course_name={projectName}
+      sidebarCollapsed={sidebarCollapsed}
+      setSidebarCollapsed={setSidebarCollapsed}
+    >
       <Head>
         <title>{projectName}/LLMs</title>
         <meta
@@ -600,7 +613,7 @@ export default function APIKeyInputForm() {
               withBorder
               padding="none"
               radius="xl"
-              className="mt-[2%] w-[96%] md:w-full 2xl:w-[95%]"
+              className={`mt-[2%] ${cardWidthClasses}`}
               style={{
                 // maxWidth: '90%',
                 // width: '100%',

@@ -4,7 +4,9 @@ import { type NextPage } from 'next'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
-import SettingsLayout from '~/components/Layout/SettingsLayout'
+import SettingsLayout, {
+  getInitialCollapsedState,
+} from '~/components/Layout/SettingsLayout'
 import ApiKeyManagement from '~/components/UIUC-Components/ApiKeyManagament'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 import { LoadingPlaceholderForAdminPages } from '~/components/UIUC-Components/MainPageBackground'
@@ -21,7 +23,9 @@ const ApiPage: NextPage = () => {
   )
   const [isLoading, setIsLoading] = useState(true)
   const [courseName, setCourseName] = useState<string | null>(null)
-
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    getInitialCollapsedState(),
+  )
   const getCurrentPageName = () => {
     return router.query.course_name as string
   }
@@ -86,13 +90,18 @@ const ApiPage: NextPage = () => {
   }
 
   return (
-    <SettingsLayout course_name={router.query.course_name as string}>
+    <SettingsLayout
+      course_name={router.query.course_name as string}
+      sidebarCollapsed={sidebarCollapsed}
+      setSidebarCollapsed={setSidebarCollapsed}
+    >
       <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
         <div className="items-left flex w-full flex-col justify-center py-0">
           <Flex direction="column" align="center" w="100%">
             <ApiKeyManagement
               course_name={router.query.course_name as string}
               auth={auth}
+              sidebarCollapsed={sidebarCollapsed}
             />
           </Flex>
         </div>

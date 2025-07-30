@@ -7,12 +7,32 @@ interface SettingsLayoutProps {
   children: React.ReactNode
   course_name: string
   bannerUrl?: string
+  sidebarCollapsed: boolean
+  setSidebarCollapsed: (collapsed: boolean) => void
+}
+
+// Helper function to safely get initial collapsed state
+export const getInitialCollapsedState = (): boolean => {
+  if (typeof window === 'undefined') return false // SSR safe
+
+  try {
+    const savedCollapsed = localStorage.getItem('sidebar-collapsed')
+    return savedCollapsed !== null ? JSON.parse(savedCollapsed) : false
+  } catch (error) {
+    console.warn(
+      'Failed to load sidebar collapsed state from localStorage:',
+      error,
+    )
+    return false
+  }
 }
 
 export default function SettingsLayout({
   children,
   course_name,
   bannerUrl = '',
+  sidebarCollapsed,
+  setSidebarCollapsed,
 }: SettingsLayoutProps) {
   const router = useRouter()
   const [activeLink, setActiveLink] = useState<string>('')
@@ -43,6 +63,19 @@ export default function SettingsLayout({
     setSidebarOpen(!sidebarOpen)
   }
 
+  const toggleSidebarCollapse = () => {
+    const newCollapsed = !sidebarCollapsed
+    setSidebarCollapsed(newCollapsed)
+    try {
+      localStorage.setItem('sidebar-collapsed', JSON.stringify(newCollapsed))
+    } catch (error) {
+      console.warn(
+        'Failed to save sidebar collapsed state to localStorage:',
+        error,
+      )
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[--background] pt-20">
       {/* Main Navbar */}
@@ -55,17 +88,20 @@ export default function SettingsLayout({
           isOpen={sidebarOpen}
           onToggle={toggleSidebar}
           activeLink={activeLink}
+          isCollapsed={sidebarCollapsed}
+          onCollapseToggle={toggleSidebarCollapse}
         />
 
         {/* Main Content */}
         <main
-          className={`flex-1 transition-all duration-300 ${
-            sidebarOpen ? 'md:ml-[280px]' : ''
-          }`}
+          className={`flex-1 transition-all duration-300 
+            ${sidebarOpen && !sidebarCollapsed ? 'md:ml-[280px]' : ''} 
+            ${sidebarOpen && sidebarCollapsed ? 'md:ml-[80px]' : ''}
+          `}
         >
-          <div className="min-h-[calc(100vh-80px)] px-4 py-2 md:px-6 md:py-3 lg:px-8 lg:py-4">
-            {children}
-          </div>
+          {/* <div className="min-h-[calc(100vh-80px)] px-4 py-2 md:px-6 md:py-3 lg:px-8 lg:py-4"> */}
+          {children}
+          {/* </div> */}
         </main>
       </div>
     </div>

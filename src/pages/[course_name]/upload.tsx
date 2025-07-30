@@ -5,7 +5,9 @@ import { useEffect, useState } from 'react'
 import { Flex } from '@mantine/core'
 import Head from 'next/head'
 import { useAuth } from 'react-oidc-context'
-import SettingsLayout from '~/components/Layout/SettingsLayout'
+import SettingsLayout, {
+  getInitialCollapsedState,
+} from '~/components/Layout/SettingsLayout'
 import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 import { CannotEditCourse } from '~/components/UIUC-Components/CannotEditCourse'
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
@@ -17,7 +19,9 @@ import { fetchCourseMetadata } from '~/utils/apiUtils'
 const CourseMain: NextPage = () => {
   const router = useRouter()
   const [projectName, setProjectName] = useState<string | null>(null)
-
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    getInitialCollapsedState(),
+  )
   const [isFetchingCourseMetadata, setIsFetchingCourseMetadata] = useState(true)
   const auth = useAuth()
   const isLoaded = !auth.isLoading
@@ -75,7 +79,11 @@ const CourseMain: NextPage = () => {
   }
 
   return (
-    <SettingsLayout course_name={projectName}>
+    <SettingsLayout
+      course_name={projectName}
+      sidebarCollapsed={sidebarCollapsed}
+      setSidebarCollapsed={setSidebarCollapsed}
+    >
       <Head>
         <title>{projectName}/upload</title>
         <meta
