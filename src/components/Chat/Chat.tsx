@@ -1925,7 +1925,7 @@ export const Chat = memo(
 
                   <motion.div
                     key={selectedConversation?.id}
-                    className="mt-4 max-h-full"
+                    className="max-h-full"
                     ref={chatContainerRef}
                     onScroll={handleScroll}
                     initial={{ opacity: 1, scale: 1 }}

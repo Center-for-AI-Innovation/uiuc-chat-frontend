@@ -505,7 +505,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                                 w={'80%'}
                                 type="ordered"
                                 withPadding
-                                className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                className={`${montserrat_paragraph.variable} font-montserratParagraph text-[--foreground]`}
                               >
                                 <List.Item>
                                   Start by creating your first workflow on{' '}

@@ -805,45 +805,46 @@ export const ChatInput = ({
 
   return (
     <div
-      className={`absolute bottom-0 left-0 w-full border-transparent bg-transparent pt-6 md:pt-2`}
+      className={`absolute bottom-0 left-0 w-full border-transparent bg-transparent`}
       style={{ pointerEvents: 'none' }}
     >
       <div
         className="stretch mx-2 mt-4 flex flex-col gap-3 last:mb-2 md:mx-4 md:mt-[52px] md:last:mb-6 lg:mx-auto lg:max-w-3xl"
         style={{ pointerEvents: 'auto' }}
       >
-        {messageIsStreaming && (
-          <button
-            className={`absolute ${isSmallScreen ? '-top-28' : '-top-20'} left-0 right-0 mx-auto mb-12 flex w-fit items-center gap-3 rounded border border-[--primary] bg-[--primary] px-4 py-2 text-[--background] opacity-[.85] hover:opacity-100 md:mb-0 md:mt-2`}
-            onClick={handleStopConversation}
-            style={{ pointerEvents: 'auto' }}
-          >
-            <IconPlayerStop size={16} /> {t('Stop Generating')}
-          </button>
-        )}
-
-        {!messageIsStreaming &&
-          selectedConversation &&
-          selectedConversation.messages &&
-          selectedConversation.messages.length > 0 &&
-          selectedConversation.messages[
-            selectedConversation.messages.length - 1
-          ]?.role === 'user' && (
-            <button
-              className={`absolute ${isSmallScreen ? '-top-28' : '-top-20'} left-0 right-0 mx-auto mb-12 flex w-fit items-center gap-3 rounded border border-[--primary] bg-[--primary] px-4 py-2 text-[--illinois-white] opacity-[.85] hover:opacity-100 md:mb-0 md:mt-2`}
-              style={{ pointerEvents: 'auto' }}
-              onClick={onRegenerate}
-            >
-              <IconRepeat size={16} /> {t('Regenerate Response')}
-            </button>
-          )}
-
         <div
           ref={chatInputParentContainerRef}
-          className="chat_input_container absolute bottom-0 mx-4 flex w-[80%] flex-col self-center rounded-t-3xl bg-[--message-background] px-4 pb-8 pt-4 text-[--message] md:mx-20 md:w-[70%]"
+          className="chat_input_container fixed bottom-0 mx-4 flex w-[80%] flex-col self-center rounded-t-3xl bg-[--message-background] px-4 pb-8 pt-4 text-[--message] md:mx-20 md:w-[60%]"
           style={{ pointerEvents: 'auto', backdropFilter: 'blur(4px)' }}
         >
           {/* FUTURE: rewrite to be flex instead of using absolute */}
+
+          {/* moved stop generating and regenerate buttons here to position off of bottom input area...as textarea varies in height */}
+          {messageIsStreaming && (
+            <button
+              className={`absolute -top-14 left-0 right-0 mx-auto mb-12 flex w-fit items-center gap-3 rounded border border-[--primary] bg-[--primary] px-4 py-2 text-[--background] opacity-[.85] hover:opacity-100 md:mb-0 md:mt-2`}
+              onClick={handleStopConversation}
+              style={{ pointerEvents: 'auto' }}
+            >
+              <IconPlayerStop size={16} /> {t('Stop Generating')}
+            </button>
+          )}
+
+          {!messageIsStreaming &&
+            selectedConversation &&
+            selectedConversation.messages &&
+            selectedConversation.messages.length > 0 &&
+            selectedConversation.messages[
+              selectedConversation.messages.length - 1
+            ]?.role === 'user' && (
+              <button
+                className={`absolute -top-14 left-0 right-0 mx-auto mb-12 flex w-fit items-center gap-3 rounded border border-[--primary] bg-[--primary] px-4 py-2 text-[--illinois-white] opacity-[.85] hover:opacity-100 md:mb-0 md:mt-2`}
+                style={{ pointerEvents: 'auto' }}
+                onClick={onRegenerate}
+              >
+                <IconRepeat size={16} /> {t('Regenerate Response')}
+              </button>
+            )}
 
           {/* BUTTON 2: Image Icon and Input */}
           {selectedConversation?.model?.id &&
@@ -1015,7 +1016,7 @@ export const ChatInput = ({
             </button>
 
             {showScrollDownButton && (
-              <div className="absolute bottom-12 right-0 lg:-right-10 lg:bottom-0">
+              <div className="absolute -right-10 bottom-2">
                 <button
                   className="flex h-7 w-7 items-center justify-center rounded-full bg-[--background-faded] text-[--foreground] hover:bg-[--background-dark] focus:outline-none"
                   onClick={onScrollDownClick}
