@@ -60,9 +60,9 @@ const Sidebar = <T,>({
   }
 
   return isOpen ? (
-    <div className="relative">
+    <div className="relative h-full">
       <div
-        className={`absolute top-0 ${side}-0 z-40 flex h-full w-[260px] flex-none flex-col space-y-2 border-r border-[--dashboard-border] bg-[--sidebar-background] p-2 text-[14px] shadow-xl transition-all sm:relative sm:top-0`}
+        className={`relative ${side}-0 z-40 flex h-full w-[260px] flex-none flex-col space-y-2 border-r border-[--dashboard-border] bg-[--sidebar-background] p-2 text-[14px] shadow-xl transition-all sm:relative sm:top-0`}
       >
         <div className="flex items-center">
           <button
@@ -102,7 +102,7 @@ const Sidebar = <T,>({
         />
         <div className="flex-grow overflow-auto" onScroll={onScroll}>
           {folders?.length > 0 && (
-            <div className="flex border-b border-[--foreground-faded] pb-2">
+            <div className="flex border-b border-[--dashboard-border] pb-2">
               {folderComponent}
             </div>
           )}
