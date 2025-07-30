@@ -1165,9 +1165,25 @@ export function ProjectFilesTable({
                             value: 'tag-item self-center',
                           }}
                           styles={{
+                            item: {
+                              color: 'var(--foreground)',
+                              backgroundColor: 'var(--background)',
+                              '&:hover': {},
+                              '&[data-hovered]': {
+                                color: 'var(--dashboard-button-foreground)',
+                                backgroundColor: 'var(--dashboard-button)',
+                              },
+                            },
                             input: {
                               color: 'var(--foreground)',
                               backgroundColor: 'var(--background)',
+                            },
+                            dropdown: {
+                              '.mantine-MultiSelect-nothingFound': {
+                                color: 'var(--foreground)',
+                                textAlign: 'left',
+                                padding: '.5rem',
+                              },
                             },
                             value: {
                               marginTop: '2px',
@@ -1335,15 +1351,15 @@ export function ProjectFilesTable({
           overlayProps={{ blur: 3, opacity: 0.55 }}
           styles={{
             header: {
-              backgroundColor: '#15162c',
+              backgroundColor: 'var(--modal)',
               borderBottom: '2px solid',
-              borderColor: theme.colors.dark[3],
+              borderColor: 'var(--modal-border)',
             },
             body: {
-              backgroundColor: '#15162c',
+              backgroundColor: 'var(--modal)',
             },
             title: {
-              color: 'white',
+              color: 'var(--modal-text)',
               fontFamily: montserrat_heading.variable,
               fontWeight: 'bold',
             },
@@ -1355,7 +1371,7 @@ export function ProjectFilesTable({
               justifyContent: 'center',
               alignItems: 'center',
               height: '100%',
-              paddingTop: '20px',
+              padding: '2rem 1rem 1rem 1rem',
             }}
           >
             <Code style={{ whiteSpace: 'pre-wrap' }}>
