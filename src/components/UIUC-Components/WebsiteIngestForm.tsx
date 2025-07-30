@@ -418,7 +418,7 @@ export default function WebsiteIngestForm({
                     style={{ color: 'red', fontSize: '16px' }}
                     className={`${montserrat_heading.variable} font-montserratHeading`}
                   >
-                    Contact Us to enable this feature!
+                    Coming soon! Contact us if interested.
                   </Text>
                   <Input
                     icon={icon}
