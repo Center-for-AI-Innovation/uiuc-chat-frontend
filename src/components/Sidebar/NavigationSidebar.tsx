@@ -9,7 +9,7 @@ import {
   IconMoon,
   IconSun,
 } from '@tabler/icons-react'
-import { montserrat_heading } from 'fonts'
+import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import {
@@ -89,7 +89,7 @@ const useStyles = createStyles((theme) => ({
     backgroundColor: 'var(--dashboard-button)',
     color: 'var(--dashboard-button-foreground)',
     border: 'none',
-    borderRadius: theme.radius.md,
+    borderRadius: theme.radius.lg,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -135,7 +135,7 @@ const useStyles = createStyles((theme) => ({
     backgroundColor: 'transparent',
     color: 'var(--foreground)',
     border: '2px solid var(--dashboard-border)',
-    borderRadius: theme.radius.sm,
+    borderRadius: theme.radius.md,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -155,7 +155,7 @@ const useStyles = createStyles((theme) => ({
     backgroundColor: 'transparent',
     color: 'var(--foreground-faded)',
     border: '1px solid var(--dashboard-border)',
-    borderRadius: theme.radius.sm,
+    borderRadius: theme.radius.md,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -206,7 +206,7 @@ const useStyles = createStyles((theme) => ({
     // marginBottom: theme.spacing.lg,
     padding: theme.spacing.sm,
     backgroundColor: 'var(--background-faded)',
-    borderRadius: theme.radius.sm,
+    borderRadius: theme.radius.md,
     fontSize: rem(13),
     marginRight: theme.spacing.md,
     color: 'var(--foreground-faded)',
@@ -228,7 +228,7 @@ const useStyles = createStyles((theme) => ({
     padding: `${theme.spacing.sm} ${theme.spacing.md}`,
     color: 'var(--navbar-foreground)',
     textDecoration: 'none',
-    borderRadius: theme.radius.sm,
+    borderRadius: theme.radius.md,
     marginBottom: theme.spacing.xs,
     fontSize: rem(14),
     fontWeight: 500,
@@ -534,8 +534,10 @@ export default function NavigationSidebar({
               }
             }}
           >
-            <IconChevronLeft size={16} />
-            <span className={`md:${isCollapsed ? 'hidden' : 'inline'}`}>
+            <IconChevronLeft size={16} strokeWidth={3} />
+            <span
+              className={`md:${isCollapsed ? 'hidden' : 'inline'} ${montserrat_paragraph.variable} font-montserratParagraph font-bold`}
+            >
               Back to Chat
             </span>
           </button>
