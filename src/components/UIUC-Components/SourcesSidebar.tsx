@@ -1,11 +1,9 @@
-import { IconArrowBarRight } from '@tabler/icons-react'
-import { type ContextWithMetadata } from '~/types/chat'
 import { Text } from '@mantine/core'
+import { IconArrowBarRight } from '@tabler/icons-react'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { useRouter } from 'next/router'
-import { useEffect, useContext } from 'react'
+import { useEffect } from 'react'
+import { type ContextWithMetadata } from '~/types/chat'
 import { CitationCard } from './CitationCard'
-import HomeContext from '~/pages/api/home/home.context'
 
 interface Props {
   isOpen: boolean
@@ -216,7 +214,10 @@ const SourcesSidebar = ({
 
   return isOpen ? (
     <>
-      <div className="absolute bottom-0 right-0 top-0 z-40 flex h-full w-[260px] flex-col bg-[--sources-background] text-[--sources-foreground] shadow-lg">
+      <div
+        className="fixed bottom-0 right-0 top-20 z-[1000] flex w-[260px] flex-col bg-[--sources-background] text-[--sources-foreground] shadow-lg"
+        style={{ height: 'calc(100vh - 80px)' }}
+      >
         <div className="flex-1 overflow-y-auto">{renderContent()}</div>
 
         <button

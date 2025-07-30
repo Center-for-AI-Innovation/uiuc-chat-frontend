@@ -1909,7 +1909,6 @@ export const Chat = memo(
               <ChatNavbar bannerUrl={bannerUrl as string} isgpt4={true} />
             </div>
 */}
-            {/* Fixed settings button - positioned outside scrollable area */}
             <div className="group absolute right-4 top-4 z-20">
               <button
                 className="rounded-md bg-[--dashboard-button] p-2 text-[--dashboard-button-foreground] transition-opacity hover:opacity-80"
