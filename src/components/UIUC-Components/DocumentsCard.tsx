@@ -88,6 +88,7 @@ function DocumentsCard({
           opened={exportModalOpened}
           onClose={() => setExportModalOpened(false)}
           title="Please confirm your action"
+          centered
         >
           <Text size="sm" style={{ color: 'white' }}>
             {`Are you sure you want to export all the documents and embeddings?`}
