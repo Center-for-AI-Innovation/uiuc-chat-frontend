@@ -98,8 +98,11 @@ const handler = async (
 
     // 3. Call your new chat file processing endpoint
     const s3_filepath = s3Key // s3Key should already be the full path
+    // Get user email from the conversation record we already fetched
+    const userEmail = existingConv?.user_email || 'unknown@example.com'
 
     const backendUrl = getBackendUrl()
+    //const backendUrl = 'http://localhost:8000';
 
     const response = await fetch(
       //'https://flask-production-751b.up.railway.app/process-chat-file',
@@ -118,7 +121,8 @@ const handler = async (
           conversation_id: conversationId,
           s3_path: s3_filepath,
           readable_filename: fileName,
-          user_id: 'placeholder@example.com', // Placeholder, will be updated later
+          user_id: userEmail,
+          course_name: courseName,
         }),
       },
     )

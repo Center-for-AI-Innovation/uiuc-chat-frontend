@@ -189,7 +189,15 @@ export const buildPrompt = async ({
       if (query_topContext) {
         const queryContextMsg = `
         <RetrievedDocumentsInstructions>
-        The following are passages retrieved via RAG from a large dataset. They may be relevant but aren't guaranteed to be. Evaluate critically, use what's pertinent, and disregard irrelevant info. When using information from these passages, place citations before the period, using the exact same XML citation format shown in the examples above (e.g., "This is a statement <cite>1</cite>.").
+        The following are passages retrieved via RAG from a large dataset. They may be relevant but aren't guaranteed to be. Evaluate critically, use what's pertinent, and disregard irrelevant info. When using information from these passages, place citations before the period, using XML-style citation tags in the following format:
+        - Use "<cite>1</cite>" when referencing document 1, placing it immediately before the period
+        - For multiple sources, include all citation numbers within a single tag, separated by commas: "<cite>1, 2, 3</cite>"
+
+        Here are examples of how to properly integrate citations in your response:
+        - "The loop invariant is a condition that must be true before and after each iteration of the loop. This fundamental concept helps prove the correctness of loop-based algorithms <cite>1</cite>."
+        - "Python lists are implemented as dynamic arrays. When the allocated space is filled, Python will automatically resize the array to accommodate more elements <cite>2</cite>."
+        - "The course has a strict late submission policy. All assignments are due every Friday by 11:59 PM, and late submissions will incur a 10% penalty per day <cite>3</cite>."
+        - "Object-oriented programming combines data and functionality into objects, while functional programming treats computation as the evaluation of mathematical functions and avoids changing state <cite>1, 3</cite>."
         </RetrievedDocumentsInstructions>
         
         <PotentiallyRelevantDocuments>
