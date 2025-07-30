@@ -1432,7 +1432,7 @@ export const ChatMessage = memo(
                         ) : (
                           <>{message.content}</>
                         )}
-                        <div className="flex w-full flex-col items-start space-y-2">
+                        <div className="mt-2 flex w-full flex-col items-start space-y-2">
                           {/* Query rewrite loading state - only show for current message */}
                           {isQueryRewriting &&
                             messageIndex ===
