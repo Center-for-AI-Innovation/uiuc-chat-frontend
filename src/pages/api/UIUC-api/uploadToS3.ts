@@ -15,7 +15,7 @@ if (region && process.env.AWS_KEY && process.env.AWS_SECRET) {
       secretAccessKey: process.env.AWS_SECRET,
     },
     endpoint: process.env.MINIO_ENDPOINT,
-    forcePathStyle: true, // Required for MinIO
+    //forcePathStyle: true, // Required for MinIO
   })
 }
 
