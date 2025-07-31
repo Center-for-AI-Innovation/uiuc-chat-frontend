@@ -1348,15 +1348,18 @@ export function ProjectFilesTable({
           styles={{
             header: {
               backgroundColor: 'var(--modal)',
-              borderBottom: '2px solid',
+              borderBottom: '1px solid',
               borderColor: 'var(--modal-border)',
             },
             body: {
+              color: 'var(--modal-text)',
               backgroundColor: 'var(--modal)',
+            },
+            close: {
+              color: 'var(--foreground-faded)',
             },
             title: {
               color: 'var(--modal-text)',
-              fontFamily: montserrat_heading.variable,
               fontWeight: 'bold',
             },
           }}
@@ -1367,10 +1370,13 @@ export function ProjectFilesTable({
               justifyContent: 'center',
               alignItems: 'center',
               height: '100%',
-              padding: '2rem 1rem 1rem 1rem',
+              padding: '1rem',
             }}
           >
-            <Code style={{ whiteSpace: 'pre-wrap' }}>
+            <Code
+              className="bg-[--modal] p-0 text-[--modal-text]"
+              style={{ whiteSpace: 'pre-wrap', lineHeight: '165%' }}
+            >
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <CopyButton value={currentError} timeout={2000}>
                   {({ copied, copy }) => (
@@ -1384,9 +1390,15 @@ export function ProjectFilesTable({
                         onClick={copy}
                       >
                         {copied ? (
-                          <IconCheck size="1rem" />
+                          <IconCheck
+                            size="1rem"
+                            className="text-[--foreground]"
+                          />
                         ) : (
-                          <IconCopy size="1rem" />
+                          <IconCopy
+                            size="1rem"
+                            className="text-[--foreground-faded]"
+                          />
                         )}
                       </ActionIcon>
                     </Tooltip>
