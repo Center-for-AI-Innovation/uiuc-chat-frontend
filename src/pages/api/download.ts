@@ -20,20 +20,19 @@ if (region && process.env.AWS_KEY && process.env.AWS_SECRET) {
 // MinIO Client configuration
 let vyriadMinioClient: S3Client | null = null
 if (
-  process.env.MINIO_KEY &&
-  process.env.MINIO_SECRET &&
-  process.env.MINIO_ENDPOINT
+  process.env.VYRIAD_KEY &&
+  process.env.VYRIAD_SECRET &&
+  process.env.VYRIAD_ENDPOINT
 ) {
   vyriadMinioClient = new S3Client({
-    region: process.env.MINIO_REGION || 'us-east-1', // MinIO requires a region, but it can be arbitrary
+    region: process.env.VYRIAD_REGION || 'us-east-1', // MinIO requires a region, but it can be arbitrary
     credentials: {
-      accessKeyId: process.env.MINIO_KEY,
-      secretAccessKey: process.env.MINIO_SECRET,
+      accessKeyId: process.env.VYRIAD_KEY,
+      secretAccessKey: process.env.VYRIAD_SECRET,
     },
-    endpoint: process.env.MINIO_ENDPOINT,
+    endpoint: process.env.VYRIAD_ENDPOINT,
     forcePathStyle: true, // Required for MinIO
-  })
-}
+})
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
