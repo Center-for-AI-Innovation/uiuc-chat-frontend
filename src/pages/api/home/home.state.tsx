@@ -1,19 +1,26 @@
-import { Action, Conversation, Message, UIUCTool } from '@/types/chat'
-import { ErrorMessage } from '@/types/error'
-import { FolderInterface, FolderWithConversation } from '@/types/folder'
-import { OpenAIModelID } from '~/utils/modelProviders/types/openai'
-import { PluginKey } from '@/types/plugin'
-import { Prompt } from '@/types/prompt'
 import {
-  AnySupportedModel,
-  AllLLMProviders,
+  type Action,
+  type Conversation,
+  type Message,
+  type UIUCTool,
+} from '@/types/chat'
+import { type ErrorMessage } from '@/types/error'
+import {
+  type FolderInterface,
+  type FolderWithConversation,
+} from '@/types/folder'
+import { type OpenAIModelID } from '~/utils/modelProviders/types/openai'
+import { type PluginKey } from '@/types/plugin'
+import { type Prompt } from '@/types/prompt'
+import {
+  type AnySupportedModel,
+  type AllLLMProviders,
 } from '~/utils/modelProviders/LLMProvider'
 
 export interface HomeInitialState {
   apiKey: string
   pluginKeys: PluginKey[]
   loading: boolean
-  lightMode: 'light' | 'dark'
   messageIsStreaming: boolean
   modelError: ErrorMessage | null
   llmProviders: AllLLMProviders
@@ -52,7 +59,6 @@ export const initialState: HomeInitialState = {
   apiKey: '',
   loading: false,
   pluginKeys: [],
-  lightMode: 'dark',
   messageIsStreaming: false,
   modelError: null,
   llmProviders: {} as AllLLMProviders,

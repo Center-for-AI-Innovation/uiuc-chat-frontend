@@ -20,12 +20,12 @@ import { useQueryClient } from '@tanstack/react-query'
 
 const GlobalStyle = createGlobalStyle`
   .mantine-Checkbox-input:checked {
-    background-color: purple;
-    border-color: hsl(280,100%,80%);
+    background-color: var(--illinois-orange);
+    border-color: var(--illinois-orange);
   } 
 
   .mantine-Table-root thead tr {
-    background-color: #1e1f3a;
+    background-color: var(--dashboard-background-dark);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 
@@ -35,25 +35,27 @@ const GlobalStyle = createGlobalStyle`
   }
 
   .mantine-Table-root tbody tr {
-    background-color: #15162c;
+    color: var(--foreground);
+    background-color: var(--background);
   }
 
   .mantine-Table-root tbody tr:nth-of-type(odd) {
-    background-color: #1e1f3a;
+    color: var(--foreground);
+    background-color: var(--background-faded);
   }
 
   .mantine-TextInput-input {
-    background-color: #1e1f3a;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: white;
+    color: var(--foreground);
+    background-color: var(--background);
+    border: 1px solid var(--foreground);
   }
 
   .mantine-TextInput-input:focus {
-    border-color: rgb(147, 51, 234);
+    border-color: var(--illinois-orange);
   }
 
   .mantine-ScrollArea-root {
-    background-color: #15162c;
+    background-color: var(--dashboard-background-dark);
     overflow: hidden;
     border-radius: 0.75rem;
   }
@@ -63,19 +65,19 @@ const GlobalStyle = createGlobalStyle`
   }
 
   .mantine-Table-root thead tr th {
-    background-color: #1e1f3a;
+    background-color: var(--dashboard-background-dark);
     position: sticky;
     top: 0;
     z-index: 10;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--dashboard-foreground);
   }
 
   .mantine-ScrollArea-scrollbar {
-    background-color: #1e1f3a;
+    background-color: var(--dashboard-background-dark);
   }
 
   .mantine-ScrollArea-thumb {
-    background-color: rgba(147, 51, 234, 0.4);
+    background-color: var(--dashboard-background);
   }
 `
 
@@ -129,9 +131,15 @@ export function DocGroupsTable({ course_name }: { course_name: string }) {
           mah="calc(80vh - 16rem)"
           type="always"
           offsetScrollbars
-          className="overflow-hidden rounded-xl"
+          className="overflow-hidden"
+          styles={{
+            root: {
+              borderRadius: '0px !important',
+            },
+          }}
         >
           <Table
+            className="document_groups_table"
             style={{
               tableLayout: 'fixed',
               position: 'relative',
@@ -141,7 +149,6 @@ export function DocGroupsTable({ course_name }: { course_name: string }) {
             }}
             // withBorder
             withColumnBorders
-            highlightOnHover
           >
             <thead>
               <tr>
@@ -154,7 +161,7 @@ export function DocGroupsTable({ course_name }: { course_name: string }) {
                 <th className="w-[20%] text-center sm:w-[15%]">
                   <Tooltip
                     multiline
-                    color="#CC65FF"
+                    color="var(--illinois-orange)"
                     arrowPosition="center"
                     arrowSize={8}
                     width={220}
@@ -196,8 +203,17 @@ export function DocGroupsTable({ course_name }: { course_name: string }) {
                           enabled: event.currentTarget.checked,
                         })
                       }
-                      color="grape"
-                      size="lg"
+                      className="cursor-pointer"
+                      styles={{
+                        track: {
+                          backgroundColor: doc_group_obj.enabled
+                            ? 'var(--dashboard-button) !important'
+                            : 'var(--dashboard-background-dark)',
+                          borderColor: doc_group_obj.enabled
+                            ? 'var(--dashboard-button) !important'
+                            : 'var(--dashboard-background-dark)',
+                        },
+                      }}
                     />
                   </td>
                 </tr>

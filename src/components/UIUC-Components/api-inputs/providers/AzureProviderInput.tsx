@@ -4,7 +4,7 @@ import { IconCheck, IconExternalLink, IconX } from '@tabler/icons-react'
 import { APIKeyInput } from '../LLMsApiKeyInputForm'
 import { ModelToggles } from '../ModelToggles'
 import {
-  AzureProvider,
+  type AzureProvider,
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -24,10 +24,9 @@ export default function AzureProviderInput({
   return (
     <motion.div layout>
       <Card
-        shadow="sm"
         p="lg"
         radius="lg"
-        className="max-w-[330px] bg-[#15162c] md:w-[330px]"
+        className="max-w-[330px] bg-[--dashboard-background-faded] text-[--dashboard-foreground] md:w-[330px]"
       >
         <div
           style={{
@@ -71,7 +70,11 @@ export default function AzureProviderInput({
                 }}
                 thumbIcon={
                   field.state.value ? (
-                    <IconCheck size="0.8rem" color="purple" stroke={3} />
+                    <IconCheck
+                      size="0.8rem"
+                      color="var(--dashboard-button)"
+                      stroke={3}
+                    />
                   ) : (
                     <IconX size="0.8rem" color="grey" stroke={3} />
                   )
@@ -79,11 +82,11 @@ export default function AzureProviderInput({
                 styles={{
                   track: {
                     backgroundColor: field.state.value
-                      ? '#6a29a4 !important'
-                      : '#25262b',
+                      ? 'var(--dashboard-button) !important'
+                      : 'var(--dashboard-background-faded)',
                     borderColor: field.state.value
-                      ? '#6a29a4 !important'
-                      : '#25262b',
+                      ? 'var(--dashboard-button) !important'
+                      : 'var(--dashboard-background-faded)',
                   },
                 }}
               />
@@ -134,6 +137,13 @@ export default function AzureProviderInput({
                       <TextInput
                         label="Azure Endpoint"
                         placeholder="https://your-resource-name.openai.azure.com/"
+                        styles={{
+                          label: { color: 'var(--dashboard-foreground-faded)' },
+                          input: {
+                            color: 'var(--foreground)',
+                            backgroundColor: 'var(--background)',
+                          },
+                        }}
                         value={field.state.value}
                         onChange={(event) =>
                           field.handleChange(event.currentTarget.value)

@@ -3,7 +3,7 @@ import type {
   ChatCompletionMessageToolCall,
   ChatCompletionTool,
 } from 'openai/resources/chat/completions'
-import { Conversation } from '~/types/chat'
+import { type Conversation } from '~/types/chat'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 
 // Change runtime to edge
