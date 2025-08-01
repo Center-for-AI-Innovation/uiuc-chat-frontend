@@ -1,4 +1,4 @@
-import { AnthropicProvider, ProviderNames } from '../LLMProvider'
+import { type AnthropicProvider, ProviderNames } from '../LLMProvider'
 import {
   AnthropicModel,
   AnthropicModelID,

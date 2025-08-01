@@ -1,4 +1,4 @@
-import { ProviderNames } from '../LLMProvider'
+import { type ProviderNames } from '../LLMProvider'
 
 export interface OpenAIProvider {
   provider: ProviderNames.OpenAI

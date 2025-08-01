@@ -1,5 +1,5 @@
 import { IconCheck, IconTrash, IconX } from '@tabler/icons-react'
-import { FC, useState } from 'react'
+import { type FC, useState } from 'react'
 
 import { useTranslation } from 'next-i18next'
 

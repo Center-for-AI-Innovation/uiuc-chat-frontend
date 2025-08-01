@@ -1,14 +1,16 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { ThemeToggle } from './ThemeToggle'
 
 export default function Footer({ isNavbar = false }: { isNavbar?: boolean }) {
   return (
     <footer className="footer footer-center rounded p-10 text-base-content">
       {/*       <div className="grid grid-flow-col gap-4"> */}
-      <div className="flex flex-col flex-wrap items-center justify-center gap-4 sm:flex-row">
+      <div className="flex flex-col flex-wrap items-center justify-center gap-4 text-[--footer-foreground] sm:flex-row">
+        <ThemeToggle />
         <Link
           href="/disclaimer"
-          className="link-hover link text-blue-500"
+          className="link-hover link text-[--footer-link] hover:text-[--footer-link-hover]"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -16,7 +18,7 @@ export default function Footer({ isNavbar = false }: { isNavbar?: boolean }) {
         </Link>
         <Link
           href="https://www.vpaa.uillinois.edu/digital_risk_management/generative_ai/"
-          className="link-hover link text-blue-500"
+          className="link-hover link text-[--footer-link] hover:text-[--footer-link-hover]"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -24,7 +26,7 @@ export default function Footer({ isNavbar = false }: { isNavbar?: boolean }) {
         </Link>
         <Link
           href="https://www.vpaa.uillinois.edu/resources/terms_of_use"
-          className="link-hover link text-blue-500"
+          className="link-hover link text-[--footer-link] hover:text-[--footer-link-hover]"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -32,7 +34,7 @@ export default function Footer({ isNavbar = false }: { isNavbar?: boolean }) {
         </Link>
         <Link
           href="https://www.vpaa.uillinois.edu/resources/web_privacy"
-          className="link-hover link text-blue-500"
+          className="link-hover link text-[--footer-link] hover:text-[--footer-link-hover]"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -42,7 +44,7 @@ export default function Footer({ isNavbar = false }: { isNavbar?: boolean }) {
           MIT Licensed{' '}
           <Link
             href="https://github.com/Center-for-AI-Innovation/uiuc-chat-frontend"
-            className="link-hover link text-blue-500"
+            className="link-hover link text-[--footer-link] hover:text-[--footer-link-hover]"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -50,8 +52,8 @@ export default function Footer({ isNavbar = false }: { isNavbar?: boolean }) {
           </Link>{' '}
           and{' '}
           <Link
-            href="https://github.com/Center-for-AI-Innovation/ai-ta-backend"
-            className="link-hover link text-blue-500"
+            href="https://github.com/Center-for-AI-Innovation/ai-ta-backendhttps://github.com/UIUC-Chatbot/ai-ta-backend"
+            className="link-hover link text-[--footer-link] hover:text-[--footer-link-hover]"
             target="_blank"
             rel="noopener noreferrer"
           >
