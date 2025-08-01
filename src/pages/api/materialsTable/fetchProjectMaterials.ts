@@ -1,4 +1,4 @@
-import { supabase } from '@/utils/supabaseClient'
+import { getSupabaseClient } from '@/utils/supabaseClient'
 import posthog from 'posthog-js'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { PostgrestError } from '@supabase/supabase-js'
@@ -51,6 +51,9 @@ export default async function fetchDocuments(
 
   const from = parseInt(fromStr)
   const to = parseInt(toStr)
+
+  // Get the appropriate Supabase client based on course name
+  const supabase = getSupabaseClient(course_name as string)
 
   try {
     let documents
