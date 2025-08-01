@@ -1,16 +1,15 @@
 // src/pages/api/documentGroups.ts
 import { NextApiRequest, NextApiResponse } from 'next'
-import posthog from 'posthog-js'
-import { CourseDocument } from 'src/types/courseMaterials'
 import {
   addDocumentsToDocGroup,
-  fetchDocumentGroups,
-  fetchEnabledDocGroups,
   removeDocGroup,
   updateDocGroupStatus,
+  fetchDocumentGroups,
+  fetchEnabledDocGroups,
 } from '~/utils/dbUtils'
-
 import { addDocumentsToDocGroupQdrant } from '~/utils/qdrantUtils'
+import posthog from 'posthog-js'
+import { CourseDocument } from '~/types/courseMaterials'
 
 interface RequestBody {
   action:
@@ -145,37 +144,32 @@ export default async function handler(
         })
 
         await removeDocGroup(courseName, doc, docGroup)
-
-        if (!doc.doc_groups) {
-          doc.doc_groups = []
+        const qdrantResponse = await addDocumentsToDocGroupQdrant(courseName, doc)
+        if (qdrantResponse && qdrantResponse.status === 'completed') {
+          res.status(200).json({ success: true })
+        } else {
+          res.status(500).json({
+            success: false,
+            error: 'An error occurred during Qdrant update',
+          })
         }
-        doc.doc_groups = doc.doc_groups.filter(
-          (group: string) => group !== docGroup,
-        )
-        await addDocumentsToDocGroupQdrant(courseName, doc)
-        res.status(200).json({ success: true })
       } else if (action === 'getDocumentGroups') {
-        const documents = await fetchDocumentGroups(courseName)
-        res.status(200).json({ success: true, documents })
-      } else if (
-        action === 'updateDocGroupStatus' &&
-        docGroup &&
-        enabled !== undefined
-      ) {
-        console.log('Updating doc group status: ', docGroup, 'to: ', enabled)
+        const documentGroups = await fetchDocumentGroups(courseName)
+        res.status(200).json({ documentGroups })
+      } else if (action === 'updateDocGroupStatus' && docGroup && enabled !== undefined) {
         await updateDocGroupStatus(courseName, docGroup, enabled)
         res.status(200).json({ success: true })
       } else if (action === 'fetchEnabledDocGroups') {
-        const documents = await fetchEnabledDocGroups(courseName)
-        res.status(200).json({ success: true, documents })
+        const enabledDocGroups = await fetchEnabledDocGroups(courseName)
+        res.status(200).json({ enabledDocGroups })
       } else {
-        res.status(400).json({ success: false, error: 'Invalid action' })
+        res.status(400).json({ error: 'Invalid action or missing parameters' })
       }
     } catch (error) {
-      console.error('Error in document group operation:', error)
-      res.status(500).json({ success: false, error: 'An error occurred' })
+      console.error('Error in documentGroups handler:', error)
+      res.status(500).json({ error: 'Internal server error' })
     }
   } else {
-    res.status(405).json({ success: false, error: 'Method not allowed' })
+    res.status(405).json({ error: 'Method not allowed' })
   }
 }
