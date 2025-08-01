@@ -1,18 +1,18 @@
-import { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiRequest, type NextApiResponse } from 'next'
 import { supabase } from '@/utils/supabaseClient'
 import {
-  Conversation as ChatConversation,
-  Message as ChatMessage,
-  Content,
-  ContextWithMetadata,
-  Role,
-  UIUCTool,
+  type Conversation as ChatConversation,
+  type Message as ChatMessage,
+  type Content,
+  type ContextWithMetadata,
+  type Role,
+  type UIUCTool,
 } from '@/types/chat'
-import { Database } from 'database.types'
+import { type Database } from 'database.types'
 import { v4 as uuidv4 } from 'uuid'
 import {
   AllSupportedModels,
-  GenericSupportedModel,
+  type GenericSupportedModel,
 } from '~/utils/modelProviders/LLMProvider'
 import { sanitizeText } from '@/utils/sanitization'
 

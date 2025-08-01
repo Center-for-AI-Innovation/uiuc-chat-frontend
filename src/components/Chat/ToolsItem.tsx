@@ -44,14 +44,13 @@ export const ToolsItem = ({}) => {
   return (
     <>
       <div
-        className="flex h-full w-[100%] flex-col space-y-4 rounded-lg bg-[#1d1f33] p-4 dark:bg-[#1d1f33]"
+        className="flex h-full w-[100%] flex-col space-y-4 rounded-lg p-3"
         style={{ position: 'relative', zIndex: 100 }}
       >
         <div>
           <div className="flex flex-col"></div>
           <Title
-            className={`px-4 pt-4 ${montserrat_heading.variable} rounded-lg bg-[#15162c] p-4 font-montserratHeading`}
-            color="white"
+            className={`px-4 pt-4 ${montserrat_heading.variable} rounded-lg bg-[--modal-dark] p-4 font-montserratHeading text-[--modal-text]`}
             order={isSmallScreen ? 5 : 3}
           >
             Tools
@@ -67,25 +66,45 @@ export const ToolsItem = ({}) => {
               onChange={handleToolSearchChange}
               w={'90%'}
               size={isSmallScreen ? 'xs' : 'sm'}
+              styles={{
+                input: {
+                  color: 'var(--foreground)',
+                  backgroundColor: 'var(--background-faded)',
+                  borderColor: 'var(--background-dark)',
+                  '&:focus': {
+                    borderColor: 'var(--background-darker)',
+                  },
+                },
+              }}
             />
 
+            {/* unable to use this until v7 of mantine since we can't control the hover color              highlightOnHover */}
             <Table
               variant="striped"
+              className="text-[--modal-text]"
               style={{
                 width: '90%',
               }}
-              highlightOnHover
             >
               <thead>
                 <tr
                   className={`${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`}
                 >
-                  <th style={{ width: '60%', wordWrap: 'break-word' }}>Tool</th>
+                  <th
+                    style={{
+                      width: '60%',
+                      wordWrap: 'break-word',
+                      color: 'var(--foreground)',
+                    }}
+                  >
+                    Tool
+                  </th>
                   <th
                     style={{
                       width: '40%',
                       wordWrap: 'break-word',
                       textAlign: 'center',
+                      color: 'var(--foreground)',
                     }}
                   >
                     <span className="flex flex-col items-center justify-center">
@@ -114,7 +133,7 @@ export const ToolsItem = ({}) => {
                       <Switch
                         checked={tool_obj.enabled}
                         onChange={() => handleToggleChecked(tool_obj.id)}
-                        color="grape"
+                        color="orange"
                         size={isSmallScreen ? 'sm' : 'lg'}
                       />
                     </td>

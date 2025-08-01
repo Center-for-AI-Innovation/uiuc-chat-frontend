@@ -1,4 +1,4 @@
-import { FolderInterface, FolderWithConversation } from '@/types/folder'
+import { FolderInterface, type FolderWithConversation } from '@/types/folder'
 
 // export const saveFoldersInLocalStorage = (folders: FolderInterface[]) => {
 //   localStorage.setItem('folders', JSON.stringify(folders))

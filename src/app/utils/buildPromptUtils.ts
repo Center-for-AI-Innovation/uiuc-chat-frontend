@@ -9,7 +9,7 @@ import {
   type UIUCTool,
 } from '@/types/chat'
 import { NextApiRequest, NextApiResponse } from 'next'
-import { AnySupportedModel } from '~/utils/modelProviders/LLMProvider'
+import { type AnySupportedModel } from '~/utils/modelProviders/LLMProvider'
 import {
   DEFAULT_SYSTEM_PROMPT,
   GUIDED_LEARNING_PROMPT,

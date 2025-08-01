@@ -1,5 +1,5 @@
-import { QueryClient, useMutation } from '@tanstack/react-query'
-import { Message } from '~/types/chat'
+import { type QueryClient, useMutation } from '@tanstack/react-query'
+import { type Message } from '~/types/chat'
 import { deleteMessagesFromServer } from '~/utils/app/message'
 
 // this will only be used for Regenerate Response or Edit a previous message when x number of messages should be deleted
