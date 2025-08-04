@@ -22,9 +22,11 @@ import { KeycloakProvider } from '../providers/KeycloakProvider'
 // Check that PostHog is client-side (used to handle Next.js SSR)
 if (typeof window !== 'undefined') {
   posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY as string, {
-    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com',
+    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://posthog-dev.ilchat.mss.illinois.edu',
     opt_in_site_apps: true,
     autocapture: false,
+    person_profiles: 'always',
+    defaults: '2025-05-24',
     session_recording: {
       maskAllInputs: false,
       maskInputOptions: {
