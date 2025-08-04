@@ -183,7 +183,6 @@ export const messages = pgTable('messages', {
 // Projects table
 export const projects = pgTable('projects', {
   id: bigserial('id', { mode: 'number' }).primaryKey(),
-  // id: bigint('id', { mode: 'number' }).primaryKey(),
   created_at: timestamp('created_at', { withTimezone: true })
     .defaultNow()
     .notNull(),
