@@ -280,19 +280,19 @@ export const buildPrompt = async ({
       remainingTokenBudget -= encoding.encode(userQuery).length
     }
 
-    // P1.2: User GoogleFit Data
-    const user_data = getUserGoogleFitData('1')
-    const user_data_str = JSON.stringify(user_data)
-    const userData = `\nBelow is the user's GoogleFit health and workoutdata. Use this data to answer the user's question.\n<User Data>\n${user_data_str}\n</User Data>`
-    remainingTokenBudget -= encoding.encode(userData).length
-    userPromptSections.push(userData)
+    // // P1.2: User GoogleFit Data
+    // const user_data = getUserGoogleFitData('1')
+    // const user_data_str = JSON.stringify(user_data)
+    // const userData = `\nBelow is the user's GoogleFit health and workoutdata. Use this data to answer the user's question.\n<User Data>\n${user_data_str}\n</User Data>`
+    // remainingTokenBudget -= encoding.encode(userData).length
+    // userPromptSections.push(userData)
 
-    // P1.3: User Profile
-    const userProfile = getUserProfile('1')
-    const userProfileStr = JSON.stringify(userProfile)
-    const userProfileData = `\nBelow is the user's profile. Use this data to answer the user's question.\n<User Profile>\n${userProfileStr}\n</User Profile>`
-    remainingTokenBudget -= encoding.encode(userProfileData).length
-    userPromptSections.push(userProfileData)
+    // // P1.3: User Profile
+    // const userProfile = getUserProfile('1')
+    // const userProfileStr = JSON.stringify(userProfile)
+    // const userProfileData = `\nBelow is the user's profile. Use this data to answer the user's question.\n<User Profile>\n${userProfileStr}\n</User Profile>`
+    // remainingTokenBudget -= encoding.encode(userProfileData).length
+    // userPromptSections.push(userProfileData)
 
     // P2.1 : get the previous conversation summary, if it exists
     if (conversation.summary) {
