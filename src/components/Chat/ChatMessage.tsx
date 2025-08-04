@@ -31,16 +31,6 @@ import {
   IconFile,
   IconEye,
 } from '@tabler/icons-react'
-import React, {
-  createContext,
-  memo,
-  useCallback,
-  useContext,
-  useEffect,
-  useContext as useReactContext,
-  useRef,
-  useState,
-} from 'react'
 
 import {
   type Content,
@@ -1133,96 +1123,65 @@ export const ChatMessage = memo(
               components={{
                 code({ node, inline, className, children, ...props }) {
                   const text = String(children)
-      const content = messageContent || message.content
 
-      if (typeof content === 'string') {
-        // NEW: Check if this is a file upload message
-        const fileContent = parseFileContent(content)
-        if (fileContent) {
-          return (
-            <div className="mb-2">
-              <FileCard
-                fileName={fileContent.fileName}
-                fileType={fileContent.fileType}
-                fileUrl={fileContent.fileUrl}
-                onClick={() =>
-                  handleFilePreview(
-                    fileContent.fileName,
-                    fileContent.fileUrl,
-                    fileContent.fileType,
-                  )
-                }
-              />
-            </div>
-          )
-        }
-        return (
-          <MemoizedReactMarkdown
-            className="dark:prose-invert linkMarkDown supMarkDown codeBlock prose mb-2 flex-1 flex-col items-start space-y-2 overflow-visible"
-            remarkPlugins={[remarkGfm, remarkMath]}
-            rehypePlugins={[rehypeMathjax]}
-            components={{
-              code({ node, inline, className, children, ...props }) {
-                const text = String(children)
+                  // Simple regex to see if there's a [title](url) pattern
+                  const linkRegex = /\[[^\]]+\]\([^)]+\)/
 
-                // Simple regex to see if there's a [title](url) pattern
-                const linkRegex = /\[[^\]]+\]\([^)]+\)/
-
-                // If it looks like a link, parse it again as normal Markdown
-                if (linkRegex.test(text)) {
-                  return (
-                    <MemoizedReactMarkdown
-                      remarkPlugins={[remarkGfm, remarkMath]}
-                      rehypePlugins={[rehypeMathjax]}
-                    >
-                      {text}
-                    </MemoizedReactMarkdown>
-                  )
-                }
-
-                // Handle cursor placeholder
-                if (children.length) {
-                  if (children[0] == '▍') {
+                  // If it looks like a link, parse it again as normal Markdown
+                  if (linkRegex.test(text)) {
                     return (
-                      <span className="mt-1 animate-pulse cursor-default">
-                        ▍
-                      </span>
+                      <MemoizedReactMarkdown
+                        remarkPlugins={[remarkGfm, remarkMath]}
+                        rehypePlugins={[rehypeMathjax]}
+                      >
+                        {text}
+                      </MemoizedReactMarkdown>
                     )
                   }
 
-                  children[0] = (children[0] as string).replace('`▍`', '▍')
-                }
+                  // Handle cursor placeholder
+                  if (children.length) {
+                    if (children[0] == '▍') {
+                      return (
+                        <span className="mt-1 animate-pulse cursor-default">
+                          ▍
+                        </span>
+                      )
+                    }
 
-                const match = /language-(\w+)/.exec(className || '')
+                    children[0] = (children[0] as string).replace('`▍`', '▍')
+                  }
 
-                return !inline ? (
-                  <CodeBlock
-                    key={Math.random()}
-                    language={(match && match[1]) || ''}
-                    value={String(children).replace(/\n$/, '')}
-                    style={{
-                      maxWidth: '100%',
-                      overflowX: 'auto',
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-all',
-                      overflowWrap: 'anywhere',
-                    }}
-                    {...props}
-                  />
-                ) : (
-                  <code
-                    className={'codeBlock'}
-                    {...props}
-                    style={{
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-all',
-                      overflowWrap: 'anywhere',
-                    }}
-                  >
-                    {children}
-                  </code>
-                )
-              },
+                  const match = /language-(\w+)/.exec(className || '')
+
+                  return !inline ? (
+                    <CodeBlock
+                      key={Math.random()}
+                      language={(match && match[1]) || ''}
+                      value={String(children).replace(/\n$/, '')}
+                      style={{
+                        maxWidth: '100%',
+                        overflowX: 'auto',
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-all',
+                        overflowWrap: 'anywhere',
+                      }}
+                      {...props}
+                    />
+                  ) : (
+                    <code
+                      className={'codeBlock'}
+                      {...props}
+                      style={{
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-all',
+                        overflowWrap: 'anywhere',
+                      }}
+                    >
+                      {children}
+                    </code>
+                  )
+                },
               p({ node, children }) {
                 return (
                   <p
@@ -1339,11 +1298,11 @@ export const ChatMessage = memo(
               },
             }}
           >
-            {content}
+            {contentToRender}
           </MemoizedReactMarkdown>
-        )
-      }
-      return <div>Content array handling...</div>
+          )}
+        </>
+      )
     }
 
     // Add MarkdownLink component definition

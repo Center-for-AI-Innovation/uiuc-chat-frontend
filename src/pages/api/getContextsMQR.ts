@@ -11,11 +11,12 @@ export default async function handler(req: any, res: any) {
     search_query,
     token_limit = 6000,
     doc_groups = [],
+    conversation_id,
   } = req.query
 
-  if (!course_name || !search_query) {
+  if (!course_name || !search_query || !conversation_id) {
     return res.status(400).json({
-      error: 'course_name and search_query are required',
+      error: 'course_name, search_query, and conversation_id are required',
     })
   }
 
