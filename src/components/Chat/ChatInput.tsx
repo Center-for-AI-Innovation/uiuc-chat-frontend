@@ -7,13 +7,10 @@ import {
   IconAlertCircle,
   IconX,
   IconRepeat,
-  IconPlus,
+  IconPaperclip,
   IconFileTypeTxt,
   IconFileTypePdf,
   IconFileTypeDocx,
-  IconFileTypePpt,
-  IconFileTypeXls,
-  IconCheck,
   IconFile,
 } from '@tabler/icons-react'
 import { Text } from '@mantine/core'
@@ -1209,7 +1206,7 @@ export const ChatInput = ({
                   />
                 </>
               )}
-              {/* File upload button (plus sign): always visible */}
+              {/* File upload button (attachmentsign): always visible */}
               <button
                 className="mr-2 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
                 onClick={() => fileUploadRef.current?.click()}
@@ -1217,7 +1214,7 @@ export const ChatInput = ({
                 title="Upload files"
                 style={{ pointerEvents: 'auto' }}
               >
-                <IconPlus size={22} />
+                <IconPaperclip size={22} />
               </button>
               <input
                 type="file"
