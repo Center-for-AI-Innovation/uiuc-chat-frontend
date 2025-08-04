@@ -7,6 +7,7 @@
 -- Name: add_document_to_group(text, text, text, text, text[]); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
+\echo Creating function: add_document_to_group
 CREATE OR REPLACE FUNCTION public.add_document_to_group(p_course_name text, p_s3_path text, p_url text, p_readable_filename text, p_doc_groups text[]) RETURNS boolean
     LANGUAGE plpgsql
     AS $$DECLARE
@@ -58,7 +59,7 @@ END;$$;
 --
 -- Name: add_document_to_group_url(text, text, text, text, text[]); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: add_document_to_group_url
 CREATE OR REPLACE FUNCTION public.add_document_to_group_url(p_course_name text, p_s3_path text, p_url text, p_readable_filename text, p_doc_groups text[]) RETURNS boolean
     LANGUAGE plpgsql
     AS $$DECLARE
@@ -111,7 +112,7 @@ END;$$;
 --
 -- Name: c(); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: c
 CREATE OR REPLACE FUNCTION public.c() RETURNS record
     LANGUAGE plpgsql
     AS $$DECLARE
@@ -128,7 +129,7 @@ END;$$;
 --
 -- Name: calculate_weekly_trends(text); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: calculate_weekly_trends
 CREATE OR REPLACE FUNCTION public.calculate_weekly_trends(course_name_input text) RETURNS TABLE(metric_name text, current_week_value numeric, previous_week_value numeric, percentage_change numeric)
     LANGUAGE plpgsql
     AS $$DECLARE
@@ -199,7 +200,7 @@ END;$$;
 --
 -- Name: check_and_lock_flows_v2(integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: check_and_lock_flows_v2
 CREATE OR REPLACE FUNCTION public.check_and_lock_flows_v2(id integer) RETURNS text
     LANGUAGE plpgsql
     AS $$DECLARE
@@ -233,7 +234,7 @@ end;$$;
 --
 -- Name: cn(); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: cn
 CREATE OR REPLACE FUNCTION public.cn() RETURNS text
     LANGUAGE plpgsql
     AS $$DECLARE
@@ -249,7 +250,7 @@ END;$$;
 --
 -- Name: count_models_by_project(text); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: count_models_by_project
 CREATE OR REPLACE FUNCTION public.count_models_by_project(project_name_input text) RETURNS TABLE(model character varying, count bigint)
     LANGUAGE plpgsql
     AS $$BEGIN
@@ -264,7 +265,7 @@ END;$$;
 --
 -- Name: count_models_by_project_v2(text, timestamp without time zone, timestamp without time zone); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: count_models_by_project_v2
 CREATE OR REPLACE FUNCTION public.count_models_by_project_v2(project_name_input text, start_date timestamp without time zone DEFAULT NULL::timestamp without time zone, end_date timestamp without time zone DEFAULT NULL::timestamp without time zone) RETURNS TABLE(model character varying, count bigint)
     LANGUAGE plpgsql
     AS $$
@@ -283,7 +284,7 @@ $$;
 --
 -- Name: get_base_url_with_doc_groups(text); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: get_base_url_with_doc_groups
 CREATE OR REPLACE FUNCTION public.get_base_url_with_doc_groups(p_course_name text) RETURNS json
     LANGUAGE plpgsql
     AS $$DECLARE
@@ -310,7 +311,7 @@ END;$$;
 --
 -- Name: get_convo_maps(); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: get_convo_maps
 CREATE OR REPLACE FUNCTION public.get_convo_maps() RETURNS json
     LANGUAGE plpgsql
     AS $$DECLARE
@@ -341,7 +342,7 @@ END;$$;
 --
 -- Name: get_course_details(); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: get_course_details
 CREATE OR REPLACE FUNCTION public.get_course_details() RETURNS TABLE(course_name text, convo_map_id text, last_uploaded_convo_id bigint)
     LANGUAGE plpgsql
     AS $$
@@ -358,7 +359,7 @@ $$;
 --
 -- Name: get_course_names(); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: get_course_names
 CREATE OR REPLACE FUNCTION public.get_course_names() RETURNS json
     LANGUAGE plpgsql
     AS $$DECLARE
@@ -375,7 +376,7 @@ END;$$;
 --
 -- Name: get_distinct_base_urls(text); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: get_distinct_base_urls
 CREATE OR REPLACE FUNCTION public.get_distinct_base_urls(p_course_name text) RETURNS json
     LANGUAGE plpgsql
     AS $$DECLARE
@@ -393,7 +394,7 @@ END;$$;
 --
 -- Name: get_distinct_course_names(); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: get_distinct_course_names
 CREATE OR REPLACE FUNCTION public.get_distinct_course_names() RETURNS TABLE(course_name text)
     LANGUAGE plpgsql
     AS $$
@@ -410,7 +411,7 @@ $$;
 --
 -- Name: get_doc_map_details(); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: get_doc_map_details
 CREATE OR REPLACE FUNCTION public.get_doc_map_details() RETURNS json
     LANGUAGE plpgsql
     AS $$DECLARE
@@ -441,7 +442,7 @@ END;$$;
 --
 -- Name: get_latest_workflow_id(); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: get_latest_workflow_id
 CREATE OR REPLACE FUNCTION public.get_latest_workflow_id() RETURNS bigint
     LANGUAGE plpgsql
     AS $$DECLARE
@@ -460,7 +461,7 @@ END;$$;
 --
 -- Name: get_run_data(text, integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: get_run_data
 CREATE OR REPLACE FUNCTION public.get_run_data(p_run_ids text, p_limit integer, p_offset integer) RETURNS json
     LANGUAGE plpgsql
     AS $$DECLARE
@@ -504,7 +505,7 @@ END;$$;
 --
 -- Name: hello(); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: hello
 CREATE OR REPLACE FUNCTION public.hello() RETURNS text
     LANGUAGE sql
     AS $$select 'hello world';$$;
@@ -512,7 +513,7 @@ CREATE OR REPLACE FUNCTION public.hello() RETURNS text
 --
 -- Name: increment(integer, text); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: increment
 CREATE OR REPLACE FUNCTION public.increment(usage integer, apikey text) RETURNS void
     LANGUAGE plpgsql
     AS $$
@@ -527,7 +528,7 @@ CREATE OR REPLACE FUNCTION public.increment(usage integer, apikey text) RETURNS 
 --
 -- Name: increment_workflows(); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: increment_workflows
 CREATE OR REPLACE FUNCTION public.increment_workflows() RETURNS trigger
     LANGUAGE plpgsql
     AS $$BEGIN
@@ -552,7 +553,7 @@ END;$$;
 --
 -- Name: initialize_project_stats(); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: initialize_project_stats
 CREATE OR REPLACE FUNCTION public.initialize_project_stats() RETURNS trigger
     LANGUAGE plpgsql
     AS $$BEGIN
@@ -564,7 +565,7 @@ END;$$;
 --
 -- Name: myfunc(); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: myfunc
 CREATE OR REPLACE FUNCTION public.myfunc() RETURNS void
     LANGUAGE plpgsql
     AS $$
@@ -585,7 +586,7 @@ $$;
 --
 -- Name: remove_document_from_group(text, text, text, text); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: remove_document_from_group
 CREATE OR REPLACE FUNCTION public.remove_document_from_group(p_course_name text, p_s3_path text, p_url text, p_doc_group text) RETURNS void
     LANGUAGE plpgsql
     AS $$DECLARE
@@ -625,7 +626,7 @@ END;$$;
 --
 -- Name: search_conversations(text, text, text, integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: search_conversations
 CREATE OR REPLACE FUNCTION public.search_conversations(p_user_email text, p_project_name text, p_search_term text DEFAULT NULL::text, p_limit integer DEFAULT 10, p_offset integer DEFAULT 0) RETURNS jsonb
     LANGUAGE plpgsql
     AS $$DECLARE
@@ -727,7 +728,7 @@ END;$$;
 --
 -- Name: search_conversations_v2(text, text, text, integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: search_conversations_v2
 CREATE OR REPLACE FUNCTION public.search_conversations_v2(p_user_email text, p_project_name text, p_search_term text, p_limit integer, p_offset integer) RETURNS jsonb
     LANGUAGE plpgsql
     AS $$DECLARE
@@ -843,7 +844,7 @@ END;$$;
 --
 -- Name: search_conversations_v3(text, text, text, integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: search_conversations_v3
 CREATE OR REPLACE FUNCTION public.search_conversations_v3(p_user_email text, p_project_name text, p_search_term text, p_limit integer, p_offset integer) RETURNS jsonb
     LANGUAGE plpgsql
     AS $$DECLARE
@@ -961,7 +962,7 @@ END;$$;
 --
 -- Name: test_function(integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: test_function
 CREATE OR REPLACE FUNCTION public.test_function(id integer) RETURNS text
     LANGUAGE plpgsql
     AS $$DECLARE
@@ -995,7 +996,7 @@ end;$$;
 --
 -- Name: update_doc_count(); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: update_doc_count
 CREATE OR REPLACE FUNCTION public.update_doc_count() RETURNS trigger
     LANGUAGE plpgsql
     AS $$BEGIN
@@ -1018,7 +1019,7 @@ END;$$;
 --
 -- Name: update_project_stats(); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: update_project_stats
 CREATE OR REPLACE FUNCTION public.update_project_stats() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
@@ -1095,7 +1096,7 @@ $$;
 --
 -- Name: update_total_messages_by_id_range(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
-
+\echo Creating function: update_total_messages_by_id_range
 CREATE OR REPLACE FUNCTION public.update_total_messages_by_id_range(start_id integer, end_id integer) RETURNS void
     LANGUAGE plpgsql
     AS $$
