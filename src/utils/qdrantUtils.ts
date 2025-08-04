@@ -33,12 +33,16 @@ export async function addDocumentsToDocGroupQdrant(
             value: courseName,
           },
         },
-        ...(doc.url ? [{
-          key: 'url',
-          match: {
-            value: doc.url,
-          },
-        }] : []),
+        ...(doc.url
+          ? [
+              {
+                key: 'url',
+                match: {
+                  value: doc.url,
+                },
+              },
+            ]
+          : []),
         {
           key: 's3_path',
           match: {
@@ -68,12 +72,15 @@ export async function addDocumentsToDocGroupQdrant(
     // }
     // console.log('Filter used for adding doc to doc group: ', searchFilter, 'payload:', doc.doc_groups)
 
-    const response = await qdrant.setPayload(collection_name ? collection_name : '', {
-      payload: {
-        doc_groups: doc.doc_groups,
+    const response = await qdrant.setPayload(
+      collection_name ? collection_name : '',
+      {
+        payload: {
+          doc_groups: doc.doc_groups,
+        },
+        filter: searchFilter,
       },
-      filter: searchFilter,
-    })
+    )
 
     // const searchResultAfter = await qdrant.search(collection_name ? collection_name : "", {
     //   vector: dummyVector,
@@ -103,6 +110,75 @@ export async function addDocumentsToDocGroupQdrant(
       error_logs: error,
     })
 
+    throw error
+  }
+}
+
+export async function addUrlToDocumentsQdrant(
+  courseName: string,
+  doc: CourseDocument,
+) {
+  try {
+    const searchFilter = {
+      must: [
+        {
+          key: 'course_name',
+          match: {
+            value: courseName,
+          },
+        },
+        ...(doc.doc_groups
+          ? [
+              {
+                key: 'doc_groups',
+                match: {
+                  value: doc.doc_groups,
+                },
+              },
+            ]
+          : []),
+        ...(doc.readable_filename
+          ? [
+              {
+                key: 'readable_filename',
+                match: {
+                  value: doc.readable_filename,
+                },
+              },
+            ]
+          : []),
+        {
+          key: 's3_path',
+          match: {
+            value: doc.s3_path ? doc.s3_path : '',
+          },
+        },
+      ],
+    }
+
+    const response = await qdrant.setPayload(
+      collection_name ? collection_name : '',
+      {
+        payload: {
+          url: doc.url,
+        },
+        filter: searchFilter,
+      },
+    )
+    return response
+  } catch (error) {
+    console.error('Error in addUrlToDocumentsQdrant:', error)
+    posthog.capture('add_url_to_documents', {
+      course_name: courseName,
+      doc_readable_filename: doc.readable_filename,
+      doc_unique_identifier:
+        doc.s3_path && doc.s3_path !== ''
+          ? doc.s3_path
+          : doc.url && doc.url !== ''
+            ? doc.url
+            : null,
+      error_logs: error,
+    })
     throw error
   }
 }

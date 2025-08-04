@@ -14,15 +14,15 @@ const useStyles = createStyles((theme) => ({
     minWidth: '100px',
     width: 'auto',
     padding: '0 0.75rem',
-    color: 'var(--illinois-orange)',
+    color: '#CC66FF',
     backgroundColor: 'transparent',
     fontSize: rem(14),
     fontWeight: 500,
-    border: `1px solid var(--illinois-orange)`,
+    border: `1px solid #CC66FF`,
     borderRadius: '0.375rem',
     transition: 'background-color 100ms ease',
     '&:hover': {
-      backgroundColor: 'rgba(255, 95, 5, 0.05)',
+      backgroundColor: 'rgba(204, 102, 255, 0.05)',
     },
   },
   userAvatar: {
@@ -30,7 +30,7 @@ const useStyles = createStyles((theme) => ({
     transition: 'all 200ms ease',
     position: 'relative',
     overflow: 'hidden',
-    border: '2px solid var(--border)',
+    border: '2px solid #CC66FF',
     '&:hover': {
       transform: 'translateY(-1px)',
       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',

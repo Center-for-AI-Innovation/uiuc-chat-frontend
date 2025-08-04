@@ -5,6 +5,9 @@ export default {
   darkMode: 'class', // 'media' or 'class' (media uses system settings, class uses globals.css)
   theme: {
     extend: {
+      colors: {
+        'mhealth-blue': '#0175C2',
+      },
       fontFamily: {
         // See fonts.ts for the other half
         montserratHeading: ['var(--font-montserratHeading)'],

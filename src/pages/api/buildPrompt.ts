@@ -7,9 +7,7 @@ export default async function handler(
   res: NextApiResponse,
 ) {
   try {
-    const chatBody = req.body as ChatBody
-
-    const { conversation, course_name, courseMetadata } = chatBody
+    const { conversation, course_name, courseMetadata } = req.body
 
     // **Add a nullish check for 'conversation'**
     if (!conversation) {

@@ -778,6 +778,10 @@ export const routeModelRequest = async (
   controller?: AbortController,
   baseUrl?: string,
 ): Promise<any> => {
+  console.log(
+    'In routeModelRequest: ',
+    `Conversation name: ${chatBody.conversation?.name}, Conversation prompt: ${chatBody.conversation?.prompt}, System prompt: ${chatBody.courseMetadata?.system_prompt}`,
+  )
   /*  Use this to call the LLM. It will call the appropriate endpoint based on the conversation.model.
   🧠 ADD NEW LLM PROVIDERS HERE 🧠
   NOTE: WebLLM is handled separately, because it MUST be called from the Client browser itself. 

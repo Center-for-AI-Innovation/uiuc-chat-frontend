@@ -6,6 +6,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react'
@@ -1595,15 +1596,29 @@ export const Chat = memo(
       }
     }, [messagesEndRef, userHasScrolled])
 
-    const statements =
+    const exampleQuestions =
       courseMetadata?.example_questions &&
+      Array.isArray(courseMetadata.example_questions) &&
       courseMetadata.example_questions.length > 0
         ? courseMetadata.example_questions
-        : [
-            'Make a bullet point list of key takeaways from this project.',
-            'What are the best practices for [Activity or Process] in [Context or Field]?',
-            'Can you explain the concept of [Specific Concept] in simple terms?',
-          ]
+        : null
+    const statements = useMemo(() => {
+      if (
+        courseMetadata?.example_questions &&
+        Array.isArray(courseMetadata.example_questions) &&
+        courseMetadata.example_questions.length > 0
+      ) {
+        return courseMetadata.example_questions
+          .sort(() => 0.5 - Math.random())
+          .slice(0, 5)
+      } else {
+        return [
+          'Make a bullet point list of key takeaways from this project.',
+          'What are the best practices for [Activity or Process] in [Context or Field]?',
+          'Can you explain the concept of [Specific Concept] in simple terms?',
+        ]
+      }
+    }, [courseMetadata?.example_questions])
 
     // Add this function to create dividers with statements
     const renderIntroductoryStatements = () => {
@@ -1890,10 +1905,10 @@ export const Chat = memo(
     return (
       <>
         <Head>
-          <title>{getCurrentPageName()} - Illinois Chat</title>
+          <title>{getCurrentPageName()} - mHealth Chatbot</title>
           <meta
             name="description"
-            content="The easiest way to train your own AI model and share it like a Google doc."
+            content="mHealth is an AI-powered platform that helps you manage your health and wellness."
           />
           <link rel="icon" href="/favicon.ico" />
         </Head>

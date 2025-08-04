@@ -233,7 +233,7 @@ const callN8nFunction = async (
   base_url?: string,
 ): Promise<ToolOutput> => {
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), 30000)
+  const timeoutId = setTimeout(() => controller.abort(), 300000) // 5 minutes
 
   // get n8n api key per project
   if (!n8n_api_key) {
@@ -253,12 +253,12 @@ const callN8nFunction = async (
   }
 
   const timeStart = Date.now()
-  
+
   // Check if we're running on client-side (browser) or server-side
   const isClientSide = typeof window !== 'undefined'
-  
+
   let n8nResponse: any
-  
+
   if (isClientSide) {
     // Client-side: use our API route
     const response = await fetch('/api/UIUC-api/runN8nFlow', {
@@ -294,12 +294,12 @@ const callN8nFunction = async (
     if (!n8n_api_key) {
       throw new Error('N8N API key is required')
     }
-    
+
     try {
       n8nResponse = await runN8nFlowBackend(
         n8n_api_key,
         tool.readableName,
-        tool.aiGeneratedArgumentValues
+        tool.aiGeneratedArgumentValues,
       )
     } catch (error: any) {
       if (error.message.includes('timed out')) {
@@ -319,7 +319,7 @@ const callN8nFunction = async (
   )
 
   clearTimeout(timeoutId)
-  
+
   const resultData = n8nResponse.data.resultData
   console.debug('N8n results data: ', resultData)
   const finalNodeType = resultData.lastNodeExecuted
@@ -554,12 +554,12 @@ export async function fetchTools(
   }
 
   const parsedPagination = pagination.toLowerCase() === 'true'
-  
+
   // Check if we're running on client-side (browser) or server-side
   const isClientSide = typeof window !== 'undefined'
-  
+
   let response: Response
-  
+
   if (isClientSide) {
     // Client-side: use our API route
     response = await fetch(
@@ -569,7 +569,9 @@ export async function fetchTools(
     // Server-side: use direct backend call
     const backendUrl = getBackendUrl()
     if (!backendUrl) {
-      throw new Error('No backend URL configured. Please provide base_url parameter or set RAILWAY_URL environment variable.')
+      throw new Error(
+        'No backend URL configured. Please provide base_url parameter or set RAILWAY_URL environment variable.',
+      )
     }
     response = await fetch(
       `${backendUrl}/getworkflows?api_key=${api_key}&limit=${limit}&pagination=${parsedPagination}`,

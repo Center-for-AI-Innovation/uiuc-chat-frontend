@@ -81,6 +81,128 @@ const encoding = encodingForModel('gpt-4o')
 
 export type BuildPromptMode = 'chat' | 'optimize_prompt'
 
+const googleFitData = {
+  '1': {
+    timeCreated: '2024-01-01T00:00:00Z',
+    timeDuration: '24 hours',
+    avgHeartRate: 70,
+    maxHeartRate: 100,
+    restingHeartRate: 60,
+    stepCount: 1000,
+    calories: 2000,
+    distance: 10,
+    floors: 2,
+    activeMinutes: 30,
+    caloriesBurned: 1500,
+    sleepDuration: 8,
+    sleepQuality: 0.8,
+    sleepStages: {
+      deep: 2,
+      light: 3,
+      rem: 1,
+    },
+    workoutDurationHours: 0.5,
+    workoutType: 'run',
+    workoutDistance: '5 miles',
+    workoutCalories: 1000,
+    workoutSteps: 5000,
+    workoutFloors: 2,
+    workoutActiveMinutes: 30,
+    workoutAvgHeartRate: 100,
+    workoutMaxHeartRate: 120,
+    workoutRestingHeartRate: 60,
+    workoutAvgSpeed: '10 mph',
+    workoutMaxSpeed: '15 mph',
+    workoutAvgPace: '1 min/mile',
+    workoutMaxPace: '1.5 min/mile',
+    workoutAvgStrideLength: '1 ft',
+    workoutMaxStrideLength: '1.5 ft',
+    workoutAvgStrideTime: '1 sec',
+    workoutMaxStrideTime: '1.5 sec',
+    workoutAvgStrideSpeed: '10 mph',
+    workoutMaxStrideSpeed: '15 mph',
+  },
+  '2': {
+    timeCreated: '2024-01-02T00:00:00Z',
+    timeDuration: '48 hours',
+    avgHeartRate: 70,
+    maxHeartRate: 100,
+    restingHeartRate: 60,
+    stepCount: 5000,
+    calories: 5000,
+    distance: 20,
+    floors: 2,
+    activeMinutes: 30,
+    caloriesBurned: 1500,
+    sleepDuration: 6,
+    sleepQuality: 0.6,
+    sleepStages: {
+      deep: 1,
+      light: 2,
+      rem: 1,
+    },
+    workoutDurationHours: 1,
+    workoutType: 'swim',
+    workoutDistance: '10 miles',
+    workoutCalories: 1500,
+    workoutActiveMinutes: 30,
+    workoutAvgHeartRate: 100,
+    workoutMaxHeartRate: 120,
+    workoutRestingHeartRate: 60,
+  },
+}
+
+const profile = {
+  '1': {
+    name: 'John Doe',
+    age: 30,
+    gender: 'male',
+    height: 180,
+    weight: 70,
+    bmi: 24.5,
+    bmr: 1800,
+    tdee: 2200,
+    medication: 'None',
+    allergies: 'None',
+    medicalHistory: [
+      'Diagnosed with mild hypertension (monitors blood pressure regularly)',
+      'Type 2 diabetes, managed through diet, exercise, and medication',
+      'Torn rotator cuff in the right shoulder (recovered after surgery 8 months ago, avoids heavy lifting)',
+      'Occasional lower back discomfort, aggravated by prolonged sitting',
+      'Focuses on maintaining cardiovascular health and managing weight',
+    ],
+    personality: {
+      likes: [
+        'Enjoys brisk walking and cycling on his stationary bike',
+        'Prefers structured routines with clear goals, such as daily step targets',
+        'Likes being outdoors, especially hiking on weekends',
+        'Enjoys morning exercise sessions and appreciates a daily reminder from the chatbot',
+        'Finds satisfaction in tracking progress, especially when he sees improvements in blood sugar levels',
+      ],
+      dislikes: [
+        'Dislikes heavy strength training and avoids exercises that strain his shoulder',
+        "Doesn't like late afternoon workouts; feels more sluggish and unmotivated later in the day",
+        'Avoids exercises that are too complex or require too much coordination (prefers simplicity)',
+      ],
+      preferences: [
+        'Prefers short, straightforward conversations with the chatbot, focusing on health tips and step count reminders',
+        'Motivated by seeing tangible health improvements, like lower blood pressure or stable blood sugar',
+        'Enjoys setting specific goals, such as increasing his step count gradually each week',
+        'Responds well to positive reinforcement, especially for consistency in routine',
+      ],
+      goals: 'Maintaining cardiovascular health and managing weight',
+    },
+  },
+}
+
+const getUserGoogleFitData = (userID: string) => {
+  return googleFitData[userID as keyof typeof googleFitData]
+}
+
+const getUserProfile = (userID: string) => {
+  return profile[userID as keyof typeof profile]
+}
+
 export const buildPrompt = async ({
   conversation,
   projectName,
@@ -152,13 +274,36 @@ export const buildPrompt = async ({
     // Initialize an array to collect sections of the user prompt
     const userPromptSections: string[] = []
 
-    // P1: Most recent user text input
+    // P1.1: Most recent user text input
     const userQuery = `\n<User Query>\n${lastUserTextInput}\n</User Query>`
     if (encoding) {
       remainingTokenBudget -= encoding.encode(userQuery).length
     }
 
-    // P2: Latest 2 conversation messages (Reserved tokens)
+    // // P1.2: User GoogleFit Data
+    // const user_data = getUserGoogleFitData('1')
+    // const user_data_str = JSON.stringify(user_data)
+    // const userData = `\nBelow is the user's GoogleFit health and workoutdata. Use this data to answer the user's question.\n<User Data>\n${user_data_str}\n</User Data>`
+    // remainingTokenBudget -= encoding.encode(userData).length
+    // userPromptSections.push(userData)
+
+    // // P1.3: User Profile
+    // const userProfile = getUserProfile('1')
+    // const userProfileStr = JSON.stringify(userProfile)
+    // const userProfileData = `\nBelow is the user's profile. Use this data to answer the user's question.\n<User Profile>\n${userProfileStr}\n</User Profile>`
+    // remainingTokenBudget -= encoding.encode(userProfileData).length
+    // userPromptSections.push(userProfileData)
+
+    // P2.1 : get the previous conversation summary, if it exists
+    if (conversation.summary) {
+      const previousConversationSummary = `\n<Previous Conversation Summary>\n${conversation.summary}\n</Previous Conversation Summary>`
+      userPromptSections.push(previousConversationSummary)
+      remainingTokenBudget -= encoding.encode(
+        previousConversationSummary,
+      ).length
+    }
+
+    // P2.2: Latest 2 conversation messages (Reserved tokens)
     const tokensInLastTwoMessages = _getRecentConvoTokens({
       conversation,
     })
@@ -486,15 +631,6 @@ const _getSystemPrompt = async ({
   if (shouldAppendDocumentsOnlyPrompt(conversation, courseMetadata)) {
     systemPrompt += DOCUMENT_FOCUS_PROMPT
   }
-
-  // Add math notation instructions
-  systemPrompt += `\nWhen responding with equations, use MathJax/KaTeX notation. Equations should be wrapped in either:
-
-  * Single dollar signs $...$ for inline math
-  * Double dollar signs $$...$$ for display/block math
-  * Or \\[...\\] for display math
-  
-  Here's how the equations should be formatted in the markdown: Schrödinger Equation: $i\\hbar \\frac{\\partial}{\\partial t} \\Psi(\\mathbf{r}, t) = \\hat{H} \\Psi(\\mathbf{r}, t)$`
 
   // Check if contexts are present
   const contexts =

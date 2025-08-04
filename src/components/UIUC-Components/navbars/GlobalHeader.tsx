@@ -105,14 +105,19 @@ export function LandingPageHeader({
   const [menuPosition, setMenuPosition] = useState({ right: '20px' })
 
   // Determine which elements should be visible based on screen width
-  const showDocsInNav = windowWidth >= 640 // Changed from 768 to 568 (subtract 200px)
-  const showNewsInNav = windowWidth >= 700 // Changed from 900 to 700 (subtract 200px)
-  const showNewProjectInNav = windowWidth >= 824 // Changed from 1024 to 824 (subtract 200px)
+  // const showDocsInNav = windowWidth >= 640 // Changed from 768 to 568 (subtract 200px)
+  // const showNewsInNav = windowWidth >= 700 // Changed from 900 to 700 (subtract 200px)
+  // const showNewProjectInNav = windowWidth >= 824 // Changed from 1024 to 824 (subtract 200px)
+  // Disable docs, news, new project and hamburger menu for mHealth
+  const showDocsInNav = false
+  const showNewsInNav = false
+  const showNewProjectInNav = false
 
   // Fix for hamburger menu logic to ensure menu is shown until all items are visible in nav
-  const showHamburgerMenu =
-    (!showDocsInNav || !showNewsInNav || !showNewProjectInNav) &&
-    forGeneralPurposeNotLandingpage === false
+  // const showHamburgerMenu =
+  //   (!showDocsInNav || !showNewsInNav || !showNewProjectInNav) &&
+  //   forGeneralPurposeNotLandingpage === false
+  const showHamburgerMenu = false
 
   // Update window width on resize
   useEffect(() => {
@@ -287,7 +292,7 @@ export function LandingPageHeader({
               height="100%"
             ></img>
           </div>
-          <div className="text-[var(--illinois-orange)] sm:ml-4">Illinois</div>
+          <div className="text-blue-800 sm:ml-4">mHealth</div>
           <div className="text-[var(--illinois-blue)]">Chat</div>
         </div>
 
