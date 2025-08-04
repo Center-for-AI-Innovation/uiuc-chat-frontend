@@ -1035,7 +1035,7 @@ BEGIN
         -- Calculate message count for the new conversation
         SELECT COUNT(*)
         INTO new_conversation_message_count
-        FROM json_array_elements(NEW.convo->'messages') AS message
+        FROM jsonb_array_elements(NEW.convo->'messages') AS message
         WHERE message->>'role' = 'user';
 
         -- Calculate distinct user count after the insert
@@ -1055,12 +1055,12 @@ BEGIN
         -- Get old and new message counts
         SELECT COUNT(*)
         INTO old_message_count
-        FROM json_array_elements(OLD.convo->'messages') AS message
+        FROM jsonb_array_elements(OLD.convo->'messages') AS message
         WHERE message->>'role' = 'user';
 
         SELECT COUNT(*)
         INTO new_message_count
-        FROM json_array_elements(NEW.convo->'messages') AS message
+        FROM jsonb_array_elements(NEW.convo->'messages') AS message
         WHERE message->>'role' = 'user';
 
         -- Update only message count if conversation content changed
@@ -1072,7 +1072,7 @@ BEGIN
         -- Calculate message count of deleted conversation
         SELECT COUNT(*)
         INTO old_message_count
-        FROM json_array_elements(OLD.convo->'messages') AS message
+        FROM jsonb_array_elements(OLD.convo->'messages') AS message
         WHERE message->>'role' = 'user';
 
         -- Calculate distinct user count after the delete
@@ -1115,7 +1115,7 @@ BEGIN
         SET total_messages = (
             SELECT COALESCE(SUM(
                 (SELECT COUNT(*)
-                 FROM json_array_elements(lcm.convo->'messages') AS message
+                 FROM jsonb_array_elements(lcm.convo->'messages') AS message
                  WHERE message->>'role' = 'user')
             ), 0)
             FROM public."llm-convo-monitor" lcm

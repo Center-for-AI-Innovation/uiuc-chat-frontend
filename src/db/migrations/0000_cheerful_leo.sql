@@ -235,11 +235,15 @@ CREATE TABLE "pre_authorized_api_keys" (
 CREATE TABLE "project_stats" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"project_id" integer NOT NULL,
+    "project_name" text NOT NULL,
 	"total_messages" integer DEFAULT 0,
 	"total_conversations" integer DEFAULT 0,
+    "unique_users" integer DEFAULT 0,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+    "model_usage_counts" jsonb
 );
+
 --> statement-breakpoint
 CREATE TABLE "projects" (
 	"id" serial PRIMARY KEY NOT NULL,
