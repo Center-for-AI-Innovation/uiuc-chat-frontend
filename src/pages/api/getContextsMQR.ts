@@ -6,7 +6,7 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { course_name, search_query, token_limit = 6000, doc_groups = [] } = req.query
+  const { course_name, search_query, token_limit = 6000, doc_groups = [], conversation_id } = req.query
 
   if (!course_name || !search_query) {
     return res.status(400).json({ 
@@ -28,6 +28,7 @@ export default async function handler(req: any, res: any) {
           search_query: search_query,
           token_limit: token_limit,
           doc_groups: Array.isArray(doc_groups) ? doc_groups : [doc_groups].filter(Boolean),
+          conversation_id: conversation_id,
         },
       },
     )
@@ -47,6 +48,7 @@ export const fetchMQRContexts = async (
   search_query: string,
   token_limit = 6000,
   doc_groups: string[] = [],
+  conversation_id: string,
 ): Promise<ContextWithMetadata[]> => {
   try {
     const params = new URLSearchParams({
@@ -57,6 +59,9 @@ export const fetchMQRContexts = async (
     
     // Handle doc_groups array
     doc_groups.forEach(group => params.append('doc_groups', group))
+
+      params.append('conversation_id', conversation_id)
+    
     
     const response = await fetch(`/api/getContextsMQR?${params.toString()}`)
 

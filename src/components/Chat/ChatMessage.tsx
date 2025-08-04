@@ -9,13 +9,27 @@ import React, {
   createContext,
   useContext as useReactContext,
 } from 'react'
-import { Text, createStyles, Badge, Tooltip } from '@mantine/core'
+import {
+  Text,
+  createStyles,
+  Badge,
+  Tooltip,
+  Modal,
+  Button,
+} from '@mantine/core'
 import {
   IconCheck,
   IconEdit,
   IconRobot,
   IconUser,
   IconX,
+  IconFileTypePdf,
+  IconFileTypeDocx,
+  IconFileTypeTxt,
+  IconFileTypeXls,
+  IconFileTypePpt,
+  IconFile,
+  IconEye,
 } from '@tabler/icons-react'
 
 import { useTranslation } from 'next-i18next'
@@ -84,6 +98,190 @@ const Timer: React.FC<{ timerVisible: boolean }> = ({ timerVisible }) => {
   ) : (
     <></>
   )
+}
+// File Card Component
+const FileCard: React.FC<{
+  fileName: string
+  fileType?: string
+  fileUrl?: string
+  onClick: () => void
+}> = ({ fileName, fileType, fileUrl, onClick }) => {
+  const getFileIcon = (name: string, type?: string) => {
+    const extension = name.split('.').pop()?.toLowerCase()
+    const iconProps = { size: 20 }
+
+    if (type?.includes('pdf') || extension === 'pdf') {
+      return <IconFileTypePdf {...iconProps} className="text-red-500" />
+    }
+    if (type?.includes('doc') || extension === 'docx' || extension === 'doc') {
+      return <IconFileTypeDocx {...iconProps} className="text-blue-500" />
+    }
+    if (type?.includes('text') || extension === 'txt') {
+      return <IconFileTypeTxt {...iconProps} className="text-gray-500" />
+    }
+    return <IconFile {...iconProps} className="text-gray-600" />
+  }
+
+  const truncateFileName = (name: string, maxLength = 30) => {
+    if (name.length <= maxLength) return name
+    const extension = name.split('.').pop()
+    const nameWithoutExt = name.substring(0, name.lastIndexOf('.'))
+    const truncated =
+      nameWithoutExt.substring(0, maxLength - (extension?.length || 0) - 4) +
+      '...'
+    return `${truncated}.${extension}`
+  }
+
+  return (
+    <div
+      onClick={onClick}
+      className="inline-flex max-w-xs cursor-pointer items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 transition-all hover:border-gray-300 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600 dark:hover:bg-gray-700"
+    >
+      {getFileIcon(fileName, fileType)}
+      <span className="truncate text-sm font-medium text-gray-700 dark:text-gray-300">
+        {truncateFileName(fileName)}
+      </span>
+      <IconEye size={16} className="text-gray-400" />
+    </div>
+  )
+}
+
+// File Preview Modal Component
+const FilePreviewModal: React.FC<{
+  isOpen: boolean
+  onClose: () => void
+  fileName: string
+  fileUrl?: string
+  fileType?: string
+  courseName: string
+}> = ({ isOpen, onClose, fileName, fileUrl, fileType, courseName }) => {
+  const { t } = useTranslation('chat')
+  const { activeSidebarMessageId, setActiveSidebarMessageId } = useReactContext(
+    SourcesSidebarContext,
+  )
+
+  const {
+    state: {
+      selectedConversation,
+      messageIsStreaming,
+      isImg2TextLoading,
+      isRouting,
+      isRunningTool,
+      isRetrievalLoading,
+      isQueryRewriting,
+      loading,
+    },
+    dispatch: homeDispatch,
+  } = useContext(HomeContext)
+
+  const [actualFileUrl, setActualFileUrl] = useState<string>('')
+  const [textContent, setTextContent] = useState<string>('')
+
+  const isImage =
+    fileType?.includes('image') ||
+    fileName.toLowerCase().match(/\.(jpg|jpeg|png)$/i)
+  const isPdf =
+    fileType?.includes('pdf') || fileName.toLowerCase().endsWith('.pdf')
+  const isTextFile =
+    fileType?.includes('text') ||
+    fileName.toLowerCase().match(/\.(txt|md|html|xml|csv|py|srt|vtt)$/i)
+
+  useEffect(() => {
+    if (fileUrl && isOpen) {
+      // Convert S3 key to presigned URL
+      fetchPresignedUrl(fileUrl, courseName).then((url) => {
+        setActualFileUrl(url || '')
+      })
+    }
+  }, [fileUrl, isOpen, courseName])
+
+  // Load text content for text files
+  useEffect(() => {
+    if (isTextFile && actualFileUrl && isOpen) {
+      fetch(actualFileUrl)
+        .then(response => response.text())
+        .then(text => setTextContent(text))
+        .catch(error => {
+          console.error('Failed to load text content:', error)
+          setTextContent('Failed to load file content')
+        })
+    }
+  }, [isTextFile, actualFileUrl, isOpen])
+
+  // Auto-download non-previewable files when modal opens
+  useEffect(() => {
+    if (actualFileUrl && isOpen && !isImage && !isPdf && !isTextFile) {
+      const link = document.createElement('a')
+      link.href = actualFileUrl
+      link.download = fileName
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      onClose() // Close modal after triggering download
+    }
+  }, [actualFileUrl, isOpen, isImage, isPdf, isTextFile, fileName, onClose])
+
+  // Don't render modal for non-previewable files
+  if (isOpen && !isImage && !isPdf && !isTextFile) {
+    return null
+  }
+
+  return (
+    <Modal
+      opened={isOpen}
+      onClose={onClose}
+      title={fileName}
+      size="xl"
+      centered
+    >
+      <div className="space-y-4">
+        <div className="min-h-[400px] rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
+          {isImage && actualFileUrl ? (
+            <img
+              src={actualFileUrl}
+              alt={fileName}
+              className="h-full w-full rounded-lg object-contain"
+              onLoad={() => setActualFileUrl(actualFileUrl)}
+              onError={() => {
+                setActualFileUrl('')
+              }}
+            />
+          ) : isPdf && actualFileUrl ? (
+            <iframe
+              src={actualFileUrl}
+              className="h-[400px] w-full rounded-lg"
+              onLoad={() => setActualFileUrl(actualFileUrl)}
+              onError={() => {
+                setActualFileUrl('')
+              }}
+            />
+          ) : isTextFile && actualFileUrl ? (
+            <div className="h-[400px] w-full overflow-auto p-4">
+              <pre className="whitespace-pre-wrap font-mono text-sm text-gray-800 dark:text-gray-200">
+                {textContent}
+              </pre>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+// Helper function to parse file content from message text
+function parseFileContent(
+  text: string,
+): { fileName: string; fileUrl?: string; fileType?: string } | null {
+  // New format: "📎 Uploaded file: filename|s3Key|fileType"
+  const fileMatch = text.match(/📎 Uploaded file: (.+)\|(.+)\|(.+)/)
+  if (fileMatch && fileMatch[1] && fileMatch[2]) {
+    return {
+      fileName: fileMatch[1],
+      fileUrl: fileMatch[2], // This will be the S3 key
+      fileType: fileMatch[3],
+    }
+  }
+  return null
 }
 
 // Add context for managing the active sources sidebar
@@ -864,236 +1062,217 @@ export const ChatMessage = memo(
 
     // Modify the content rendering logic
     const renderContent = () => {
-      let contentToRender = ''
-      let thoughtsContent = null
+      const content = messageContent || message.content
 
-      // Always use localContent for rendering
-      if (typeof localContent === 'string') {
-        const { thoughts, remainingContent } =
-          extractThinkTagContent(localContent)
-        thoughtsContent = thoughts
-        contentToRender = remainingContent
-      } else if (Array.isArray(localContent)) {
-        contentToRender = localContent
-          .filter((content) => content.type === 'text')
-          .map((content) => content.text)
-          .join(' ')
-        const { thoughts, remainingContent } =
-          extractThinkTagContent(contentToRender)
-        thoughtsContent = thoughts
-        contentToRender = remainingContent
-      }
+      if (typeof content === 'string') {
+        // NEW: Check if this is a file upload message
+        const fileContent = parseFileContent(content)
+        if (fileContent) {
+          return (
+            <div className="mb-2">
+              <FileCard
+                fileName={fileContent.fileName}
+                fileType={fileContent.fileType}
+                fileUrl={fileContent.fileUrl}
+                onClick={() =>
+                  handleFilePreview(
+                    fileContent.fileName,
+                    fileContent.fileUrl,
+                    fileContent.fileType,
+                  )
+                }
+              />
+            </div>
+          )
+        }
+        return (
+          <MemoizedReactMarkdown
+            className="dark:prose-invert linkMarkDown supMarkDown codeBlock prose mb-2 flex-1 flex-col items-start space-y-2 overflow-visible"
+            remarkPlugins={[remarkGfm, remarkMath]}
+            rehypePlugins={[rehypeMathjax]}
+            components={{
+              code({ node, inline, className, children, ...props }) {
+                const text = String(children)
 
-      return (
-        <>
-          {thoughtsContent && (
-            <ThinkTagDropdown
-              content={
-                messageIsStreaming &&
-                messageIndex ===
-                  (selectedConversation?.messages.length ?? 0) - 1
-                  ? `${thoughtsContent} ▍`
-                  : thoughtsContent
-              }
-              isStreaming={
-                messageIsStreaming &&
-                messageIndex ===
-                  (selectedConversation?.messages.length ?? 0) - 1 &&
-                !contentToRender
-              }
-            />
-          )}
-          {contentToRender && (
-            <MemoizedReactMarkdown
-              className="dark:prose-invert linkMarkDown supMarkDown codeBlock prose mb-2 flex-1 flex-col items-start space-y-2 overflow-visible"
-              remarkPlugins={[remarkGfm, remarkMath]}
-              rehypePlugins={[rehypeMathjax]}
-              components={{
-                code({ node, inline, className, children, ...props }) {
-                  const text = String(children)
+                // Simple regex to see if there's a [title](url) pattern
+                const linkRegex = /\[[^\]]+\]\([^)]+\)/
 
-                  // Simple regex to see if there's a [title](url) pattern
-                  const linkRegex = /\[[^\]]+\]\([^)]+\)/
+                // If it looks like a link, parse it again as normal Markdown
+                if (linkRegex.test(text)) {
+                  return (
+                    <MemoizedReactMarkdown
+                      remarkPlugins={[remarkGfm, remarkMath]}
+                      rehypePlugins={[rehypeMathjax]}
+                    >
+                      {text}
+                    </MemoizedReactMarkdown>
+                  )
+                }
 
-                  // If it looks like a link, parse it again as normal Markdown
-                  if (linkRegex.test(text)) {
+                // Handle cursor placeholder
+                if (children.length) {
+                  if (children[0] == '▍') {
                     return (
-                      <MemoizedReactMarkdown
-                        remarkPlugins={[remarkGfm, remarkMath]}
-                        rehypePlugins={[rehypeMathjax]}
-                      >
-                        {text}
-                      </MemoizedReactMarkdown>
+                      <span className="mt-1 animate-pulse cursor-default">
+                        ▍
+                      </span>
                     )
                   }
 
-                  // Handle cursor placeholder
-                  if (children.length) {
-                    if (children[0] == '▍') {
-                      return (
-                        <span className="mt-1 animate-pulse cursor-default">
-                          ▍
-                        </span>
-                      )
-                    }
+                  children[0] = (children[0] as string).replace('`▍`', '▍')
+                }
 
-                    children[0] = (children[0] as string).replace('`▍`', '▍')
-                  }
+                const match = /language-(\w+)/.exec(className || '')
 
-                  const match = /language-(\w+)/.exec(className || '')
-
-                  return !inline ? (
-                    <CodeBlock
-                      key={Math.random()}
-                      language={(match && match[1]) || ''}
-                      value={String(children).replace(/\n$/, '')}
-                      style={{
-                        maxWidth: '100%',
-                        overflowX: 'auto',
-                        whiteSpace: 'pre-wrap',
-                        wordBreak: 'break-all',
-                        overflowWrap: 'anywhere',
-                      }}
-                      {...props}
-                    />
-                  ) : (
-                    <code
-                      className={'codeBlock'}
-                      {...props}
-                      style={{
-                        whiteSpace: 'pre-wrap',
-                        wordBreak: 'break-all',
-                        overflowWrap: 'anywhere',
-                      }}
-                    >
-                      {children}
-                    </code>
-                  )
-                },
-                p({ node, children }) {
-                  return (
-                    <p
-                      className={`self-start text-base font-normal ${montserrat_paragraph.variable} pb-2 font-montserratParagraph`}
-                    >
-                      {children}
-                    </p>
-                  )
-                },
-                ul({ children }) {
-                  return (
-                    <ul
-                      className={`text-base font-normal ${montserrat_paragraph.variable} font-montserratParagraph`}
-                    >
-                      {children}
-                    </ul>
-                  )
-                },
-                ol({ children }) {
-                  return (
-                    <ol
-                      className={`text-base font-normal ${montserrat_paragraph.variable} ml-4 font-montserratParagraph lg:ml-6`}
-                    >
-                      {children}
-                    </ol>
-                  )
-                },
-                li({ children }) {
-                  return (
-                    <li
-                      className={`text-base font-normal ${montserrat_paragraph.variable} break-words font-montserratParagraph`}
-                    >
-                      {children}
-                    </li>
-                  )
-                },
-                table({ children }) {
-                  return (
-                    <table className="border-collapse border border-black px-3 py-1 dark:border-white">
-                      {children}
-                    </table>
-                  )
-                },
-                th({ children }) {
-                  return (
-                    <th className="break-words border border-black bg-gray-500 px-3 py-1 text-white dark:border-white">
-                      {children}
-                    </th>
-                  )
-                },
-                td({ children }) {
-                  return (
-                    <td className="break-words border border-black px-3 py-1 dark:border-white">
-                      {children}
-                    </td>
-                  )
-                },
-                h1({ node, children }) {
-                  return (
-                    <h1
-                      className={`text-4xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                    >
-                      {children}
-                    </h1>
-                  )
-                },
-                h2({ node, children }) {
-                  return (
-                    <h2
-                      className={`text-3xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                    >
-                      {children}
-                    </h2>
-                  )
-                },
-                h3({ node, children }) {
-                  return (
-                    <h3
-                      className={`text-2xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                    >
-                      {children}
-                    </h3>
-                  )
-                },
-                h4({ node, children }) {
-                  return (
-                    <h4
-                      className={`text-lg font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                    >
-                      {children}
-                    </h4>
-                  )
-                },
-                h5({ node, children }) {
-                  return (
-                    <h5
-                      className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                    >
-                      {children}
-                    </h5>
-                  )
-                },
-                h6({ node, children }) {
-                  return (
-                    <h6
-                      className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                    >
-                      {children}
-                    </h6>
-                  )
-                },
-                a({ node, className, children, ...props }) {
-                  return <MarkdownLink {...props}>{children}</MarkdownLink>
-                },
-              }}
-            >
-              {messageIsStreaming &&
-              messageIndex === (selectedConversation?.messages.length ?? 0) - 1
-                ? `${contentToRender} ▍`
-                : contentToRender}
-            </MemoizedReactMarkdown>
-          )}
-        </>
-      )
+                return !inline ? (
+                  <CodeBlock
+                    key={Math.random()}
+                    language={(match && match[1]) || ''}
+                    value={String(children).replace(/\n$/, '')}
+                    style={{
+                      maxWidth: '100%',
+                      overflowX: 'auto',
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-all',
+                      overflowWrap: 'anywhere',
+                    }}
+                    {...props}
+                  />
+                ) : (
+                  <code
+                    className={'codeBlock'}
+                    {...props}
+                    style={{
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-all',
+                      overflowWrap: 'anywhere',
+                    }}
+                  >
+                    {children}
+                  </code>
+                )
+              },
+              p({ node, children }) {
+                return (
+                  <p
+                    className={`self-start text-base font-normal ${montserrat_paragraph.variable} pb-2 font-montserratParagraph`}
+                  >
+                    {children}
+                  </p>
+                )
+              },
+              ul({ children }) {
+                return (
+                  <ul
+                    className={`text-base font-normal ${montserrat_paragraph.variable} font-montserratParagraph`}
+                  >
+                    {children}
+                  </ul>
+                )
+              },
+              ol({ children }) {
+                return (
+                  <ol
+                    className={`text-base font-normal ${montserrat_paragraph.variable} ml-4 font-montserratParagraph lg:ml-6`}
+                  >
+                    {children}
+                  </ol>
+                )
+              },
+              li({ children }) {
+                return (
+                  <li
+                    className={`text-base font-normal ${montserrat_paragraph.variable} break-words font-montserratParagraph`}
+                  >
+                    {children}
+                  </li>
+                )
+              },
+              table({ children }) {
+                return (
+                  <table className="border-collapse border border-black px-3 py-1 dark:border-white">
+                    {children}
+                  </table>
+                )
+              },
+              th({ children }) {
+                return (
+                  <th className="break-words border border-black bg-gray-500 px-3 py-1 text-white dark:border-white">
+                    {children}
+                  </th>
+                )
+              },
+              td({ children }) {
+                return (
+                  <td className="break-words border border-black px-3 py-1 dark:border-white">
+                    {children}
+                  </td>
+                )
+              },
+              h1({ node, children }) {
+                return (
+                  <h1
+                    className={`text-4xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    {children}
+                  </h1>
+                )
+              },
+              h2({ node, children }) {
+                return (
+                  <h2
+                    className={`text-3xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    {children}
+                  </h2>
+                )
+              },
+              h3({ node, children }) {
+                return (
+                  <h3
+                    className={`text-2xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    {children}
+                  </h3>
+                )
+              },
+              h4({ node, children }) {
+                return (
+                  <h4
+                    className={`text-lg font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    {children}
+                  </h4>
+                )
+              },
+              h5({ node, children }) {
+                return (
+                  <h5
+                    className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    {children}
+                  </h5>
+                )
+              },
+              h6({ node, children }) {
+                return (
+                  <h6
+                    className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    {children}
+                  </h6>
+                )
+              },
+              a({ node, className, children, ...props }) {
+                return <MarkdownLink {...props}>{children}</MarkdownLink>
+              },
+            }}
+          >
+            {content}
+          </MemoizedReactMarkdown>
+        )
+      }
+      return <div>Content array handling...</div>
     }
 
     // Add MarkdownLink component definition
@@ -1251,6 +1430,36 @@ export const ChatMessage = memo(
       return Array.isArray(contexts) ? contexts.length : 0
     }
 
+    const [filePreviewModal, setFilePreviewModal] = useState<{
+      isOpen: boolean
+      fileName: string
+      fileUrl?: string
+      fileType?: string
+    }>({
+      isOpen: false,
+      fileName: '',
+    })
+
+    const handleFilePreview = (
+      fileName: string,
+      fileUrl?: string,
+      fileType?: string,
+    ) => {
+      setFilePreviewModal({
+        isOpen: true,
+        fileName,
+        fileUrl,
+        fileType,
+      })
+    }
+
+    const closeFilePreview = () => {
+      setFilePreviewModal({
+        isOpen: false,
+        fileName: '',
+      })
+    }
+
     return (
       <>
         <div
@@ -1323,6 +1532,32 @@ export const ChatMessage = memo(
                               {/* User message text for all messages */}
                               {message.content.map((content, index) => {
                                 if (content.type === 'text') {
+                                  // NEW: Check if this is a file upload message
+                                  if (content.text) {
+                                    const fileContent = parseFileContent(
+                                      content.text,
+                                    )
+                                    if (fileContent) {
+                                      return (
+                                        <div key={index} className="mb-2">
+                                          <FileCard
+                                            fileName={fileContent.fileName}
+                                            fileType={fileContent.fileType}
+                                            fileUrl={fileContent.fileUrl}
+                                            onClick={() =>
+                                              handleFilePreview(
+                                                fileContent.fileName,
+                                                fileContent.fileUrl,
+                                                fileContent.fileType,
+                                              )
+                                            }
+                                          />
+                                        </div>
+                                      )
+                                    }
+                                  }
+
+                                  // EXISTING: Regular text content (unchanged)
                                   if (
                                     !(content.text as string)
                                       .trim()
@@ -1883,6 +2118,16 @@ export const ChatMessage = memo(
             onSubmit={handleFeedbackSubmit}
           />
         )}
+
+        {/* File Preview Modal */}
+        <FilePreviewModal
+          isOpen={filePreviewModal.isOpen}
+          onClose={closeFilePreview}
+          fileName={filePreviewModal.fileName}
+          fileUrl={filePreviewModal.fileUrl}
+          fileType={filePreviewModal.fileType}
+          courseName={courseName}
+        />
       </>
     )
   },

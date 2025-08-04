@@ -7,6 +7,11 @@ import {
   IconAlertCircle,
   IconX,
   IconRepeat,
+  IconPaperclip,
+  IconFileTypeTxt,
+  IconFileTypePdf,
+  IconFileTypeDocx,
+  IconFile,
 } from '@tabler/icons-react'
 import { Text } from '@mantine/core'
 import {
@@ -20,7 +25,7 @@ import {
 } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { useTranslation } from 'next-i18next'
-import { Content, Message, MessageType } from '@/types/chat'
+import { Content, Message, MessageType, Conversation } from '@/types/chat'
 import { Plugin } from '@/types/plugin'
 import { Prompt } from '@/types/prompt'
 
@@ -55,11 +60,47 @@ import { UserSettings } from '~/components/Chat/UserSettings'
 import { IconChevronRight } from '@tabler/icons-react'
 import { findDefaultModel } from '../UIUC-Components/api-inputs/LLMsApiKeyInputForm'
 import { showConfirmationToast } from '../UIUC-Components/api-inputs/LLMsApiKeyInputForm'
+import { ContextWithMetadata } from '~/types/chat'
 
 const montserrat_med = Montserrat({
   weight: '500',
   subsets: ['latin'],
 })
+// constant created to check the types of files allowed to be uploaded
+const ALLOWED_FILE_EXTENSIONS = [
+  'html',
+  'py',
+  'pdf',
+  'txt',
+  'md',
+  'srt',
+  'vtt',
+  'docx',
+  'ppt',
+  'pptx',
+  'xlsx',
+  'xls',
+  'xlsm',
+  'xlsb',
+  'xltx',
+  'xltm',
+  'xlt',
+  'xml',
+  'xlam',
+  'xla',
+  'xlw',
+  'xlr',
+  'csv',
+  'png',
+  'jpg',
+]
+
+type FileUploadStatus = {
+  file: File
+  status: 'uploading' | 'uploaded' | 'processing' | 'completed' | 'error' // Add 'processing' and 'completed'
+  url?: string
+  contexts?: ContextWithMetadata[]
+}
 
 interface Props {
   onSend: (message: Message, plugin: Plugin | null) => void
@@ -77,6 +118,77 @@ interface Props {
 interface ProcessedImage {
   resizedFile: File
   dataUrl: string
+}
+
+async function createNewConversation(
+  courseName: string,
+  homeDispatch: any,
+): Promise<Conversation> {
+  const conversationId = uuidv4()
+  const newConversation: Conversation = {
+    id: conversationId,
+    name: `File Upload - ${new Date().toLocaleString()}`,
+    messages: [],
+    model: {
+      id: 'gpt-4o-mini',
+      name: 'GPT-4o mini',
+      tokenLimit: 128000,
+      enabled: true,
+    },
+    prompt:
+      'You are a helpful assistant. You can analyze uploaded files and answer questions.',
+    temperature: 0.5,
+    folderId: null,
+    createdAt: new Date().toISOString(),
+  }
+
+  homeDispatch({ field: 'selectedConversation', value: newConversation })
+  homeDispatch({
+    field: 'conversations',
+    value: (prev: Conversation[]) => [newConversation, ...prev],
+  })
+
+  return newConversation
+}
+
+async function fetchFileUploadContexts(
+  conversationId: string,
+  courseName: string,
+  fileName: string,
+): Promise<ContextWithMetadata[]> {
+  try {
+    const response = await fetch('/api/getContexts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        course_name: courseName,
+        search_query: fileName,
+        token_limit: 4000,
+        doc_groups: ['All Documents'],
+        conversation_id: conversationId,
+      }),
+    })
+
+    if (!response.ok) {
+      console.error('Failed to fetch file contexts:', response.status)
+    }
+
+    const data = await response.json()
+    
+    //Check if data is an array before filtering
+    if (!Array.isArray(data)) {
+      throw new Error('Invalid response format')
+    }
+
+    const filteredContexts = data.filter((context: any) => 
+      context.readable_filename === fileName
+    )
+        
+    return filteredContexts
+  } catch (error) {
+    console.error('Error fetching file contexts:', error)
+    return []
+  }
 }
 
 export const ChatInput = ({
@@ -130,6 +242,8 @@ export const ChatInput = ({
   const [imageUrls, setImageUrls] = useState<string[]>([])
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const modelSelectContainerRef = useRef<HTMLDivElement | null>(null)
+  const fileUploadRef = useRef<HTMLInputElement | null>(null)
+  const [fileUploads, setFileUploads] = useState<FileUploadStatus[]>([])
 
   const handleFocus = () => {
     setIsFocused(true)
@@ -206,17 +320,33 @@ export const ChatInput = ({
   type Role = 'user' | 'system' // Add other roles as needed
 
   const handleSend = async () => {
-    if (messageIsStreaming) {
+    const hasProcessingFiles = fileUploads.some(
+      (fu) =>
+        fu.status === 'processing' ||
+        fu.status === 'uploading' ||
+        fu.status === 'uploaded',
+    )
+
+    if (messageIsStreaming || hasProcessingFiles) {
+      // ✅ Show notification to user
+      if (hasProcessingFiles) {
+        notifications.show({
+          title: 'Files Processing',
+          message: 'Please wait for all files to finish processing',
+          color: 'yellow',
+        })
+      }
       return
     }
 
     const textContent = content
-    let imageContent: Content[] = [] // Explicitly declare the type for imageContent
+    let imageContent: Content[] = []  
+    let fileContent: Content[] = []
 
+    // Handle image uploads (existing code - keep this as is)
     if (imageFiles.length > 0 && !uploadingImage) {
       setUploadingImage(true)
       try {
-        // If imageUrls is empty, upload all images and get their URLs
         const imageUrlsToUse =
           imageUrls.length > 0
             ? imageUrls
@@ -226,17 +356,13 @@ export const ChatInput = ({
                 ),
               )
 
-        // Construct image content for the message
         imageContent = imageUrlsToUse
-          .filter((url): url is string => url !== '') // Type-guard to filter out empty strings
+          .filter((url): url is string => url !== '')
           .map((url) => ({
             type: 'image_url',
             image_url: { url },
           }))
 
-        // console.log("Final imageUrls: ", imageContent)
-
-        // Clear the files after uploading
         setImageFiles([])
         setImagePreviewUrls([])
         setImageUrls([])
@@ -248,8 +374,40 @@ export const ChatInput = ({
       }
     }
 
-    if (!textContent && imageContent.length === 0) {
-      alert(t('Please enter a message or upload an image'))
+    // Handle file uploads: Only proceed if all files are completed
+    const allFileContexts: ContextWithMetadata[] = [] // ✅ Change to const
+    
+    if (fileUploads.length > 0) {
+      const pendingFiles = fileUploads.filter((fu) => fu.status !== 'completed')
+
+      if (pendingFiles.length > 0) {
+        notifications.show({
+          title: 'Files Still Processing',
+          message:
+            'Please wait for all files to finish processing before sending',
+          color: 'yellow',
+        })
+        return
+      }
+
+      // Create file content for the message (files are already processed)
+      fileContent = fileUploads
+        .filter((fu) => fu.status === 'completed')
+        .map((fu) => {
+          if (fu.contexts && Array.isArray(fu.contexts)) {
+            allFileContexts.push(...fu.contexts) // This will still work with const
+          }
+          return {
+            type: 'text' as MessageType,
+            text: `📎 Uploaded file: ${fu.file.name}|${fu.url}|${fu.file.type}`,
+          }
+        })
+
+      setFileUploads([]) // Clear after using
+    }
+
+    if (!textContent && imageContent.length === 0 && fileContent.length === 0) {
+      alert(t('Please enter a message or upload a file'))
       return
     }
 
@@ -259,17 +417,19 @@ export const ChatInput = ({
         ? [{ type: 'text' as MessageType, text: textContent }]
         : []),
       ...imageContent,
+      ...fileContent,
     ]
 
-    // Create a structured message for GPT-4 Vision
-    const messageForGPT4Vision: Message = {
+    // Create a structured message
+    const messageForChat: Message = {
       id: uuidv4(),
       role: 'user',
       content: contentArray,
+      contexts: allFileContexts.length > 0 ? allFileContexts : undefined, //Include contexts
     }
 
     // Use the onSend prop to send the structured message
-    onSend(messageForGPT4Vision, plugin) // Cast to unknown then to Message if needed
+    onSend(messageForChat, plugin)
 
     // Reset states
     setContent('')
@@ -278,9 +438,13 @@ export const ChatInput = ({
     setImageUrls([])
     setImageFiles([])
     setImagePreviewUrls([])
+    setFileUploads([])
 
     if (imageUploadRef.current) {
       imageUploadRef.current.value = ''
+    }
+    if (fileUploadRef.current) {
+      fileUploadRef.current.value = ''
     }
   }
 
@@ -523,6 +687,163 @@ export const ChatInput = ({
       courseName,
     ],
   )
+
+  async function handleFileSelection(newFiles: File[]) {
+    const allFiles = [...fileUploads.map((f) => f.file), ...newFiles]
+
+    // 1. Validation: number of files
+    if (allFiles.length > 5) {
+      notifications.show({
+        title: 'Too Many Files',
+        message:
+          'You can upload a maximum of 5 files at once. Please remove some files before adding new ones.',
+        color: 'red',
+        icon: <IconAlertCircle />,
+        autoClose: 6000,
+      })
+      return
+    }
+
+    // 2. Validation: total size
+    const totalSize = allFiles.reduce((sum, file) => sum + file.size, 0)
+    if (totalSize > 25 * 1024 * 1024) {
+      notifications.show({
+        title: 'Files Too Large',
+        message:
+          'The total size of all files cannot exceed 25MB. Please remove large files or upload smaller ones.',
+        color: 'red',
+        icon: <IconAlertCircle />,
+        autoClose: 6000,
+      })
+      return
+    }
+
+    // 3. Validation: file types
+    for (const file of newFiles) {
+      const ext = file.name.split('.').pop()?.toLowerCase()
+      if (!ext || !ALLOWED_FILE_EXTENSIONS.includes(ext)) {
+        notifications.show({
+          title: 'Unsupported File Type',
+          message: `The file "${file.name}" is not supported. Please upload files of the following types: ${ALLOWED_FILE_EXTENSIONS.join(', ')}.`,
+          color: 'red',
+          icon: <IconAlertCircle />,
+          autoClose: 6000,
+        })
+        return
+      }
+    }
+
+    // Prevent duplicates by name
+    const existingNames = new Set(fileUploads.map((fu) => fu.file.name))
+    const uniqueNewFiles = newFiles.filter(
+      (file) => !existingNames.has(file.name),
+    )
+
+    if (uniqueNewFiles.length === 0) {
+      notifications.show({
+        title: 'Duplicate Files',
+        message: 'All selected files are already uploaded or in progress.',
+        color: 'yellow',
+        icon: <IconAlertCircle />,
+        autoClose: 6000,
+      })
+      return
+    }
+
+    for (const file of uniqueNewFiles) {
+      const ext = file.name.split('.').pop()?.toLowerCase()
+      const imageTypes = ['jpg', 'jpeg', 'png', 'webp', 'gif']
+
+      // If image, generate preview for UI
+      if (ext && imageTypes.includes(ext)) {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          const dataUrl = e.target?.result as string
+          setImagePreviewUrls((prev) => [...prev, dataUrl])
+          setImageFiles((prev) => [...prev, file])
+        }
+        reader.readAsDataURL(file)
+      } else {
+        // For non-image files, just add to fileUploads
+        setFileUploads((prev) => [
+          ...prev,
+          {
+            file,
+            status: 'uploading' as const,
+          },
+        ])
+      }
+
+      // Upload all files (including images) to S3 and update status
+      try {
+        const s3Key = await uploadToS3(file, courseName)
+        setFileUploads((prev) =>
+          prev.map((f) =>
+            f.file.name === file.name
+              ? { ...f, status: 'uploaded', url: s3Key }
+              : f,
+          ),
+        )
+
+        // **NEW: Immediately process the file after S3 upload**
+        setFileUploads((prev) =>
+          prev.map((f) =>
+            f.file.name === file.name ? { ...f, status: 'processing' } : f,
+          ),
+        )
+
+        // Create conversation if needed
+        let conversation = selectedConversation
+        if (!conversation?.id) {
+          conversation = await createNewConversation(courseName, homeDispatch)
+        }
+
+        // Process the file immediately
+        const response = await fetch('/api/UIUC-api/chat-file-upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            conversationId: conversation.id,
+            courseName: courseName,
+            s3Key: s3Key,
+            fileName: file.name,
+            fileType: file.type,
+            model: conversation.model?.id,
+          }),
+        })
+
+        if (!response.ok) {
+          throw new Error('File processing failed')
+        }
+
+        const result = await response.json()
+        console.log('File processing completed:', result)
+        
+        const contexts = await fetchFileUploadContexts(
+          conversation.id,
+          courseName,
+          file.name,
+        )
+        setFileUploads((prev) =>
+          prev.map((f) =>
+            f.file.name === file.name
+              ? { ...f, status: 'completed', contexts }
+              : f,
+          ),
+        )
+      } catch (error) {
+        setFileUploads((prev) =>
+          prev.map((f) =>
+            f.file.name === file.name ? { ...f, status: 'error' } : f,
+          ),
+        )
+        notifications.show({
+          message: `Failed to process ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          color: 'red',
+        })
+      }
+    }
+  }
 
   async function processAndUploadImage(
     file: File,
@@ -837,39 +1158,107 @@ export const ChatInput = ({
             </button>
           )}
 
+        {fileUploads.map((fu, index) => (
+          <div key={index} className="mb-1 text-sm text-neutral-500">
+            📎 {fu.file.name}
+          </div>
+        ))}
+
         <div
           ref={chatInputParentContainerRef}
           className="absolute bottom-0 mx-4 flex w-[80%] flex-col self-center rounded-t-3xl border border-black/10 bg-[#070712] px-4 pb-8 pt-4 shadow-[0_0_10px_rgba(0,0,0,0.10)] dark:border-gray-900/50 dark:text-white dark:shadow-[0_0_15px_rgba(0,0,0,0.10)] md:mx-20 md:w-[70%]"
           style={{ pointerEvents: 'auto' }}
         >
-          {/* BUTTON 2: Image Icon and Input */}
-          {selectedConversation?.model?.id &&
-            VisionCapableModels.has(
-              selectedConversation.model?.id as OpenAIModelID,
-            ) && (
+          {/* Flex row for upload buttons and textarea */}
+          <div className="flex w-full items-center">
+            <>
+              {/* Image upload button: only for vision-capable models */}
+              {VisionCapableModels.has(
+                selectedConversation?.model?.id as OpenAIModelID,
+              ) && (
+                <>
+                  <button
+                    className="mr-2 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
+                    onClick={() => imageUploadRef.current?.click()}
+                    type="button"
+                    title="Upload image"
+                    style={{ pointerEvents: 'auto' }}
+                  >
+                    <IconPhoto size={22} />
+                  </button>
+                  <input
+                    type="file"
+                    multiple
+                    id="imageUpload"
+                    ref={imageUploadRef}
+                    style={{ display: 'none', pointerEvents: 'auto' }}
+                    accept=".jpg,.jpeg,.png,.webp,.gif"
+                    onChange={(e) => {
+                      const files = e.target.files
+                      if (files) {
+                        handleImageUpload(Array.from(files))
+                      }
+                      // Reset input value so the same file can be selected again
+                      if (imageUploadRef.current) {
+                        imageUploadRef.current.value = ''
+                      }
+                    }}
+                  />
+                </>
+              )}
+              {/* File upload button (attachmentsign): always visible */}
               <button
-                className="absolute bottom-11 left-5 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
-                onClick={() => document.getElementById('imageUpload')?.click()}
+                className="mr-2 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
+                onClick={() => fileUploadRef.current?.click()}
+                type="button"
+                title="Upload files"
                 style={{ pointerEvents: 'auto' }}
               >
-                <div className="">
-                  <IconPhoto size={22} />
-                </div>
+                <IconPaperclip size={22} />
               </button>
-            )}
-          <input
-            type="file"
-            multiple
-            id="imageUpload"
-            ref={imageUploadRef}
-            style={{ display: 'none', pointerEvents: 'auto' }}
-            onChange={(e) => {
-              const files = e.target.files
-              if (files) {
-                handleImageUpload(Array.from(files))
-              }
-            }}
-          />
+              <input
+                type="file"
+                multiple
+                ref={fileUploadRef}
+                style={{ display: 'none', pointerEvents: 'auto' }}
+                accept={ALLOWED_FILE_EXTENSIONS.map((ext) => '.' + ext).join(
+                  ',',
+                )}
+                onChange={(e) => {
+                  const files = e.target.files
+                  if (files) {
+                    handleFileSelection(Array.from(files))
+                  }
+                  // Reset input value so the same file can be selected again
+                  if (fileUploadRef.current) {
+                    fileUploadRef.current.value = ''
+                  }
+                }}
+              />
+            </>
+            {/* Textarea for message input */}
+            <textarea
+              ref={textareaRef}
+              className="chat-input m-0 h-[24px] max-h-[400px] w-full flex-1 resize-none bg-transparent py-2 pl-2 pr-8 text-white outline-none"
+              style={{
+                resize: 'none',
+                minHeight: '24px',
+                height: 'auto',
+                maxHeight: '400px',
+                overflow: 'hidden',
+                pointerEvents: 'auto',
+              }}
+              placeholder={'Message UIUC.chat'}
+              value={content}
+              rows={1}
+              onCompositionStart={() => setIsTyping(true)}
+              onCompositionEnd={() => setIsTyping(false)}
+              onChange={handleChange}
+              onKeyDown={handleKeyDown}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+            />
+          </div>
 
           {showPluginSelect && (
             <div
@@ -933,7 +1322,6 @@ export const ChatInput = ({
                     <button
                       className="remove-button"
                       onClick={() => {
-                        // Filter out the image from both imageFiles and imagePreviewUrls
                         setImageFiles((prev) =>
                           prev.filter((_, i) => i !== index),
                         )
@@ -962,41 +1350,129 @@ export const ChatInput = ({
               ))}
             </div>
 
-            {/* Button 3: main input text area  */}
-            <div
-              className={`
-                ${
-                  VisionCapableModels.has(
-                    selectedConversation?.model?.id as OpenAIModelID,
-                  )
-                    ? 'pl-8'
-                    : 'pl-1'
+            {/* File upload preview section */}
+            <div className="mt-2 flex flex-wrap gap-3">
+              {fileUploads.map((fu, index) => {
+                const getFileIcon = (name: string, type?: string) => {
+                  const extension = name.split('.').pop()?.toLowerCase()
+                  const iconProps = { size: 20 }
+
+                  if (type?.includes('pdf') || extension === 'pdf') {
+                    return (
+                      <IconFileTypePdf
+                        {...iconProps}
+                        className="text-red-500"
+                      />
+                    )
+                  }
+                  if (
+                    type?.includes('doc') ||
+                    extension === 'docx' ||
+                    extension === 'doc'
+                  ) {
+                    return (
+                      <IconFileTypeDocx
+                        {...iconProps}
+                        className="text-blue-500"
+                      />
+                    )
+                  }
+                  if (type?.includes('text') || extension === 'txt') {
+                    return (
+                      <IconFileTypeTxt
+                        {...iconProps}
+                        className="text-gray-500"
+                      />
+                    )
+                  }
+                  return <IconFile {...iconProps} className="text-gray-600" />
                 }
-                  `}
-            >
-              <textarea
-                ref={textareaRef}
-                className={`chat-input m-0 h-[24px] max-h-[400px] w-full resize-none bg-transparent py-2 pl-2 pr-8 text-white outline-none ${
-                  isFocused ? 'border-blue-500' : ''
-                }`}
-                style={{
-                  resize: 'none',
-                  minHeight: '24px',
-                  height: 'auto',
-                  maxHeight: '400px',
-                  overflow: 'hidden',
-                  pointerEvents: 'auto',
-                }}
-                placeholder={'Message UIUC.chat'}
-                value={content}
-                rows={1}
-                onCompositionStart={() => setIsTyping(true)}
-                onCompositionEnd={() => setIsTyping(false)}
-                onChange={handleChange}
-                onKeyDown={handleKeyDown}
-                onFocus={handleFocus}
-                onBlur={handleBlur}
-              />
+
+                const getStatusIcon = (status: string) => {
+                  switch (status) {
+                    case 'uploading':
+                    case 'processing':
+                      return (
+                        <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-blue-600"></div>
+                      )
+                    case 'completed':
+                      return (
+                        <div className="flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
+                          <svg
+                            className="h-2.5 w-2.5 text-white"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                      )
+                    case 'error':
+                      return (
+                        <div className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500">
+                          <svg
+                            className="h-2.5 w-2.5 text-white"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                      )
+                    default:
+                      return null
+                  }
+                }
+
+                const truncateFileName = (name: string, maxLength = 25) => {
+                  if (name.length <= maxLength) return name
+                  const extension = name.split('.').pop()
+                  const nameWithoutExt = name.substring(
+                    0,
+                    name.lastIndexOf('.'),
+                  )
+                  return `${nameWithoutExt.substring(0, maxLength - 3)}...${extension ? `.${extension}` : ''}`
+                }
+
+                return (
+                  <div
+                    key={index}
+                    className="flex items-center gap-2 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2"
+                  >
+                    {getFileIcon(fu.file.name, fu.file.type)}
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-gray-300">
+                        {truncateFileName(fu.file.name)}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {fu.status === 'uploading' && 'Uploading...'}
+                        {fu.status === 'processing' && 'Processing...'}
+                        {fu.status === 'completed' && 'Ready for chat'}
+                        {fu.status === 'error' && 'Upload failed'}
+                      </span>
+                    </div>
+                    {getStatusIcon(fu.status)}
+                    <button
+                      onClick={() => {
+                        setFileUploads((prev) =>
+                          prev.filter((_, i) => i !== index),
+                        )
+                      }}
+                      className="ml-2 text-gray-400 hover:text-gray-300"
+                    >
+                      <IconX size={16} />
+                    </button>
+                  </div>
+                )
+              })}
             </div>
 
             <button
@@ -1012,7 +1488,7 @@ export const ChatInput = ({
             </button>
 
             {showScrollDownButton && (
-              <div className="absolute bottom-12 right-0 lg:-right-10 lg:bottom-0">
+              <div className="absolute bottom-11 right-0 lg:-right-10 lg:bottom-0">
                 <button
                   className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-300 text-gray-800 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-neutral-200"
                   onClick={onScrollDownClick}
