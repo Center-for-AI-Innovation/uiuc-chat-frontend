@@ -1,5 +1,5 @@
 // chatinput.tsx
-import { type Content, type Message, type MessageType } from '@/types/chat'
+import { type Content, type Message, type MessageType, type Conversation } from '@/types/chat'
 import { type Plugin } from '@/types/plugin'
 import { type Prompt } from '@/types/prompt'
 import { Text } from '@mantine/core'
@@ -31,10 +31,6 @@ import {
   useState,
 } from 'react'
 import { v4 as uuidv4 } from 'uuid'
-import { useTranslation } from 'next-i18next'
-import { Content, Message, MessageType, Conversation } from '@/types/chat'
-import { Plugin } from '@/types/plugin'
-import { Prompt } from '@/types/prompt'
 
 import HomeContext from '~/pages/api/home/home.context'
 
@@ -1138,14 +1134,14 @@ export const ChatInput = ({
         className="stretch mx-2 mt-4 flex flex-col gap-3 last:mb-2 md:mx-4 md:mt-[52px] md:last:mb-6 lg:mx-auto lg:max-w-3xl"
         style={{ pointerEvents: 'auto' }}
       >
+
+
         <div
           ref={chatInputParentContainerRef}
           className="chat_input_container fixed bottom-0 mx-4 flex w-[80%] flex-col self-center rounded-t-3xl bg-[--message-background] px-4 pb-8 pt-4 text-[--message] md:mx-20 md:w-[60%]"
           style={{ pointerEvents: 'auto', backdropFilter: 'blur(4px)' }}
         >
-          {/* FUTURE: rewrite to be flex instead of using absolute */}
-
-          {/* moved stop generating and regenerate buttons here to position off of bottom input area...as textarea varies in height */}
+          {/* Stop generating and regenerate buttons */}
           {messageIsStreaming && (
             <button
               className={`absolute -top-14 left-0 right-0 mx-auto mb-12 flex w-fit items-center gap-3 rounded border border-[--primary] bg-[--primary] px-4 py-2 text-[--background] opacity-[.85] hover:opacity-100 md:mb-0 md:mt-2`}
@@ -1172,133 +1168,6 @@ export const ChatInput = ({
               </button>
             )}
 
-        {fileUploads.map((fu, index) => (
-          <div key={index} className="mb-1 text-sm text-neutral-500">
-            📎 {fu.file.name}
-          </div>
-        ))}
-
-        <div
-          ref={chatInputParentContainerRef}
-          className="absolute bottom-0 mx-4 flex w-[80%] flex-col self-center rounded-t-3xl border border-black/10 bg-[#070712] px-4 pb-8 pt-4 shadow-[0_0_10px_rgba(0,0,0,0.10)] dark:border-gray-900/50 dark:text-white dark:shadow-[0_0_15px_rgba(0,0,0,0.10)] md:mx-20 md:w-[70%]"
-          style={{ pointerEvents: 'auto' }}
-        >
-          {/* Flex row for upload buttons and textarea */}
-          <div className="flex w-full items-center">
-            <>
-              {/* Image upload button: only for vision-capable models */}
-              {VisionCapableModels.has(
-                selectedConversation?.model?.id as OpenAIModelID,
-              ) && (
-                <>
-                  <button
-                    className="mr-2 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
-                    onClick={() => imageUploadRef.current?.click()}
-                    type="button"
-                    title="Upload image"
-                    style={{ pointerEvents: 'auto' }}
-                  >
-                    <IconPhoto size={22} />
-                  </button>
-                  <input
-                    type="file"
-                    multiple
-                    id="imageUpload"
-                    ref={imageUploadRef}
-                    style={{ display: 'none', pointerEvents: 'auto' }}
-                    accept=".jpg,.jpeg,.png,.webp,.gif"
-                    onChange={(e) => {
-                      const files = e.target.files
-                      if (files) {
-                        handleImageUpload(Array.from(files))
-                      }
-                      // Reset input value so the same file can be selected again
-                      if (imageUploadRef.current) {
-                        imageUploadRef.current.value = ''
-                      }
-                    }}
-                  />
-                </>
-              )}
-              {/* File upload button (plus sign): always visible */}
-              <button
-                className="mr-2 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
-                onClick={() => fileUploadRef.current?.click()}
-                type="button"
-                title="Upload files"
-                style={{ pointerEvents: 'auto' }}
-              >
-                <IconPlus size={22} />
-              </button>
-              <input
-                type="file"
-                multiple
-                ref={fileUploadRef}
-                style={{ display: 'none', pointerEvents: 'auto' }}
-                accept={ALLOWED_FILE_EXTENSIONS.map((ext) => '.' + ext).join(
-                  ',',
-                )}
-                onChange={(e) => {
-                  const files = e.target.files
-                  if (files) {
-                    handleFileSelection(Array.from(files))
-                  }
-                  // Reset input value so the same file can be selected again
-                  if (fileUploadRef.current) {
-                    fileUploadRef.current.value = ''
-                  }
-                }}
-              />
-            </>
-            {/* Textarea for message input */}
-            <textarea
-              ref={textareaRef}
-              className="chat-input m-0 h-[24px] max-h-[400px] w-full flex-1 resize-none bg-transparent py-2 pl-2 pr-8 text-white outline-none"
-              style={{
-                resize: 'none',
-                minHeight: '24px',
-                height: 'auto',
-                maxHeight: '400px',
-                overflow: 'hidden',
-                pointerEvents: 'auto',
-              }}
-              placeholder={'Message UIUC.chat'}
-              value={content}
-              rows={1}
-              onCompositionStart={() => setIsTyping(true)}
-              onCompositionEnd={() => setIsTyping(false)}
-              onChange={handleChange}
-              onKeyDown={handleKeyDown}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-            />
-          </div>
-
-          {showPluginSelect && (
-            <div
-              className="absolute bottom-14 left-0 rounded"
-              style={{ pointerEvents: 'auto' }}
-            >
-              <PluginSelect
-                plugin={plugin}
-                onKeyDown={(e: any) => {
-                  if (e.key === 'Escape') {
-                    e.preventDefault()
-                    setShowPluginSelect(false)
-                    textareaRef.current?.focus()
-                  }
-                }}
-                onPluginChange={(plugin: Plugin) => {
-                  setPlugin(plugin)
-                  setShowPluginSelect(false)
-
-                  if (textareaRef && textareaRef.current) {
-                    textareaRef.current.focus()
-                  }
-                }}
-              />
-            </div>
-          )}
           {/* Chat input and preview container */}
           <div
             ref={chatInputContainerRef}
@@ -1312,194 +1181,321 @@ export const ChatInput = ({
               pointerEvents: 'auto',
             }}
           >
-            {/* Image preview section */}
-            <div
-              className="ml-10 flex space-x-3"
-              style={{ display: imagePreviewUrls.length > 0 ? 'flex' : 'none' }}
-            >
-              {imagePreviewUrls.map((src, index) => (
-                <div key={src} className="relative h-12 w-12">
-                  <ImagePreview
-                    src={src}
-                    alt={`Preview ${index}`}
-                    className="h-full w-full rounded-lg object-cover"
-                  />
-                  <Tooltip
-                    label="Remove File"
-                    position="top"
-                    withArrow
-                    style={{
-                      color: 'var(--tooltip)',
-                      backgroundColor: 'var(--tooltip-background)',
-                    }}
-                  >
-                    <button
-                      className="remove-button"
-                      onClick={() => {
-                        setImageFiles((prev) =>
-                          prev.filter((_, i) => i !== index),
-                        )
-                        setImagePreviewUrls((prev) =>
-                          prev.filter((_, i) => i !== index),
-                        )
-                      }}
-                      style={removeButtonStyle}
-                      onMouseEnter={(e) => {
-                        const current = e.currentTarget
-                        current.style.backgroundColor =
-                          removeButtonHoverStyle.backgroundColor!
-                        current.style.color = removeButtonHoverStyle.color!
-                      }}
-                      onMouseLeave={(e) => {
-                        const current = e.currentTarget
-                        current.style.backgroundColor =
-                          removeButtonStyle.backgroundColor!
-                        current.style.color = removeButtonStyle.color!
+            {/* Image preview section - moved inside chat bar */}
+            {imagePreviewUrls.length > 0 && (
+              <div className="mb-4 flex space-x-3">
+                {imagePreviewUrls.map((src, index) => (
+                  <div key={src} className="relative h-12 w-12">
+                    <ImagePreview
+                      src={src}
+                      alt={`Preview ${index}`}
+                      className="h-full w-full rounded-lg object-cover"
+                    />
+                    <Tooltip
+                      label="Remove File"
+                      position="top"
+                      withArrow
+                      style={{
+                        color: 'var(--tooltip)',
+                        backgroundColor: 'var(--tooltip-background)',
                       }}
                     >
-                      <IconX size={'.85rem'} />
-                    </button>
-                  </Tooltip>
-                </div>
-              ))}
-            </div>
-
-            {/* File upload preview section */}
-            <div className="mt-2 flex flex-wrap gap-3">
-              {fileUploads.map((fu, index) => {
-                const getFileIcon = (name: string, type?: string) => {
-                  const extension = name.split('.').pop()?.toLowerCase()
-                  const iconProps = { size: 20 }
-
-                  if (type?.includes('pdf') || extension === 'pdf') {
-                    return (
-                      <IconFileTypePdf
-                        {...iconProps}
-                        className="text-red-500"
-                      />
-                    )
-                  }
-                  if (
-                    type?.includes('doc') ||
-                    extension === 'docx' ||
-                    extension === 'doc'
-                  ) {
-                    return (
-                      <IconFileTypeDocx
-                        {...iconProps}
-                        className="text-blue-500"
-                      />
-                    )
-                  }
-                  if (type?.includes('text') || extension === 'txt') {
-                    return (
-                      <IconFileTypeTxt
-                        {...iconProps}
-                        className="text-gray-500"
-                      />
-                    )
-                  }
-                  return <IconFile {...iconProps} className="text-gray-600" />
-                }
-
-                const getStatusIcon = (status: string) => {
-                  switch (status) {
-                    case 'uploading':
-                    case 'processing':
-                      return (
-                        <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-blue-600"></div>
-                      )
-                    case 'completed':
-                      return (
-                        <div className="flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
-                          <svg
-                            className="h-2.5 w-2.5 text-white"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </div>
-                      )
-                    case 'error':
-                      return (
-                        <div className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500">
-                          <svg
-                            className="h-2.5 w-2.5 text-white"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </div>
-                      )
-                    default:
-                      return null
-                  }
-                }
-
-                const truncateFileName = (name: string, maxLength = 25) => {
-                  if (name.length <= maxLength) return name
-                  const extension = name.split('.').pop()
-                  const nameWithoutExt = name.substring(
-                    0,
-                    name.lastIndexOf('.'),
-                  )
-                  return `${nameWithoutExt.substring(0, maxLength - 3)}...${extension ? `.${extension}` : ''}`
-                }
-
-                return (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2"
-                  >
-                    {getFileIcon(fu.file.name, fu.file.type)}
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium text-gray-300">
-                        {truncateFileName(fu.file.name)}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {fu.status === 'uploading' && 'Uploading...'}
-                        {fu.status === 'processing' && 'Processing...'}
-                        {fu.status === 'completed' && 'Ready for chat'}
-                        {fu.status === 'error' && 'Upload failed'}
-                      </span>
-                    </div>
-                    {getStatusIcon(fu.status)}
-                    <button
-                      onClick={() => {
-                        setFileUploads((prev) =>
-                          prev.filter((_, i) => i !== index),
-                        )
-                      }}
-                      className="ml-2 text-gray-400 hover:text-gray-300"
-                    >
-                      <IconX size={16} />
-                    </button>
+                      <button
+                        className="remove-button"
+                        onClick={() => {
+                          setImageFiles((prev) =>
+                            prev.filter((_, i) => i !== index),
+                          )
+                          setImagePreviewUrls((prev) =>
+                            prev.filter((_, i) => i !== index),
+                          )
+                        }}
+                        style={removeButtonStyle}
+                        onMouseEnter={(e) => {
+                          const current = e.currentTarget
+                          current.style.backgroundColor =
+                            removeButtonHoverStyle.backgroundColor!
+                          current.style.color = removeButtonHoverStyle.color!
+                        }}
+                        onMouseLeave={(e) => {
+                          const current = e.currentTarget
+                          current.style.backgroundColor =
+                            removeButtonStyle.backgroundColor!
+                          current.style.color = removeButtonStyle.color!
+                        }}
+                      >
+                        <IconX size={'.85rem'} />
+                      </button>
+                    </Tooltip>
                   </div>
-                )
-              })}
+                ))}
+              </div>
+            )}
+
+            {/* File upload preview section - moved inside chat bar */}
+            {fileUploads.length > 0 && (
+              <div className="mb-4 flex flex-wrap gap-3">
+                {fileUploads.map((fu, index) => {
+                  const getFileIcon = (name: string, type?: string) => {
+                    const extension = name.split('.').pop()?.toLowerCase()
+                    const iconProps = { size: 20 }
+
+                    if (type?.includes('pdf') || extension === 'pdf') {
+                      return (
+                        <IconFileTypePdf
+                          {...iconProps}
+                          className="text-red-500"
+                        />
+                      )
+                    }
+                    if (
+                      type?.includes('doc') ||
+                      extension === 'docx' ||
+                      extension === 'doc'
+                    ) {
+                      return (
+                        <IconFileTypeDocx
+                          {...iconProps}
+                          className="text-blue-500"
+                        />
+                      )
+                    }
+                    if (type?.includes('text') || extension === 'txt') {
+                      return (
+                        <IconFileTypeTxt
+                          {...iconProps}
+                          className="text-gray-500"
+                        />
+                      )
+                    }
+                    return <IconFile {...iconProps} className="text-gray-600" />
+                  }
+
+                  const getStatusIcon = (status: string) => {
+                    switch (status) {
+                      case 'uploading':
+                      case 'processing':
+                        return (
+                          <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-blue-600"></div>
+                        )
+                      case 'completed':
+                        return (
+                          <div className="flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
+                            <svg
+                              className="h-2.5 w-2.5 text-white"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </div>
+                        )
+                      case 'error':
+                        return (
+                          <div className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500">
+                            <svg
+                              className="h-2.5 w-2.5 text-white"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </div>
+                        )
+                      default:
+                        return null
+                    }
+                  }
+
+                  const truncateFileName = (name: string, maxLength = 25) => {
+                    if (name.length <= maxLength) return name
+                    const extension = name.split('.').pop()
+                    const nameWithoutExt = name.substring(
+                      0,
+                      name.lastIndexOf('.'),
+                    )
+                    return `${nameWithoutExt.substring(0, maxLength - 3)}...${extension ? `.${extension}` : ''}`
+                  }
+
+                  return (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2"
+                    >
+                      {getFileIcon(fu.file.name, fu.file.type)}
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-gray-300">
+                          {truncateFileName(fu.file.name)}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {fu.status === 'uploading' && 'Uploading...'}
+                          {fu.status === 'processing' && 'Processing...'}
+                          {fu.status === 'completed' && 'Ready for chat'}
+                          {fu.status === 'error' && 'Upload failed'}
+                        </span>
+                      </div>
+                      {getStatusIcon(fu.status)}
+                      <button
+                        onClick={() => {
+                          setFileUploads((prev) =>
+                            prev.filter((_, i) => i !== index),
+                          )
+                        }}
+                        className="ml-2 text-gray-400 hover:text-gray-300"
+                      >
+                        <IconX size={16} />
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* Flex row for upload buttons and textarea */}
+            <div className="relative flex items-center">
+              {/* Upload buttons container */}
+              <div className="flex items-center gap-1 pl-2 pr-1">
+                {/* Image upload button: only for vision-capable models */}
+                {VisionCapableModels.has(
+                  selectedConversation?.model?.id as OpenAIModelID,
+                ) && (
+                  <>
+                    <button
+                      className="rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
+                      onClick={() => imageUploadRef.current?.click()}
+                      type="button"
+                      title="Upload image"
+                      style={{ pointerEvents: 'auto' }}
+                    >
+                      <IconPhoto size={22} />
+                    </button>
+                    <input
+                      type="file"
+                      multiple
+                      id="imageUpload"
+                      ref={imageUploadRef}
+                      style={{ display: 'none', pointerEvents: 'auto' }}
+                      accept=".jpg,.jpeg,.png,.webp,.gif"
+                      onChange={(e) => {
+                        const files = e.target.files
+                        if (files) {
+                          handleImageUpload(Array.from(files))
+                        }
+                        // Reset input value so the same file can be selected again
+                        if (imageUploadRef.current) {
+                          imageUploadRef.current.value = ''
+                        }
+                      }}
+                    />
+                  </>
+                )}
+                {/* File upload button (plus sign): always visible */}
+                <button
+                  className="rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
+                  onClick={() => fileUploadRef.current?.click()}
+                  type="button"
+                  title="Upload files"
+                  style={{ pointerEvents: 'auto' }}
+                >
+                  <IconPlus size={22} />
+                </button>
+                <input
+                  type="file"
+                  multiple
+                  ref={fileUploadRef}
+                  style={{ display: 'none', pointerEvents: 'auto' }}
+                  accept={ALLOWED_FILE_EXTENSIONS.map((ext) => '.' + ext).join(
+                    ',',
+                  )}
+                  onChange={(e) => {
+                    const files = e.target.files
+                    if (files) {
+                      handleFileSelection(Array.from(files))
+                    }
+                    // Reset input value so the same file can be selected again
+                    if (fileUploadRef.current) {
+                      fileUploadRef.current.value = ''
+                    }
+                  }}
+                />
+              </div>
+
+              {/* Textarea for message input */}
+              <textarea
+                ref={textareaRef}
+                className={`chat-input m-0 h-[24px] max-h-[400px] w-full flex-1 resize-none bg-transparent py-2 pr-12 text-white outline-none ${
+                  VisionCapableModels.has(
+                    selectedConversation?.model?.id as OpenAIModelID,
+                  )
+                    ? 'pl-8'
+                    : 'pl-1'
+                }`}
+                style={{
+                  resize: 'none',
+                  minHeight: '24px',
+                  height: 'auto',
+                  maxHeight: '400px',
+                  overflow: 'hidden',
+                  pointerEvents: 'auto',
+                }}
+                placeholder={'Message UIUC.chat'}
+                value={content}
+                rows={1}
+                onCompositionStart={() => setIsTyping(true)}
+                onCompositionEnd={() => setIsTyping(false)}
+                onChange={handleChange}
+                onKeyDown={handleKeyDown}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+              />
+
+              {/* Send button */}
+              <button
+                className="absolute top-1/2 right-2 -translate-y-1/2 rounded-full bg-[white/30] p-1.5 opacity-50 hover:opacity-100"
+                onClick={handleSend}
+                style={{ pointerEvents: 'auto' }}
+              >
+                {messageIsStreaming ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-t-2 border-neutral-800 opacity-60"></div>
+                ) : (
+                  <IconSend size={18} />
+                )}
+              </button>
             </div>
 
-            <button
-              className="absolute bottom-[2.25rem] right-5 rounded-full bg-[white/30] p-2 opacity-50 hover:opacity-100"
-              onClick={handleSend}
-              style={{ pointerEvents: 'auto' }}
-            >
-              {messageIsStreaming ? (
-                <div className="h-4 w-4 animate-spin rounded-full border-t-2 border-neutral-800 opacity-60"></div>
-              ) : (
-                <IconSend size={18} />
-              )}
-            </button>
+            {showPluginSelect && (
+              <div
+                className="absolute bottom-14 left-0 rounded"
+                style={{ pointerEvents: 'auto' }}
+              >
+                <PluginSelect
+                  plugin={plugin}
+                  onKeyDown={(e: any) => {
+                    if (e.key === 'Escape') {
+                      e.preventDefault()
+                      setShowPluginSelect(false)
+                      textareaRef.current?.focus()
+                    }
+                  }}
+                  onPluginChange={(plugin: Plugin) => {
+                    setPlugin(plugin)
+                    setShowPluginSelect(false)
+
+                    if (textareaRef && textareaRef.current) {
+                      textareaRef.current.focus()
+                    }
+                  }}
+                />
+              </div>
+            )}
 
             {showScrollDownButton && (
               <div className="absolute bottom-2 right-10 lg:-right-10 lg:bottom-0">
