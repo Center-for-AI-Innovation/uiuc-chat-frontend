@@ -21,8 +21,17 @@ import { KeycloakProvider } from '../providers/KeycloakProvider'
 
 // Check that PostHog is client-side (used to handle Next.js SSR)
 if (typeof window !== 'undefined') {
-  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY as string, {
-    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://posthog-dev.ilchat.mss.illinois.edu',
+  const key = process.env.NEXT_PUBLIC_POSTHOG_KEY
+  const host = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://posthog-dev.ilchat.mss.illinois.edu'
+
+  console.log('🔑 PostHog key:', key)
+  console.log('🌐 PostHog host:', host)
+
+  if (!key) {
+    console.warn('⚠️  No POSTHOG key—skipping init.')
+  } else {
+  posthog.init(key, {
+    api_host: host,
     opt_in_site_apps: true,
     autocapture: false,
     person_profiles: 'always',
@@ -38,8 +47,9 @@ if (typeof window !== 'undefined') {
     },
     loaded: (posthog) => {
       if (process.env.NODE_ENV === 'development') posthog.debug()
-    },
-  })
+      },
+    })
+  }
 }
 
 const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
