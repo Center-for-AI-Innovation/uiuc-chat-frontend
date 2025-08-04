@@ -12,7 +12,6 @@ import {
   bigint,
   date,
   doublePrecision,
-  bigserial,
 } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
 
@@ -182,7 +181,8 @@ export const messages = pgTable('messages', {
 
 // Projects table
 export const projects = pgTable('projects', {
-  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  // id: bigserial('id', { mode: 'number' }).primaryKey(),
+  id: bigint('id', { mode: 'number' }).primaryKey(),
   created_at: timestamp('created_at', { withTimezone: true })
     .defaultNow()
     .notNull(),
