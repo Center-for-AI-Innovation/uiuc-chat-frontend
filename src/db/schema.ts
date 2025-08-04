@@ -362,10 +362,13 @@ export const preAuthorizedApiKeys = pgTable('pre_authorized_api_keys', {
 export const projectStats = pgTable('project_stats', {
   id: serial('id').primaryKey(),
   project_id: integer('project_id').notNull(),
+  project_name: text('project_name').notNull(),
   total_messages: integer('total_messages').default(0),
   total_conversations: integer('total_conversations').default(0),
+  unique_users: integer('unique_users').default(0),
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().notNull(),
+  model_usage_counts: jsonb('model_usage_counts')
 })
 
 // PubMed Daily Update (from schema.sql)
