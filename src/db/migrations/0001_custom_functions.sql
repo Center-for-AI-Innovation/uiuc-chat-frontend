@@ -1112,38 +1112,83 @@ BEGIN
 END;
 $$;
 
+
 -- Create Triggers --
 --
 -- Name: projects after_project_insert; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
-CREATE TRIGGER after_project_insert AFTER INSERT ON public.projects FOR EACH ROW EXECUTE FUNCTION public.initialize_project_stats();
-
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname = 'after_project_insert'
+  ) THEN
+    CREATE TRIGGER after_project_insert
+    AFTER INSERT ON public.projects
+    FOR EACH ROW EXECUTE FUNCTION public.initialize_project_stats();
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
 
 --
 -- Name: llm-convo-monitor project_stats_trigger; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
-CREATE TRIGGER project_stats_trigger AFTER INSERT OR DELETE OR UPDATE ON public."llm-convo-monitor" FOR EACH ROW EXECUTE FUNCTION public.update_project_stats();
-
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname = 'project_stats_trigger'
+  ) THEN
+    CREATE TRIGGER project_stats_trigger
+    AFTER INSERT OR DELETE OR UPDATE ON public."llm-convo-monitor"
+    FOR EACH ROW EXECUTE FUNCTION public.update_project_stats();
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
 
 --
 -- Name: documents_doc_groups trg_update_doc_count_after_insert; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
-CREATE TRIGGER trg_update_doc_count_after_insert AFTER INSERT OR DELETE ON public.documents_doc_groups FOR EACH ROW EXECUTE FUNCTION public.update_doc_count();
-
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname = 'trg_update_doc_count_after_insert'
+  ) THEN
+    CREATE TRIGGER trg_update_doc_count_after_insert
+    AFTER INSERT OR DELETE ON public.documents_doc_groups
+    FOR EACH ROW EXECUTE FUNCTION public.update_doc_count();
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
 
 --
 -- Name: subscription tr_check_filters; Type: TRIGGER; Schema: realtime; Owner: supabase_admin
 --
 
-CREATE TRIGGER tr_check_filters BEFORE INSERT OR UPDATE ON realtime.subscription FOR EACH ROW EXECUTE FUNCTION realtime.subscription_check_filters();
-
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname = 'tr_check_filters'
+  ) THEN
+    CREATE TRIGGER tr_check_filters
+    BEFORE INSERT OR UPDATE ON realtime.subscription
+    FOR EACH ROW EXECUTE FUNCTION realtime.subscription_check_filters();
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
 
 --
 -- Name: objects update_objects_updated_at; Type: TRIGGER; Schema: storage; Owner: supabase_storage_admin
 --
-
-CREATE TRIGGER update_objects_updated_at BEFORE UPDATE ON storage.objects FOR EACH ROW EXECUTE FUNCTION storage.update_updated_at_column();
-
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname = 'update_objects_updated_at'
+  ) THEN
+    CREATE TRIGGER update_objects_updated_at
+    BEFORE UPDATE ON storage.objects
+    FOR EACH ROW EXECUTE FUNCTION storage.update_updated_at_column();
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
