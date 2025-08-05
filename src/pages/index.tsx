@@ -2,7 +2,7 @@ import Image from 'next/image'
 import { type NextPage } from 'next'
 import Head from 'next/head'
 import Link from 'next/link'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { ArrowNarrowRight, ExternalLink } from 'tabler-icons-react'
 import ProjectTable from '~/components/UIUC-Components/ProjectTable'
 import { Card, Button } from '@mantine/core'
@@ -23,7 +23,6 @@ const TypingAnimation: React.FC = () => {
     'favorite blogs',
     'clubs',
   ]
-
   const [displayText, setDisplayText] = useState('')
   const [wordIndex, setWordIndex] = useState(0)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -105,6 +104,7 @@ const TypingAnimation: React.FC = () => {
             opacity: 0;
           }
         }
+
         .typing-animation {
           display: inline-block;
           width: 100%;
@@ -127,7 +127,10 @@ const TypingAnimation: React.FC = () => {
 }
 
 const Home: NextPage = () => {
-  const [isTooltipVisible, setIsTooltipVisible] = useState(false)
+  const [isTooltipVisible, setIsTooltipVisible] = useState(false);
+  const useIllinoisChatConfig = useMemo(() => {
+    return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === "True";
+  }, []);
 
   return (
     <>
@@ -206,7 +209,8 @@ const Home: NextPage = () => {
         className={`illinois-blue-gradient-bg flex min-h-screen flex-col items-center justify-center overflow-hidden
           ${montserrat_paragraph.variable} font-montserratParagraph`}
       >
-        <div className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 px-4 py-8 sm:px-8 sm:py-20">
+        <div
+          className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 px-4 py-8 sm:px-8 sm:py-20">
           <div
             className="
             flex w-full
@@ -286,31 +290,35 @@ const Home: NextPage = () => {
               </div>
             </div>
           </div>
-
-          <div className="mb-6 w-full pt-8 text-center">
-            <h2
-              className={`
+          {
+            !useIllinoisChatConfig &&
+            <>
+              <div className="mb-6 w-full pt-8 text-center">
+                <h2
+                  className={`
                 pt-12
                 text-2xl font-bold sm:pt-2 
                 ${montserrat_heading.variable} font-montserratHeading
               `}
-              style={{ color: 'var(--illinois-blue)' }}
-            >
-              Flagship Chatbots
-            </h2>
-            <p
-              className={`
+                  style={{ color: 'var(--illinois-blue)' }}
+                >
+                  Flagship Chatbots
+                </h2>
+                <p
+                  className={`
                 text-md mt-2
                 ${montserrat_paragraph.variable} font-montserratParagraph
               `}
-            >
-              Dive right into our bots trained on everything Illinois
-            </p>
-          </div>
+                >
+                  Dive right into our bots trained on everything Illinois
+                </p>
+              </div>
 
-          <div className="w-full max-w-5xl">
-            <FlagshipChatbots />
-          </div>
+              <div className="w-full max-w-5xl">
+                <FlagshipChatbots />
+              </div>
+            </>
+          }
         </div>
 
         <div className="mb-6 w-full px-2 pt-4 text-center sm:mt-[-24px] sm:px-4">
@@ -355,7 +363,8 @@ const Home: NextPage = () => {
         </div>
 
         {/* second section below the orange banner */}
-        <div className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 overflow-hidden px-4 py-8 sm:px-8 sm:py-20">
+        <div
+          className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 overflow-hidden px-4 py-8 sm:px-8 sm:py-20">
           <h2
             className={`
               max-w-lg
@@ -796,7 +805,8 @@ const Home: NextPage = () => {
         </div>
 
         {/* second section below the blue banner */}
-        <div className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 overflow-hidden px-4 py-8 sm:px-8 sm:py-20">
+        <div
+          className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 overflow-hidden px-4 py-8 sm:px-8 sm:py-20">
           <h4
             className={`
             text-4xl font-extrabold tracking-tight
@@ -934,7 +944,7 @@ function FlagshipChatbots() {
       badge: 'Illinois',
       tagline: 'Find professors based on your research interests',
       description:
-        "Using all of Illinois's documentation, get detailed examples, advice and information about the conference.",
+        'Using all of Illinois\'s documentation, get detailed examples, advice and information about the conference.',
     },
     {
       course_slug: 'NeurIPS-2024',
@@ -944,7 +954,7 @@ function FlagshipChatbots() {
       tagline:
         'Trained on all 4,000+ papers from the largest AI conference in the world',
       description:
-        "Using all of NeurIPS 2024's documentation, get detailed examples, advice and information about the conference.",
+        'Using all of NeurIPS 2024\'s documentation, get detailed examples, advice and information about the conference.',
     },
     {
       course_slug: 'NCSADelta',
@@ -952,9 +962,9 @@ function FlagshipChatbots() {
       title: 'NCSA Delta Supercomputer',
       badge: 'NCSA Docs',
       tagline:
-        "Quickstart on our Delta supercomputer, it'll write SLRUM scripts for you 😁",
+        'Quickstart on our Delta supercomputer, it\'ll write SLRUM scripts for you 😁',
       description:
-        "Using all of Delta's documentation, get detailed examples, advice and information about how to use the Delta supercomputer.",
+        'Using all of Delta\'s documentation, get detailed examples, advice and information about how to use the Delta supercomputer.',
     },
     /*
     {

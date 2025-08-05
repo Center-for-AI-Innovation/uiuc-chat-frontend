@@ -14,8 +14,17 @@ const getBaseUrl = () => {
 // Function to save the current path before login
 const saveCurrentPath = () => {
   if (typeof window !== 'undefined') {
-    const currentPath = window.location.pathname + window.location.search
-    // Don't save the login callback URL with all the OIDC parameters
+    let currentPath = window.location.pathname + window.location.search
+
+    // Redirect "/" to "/chat" if using Illinois Chat config
+    if (
+      currentPath === '/' &&
+      process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
+    ) {
+      currentPath = '/chat'
+    }
+
+    // Don't save the login callback URL with OIDC params
     if (!currentPath.includes('state=') && !currentPath.includes('code=')) {
       localStorage.setItem('auth_redirect_path', currentPath)
       console.log('Saved redirect path:', currentPath)
