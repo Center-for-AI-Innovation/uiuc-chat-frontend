@@ -79,11 +79,13 @@ export const callSetCourseMetadata = async (
 /**
  * Uploads a file to S3 using a pre-signed URL.
  * @param {File | null} file - The file to upload.
+ * @param {string} user_id - The user ID associated with the file.
  * @param {string} course_name - The name of the course associated with the file.
  * @returns {Promise<string | undefined>} - A promise that resolves to the key of the uploaded file or undefined.
  */
 export const uploadToS3 = async (
   file: File | null,
+  user_id: string,
   course_name: string,
 ): Promise<string | undefined> => {
   if (!file) return
@@ -95,6 +97,7 @@ export const uploadToS3 = async (
     body: JSON.stringify({
       fileName: file.name,
       fileType: file.type,
+      user_id: user_id,
       courseName: course_name,
       uniqueFileName,
     }),

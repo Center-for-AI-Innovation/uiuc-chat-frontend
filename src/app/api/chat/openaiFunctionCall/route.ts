@@ -35,13 +35,13 @@ export async function POST(req: Request) {
     conversation,
     tools,
     openaiKey,
-    imageUrls,
-    imageDescription,
+    // imageUrls, // Commented out image upload functionality
+    // imageDescription, // Commented out image upload functionality
   }: {
     tools: ChatCompletionTool[]
     conversation: Conversation
-    imageUrls: string[]
-    imageDescription: string
+    // imageUrls: string[] // Commented out image upload functionality
+    // imageDescription: string // Commented out image upload functionality
     openaiKey: string
   } = await req.json()
 
@@ -69,20 +69,20 @@ export async function POST(req: Request) {
   })
 
   // Add image info if present
-  if (imageUrls.length > 0 && imageDescription) {
-    const imageInfo = `Image URL(s): ${imageUrls.join(', ')};\nImage Description: ${imageDescription}`
-    if (message_to_send.length > 0) {
-      const lastMessage = message_to_send[message_to_send.length - 1]
-      if (lastMessage) {
-        lastMessage.content += `\n\n${imageInfo}`
-      }
-    } else {
-      message_to_send.push({
-        role: 'system',
-        content: imageInfo,
-      })
-    }
-  }
+  // if (imageUrls.length > 0 && imageDescription) { // Commented out image upload functionality
+  //   const imageInfo = `Image URL(s): ${imageUrls.join(', ')};\nImage Description: ${imageDescription}` // Commented out image upload functionality
+  //   if (message_to_send.length > 0) { // Commented out image upload functionality
+  //     const lastMessage = message_to_send[message_to_send.length - 1] // Commented out image upload functionality
+  //     if (lastMessage) { // Commented out image upload functionality
+  //       lastMessage.content += `\n\n${imageInfo}` // Commented out image upload functionality
+  //     } // Commented out image upload functionality
+  //   } else { // Commented out image upload functionality
+  //     message_to_send.push({ // Commented out image upload functionality
+  //       role: 'system', // Commented out image upload functionality
+  //       content: imageInfo, // Commented out image upload functionality
+  //     }) // Commented out image upload functionality
+  //   } // Commented out image upload functionality
+  // } // Commented out image upload functionality
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {

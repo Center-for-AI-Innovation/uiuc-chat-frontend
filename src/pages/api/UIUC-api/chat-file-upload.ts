@@ -25,15 +25,15 @@ const handler = async (
       })
     }
 
-    const { conversationId, courseName, s3Key, fileName, fileType, model } =
+    const { conversationId, courseName, user_id, s3Key, fileName, fileType, model } =
       req.body
 
     // Validate required parameters
-    if (!conversationId || !courseName || !s3Key || !fileName) {
+    if (!conversationId || !courseName || !user_id || !s3Key || !fileName) {
       console.error('Missing required parameters')
       return res.status(400).json({
         error:
-          ' Missing required parameters: conversationId, courseName, s3Key, fileName',
+          ' Missing required parameters: conversationId, courseName, user_id s3Key, fileName',
       })
     }
 

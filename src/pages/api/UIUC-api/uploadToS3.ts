@@ -37,13 +37,13 @@ if (
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
-    const { uniqueFileName, courseName } = req.body as {
+    const { uniqueFileName, user_id, courseName } = req.body as {
       uniqueFileName: string
+      user_id: string
       courseName: string
     }
 
-    const s3_filepath = `courses/${courseName}/${uniqueFileName}`
-
+    const s3_filepath = `${user_id}/${uniqueFileName}`
     let post
     if (courseName === 'vyriad') {
       if (!vyriadMinioClient) {

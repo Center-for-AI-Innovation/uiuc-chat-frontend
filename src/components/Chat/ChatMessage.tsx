@@ -336,7 +336,7 @@ export interface Props {
   ) => void
   context?: ContextWithMetadata[]
   contentRenderer?: (message: Message) => JSX.Element
-  onImageUrlsUpdate?: (message: Message, messageIndex: number) => void
+  // onImageUrlsUpdate?: (message: Message, messageIndex: number) => void // Commented out image upload functionality
   courseName: string
 }
 
@@ -412,7 +412,7 @@ export const ChatMessage = memo(
     onEdit,
     onRegenerate,
     onFeedback,
-    onImageUrlsUpdate,
+    // onImageUrlsUpdate, // Commented out image upload functionality
     courseName,
   }: Props) => {
     const { t } = useTranslation('chat')
@@ -439,7 +439,7 @@ export const ChatMessage = memo(
     const [localContent, setLocalContent] = useState<string | Content[]>(
       message.content,
     )
-    const [imageUrls, setImageUrls] = useState<Set<string>>(new Set())
+    // const [imageUrls, setImageUrls] = useState<Set<string>>(new Set()) // Commented out image upload functionality
 
     const [isRightSideVisible, setIsRightSideVisible] = useState(false)
     const [sourceThumbnails, setSourceThumbnails] = useState<string[]>([])
@@ -545,10 +545,10 @@ export const ChatMessage = memo(
               if (content.type === 'image_url' && content.image_url) {
                 isValid = await checkIfUrlIsValid(content.image_url.url)
                 if (isValid) {
-                  setImageUrls(
-                    (prevUrls) =>
-                      new Set([...prevUrls, content.image_url?.url as string]),
-                  )
+                  // setImageUrls( // Commented out image upload functionality
+                  //   (prevUrls) => // Commented out image upload functionality
+                  //     new Set([...prevUrls, content.image_url?.url as string]), // Commented out image upload functionality
+                  // ) // Commented out image upload functionality
                   return content
                 } else {
                   const path = extractPathFromUrl(content.image_url.url)
@@ -557,9 +557,9 @@ export const ChatMessage = memo(
                     path,
                   )
                   const presignedUrl = await getPresignedUrl(path, courseName)
-                  setImageUrls(
-                    (prevUrls) => new Set([...prevUrls, presignedUrl]),
-                  )
+                  // setImageUrls( // Commented out image upload functionality
+                  //   (prevUrls) => new Set([...prevUrls, presignedUrl]), // Commented out image upload functionality
+                  // ) // Commented out image upload functionality
                   return { ...content, image_url: { url: presignedUrl } }
                 }
               }
@@ -568,7 +568,7 @@ export const ChatMessage = memo(
           )
           if (
             !isValid &&
-            onImageUrlsUpdate &&
+            // onImageUrlsUpdate && // Commented out image upload functionality
             !deepEqual(updatedContent, message.content)
           ) {
             console.log(
@@ -577,10 +577,10 @@ export const ChatMessage = memo(
               'Previous content: ',
               message.content,
             )
-            onImageUrlsUpdate(
-              { ...message, content: updatedContent },
-              messageIndex,
-            )
+            // onImageUrlsUpdate( // Commented out image upload functionality
+            //   { ...message, content: updatedContent }, // Commented out image upload functionality
+            //   messageIndex, // Commented out image upload functionality
+            // ) // Commented out image upload functionality
           }
         }
       }
@@ -677,11 +677,11 @@ export const ChatMessage = memo(
       // }
     }, [message.content])
 
-    useEffect(() => {
-      // console.log('Resetting image urls because message: ', message, 'selectedConversation: ', selectedConversation)
-      setImageUrls(new Set())
-      // console.log('Set the image urls: ', imageUrls)
-    }, [message])
+    // useEffect(() => { // Commented out image upload functionality
+    //   // console.log('Resetting image urls because message: ', message, 'selectedConversation: ', selectedConversation) // Commented out image upload functionality
+    //   setImageUrls(new Set()) // Commented out image upload functionality
+    //   // console.log('Set the image urls: ', imageUrls) // Commented out image upload functionality
+    // }, [message]) // Commented out image upload functionality
 
     useEffect(() => {
       if (textareaRef.current) {
@@ -1614,15 +1614,15 @@ export const ChatMessage = memo(
                                       className={classes.imageContainerStyle}
                                     >
                                       <div className="overflow-hidden rounded-lg">
-                                        <ImagePreview
-                                          src={
-                                            Array.from(imageUrls)[
-                                              index
-                                            ] as string
-                                          }
-                                          alt="Chat message"
-                                          className={classes.imageStyle}
-                                        />
+                                        {/* <ImagePreview // Commented out image upload functionality
+                                          src={ // Commented out image upload functionality
+                                            Array.from(imageUrls)[ // Commented out image upload functionality
+                                              index // Commented out image upload functionality
+                                            ] as string // Commented out image upload functionality
+                                          } // Commented out image upload functionality
+                                          alt="Chat message" // Commented out image upload functionality
+                                          className={classes.imageStyle} // Commented out image upload functionality
+                                        /> // Commented out image upload functionality */}
                                       </div>
                                     </div>
                                   ))}
