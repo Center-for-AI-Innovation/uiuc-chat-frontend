@@ -414,12 +414,13 @@ export default function WebsiteIngestForm({
                     event.preventDefault()
                   }}
                 >
-                  <Text
+                  {useIllinoisChatConfig && <Text
                     style={{ color: 'red', fontSize: '16px' }}
                     className={`${montserrat_heading.variable} font-montserratHeading`}
                   >
                     Coming soon! Contact us if interested.
-                  </Text>
+                  </Text>}
+
                   <Input
                     icon={icon}
                     className="w-full rounded-full"
