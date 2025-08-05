@@ -5,7 +5,7 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { project_name, project_description, project_owner_email } = req.body
+  const { project_name, project_description, project_owner_email, is_private } = req.body
 
   if (!project_name || !project_owner_email) {
     return res.status(400).json({ 
@@ -17,6 +17,7 @@ export default async function handler(req: any, res: any) {
     project_name: project_name,
     project_description: project_description,
     project_owner_email: project_owner_email,
+    is_private: is_private
   }
 
   try {
