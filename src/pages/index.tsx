@@ -127,10 +127,10 @@ const TypingAnimation: React.FC = () => {
 }
 
 const Home: NextPage = () => {
-  const [isTooltipVisible, setIsTooltipVisible] = useState(false);
+  const [isTooltipVisible, setIsTooltipVisible] = useState(false)
   const useIllinoisChatConfig = useMemo(() => {
-    return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === "True";
-  }, []);
+    return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
+  }, [])
 
   return (
     <>
@@ -173,13 +173,23 @@ const Home: NextPage = () => {
           className={`inline-block ${montserrat_heading.variable} font-montserratHeading`}
         >
           <div className="relative inline-block cursor-help">
-            <span
-              className="text-lg font-bold"
-              onMouseEnter={() => setIsTooltipVisible(true)}
-              onMouseLeave={() => setIsTooltipVisible(false)}
-            >
-              Heads up: we&apos;ve rebranded to Illinois Chat
-            </span>
+            {
+              !useIllinoisChatConfig &&
+                <span
+                  className="text-lg font-bold"
+                  onMouseEnter={() => setIsTooltipVisible(true)}
+                  onMouseLeave={() => setIsTooltipVisible(false)}
+                >
+                Heads up: we’ve rebranded to Illinois Chat — please visit{' '}
+                  <a
+                    href="https://chat.illinois.edu"
+                    className="underline"
+                  >
+                    chat.illinois.edu
+                  </a>
+              </span>
+            }
+
             <div
               className={`absolute left-1/2 top-full z-50 mt-2 w-72 -translate-x-1/2 transform rounded p-2 text-sm transition duration-300 ${isTooltipVisible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
               style={{
