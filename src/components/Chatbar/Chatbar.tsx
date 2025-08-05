@@ -3,7 +3,7 @@ import { useTranslation } from 'next-i18next'
 import { useCreateReducer } from '@/hooks/useCreateReducer'
 import { DEFAULT_SYSTEM_PROMPT, DEFAULT_TEMPERATURE } from '@/utils/app/const'
 import { exportData } from '@/utils/app/importExport'
-import { Conversation } from '@/types/chat'
+import { type Conversation } from '@/types/chat'
 import { LatestExportFormat, SupportedExportFormats } from '@/types/export'
 import { OpenAIModels } from '~/utils/modelProviders/types/openai'
 import { PluginKey } from '@/types/plugin'
@@ -14,7 +14,7 @@ import { ChatbarSettings } from './components/ChatbarSettings'
 import { Conversations } from './components/Conversations'
 import Sidebar from '../Sidebar'
 import ChatbarContext from './Chatbar.context'
-import { ChatbarInitialState, initialState } from './Chatbar.state'
+import { type ChatbarInitialState, initialState } from './Chatbar.state'
 import { v4 as uuidv4 } from 'uuid'
 import router from 'next/router'
 import { useQueryClient } from '@tanstack/react-query'
@@ -110,36 +110,36 @@ export const Chatbar = ({
 
   useEffect(() => {
     if (!current_email || !courseName) {
-      return;
+      return
     }
     setDebouncedSearchTerm(searchTerm)
   }, [searchTerm, current_email, courseName])
 
   async function updateConversations(conversationHistory: Conversation[]) {
     if (!current_email || !courseName) {
-      console.warn('Cannot update conversations: missing email or course name');
-      return;
+      console.warn('Cannot update conversations: missing email or course name')
+      return
     }
-    
+
     try {
       await Promise.all(
         conversationHistory.map(async (conversation: Conversation) => {
-          conversation.userEmail = current_email;
-          conversation.projectName = courseName;
+          conversation.userEmail = current_email
+          conversation.projectName = courseName
           try {
-            const response = await saveConversationToServer(conversation);
-            console.log('Response from saveConversationToServer: ', response);
+            const response = await saveConversationToServer(conversation)
+            console.log('Response from saveConversationToServer: ', response)
           } catch (error: any) {
             if (error?.details?.includes('already exists')) {
-              console.log('Conversation already exists, skipping');
-              return;
+              console.log('Conversation already exists, skipping')
+              return
             }
-            throw error;
+            throw error
           }
         }),
       )
     } catch (error) {
-      console.error('Error updating conversations:', error);
+      console.error('Error updating conversations:', error)
     }
   }
 
@@ -305,7 +305,7 @@ export const Chatbar = ({
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   return (

@@ -3,7 +3,7 @@ import { Text, Switch, Card, Skeleton } from '@mantine/core'
 import { IconCheck, IconExternalLink, IconX } from '@tabler/icons-react'
 import { ModelToggles } from '../ModelToggles'
 import {
-  SambaNovaProvider,
+  type SambaNovaProvider,
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -25,10 +25,9 @@ export default function SambaNovaProviderInput({
   return (
     <motion.div layout>
       <Card
-        shadow="sm"
         p="lg"
         radius="lg"
-        className="max-w-[330px] bg-[#15162c] md:w-[330px]"
+        className="max-w-[330px] bg-[--dashboard-background-faded] text-[--dashboard-foreground] md:w-[330px] "
       >
         <div
           style={{
@@ -74,7 +73,11 @@ export default function SambaNovaProviderInput({
                 }}
                 thumbIcon={
                   field.state.value ? (
-                    <IconCheck size="0.8rem" color="purple" stroke={3} />
+                    <IconCheck
+                      size="0.8rem"
+                      color="var(--dashboard-button)"
+                      stroke={3}
+                    />
                   ) : (
                     <IconX size="0.8rem" color="grey" stroke={3} />
                   )
@@ -82,11 +85,11 @@ export default function SambaNovaProviderInput({
                 styles={{
                   track: {
                     backgroundColor: field.state.value
-                      ? '#6a29a4 !important'
-                      : '#25262b',
+                      ? 'var(--dashboard-button) !important'
+                      : 'var(--dashboard-background-faded)',
                     borderColor: field.state.value
-                      ? '#6a29a4 !important'
-                      : '#25262b',
+                      ? 'var(--dashboard-button) !important'
+                      : 'var(--dashboard-background-faded)',
                   },
                 }}
               />

@@ -1,7 +1,3 @@
-import Link from 'next/link'
-import { useDisclosure } from '@mantine/hooks'
-import Image from 'next/image'
-import { useEffect, useState, useContext, useRef } from 'react'
 import {
   Burger,
   Container,
@@ -11,18 +7,20 @@ import {
   Paper,
   rem,
   Transition,
-  Avatar,
-  Menu,
 } from '@mantine/core'
-import { IconHome, IconSettings, IconPlus } from '@tabler/icons-react'
-import { useRouter } from 'next/router'
+import { useDisclosure } from '@mantine/hooks'
+import { IconHome, IconPlus, IconSettings } from '@tabler/icons-react'
 import { montserrat_heading } from 'fonts'
+import Image from 'next/image'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
+import { useContext, useEffect, useRef, useState } from 'react'
 
+import { usePostHog } from 'posthog-js/react'
 import { useAuth } from 'react-oidc-context'
-import { type CourseMetadata } from '~/types/courseMetadata'
 import HomeContext from '~/pages/api/home/home.context'
 import { UserSettings } from '../../Chat/UserSettings'
-import { usePostHog } from 'posthog-js/react'
+import { ThemeToggle } from '../ThemeToggle'
 import { AuthMenu } from './AuthMenu'
 
 const styles: Record<string, React.CSSProperties> = {
@@ -51,44 +49,39 @@ const useStyles = createStyles((theme, { isAdmin }: { isAdmin: boolean }) => ({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  links: {
-    padding: 'theme.spacing.lg, 1em, 1em',
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    [theme.fn.smallerThan(825)]: {
-      display: 'none',
-    },
-  },
   link: {
-    fontSize: rem(12),
-    textAlign: 'center',
-    padding: `3px ${theme.spacing.xs}`,
-    margin: '0.2rem 0.1rem',
+    color: 'var(--navbar-text)',
+    fontSize: rem(12), //change to css variables --font-size or tailwindcss
     fontWeight: 700,
+    textAlign: 'center',
+    //should transition to using css variables...because this had overrides in the layout, so it wasn't clear if this should be changed here. something like this padding: 'var(--padding-xs) var(--padding-md)'
+    padding: `3px ${theme.spacing.xs}`,
+    //    margin: '0.2rem 0.1rem', //no reason to pad between. if you need more space, use padding. this way, the UX when mouse rollover doesn't blink weirdly (smoothly changes from one button to the next). --safe to remove this margin
+    textDecoration: 'none',
     transition:
       'border-color 100ms ease, color 100ms ease, background-color 100ms ease',
-    borderRadius: theme.radius.sm,
+    borderRadius: 'var(--radius-sm)',
+
     '&:hover': {
-      color: 'hsl(280,100%,70%)',
-      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-      textDecoration: 'none',
-      borderRadius: '10px',
+      color: 'var(--button-hover-text-color)', //hsl(280,100%,70%)
+      backgroundColor: 'var(--button-hover)', //'rgba(255, 255, 255, 0.1)',
     },
+
     '&[data-active="true"]': {
-      color: 'hsl(280,100%,70%)',
-      borderBottom: '2px solid hsl(280,100%,70%)',
-      textDecoration: 'none',
-      borderRadius: '10px',
-      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      //      color: 'hsl(280,100%,70%)',
+      borderBottom: '2px solid var(--button-active)', // hsl(280,100%,70%)',
+      //      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      backgroundColor: 'var(--button-active)',
       textAlign: 'right',
     },
+
     [theme.fn.smallerThan(isAdmin ? 825 : 500)]: {
       display: 'list-item',
       textAlign: 'center',
-      borderRadius: 0,
+      //      borderRadius: '0rem',
       padding: theme.spacing.sm,
-      margin: '0.2rem 0 0.2rem 0',
+      //      margin: '0.2rem 0 0.2rem 0',
+      //      margin: 'calc(var(--padding) * .2) 0rem calc(var(--padding) * .2) 0rem'
     },
   },
   burger: {
@@ -103,14 +96,14 @@ const useStyles = createStyles((theme, { isAdmin }: { isAdmin: boolean }) => ({
     top: HEADER_HEIGHT,
     right: '20px',
     zIndex: 10,
-    borderRadius: '10px',
+    borderRadius: '4px',
     overflow: 'hidden',
     width: '200px',
     [theme.fn.largerThan(isAdmin ? 825 : 500)]: {
       display: 'none',
     },
-    backgroundColor: '#15162c',
-    color: 'white',
+    backgroundColor: 'var(--background-faded)',
+    color: 'var(--foreground)',
   },
   adminDashboard: {
     [theme.fn.smallerThan(825)]: {
@@ -236,7 +229,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
 
   return (
     <div
-      className={`${isgpt4 ? 'bg-[#15162c]' : 'bg-[#2e026d]'} -mr-0 px-12 pb-16 pl-5`}
+      className={`-mr-0 bg-[--navbar-background] px-12 pb-16 pl-5`}
       style={{ display: show ? 'block' : 'none' }}
     >
       <div
@@ -247,17 +240,22 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
           paddingLeft: '17px',
         }}
       >
+        {/* can remove in future. navbar had rounded-badge bg-[--navbar-background] shadow-lg shadow-[--navbar-shadow] */}
         <Flex
           justify="flex-start"
           direction="row"
           styles={{ height: '10px', flexWrap: 'nowrap', gap: '0rem' }}
-          className="navbar rounded-badge bg-[#15162c] shadow-lg shadow-purple-800"
+          className="navbar"
         >
           <Link href="/" style={{ flex: 'none', flexWrap: 'nowrap' }}>
-            <h2 className="cursor-pointer font-extrabold tracking-tight text-white sm:ms-3 sm:text-[2rem] sm:text-[2rem] md:text-3xl">
-              Illinois <span className="text-[hsl(280,100%,70%)]">Chat</span>
+            <h2 className="cursor-pointer font-extrabold tracking-tight text-[--primary] sm:ms-3 sm:text-[2rem] sm:text-[2rem] md:text-3xl">
+              Illinois <span className="text-[--navbar-text]">Chat</span>
             </h2>
           </Link>
+
+          <div className="pl-4">
+            <ThemeToggle />
+          </div>
 
           {bannerUrl ? (
             <div style={{ ...styles.logoContainerBox, flex: '1' }}>
@@ -302,6 +300,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                     ...styles,
                     transform: 'translateY(26px)',
                     minWidth: '120px',
+                    borderColor: 'var(--background-dark)',
                   }}
                 >
                   {/* New Chat button in hamburger when screen is small */}
@@ -426,9 +425,6 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
               className={classes.inner}
               style={{ padding: 0, margin: 0 }}
             >
-              <div className={classes.links}>
-                {/* Navigation links can be added here if needed */}
-              </div>
               <div className={classes.newChat}>
                 <button
                   className={`${classes.link}`}
@@ -623,6 +619,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                 opened={opened}
                 onClick={toggle}
                 className={classes.burger}
+                color="var(--foreground)"
                 size="sm"
               />
             </Container>
