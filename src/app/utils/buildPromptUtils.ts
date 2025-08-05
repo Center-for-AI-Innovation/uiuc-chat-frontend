@@ -564,7 +564,7 @@ When using tool outputs in your response, place the tool reference at the end of
 
 The user message includes XML-style tags (e.g., <Potentially Relevant Documents>, <Tool Outputs>). Make sure to integrate this information appropriately in your answer.`.trim()
 
-  if (courseMetadata.removeCitations) {
+  if (courseMetadata?.removeCitations) {
     // Return the postPrompt WITHOUT citation instructions
     return `
 Please analyze and respond to the following question using the excerpts from the provided documents. These documents can be PDF files or web pages. You may also see output from API calls (labeled as "tools") and image descriptions. Use this information to craft a detailed and accurate answer.
@@ -596,7 +596,7 @@ export const getDefaultPostPrompt = (): string => {
     guidedLearning: false,
     systemPromptOnly: false,
     vector_search_rewrite_disabled: false,
-    removeCitations: false,
+    //removeCitations: false,
   }
 
   // Call getSystemPostPrompt with default values

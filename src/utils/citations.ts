@@ -81,7 +81,12 @@ export async function replaceCitationLinks(
       .replace(/\b\d+\s*\.\s*\[.*?\]\(#\)/g, '')
   }
   if (!lastMessage.contexts) {
-    return safeText(content)
+    // Clean up any raw citation tags since we can't process them without contexts
+    const cleanedContent = content.replace(
+      /(?:&lt;cite|<cite)[ \t]{0,100}>([0-9,\s]+)(?:[ \t]{0,100},[ \t]{0,100}p\.[ \t]{0,100}(\d+))?[ \t]{0,100}(?:&lt;\/cite&gt;|<\/cite>)/g,
+      '',
+    )
+    return safeText(cleanedContent)
   }
 
   // Process citations first - this is the most common case

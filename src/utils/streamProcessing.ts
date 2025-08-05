@@ -84,6 +84,11 @@ export async function processChunkWithStateMachine(
     return ''
   }
 
+  // If removeCitations is enabled, just return the chunk with citation tags removed
+if (removeCitations) {
+  return chunk.replace(/(?:&lt;cite|<cite)[ \t]{0,100}>([0-9,\s]+)(?:[ \t]{0,100},[ \t]{0,100}p\.[ \t]{0,100}(\d+))?[ \t]{0,100}(?:&lt;\/cite&gt;|<\/cite>)/g, '')
+}
+
   // Combine any leftover buffer with the new chunk
   const combinedChunk = buffer + chunk
   buffer = ''

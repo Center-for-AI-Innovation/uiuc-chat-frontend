@@ -19,7 +19,7 @@ export interface CourseMetadata {
   guidedLearning: boolean | undefined
   systemPromptOnly: boolean | undefined
   vector_search_rewrite_disabled: boolean | undefined
-  removeCitations: boolean | undefined
+  removeCitations?: boolean | undefined
 }
 
 export type ProjectWideLLMProviders = {
@@ -46,5 +46,5 @@ export interface CourseMetadataOptionalForUpsert {
   guidedLearning: boolean | undefined
   systemPromptOnly: boolean | undefined
   vector_search_rewrite_disabled: boolean | undefined
-  removeCitations: boolean | undefined
+  removeCitations?: boolean | undefined
 }

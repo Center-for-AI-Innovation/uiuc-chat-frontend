@@ -541,7 +541,7 @@ CRITICAL: The optimized prompt must:
         guidedLearning: false,
         documentsOnly: false,
         systemPromptOnly: false,
-        removeCitations: false,
+        //removeCitations: false,
       }
       const success = await callSetCourseMetadata(
         course_name,

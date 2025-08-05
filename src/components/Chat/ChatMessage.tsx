@@ -1009,6 +1009,11 @@ export const ChatMessage = memo(
 
         // ADD THIS: Remove citation patterns if removeCitations is true
         if (removeCitations) {
+          // Remove raw XML-style citations: <cite>1</cite> or <cite>1, 2, 3</cite>
+          contentToRender = contentToRender.replace(
+            /(?:&lt;cite|<cite)[ \t]{0,100}>([0-9,\s]+)(?:[ \t]{0,100},[ \t]{0,100}p\.[ \t]{0,100}(\d+))?[ \t]{0,100}(?:&lt;\/cite&gt;|<\/cite>)/g,
+            '',
+          )
           // Remove citation tooltips: [text](url "Citation X")
           contentToRender = contentToRender.replace(
             /\[([^\]]+)\]\([^)]+\s+"Citation\s+\d+"\)/g,
@@ -1016,6 +1021,12 @@ export const ChatMessage = memo(
           )
           // Remove old format citations: (Document | X)
           contentToRender = contentToRender.replace(/\([^|]+\|\s*\d+\)/g, '')
+        } else {
+          // Only clean up unprocessed raw citation tags when citations are enabled
+          contentToRender = contentToRender.replace(
+            /(?:&lt;cite|<cite)[ \t]{0,100}>([0-9,\s]+)(?:[ \t]{0,100},[ \t]{0,100}p\.[ \t]{0,100}(\d+))?[ \t]{0,100}(?:&lt;\/cite&gt;|<\/cite>)/g,
+            '',
+          )
         }
       } else if (Array.isArray(localContent)) {
         contentToRender = localContent
@@ -1026,14 +1037,26 @@ export const ChatMessage = memo(
           extractThinkTagContent(contentToRender)
         thoughtsContent = thoughts
         contentToRender = remainingContent
-
         // ADD THIS: Remove citation patterns if removeCitations is true
         if (removeCitations) {
+          // Remove raw XML-style citations: <cite>1</cite> or <cite>1, 2, 3</cite>
+          contentToRender = contentToRender.replace(
+            /(?:&lt;cite|<cite)[ \t]{0,100}>([0-9,\s]+)(?:[ \t]{0,100},[ \t]{0,100}p\.[ \t]{0,100}(\d+))?[ \t]{0,100}(?:&lt;\/cite&gt;|<\/cite>)/g,
+            '',
+          )
+          // Remove citation tooltips: [text](url "Citation X")
           contentToRender = contentToRender.replace(
             /\[([^\]]+)\]\([^)]+\s+"Citation\s+\d+"\)/g,
             '$1',
           )
+          // Remove old format citations: (Document | X)
           contentToRender = contentToRender.replace(/\([^|]+\|\s*\d+\)/g, '')
+        } else {
+          // Only clean up unprocessed raw citation tags when citations are enabled
+          contentToRender = contentToRender.replace(
+            /(?:&lt;cite|<cite)[ \t]{0,100}>([0-9,\s]+)(?:[ \t]{0,100},[ \t]{0,100}p\.[ \t]{0,100}(\d+))?[ \t]{0,100}(?:&lt;\/cite&gt;|<\/cite>)/g,
+            '',
+          )
         }
       }
 
