@@ -339,7 +339,7 @@ export const Chat = memo(
           }
         }
 
-        let searchQuery = Array.isArray(message.content)
+        const searchQuery = Array.isArray(message.content)
           ? message.content.map((content) => content.text).join(' ')
           : message.content
 
@@ -437,42 +437,41 @@ export const Chat = memo(
           homeDispatch({ field: 'messageIsStreaming', value: true })
           const controller = new AbortController()
 
-          let imgDesc = ''
-          let imageUrls: string[] = []
+          // let imgDesc = '' // Commented out image upload functionality
+          // let imageUrls: string[] = [] // Commented out image upload functionality
 
           // Action 1: Image to Text Conversion
-          if (Array.isArray(message.content)) {
-            const imageContent = (message.content as Content[]).filter(
-              (content) => content.type === 'image_url',
-            )
+          // if (Array.isArray(message.content)) { // Commented out image upload functionality
+          //   const imageContent = (message.content as Content[]).filter( // Commented out image upload functionality
+          //     (content) => content.type === 'image_url', // Commented out image upload functionality
+          //   ) // Commented out image upload functionality
 
-            if (imageContent.length > 0) {
-              homeDispatch({ field: 'isImg2TextLoading', value: true })
-              try {
-                const { searchQuery: newSearchQuery, imgDesc: newImgDesc } =
-                  await handleImageContent(
-                    message,
-                    courseName,
-                    updatedConversation,
-                    searchQuery,
-                    llmProviders,
-                    controller,
-                  )
-                searchQuery = newSearchQuery
-                imgDesc = newImgDesc
-                imageUrls = imageContent.map(
-                  (content) => content.image_url?.url as string,
-                )
-              } catch (error) {
-                console.error(
-                  'Error in chat.tsx running handleImageContent():',
-                  error,
-                )
-              } finally {
-                homeDispatch({ field: 'isImg2TextLoading', value: false })
-              }
-            }
-          }
+          //   if (imageContent.length > 0) { // Commented out image upload functionality
+          //     homeDispatch({ field: 'isImg2TextLoading', value: true }) // Commented out image upload functionality
+          //     try { // Commented out image upload functionality
+          //       const { searchQuery: newSearchQuery, imgDesc: newImgDesc } = // Commented out image upload functionality
+          //         await handleImageContent( // Commented out image upload functionality
+          //           message, // Commented out image upload functionality
+          //           courseName, // Commented out image upload functionality
+          //           updatedConversation, // Commented out image upload functionality
+          //           searchQuery, // Commented out image upload functionality
+          //           llmProviders, // Commented out image upload functionality
+          //           controller, // Commented out image upload functionality
+          //         ) // Commented out image upload functionality
+          //     searchQuery = newSearchQuery // Commented out image upload functionality
+          //     imgDesc = newImgDesc // Commented out image upload functionality
+          //     imageUrls = imageContent.map( // Commented out image upload functionality
+          //       (content) => content.image_url?.url as string, // Commented out image upload functionality
+          //     ) // Commented out image upload functionality
+          //   } catch (error) { // Commented out image upload functionality
+          //     console.error( // Commented out image upload functionality
+          //       'Error in chat.tsx running handleImageContent():', // Commented out image upload functionality
+          //       error, // Commented out image upload functionality
+          //     ) // Commented out image upload functionality
+          //   } finally { // Commented out image upload functionality
+          //     homeDispatch({ field: 'isImg2TextLoading', value: false }) // Commented out image upload functionality
+          //   } // Commented out image upload functionality
+          // } // Commented out image upload functionality
 
           const hasConversationFiles = (
             conversation: Conversation | undefined,
@@ -860,8 +859,6 @@ export const Chat = memo(
               const uiucToolsToRun = await handleFunctionCall(
                 message,
                 tools,
-                imageUrls,
-                imgDesc,
                 updatedConversation,
                 getOpenAIKey(llmProviders, courseMetadata, apiKey),
               )
@@ -1757,7 +1754,7 @@ export const Chat = memo(
       )
     }
 
-    const onImageUrlsUpdate = useCallback(
+    /**const onImageUrlsUpdate = useCallback(
       (updatedMessage: Message, messageIndex: number) => {
         if (!selectedConversation) {
           throw new Error('No selected conversation found')
@@ -1787,7 +1784,7 @@ export const Chat = memo(
         // saveConversations(updatedConversations)
       },
       [selectedConversation, conversations],
-    )
+    )**/
 
     const handleFeedback = useCallback(
       async (
@@ -2012,7 +2009,6 @@ export const Chat = memo(
                               }}
                               onRegenerate={() => handleRegenerate(index)}
                               onFeedback={handleFeedback}
-                              onImageUrlsUpdate={onImageUrlsUpdate}
                               courseName={courseName}
                             />
                           ),
@@ -2052,7 +2048,11 @@ export const Chat = memo(
                 onRegenerate={() => handleRegenerate()}
                 inputContent={inputContent}
                 setInputContent={setInputContent}
-                courseName={getCurrentPageName()}
+                user_id={(() => {
+                  const userId = auth.user?.profile.sub || currentEmail
+                  return userId
+                })()}
+                courseName={courseName}
                 chat_ui={chat_ui}
               />
             </div>
