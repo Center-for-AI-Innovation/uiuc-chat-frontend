@@ -1,9 +1,10 @@
 import Link from 'next/link'
-import React, { ReactNode } from 'react'
+import React, { type ReactNode } from 'react'
 import { LandingPageHeader } from './navbars/GlobalHeader'
 import Navbar from './navbars/Navbar'
 import { useRouter } from 'next/router'
 import { LoadingSpinner } from './LoadingSpinner'
+import { montserrat_heading } from 'fonts'
 
 interface MainPageBackgroundProps {
   children: ReactNode
@@ -18,9 +19,11 @@ export const MainPageBackground: React.FC<MainPageBackgroundProps> = ({
       <main className="items-left justify-left course-page-main flex min-h-screen flex-col">
         <div className="container flex flex-col items-center justify-center gap-8 px-4 py-5 pt-20">
           <Link href="/">
-            <h2 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
-              Illinois{' '}
-              <span className="${inter.style.fontFamily} text-[hsl(280,100%,70%)]">
+            <h2
+              className={`text-5xl font-extrabold tracking-tight text-[--primary] sm:text-[5rem] ${montserrat_heading.variable} font-montserratHeading`}
+            >
+              Illinois
+              <span className="${inter.style.fontFamily} ml-2 text-[--foreground]">
                 Chat
               </span>
             </h2>

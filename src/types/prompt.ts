@@ -1,4 +1,4 @@
-import { OpenAIModel } from '~/utils/modelProviders/types/openai'
+import { type OpenAIModel } from '~/utils/modelProviders/types/openai'
 
 export interface Prompt {
   id: string

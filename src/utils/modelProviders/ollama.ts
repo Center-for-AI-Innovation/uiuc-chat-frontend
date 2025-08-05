@@ -1,6 +1,6 @@
 import { ChatBody } from '~/types/chat'
 import {
-  OllamaProvider,
+  type OllamaProvider,
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 
