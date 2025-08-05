@@ -1102,6 +1102,7 @@ export const Chat = memo(
                           stateMachineContext,
                           citationLinkCache,
                           getCurrentPageName(),
+                          courseMetadata?.removeCitations,
                         )
 
                       // Update the last message with the new content
@@ -1948,6 +1949,7 @@ export const Chat = memo(
                               onFeedback={handleFeedback}
                               onImageUrlsUpdate={onImageUrlsUpdate}
                               courseName={courseName}
+                              removeCitations={courseMetadata?.removeCitations}
                             />
                           ),
                         )}

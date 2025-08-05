@@ -75,6 +75,7 @@ export async function processChunkWithStateMachine(
   stateMachineContext: { state: State; buffer: string },
   citationLinkCache: Map<number, string>,
   courseName: string,
+  removeCitations?: boolean,
 ): Promise<string> {
   let { state, buffer } = stateMachineContext
   let processedChunk = ''
@@ -82,6 +83,11 @@ export async function processChunkWithStateMachine(
   if (!chunk) {
     return ''
   }
+
+  // If removeCitations is enabled, just return the chunk with citation tags removed
+if (removeCitations) {
+  return chunk.replace(/(?:&lt;cite|<cite)[ \t]{0,100}>([0-9,\s]+)(?:[ \t]{0,100},[ \t]{0,100}p\.[ \t]{0,100}(\d+))?[ \t]{0,100}(?:&lt;\/cite&gt;|<\/cite>)/g, '')
+}
 
   // Combine any leftover buffer with the new chunk
   const combinedChunk = buffer + chunk
@@ -160,6 +166,7 @@ export async function processChunkWithStateMachine(
                 lastMessage,
                 citationLinkCache,
                 courseName,
+                removeCitations,
               )
               processedChunk += processedCitation
               buffer = ''
@@ -225,6 +232,7 @@ export async function processChunkWithStateMachine(
             lastMessage,
             citationLinkCache,
             courseName,
+            removeCitations,
           )
           buffer = ''
           if (

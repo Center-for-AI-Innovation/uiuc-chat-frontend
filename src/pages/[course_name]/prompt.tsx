@@ -169,6 +169,7 @@ const CourseMain: NextPage = () => {
   >([])
   const [input, setInput] = useState(baseSystemPrompt)
   const [isOptimizing, setIsOptimizing] = useState(false)
+  const [removeCitations, setRemoveCitations] = useState(false)
 
   const removeThinkSections = (text: string): string => {
     const cleanedText = text.replace(/<think>[\s\S]*?<\/think>/g, '')
@@ -495,6 +496,7 @@ CRITICAL: The optimized prompt must:
       setDocumentsOnly(fetchedMetadata.documentsOnly || false)
       setSystemPromptOnly(fetchedMetadata.systemPromptOnly || false)
       setVectorSearchRewrite(!fetchedMetadata.vector_search_rewrite_disabled)
+      setRemoveCitations(fetchedMetadata.removeCitations || false)
 
       setIsLoading(false)
     }
@@ -516,6 +518,7 @@ CRITICAL: The optimized prompt must:
         guidedLearning,
         documentsOnly,
         systemPromptOnly,
+        removeCitations,
       }
       success = await callSetCourseMetadata(course_name, updatedCourseMetadata)
       if (success) {
@@ -538,6 +541,7 @@ CRITICAL: The optimized prompt must:
         guidedLearning: false,
         documentsOnly: false,
         systemPromptOnly: false,
+        //removeCitations: false,
       }
       const success = await callSetCourseMetadata(
         course_name,
@@ -552,6 +556,7 @@ CRITICAL: The optimized prompt must:
         setGuidedLearning(false)
         setDocumentsOnly(false)
         setSystemPromptOnly(false)
+        setRemoveCitations(false)
         showToastOnPromptUpdate(theme, false, true)
       }
     } else {
@@ -593,11 +598,13 @@ CRITICAL: The optimized prompt must:
     documentsOnly: boolean
     systemPromptOnly: boolean
     vectorSearchRewrite: boolean
+    removeCitations: boolean
   }>({
     guidedLearning: false,
     documentsOnly: false,
     systemPromptOnly: false,
     vectorSearchRewrite: false,
+    removeCitations: false,
   })
 
   useEffect(() => {
@@ -607,6 +614,7 @@ CRITICAL: The optimized prompt must:
         documentsOnly: courseMetadata.documentsOnly || false,
         systemPromptOnly: courseMetadata.systemPromptOnly || false,
         vectorSearchRewrite: !courseMetadata.vector_search_rewrite_disabled,
+        removeCitations: courseMetadata.removeCitations || false,
       }
     }
   }, [courseMetadata])
@@ -616,6 +624,7 @@ CRITICAL: The optimized prompt must:
 
     const currentSwitchState = {
       guidedLearning,
+      removeCitations,
       documentsOnly,
       systemPromptOnly,
       vectorSearchRewrite,
@@ -634,6 +643,7 @@ CRITICAL: The optimized prompt must:
     const updatedMetadata = {
       ...courseMetadataRef.current,
       guidedLearning,
+      removeCitations,
       documentsOnly,
       systemPromptOnly,
       vector_search_rewrite_disabled: !vectorSearchRewrite,
@@ -680,6 +690,14 @@ CRITICAL: The optimized prompt must:
           `Bypass UIUC.chat's internal prompting ${currentSwitchState.systemPromptOnly ? 'enabled' : 'disabled'}`,
         )
       }
+      if (
+        initialSwitchState.removeCitations !==
+        currentSwitchState.removeCitations
+      ) {
+        changes.push(
+          `Remove Citations ${currentSwitchState.removeCitations ? 'enabled' : 'disabled'}`,
+        )
+      }
 
       if (changes.length > 0) {
         showToastNotification(
@@ -720,6 +738,8 @@ CRITICAL: The optimized prompt must:
 
     if ('guidedLearning' in updatedFields)
       setGuidedLearning(updatedFields.guidedLearning!)
+    if ('removeCitations' in updatedFields)
+      setRemoveCitations(updatedFields.removeCitations!)
     if ('documentsOnly' in updatedFields)
       setDocumentsOnly(updatedFields.documentsOnly!)
     if ('systemPromptOnly' in updatedFields)
@@ -1846,6 +1866,17 @@ CRITICAL: The optimized prompt must:
                                   />
                                 </Flex>
                               )}
+
+                              <CustomSwitch
+                                label="Remove Citations"
+                                tooltip="When enabled, the AI will not include citations in its responses."
+                                checked={removeCitations}
+                                onChange={(value: boolean) =>
+                                  handleCheckboxChange({
+                                    removeCitations: value,
+                                  })
+                                }
+                              />
 
                               {/* Reset Button and Modal */}
                               <Modal

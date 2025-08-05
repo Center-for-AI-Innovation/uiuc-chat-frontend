@@ -564,6 +564,17 @@ When using tool outputs in your response, place the tool reference at the end of
 
 The user message includes XML-style tags (e.g., <Potentially Relevant Documents>, <Tool Outputs>). Make sure to integrate this information appropriately in your answer.`.trim()
 
+  if (courseMetadata?.removeCitations) {
+    // Return the postPrompt WITHOUT citation instructions
+    return `
+Please analyze and respond to the following question using the excerpts from the provided documents. These documents can be PDF files or web pages. You may also see output from API calls (labeled as "tools") and image descriptions. Use this information to craft a detailed and accurate answer.
+
+When using tool outputs in your response, place the tool reference at the end of the relevant statement, before the period, using code notation. For example: "The repository contains three JavaScript files \`as per tool ls\`." Always be honest and transparent about tool results.
+
+The user message includes XML-style tags (e.g., <Potentially Relevant Documents>, <Tool Outputs>). Make sure to integrate this information appropriately in your answer.
+`.trim()
+  }
+
   return postPrompt
 }
 
@@ -585,6 +596,7 @@ export const getDefaultPostPrompt = (): string => {
     guidedLearning: false,
     systemPromptOnly: false,
     vector_search_rewrite_disabled: false,
+    //removeCitations: false,
   }
 
   // Call getSystemPostPrompt with default values
