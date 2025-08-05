@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useDebouncedState } from '@mantine/hooks'
 import {
   IconLock,
@@ -32,11 +32,16 @@ interface ShareSettingsModalProps {
  * - Manage administrator permissions
  */
 export default function ShareSettingsModal({
-  opened,
-  onClose,
-  projectName,
-  metadata: initialMetadata,
-}: ShareSettingsModalProps) {
+                                             opened,
+                                             onClose,
+                                             projectName,
+                                             metadata: initialMetadata,
+                                           }: ShareSettingsModalProps) {
+
+  const useIllinoisChatConfig = useMemo(() => {
+    return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
+  }, [])
+
   const queryClient = useQueryClient()
   const [metadata, setMetadata] = useState<CourseMetadata>(initialMetadata)
 
@@ -111,7 +116,8 @@ export default function ShareSettingsModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Add subtle gradient border */}
-        <div className="absolute inset-0 -z-10 rounded-2xl bg-gradient-to-tr from-violet-500/20 to-transparent blur-xl" />
+        <div
+          className="absolute inset-0 -z-10 rounded-2xl bg-gradient-to-tr from-violet-500/20 to-transparent blur-xl" />
 
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
@@ -173,15 +179,18 @@ export default function ShareSettingsModal({
             </h3>
 
             {/* Privacy toggle */}
-            <div className="rounded-lg bg-[#1e1f3a] p-4 ring-1 ring-white/10 transition-all duration-300 hover:ring-violet-500/50">
+            <div
+              className="rounded-lg bg-[#1e1f3a] p-4 ring-1 ring-white/10 transition-all duration-300 hover:ring-violet-500/50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {isPrivate ? (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#15162c] ring-1 ring-white/10">
+                    <div
+                      className="flex h-10 w-10 items-center justify-center rounded-full bg-[#15162c] ring-1 ring-white/10">
                       <IconLock className="h-5 w-5 text-violet-400" />
                     </div>
                   ) : (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#15162c] ring-1 ring-white/10">
+                    <div
+                      className="flex h-10 w-10 items-center justify-center rounded-full bg-[#15162c] ring-1 ring-white/10">
                       <IconLockOpen className="h-5 w-5 text-violet-400" />
                     </div>
                   )}
@@ -200,18 +209,20 @@ export default function ShareSettingsModal({
                     </p>
                   </div>
                 </div>
-                <button
-                  onClick={handlePrivacyChange}
-                  className={`relative h-6 w-11 rounded-full transition-colors duration-300 ${
-                    isPrivate ? 'bg-violet-600' : 'bg-gray-600'
-                  }`}
-                >
+                {
+                  !useIllinoisChatConfig && (<button
+                    onClick={handlePrivacyChange}
+                    className={`relative h-6 w-11 rounded-full transition-colors duration-300 ${
+                      isPrivate ? 'bg-violet-600' : 'bg-gray-600'
+                    }`}
+                  >
                   <span
                     className={`absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ${
                       isPrivate ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
-                </button>
+                  </button>)
+                }
               </div>
             </div>
 
