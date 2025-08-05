@@ -72,12 +72,12 @@ export default function CourseraIngestForm(): JSX.Element {
       >
         <DialogTrigger asChild>
           <Card
-            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-gradient-to-br from-[#1c1c2e] to-[#2a2a40] p-6 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
+            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
             style={{ height: '100%' }}
           >
             <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-900/30">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[--dashboard-background-darker]">
                   <Image
                     src="/media/coursera_logo_cutout.png"
                     alt="Coursera Logo"
@@ -86,16 +86,14 @@ export default function CourseraIngestForm(): JSX.Element {
                     className="h-8 w-8 object-contain"
                   />
                 </div>
-                <Text className="text-xl font-semibold text-gray-100">
-                  Coursera
-                </Text>
+                <Text className="text-xl font-semibold">Coursera</Text>
               </div>
             </div>
-            <Text className="mb-4 text-sm leading-relaxed text-gray-400">
+            <Text className="mb-4 text-sm leading-relaxed text-[--dashboard-foreground-faded]">
               Import content from Coursera courses, including lectures,
               assignments, and course materials.
             </Text>
-            <div className="mt-auto flex items-center text-sm text-purple-400">
+            <div className="mt-auto flex items-center text-sm font-bold text-[--dashboard-button]">
               <span>Configure import</span>
               <IconArrowRight
                 size={16}
@@ -105,22 +103,23 @@ export default function CourseraIngestForm(): JSX.Element {
           </Card>
         </DialogTrigger>
 
-        <DialogContent className="mx-auto h-auto w-[95%] max-w-2xl !rounded-2xl border-0 bg-[#1c1c2e] px-4 py-6 text-white sm:px-6">
+        <DialogContent className="mx-auto h-auto max-h-[85vh] w-[95%] max-w-2xl overflow-y-auto !rounded-2xl border-0 bg-[--modal] px-4 py-6 text-[--modal-text] sm:px-6">
           <DialogHeader>
             <DialogTitle className="mb-4 text-left text-xl font-bold">
               Ingest Coursera Course
             </DialogTitle>
           </DialogHeader>
-          <div className="border-t border-gray-800 pt-4">
-            <div className="space-y-4">
+          <div className="">
+            <div className="">
               <div>
                 <div className="break-words text-sm sm:text-base">
                   <strong>For Coursera</strong>, just enter a URL like{' '}
-                  <code className="inline-flex items-center rounded-md bg-[#020307] px-2 py-1 font-mono text-xs sm:text-sm">
+                  <code className="inline-flex items-center rounded-md bg-[--illinois-orange] px-2 py-1 font-mono text-xs text-[--illinois-white] sm:text-sm">
                     coursera.org/learn/COURSE_NAME
                   </code>
-                  , for example:{' '}
-                  <span className="break-all text-purple-600">
+                  ,<br />
+                  for example:{' '}
+                  <span className="break-all text-[--dashboard-button]">
                     <NextLink
                       target="_blank"
                       rel="noreferrer"
@@ -132,7 +131,7 @@ export default function CourseraIngestForm(): JSX.Element {
                   </span>
                   .
                 </div>
-                <div className="py-3"></div>
+
                 <Input
                   icon={
                     <Image
@@ -143,15 +142,17 @@ export default function CourseraIngestForm(): JSX.Element {
                       className="object-contain"
                     />
                   }
-                  className="w-full rounded-full"
+                  className="mt-4 w-full rounded-full"
                   styles={{
                     input: {
-                      backgroundColor: '#1A1B1E',
+                      color: 'var(--foreground)',
+                      backgroundColor: 'var(--background-faded)',
+                      borderColor: 'var(--background-dark)',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       '&:focus': {
-                        borderColor: '#9370DB',
+                        borderColor: 'var(--illinois-orange)',
                       },
                     },
                     wrapper: {
@@ -159,7 +160,7 @@ export default function CourseraIngestForm(): JSX.Element {
                     },
                   }}
                   placeholder="Enter URL..."
-                  radius="xl"
+                  radius="md"
                   type="url"
                   value={url}
                   size="lg"
@@ -170,11 +171,11 @@ export default function CourseraIngestForm(): JSX.Element {
               </div>
             </div>
           </div>
-          <div className="mt-4 border-t border-gray-800 pt-2">
+          <div className="mt-4">
             <Button
               onClick={handleIngest}
               disabled={!isUrlValid}
-              className="h-11 w-full rounded-xl bg-purple-600 text-white transition-colors hover:bg-purple-700"
+              className="h-11 w-full rounded-xl bg-[--dashboard-button] text-[--dashboard-button-foreground] transition-colors hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--background-dark]"
             >
               Ingest Course
             </Button>
