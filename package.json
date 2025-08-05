@@ -97,7 +97,7 @@
     "ollama-ai-provider": "^0.10.0",
     "openai": "^4.42.0",
     "postgres": "^3.4.7",
-    "posthog-js": "^1.96.0",
+    "posthog-js": "^1.258.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-dropzone": "^14.2.3",
