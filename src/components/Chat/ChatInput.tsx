@@ -119,6 +119,7 @@ export const ChatInput = ({
   const [uploadingImage, setUploadingImage] = useState<boolean>(false)
   const [imageError, setImageError] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState<boolean>(false)
+  const [showToolsDropdown, setShowToolsDropdown] = useState(false)
   const [isWebSearchEnabled, setIsWebSearchEnabled] = useState(false)
   const imageUploadRef = useRef<HTMLInputElement | null>(null)
   const promptListRef = useRef<HTMLUListElement | null>(null)
@@ -676,6 +677,22 @@ export const ChatInput = ({
   }, [imageError, showToastOnInvalidImage])
 
   useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showToolsDropdown &&
+        !(event.target as Element)?.closest?.('.tools-dropdown-container')
+      ) {
+        setShowToolsDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showToolsDropdown])
+
+  useEffect(() => {
     if (promptListRef.current) {
       promptListRef.current.scrollTop = activePromptIndex * 30
     }
@@ -863,36 +880,13 @@ export const ChatInput = ({
           className="absolute bottom-0 mx-4 flex w-[80%] flex-col self-center rounded-t-3xl border border-black/10 bg-[#070712] px-4 pb-8 pt-4 shadow-[0_0_10px_rgba(0,0,0,0.10)] dark:border-gray-900/50 dark:text-white dark:shadow-[0_0_15px_rgba(0,0,0,0.10)] md:mx-20 md:w-[70%]"
           style={{ pointerEvents: 'auto' }}
         >
-          <Tooltip
-            label="Web Search"
-            position="top"
-            withArrow
-            style={{
-              backgroundColor: '#2b2b2b',
-              color: 'white',
-            }}
-          >
-            <button
-              className={`absolute bottom-11 left-5 rounded-full p-1 text-neutral-100 transition-colors duration-200 ${
-                isWebSearchEnabled
-                  ? 'bg-blue-600 text-white'
-                  : 'opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200'
-              }`}
-              onClick={() => setIsWebSearchEnabled(!isWebSearchEnabled)}
-              style={{ pointerEvents: 'auto' }}
-            >
-              <IconWorld size={22} />
-            </button>
-          </Tooltip>
-
           {/* BUTTON 2: Image Icon and Input */}
           {selectedConversation?.model?.id &&
             VisionCapableModels.has(
               selectedConversation.model?.id as OpenAIModelID,
             ) && (
               <button
-                className="absolute bottom-11 left-14 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
-                onClick={() => document.getElementById('imageUpload')?.click()}
+                className="absolute bottom-11 left-5 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
                 style={{ pointerEvents: 'auto' }}
               >
                 <div className="">
@@ -939,7 +933,23 @@ export const ChatInput = ({
               />
             </div>
           )}
-          {/* Chat input and preview container */}
+          {/* Cha<Tooltip
+          label="Tools"
+          position="top"
+          withArrow
+          style={{
+            backgroundColor: '#2b2b2b',
+            color: 'white',
+          }}
+        >
+          <button
+            className="absolute bottom-11 left-5 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200 transition-colors duration-200"
+            onClick={() => setShowToolsDropdown(!showToolsDropdown)}
+            style={{ pointerEvents: 'auto' }}
+          >
+            <IconTool size={22} />
+          </button>
+        </Tooltip>t input and preview container */}
           <div
             ref={chatInputContainerRef}
             className="chat-input-container m-0 w-full resize-none bg-[#070712] p-0 text-black dark:bg-[#070712] dark:text-white"
@@ -1019,7 +1029,7 @@ export const ChatInput = ({
             >
               <textarea
                 ref={textareaRef}
-                className={`chat-input m-0 h-[24px] max-h-[400px] w-full resize-none bg-transparent py-2 pl-12 pr-8 text-white outline-none ${
+                className={`chat-input m-0 h-[24px] max-h-[400px] w-full resize-none bg-transparent py-2 pl-8 pr-8 text-white outline-none ${
                   isFocused ? 'border-blue-500' : ''
                 }`}
                 style={{
@@ -1115,6 +1125,28 @@ export const ChatInput = ({
               }}
             />
           </Text>
+
+          <Text
+            size={isSmallScreen ? '10px' : 'xs'}
+            className={`font-montserratHeading ${montserrat_heading.variable} absolute bottom-2 left-32 break-words rounded-full p-1 text-neutral-100 transition-colors duration-200 ${
+              isWebSearchEnabled
+                ? 'bg-purple-800 text-white'
+                : 'opacity-90 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200'
+            }`}
+            onClick={() => setIsWebSearchEnabled(!isWebSearchEnabled)}
+            style={{ cursor: 'pointer', pointerEvents: 'auto' }}
+          >
+            <IconWorld
+              size={isSmallScreen ? '10px' : '13px'}
+              style={{
+                marginRight: '4px',
+                marginBottom: isSmallScreen ? '2px' : '4px',
+                display: 'inline-block',
+              }}
+            />
+            Search
+          </Text>
+
           {showModelSettings && (
             <div
               ref={modelSelectContainerRef}
