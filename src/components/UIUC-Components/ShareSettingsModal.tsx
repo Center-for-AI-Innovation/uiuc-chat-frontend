@@ -32,12 +32,11 @@ interface ShareSettingsModalProps {
  * - Manage administrator permissions
  */
 export default function ShareSettingsModal({
-                                             opened,
-                                             onClose,
-                                             projectName,
-                                             metadata: initialMetadata,
-                                           }: ShareSettingsModalProps) {
-
+  opened,
+  onClose,
+  projectName,
+  metadata: initialMetadata,
+}: ShareSettingsModalProps) {
   const useIllinoisChatConfig = useMemo(() => {
     return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
   }, [])
@@ -116,7 +115,7 @@ export default function ShareSettingsModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Add subtle gradient border */}
-        <div className="absolute inset-0 -z-10 rounded-2xl blur-xlxl" />
+        <div className="blur-xlxl absolute inset-0 -z-10 rounded-2xl" />
 
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[--modal-border] px-6 py-4">
@@ -219,8 +218,7 @@ export default function ShareSettingsModal({
                       isPrivate ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
-                  </button>)
-                }
+                </button>
               </div>
             </div>
 
