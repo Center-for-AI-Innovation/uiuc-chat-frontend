@@ -53,9 +53,10 @@ export default function GitHubIngestForm({
     },
 
     codeStyledText: {
-      backgroundColor: '#020307',
+      color: 'var(--illinois-white)',
+      backgroundColor: 'var(--illinois-orange)',
       borderRadius: '5px',
-      padding: '1px 5px',
+      padding: '.2rem .5rem',
       fontFamily: 'monospace',
       alignItems: 'center',
       justifyItems: 'center',
@@ -328,9 +329,11 @@ export default function GitHubIngestForm({
         scrapeStrategy,
       })
 
-      console.log('Response from Next.js API web scraping endpoint:', response.data)
+      console.log(
+        'Response from Next.js API web scraping endpoint:',
+        response.data,
+      )
       return response.data
-
     } catch (error: any) {
       console.error('Error during web scraping:', error)
 
@@ -384,24 +387,22 @@ export default function GitHubIngestForm({
       >
         <DialogTrigger asChild>
           <Card
-            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-gradient-to-br from-[#1c1c2e] to-[#2a2a40] p-6 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
+            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
             style={{ height: '100%' }}
           >
             <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-900/30">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[--dashboard-background-darker]">
                   <IconBrandGithub className="h-8 w-8" />
                 </div>
-                <Text className="text-xl font-semibold text-gray-100">
-                  GitHub
-                </Text>
+                <Text className="text-xl font-semibold">GitHub</Text>
               </div>
             </div>
-            <Text className="mb-4 text-sm leading-relaxed text-gray-400">
+            <Text className="mb-4 text-sm leading-relaxed text-[--dashboard-foreground-faded]">
               Import content from GitHub repositories, including documentation,
               code, and README files.
             </Text>
-            <div className="mt-auto flex items-center text-sm text-purple-400">
+            <div className="mt-auto flex items-center text-sm font-bold text-[--dashboard-button]">
               <span>Configure import</span>
               <IconArrowRight
                 size={16}
@@ -411,14 +412,14 @@ export default function GitHubIngestForm({
           </Card>
         </DialogTrigger>
 
-        <DialogContent className="mx-auto h-auto w-[95%] max-w-2xl !rounded-2xl border-0 bg-[#1c1c2e] px-4 py-6 text-white sm:px-6">
+        <DialogContent className="mx-auto h-auto max-h-[85vh] w-[95%] max-w-2xl overflow-y-auto !rounded-2xl border-0 bg-[--modal] px-4 py-6 text-[--modal-text] sm:px-6">
           <DialogHeader>
             <DialogTitle className="mb-4 text-left text-xl font-bold">
               Ingest GitHub Website
             </DialogTitle>
           </DialogHeader>
-          <div className="border-t border-gray-800 pt-4">
-            <div className="space-y-4">
+          <div className="">
+            <div className="">
               <div>
                 <div className="break-words text-sm sm:text-base">
                   <strong>For GitHub</strong>, just enter a URL like{' '}
@@ -426,12 +427,13 @@ export default function GitHubIngestForm({
                     github.com/USER/REPO
                   </code>
                   , for example:{' '}
-                  <span className={'text-purple-600'}>
+                  <span>
                     <Link
                       target="_blank"
                       rel="noreferrer"
                       href={'https://github.com/langchain-ai/langchain'}
                       onClick={(e) => e.stopPropagation()}
+                      className="text-[--dashboard-button]"
                     >
                       https://github.com/langchain-ai/langchain
                     </Link>
@@ -439,18 +441,20 @@ export default function GitHubIngestForm({
                   . We&apos;ll ingest all files in the main branch. Ensure the
                   repository is public.
                 </div>
-                <div className="py-3"></div>
+
                 <Input
                   icon={icon}
-                  className="w-full rounded-full"
+                  className="mt-4 w-full rounded-full"
                   styles={{
                     input: {
-                      backgroundColor: '#1A1B1E',
+                      color: 'var(--foreground)',
+                      backgroundColor: 'var(--background-faded)',
+                      borderColor: 'var(--background-dark)',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       '&:focus': {
-                        borderColor: '#9370DB',
+                        borderColor: 'var(--illinois-orange)',
                       },
                     },
                     wrapper: {
@@ -458,7 +462,7 @@ export default function GitHubIngestForm({
                     },
                   }}
                   placeholder="Enter URL..."
-                  radius="xl"
+                  radius="md"
                   type="url"
                   value={url}
                   size="lg"
@@ -469,11 +473,11 @@ export default function GitHubIngestForm({
               </div>
             </div>
           </div>
-          <div className="mt-4 border-t border-gray-800 pt-2">
+          <div className="mt-4">
             <Button
               onClick={handleIngest}
               disabled={!isUrlValid}
-              className="h-11 w-full rounded-xl bg-purple-600 text-white transition-colors hover:bg-purple-700"
+              className="h-11 w-full rounded-xl bg-[--dashboard-button] text-[--dashboard-button-foreground] transition-colors hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--background-dark]"
             >
               Ingest the Website
             </Button>
