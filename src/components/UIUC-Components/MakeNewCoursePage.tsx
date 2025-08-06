@@ -88,16 +88,15 @@ const MakeNewCoursePage = ({
     project_name: string,
     project_description: string | undefined,
     current_user_email: string,
-    is_private = false
+    is_private = false,
   ) => {
-
     setIsLoading(true)
     try {
       const result = await createProject(
         project_name,
         project_description,
         current_user_email,
-        is_private
+        is_private,
       )
       console.log('Project created successfully:', result)
       if (is_new_course) {
@@ -170,152 +169,153 @@ const MakeNewCoursePage = ({
                     </Title>
                   </Flex>
 
-                <Flex
-                  direction="column"
-                  gap="md"
-                  w={isSmallScreen ? '80%' : '60%'}
-                >
-                  <TextInput
-                    autoComplete="off"
-                    data-lpignore="true"
-                    data-form-type="other"
-                    styles={{
-                      input: {
-                        backgroundColor: '#1A1B1E',
-                        paddingRight: '6rem',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        color:
-                          isCourseAvailable && projectName != ''
-                            ? 'green'
-                            : 'red',
-                        '&:focus-within': {
-                          borderColor:
-                            isCourseAvailable && projectName !== ''
+                  <Flex
+                    direction="column"
+                    gap="md"
+                    w={isSmallScreen ? '80%' : '60%'}
+                  >
+                    <TextInput
+                      autoComplete="off"
+                      data-lpignore="true"
+                      data-form-type="other"
+                      styles={{
+                        input: {
+                          backgroundColor: '#1A1B1E',
+                          paddingRight: '6rem',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          color:
+                            isCourseAvailable && projectName != ''
                               ? 'green'
                               : 'red',
+                          '&:focus-within': {
+                            borderColor:
+                              isCourseAvailable && projectName !== ''
+                                ? 'green'
+                                : 'red',
+                          },
+                          fontSize: isSmallScreen ? '12px' : '16px', // Added text styling
+                          font: `${montserrat_paragraph.variable} font-montserratParagraph`,
                         },
-                        fontSize: isSmallScreen ? '12px' : '16px', // Added text styling
-                        font: `${montserrat_paragraph.variable} font-montserratParagraph`,
-                      },
-                      label: {
-                        fontWeight: 'bold',
-                        fontSize: isSmallScreen ? '14px' : '20px',
-                        color: 'white',
-                        marginBottom: '1rem',
-                      },
-                    }}
-                    placeholder="Project name"
-                    radius={'lg'}
-                    type="text"
-                    value={projectName}
-                    label="What is the project name?"
-                    size={'lg'}
-                    disabled={!is_new_course}
-                    onChange={(e) =>
-                      setProjectName(e.target.value.replaceAll(' ', '-'))
-                    }
-                    autoFocus
-                    withAsterisk
-                    className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                    rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
-                  />
-                  <Flex direction="row" align="flex-end">
-                    <label
-                      className={`${montserrat_paragraph.variable} mt-4 font-montserratParagraph font-bold`}
-                      style={{ fontSize: isSmallScreen ? '14px' : '20px' }}
-                    >
-                      What do you want to achieve?
-                    </label>
-                    <label
-                      className={`${montserrat_paragraph.variable} mt-5 pl-2 font-montserratParagraph text-gray-400`}
-                    >
-                      (optional)
-                    </label>
-                  </Flex>
-                  <Textarea
-                    placeholder="Describe your project, goals, expected impact etc..."
-                    radius={'lg'}
-                    value={projectDescription}
-                    onChange={(e) => setProjectDescription(e.target.value)}
-                    size={'lg'}
-                    minRows={4}
-                    styles={{
-                      input: {
-                        backgroundColor: '#1A1B1E',
-                        fontSize: isSmallScreen ? '12px' : '16px', // Added text styling
-                        font: `${montserrat_paragraph.variable} font-montserratParagraph`,
-                        // borderColor: '#8e44ad', // Grape color
-                        '&:focus': {
-                          borderColor: '#8e44ad', // Grape color when focused/selected
+                        label: {
+                          fontWeight: 'bold',
+                          fontSize: isSmallScreen ? '14px' : '20px',
+                          color: 'white',
+                          marginBottom: '1rem',
                         },
-                      },
-                      label: {
-                        fontWeight: 'bold',
-                        color: 'white',
-                      },
-                    }}
-                    className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                  />
-                  <Flex direction={'row'}>
-                    <Title
-                      order={isSmallScreen ? 5 : 4}
-                      className={`w-full pr-2 pr-7 text-right ${montserrat_paragraph.variable} mt-2 font-montserratParagraph`}
-                    >
-                      Next: let&apos;s upload some documents
-                    </Title>
-                    <Tooltip
-                      label={
-                        projectName === ''
-                          ? 'Add a project name above :)'
-                          : !isCourseAvailable
-                            ? 'This project name is already taken!'
-                            : ''
+                      }}
+                      placeholder="Project name"
+                      radius={'lg'}
+                      type="text"
+                      value={projectName}
+                      label="What is the project name?"
+                      size={'lg'}
+                      disabled={!is_new_course}
+                      onChange={(e) =>
+                        setProjectName(e.target.value.replaceAll(' ', '-'))
                       }
-                      withArrow
-                      disabled={projectName !== '' && isCourseAvailable}
-                    >
-                      <span>
-                        <Button
-                          onClick={async (e) => {
-                            await handleSubmit(
-                              projectName,
-                              projectDescription,
-                              current_user_email,
-                              useIllinoisChatConfig, // isPrivate: illinois chat project default to private
-                            )
-                          }}
-                          size="md"
-                          radius={'md'}
-                          className={`${isCourseAvailable && projectName !== '' ? 'bg-purple-800' : 'border-purple-800'}
+                      autoFocus
+                      withAsterisk
+                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                      rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
+                    />
+                    <Flex direction="row" align="flex-end">
+                      <label
+                        className={`${montserrat_paragraph.variable} mt-4 font-montserratParagraph font-bold`}
+                        style={{ fontSize: isSmallScreen ? '14px' : '20px' }}
+                      >
+                        What do you want to achieve?
+                      </label>
+                      <label
+                        className={`${montserrat_paragraph.variable} mt-5 pl-2 font-montserratParagraph text-gray-400`}
+                      >
+                        (optional)
+                      </label>
+                    </Flex>
+                    <Textarea
+                      placeholder="Describe your project, goals, expected impact etc..."
+                      radius={'lg'}
+                      value={projectDescription}
+                      onChange={(e) => setProjectDescription(e.target.value)}
+                      size={'lg'}
+                      minRows={4}
+                      styles={{
+                        input: {
+                          backgroundColor: '#1A1B1E',
+                          fontSize: isSmallScreen ? '12px' : '16px', // Added text styling
+                          font: `${montserrat_paragraph.variable} font-montserratParagraph`,
+                          // borderColor: '#8e44ad', // Grape color
+                          '&:focus': {
+                            borderColor: '#8e44ad', // Grape color when focused/selected
+                          },
+                        },
+                        label: {
+                          fontWeight: 'bold',
+                          color: 'white',
+                        },
+                      }}
+                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                    />
+                    <Flex direction={'row'}>
+                      <Title
+                        order={isSmallScreen ? 5 : 4}
+                        className={`w-full pr-2 pr-7 text-right ${montserrat_paragraph.variable} mt-2 font-montserratParagraph`}
+                      >
+                        Next: let&apos;s upload some documents
+                      </Title>
+                      <Tooltip
+                        label={
+                          projectName === ''
+                            ? 'Add a project name above :)'
+                            : !isCourseAvailable
+                              ? 'This project name is already taken!'
+                              : ''
+                        }
+                        withArrow
+                        disabled={projectName !== '' && isCourseAvailable}
+                      >
+                        <span>
+                          <Button
+                            onClick={async (e) => {
+                              await handleSubmit(
+                                projectName,
+                                projectDescription,
+                                current_user_email,
+                                useIllinoisChatConfig, // isPrivate: illinois chat project default to private
+                              )
+                            }}
+                            size="md"
+                            radius={'md'}
+                            className={`${isCourseAvailable && projectName !== '' ? 'bg-purple-800' : 'border-purple-800'}
                         overflow-ellipsis text-ellipsis p-2 ${isCourseAvailable && projectName !== '' ? 'text-white' : 'text-gray-500'}
                         mt-2 min-w-[5-rem] transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none lg:min-w-[8rem]`}
-                          // w={`${isSmallScreen ? '5rem' : '50%'}`}
-                          style={{
-                            alignSelf: 'flex-end',
-                          }}
-                          disabled={
-                            projectName === '' ||
-                            isLoading ||
-                            !isCourseAvailable
-                          }
-                          leftIcon={
-                            isLoading ? (
-                              <Loader size="xs" color="white" />
-                            ) : null
-                          }
-                        >
-                          {isLoading ? 'Creating...' : 'Create'}
-                        </Button>
-                      </span>
-                    </Tooltip>
+                            // w={`${isSmallScreen ? '5rem' : '50%'}`}
+                            style={{
+                              alignSelf: 'flex-end',
+                            }}
+                            disabled={
+                              projectName === '' ||
+                              isLoading ||
+                              !isCourseAvailable
+                            }
+                            leftIcon={
+                              isLoading ? (
+                                <Loader size="xs" color="white" />
+                              ) : null
+                            }
+                          >
+                            {isLoading ? 'Creating...' : 'Create'}
+                          </Button>
+                        </span>
+                      </Tooltip>
+                    </Flex>
                   </Flex>
-                </Flex>
-              </Group>
-            </div>
-          </Flex>
-        </Card>
+                </Group>
+              </div>
+            </Flex>
+          </Card>
+        </div>
       </main>
     </>
   )
