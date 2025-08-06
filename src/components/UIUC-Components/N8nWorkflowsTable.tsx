@@ -1,11 +1,9 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import React, { useEffect, useState } from 'react'
 import dayjs from 'dayjs'
+import { useEffect, useState } from 'react'
 
+import { Switch, Text } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
-import { Title, Text, Switch } from '@mantine/core'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { Montserrat } from 'next/font/google'
 import {
   // IconArrowsSort,
   // IconCaretDown,
@@ -13,11 +11,12 @@ import {
   // IconSquareArrowUp,
   IconAlertCircle,
 } from '@tabler/icons-react'
-import { DataTable, DataTableSortStatus } from 'mantine-datatable'
-import { LoadingSpinner } from './LoadingSpinner'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { UIUCTool } from '~/types/chat'
+import { DataTable } from 'mantine-datatable'
+import { Montserrat } from 'next/font/google'
+import { type UIUCTool } from '~/types/chat'
 import { useFetchAllWorkflows } from '~/utils/functionCalling/handleFunctionCalling'
+import { LoadingSpinner } from './LoadingSpinner'
 
 const PAGE_SIZE = 25
 
@@ -25,6 +24,7 @@ interface N8nWorkflowsTableProps {
   n8nApiKey: string
   course_name: string
   isEmptyWorkflowTable: boolean
+  sidebarCollapsed?: boolean
   // fetchWorkflows: (
   //   limit?: number,
   //   pagination?: boolean,
@@ -36,13 +36,57 @@ const montserrat_med = Montserrat({
   subsets: ['latin'],
 })
 
+const dataTableTitleStyles = {
+  color: 'var(--table-header)',
+}
+
+const dataTableCellsStyles = {
+  color: 'var(--foreground)',
+}
+
+const notificationStyles = (isError = false) => {
+  return {
+    root: {
+      backgroundColor: 'var(--notification)', // Dark background to match the page
+      borderColor: isError ? '#E53935' : 'var(--notification-border)', // Red for errors,  for success
+      borderWidth: '1px',
+      borderStyle: 'solid',
+      borderRadius: '8px', // Added rounded corners
+    },
+    title: {
+      color: 'var(--notification-title)', // White text for the title
+      fontWeight: 600,
+    },
+    description: {
+      color: 'var(--notification-message)', // Light gray text for the message
+    },
+    closeButton: {
+      color: 'var(--notification-title)', // White color for the close button
+      borderRadius: '4px', // Added rounded corners to close button
+      '&:hover': {
+        backgroundColor: 'rgba(255, 255, 255, 0.1)', // Subtle hover effect
+      },
+    },
+    icon: {
+      backgroundColor: 'transparent', // Transparent background for the icon
+      color: isError ? '#E53935' : 'var(--notification-title)', // Icon color matches the border
+    },
+  }
+}
+
 export const N8nWorkflowsTable = ({
   n8nApiKey,
   course_name,
   isEmptyWorkflowTable,
+  sidebarCollapsed = false,
 }: N8nWorkflowsTableProps) => {
   const [page, setPage] = useState(1)
   const queryClient = useQueryClient()
+
+  // Get responsive width classes based on sidebar state
+  const widthClasses = sidebarCollapsed
+    ? 'w-[96%] md:w-[98%] lg:w-[96%] xl:w-[94%] 2xl:w-[92%]' // More space when sidebar collapsed
+    : 'w-[96%] md:w-[94%] lg:w-[92%] xl:w-[90%] 2xl:w-[88%]' // Less space when sidebar expanded
 
   const {
     data: records,
@@ -88,7 +132,7 @@ export const N8nWorkflowsTable = ({
           </Text>
         ),
         message: (
-          <Text className={`${montserrat_med.className} text-neutral-200`}>
+          <Text className={`${montserrat_med.className} text-[neutral-200]`}>
             {(error as Error).message}
           </Text>
         ),
@@ -96,11 +140,7 @@ export const N8nWorkflowsTable = ({
         radius: 'lg',
         icon: <IconAlertCircle />,
         className: 'my-notification-class',
-        style: {
-          backgroundColor: 'rgba(42,42,64,0.3)',
-          backdropFilter: 'blur(10px)',
-          borderLeft: '5px solid red',
-        },
+        styles: notificationStyles(true),
         withBorder: true,
         loading: false,
       })
@@ -137,7 +177,7 @@ export const N8nWorkflowsTable = ({
   }, [])
 
   const dataTableStyle = {
-    width: isWideScreen ? '65%' : '92%',
+    //    width: isWideScreen ? '85%' : '92%',
   }
 
   let currentRecords
@@ -162,15 +202,18 @@ export const N8nWorkflowsTable = ({
       >
         Your n8n tools
       </Title> */}
-      <Text w={isWideScreen ? '65%' : '92%'} className="pb-2">
+      <Text
+        // w={isWideScreen ? '85%' : '92%'}
+        className={`pb-2 text-[--dashboard-foreground] ${widthClasses}`}
+      >
         These tools can be automatically invoked by the LLM to fetch additional
         data to answer user questions on the{' '}
         <a
           href={`/${course_name}/chat`}
           // target="_blank"
           rel="noopener noreferrer"
+          className="text-[--dashboard-button] hover:text-[--dashboard-button-hover]"
           style={{
-            color: '#8B5CF6',
             textDecoration: 'underline',
           }}
         >
@@ -178,81 +221,133 @@ export const N8nWorkflowsTable = ({
         </a>
         .
       </Text>
-      <DataTable
-        height={500}
-        style={dataTableStyle}
-        // style={{
-        //   width: '50%',
-        // }}
-        withBorder
-        fetching={isLoadingRecords}
-        customLoader={<LoadingSpinner />}
-        // keyField="id"
-        records={isEmptyWorkflowTable ? [] : (currentRecords as UIUCTool[])}
-        columns={[
-          // { accessor: 'id', width: 175 },
-          { accessor: 'name' },
-          {
-            accessor: 'enabled',
-            width: 100,
-            render: (record, index) => (
-              <Switch
-                // @ts-ignore -- for some reason N8N returns "active" and we use "enabled" but I can't get them to agree
-                checked={!!record.active}
-                onChange={(event) => {
-                  mutate_active_flows.mutate({
-                    id: record.id,
-                    checked: event.target.checked,
-                  })
-                }}
-              />
-            ),
-          },
-          {
-            accessor: 'tags',
-            width: 100,
-            render: (record, index) => {
-              return record.tags
-                ? record.tags.map((tag) => tag.name).join(', ')
-                : ''
+
+      {/* dataTable styling options https://icflorescu.github.io/mantine-datatable/examples/overriding-the-default-styles/  */}
+      <div className={`n8n_workflows_table ${widthClasses}`}>
+        <DataTable
+          height={500}
+          styles={{
+            pagination: {
+              backgroundColor: 'var(--background)',
             },
-          },
-          {
-            accessor: 'createdAt',
-            // textAlign: 'left',
-            width: 120,
-            render: (record, index) => {
-              const { createdAt } = record as { createdAt: string }
-              return dayjs(createdAt).format('MMM D YYYY, h:mm A')
+          }}
+          rowStyle={(row, index) => {
+            return index % 2 === 0
+              ? { backgroundColor: 'var(--background)' }
+              : { backgroundColor: 'var(--background-faded)' }
+          }}
+          sx={{
+            color: 'var(--foreground)',
+            backgroundColor: 'var(--background)',
+          }}
+          withColumnBorders
+          borderColor="var(--table-border)"
+          rowBorderColor="var(--table-border)"
+          withBorder={false}
+          fetching={isLoadingRecords}
+          customLoader={<LoadingSpinner />}
+          // keyField="id"
+          records={isEmptyWorkflowTable ? [] : (currentRecords as UIUCTool[])}
+          /* //just testing the output, safe to remove in the future
+        records={[{
+          "id": "1323addd-a4ac-4dd2-8de2-6f934969a0f1",
+          "name": "Feest, Bogan and Herzog",
+          "streetAddress": "21716 Ratke Drive",
+          "city": "Stromanport",
+          "state": "WY",
+          "missionStatement": "Innovate bricks-and-clicks metrics."
+        }]}
+*/
+          columns={[
+            // { titleStyle: dataTableTitleStyles, accessor: 'id', width: 175 },
+            {
+              titleStyle: dataTableTitleStyles,
+              cellsStyle: dataTableCellsStyles,
+              accessor: 'name',
             },
-          },
-          {
-            accessor: 'updatedAt',
-            // textAlign: 'left',
-            width: 120,
-            render: (record, index) => {
-              const { updatedAt } = record as { updatedAt: string }
-              return dayjs(updatedAt).format('MMM D YYYY, h:mm A')
+            {
+              titleStyle: dataTableTitleStyles,
+              cellsStyle: dataTableCellsStyles,
+              accessor: 'enabled',
+              width: 100,
+              render: (record, index) => (
+                <Switch
+                  // @ts-ignore -- for some reason N8N returns "active" and we use "enabled" but I can't get them to agree
+                  checked={!!record.active}
+                  onChange={(event) => {
+                    mutate_active_flows.mutate({
+                      id: record.id,
+                      checked: event.target.checked,
+                    })
+                  }}
+                  size="sm"
+                  className="cursor-pointer"
+                  styles={(theme) => ({
+                    track: {
+                      backgroundColor: record.enabled
+                        ? 'var(--dashboard-button) !important'
+                        : 'transparent',
+                      borderColor: record.enabled
+                        ? 'var(--dashboard-button) !important'
+                        : 'var(--foreground-faded)',
+                    },
+                    label: {
+                      color: 'var(--dashboard-foreground)',
+                      fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+                    },
+                  })}
+                />
+              ),
             },
-          },
-        ]}
-        // totalRecords={records.length}
-        totalRecords={records?.length || 0}
-        recordsPerPage={PAGE_SIZE}
-        page={page}
-        onPageChange={(p) => setPage(p)}
-        // 👇 uncomment the next line to use a custom pagination size
-        // paginationSize="md"
-        // 👇 uncomment the next line to use a custom loading text
-        loadingText="Loading..."
-        // 👇 uncomment the next line to display a custom text when no records were found
-        noRecordsText="No records found"
-      // 👇 uncomment the next line to use a custom pagination text
-      // paginationText={({ from, to, totalRecords }) => `Records ${from} - ${to} of ${totalRecords}`}
-      // 👇 uncomment the next lines to use custom pagination colors
-      // paginationActiveBackgroundColor="green"
-      // paginationActiveTextColor="#e6e348"
-      />
+            {
+              titleStyle: dataTableTitleStyles,
+              cellsStyle: dataTableCellsStyles,
+              accessor: 'tags',
+              render: (record, index) => {
+                return record.tags
+                  ? record.tags.map((tag) => tag.name).join(', ')
+                  : ''
+              },
+            },
+            {
+              titleStyle: dataTableTitleStyles,
+              cellsStyle: dataTableCellsStyles,
+              accessor: 'createdAt',
+              // textAlign: 'left',
+              render: (record, index) => {
+                const { createdAt } = record as { createdAt: string }
+                return dayjs(createdAt).format('MMM D YYYY, h:mm A')
+              },
+            },
+            {
+              titleStyle: dataTableTitleStyles,
+              cellsStyle: dataTableCellsStyles,
+              accessor: 'updatedAt',
+              // textAlign: 'left',
+              render: (record, index) => {
+                const { updatedAt } = record as { updatedAt: string }
+                return dayjs(updatedAt).format('MMM D YYYY, h:mm A')
+              },
+            },
+          ]}
+          // totalRecords={records.length}
+          totalRecords={records?.length || 0}
+          recordsPerPage={PAGE_SIZE}
+          page={page}
+          onPageChange={(p) => setPage(p)}
+          // 👇 uncomment the next line to use a custom pagination size
+          // paginationSize="md"
+          // 👇 uncomment the next line to use a custom loading text
+          loadingText="Loading..."
+          // 👇 uncomment the next line to display a custom text when no records were found
+          noRecordsText="No records found"
+          // 👇 uncomment the next line to use a custom pagination text
+          // paginationText={({ from, to, totalRecords }) => `Records ${from} - ${to} of ${totalRecords}`}
+          // 👇 uncomment the next lines to use custom pagination colors
+          // paginationActiveBackgroundColor="green"
+          // paginationActiveTextColor="#e6e348"
+        />
+      </div>
     </>
   )
 }

@@ -1,6 +1,6 @@
 import { kv } from '@vercel/kv'
 import { NextResponse } from 'next/server'
-import { CourseMetadata } from '~/types/courseMetadata'
+import { type CourseMetadata } from '~/types/courseMetadata'
 import { redisClient } from '~/utils/redisClient'
 
 export const runtime = 'edge'

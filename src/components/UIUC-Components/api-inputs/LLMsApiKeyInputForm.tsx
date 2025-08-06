@@ -1,66 +1,62 @@
-import React, { useEffect, useState, forwardRef } from 'react'
 import {
+  ActionIcon,
   Button,
-  Text,
-  Slider,
   Card,
   Flex,
-  Title,
-  Stack,
-  Input,
-  ActionIcon,
-  TextInput,
-  Select,
   Group,
+  Input,
+  Select,
+  Stack,
+  Text,
+  TextInput,
+  Title,
 } from '@mantine/core'
-import Image from 'next/image'
-import { useQueryClient } from '@tanstack/react-query'
+import { notifications } from '@mantine/notifications'
+import { IconAlertCircle, IconCheck, IconX } from '@tabler/icons-react'
 import { useForm, type FieldApi } from '@tanstack/react-form'
+import { useQueryClient } from '@tanstack/react-query'
+import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import Head from 'next/head'
+import Image from 'next/image'
+import React, { forwardRef, useEffect, useState } from 'react'
+import { getModelLogo } from '~/components/Chat/ModelSelect'
+import SettingsLayout, {
+  getInitialCollapsedState,
+} from '~/components/Layout/SettingsLayout'
 import {
   useGetProjectLLMProviders,
   useSetProjectLLMProviders,
 } from '~/hooks/useProjectAPIKeys'
 import {
+  LLM_PROVIDER_ORDER,
   type AllLLMProviders,
   type AnthropicProvider,
   type AnySupportedModel,
   type AzureProvider,
+  type BedrockProvider,
+  type GeminiProvider,
   type LLMProvider,
   type NCSAHostedProvider,
+  type NCSAHostedVLMProvider,
   type OllamaProvider,
   type OpenAIProvider,
   type ProviderNames,
-  type WebLLMProvider,
-  type NCSAHostedVLMProvider,
-  type BedrockProvider,
-  type GeminiProvider,
   type SambaNovaProvider,
-  LLM_PROVIDER_ORDER,
+  type WebLLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
-import { notifications } from '@mantine/notifications'
-import {
-  IconAlertCircle,
-  IconCheck,
-  IconChevronDown,
-  IconX,
-} from '@tabler/icons-react'
+import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import { GetCurrentPageName } from '../CanViewOnlyCourse'
 import GlobalFooter from '../GlobalFooter'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import Navbar from '../navbars/Navbar'
-import Head from 'next/head'
-import OpenAIProviderInput from './providers/OpenAIProviderInput'
 import AnthropicProviderInput from './providers/AnthropicProviderInput'
 import AzureProviderInput from './providers/AzureProviderInput'
-import OllamaProviderInput from './providers/OllamaProviderInput'
-import WebLLMProviderInput from './providers/WebLLMProviderInput'
-import NCSAHostedLLmsProviderInput from './providers/NCSAHostedProviderInput'
-import { getModelLogo } from '~/components/Chat/ModelSelect'
-import NCSAHostedVLMProviderInput from './providers/NCSAHostedVLMProviderInput'
-import { t } from 'i18next'
 import BedrockProviderInput from './providers/BedrockProviderInput'
 import GeminiProviderInput from './providers/GeminiProviderInput'
+import NCSAHostedLLmsProviderInput from './providers/NCSAHostedProviderInput'
+import NCSAHostedVLMProviderInput from './providers/NCSAHostedVLMProviderInput'
+import OllamaProviderInput from './providers/OllamaProviderInput'
+import OpenAIProviderInput from './providers/OpenAIProviderInput'
 import SambaNovaProviderInput from './providers/SambaNovaProviderInput'
+import WebLLMProviderInput from './providers/WebLLMProviderInput'
 
 const isSmallScreen = false
 
@@ -94,7 +90,13 @@ export const APIKeyInput = ({
 
   return (
     <div style={{ position: 'relative', width: '100%' }}>
-      <Input.Wrapper id="API-key-input" label={placeholder}>
+      <Input.Wrapper
+        id="API-key-input"
+        label={placeholder}
+        styles={{
+          label: { color: 'var(--dashboard-foreground-faded)' },
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <TextInput
             type="password"
@@ -113,7 +115,8 @@ export const APIKeyInput = ({
             style={{ flex: 1 }}
             styles={{
               input: {
-                color: 'white',
+                color: 'var(--foreground)',
+                backgroundColor: 'var(--background)',
                 padding: '8px',
                 borderRadius: '4px',
               },
@@ -128,6 +131,7 @@ export const APIKeyInput = ({
               field.form.handleSubmit()
             }}
             type="submit"
+            className="hover:bg-[red] hover:text-[white]"
             style={{ marginLeft: '8px' }}
           >
             <IconX size={12} />
@@ -151,7 +155,7 @@ export const APIKeyInput = ({
         <div>
           <Button
             compact
-            className="bg-purple-800 hover:border-indigo-600 hover:bg-indigo-600"
+            className="bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover]"
             onClick={() => {
               field.form.handleSubmit()
             }}
@@ -281,8 +285,9 @@ const NewModelDropdown: React.FC<{
         }}
         styles={(theme) => ({
           input: {
-            backgroundColor: 'rgb(107, 33, 168)',
-            border: 'none',
+            color: 'var(--foreground)',
+            backgroundColor: 'var(--background)',
+            borderColor: 'var(--button)',
             // color: theme.white,
             // borderRadius: theme.radius.md,
             // width: '24rem',
@@ -291,8 +296,8 @@ const NewModelDropdown: React.FC<{
             // },
           },
           dropdown: {
-            backgroundColor: '#1d1f33',
-            border: '1px solid rgba(42,42,120,1)',
+            backgroundColor: 'var(--background)',
+            border: '1px solid var(--background-dark)',
             borderRadius: theme.radius.md,
             marginTop: '2px',
             boxShadow: theme.shadows.xs,
@@ -301,21 +306,23 @@ const NewModelDropdown: React.FC<{
             position: 'absolute',
           },
           item: {
-            backgroundColor: '#1d1f33',
+            color: 'var(--foreground)',
+            backgroundColor: 'var(--background)',
             borderRadius: theme.radius.md,
             margin: '2px',
             '&[data-selected]': {
               '&': {
+                color: 'var(--foreground)',
                 backgroundColor: 'transparent',
               },
               '&:hover': {
-                backgroundColor: 'rgb(107, 33, 168)',
-                color: theme.white,
+                color: 'var(--foreground)',
+                backgroundColor: 'var(--foreground-faded)',
               },
             },
             '&[data-hovered]': {
-              backgroundColor: 'rgb(107, 33, 168)',
-              color: theme.white,
+              color: 'var(--foreground)',
+              backgroundColor: 'var(--foreground-faded)',
             },
           },
         })}
@@ -410,6 +417,12 @@ export function findDefaultModel(
 
 export default function APIKeyInputForm() {
   const projectName = GetCurrentPageName()
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    getInitialCollapsedState(),
+  )
+
+  // Get responsive card width classes based on sidebar state
+  const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed)
 
   // ------------ <TANSTACK QUERIES> ------------
   const queryClient = useQueryClient()
@@ -579,9 +592,11 @@ export default function APIKeyInputForm() {
   // }
 
   return (
-    <>
-      <Navbar course_name={projectName} />
-
+    <SettingsLayout
+      course_name={projectName}
+      sidebarCollapsed={sidebarCollapsed}
+      setSidebarCollapsed={setSidebarCollapsed}
+    >
       <Head>
         <title>{projectName}/LLMs</title>
         <meta
@@ -593,52 +608,52 @@ export default function APIKeyInputForm() {
 
       <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
         <div className="items-left flex w-full flex-col justify-center py-0">
-          <Flex
-            direction="column"
-            align="center"
-            w="100%"
-            className="mt-8 lg:mt-4"
-          >
+          <Flex direction="column" align="center" w="100%">
             <Card
-              shadow="xs"
+              withBorder
               padding="none"
               radius="xl"
-              style={{ maxWidth: '90%', width: '100%', marginTop: '2%' }}
+              className={`mt-[2%] ${cardWidthClasses}`}
+              style={{
+                // maxWidth: '90%',
+                // width: '100%',
+                marginTop: '2%',
+                backgroundColor: 'var(--background)',
+                borderColor: 'var(--dashboard-border)',
+              }}
             >
               <Flex className="flex-col md:flex-row">
                 <div
                   style={{
                     border: 'None',
-                    color: 'white',
+                    color: 'text-[--foreground]',
                   }}
-                  className="min-h-full flex-[1_1_100%] bg-gradient-to-r from-purple-900 via-indigo-800 to-blue-800 md:flex-[1_1_70%]"
+                  className="min-h-full flex-[1_1_100%] bg-[--background] md:flex-[1_1_70%]"
                 >
                   <Flex
                     gap="md"
                     direction="column"
                     justify="flex-start"
                     align="flex-start"
-                    className="lg:ml-8"
+                    className="lg:ml-4"
                   >
                     <Title
                       order={2}
-                      variant="gradient"
                       align="left"
-                      gradient={{ from: 'gold', to: 'white', deg: 50 }}
-                      className={`pl-8 pt-8 ${montserrat_heading.variable} font-montserratHeading`}
+                      className={`pl-4 pr-2 pt-4 ${montserrat_heading.variable} font-montserratHeading text-[--foreground]`}
                     >
                       {/* API Keys: Add LLMs to your Chatbot */}
                       Configure LLM Providers for your Chatbot
                     </Title>
                     <Title
-                      className={`${montserrat_heading.variable} flex-[1_1_50%] font-montserratHeading`}
+                      className={`${montserrat_heading.variable} flex-[1_1_50%] font-montserratHeading text-[--foreground]`}
                       order={5}
                       px={18}
                       ml={'md'}
                       style={{ textAlign: 'left' }}
                     >
-                      Configure which LLMs are available to you users. Enable or
-                      disable models to balance price and performance.
+                      Configure which LLMs are available to your users. Enable
+                      or disable models to balance price and performance.
                     </Title>
                     <Stack align="center" justify="start">
                       <form
@@ -659,13 +674,7 @@ export default function APIKeyInputForm() {
                         >
                           <>
                             <Title
-                              className={`${montserrat_heading.variable} mt-4 font-montserratHeading`}
-                              variant="gradient"
-                              gradient={{
-                                from: 'gold',
-                                to: 'white',
-                                deg: 170,
-                              }}
+                              className={`${montserrat_heading.variable} mt-4 font-montserratHeading text-[--foreground]`}
                               order={3}
                             >
                               Closed source LLMs
@@ -728,13 +737,7 @@ export default function APIKeyInputForm() {
                               />
                             </Flex>
                             <Title
-                              className={`-mb-3 ${montserrat_heading.variable} mt-4 font-montserratHeading`}
-                              variant="gradient"
-                              gradient={{
-                                from: 'gold',
-                                to: 'white',
-                                deg: 170,
-                              }}
+                              className={`-mb-3 ${montserrat_heading.variable} mt-4 font-montserratHeading text-[--foreground]`}
                               order={3}
                             >
                               Open source LLMs
@@ -792,19 +795,20 @@ export default function APIKeyInputForm() {
                 <div
                   className="flex flex-[1_1_100%] md:flex-[1_1_30%]"
                   style={{
-                    // flex: isSmallScreen ? '1 1 100%' : '1 1 40%',
+                    //flex: isSmallScreen ? '1 1 100%' : '1 1 40%',
                     padding: '1rem',
-                    backgroundColor: '#15162c',
-                    color: 'white',
+                    backgroundColor: 'var(--dashboard-sidebar-background)',
+                    color: 'var(--dashboard-foreground)',
+                    borderLeft: isSmallScreen
+                      ? ''
+                      : '1px solid var(--dashboard-border)',
                   }}
                 >
                   <div className="card flex h-full flex-col justify-center">
-                    <div className="card-body">
+                    <div className="card-body" style={{ padding: '.5rem' }}>
                       <div className="pb-4">
                         <Title
                           className={`label ${montserrat_heading.variable} font-montserratHeading`}
-                          variant="gradient"
-                          gradient={{ from: 'gold', to: 'white', deg: 170 }}
                           order={3}
                         >
                           Default Model
@@ -929,7 +933,7 @@ export default function APIKeyInputForm() {
 
             {/* SECTION: OTHER INFO, TBD */}
             {/* <div
-              className="mx-auto mt-[2%] w-[90%] items-start rounded-2xl shadow-md shadow-purple-600"
+              className="mx-auto mt-[2%] w-[90%] items-start rounded-2xl shadow-md"
               style={{ zIndex: 1, background: '#15162c' }}
             >
               <Flex direction="row" justify="space-between">
@@ -970,7 +974,7 @@ export default function APIKeyInputForm() {
         </div>
         <GlobalFooter />
       </main>
-    </>
+    </SettingsLayout>
   )
 }
 
@@ -998,7 +1002,33 @@ export const showConfirmationToast = ({
     radius: 'lg',
     icon: isError ? <IconAlertCircle /> : <IconCheck />,
     className: 'my-notification-class',
-    style: { backgroundColor: '#15162c' },
+    styles: {
+      root: {
+        backgroundColor: 'var(--notification)', // Dark background to match the page
+        borderColor: isError ? '#E53935' : 'var(--notification-border)', // Red for errors,  for success
+        borderWidth: '1px',
+        borderStyle: 'solid',
+        borderRadius: '8px', // Added rounded corners
+      },
+      title: {
+        color: 'var(--notification-title)', // White text for the title
+        fontWeight: 600,
+      },
+      description: {
+        color: 'var(--notification-message)', // Light gray text for the message
+      },
+      closeButton: {
+        color: 'var(--notification-title)', // White color for the close button
+        borderRadius: '4px', // Added rounded corners to close button
+        '&:hover': {
+          backgroundColor: 'rgba(255, 255, 255, 0.1)', // Subtle hover effect
+        },
+      },
+      icon: {
+        backgroundColor: 'transparent', // Transparent background for the icon
+        color: isError ? '#E53935' : 'var(--notification-title)', // Icon color matches the border
+      },
+    },
     loading: false,
   })
 }

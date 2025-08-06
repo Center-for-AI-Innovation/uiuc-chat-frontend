@@ -245,19 +245,19 @@ export const WebScrape = ({
         icon: <IconWorldDownload />,
         styles: {
           root: {
-            backgroundColor: theme.colors.nearlyWhite,
-            borderColor: theme.colors.aiPurple,
+            backgroundColor: 'var(--modal-background)',
+            borderColor: 'var(--modal-border)',
           },
           title: {
-            color: theme.colors.nearlyBlack,
+            color: 'var(--modal-text)',
           },
           description: {
-            color: theme.colors.nearlyBlack,
+            color: 'var(--modal-text)',
           },
           closeButton: {
-            color: theme.colors.nearlyBlack,
+            color: 'var(--modal-button)',
             '&:hover': {
-              backgroundColor: theme.colors.dark[1],
+              color: 'var(--modal-button-hover)',
             },
           },
         },
@@ -283,9 +283,11 @@ export const WebScrape = ({
         scrapeStrategy,
       })
 
-      console.log('Response from Next.js API web scraping endpoint:', response.data)
+      console.log(
+        'Response from Next.js API web scraping endpoint:',
+        response.data,
+      )
       return response.data
-
     } catch (error: any) {
       console.error('Error during web scraping:', error)
 
@@ -329,16 +331,13 @@ export const WebScrape = ({
     try {
       if (!url || !courseName || !localDir) return null
       console.log('calling downloadMITCourse')
-      const response = await axios.get(
-        `/api/UIUC-api/downloadMITCourse`,
-        {
-          params: {
-            url: url,
-            course_name: courseName,
-            local_dir: localDir,
-          },
+      const response = await axios.get(`/api/UIUC-api/downloadMITCourse`, {
+        params: {
+          url: url,
+          course_name: courseName,
+          local_dir: localDir,
         },
-      )
+      })
       return response.data
     } catch (error) {
       console.error('Error during MIT course download:', error)
@@ -374,12 +373,13 @@ export const WebScrape = ({
           <Input
             icon={icon}
             // I can't figure out how to change the background colors.
-            className={`mt-4 w-[80%] min-w-[20rem] disabled:bg-purple-200 lg:w-[75%]`}
+            className={`mt-4 w-[80%] min-w-[20rem] disabled:bg-[--background-faded] lg:w-[75%]`}
             // wrapperProps={{ borderRadius: 'xl' }}
             // styles={{ input: { backgroundColor: '#1A1B1E' } }}
             styles={{
               input: {
-                backgroundColor: '#1A1B1E',
+                color: 'var(--foreground)',
+                backgroundColor: 'var(--background)',
                 paddingRight: '6rem', // Adjust right padding to prevent text from hiding behind the button
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
@@ -446,10 +446,14 @@ export const WebScrape = ({
                 size="md"
                 radius={'xl'}
                 className={`rounded-s-md ${
-                  isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
+                  isUrlUpdated
+                    ? 'bg-[--dashboard-button]'
+                    : 'border-[--dashboard-button]'
                 } overflow-ellipsis text-ellipsis p-2 ${
-                  isUrlUpdated ? 'text-white' : 'text-gray-500'
-                } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
+                  isUrlUpdated
+                    ? 'text-[--dashboard-button-foreground]'
+                    : 'text-[--dashboard-button-foreground]'
+                } min-w-[5rem] -translate-x-1 transform hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none`}
                 w={`${isSmallScreen ? 'auto' : 'auto'}`}
                 disabled={isDisabled}
               >
@@ -483,12 +487,13 @@ export const WebScrape = ({
             //! THIS BOX IS DUPLICATED (from above). KEEP BOTH IN SYNC. For Loading states.
             icon={icon}
             // I can't figure out how to change the background colors.
-            className={`mt-4 w-[80%] min-w-[20rem] disabled:bg-purple-200 lg:w-[75%]`}
+            className={`mt-4 w-[80%] min-w-[20rem] disabled:bg-[--background-faded] lg:w-[75%]`}
             // wrapperProps={{ borderRadius: 'xl' }}
             // styles={{ input: { backgroundColor: '#1A1B1E' } }}
             styles={{
               input: {
-                backgroundColor: '#1A1B1E',
+                color: 'var(--foreground)',
+                backgroundColor: 'var(--background)',
                 paddingRight: '6rem', // Adjust right padding to prevent text from hiding behind the button
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
@@ -555,10 +560,14 @@ export const WebScrape = ({
                 size="md"
                 radius={'xl'}
                 className={`rounded-s-md ${
-                  isUrlUpdated ? 'bg-purple-800' : 'border-purple-800'
+                  isUrlUpdated
+                    ? 'bg-[--dashboard-button]'
+                    : 'border-[--dashboard-button]'
                 } overflow-ellipsis text-ellipsis p-2 ${
-                  isUrlUpdated ? 'text-white' : 'text-gray-500'
-                } min-w-[5rem] -translate-x-1 transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none`}
+                  isUrlUpdated
+                    ? 'text-[--dashboard-button-foreground]'
+                    : 'text-[--dashboard-button-foreground]'
+                } min-w-[5rem] -translate-x-1 transform hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none`}
                 w={`${isSmallScreen ? 'auto' : 'auto'}`}
                 disabled={isDisabled}
               >
@@ -643,7 +652,9 @@ export const WebScrape = ({
                     <Text style={{ color: '#C1C2C5' }}>
                       For more detail{' '}
                       <a
-                        className={'text-purple-600'}
+                        className={
+                          'text-[--dashboard-button] hover:text-[--dashboard-button-hover]'
+                        }
                         href="https://docs.uiuc.chat/features/web-crawling-details"
                         target="_blank"
                         rel="noopener noreferrer"

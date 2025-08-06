@@ -1,18 +1,18 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { db, messages, conversations as conversationsTable } from '~/db/dbClient'
 import {
-  Conversation as ChatConversation,
-  Message as ChatMessage,
-  Content,
-  ContextWithMetadata,
-  Role,
-  UIUCTool,
+  type Conversation as ChatConversation,
+  type Message as ChatMessage,
+  type Content,
+  type ContextWithMetadata,
+  type Role,
+  type UIUCTool,
 } from '@/types/chat'
 import { Database, Json } from 'database.types'
 import { v4 as uuidv4, validate as isUUID  } from 'uuid'
 import {
   AllSupportedModels,
-  GenericSupportedModel,
+  type GenericSupportedModel,
 } from '~/utils/modelProviders/LLMProvider'
 import { sanitizeText } from '@/utils/sanitization'
 import { inArray, eq, and, isNull, desc, sql, asc, gt } from 'drizzle-orm'

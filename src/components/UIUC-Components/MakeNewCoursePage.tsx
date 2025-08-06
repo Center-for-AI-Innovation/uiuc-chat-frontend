@@ -1,24 +1,23 @@
 import Head from 'next/head'
 import React, { useEffect, useMemo, useState } from 'react'
 
-import Navbar from './navbars/Navbar'
 import {
   Button,
   Card,
   Flex,
   Group,
+  Loader,
   Textarea,
   TextInput,
   Title,
   Tooltip,
-  Loader,
 } from '@mantine/core'
 import { useMediaQuery } from '@mantine/hooks'
-import router from 'next/router'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import router from 'next/router'
 import { createProject } from '~/pages/api/UIUC-api/createProject'
-import { callSetCourseMetadata } from '~/utils/apiUtils'
-import { CourseMetadata } from '~/types/courseMetadata'
+import Navbar from './navbars/Navbar'
+import GlobalFooter from './GlobalFooter'
 
 const MakeNewCoursePage = ({
   project_name,
@@ -114,58 +113,62 @@ const MakeNewCoursePage = ({
 
   return (
     <>
-      <Navbar isPlain={true} />
+      <Navbar isPlain={false} />
       <Head>
         <title>{project_name}</title>
         <meta name="description" content="Create a new project on UIUC.chat." />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main
-        className="course-page-main"
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'start',
-          minHeight: '100vh',
-          padding: '1rem',
-        }}
+        className="course-page-main min-w-screen flex min-h-screen flex-col items-center"
+        // style={{
+        //   justifyContent: 'center',
+        //   alignItems: 'center',
+        //   minHeight: '100vh',
+        //   padding: '1rem',
+        // }}
       >
-        <Card
-          shadow="xs"
-          padding="none"
-          radius="xl"
-          // style={{ maxWidth: '85%', width: '100%', marginTop: '4%' }}
-          className="mt-[4%] w-[96%] md:w-[90%] lg:max-w-[750px]"
-        >
-          <Flex direction={isSmallScreen ? 'column' : 'row'}>
-            <div
-              style={{
-                flex: isSmallScreen ? '1 1 100%' : '1 1 60%',
-                border: 'None',
-                color: 'white',
-              }}
-              className="min-h-full bg-gradient-to-r from-purple-900 via-indigo-800 to-blue-800"
-            >
-              <Group
-                m="3rem"
-                align="center"
-                style={{ justifyContent: 'center' }}
+        <div className="flex w-full flex-1 flex-col items-center justify-center py-0 pb-20">
+          <Card
+            shadow="xs"
+            padding="none"
+            withBorder={false}
+            radius="xl"
+            // style={{ maxWidth: '85%', width: '100%', marginTop: '4%' }}
+            className="w-[96%] md:w-[90%] lg:max-w-[750px]"
+            style={{
+              backgroundColor: 'var(--background-faded)',
+            }}
+          >
+            <Flex direction={isSmallScreen ? 'column' : 'row'}>
+              <div
+                style={{
+                  flex: isSmallScreen ? '1 1 100%' : '1 1 60%',
+                  border: 'None',
+                  color: 'white',
+                }}
+                className="min-h-full bg-[--background-faded]"
               >
-                {/* Flex just to left align title. */}
-                <Flex
-                  justify="flex-start"
-                  align="flex-start"
-                  w={isSmallScreen ? '80%' : '60%'}
+                <Group
+                  m="3rem"
+                  align="center"
+                  style={{ justifyContent: 'center' }}
                 >
-                  <Title
-                    order={isSmallScreen ? 3 : 2}
-                    variant="gradient"
-                    gradient={{ from: 'gold', to: 'white', deg: 50 }}
-                    className={`${montserrat_heading.variable} text-left font-montserratHeading`}
+                  {/* Flex just to left align title. */}
+                  <Flex
+                    justify="flex-start"
+                    align="flex-start"
+                    w={isSmallScreen ? '80%' : '60%'}
                   >
-                    {!is_new_course ? `${projectName}` : 'Create a new project'}
-                  </Title>
-                </Flex>
+                    <Title
+                      order={isSmallScreen ? 3 : 2}
+                      className={`${montserrat_heading.variable} text-left font-montserratHeading text-[--foreground]`}
+                    >
+                      {!is_new_course
+                        ? `${projectName}`
+                        : 'Create a new project'}
+                    </Title>
+                  </Flex>
 
                 <Flex
                   direction="column"
