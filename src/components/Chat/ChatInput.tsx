@@ -6,7 +6,6 @@ import { Text } from '@mantine/core'
 import {
   IconAlertCircle,
   IconArrowDown,
-  // IconPhoto, // Commented out image upload functionality
   IconPlayerStop,
   IconRepeat,
   IconSend,
@@ -14,9 +13,6 @@ import {
   IconFileTypeTxt,
   IconFileTypePdf,
   IconFileTypeDocx,
-  IconFileTypePpt,
-  IconFileTypeXls,
-  IconCheck,
   IconFile,
   IconPaperclip,
 } from '@tabler/icons-react'
@@ -58,13 +54,13 @@ import {
 import { type OpenAIModelID } from '~/utils/modelProviders/types/openai'
 import type ChatUI from '~/utils/modelProviders/WebLLM'
 import { webLLMModels } from '~/utils/modelProviders/WebLLM'
-import { ImagePreview } from './ImagePreview'
 import { ContextWithMetadata } from '~/types/chat'
 
 const montserrat_med = Montserrat({
   weight: '500',
   subsets: ['latin'],
 })
+
 // constant created to check the types of files allowed to be uploaded
 const ALLOWED_FILE_EXTENSIONS = [
   'html',
@@ -96,7 +92,7 @@ const ALLOWED_FILE_EXTENSIONS = [
 
 type FileUploadStatus = {
   file: File
-  status: 'uploading' | 'uploaded' | 'processing' | 'completed' | 'error' // Add 'processing' and 'completed'
+  status: 'uploading' | 'uploaded' | 'processing' | 'completed' | 'error'
   url?: string
   contexts?: ContextWithMetadata[]
 }
@@ -113,11 +109,6 @@ interface Props {
   courseName: string
   chat_ui?: ChatUI
   onRegenerate?: () => void
-}
-
-interface ProcessedImage {
-  resizedFile: File
-  dataUrl: string
 }
 
 async function createNewConversation(
@@ -229,20 +220,11 @@ export const ChatInput = ({
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [showPluginSelect, setShowPluginSelect] = useState(false)
   const [plugin, setPlugin] = useState<Plugin | null>(null)
-  // const [uploadingImage, setUploadingImage] = useState<boolean>(false) // Commented out image upload functionality
-  // const [imageError, setImageError] = useState<string | null>(null) // Commented out image upload functionality
   const [isDragging, setIsDragging] = useState<boolean>(false)
-  // const imageUploadRef = useRef<HTMLInputElement | null>(null) // Commented out image upload functionality
   const promptListRef = useRef<HTMLUListElement | null>(null)
-  // const [imageFiles, setImageFiles] = useState<File[]>([]) // Commented out image upload functionality
-  // const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]) // Commented out image upload functionality
   const chatInputContainerRef = useRef<HTMLDivElement>(null)
   const chatInputParentContainerRef = useRef<HTMLDivElement>(null)
   const [isFocused, setIsFocused] = useState(false)
-  // const [imagePreviews, setImagePreviews] = useState<string[]>([]) // Commented out image upload functionality
-  // const [selectedImage, setSelectedImage] = useState<string | null>(null) // Commented out image upload functionality
-  // const [isModalOpen, setIsModalOpen] = useState(false) // Commented out image upload functionality
-  // const [imageUrls, setImageUrls] = useState<string[]>([]) // Commented out image upload functionality
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const modelSelectContainerRef = useRef<HTMLDivElement | null>(null)
   const fileUploadRef = useRef<HTMLInputElement | null>(null)
@@ -280,9 +262,8 @@ export const ChatInput = ({
     width: '24px',
     height: '24px',
     borderRadius: '50%',
-    backgroundColor: 'var(--message-background)', // Changed to a darker gray
-    color: 'rgba(from var(--message) r g b / .35)', // White icon color
-    //    border: '1px solid rgba(from var(--foreground) r g b / .5)', // White border
+    backgroundColor: 'var(--message-background)',
+    color: 'rgba(from var(--message) r g b / .35)',
     cursor: 'pointer',
     zIndex: 2,
   }
@@ -291,13 +272,9 @@ export const ChatInput = ({
     color: 'var(--message)',
     backgroundColor: 'var(--message-background)',
     borderColor: 'var(--foreground)',
-    //    backgroundColor: 'var(--background)', // Even darker gray for hover state
   }
 
-  // Dynamically set the padding based on image previews presence
   const chatInputContainerStyle: CSSProperties = {
-    // paddingTop: imagePreviewUrls.length > 0 ? '10px' : '0', // Commented out image upload functionality
-    // paddingRight: imagePreviewUrls.length > 0 ? '10px' : '0', // Commented out image upload functionality
     paddingBottom: '0',
     paddingLeft: '10px',
   }
@@ -321,9 +298,8 @@ export const ChatInput = ({
     setContent(value)
     updatePromptListVisibility(value)
   }
-  // Assuming Message, Role, and Plugin types are already defined in your codebase
 
-  type Role = 'user' | 'system' // Add other roles as needed
+  type Role = 'user' | 'system'
 
   const handleSend = async () => {
     const hasProcessingFiles = fileUploads.some(
@@ -334,7 +310,6 @@ export const ChatInput = ({
     )
 
     if (messageIsStreaming || hasProcessingFiles) {
-      // ✅ Show notification to user
       if (hasProcessingFiles) {
         notifications.show({
           title: 'Files Processing',
@@ -346,42 +321,10 @@ export const ChatInput = ({
     }
 
     const textContent = content
-    // let imageContent: Content[] = [] // Commented out image upload functionality
     let fileContent: Content[] = []
 
-    // Handle image uploads (existing code - keep this as is)
-    // if (imageFiles.length > 0 && !uploadingImage) { // Commented out image upload functionality
-    //   setUploadingImage(true) // Commented out image upload functionality
-    //   try { // Commented out image upload functionality
-    //     const imageUrlsToUse = // Commented out image upload functionality
-    //       imageUrls.length > 0 // Commented out image upload functionality
-    //         ? imageUrls // Commented out image upload functionality
-    //         : await Promise.all( // Commented out image upload functionality
-    //             imageFiles.map((file) => // Commented out image upload functionality
-    //               uploadImageAndGetUrl(file, courseName), // Commented out image upload functionality
-    //             ), // Commented out image upload functionality
-    //           ) // Commented out image upload functionality
-
-    //     imageContent = imageUrlsToUse // Commented out image upload functionality
-    //       .filter((url): url is string => url !== '') // Commented out image upload functionality
-    //       .map((url) => ({ // Commented out image upload functionality
-    //         type: 'image_url', // Commented out image upload functionality
-    //         image_url: { url }, // Commented out image upload functionality
-    //       })) // Commented out image upload functionality
-
-    //     setImageFiles([]) // Commented out image upload functionality
-    //     setImagePreviewUrls([]) // Commented out image upload functionality
-    //     setImageUrls([]) // Commented out image upload functionality
-    //   } catch (error) { // Commented out image upload functionality
-    //     console.error('Error uploading files:', error) // Commented out image upload functionality
-    //     setImageError('Error uploading files') // Commented out image upload functionality
-    //   } finally { // Commented out image upload functionality
-    //     setUploadingImage(false) // Commented out image upload functionality
-    //   } // Commented out image upload functionality
-    // } // Commented out image upload functionality
-
     // Handle file uploads: Only proceed if all files are completed
-    const allFileContexts: ContextWithMetadata[] = [] // ✅ Change to const
+    const allFileContexts: ContextWithMetadata[] = []
     
     if (fileUploads.length > 0) {
       const pendingFiles = fileUploads.filter((fu) => fu.status !== 'completed')
@@ -401,7 +344,7 @@ export const ChatInput = ({
         .filter((fu) => fu.status === 'completed')
         .map((fu) => {
           if (fu.contexts && Array.isArray(fu.contexts)) {
-            allFileContexts.push(...fu.contexts) // This will still work with const
+            allFileContexts.push(...fu.contexts)
           }
           return {
             type: 'text' as MessageType,
@@ -412,7 +355,7 @@ export const ChatInput = ({
       setFileUploads([]) // Clear after using
     }
 
-    if (!textContent && fileContent.length === 0) { // Removed imageContent check
+    if (!textContent && fileContent.length === 0) {
       alert(t('Please enter a message or upload a file'))
       return
     }
@@ -422,7 +365,6 @@ export const ChatInput = ({
       ...(textContent
         ? [{ type: 'text' as MessageType, text: textContent }]
         : []),
-      // ...imageContent, // Commented out image upload functionality
       ...fileContent,
     ]
 
@@ -431,7 +373,7 @@ export const ChatInput = ({
       id: uuidv4(),
       role: 'user',
       content: contentArray,
-      contexts: allFileContexts.length > 0 ? allFileContexts : undefined, //Include contexts
+      contexts: allFileContexts.length > 0 ? allFileContexts : undefined,
     }
 
     // Use the onSend prop to send the structured message
@@ -440,15 +382,8 @@ export const ChatInput = ({
     // Reset states
     setContent('')
     setPlugin(null)
-    // setImagePreviews([]) // Commented out image upload functionality
-    // setImageUrls([]) // Commented out image upload functionality
-    // setImageFiles([]) // Commented out image upload functionality
-    // setImagePreviewUrls([]) // Commented out image upload functionality
     setFileUploads([])
 
-    // if (imageUploadRef.current) { // Commented out image upload functionality
-    //   imageUploadRef.current.value = '' // Commented out image upload functionality
-    // } // Commented out image upload functionality
     if (fileUploadRef.current) {
       fileUploadRef.current.value = ''
     }
@@ -570,8 +505,6 @@ export const ChatInput = ({
     }
 
     try {
-      // ... existing image handling code ...
-
       const response = await fetch('/api/allNewRoutingChat', {
         method: 'POST',
         headers: {
@@ -579,11 +512,8 @@ export const ChatInput = ({
         },
         body: JSON.stringify({
           conversation: selectedConversation,
-          // key: apiKey,
           course_name: courseName,
-          // courseMetadata: courseMetadata,
           stream: true,
-          // llmProviders: llmProviders,
         }),
       })
 
@@ -598,8 +528,6 @@ export const ChatInput = ({
         })
         return
       }
-
-      // ... rest of success handling ...
     } catch (error) {
       console.error('Error in chat submission:', error)
       notifications.show({
@@ -609,90 +537,8 @@ export const ChatInput = ({
             : 'Failed to send message. Please try again.',
         color: 'red',
       })
-    } finally {
-      // setUploadingImage(false) // Commented out image upload functionality
     }
   }
-
-  // https://platform.openai.com/docs/guides/vision/what-type-of-files-can-i-upload
-  // const validImageTypes = ['.jpg', '.jpeg', '.png', '.webp', '.gif'] // Commented out image upload functionality
-
-  // const isImageValid = (fileName: string): boolean => { // Commented out image upload functionality
-  //   const ext = fileName.slice(fileName.lastIndexOf('.') + 1).toLowerCase() // Commented out image upload functionality
-  //   return validImageTypes.includes(`.${ext}`) // Commented out image upload functionality
-  // } // Commented out image upload functionality
-
-  // const showToastOnInvalidImage = useCallback(() => { // Commented out image upload functionality
-  //   notifications.show({ // Commented out image upload functionality
-  //     id: 'error-notification', // Commented out image upload functionality
-  //     withCloseButton: true, // Commented out image upload functionality
-  //     onClose: () => console.log('error unmounted'), // Commented out image upload functionality
-  //     onOpen: () => console.log('error mounted'), // Commented out image upload functionality
-  //     autoClose: 8000, // Commented out image upload functionality
-  //     title: 'Invalid Image Type', // Commented out image upload functionality
-  //     message: 'Unsupported file type. Please upload .jpg or .png images.', // Commented out image upload functionality
-  //     color: 'red', // Commented out image upload functionality
-  //     radius: 'lg', // Commented out image upload functionality
-  //     icon: <IconAlertCircle />, // Commented out image upload functionality
-  //     className: 'my-notification-class', // Commented out image upload functionality
-  //     style: { backgroundColor: '#15162c' }, // Commented out image upload functionality
-  //     withBorder: true, // Commented out image upload functionality
-  //     loading: false, // Commented out image upload functionality
-  //   }) // Commented out image upload functionality
-  // }, []) // Commented out image upload functionality
-
-  // const handleImageUpload = useCallback( // Commented out image upload functionality
-  //   async (files: File[]) => { // Commented out image upload functionality
-  //     // TODO: FIX IMAGE UPLOADS ASAP // Commented out image upload functionality
-  //     // showConfirmationToast({ // Commented out image upload functionality
-  //     //   title: `😢 We can't handle all these images...`, // Commented out image upload functionality
-  //     //   message: `Image uploads are temporarily disabled. I'm really sorry, I'm working on getting them back. Email me if you want to complain: rohan13@illinois.edu`, // Commented out image upload functionality
-  //     //   isError: true, // Commented out image upload functionality
-  //     //   autoClose: 10000, // Commented out image upload functionality
-  //     // }) // Commented out image upload functionality
-
-  //     // Clear any selected files // Commented out image upload functionality
-  //     if (imageUploadRef.current) { // Commented out image upload functionality
-  //       imageUploadRef.current.value = '' // Commented out image upload functionality
-  //     } // Commented out image upload functionality
-  //     // return // Exit early to prevent processing // Commented out image upload functionality
-
-  //     const validFiles = files.filter((file) => isImageValid(file.name)) // Commented out image upload functionality
-  //     const invalidFilesCount = files.length - validFiles.length // Commented out image upload functionality
-
-  //     if (invalidFilesCount > 0) { // Commented out image upload functionality
-  //       setImageError( // Commented out image upload functionality
-  //         `${invalidFilesCount} invalid file type(s). Please upload .jpg or .png images.`, // Commented out image upload functionality
-  //       ) // Commented out image upload functionality
-  //       showToastOnInvalidImage() // Commented out image upload functionality
-  //     } // Commented out image upload functionality
-
-  //     const imageProcessingPromises = validFiles.map((file) => // Commented out image upload functionality
-  //       processAndUploadImage(file), // Commented out image upload functionality
-  //     ) // Commented out image upload functionality
-
-  //     try { // Commented out image upload functionality
-  //       const processedImages = await Promise.all(imageProcessingPromises) // Commented out image upload functionality
-  //       const newImageFiles = processedImages.map((img) => img.resizedFile) // Commented out image upload functionality
-  //       const newImagePreviewUrls = processedImages.map((img) => img.dataUrl) // Commented out image upload functionality
-  //       const newImageUrls = processedImages.map((img) => img.uploadedUrl) // Commented out image upload functionality
-
-  //       setImageFiles((prev) => [...prev, ...newImageFiles]) // Commented out image upload functionality
-  //       setImagePreviewUrls((prev) => [...prev, ...newImagePreviewUrls]) // Commented out image upload functionality
-  //       setImageUrls((prev) => [...prev, ...newImageUrls.filter(Boolean)]) // Commented out image upload functionality
-  //     } catch (error) { // Commented out image upload functionality
-  //       console.error('Error processing files:', error) // Commented out image upload functionality
-  //     } // Commented out image upload functionality
-  //   }, // Commented out image upload functionality
-  //   [ // Commented out image upload functionality
-  //     setImageError, // Commented out image upload functionality
-  //     setImageFiles, // Commented out image upload functionality
-  //     setImagePreviewUrls, // Commented out image upload functionality
-  //     setImageUrls, // Commented out image upload functionality
-  //     showToastOnInvalidImage, // Commented out image upload functionality
-  //     courseName, // Commented out image upload functionality
-  //   ], // Commented out image upload functionality
-  // ) // Commented out image upload functionality
 
   async function handleFileSelection(newFiles: File[]) {
     const allFiles = [...fileUploads.map((f) => f.file), ...newFiles]
@@ -757,30 +603,16 @@ export const ChatInput = ({
     }
 
     for (const file of uniqueNewFiles) {
-      const ext = file.name.split('.').pop()?.toLowerCase()
-      // const imageTypes = ['jpg', 'jpeg', 'png', 'webp', 'gif'] // Commented out image upload functionality
+      // For non-image files, just add to fileUploads
+      setFileUploads((prev) => [
+        ...prev,
+        {
+          file,
+          status: 'uploading' as const,
+        },
+      ])
 
-      // If image, generate preview for UI
-      // if (ext && imageTypes.includes(ext)) { // Commented out image upload functionality
-      //   const reader = new FileReader() // Commented out image upload functionality
-      //   reader.onload = (e) => { // Commented out image upload functionality
-      //     const dataUrl = e.target?.result as string // Commented out image upload functionality
-      //     setImagePreviewUrls((prev) => [...prev, dataUrl]) // Commented out image upload functionality
-      //     setImageFiles((prev) => [...prev, file]) // Commented out image upload functionality
-      //   } // Commented out image upload functionality
-      //   reader.readAsDataURL(file) // Commented out image upload functionality
-      // } else { // Commented out image upload functionality
-        // For non-image files, just add to fileUploads
-        setFileUploads((prev) => [
-          ...prev,
-          {
-            file,
-            status: 'uploading' as const,
-          },
-        ])
-      // } // Commented out image upload functionality
-
-      // Upload all files (including images) to S3 and update status
+      // Upload all files to S3 and update status
       try {
         const s3Key = await uploadToS3(file, user_id, courseName)
         setFileUploads((prev) =>
@@ -853,152 +685,7 @@ export const ChatInput = ({
     }
   }
 
-  // async function processAndUploadImage( // Commented out image upload functionality
-  //   file: File, // Commented out image upload functionality
-  // ): Promise<ProcessedImage & { uploadedUrl: string }> { // Commented out image upload functionality
-  //   return new Promise((resolve, reject) => { // Commented out image upload functionality
-  //     const reader = new FileReader() // Commented out image upload functionality
-
-  //     reader.onloadend = async () => { // Commented out image upload functionality
-  //       const result = reader.result // Commented out image upload functionality
-  //       if (typeof result === 'string') { // Commented out image upload functionality
-  //         const img = new Image() // Commented out image upload functionality
-  //         img.src = result // Commented out image upload functionality
-
-  //         img.onload = async () => { // Commented out image upload functionality
-  //           const { newWidth, newHeight } = calculateDimensions(img) // Commented out image upload functionality
-  //           const canvas = document.createElement('canvas') // Commented out image upload functionality
-  //           const ctx = canvas.getContext('2d') // Commented out image upload functionality
-  //           if (ctx) { // Commented out image upload functionality
-  //             canvas.width = newWidth // Commented out image upload functionality
-  //             canvas.height = newHeight // Commented out image upload functionality
-  //             ctx.drawImage(img, 0, 0, newWidth, newHeight) // Commented out image upload functionality
-
-  //             canvas.toBlob( // Commented out image upload functionality
-  //               async (blob) => { // Commented out image upload functionality
-  //                 if (blob) { // Commented out image upload functionality
-  //                   const resizedFile = new File([blob], file.name, { // Commented out image upload functionality
-  //                     type: 'image/jpeg', // Commented out image upload functionality
-  //                     lastModified: Date.now(), // Commented out image upload functionality
-  //                   }) // Commented out image upload functionality
-
-  //                   const uploadedUrl = await uploadImageAndGetUrl( // Commented out image upload functionality
-  //                     resizedFile, // Commented out image upload functionality
-  //                     courseName, // Commented out image upload functionality
-  //                   ) // Commented out image upload functionality
-  //                   resolve({ // Commented out image upload functionality
-  //                     resizedFile, // Commented out image upload functionality
-  //                     dataUrl: canvas.toDataURL('image/jpeg'), // Commented out image upload functionality
-  //                     uploadedUrl, // Commented out image upload functionality
-  //                   }) // Commented out image upload functionality
-  //                 } else { // Commented out image upload functionality
-  //                   reject(new Error('Canvas toBlob failed')) // Commented out image upload functionality
-  //                 } // Commented out image upload functionality
-  //               }, // Commented out image upload functionality
-  //               'image/jpeg', // Commented out image upload functionality
-  //               0.9, // Commented out image upload functionality
-  //             ) // Commented out image upload functionality
-  //           } else { // Commented out image upload functionality
-  //             reject(new Error('Canvas Context is null')) // Commented out image upload functionality
-  //           } // Commented out image upload functionality
-  //         } // Commented out image upload functionality
-  //       } else { // Commented out image upload functionality
-  //         reject(new Error('FileReader did not return a string result')) // Commented out image upload functionality
-  //       } // Commented out image upload functionality
-  //     } // Commented out image upload functionality
-
-  //     reader.onerror = reject // Commented out image upload functionality
-  //     reader.readAsDataURL(file) // Commented out image upload functionality
-  //   }) // Commented out image upload functionality
-  // } // Commented out image upload functionality
-
-  // function calculateDimensions(img: HTMLImageElement): { // Commented out image upload functionality
-  //   newWidth: number // Commented out image upload functionality
-  //   newHeight: number // Commented out image upload functionality
-  // } { // Commented out image upload functionality
-  //   const MAX_WIDTH = 2048 // Commented out image upload functionality
-  //   const MAX_HEIGHT = 2048 // Commented out image upload functionality
-  //   const MIN_SIDE = 768 // Commented out image upload functionality
-
-  //   let newWidth, newHeight // Commented out image upload functionality
-  //   if (img.width > img.height) { // Commented out image upload functionality
-  //     newHeight = MIN_SIDE // Commented out image upload functionality
-  //     newWidth = (img.width / img.height) * newHeight // Commented out image upload functionality
-  //     if (newWidth > MAX_WIDTH) { // Commented out image upload functionality
-  //       newWidth = MAX_WIDTH // Commented out image upload functionality
-  //       newHeight = (img.height / img.width) * newWidth // Commented out image upload functionality
-  //     } // Commented out image upload functionality
-  //   } else { // Commented out image upload functionality
-  //     newWidth = MIN_SIDE // Commented out image upload functionality
-  //     newHeight = (img.height / img.width) * newWidth // Commented out image upload functionality
-  //     if (newHeight > MAX_HEIGHT) { // Commented out image upload functionality
-  //       newHeight = MAX_HEIGHT // Commented out image upload functionality
-  //       newWidth = (img.width / img.height) * newHeight // Commented out image upload functionality
-  //     } // Commented out image upload functionality
-  //   } // Commented out image upload functionality
-  //   return { newWidth, newHeight } // Commented out image upload functionality
-  // } // Commented out image upload functionality
-
-  // Function to open the modal with the selected image
-  // const openModal = (imageSrc: string) => { // Commented out image upload functionality
-  //   setSelectedImage(imageSrc) // Commented out image upload functionality
-  //   setIsModalOpen(true) // Commented out image upload functionality
-  // } // Commented out image upload functionality
-
   const theme = useMantineTheme()
-
-  // useEffect(() => { // Commented out image upload functionality
-  //   if ( // Commented out image upload functionality
-  //     !VisionCapableModels.has(selectedConversation?.model?.id as OpenAIModelID) // Commented out image upload functionality
-  //   ) { // Commented out image upload functionality
-  //     return // Exit early if the model is not GPT-4 Vision // Commented out image upload functionality
-  //   } // Commented out image upload functionality
-
-  //   const handleDocumentDragOver = (e: DragEvent) => { // Commented out image upload functionality
-  //     e.preventDefault() // Commented out image upload functionality
-  //     setIsDragging(true) // Commented out image upload functionality
-  //   } // Commented out image upload functionality
-
-  //   const handleDocumentDrop = (e: DragEvent) => { // Commented out image upload functionality
-  //     e.preventDefault() // Commented out image upload functionality
-  //     setIsDragging(false) // Commented out image upload functionality
-  //     if ( // Commented out image upload functionality
-  //       e.dataTransfer && // Commented out image upload functionality
-  //       e.dataTransfer.items && // Commented out image upload functionality
-  //       e.dataTransfer.items.length > 0 // Commented out image upload functionality
-  //     ) { // Commented out image upload functionality
-  //       const files = Array.from(e.dataTransfer.items) // Commented out image upload functionality
-  //         .filter((item) => item.kind === 'file') // Commented out image upload functionality
-  //         .map((item) => item.getAsFile()) // Commented out image upload functionality
-  //         .filter((file) => file !== null) as File[] // Commented out image upload functionality
-  //       if (files.length > 0) { // Commented out image upload functionality
-  //         handleImageUpload(files) // Commented out image upload functionality
-  //       } // Commented out image upload functionality
-  //     } // Commented out image upload functionality
-  //   } // Commented out image upload functionality
-
-  //   const handleDocumentDragLeave = (e: DragEvent) => { // Commented out image upload functionality
-  //     setIsDragging(false) // Commented out image upload functionality
-  //   } // Commented out image upload functionality
-
-  //   document.addEventListener('dragover', handleDocumentDragOver) // Commented out image upload functionality
-  //   document.addEventListener('drop', handleDocumentDrop) // Commented out image upload functionality
-  //   document.addEventListener('dragleave', handleDocumentDragLeave) // Commented out image upload functionality
-
-  //   return () => { // Commented out image upload functionality
-  //     // Clean up the event listeners when the component is unmounted // Commented out image upload functionality
-  //     document.removeEventListener('dragover', handleDocumentDragOver) // Commented out image upload functionality
-  //     document.removeEventListener('drop', handleDocumentDrop) // Commented out image upload functionality
-  //     document.removeEventListener('dragleave', handleDocumentDragLeave) // Commented out image upload functionality
-  //   } // Commented out image upload functionality
-  // }, [handleImageUpload, selectedConversation?.model?.id]) // Commented out image upload functionality
-
-  // useEffect(() => { // Commented out image upload functionality
-  //   if (imageError) { // Commented out image upload functionality
-  //     showToastOnInvalidImage() // Commented out image upload functionality
-  //     setImageError(null) // Commented out image upload functionality
-  //   } // Commented out image upload functionality
-  // }, [imageError, showToastOnInvalidImage]) // Commented out image upload functionality
 
   useEffect(() => {
     if (promptListRef.current) {
@@ -1070,32 +757,6 @@ export const ChatInput = ({
     }
   }, [inputContent, textareaRef])
 
-  // This is where we upload images and generate their presigned url
-  // async function uploadImageAndGetUrl( // Commented out image upload functionality
-  //   file: File, // Commented out image upload functionality
-  //   courseName: string, // Commented out image upload functionality
-  // ): Promise<string> { // Commented out image upload functionality
-  //   try { // Commented out image upload functionality
-  //     const uploadedImageUrl = await uploadToS3(file, courseName) // Commented out image upload functionality
-  //     const presignedUrl = await fetchPresignedUrl( // Commented out image upload functionality
-  //       uploadedImageUrl as string, // Commented out image upload functionality
-  //       courseName, // Commented out image upload functionality
-  //     ) // Commented out image upload functionality
-  //     return presignedUrl as string // Commented out image upload functionality
-  //   } catch (error) { // Commented out image upload functionality
-  //     console.error('Upload failed for file', file.name, error) // Commented out image upload functionality
-  //     setImageError(`Upload failed for file: ${file.name}`) // Commented out image upload functionality
-  //     return '' // Commented out image upload functionality
-  //   } // Commented out image upload functionality
-  // } // Commented out image upload functionality
-
-  // // Toggle to enable Fancy retrieval method: Multi-Query Retrieval
-  // const [useMQRetrieval, setUseMQRetrieval] = useState(localStorage.getItem('UseMQRetrieval') === 'true');
-  // // Update localStorage whenever useMQRetrieval changes
-  // useEffect(() => {
-  //   localStorage.setItem('UseMQRetrieval', useMQRetrieval ? 'true' : 'false');
-  // }, [useMQRetrieval]);
-
   // Debounce the resize handler to avoid too frequent updates
   const handleResize = useCallback(() => {
     if (textareaRef.current) {
@@ -1140,8 +801,6 @@ export const ChatInput = ({
         className="stretch mx-2 mt-4 flex flex-col gap-3 last:mb-2 md:mx-4 md:mt-[52px] md:last:mb-6 lg:mx-auto lg:max-w-3xl"
         style={{ pointerEvents: 'auto' }}
       >
-
-
         <div
           ref={chatInputParentContainerRef}
           className="chat_input_container fixed bottom-0 mx-4 flex w-[80%] flex-col self-center rounded-t-3xl bg-[--message-background] px-4 pb-8 pt-4 text-[--message] md:mx-20 md:w-[60%]"
@@ -1174,34 +833,12 @@ export const ChatInput = ({
               </button>
             )}
 
-          {/* BUTTON 2: Image Icon and Input */}
-          {/* {selectedConversation?.model?.id &&
-            VisionCapableModels.has(
-              selectedConversation.model?.id as OpenAIModelID,
-            ) && (
-              <button
-                className="absolute bottom-[2.25rem] left-5 rounded-full bg-white/30 p-2 opacity-50 hover:opacity-100"
-                onClick={() => document.getElementById('imageUpload')?.click()}
-                style={{ pointerEvents: 'auto' }}
-              >
-                <div className="">
-                  <IconPhoto size={22} />
-                </div>
-              </button>
-            )}
-          <input
-            type="file"
-            multiple
-            id="imageUpload"
-            ref={imageUploadRef}
-            style={{ display: 'none', pointerEvents: 'auto' }}
-            onChange={(e) => {
-              const files = e.target.files
-              if (files) {
-                handleImageUpload(Array.from(files))
-              }
-            }}
-          /> */}
+          {/* File upload status display */}
+          {fileUploads.map((fu, index) => (
+            <div key={index} className="mb-1 text-sm text-neutral-500">
+              📎 {fu.file.name}
+            </div>
+          ))}
 
           {/* Chat input and preview container */}
           <div
@@ -1216,59 +853,6 @@ export const ChatInput = ({
               pointerEvents: 'auto',
             }}
           >
-            {/* Image preview section */}
-            {/* <div
-              className="ml-10 flex space-x-3"
-              style={{ display: imagePreviewUrls.length > 0 ? 'flex' : 'none' }}
-            >
-              {imagePreviewUrls.map((src, index) => (
-                <div key={src} className="relative h-12 w-12">
-                  <ImagePreview
-                    src={src}
-                    alt={`Preview ${index}`}
-                    className="h-full w-full rounded-lg object-cover"
-                  />
-                  <Tooltip
-                    label="Remove File"
-                    position="top"
-                    withArrow
-                    style={{
-                      color: 'var(--tooltip)',
-                      backgroundColor: 'var(--tooltip-background)',
-                    }}
-                  >
-                    <button
-                      className="remove-button"
-                      onClick={() => {
-                        // Filter out the image from both imageFiles and imagePreviewUrls
-                        setImageFiles((prev) =>
-                          prev.filter((_, i) => i !== index),
-                        )
-                        setImagePreviewUrls((prev) =>
-                          prev.filter((_, i) => i !== index),
-                        )
-                      }}
-                      style={removeButtonStyle}
-                      onMouseEnter={(e) => {
-                        const current = e.currentTarget
-                        current.style.backgroundColor =
-                          removeButtonHoverStyle.backgroundColor!
-                        current.style.color = removeButtonHoverStyle.color!
-                      }}
-                      onMouseLeave={(e) => {
-                        const current = e.currentTarget
-                        current.style.backgroundColor =
-                          removeButtonStyle.backgroundColor!
-                        current.style.color = removeButtonStyle.color!
-                      }}
-                    >
-                      <IconX size={'.85rem'} />
-                    </button>
-                  </Tooltip>
-                </div>
-              ))}
-            </div> */}
-
             {/* File upload preview section */}
             {fileUploads.length > 0 && (
               <div className="mb-4 flex flex-wrap gap-3">
@@ -1396,48 +980,42 @@ export const ChatInput = ({
               </div>
             )}
 
-            {/* Button 3: main input text area  */}
-            <div
-              className={`
-                ${
-                  VisionCapableModels.has(
-                    selectedConversation?.model?.id as OpenAIModelID,
-                  )
-                    ? 'pl-8'
-                    : 'pl-1'
-                }
-                  `}
-            >
-              {/* Hidden file input */}
-              <input
-                ref={fileUploadRef}
-                type="file"
-                multiple
-                accept={ALLOWED_FILE_EXTENSIONS.map(ext => `.${ext}`).join(',')}
-                onChange={(e) => {
-                  const files = Array.from(e.target.files || [])
-                  if (files.length > 0) {
-                    handleFileSelection(files)
-                  }
-                  e.target.value = '' // Clear the input so the same file can be uploaded again
-                }}
-                className="hidden"
-              />
+            {/* Main input area */}
+            <div className="flex w-full items-center">
               {/* File upload button */}
               <button
-                className="absolute bottom-[2.25rem] left-3 rounded-full bg-[white/30] p-2 opacity-50 hover:opacity-100"
+                className="mr-2 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
                 onClick={() => fileUploadRef.current?.click()}
-                style={{ pointerEvents: 'auto' }}
+                type="button"
                 title="Upload files"
+                style={{ pointerEvents: 'auto' }}
               >
-                <IconPaperclip size={18} />
+                <IconPaperclip size={22} />
               </button>
+              <input
+                type="file"
+                multiple
+                ref={fileUploadRef}
+                style={{ display: 'none', pointerEvents: 'auto' }}
+                accept={ALLOWED_FILE_EXTENSIONS.map((ext) => '.' + ext).join(
+                  ',',
+                )}
+                onChange={(e) => {
+                  const files = e.target.files
+                  if (files) {
+                    handleFileSelection(Array.from(files))
+                  }
+                  // Reset input value so the same file can be selected again
+                  if (fileUploadRef.current) {
+                    fileUploadRef.current.value = ''
+                  }
+                }}
+              />
 
+              {/* Textarea for message input */}
               <textarea
                 ref={textareaRef}
-                className={`chat-input m-0 max-h-[400px] w-full resize-none bg-transparent py-2 pl-2 pr-12 outline-none ${
-                  isFocused ? 'border-white/50' : ''
-                }`}
+                className="chat-input m-0 h-[24px] max-h-[400px] w-full flex-1 resize-none bg-transparent py-2 pl-2 pr-8 text-white outline-none"
                 style={{
                   resize: 'none',
                   minHeight: '24px',
@@ -1456,23 +1034,24 @@ export const ChatInput = ({
                 onFocus={handleFocus}
                 onBlur={handleBlur}
               />
-            </div>
 
-            <button
-              className="absolute bottom-[2.25rem] right-5 rounded-full bg-[white/30] p-2 opacity-50 hover:opacity-100"
-              onClick={handleSend}
-              style={{ pointerEvents: 'auto' }}
-            >
-              {messageIsStreaming ? (
-                <div className="h-4 w-4 animate-spin rounded-full border-t-2 border-neutral-800 opacity-60"></div>
-              ) : (
-                <IconSend size={18} />
-              )}
-            </button>
+              {/* Send button */}
+              <button
+                className="absolute bottom-[2.25rem] right-5 rounded-full bg-[white/30] p-2 opacity-50 hover:opacity-100"
+                onClick={handleSend}
+                style={{ pointerEvents: 'auto' }}
+              >
+                {messageIsStreaming ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-t-2 border-neutral-800 opacity-60"></div>
+                ) : (
+                  <IconSend size={18} />
+                )}
+              </button>
+            </div>
 
             {showPluginSelect && (
               <div
-                className="absolute bottom-14 left-0 rounded"
+                className="absolute bottom-14 left-0 rounded bg-white dark:bg-[#15162c]"
                 style={{ pointerEvents: 'auto' }}
               >
                 <PluginSelect
