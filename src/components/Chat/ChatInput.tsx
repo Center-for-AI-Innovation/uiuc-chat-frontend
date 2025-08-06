@@ -833,12 +833,6 @@ export const ChatInput = ({
               </button>
             )}
 
-          {/* File upload status display */}
-          {fileUploads.map((fu, index) => (
-            <div key={index} className="mb-1 text-sm text-neutral-500">
-              📎 {fu.file.name}
-            </div>
-          ))}
 
           {/* Chat input and preview container */}
           <div
@@ -855,7 +849,7 @@ export const ChatInput = ({
           >
             {/* File upload preview section */}
             {fileUploads.length > 0 && (
-              <div className="mb-4 flex flex-wrap gap-3">
+              <div style={{ marginBottom: '16px', display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
                 {fileUploads.map((fu, index) => {
                   const getFileIcon = (name: string, type?: string) => {
                     const extension = name.split('.').pop()?.toLowerCase()
@@ -865,7 +859,7 @@ export const ChatInput = ({
                       return (
                         <IconFileTypePdf
                           {...iconProps}
-                          className="text-red-500"
+                          style={{ color: 'var(--illinois-orange)' }}
                         />
                       )
                     }
@@ -877,7 +871,7 @@ export const ChatInput = ({
                       return (
                         <IconFileTypeDocx
                           {...iconProps}
-                          className="text-blue-500"
+                          style={{ color: 'var(--illinois-orange)' }}
                         />
                       )
                     }
@@ -885,11 +879,11 @@ export const ChatInput = ({
                       return (
                         <IconFileTypeTxt
                           {...iconProps}
-                          className="text-gray-500"
+                          style={{ color: 'var(--illinois-orange)' }}
                         />
                       )
                     }
-                    return <IconFile {...iconProps} className="text-gray-600" />
+                    return <IconFile {...iconProps} style={{ color: 'var(--illinois-orange)' }} />
                   }
 
                   const getStatusIcon = (status: string) => {
@@ -897,13 +891,32 @@ export const ChatInput = ({
                       case 'uploading':
                       case 'processing':
                         return (
-                          <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-blue-600"></div>
+                          <div 
+                            style={{
+                              height: '16px',
+                              width: '16px',
+                              animation: 'spin 1s linear infinite',
+                              borderRadius: '50%',
+                              border: '2px solid var(--primary)',
+                              borderTopColor: 'transparent',
+                            }}
+                          />
                         )
                       case 'completed':
                         return (
-                          <div className="flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
+                          <div 
+                            style={{
+                              display: 'flex',
+                              height: '16px',
+                              width: '16px',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderRadius: '50%',
+                              backgroundColor: 'var(--illinois-prairie)',
+                            }}
+                          >
                             <svg
-                              className="h-2.5 w-2.5 text-white"
+                              style={{ height: '10px', width: '10px', color: 'white' }}
                               fill="currentColor"
                               viewBox="0 0 20 20"
                             >
@@ -917,9 +930,19 @@ export const ChatInput = ({
                         )
                       case 'error':
                         return (
-                          <div className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500">
+                          <div 
+                            style={{
+                              display: 'flex',
+                              height: '16px',
+                              width: '16px',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderRadius: '50%',
+                              backgroundColor: 'var(--destructive)',
+                            }}
+                          >
                             <svg
-                              className="h-2.5 w-2.5 text-white"
+                              style={{ height: '10px', width: '10px', color: 'white' }}
                               fill="currentColor"
                               viewBox="0 0 20 20"
                             >
@@ -949,14 +972,34 @@ export const ChatInput = ({
                   return (
                     <div
                       key={index}
-                      className="flex items-center gap-2 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        borderRadius: '8px',
+                        border: '1px solid var(--border)',
+                        backgroundColor: 'var(--background-faded)',
+                        padding: '8px 12px',
+                        transition: 'all 0.2s ease',
+                      }}
                     >
                       {getFileIcon(fu.file.name, fu.file.type)}
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium text-gray-300">
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span 
+                          style={{
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            color: 'var(--foreground)',
+                          }}
+                        >
                           {truncateFileName(fu.file.name)}
                         </span>
-                        <span className="text-xs text-gray-500">
+                        <span 
+                          style={{
+                            fontSize: '12px',
+                            color: 'var(--foreground-faded)',
+                          }}
+                        >
                           {fu.status === 'uploading' && 'Uploading...'}
                           {fu.status === 'processing' && 'Processing...'}
                           {fu.status === 'completed' && 'Ready for chat'}
@@ -970,7 +1013,24 @@ export const ChatInput = ({
                             prev.filter((_, i) => i !== index),
                           )
                         }}
-                        className="ml-2 text-gray-400 hover:text-gray-300"
+                        style={{
+                          marginLeft: '8px',
+                          color: 'var(--foreground-faded)',
+                          cursor: 'pointer',
+                          background: 'none',
+                          border: 'none',
+                          padding: '4px',
+                          borderRadius: '4px',
+                          transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.color = 'var(--foreground)'
+                          e.currentTarget.style.backgroundColor = 'var(--background-dark)'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.color = 'var(--foreground-faded)'
+                          e.currentTarget.style.backgroundColor = 'transparent'
+                        }}
                       >
                         <IconX size={16} />
                       </button>
@@ -981,16 +1041,16 @@ export const ChatInput = ({
             )}
 
             {/* Main input area */}
-            <div className="flex w-full items-center">
+            <div className="flex w-full items-center relative">
               {/* File upload button */}
               <button
-                className="mr-2 rounded-full p-1 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
+                className="mr-2 rounded-full p-2 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200 flex items-center justify-center"
                 onClick={() => fileUploadRef.current?.click()}
                 type="button"
                 title="Upload files"
                 style={{ pointerEvents: 'auto' }}
               >
-                <IconPaperclip size={22} />
+                <IconPaperclip size={20} />
               </button>
               <input
                 type="file"
@@ -1015,7 +1075,7 @@ export const ChatInput = ({
               {/* Textarea for message input */}
               <textarea
                 ref={textareaRef}
-                className="chat-input m-0 h-[24px] max-h-[400px] w-full flex-1 resize-none bg-transparent py-2 pl-2 pr-8 text-white outline-none"
+                className="chat-input m-0 h-[24px] max-h-[400px] w-full flex-1 resize-none bg-transparent py-2 pl-2 pr-12 text-white outline-none"
                 style={{
                   resize: 'none',
                   minHeight: '24px',
@@ -1037,7 +1097,7 @@ export const ChatInput = ({
 
               {/* Send button */}
               <button
-                className="absolute bottom-[2.25rem] right-5 rounded-full bg-[white/30] p-2 opacity-50 hover:opacity-100"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full bg-[white/30] p-2 opacity-50 hover:opacity-100 flex items-center justify-center"
                 onClick={handleSend}
                 style={{ pointerEvents: 'auto' }}
               >

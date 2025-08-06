@@ -115,15 +115,15 @@ const FileCard: React.FC<{
     const iconProps = { size: 20 }
 
     if (type?.includes('pdf') || extension === 'pdf') {
-      return <IconFileTypePdf {...iconProps} className="text-red-500" />
+      return <IconFileTypePdf {...iconProps} style={{ color: 'var(--illinois-orange)' }} />
     }
     if (type?.includes('doc') || extension === 'docx' || extension === 'doc') {
-      return <IconFileTypeDocx {...iconProps} className="text-blue-500" />
+      return <IconFileTypeDocx {...iconProps} style={{ color: 'var(--illinois-orange)' }} />
     }
     if (type?.includes('text') || extension === 'txt') {
-      return <IconFileTypeTxt {...iconProps} className="text-gray-500" />
+      return <IconFileTypeTxt {...iconProps} style={{ color: 'var(--illinois-orange)' }} />
     }
-    return <IconFile {...iconProps} className="text-gray-600" />
+    return <IconFile {...iconProps} style={{ color: 'var(--illinois-orange)' }} />
   }
 
   const truncateFileName = (name: string, maxLength = 30) => {
@@ -139,13 +139,41 @@ const FileCard: React.FC<{
   return (
     <div
       onClick={onClick}
-      className="inline-flex max-w-xs cursor-pointer items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 transition-all hover:border-gray-300 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600 dark:hover:bg-gray-700"
+      style={{
+        display: 'inline-flex',
+        maxWidth: '320px',
+        cursor: 'pointer',
+        alignItems: 'center',
+        gap: '8px',
+        borderRadius: '8px',
+        border: '1px solid var(--border)',
+        backgroundColor: 'var(--background-faded)',
+        padding: '8px 12px',
+        transition: 'all 0.2s ease',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = 'var(--primary)'
+        e.currentTarget.style.backgroundColor = 'var(--background-dark)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = 'var(--border)'
+        e.currentTarget.style.backgroundColor = 'var(--background-faded)'
+      }}
     >
       {getFileIcon(fileName, fileType)}
-      <span className="truncate text-sm font-medium text-gray-700 dark:text-gray-300">
+      <span 
+        style={{
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          fontSize: '14px',
+          fontWeight: '500',
+          color: 'var(--foreground)',
+        }}
+      >
         {truncateFileName(fileName)}
       </span>
-      <IconEye size={16} className="text-gray-400" />
+      <IconEye size={16} style={{ color: 'var(--illinois-orange)' }} />
     </div>
   )
 }
@@ -231,44 +259,49 @@ const FilePreviewModal: React.FC<{
   }
 
   return (
-    <Modal
-      opened={isOpen}
-      onClose={onClose}
-      title={fileName}
-      size="xl"
-      centered
-    >
-      <div className="space-y-4">
-        <div className="min-h-[400px] rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
-          {isImage && actualFileUrl ? (
-            <img
-              src={actualFileUrl}
-              alt={fileName}
-              className="h-full w-full rounded-lg object-contain"
-              onLoad={() => setActualFileUrl(actualFileUrl)}
-              onError={() => {
-                setActualFileUrl('')
-              }}
-            />
-          ) : isPdf && actualFileUrl ? (
-            <iframe
-              src={actualFileUrl}
-              className="h-[400px] w-full rounded-lg"
-              onLoad={() => setActualFileUrl(actualFileUrl)}
-              onError={() => {
-                setActualFileUrl('')
-              }}
-            />
-          ) : isTextFile && actualFileUrl ? (
-            <div className="h-[400px] w-full overflow-auto p-4">
-              <pre className="whitespace-pre-wrap font-mono text-sm text-gray-800 dark:text-gray-200">
-                {textContent}
-              </pre>
-            </div>
-          ) : null}
-        </div>
-      </div>
-    </Modal>
+    <Modal.Root opened={isOpen} onClose={onClose} centered size="xl">
+      <Modal.Overlay className="modal-overlay-common" />
+      <Modal.Content className="modal-common">
+        <Modal.Header className="modal-header-common">
+          <Modal.Title className={`modal-title-common ${montserrat_heading.variable} font-montserratHeading`}>
+            {fileName}
+          </Modal.Title>
+          <Modal.CloseButton
+            onClick={onClose}
+            aria-label="Close file preview"
+            className="modal-close-button-common"
+          />
+        </Modal.Header>
+        <Modal.Body className="modal-body-common">
+          <div className="file-preview-container">
+            {isImage && actualFileUrl ? (
+              <img
+                src={actualFileUrl}
+                alt={fileName}
+                className="file-preview-image"
+                onLoad={() => setActualFileUrl(actualFileUrl)}
+                onError={() => {
+                  setActualFileUrl('')
+                }}
+              />
+            ) : isPdf && actualFileUrl ? (
+              <iframe
+                src={actualFileUrl}
+                className="file-preview-iframe"
+                onLoad={() => setActualFileUrl(actualFileUrl)}
+                onError={() => {
+                  setActualFileUrl('')
+                }}
+              />
+            ) : isTextFile && actualFileUrl ? (
+              <div className="file-preview-text">
+                <pre>{textContent}</pre>
+              </div>
+            ) : null}
+          </div>
+        </Modal.Body>
+      </Modal.Content>
+    </Modal.Root>
   )
 }
 
@@ -439,6 +472,12 @@ export const ChatMessage = memo(
     const [localContent, setLocalContent] = useState<string | Content[]>(
       message.content,
     )
+    // Store original file content during edit mode
+    const [originalFileContent, setOriginalFileContent] = useState<{
+      fileName: string
+      fileUrl?: string
+      fileType?: string
+    } | null>(null)
     // const [imageUrls, setImageUrls] = useState<Set<string>>(new Set()) // Commented out image upload functionality
 
     const [isRightSideVisible, setIsRightSideVisible] = useState(false)
@@ -597,10 +636,27 @@ export const ChatMessage = memo(
             .filter((content) => content.type === 'text')
             .map((content) => content.text)
             .join(' ')
-          setMessageContent(textContent)
+          
+          // Check if this message contains a file upload
+          const fileContent = parseFileContent(textContent)
+          if (fileContent) {
+            // Store the file content for later reconstruction
+            setOriginalFileContent(fileContent)
+            // Extract only the user's message text (remove file reference)
+            const fileUploadText = `📎 Uploaded file: ${fileContent.fileName}|${fileContent.fileUrl}|${fileContent.fileType}`
+            const userMessageText = textContent.replace(fileUploadText, '').trim()
+            setMessageContent(userMessageText)
+          } else {
+            setOriginalFileContent(null)
+            setMessageContent(textContent)
+          }
         } else {
+          setOriginalFileContent(null)
           setMessageContent(message.content as string)
         }
+      } else {
+        // When exiting edit mode, clear the stored file content
+        setOriginalFileContent(null)
       }
       setIsEditing(!isEditing)
       // Focus the textarea after the state update and component re-render
@@ -626,11 +682,27 @@ export const ChatMessage = memo(
 
     const handleEditMessage = () => {
       const trimmedContent = messageContent.trim()
-      if (trimmedContent.length === 0) return
+      
+      // Reconstruct the full message content
+      let finalContent: string | Content[]
+      
+      // If there was an original file, add it back to the message
+      if (originalFileContent) {
+        const fileUploadText = `📎 Uploaded file: ${originalFileContent.fileName}|${originalFileContent.fileUrl}|${originalFileContent.fileType}`
+        const fullText = trimmedContent ? `${trimmedContent} ${fileUploadText}` : fileUploadText
+        
+        // Maintain array structure for proper rendering
+        finalContent = [{ type: 'text' as const, text: fullText }]
+      } else {
+        // No file, just text content
+        finalContent = trimmedContent
+      }
+      
+      if (finalContent.length === 0) return
 
-      if (message.content !== trimmedContent) {
+      if (message.content !== finalContent) {
         if (selectedConversation && onEdit) {
-          const editedMessage = { ...message, content: trimmedContent }
+          const editedMessage = { ...message, content: finalContent }
           onEdit(editedMessage)
 
           // Save to server
@@ -654,7 +726,8 @@ export const ChatMessage = memo(
       if (e.key === 'Enter' && !isTyping && !e.shiftKey) {
         e.preventDefault()
         const trimmedContent = messageContent.trim()
-        if (trimmedContent.length > 0) {
+        // Allow saving even if only file content exists (no user text)
+        if (trimmedContent.length > 0 || originalFileContent) {
           handleEditMessage()
         }
       }
@@ -1517,6 +1590,26 @@ export const ChatMessage = memo(
                 <div className="flex w-[90%] flex-col">
                   {isEditing ? (
                     <div className="flex w-full flex-col">
+                      {/* Show file card during edit mode if there was an original file */}
+                      {originalFileContent && (
+                        <div className="mb-4">
+                          <div className="flex items-center justify-between rounded-md border border-[--foreground-faded] bg-[--background-faded] p-3">
+                            <FileCard
+                              fileName={originalFileContent.fileName}
+                              fileType={originalFileContent.fileType}
+                              fileUrl={originalFileContent.fileUrl}
+                              onClick={() =>
+                                handleFilePreview(
+                                  originalFileContent.fileName,
+                                  originalFileContent.fileUrl,
+                                  originalFileContent.fileType,
+                                )
+                              }
+                            />                           
+                          </div>
+                        </div>
+                      )}
+                      
                       <textarea
                         ref={textareaRef}
                         className="w-full resize-none whitespace-pre-wrap rounded-md border border-[--foreground-faded] bg-[--background-faded] p-3 focus:border-[--primary] focus:outline-none"
@@ -1525,6 +1618,7 @@ export const ChatMessage = memo(
                         onKeyDown={handlePressEnter}
                         onCompositionStart={() => setIsTyping(true)}
                         onCompositionEnd={() => setIsTyping(false)}
+                        placeholder={originalFileContent ? "Edit your message..." : "Edit message..."}
                         style={{
                           fontFamily: 'inherit',
                           fontSize: 'inherit',
@@ -1546,7 +1640,7 @@ export const ChatMessage = memo(
                         <button
                           className="flex items-center gap-2 rounded-md bg-[--button] px-4 py-2 text-sm font-medium text-[--button-text-color] transition-colors hover:bg-[--button-hover] hover:text-[--button-hover-text-color] disabled:cursor-not-allowed disabled:opacity-50"
                           onClick={handleEditMessage}
-                          disabled={messageContent.trim().length <= 0}
+                          disabled={messageContent.trim().length <= 0 && !originalFileContent}
                         >
                           <IconCheck size={16} />
                           {t('Save & Submit')}
@@ -1568,8 +1662,13 @@ export const ChatMessage = memo(
                                       content.text,
                                     )
                                     if (fileContent) {
+                                      // Extract the user's message text (remove the file upload text)
+                                      const fileUploadText = `📎 Uploaded file: ${fileContent.fileName}|${fileContent.fileUrl}|${fileContent.fileType}`
+                                      const userMessageText = content.text.replace(fileUploadText, '').trim()
+                                      
                                       return (
                                         <div key={index} className="mb-2">
+                                          {/* File card first */}
                                           <FileCard
                                             fileName={fileContent.fileName}
                                             fileType={fileContent.fileType}
@@ -1582,6 +1681,14 @@ export const ChatMessage = memo(
                                               )
                                             }
                                           />
+                                          {/* User's text message below the file card */}
+                                          {userMessageText && (
+                                            <p
+                                              className={`self-start text-lg font-black text-[--chat-user] ${montserrat_heading.variable} font-montserratHeading mt-2`}
+                                            >
+                                              {userMessageText}
+                                            </p>
+                                          )}
                                         </div>
                                       )
                                     }
