@@ -150,35 +150,46 @@ function UploadNotificationContent({
       className: 'flex-shrink-0',
     }
 
+    /* //changed to match the same colors as the upload maters section in largeDropzone
+        { icon: IconFileTypePdf, label: 'PDF', color: 'text-red-500' },
+        { icon: IconFileTypeDocx, label: 'Word', color: 'text-blue-500' },
+        { icon: IconFileTypePpt, label: 'PPT', color: 'text-orange-500' },
+        { icon: IconFileTypeXls, label: 'Excel', color: 'text-green-500' },
+        { icon: IconVideo, label: 'Video', color: 'text-purple-500' },
+        { icon: IconPhoto, label: 'Image', color: 'text-pink-500' },
+        { icon: IconMusic, label: 'Audio', color: 'text-yellow-500' },
+        { icon: IconCode, label: 'Code', color: 'text-cyan-500' },
+        { icon: IconFileTypeTxt, label: 'Text', color: 'text-white' }
+    */
     switch (fileType.toLowerCase()) {
       case 'pdf':
-        return <IconFileTypePdf {...iconProps} className="text-[#FF4B4B]" />
+        return <IconFileTypePdf {...iconProps} className="text-red-500" />
       case 'doc':
       case 'docx':
-        return <IconFileTypeDocx {...iconProps} className="text-[#4B7BFF]" />
+        return <IconFileTypeDocx {...iconProps} className="text-blue-500" />
       case 'ppt':
       case 'pptx':
-        return <IconFileTypePpt {...iconProps} className="text-[#FF8F4B]" />
+        return <IconFileTypePpt {...iconProps} className="text-orange-500" />
       case 'xls':
       case 'xlsx':
-        return <IconFileTypeXls {...iconProps} className="text-[#4BFF4B]" />
+        return <IconFileTypeXls {...iconProps} className="text-green-500" />
       case 'mp4':
       case 'mov':
       case 'avi':
-        return <IconVideo {...iconProps} className="text-[#B44BFF]" />
+        return <IconVideo {...iconProps} className="text-purple-500" />
       case 'jpg':
       case 'jpeg':
       case 'png':
       case 'gif':
-        return <IconPhoto {...iconProps} className="text-[#FF4B8F]" />
+        return <IconPhoto {...iconProps} className="text-pink-500" />
       case 'mp3':
       case 'wav':
-        return <IconMusic {...iconProps} className="text-[#FFD74B]" />
+        return <IconMusic {...iconProps} className="text-yellow-500" />
       case 'js':
       case 'ts':
       case 'tsx':
       case 'jsx':
-        return <IconCode {...iconProps} className="text-[#4BFFFF]" />
+        return <IconCode {...iconProps} className="text-cyan-500" />
       default:
         return <IconFileTypeTxt {...iconProps} className="text-white" />
     }
@@ -226,14 +237,14 @@ function UploadNotificationContent({
       shadow="sm"
       padding={0}
       radius="md"
-      className={`fixed bottom-4 right-4 z-50 w-[320px] overflow-hidden bg-[#1a1b3b] shadow-xl shadow-black/25 md:w-[420px] ${montserrat_paragraph.variable}`}
+      className={`fixed bottom-4 right-4 z-50 w-[320px] overflow-hidden border border-[--modal-border] bg-[--modal] shadow-xl shadow-black/25 md:w-[420px] ${montserrat_paragraph.variable}`}
     >
-      <div className="flex items-center justify-between border-b border-[#2a2c4c] bg-[#12132b] px-5 py-4">
+      <div className="flex items-center justify-between border-b border-[--modal-border] bg-[--modal-dark] px-5 py-4 text-[--modal-text]">
         <div className="flex flex-col gap-1">
           <Text
             size="sm"
             weight={600}
-            className={`text-white ${montserrat_heading.variable} font-montserratHeading`}
+            className={`${montserrat_heading.variable} font-montserratHeading`}
           >
             {allComplete
               ? `${currentFiles.length} document${currentFiles.length > 1 ? 's' : ''} ready for chat`
@@ -241,7 +252,7 @@ function UploadNotificationContent({
           </Text>
           <Text
             size="xs"
-            className={`text-[#8e8eb2] ${montserrat_paragraph.variable} font-montserratParagraph`}
+            className={`${montserrat_paragraph.variable} font-montserratParagraph`}
             component="pre"
           >
             {currentFiles.some((file) => file.status === 'error')
@@ -259,7 +270,7 @@ function UploadNotificationContent({
             color="gray"
             compact
             onClick={toggleMinimize}
-            className="h-8 w-8 rounded-md p-0 hover:bg-[#2a2c4c] hover:text-white"
+            className="h-8 w-8 rounded-md p-0 text-[--modal-button] hover:bg-[--background-dark] hover:text-[--modal-button-text-hover]"
           >
             {isMinimized ? (
               <IconChevronUp size={18} />
@@ -272,7 +283,7 @@ function UploadNotificationContent({
             color="gray"
             compact
             onClick={onClose}
-            className="h-8 w-8 rounded-md p-0 hover:bg-[#2a2c4c] hover:text-white"
+            className="h-8 w-8 rounded-md p-0 text-[--modal-button] hover:bg-[--background-dark] hover:text-[--modal-button-text-hover]"
           >
             <IconX size={18} />
           </Button>
@@ -292,7 +303,7 @@ function UploadNotificationContent({
                 className="mb-3 last:mb-0"
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center">
+                  <div className="flex h-8 w-8 items-center justify-center text-[--foreground-faded]">
                     {file.type === 'webscrape' ? (
                       <IconWorld size={18} />
                     ) : file.name ? (
@@ -304,14 +315,14 @@ function UploadNotificationContent({
                   <div className="min-w-0 flex-1">
                     <Text
                       size="sm"
-                      className={`truncate font-medium text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
+                      className={`truncate font-medium text-[--modal-text] ${montserrat_paragraph.variable} font-montserratParagraph`}
                       title={file.name}
                     >
                       {file.name ? truncateText(file.name, 30) : file.name}
                     </Text>
                     <Text
                       size="xs"
-                      className={`truncate text-[#8e8eb2] ${montserrat_paragraph.variable} font-montserratParagraph`}
+                      className={`truncate text-[--modal-text] ${montserrat_paragraph.variable} font-montserratParagraph`}
                       title={getStatusMessage(file.status)}
                     >
                       {getStatusMessage(
@@ -338,6 +349,7 @@ function UploadNotificationContent({
                         <LoadingSpinner size="xs" />
                       </Tooltip>
                     )}
+
                     {file.status === 'complete' && (
                       <Tooltip
                         label="Ready for chat"
@@ -345,7 +357,10 @@ function UploadNotificationContent({
                           tooltip: `${montserrat_paragraph.variable} font-montserratParagraph`,
                         }}
                       >
-                        <IconCheck size={18} className="text-[#22C55E]" />
+                        <IconCheck
+                          size={18}
+                          className="text-[--modal-button]"
+                        />
                       </Tooltip>
                     )}
                     {file.status === 'error' && (
@@ -355,7 +370,7 @@ function UploadNotificationContent({
                           tooltip: `${montserrat_paragraph.variable} font-montserratParagraph`,
                         }}
                       >
-                        <IconX size={18} className="text-[#FF4B4B]" />
+                        <IconX size={18} className="text-[--error]" />
                       </Tooltip>
                     )}
                   </div>

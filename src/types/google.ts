@@ -1,5 +1,5 @@
 // This is DEPRECATED. Use new Tools methods instead.
-import { ChatBody, Message } from './chat'
+import { type ChatBody, type Message } from './chat'
 
 export interface GoogleBody extends ChatBody {
   googleAPIKey: string

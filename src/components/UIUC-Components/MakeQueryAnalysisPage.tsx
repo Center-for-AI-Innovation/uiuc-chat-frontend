@@ -1,58 +1,60 @@
-import Head from 'next/head'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import Head from 'next/head'
 // import { DropzoneS3Upload } from '~/components/UIUC-Components/Upload_S3'
 import {
   // Badge,
   // MantineProvider,
   Button,
+  Flex,
+  // TextInput,
+  // Tooltip,
+  Select,
+  Text,
   // Group,
   // Stack,
   // createStyles,
   // FileInput,
   // rem,
   Title,
-  Text,
-  Flex,
   createStyles,
   // Divider,
   type MantineTheme,
-  Divider,
-  // TextInput,
-  // Tooltip,
-  Select,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 // const rubik_puddles = Rubik_Puddles({ weight: '400', subsets: ['latin'] })
-import React, { useEffect, useState } from 'react'
-import { useRouter } from 'next/router'
-import { LoadingSpinner } from './LoadingSpinner'
-import { downloadConversationHistory } from '../../pages/api/UIUC-api/downloadConvoHistory'
-import { getConversationStats } from '../../pages/api/UIUC-api/getConversationStats'
-import { getProjectStats } from '../../pages/api/UIUC-api/getProjectStats'
-import ConversationsPerDayChart from './ConversationsPerDayChart'
-import ConversationsPerHourChart from './ConversationsPerHourChart'
-import ConversationsPerDayOfWeekChart from './ConversationsPerDayOfWeekChart'
-import ConversationsHeatmapByHourChart from './ConversationsHeatmapByHourChart'
 import {
-  IconTrendingUp,
-  IconTrendingDown,
+  IconCalendar,
   IconChartBar,
   IconMessage2,
   IconMessageCircle2,
-  IconUsers,
   IconMinus,
-  IconCalendar,
+  IconTrendingDown,
+  IconTrendingUp,
+  IconUsers,
 } from '@tabler/icons-react'
-import { getWeeklyTrends } from '../../pages/api/UIUC-api/getWeeklyTrends'
-import ModelUsageChart from './ModelUsageChart'
+import { useRouter } from 'next/router'
+import { useEffect, useState } from 'react'
+import SettingsLayout, {
+  getInitialCollapsedState,
+} from '~/components/Layout/SettingsLayout'
+import { GRID_CONFIGS, useResponsiveGrid } from '~/utils/responsiveGrid'
+import { downloadConversationHistory } from '../../pages/api/UIUC-api/downloadConvoHistory'
+import { getConversationStats } from '../../pages/api/UIUC-api/getConversationStats'
 import { getModelUsageCounts } from '../../pages/api/UIUC-api/getModelUsageCounts'
+import { getProjectStats } from '../../pages/api/UIUC-api/getProjectStats'
+import { getWeeklyTrends } from '../../pages/api/UIUC-api/getWeeklyTrends'
+import ConversationsHeatmapByHourChart from './ConversationsHeatmapByHourChart'
+import ConversationsPerDayChart from './ConversationsPerDayChart'
+import ConversationsPerDayOfWeekChart from './ConversationsPerDayOfWeekChart'
+import ConversationsPerHourChart from './ConversationsPerHourChart'
+import { LoadingSpinner } from './LoadingSpinner'
+import ModelUsageChart from './ModelUsageChart'
 
 const useStyles = createStyles((theme: MantineTheme) => ({
   downloadButton: {
     fontFamily: 'var(--font-montserratHeading)',
     outline: 'none',
-    border: 'solid 1.5px',
-    borderColor: theme.colors.grape[8],
+    color: 'var(--dashboard-button-foreground)',
     alignItems: 'center',
     justifyContent: 'center',
     gap: theme.spacing.xs,
@@ -60,10 +62,10 @@ const useStyles = createStyles((theme: MantineTheme) => ({
     cursor: 'pointer',
     transition: 'background-color 0.2s ease-in-out',
     height: '48px',
-    backgroundColor: '#0E1116',
+    /* border-1 border-[--dashboard-button] hover:bg-[--dashboard-button-hover] hover:border-[--dashboard-button-hover] */
 
     '&:hover': {
-      backgroundColor: theme.colors.grape[8],
+      color: 'var(--dashboard-button-foreground)',
     },
     '@media (max-width: 768px)': {
       fontSize: theme.fontSizes.xs,
@@ -131,8 +133,20 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     null,
   )
   const [currentEmail, setCurrentEmail] = useState('')
-
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    getInitialCollapsedState(),
+  )
   const router = useRouter()
+
+  // Get responsive grid classes based on sidebar state
+  const statsGridClasses = useResponsiveGrid(
+    GRID_CONFIGS.STATS_CARDS,
+    sidebarCollapsed,
+  )
+  const chartsGridClasses = useResponsiveGrid(
+    GRID_CONFIGS.CHARTS,
+    sidebarCollapsed,
+  )
 
   const currentPageName = GetCurrentPageName()
 
@@ -393,457 +407,479 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
   return (
     <>
-      <Navbar course_name={course_name} />
-
-      <Head>
-        <title>{course_name}</title>
-        <meta
-          name="description"
-          content="The AI teaching assistant built for students at UIUC."
-        />
-        <link rel="icon" href="/favicon.ico" />
-        {/* <Header /> */}
-      </Head>
-      <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
-        <div className="items-left flex w-full flex-col justify-center py-0">
-          <Flex direction="column" align="center" w="100%">
-            <div className="pt-5"></div>
-            <div
-              className="w-[98%] rounded-3xl"
-              style={{
-                // width: '98%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                background: '#15162c',
-                paddingTop: '1rem',
-              }}
-            >
+      <SettingsLayout
+        course_name={course_name}
+        sidebarCollapsed={sidebarCollapsed}
+        setSidebarCollapsed={setSidebarCollapsed}
+      >
+        <Head>
+          <title>{course_name}</title>
+          <meta
+            name="description"
+            content="The AI teaching assistant built for students at UIUC."
+          />
+          <link rel="icon" href="/favicon.ico" />
+          {/* <Header /> */}
+        </Head>
+        <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
+          <div className="items-left flex w-full flex-col justify-center py-0">
+            <Flex direction="column" align="center" w="100%">
+              <div className="pt-5"></div>
               <div
+                className="w-[96%] rounded-3xl bg-[--background] md:w-full 2xl:w-[95%]"
                 style={{
-                  width: '95%',
+                  // width: '98%',
                   display: 'flex',
-                  justifyContent: 'space-between',
+                  flexDirection: 'column',
                   alignItems: 'center',
-                  background: '#15162c',
-                  paddingBottom: '1rem',
+                  paddingTop: '1rem',
                 }}
               >
-                <Title
-                  order={3}
-                  align="left"
-                  className={`px-4 text-[hsl(280,100%,70%)] ${montserrat_heading.variable} font-montserratHeading`}
-                  style={{ flexGrow: 2 }}
+                <div
+                  style={{
+                    width: '95%',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    paddingBottom: '1rem',
+                  }}
                 >
-                  Usage Overview
-                </Title>
-                <Button
-                  className={`${montserrat_paragraph.variable} font-montserratParagraph ${classes.downloadButton} w-full px-2 text-sm sm:w-auto sm:px-4 sm:text-base`}
-                  rightIcon={
-                    isLoading ? (
-                      <LoadingSpinner size="sm" />
-                    ) : (
-                      <IconCloudDownload className="hidden sm:block" />
-                    )
-                  }
-                  onClick={() => handleDownload(course_name)}
-                >
-                  <span className="hidden sm:inline">
-                    Download Conversation History
-                  </span>
-                  <span className="sm:hidden">Download History</span>
-                </Button>
-              </div>
-
-              <Divider className="w-full" color="gray.4" size="sm" />
-
-              {/* Project Analytics Dashboard - Using all-time stats */}
-              <div className="my-6 w-[95%] rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
-                <div className="mb-6">
                   <Title
-                    order={4}
-                    className={`${montserrat_heading.variable} font-montserratHeading text-white`}
+                    order={3}
+                    align="left"
+                    className={`px-4 text-[--dashboard-foreground] ${montserrat_heading.variable} font-montserratHeading`}
+                    style={{ flexGrow: 2 }}
                   >
-                    Project Analytics
+                    Usage Overview
                   </Title>
-                  <Text size="sm" color="dimmed" mt={2}>
-                    Overview of project engagement and usage statistics
-                  </Text>
+                  <Button
+                    className={`${montserrat_paragraph.variable} font-montserratParagraph ${classes.downloadButton} w-full bg-[--dashboard-button] px-2 text-sm hover:bg-[--dashboard-button-hover] sm:w-auto sm:px-4 sm:text-base`}
+                    rightIcon={
+                      isLoading ? (
+                        <LoadingSpinner size="sm" />
+                      ) : (
+                        <IconCloudDownload className="hidden sm:block" />
+                      )
+                    }
+                    onClick={() => handleDownload(course_name)}
+                  >
+                    <span className="hidden sm:inline">
+                      Download Conversation History
+                    </span>
+                    <span className="sm:hidden">Download History</span>
+                  </Button>
                 </div>
 
-                {/* Main Stats Grid with Integrated Weekly Trends */}
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                  {/* Conversations Card */}
-                  <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
-                    <div className="mb-3 flex items-center justify-between">
-                      <div>
-                        <Text size="sm" color="dimmed" weight={500} mb={1}>
-                          Total Conversations
-                        </Text>
-                        <Text size="xs" color="dimmed" opacity={0.7}>
-                          All-time chat sessions
-                        </Text>
-                      </div>
-                      <div className="rounded-full bg-purple-400/10 p-2">
-                        <IconMessageCircle2
-                          size={24}
-                          className="text-purple-400"
-                        />
-                      </div>
-                    </div>
-                    <div className="mt-4">
-                      <div className="flex items-center gap-3">
-                        <Text
-                          size="xl"
-                          weight={700}
-                          className="text-purple-400"
-                        >
-                          {courseStats?.total_conversations?.toLocaleString() ||
-                            '0'}
-                        </Text>
-                        {(() => {
-                          const trend = weeklyTrends.find(
-                            (t) => t.metric_name === 'Total Conversations',
-                          )
-                          if (!trend) return null
-
-                          return (
-                            <div
-                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
-                                trend.percentage_change > 0
-                                  ? 'bg-green-400/10'
-                                  : trend.percentage_change < 0
-                                    ? 'bg-red-400/10'
-                                    : 'bg-gray-400/10'
-                              }`}
-                            >
-                              {trend.percentage_change > 0 ? (
-                                <IconTrendingUp
-                                  size={18}
-                                  className="text-green-400"
-                                />
-                              ) : trend.percentage_change < 0 ? (
-                                <IconTrendingDown
-                                  size={18}
-                                  className="text-red-400"
-                                />
-                              ) : (
-                                <IconMinus
-                                  size={18}
-                                  className="text-gray-400"
-                                />
-                              )}
-                              <Text
-                                size="sm"
-                                weight={500}
-                                className={
-                                  trend.percentage_change > 0
-                                    ? 'text-green-400'
-                                    : trend.percentage_change < 0
-                                      ? 'text-red-400'
-                                      : 'text-gray-400'
-                                }
-                              >
-                                {trend.percentage_change > 0 ? '+' : ''}
-                                {formatPercentageChange(
-                                  trend.percentage_change,
-                                )}
-                                % vs last week
-                              </Text>
-                            </div>
-                          )
-                        })()}
-                      </div>
-                    </div>
+                {/* Project Analytics Dashboard - Using all-time stats */}
+                <div className="my-6 w-[95%] rounded-xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground]">
+                  <div className="mb-6">
+                    <Title
+                      order={4}
+                      className={`${montserrat_heading.variable} font-montserratHeading`}
+                    >
+                      Project Analytics
+                    </Title>
+                    <Text
+                      size="sm"
+                      color="var(--dashboard-foreground-faded)"
+                      mt={2}
+                    >
+                      Overview of project engagement and usage statistics
+                    </Text>
                   </div>
 
-                  {/* Users Card */}
-                  <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
-                    <div className="mb-3 flex items-center justify-between">
-                      <div>
-                        <Text size="sm" color="dimmed" weight={500} mb={1}>
-                          Total Users
-                        </Text>
-                        <Text size="xs" color="dimmed" opacity={0.7}>
-                          All-time unique participants
-                        </Text>
-                      </div>
-                      <div className="rounded-full bg-purple-400/10 p-2">
-                        <IconUsers size={24} className="text-purple-400" />
-                      </div>
-                    </div>
-                    <div className="mt-4">
-                      <div className="flex items-center gap-3">
-                        <Text
-                          size="xl"
-                          weight={700}
-                          className="text-purple-400"
-                        >
-                          {courseStats?.total_users?.toLocaleString() || '0'}
-                        </Text>
-                        {(() => {
-                          const trend = weeklyTrends.find(
-                            (t) => t.metric_name === 'Unique Users',
-                          )
-                          if (!trend) return null
-
-                          return (
-                            <div
-                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
-                                trend.percentage_change > 0
-                                  ? 'bg-green-400/10'
-                                  : trend.percentage_change < 0
-                                    ? 'bg-red-400/10'
-                                    : 'bg-gray-400/10'
-                              }`}
-                            >
-                              {trend.percentage_change > 0 ? (
-                                <IconTrendingUp
-                                  size={18}
-                                  className="text-green-400"
-                                />
-                              ) : trend.percentage_change < 0 ? (
-                                <IconTrendingDown
-                                  size={18}
-                                  className="text-red-400"
-                                />
-                              ) : (
-                                <IconMinus
-                                  size={18}
-                                  className="text-gray-400"
-                                />
-                              )}
-                              <Text
-                                size="sm"
-                                weight={500}
-                                className={
-                                  trend.percentage_change > 0
-                                    ? 'text-green-400'
-                                    : trend.percentage_change < 0
-                                      ? 'text-red-400'
-                                      : 'text-gray-400'
-                                }
-                              >
-                                {trend.percentage_change > 0 ? '+' : ''}
-                                {formatPercentageChange(
-                                  trend.percentage_change,
-                                )}
-                                % vs last week
-                              </Text>
-                            </div>
-                          )
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Messages Card */}
-                  <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
-                    <div className="mb-3 flex items-center justify-between">
-                      <div>
-                        <Text size="sm" color="dimmed" weight={500} mb={1}>
-                          Messages
-                        </Text>
-                        <Text size="xs" color="dimmed" opacity={0.7}>
-                          Total exchanges
-                        </Text>
-                      </div>
-                      <div className="rounded-full bg-purple-400/10 p-2">
-                        <IconMessage2 size={24} className="text-purple-400" />
-                      </div>
-                    </div>
-                    <div className="mt-4">
-                      <div className="flex items-center gap-3">
-                        <Text
-                          size="xl"
-                          weight={700}
-                          className="text-purple-400"
-                        >
-                          {courseStats?.total_messages?.toLocaleString() || '0'}
-                        </Text>
-                        {(() => {
-                          const trend = weeklyTrends.find(
-                            (t) => t.metric_name === 'Total Messages',
-                          )
-                          if (!trend) return null
-
-                          return (
-                            <div
-                              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
-                                trend.percentage_change > 0
-                                  ? 'bg-green-400/10'
-                                  : trend.percentage_change < 0
-                                    ? 'bg-red-400/10'
-                                    : 'bg-gray-400/10'
-                              }`}
-                            >
-                              {trend.percentage_change > 0 ? (
-                                <IconTrendingUp
-                                  size={18}
-                                  className="text-green-400"
-                                />
-                              ) : trend.percentage_change < 0 ? (
-                                <IconTrendingDown
-                                  size={18}
-                                  className="text-red-400"
-                                />
-                              ) : (
-                                <IconMinus
-                                  size={18}
-                                  className="text-gray-400"
-                                />
-                              )}
-                              <Text
-                                size="sm"
-                                weight={500}
-                                className={
-                                  trend.percentage_change > 0
-                                    ? 'text-green-400'
-                                    : trend.percentage_change < 0
-                                      ? 'text-red-400'
-                                      : 'text-gray-400'
-                                }
-                              >
-                                {trend.percentage_change > 0 ? '+' : ''}
-                                {formatPercentageChange(
-                                  trend.percentage_change,
-                                )}
-                                % vs last week
-                              </Text>
-                            </div>
-                          )
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* User Engagement Metrics Section */}
-                <div className="mt-8">
-                  <div className="mb-4 flex items-center">
-                    <div className="flex-1">
-                      <Text
-                        size="lg"
-                        weight={600}
-                        className={`${montserrat_heading.variable} font-montserratHeading`}
-                      >
-                        User Engagement Metrics
-                      </Text>
-                      <Text size="sm" color="dimmed" mt={1}>
-                        Detailed breakdown of user interaction patterns
-                      </Text>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                    {/* Average Conversations per User */}
-                    <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
+                  {/* Main Stats Grid with Integrated Weekly Trends */}
+                  <div className={`grid gap-6 ${statsGridClasses}`}>
+                    {/* Conversations Card */}
+                    <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] transition-all duration-200">
                       <div className="mb-3 flex items-center justify-between">
                         <div>
-                          <Text size="sm" color="dimmed" weight={500} mb={1}>
-                            Conversations per User
+                          <Text size="sm" weight={500} mb={1}>
+                            Total Conversations
                           </Text>
-                          <Text size="xs" color="dimmed" opacity={0.7}>
-                            Average engagement frequency
+                          <Text size="xs" opacity={0.7}>
+                            All-time chat sessions
                           </Text>
                         </div>
-                        <div className="rounded-full bg-purple-400/10 p-2">
+                        <div className="rounded-full bg-[--dashboard-background-dark] p-2">
                           <IconMessageCircle2
                             size={24}
-                            className="text-purple-400"
+                            className="text-[--dashboard-stat]"
                           />
                         </div>
                       </div>
-                      <div className="mt-4 flex items-baseline gap-2">
+                      <div className="mt-4">
+                        <div className="flex items-center gap-3">
+                          <Text
+                            size="xl"
+                            weight={700}
+                            className="flex min-h-[3rem] min-w-[3rem] items-center justify-center rounded-full bg-[--dashboard-stat] text-white"
+                          >
+                            {courseStats?.total_conversations?.toLocaleString() ||
+                              '0'}
+                          </Text>
+
+                          {(() => {
+                            const trend = weeklyTrends.find(
+                              (t) => t.metric_name === 'Total Conversations',
+                            )
+                            if (!trend) return null
+
+                            return (
+                              <div
+                                className={`flex items-center gap-2 rounded-md ${
+                                  trend.percentage_change > 0
+                                    ? 'bg-green-400/10'
+                                    : trend.percentage_change < 0
+                                      ? 'bg-red-400/10'
+                                      : 'bg-gray-400/10'
+                                }`}
+                              >
+                                {trend.percentage_change > 0 ? (
+                                  <IconTrendingUp
+                                    size={32}
+                                    className="text-green-400"
+                                  />
+                                ) : trend.percentage_change < 0 ? (
+                                  <IconTrendingDown
+                                    size={32}
+                                    className="text-red-400"
+                                  />
+                                ) : (
+                                  <IconMinus
+                                    size={18}
+                                    className="text-gray-400"
+                                  />
+                                )}
+                                <Text
+                                  size="sm"
+                                  weight={500}
+                                  className={
+                                    trend.percentage_change > 0
+                                      ? 'text-green-400'
+                                      : trend.percentage_change < 0
+                                        ? 'text-red-400'
+                                        : 'text-gray-400'
+                                  }
+                                >
+                                  {trend.percentage_change > 0 ? '+' : ''}
+                                  {formatPercentageChange(
+                                    trend.percentage_change,
+                                  )}
+                                  % vs last week
+                                </Text>
+                              </div>
+                            )
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Users Card */}
+                    <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] transition-all duration-200">
+                      <div className="mb-3 flex items-center justify-between">
+                        <div>
+                          <Text size="sm" weight={500} mb={1}>
+                            Total Users
+                          </Text>
+                          <Text size="xs" opacity={0.7}>
+                            All-time unique participants
+                          </Text>
+                        </div>
+                        <div className="rounded-full bg-[--dashboard-background-dark] p-2">
+                          <IconUsers
+                            size={24}
+                            className="text-[--dashboard-stat]"
+                          />
+                        </div>
+                      </div>
+                      <div className="mt-4">
+                        <div className="flex items-center gap-3">
+                          <Text
+                            size="xl"
+                            weight={700}
+                            className="flex min-h-[3rem] min-w-[3rem] items-center justify-center rounded-full bg-[--dashboard-stat] text-white"
+                          >
+                            {courseStats?.total_users?.toLocaleString() || '0'}
+                          </Text>
+                          {(() => {
+                            const trend = weeklyTrends.find(
+                              (t) => t.metric_name === 'Unique Users',
+                            )
+                            if (!trend) return null
+
+                            return (
+                              <div
+                                className={`flex items-center gap-2 rounded-md ${
+                                  trend.percentage_change > 0
+                                    ? 'bg-green-400/10'
+                                    : trend.percentage_change < 0
+                                      ? 'bg-red-400/10'
+                                      : 'bg-gray-400/10'
+                                }`}
+                              >
+                                {trend.percentage_change > 0 ? (
+                                  <IconTrendingUp
+                                    size={32}
+                                    className="text-green-400"
+                                  />
+                                ) : trend.percentage_change < 0 ? (
+                                  <IconTrendingDown
+                                    size={32}
+                                    className="text-red-400"
+                                  />
+                                ) : (
+                                  <IconMinus
+                                    size={18}
+                                    className="text-gray-400"
+                                  />
+                                )}
+                                <Text
+                                  size="sm"
+                                  weight={500}
+                                  className={
+                                    trend.percentage_change > 0
+                                      ? 'text-green-400'
+                                      : trend.percentage_change < 0
+                                        ? 'text-red-400'
+                                        : 'text-gray-400'
+                                  }
+                                >
+                                  {trend.percentage_change > 0 ? '+' : ''}
+                                  {formatPercentageChange(
+                                    trend.percentage_change,
+                                  )}
+                                  % vs last week
+                                </Text>
+                              </div>
+                            )
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Messages Card */}
+                    <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] transition-all duration-200">
+                      <div className="mb-3 flex items-center justify-between">
+                        <div>
+                          <Text size="sm" weight={500} mb={1}>
+                            Messages
+                          </Text>
+                          <Text size="xs" opacity={0.7}>
+                            Total exchanges
+                          </Text>
+                        </div>
+                        <div className="rounded-full bg-[--dashboard-background-dark] p-2">
+                          <IconMessage2
+                            size={24}
+                            className="text-[--dashboard-stat]"
+                          />
+                        </div>
+                      </div>
+                      <div className="mt-4">
+                        <div className="flex items-center gap-3">
+                          <Text
+                            size="xl"
+                            weight={700}
+                            className="inline-flex min-h-[3rem] min-w-[3rem] items-center justify-center rounded-full bg-[--dashboard-stat] text-white"
+                          >
+                            {courseStats?.total_messages?.toLocaleString() ||
+                              '0'}
+                          </Text>
+
+                          {(() => {
+                            const trend = weeklyTrends.find(
+                              (t) => t.metric_name === 'Total Messages',
+                            )
+                            if (!trend) return null
+
+                            return (
+                              <div
+                                className={`flex items-center gap-2 rounded-md ${
+                                  trend.percentage_change > 0
+                                    ? 'bg-green-400/10'
+                                    : trend.percentage_change < 0
+                                      ? 'bg-red-400/10'
+                                      : 'bg-gray-400/10'
+                                }`}
+                              >
+                                {trend.percentage_change > 0 ? (
+                                  <IconTrendingUp
+                                    size={32}
+                                    className="text-green-400"
+                                  />
+                                ) : trend.percentage_change < 0 ? (
+                                  <IconTrendingDown
+                                    size={32}
+                                    className="text-red-400"
+                                  />
+                                ) : (
+                                  <IconMinus
+                                    size={18}
+                                    className="text-gray-400"
+                                  />
+                                )}
+                                <Text
+                                  size="sm"
+                                  weight={500}
+                                  className={
+                                    trend.percentage_change > 0
+                                      ? 'text-green-400'
+                                      : trend.percentage_change < 0
+                                        ? 'text-red-400'
+                                        : 'text-gray-400'
+                                  }
+                                >
+                                  {trend.percentage_change > 0 ? '+' : ''}
+                                  {formatPercentageChange(
+                                    trend.percentage_change,
+                                  )}
+                                  % vs last week
+                                </Text>
+                              </div>
+                            )
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* User Engagement Metrics Section */}
+                  <div className="mt-8">
+                    <div className="mb-4 flex items-center">
+                      <div className="flex-1">
                         <Text
-                          size="xl"
-                          weight={700}
-                          className="text-purple-400"
+                          size="lg"
+                          weight={600}
+                          className={`${montserrat_heading.variable} font-montserratHeading`}
                         >
-                          {courseStats?.avg_conversations_per_user?.toFixed(
-                            1,
-                          ) || '0'}
+                          User Engagement Metrics
                         </Text>
-                        <Text size="sm" color="dimmed">
-                          conversations / user
+                        <Text
+                          size="sm"
+                          color="var(--dashboard-foreground-faded)"
+                          mt={1}
+                        >
+                          Detailed breakdown of user interaction patterns
                         </Text>
                       </div>
                     </div>
 
-                    {/* Average Messages per User */}
-                    <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
-                      <div className="mb-3 flex items-center justify-between">
-                        <div>
-                          <Text size="sm" color="dimmed" weight={500} mb={1}>
-                            Messages per User
+                    <div className={`grid gap-6 ${statsGridClasses}`}>
+                      {/* Average Conversations per User */}
+                      <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] transition-all duration-200">
+                        <div className="mb-3 flex items-center justify-between">
+                          <div>
+                            <Text size="sm" weight={500} mb={1}>
+                              Conversations per User
+                            </Text>
+                            <Text size="xs" opacity={0.7}>
+                              Average engagement frequency
+                            </Text>
+                          </div>
+                          <div className="rounded-full bg-[--dashboard-background-dark] p-2">
+                            <IconMessageCircle2
+                              size={24}
+                              className="text-[--dashboard-stat]"
+                            />
+                          </div>
+                        </div>
+                        <div className="mt-4 flex items-baseline gap-2">
+                          <Text
+                            size="xl"
+                            weight={700}
+                            className="inline-flex min-h-[3rem] min-w-[3rem] items-center justify-center rounded-full bg-[--dashboard-stat] text-white"
+                          >
+                            {courseStats?.avg_conversations_per_user?.toFixed(
+                              1,
+                            ) || '0'}
                           </Text>
-                          <Text size="xs" color="dimmed" opacity={0.7}>
-                            Average interaction depth
+                          <Text size="sm" color="dimmed">
+                            conversations / user
                           </Text>
                         </div>
-                        <div className="rounded-full bg-purple-400/10 p-2">
-                          <IconMessage2 size={24} className="text-purple-400" />
-                        </div>
                       </div>
-                      <div className="mt-4 flex items-baseline gap-2">
-                        <Text
-                          size="xl"
-                          weight={700}
-                          className="text-purple-400"
-                        >
-                          {courseStats?.avg_messages_per_user?.toFixed(1) ||
-                            '0'}
-                        </Text>
-                        <Text size="sm" color="dimmed">
-                          messages / user
-                        </Text>
-                      </div>
-                    </div>
 
-                    {/* Average Messages per Conversation */}
-                    <div className="rounded-lg bg-[#232438] p-4 shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/30">
-                      <div className="mb-3 flex items-center justify-between">
-                        <div>
-                          <Text size="sm" color="dimmed" weight={500} mb={1}>
-                            Messages per Conversation
-                          </Text>
-                          <Text size="xs" color="dimmed" opacity={0.7}>
-                            Average conversation length
-                          </Text>
+                      {/* Average Messages per User */}
+                      <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] transition-all duration-200">
+                        <div className="mb-3 flex items-center justify-between">
+                          <div>
+                            <Text size="sm" weight={500} mb={1}>
+                              Messages per User
+                            </Text>
+                            <Text size="xs" opacity={0.7}>
+                              Average interaction depth
+                            </Text>
+                          </div>
+                          <div className="rounded-full bg-[--dashboard-background-dark] p-2">
+                            <IconMessage2
+                              size={24}
+                              className="text-[--dashboard-stat]"
+                            />
+                          </div>
                         </div>
-                        <div className="rounded-full bg-purple-400/10 p-2">
-                          <IconChartBar size={24} className="text-purple-400" />
+                        <div className="mt-4 flex items-baseline gap-2">
+                          <Text
+                            size="xl"
+                            weight={700}
+                            className="inline-flex min-h-[3rem] min-w-[3rem] items-center justify-center rounded-full bg-[--dashboard-stat] text-white"
+                          >
+                            {courseStats?.avg_messages_per_user?.toFixed(1) ||
+                              '0'}
+                          </Text>
+                          <Text size="sm" color="dimmed">
+                            messages / user
+                          </Text>
                         </div>
                       </div>
-                      <div className="mt-4 flex items-baseline gap-2">
-                        <Text
-                          size="xl"
-                          weight={700}
-                          className="text-purple-400"
-                        >
-                          {courseStats?.avg_messages_per_conversation?.toFixed(
-                            1,
-                          ) || '0'}
-                        </Text>
-                        <Text size="sm" color="dimmed">
-                          messages / conversation
-                        </Text>
+
+                      {/* Average Messages per Conversation */}
+                      <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] transition-all duration-200">
+                        <div className="mb-3 flex items-center justify-between">
+                          <div>
+                            <Text size="sm" weight={500} mb={1}>
+                              Messages per Conversation
+                            </Text>
+                            <Text size="xs" opacity={0.7}>
+                              Average conversation length
+                            </Text>
+                          </div>
+                          <div className="rounded-full bg-[--dashboard-background-dark] p-2">
+                            <IconChartBar
+                              size={24}
+                              className="text-[--dashboard-stat]"
+                            />
+                          </div>
+                        </div>
+                        <div className="mt-4 flex items-baseline gap-2">
+                          <Text
+                            size="xl"
+                            weight={700}
+                            className="inline-flex min-h-[3rem] min-w-[3rem] items-center justify-center rounded-full bg-[--dashboard-stat] text-white"
+                          >
+                            {courseStats?.avg_messages_per_conversation?.toFixed(
+                              1,
+                            ) || '0'}
+                          </Text>
+                          <Text size="sm" color="dimmed">
+                            messages / conversation
+                          </Text>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
               {/* Charts Section - Using filtered stats */}
               <div className="grid w-[95%] grid-cols-1 gap-6 pb-10 lg:grid-cols-2">
                 {/* Date Range Selector - Always visible */}
-                <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20 lg:col-span-2">
+                <div className="rounded-xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-200 lg:col-span-2">
                   <div className="flex items-center justify-between">
                     <div>
-                      <Title order={4} className="text-white">
+                      <Title order={4}>
                         Conversation Visualizations
                       </Title>
-                      <Text size="sm" color="dimmed" mt={1}>
+                      <Text size="sm" mt={1}>
                         Select a time range to filter the visualizations below
                       </Text>
                     </div>
@@ -865,27 +901,41 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           { value: 'last_year', label: 'Last Year' },
                           { value: 'custom', label: 'Custom Range' },
                         ]}
-                        styles={(theme: MantineTheme) => ({
-                          input: {
-                            backgroundColor: '#232438',
-                            borderColor: theme.colors.grape[8],
-                            color: theme.white,
-                            '&:hover': {
-                              borderColor: theme.colors.grape[7],
+                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                          styles={(theme) => ({
+                            input: {
+                              '&:focus': {
+                                borderColor: 'var(--dashboard-button)',
+                              },
+                              color: 'var(--foreground)',
+                              backgroundColor: 'var(--background)',
+                              fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
                             },
-                          },
-                          item: {
-                            backgroundColor: '#232438',
-                            color: theme.white,
-                            '&:hover': {
-                              backgroundColor: theme.colors.grape[8],
+                            dropdown: {
+                              backgroundColor: 'var(--background)',
+                              border: '1px solid var(--background-dark)',
                             },
-                          },
-                          dropdown: {
-                            backgroundColor: '#232438',
-                            borderColor: theme.colors.grape[8],
-                          },
-                        })}
+                            item: {
+                              color: 'var(--foreground)',
+                              backgroundColor: 'var(--background)',
+                              borderRadius: theme.radius.md,
+                              margin: '2px',
+                              '&[data-selected]': {
+                                '&': {
+                                  color: 'var(--foreground)',
+                                  backgroundColor: 'transparent',
+                                },
+                                '&:hover': {
+                                  color: 'var(--foreground)',
+                                  backgroundColor: 'var(--foreground-faded)',
+                                },
+                              },
+                              '&[data-hovered]': {
+                                color: 'var(--foreground)',
+                                backgroundColor: 'var(--foreground-faded)',
+                              },
+                            },
+                          })}
                       />
                       {dateRangeType === 'custom' && (
                         <DatePickerInput
@@ -896,44 +946,48 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           w={200}
                           value={dateRange}
                           onChange={setDateRange}
-                          // @ts-expect-error TODO: Fix DatePickerInput placeholder prop mismatch
                           placeholder="Pick date range"
+                          className="date_picker"
                           styles={(theme: MantineTheme) => ({
+                            icon: {
+                              color: 'var(--foreground)',
+                            },
                             input: {
-                              backgroundColor: '#232438',
-                              borderColor: theme.colors.grape[8],
-                              color: theme.white,
+                              backgroundColor: 'var(--background)',
+                              borderColor: 'var(--foreground-faded)',
+                              color: 'var(--foreground)',
                               '&:selected': {
-                                backgroundColor: theme.colors.grape[8],
-                                borderColor: theme.colors.grape[8],
+                                color: 'var(--button-text-color)',
+                                backgroundColor: 'var(--button)',
+                                borderColor: 'var(--button)',
                               },
                               '&:hover': {
-                                borderColor: theme.colors.grape[7],
+                                borderColor: 'var(--dashboard-button)',
                               },
                               '&:focus': {
-                                borderColor: theme.colors.grape[8],
-                              },
+                                borderColor: 'var(--button)',
+                              }
                             },
                             calendarHeader: {
-                              borderColor: theme.colors.grape[8],
+                              borderColor: 'var(--button)',
                               color: theme.white,
                             },
                             calendarHeaderControl: {
                               color: theme.white,
                               '&:hover': {
-                                backgroundColor: theme.colors.grape[8],
+                                color: theme.white,
                               },
                             },
                             monthPickerControl: {
                               color: theme.white,
                               '&:hover': {
-                                backgroundColor: theme.colors.grape[8],
+                                backgroundColor: 'var(--button-hover)',
                               },
                             },
                             yearPickerControl: {
                               color: theme.white,
                               '&:hover': {
-                                backgroundColor: theme.colors.grape[8],
+                                backgroundColor: 'var(--button-hover)',
                               },
                             },
                             day: {
@@ -954,133 +1008,136 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                   </div>
                 </div>
 
-                {!hasConversationData ? (
-                  <div className="rounded-xl bg-[#1a1b30] p-6 text-center shadow-lg shadow-purple-900/20 lg:col-span-2">
-                    <Title
-                      order={4}
-                      className={`${montserrat_heading.variable} font-montserratHeading`}
-                    >
-                      No conversation data available for selected time range
-                    </Title>
-                    <Text size="lg" color="dimmed" mt="md">
-                      Try selecting a different time range to view the
-                      visualizations
-                    </Text>
-                  </div>
-                ) : (
-                  <>
-                    {/* Model Usage Chart */}
-                    <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
+                  {!hasConversationData ? (
+                    <div className="rounded-xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-200">
                       <Title
                         order={4}
-                        mb="md"
-                        align="left"
-                        className="text-white"
+                        className={`${montserrat_heading.variable} font-montserratHeading`}
                       >
-                        Model Usage Distribution
+                        No conversation data available for selected time range
                       </Title>
-                      <Text size="sm" color="dimmed" mb="xl">
-                        Distribution of AI models used across all conversations
+                      <Text size="lg" mt="md">
+                        Try selecting a different time range to view the
+                        visualizations
                       </Text>
-                      <ModelUsageChart
-                        data={modelUsageData}
-                        isLoading={modelUsageLoading}
-                        error={modelUsageError}
-                      />
                     </div>
-
-                    {/* Conversations Per Day Chart */}
-                    <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
-                      <Title
-                        order={4}
-                        mb="md"
-                        align="left"
-                        className="text-white"
-                      >
-                        Conversations Per Day
-                      </Title>
-                      <Text size="sm" color="dimmed" mb="xl">
-                        Shows the total number of conversations that occurred on
-                        each calendar day
-                      </Text>
-                      <ConversationsPerDayChart
-                        data={filteredConversationStats?.per_day}
-                        isLoading={filteredStatsLoading}
-                        error={filteredStatsError}
-                      />
-                    </div>
-
-                    {/* Combined Hour/Weekday Chart */}
-                    <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
-                      <div className="mb-4 flex items-center justify-between">
-                        <div>
-                          <Title order={4} className="text-white">
-                            Aggregated Conversation Breakdown
-                          </Title>
-                          <Text size="sm" color="dimmed" mt={1}>
-                            View conversation patterns by hour of day or day of
-                            week
-                          </Text>
-                        </div>
-                        <Select
-                          value={view}
-                          onChange={(value) => setView(value || 'hour')}
-                          data={[
-                            { value: 'hour', label: 'By Hour' },
-                            { value: 'weekday', label: 'By Day of Week' },
-                          ]}
-                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                          styles={(theme) => ({
-                            input: {
-                              backgroundColor: '#232438',
-                              borderColor: theme.colors.grape[8],
-                              color: theme.white,
-                              '&:hover': {
-                                borderColor: theme.colors.grape[7],
-                              },
-                            },
-                            item: {
-                              backgroundColor: '#232438',
-                              color: theme.white,
-                              '&:hover': {
-                                backgroundColor: theme.colors.grape[8],
-                              },
-                            },
-                            dropdown: {
-                              backgroundColor: '#232438',
-                              borderColor: theme.colors.grape[8],
-                            },
-                          })}
-                          size="xs"
-                          w={150}
+                  ) : (
+                    <>
+                      {/* Model Usage Chart */}
+                      <div className="rounded-xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-200">
+                        <Title order={4} mb="md" align="left">
+                          Model Usage Distribution
+                        </Title>
+                        <Text size="sm" mb="xl">
+                          Distribution of AI models used across all
+                          conversations
+                        </Text>
+                        <ModelUsageChart
+                          data={modelUsageData}
+                          isLoading={modelUsageLoading}
+                          error={modelUsageError}
                         />
                       </div>
-                      {view === 'hour' ? (
-                        <ConversationsPerHourChart
-                          data={filteredConversationStats?.per_hour}
+
+                      {/* Conversations Per Day Chart */}
+                      <div className="rounded-xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-200">
+                        <Title order={4} mb="md" align="left">
+                          Conversations Per Day
+                        </Title>
+                        <Text size="sm" mb="xl">
+                          Shows the total number of conversations that occurred
+                          on each calendar day
+                        </Text>
+                        <ConversationsPerDayChart
+                          data={filteredConversationStats?.per_day}
                           isLoading={filteredStatsLoading}
                           error={filteredStatsError}
                         />
-                      ) : (
-                        <ConversationsPerDayOfWeekChart
-                          data={filteredConversationStats?.per_weekday}
-                          isLoading={filteredStatsLoading}
-                          error={filteredStatsError}
-                        />
-                      )}
-                    </div>
+                      </div>
+
+                      {/* Combined Hour/Weekday Chart */}
+                      <div className="rounded-xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-200">
+                        <div className="mb-4 flex items-center justify-between">
+                          <div>
+                            <Title order={4}>
+                              Aggregated Conversation Breakdown
+                            </Title>
+                            <Text size="sm" mt={1}>
+                              View conversation patterns by hour of day or day
+                              of week
+                            </Text>
+                          </div>
+                          <Select
+                            value={view}
+                            onChange={(value) => setView(value || 'hour')}
+                            data={[
+                              { value: 'hour', label: 'By Hour' },
+                              { value: 'weekday', label: 'By Day of Week' },
+                            ]}
+                            className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                            styles={(theme) => ({
+                              input: {
+                                '&:focus': {
+                                  borderColor: 'var(--dashboard-button)',
+                                },
+                                color: 'var(--foreground)',
+                                backgroundColor: 'var(--background)',
+                                fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+                              },
+                              dropdown: {
+                                backgroundColor: 'var(--background)',
+                                border: '1px solid var(--background-dark)',
+                              },
+                              item: {
+                                color: 'var(--foreground)',
+                                backgroundColor: 'var(--background)',
+                                borderRadius: theme.radius.md,
+                                margin: '2px',
+                                '&[data-selected]': {
+                                  '&': {
+                                    color: 'var(--foreground)',
+                                    backgroundColor: 'transparent',
+                                  },
+                                  '&:hover': {
+                                    color: 'var(--foreground)',
+                                    backgroundColor: 'var(--foreground-faded)',
+                                  },
+                                },
+                                '&[data-hovered]': {
+                                  color: 'var(--foreground)',
+                                  backgroundColor: 'var(--foreground-faded)',
+                                },
+                              },
+                            })}
+                            size="xs"
+                            w={150}
+                          />
+                        </div>
+                        {view === 'hour' ? (
+                          <ConversationsPerHourChart
+                            data={filteredConversationStats?.per_hour}
+                            isLoading={filteredStatsLoading}
+                            error={filteredStatsError}
+                          />
+                        ) : (
+                          <ConversationsPerDayOfWeekChart
+                            data={filteredConversationStats?.per_weekday}
+                            isLoading={filteredStatsLoading}
+                            error={filteredStatsError}
+                          />
+                        )}
+                      </div>
 
                     {/* Heatmap Chart */}
-                    <div className="rounded-xl bg-[#1a1b30] p-6 shadow-lg shadow-purple-900/20">
+                    <div className="rounded-xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-200">
                       <Title
                         order={4}
                         mb="md"
                         align="left"
-                        className="text-white"
                       >
                         Conversations Per Day and Hour
                       </Title>
-                      <Text size="sm" color="dimmed" mb="xl">
+                      <Text size="sm" mb="xl">
                         A heatmap showing conversation density across both days
                         and hours
                       </Text>
@@ -1097,26 +1154,24 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
           </Flex>
         </div>
 
-        {/*<NomicDocumentMap course_name={course_name as string} />*/}
+        <NomicDocumentMap course_name={course_name as string} />
         <GlobalFooter />
       </main>
+
+      </SettingsLayout>
     </>
   )
 }
 
-import {
-  IconCheck,
-  IconCloudDownload,
-} from '@tabler/icons-react'
+import { IconCheck, IconCloudDownload } from '@tabler/icons-react'
 
-import { CannotEditCourse } from './CannotEditCourse'
-import { type CourseMetadata } from '~/types/courseMetadata'
 import { notifications } from '@mantine/notifications'
+import { type CourseMetadata } from '~/types/courseMetadata'
+import { CannotEditCourse } from './CannotEditCourse'
 import GlobalFooter from './GlobalFooter'
-import Navbar from './navbars/Navbar'
+
 import Link from 'next/link'
 import NomicDocumentMap from './NomicDocumentsMap'
-
 
 async function fetchCourseMetadata(course_name: string) {
   try {
@@ -1171,23 +1226,22 @@ const showToastOnFileDeleted = (theme: MantineTheme, was_error = false) => {
       // className: 'my-notification-class',
       styles: {
         root: {
-          backgroundColor: was_error
-            ? theme.colors.errorBackground
-            : theme.colors.nearlyWhite,
+          backgroundColor: was_error ? 'var(--error)' : 'var(--notification)',
           borderColor: was_error
-            ? theme.colors.errorBorder
-            : theme.colors.aiPurple,
+            ? 'var(--error)'
+            : 'var(--notification-border)',
         },
         title: {
-          color: theme.colors.nearlyBlack,
+          color: 'var(--notification-title)',
         },
         description: {
-          color: theme.colors.nearlyBlack,
+          color: 'var(--notification-message)',
         },
         closeButton: {
-          color: theme.colors.nearlyBlack,
+          color: 'var(--text-foreground-faded)',
           '&:hover': {
-            backgroundColor: theme.colors.dark[1],
+            color: 'var(--text-foreground)',
+            backgroundColor: 'var(--text-background-faded)',
           },
         },
       },
@@ -1225,7 +1279,10 @@ export const showToastOnUpdate = (
           }
           target="_blank"
           rel="noopener noreferrer"
-          style={{ textDecoration: 'underline', color: 'lightpurple' }}
+          style={{
+            textDecoration: 'underline',
+            color: 'var(--dashboard-button)',
+          }}
         >
           our docs
         </Link>{' '}

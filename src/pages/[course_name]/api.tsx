@@ -1,17 +1,19 @@
 // src/pages/[course_name]/api.tsx
-import { NextPage } from 'next'
+import { Flex } from '@mantine/core'
+import { type NextPage } from 'next'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
-import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
-import { LoadingPlaceholderForAdminPages } from '~/components/UIUC-Components/MainPageBackground'
+import SettingsLayout, {
+  getInitialCollapsedState,
+} from '~/components/Layout/SettingsLayout'
 import ApiKeyManagement from '~/components/UIUC-Components/ApiKeyManagament'
-import { CourseMetadata } from '~/types/courseMetadata'
-import { fetchCourseMetadata } from '~/utils/apiUtils'
-import { Flex } from '@mantine/core'
-import Navbar from '~/components/UIUC-Components/navbars/Navbar'
-import { initiateSignIn } from '~/utils/authHelpers'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
+import { LoadingPlaceholderForAdminPages } from '~/components/UIUC-Components/MainPageBackground'
+import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
+import { type CourseMetadata } from '~/types/courseMetadata'
+import { fetchCourseMetadata } from '~/utils/apiUtils'
+import { initiateSignIn } from '~/utils/authHelpers'
 
 const ApiPage: NextPage = () => {
   const router = useRouter()
@@ -21,7 +23,9 @@ const ApiPage: NextPage = () => {
   )
   const [isLoading, setIsLoading] = useState(true)
   const [courseName, setCourseName] = useState<string | null>(null)
-
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    getInitialCollapsedState(),
+  )
   const getCurrentPageName = () => {
     return router.query.course_name as string
   }
@@ -80,26 +84,30 @@ const ApiPage: NextPage = () => {
   }
 
   if (!auth.user || !auth.isAuthenticated) {
-    void router.push(`/new?course_name=${courseName}`);
+    void router.push(`/new?course_name=${courseName}`)
     void initiateSignIn(auth, router.asPath)
     return null
   }
 
   return (
-    <>
-      <Navbar course_name={router.query.course_name as string} />
+    <SettingsLayout
+      course_name={router.query.course_name as string}
+      sidebarCollapsed={sidebarCollapsed}
+      setSidebarCollapsed={setSidebarCollapsed}
+    >
       <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
         <div className="items-left flex w-full flex-col justify-center py-0">
           <Flex direction="column" align="center" w="100%">
             <ApiKeyManagement
               course_name={router.query.course_name as string}
               auth={auth}
+              sidebarCollapsed={sidebarCollapsed}
             />
           </Flex>
         </div>
         <GlobalFooter />
       </main>
-    </>
+    </SettingsLayout>
   )
 }
 

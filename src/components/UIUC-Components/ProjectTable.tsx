@@ -17,16 +17,14 @@ import {
 
 const StyledRow = styled.tr`
   &:hover {
-    background-color: rgba(255, 95, 5, 0.6);
+    color: var(--foreground);
+    background-color: var(--background-faded);
   }
-  color: #c1c2c5;
 `
 
 const StyledTable = styled(Table)`
   table-layout: fixed;
   width: 100%;
-  background-color: white;
-  color: var(--illinois-blue);
 
   th,
   td {
@@ -34,14 +32,24 @@ const StyledTable = styled(Table)`
     overflow-wrap: break-word;
     hyphens: auto;
     padding: 8px;
+
+    color: var(--foreground) !important;
+  }
+
+  thead th {
+    border-bottom-color: var(--table-border) !important;
+  }
+
+  tbody td {
+    border-top-color: var(--table-border) !important;
   }
 `
 
 const ResponsiveTableWrapper = styled.div`
   overflow-x: auto;
   width: 100%;
-  background-color: white;
-  box-shadow: 0px 0px 10px 2px rgba(0, 0, 0, 0.1);
+  color: var(--foreground);
+  background-color: var(--background);
   border-radius: 15px;
   padding: 0;
 
@@ -236,7 +244,7 @@ const ListProjectTable: React.FC = () => {
         <>
           {/* Todo: add enticing copy for new recruits */}
           {/* <Title order={3}>
-            <Link className="text-purple-500 underline" href="/new">Make your own project here</Link>
+            <Link className="text-[--dashboard-button] underline" href="/new">Make your own project here</Link>
           </Title> */}
         </>
       )
@@ -244,37 +252,13 @@ const ListProjectTable: React.FC = () => {
 
     return (
       <>
-        <div className="mx-auto w-full max-w-[950px] md:w-11/12 lg:w-5/6">
-          <Title
-            order={2}
-            ta="center"
-            className={`
-              text-2xl font-bold sm:pt-2 
-              ${montserrat_heading.variable} font-montserratHeading
-            `}
-            style={{ color: 'var(--illinois-blue)' }}
-          >
-            Your Chatbots
-          </Title>
+        <div className="mx-auto px-8 py-6">
           {rows.length > 0 ? (
             <>
-              <p
-                className={`
-                text-md pb-8 pt-2
-                ${montserrat_paragraph.variable} font-montserratParagraph
-              `}
-                style={{ color: 'var(--illinois-blue)' }}
-              >
-                These are projects you&apos;ve created, or where you are an
-                admin.
-              </p>
               <div
                 style={{
                   overflowX: 'auto',
                   width: '100%',
-                  backgroundColor: 'white',
-                  boxShadow: '0px 0px 10px 2px rgba(0, 0, 0, 0.1)',
-                  borderRadius: '15px',
                 }}
               >
                 <StyledTable>
@@ -295,12 +279,12 @@ const ListProjectTable: React.FC = () => {
                             style={{
                               display: 'flex',
                               alignItems: 'center',
-                              justifyContent: 'center',
+                              justifyContent: 'flex-start',
                               gap: '4px',
                             }}
                           >
                             <span
-                              className={`text-md text-[var(--illinois-blue)] ${montserrat_heading.variable} font-montserratHeading`}
+                              className={`text-md ${montserrat_heading.variable} font-montserratHeading`}
                             >
                               {label}
                             </span>
