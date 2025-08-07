@@ -946,7 +946,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           w={200}
                           value={dateRange}
                           onChange={setDateRange}
-                          placeholder="Pick date range"
+                          // TODO fix me type error complaining placeholder doesn't exist for mantine/date v6
+                          // placeholder="Pick date range"
                           className="date_picker"
                           styles={(theme: MantineTheme) => ({
                             icon: {
