@@ -3,9 +3,8 @@ import {
   preferredModelIds,
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
-import { decryptKeyIfNeeded } from '../crypto'
 import { OPENAI_API_VERSION } from '../app/const'
-import { ChatBody } from '~/types/chat'
+import { decryptKeyIfNeeded } from '../crypto'
 
 // OMG azure sucks
 // the azureDeploymentID is require to make requests. Grab it from the /deployments list in getAzureModels()
@@ -37,6 +36,7 @@ export enum AzureModelID {
   GPT_5 = 'gpt-5',
   GPT_5_mini = 'gpt-5-mini',
   GPT_5_nano = 'gpt-5-nano',
+  GPT_5_thinking = 'gpt-5-thinking',
 }
 
 export enum AzureDeploymentModelName {
@@ -54,6 +54,7 @@ export enum AzureDeploymentModelName {
   GPT_5 = 'gpt-5',
   GPT_5_mini = 'gpt-5-mini',
   GPT_5_nano = 'gpt-5-nano',
+  GPT_5_thinking = 'gpt-5-thinking',
 }
 
 export const AzureModels: Record<AzureModelID, AzureModel> = {
@@ -131,21 +132,28 @@ export const AzureModels: Record<AzureModelID, AzureModel> = {
     id: AzureModelID.GPT_5,
     name: 'GPT-5',
     azureDeploymentModelName: AzureDeploymentModelName.GPT_5,
-    tokenLimit: 200000,
+    tokenLimit: 400000,
     enabled: true,
   },
   [AzureModelID.GPT_5_mini]: {
     id: AzureModelID.GPT_5_mini,
     name: 'GPT-5 Mini',
     azureDeploymentModelName: AzureDeploymentModelName.GPT_5_mini,
-    tokenLimit: 200000,
+    tokenLimit: 400000,
     enabled: true,
   },
   [AzureModelID.GPT_5_nano]: {
     id: AzureModelID.GPT_5_nano,
     name: 'GPT-5 Nano',
     azureDeploymentModelName: AzureDeploymentModelName.GPT_5_nano,
-    tokenLimit: 200000,
+    tokenLimit: 400000,
+    enabled: true,
+  },
+  [AzureModelID.GPT_5_thinking]: {
+    id: AzureModelID.GPT_5_thinking,
+    name: 'GPT-5 Thinking',
+    azureDeploymentModelName: AzureDeploymentModelName.GPT_5_thinking,
+    tokenLimit: 400000,
     enabled: true,
   },
 }
@@ -187,6 +195,21 @@ export const getAzureModels = async (
     }
 
     const responseJson = await response.json()
+
+    // gpt-5-thinking will not be explictly listed in the response, it will just be gpt-5
+    // so we need to add it manually if gpt-5 is in the response
+    const gpt5ThinkingModel = responseJson.data.find(
+      (model: any) => model.model === 'gpt-5',
+    )
+    if (gpt5ThinkingModel) {
+      responseJson.data.push({
+        id: 'gpt-5-thinking',
+        object: 'model',
+        created: 1728288000,
+        owned_by: 'openai',
+      })
+    }
+
     const azureModels: AzureModel[] = responseJson.data.reduce(
       (acc: AzureModel[], model: any) => {
         const predefinedModel = Object.values(AzureModels).find(
@@ -219,8 +242,8 @@ export const getAzureModels = async (
 
     // Sort the azureModels based on the preferredModelIds
     azureModels.sort((a, b) => {
-      const indexA = preferredModelIds.indexOf(a.id as any)
-      const indexB = preferredModelIds.indexOf(b.id as any)
+      const indexA = preferredModelIds.indexOf(a.id as AzureModelID)
+      const indexB = preferredModelIds.indexOf(b.id as AzureModelID)
       return (
         (indexA === -1 ? Infinity : indexA) -
         (indexB === -1 ? Infinity : indexB)

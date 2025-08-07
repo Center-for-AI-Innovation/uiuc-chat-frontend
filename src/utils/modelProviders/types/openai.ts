@@ -35,12 +35,20 @@ export enum OpenAIModelID {
   GPT_5 = 'gpt-5',
   GPT_5_mini = 'gpt-5-mini',
   GPT_5_nano = 'gpt-5-nano',
+  GPT_5_thinking = 'gpt-5-thinking',
 }
 
 export const ModelIDsThatUseDeveloperMessage: readonly OpenAIModelID[] = [
   OpenAIModelID.o3_mini,
   OpenAIModelID.o3,
   OpenAIModelID.o4_mini,
+] as const
+
+export const GPT5Models: readonly OpenAIModelID[] = [
+  OpenAIModelID.GPT_5,
+  OpenAIModelID.GPT_5_mini,
+  OpenAIModelID.GPT_5_nano,
+  OpenAIModelID.GPT_5_thinking,
 ] as const
 
 export const OpenAIModels: Record<OpenAIModelID, OpenAIModel> = {
@@ -115,19 +123,25 @@ export const OpenAIModels: Record<OpenAIModelID, OpenAIModel> = {
   [OpenAIModelID.GPT_5]: {
     id: OpenAIModelID.GPT_5,
     name: 'GPT-5',
-    tokenLimit: 200000,
+    tokenLimit: 400000,
     enabled: true,
   },
   [OpenAIModelID.GPT_5_mini]: {
     id: OpenAIModelID.GPT_5_mini,
     name: 'GPT-5 Mini',
-    tokenLimit: 200000,
+    tokenLimit: 400000,
     enabled: true,
   },
   [OpenAIModelID.GPT_5_nano]: {
     id: OpenAIModelID.GPT_5_nano,
     name: 'GPT-5 Nano',
-    tokenLimit: 200000,
+    tokenLimit: 400000,
+    enabled: true,
+  },
+  [OpenAIModelID.GPT_5_thinking]: {
+    id: OpenAIModelID.GPT_5_thinking,
+    name: 'GPT-5 Thinking',
+    tokenLimit: 400000,
     enabled: true,
   },
 }
