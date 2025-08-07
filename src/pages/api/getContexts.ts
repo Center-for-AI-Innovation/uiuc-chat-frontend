@@ -12,8 +12,6 @@ export const fetchContextsFromBackend = async (
 ): Promise<ContextWithMetadata[]> => {
   const backendUrl = getBackendUrl()
 
-  // const backendUrl = 'http://localhost:8000'
-
   const requestBody = {
     course_name: course_name,
     search_query: search_query,
