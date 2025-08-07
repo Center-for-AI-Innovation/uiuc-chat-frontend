@@ -339,7 +339,7 @@ export const Chat = memo(
           }
         }
 
-        const searchQuery = Array.isArray(message.content)
+        let searchQuery = Array.isArray(message.content)
           ? message.content.map((content) => content.text).join(' ')
           : message.content
 
@@ -410,9 +410,12 @@ export const Chat = memo(
             // Update the name of the conversation if it's the first message
             if (updatedConversation.messages?.length === 1) {
               const { content } = message
-              // Use only texts instead of content itself
+              // Use only text content, exclude file content
               const contentText = Array.isArray(content)
-                ? content.map((content) => content.text).join(' ')
+                ? content
+                    .filter((content) => content.type === 'text')
+                    .map((content) => content.text)
+                    .join(' ')
                 : content
 
               // This is where we can customize the name of the conversation
@@ -437,41 +440,42 @@ export const Chat = memo(
           homeDispatch({ field: 'messageIsStreaming', value: true })
           const controller = new AbortController()
 
-          // let imgDesc = '' // Commented out image upload functionality
-          // let imageUrls: string[] = [] // Commented out image upload functionality
+          let imgDesc = ''
+          let imageUrls: string[] = []
 
           // Action 1: Image to Text Conversion
-          // if (Array.isArray(message.content)) { // Commented out image upload functionality
-          //   const imageContent = (message.content as Content[]).filter( // Commented out image upload functionality
-          //     (content) => content.type === 'image_url', // Commented out image upload functionality
-          //   ) // Commented out image upload functionality
+          if (Array.isArray(message.content)) {
+            const imageContent = (message.content as Content[]).filter(
+              (content) => content.type === 'image_url',
+            )
 
-          //   if (imageContent.length > 0) { // Commented out image upload functionality
-          //     homeDispatch({ field: 'isImg2TextLoading', value: true }) // Commented out image upload functionality
-          //     try { // Commented out image upload functionality
-          //       const { searchQuery: newSearchQuery, imgDesc: newImgDesc } = // Commented out image upload functionality
-          //         await handleImageContent( // Commented out image upload functionality
-          //           message, // Commented out image upload functionality
-          //           courseName, // Commented out image upload functionality
-          //           updatedConversation, // Commented out image upload functionality
-          //           searchQuery, // Commented out image upload functionality
-          //           llmProviders, // Commented out image upload functionality
-          //           controller, // Commented out image upload functionality
-          //         ) // Commented out image upload functionality
-          //     searchQuery = newSearchQuery // Commented out image upload functionality
-          //     imgDesc = newImgDesc // Commented out image upload functionality
-          //     imageUrls = imageContent.map( // Commented out image upload functionality
-          //       (content) => content.image_url?.url as string, // Commented out image upload functionality
-          //     ) // Commented out image upload functionality
-          //   } catch (error) { // Commented out image upload functionality
-          //     console.error( // Commented out image upload functionality
-          //       'Error in chat.tsx running handleImageContent():', // Commented out image upload functionality
-          //       error, // Commented out image upload functionality
-          //     ) // Commented out image upload functionality
-          //   } finally { // Commented out image upload functionality
-          //     homeDispatch({ field: 'isImg2TextLoading', value: false }) // Commented out image upload functionality
-          //   } // Commented out image upload functionality
-          // } // Commented out image upload functionality
+            if (imageContent.length > 0) {
+              homeDispatch({ field: 'isImg2TextLoading', value: true })
+              try {
+                const { searchQuery: newSearchQuery, imgDesc: newImgDesc } =
+                  await handleImageContent(
+                    message,
+                    courseName,
+                    updatedConversation,
+                    searchQuery,
+                    llmProviders,
+                    controller,
+                  )
+                searchQuery = newSearchQuery
+                imgDesc = newImgDesc
+                imageUrls = imageContent.map(
+                  (content) => content.image_url?.url as string,
+                )
+              } catch (error) {
+                console.error(
+                  'Error in chat.tsx running handleImageContent():',
+                  error,
+                )
+              } finally {
+                homeDispatch({ field: 'isImg2TextLoading', value: false })
+              }
+            }
+          }
 
           const hasConversationFiles = (
             conversation: Conversation | undefined,
@@ -859,6 +863,8 @@ export const Chat = memo(
               const uiucToolsToRun = await handleFunctionCall(
                 message,
                 tools,
+                imageUrls,
+                imgDesc,
                 updatedConversation,
                 getOpenAIKey(llmProviders, courseMetadata, apiKey),
               )

@@ -14,8 +14,8 @@ import { getBackendUrl } from '~/utils/apiUtils'
 export async function handleFunctionCall(
   message: Message,
   availableTools: UIUCTool[],
-  // imageUrls: string[], // Commented out image upload functionality
-  // imageDescription: string, // Commented out image upload functionality
+  imageUrls: string[],
+  imageDescription: string,
   selectedConversation: Conversation,
   openaiKey: string,
   base_url?: string,
@@ -35,8 +35,8 @@ export async function handleFunctionCall(
       body: JSON.stringify({
         conversation: selectedConversation,
         tools: openAITools,
-        // imageUrls: imageUrls, // Commented out image upload functionality
-        // imageDescription: imageDescription, // Commented out image upload functionality
+        imageUrls: imageUrls,
+        imageDescription: imageDescription,
         openaiKey: openaiKey,
       }),
     })
@@ -192,8 +192,8 @@ export async function handleToolCall(
 export async function handleToolsServer(
   message: Message,
   availableTools: UIUCTool[],
-  // imageUrls: string[], // Commented out image upload functionality
-  // imageDescription: string, // Commented out image upload functionality
+  imageUrls: string[],
+  imageDescription: string,
   selectedConversation: Conversation,
   openaiKey: string,
   projectName: string,
@@ -203,6 +203,8 @@ export async function handleToolsServer(
     const uiucToolsToRun = await handleFunctionCall(
       message,
       availableTools,
+      imageUrls,
+      imageDescription,
       selectedConversation,
       openaiKey,
       base_url,
