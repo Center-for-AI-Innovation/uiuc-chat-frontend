@@ -31,6 +31,10 @@ export enum OpenAIModelID {
   GPT_4_1 = 'gpt-4.1', // rolling model
   GPT_4_1_mini = 'gpt-4.1-mini', // rolling model
   GPT_4_1_nano = 'gpt-4.1-nano', // rolling model
+  // New GPT-5 family
+  GPT_5 = 'gpt-5',
+  GPT_5_mini = 'gpt-5-mini',
+  GPT_5_nano = 'gpt-5-nano',
 }
 
 export const ModelIDsThatUseDeveloperMessage: readonly OpenAIModelID[] = [
@@ -106,6 +110,24 @@ export const OpenAIModels: Record<OpenAIModelID, OpenAIModel> = {
     id: OpenAIModelID.GPT_4_1_nano,
     name: 'GPT-4.1 Nano',
     tokenLimit: 1047576,
+    enabled: true,
+  },
+  [OpenAIModelID.GPT_5]: {
+    id: OpenAIModelID.GPT_5,
+    name: 'GPT-5',
+    tokenLimit: 200000,
+    enabled: true,
+  },
+  [OpenAIModelID.GPT_5_mini]: {
+    id: OpenAIModelID.GPT_5_mini,
+    name: 'GPT-5 Mini',
+    tokenLimit: 200000,
+    enabled: true,
+  },
+  [OpenAIModelID.GPT_5_nano]: {
+    id: OpenAIModelID.GPT_5_nano,
+    name: 'GPT-5 Nano',
+    tokenLimit: 200000,
     enabled: true,
   },
 }

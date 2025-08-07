@@ -95,6 +95,10 @@ export const VisionCapableModels: Set<
   OpenAIModelID.GPT_4_1,
   OpenAIModelID.GPT_4_1_mini,
   OpenAIModelID.GPT_4_1_nano,
+  // Include GPT-5 family
+  OpenAIModelID.GPT_5,
+  OpenAIModelID.GPT_5_mini,
+  OpenAIModelID.GPT_5_nano,
 
   AzureModelID.o3,
   AzureModelID.o4_mini,
@@ -104,6 +108,10 @@ export const VisionCapableModels: Set<
   AzureModelID.GPT_4_1,
   AzureModelID.GPT_4_1_mini,
   AzureModelID.GPT_4_1_nano,
+  // GPT-5 family for Azure
+  AzureModelID.GPT_5,
+  AzureModelID.GPT_5_mini,
+  AzureModelID.GPT_5_nano,
 
   // claude-3.5....
   AnthropicModelID.Claude_3_7_Sonnet,
@@ -149,6 +157,10 @@ export const ReasoningCapableModels: Set<
   OpenAIModelID.o3_mini,
   OpenAIModelID.o4_mini,
   OpenAIModelID.GPT_4_1,
+  // Add GPT-5 family
+  OpenAIModelID.GPT_5,
+  OpenAIModelID.GPT_5_mini,
+  OpenAIModelID.GPT_5_nano,
   OllamaModelIDs.DEEPSEEK_R1_14b_qwen_fp16,
   // Add other reasoning-capable models as they become available
 ])
@@ -285,6 +297,10 @@ export type AllLLMProviders = {
 export const preferredModelIds = [
   OpenAIModelID.GPT_4_1,
   OpenAIModelID.GPT_4_1_mini,
+  // Prefer GPT-5 family next when available
+  OpenAIModelID.GPT_5,
+  OpenAIModelID.GPT_5_mini,
+  OpenAIModelID.GPT_5_nano,
   OpenAIModelID.o3,
   OpenAIModelID.o4_mini,
   AnthropicModelID.Claude_3_5_Sonnet,
