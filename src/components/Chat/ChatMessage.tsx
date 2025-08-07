@@ -36,6 +36,7 @@ import {
   type Content,
   type ContextWithMetadata,
   type Message,
+  type MessageType,
 } from '@/types/chat'
 import { useTranslation } from 'next-i18next'
 import HomeContext from '~/pages/api/home/home.context'
@@ -209,11 +210,10 @@ const FilePreviewModal: React.FC<{
   const [actualFileUrl, setActualFileUrl] = useState<string>('')
   const [textContent, setTextContent] = useState<string>('')
 
-  const isImage =
-    fileType?.includes('image') ||
-    fileName.toLowerCase().match(/\.(jpg|jpeg|png)$/i)
+  // Handle PDFs and Office documents that can be displayed in iframes
   const isPdf =
-    fileType?.includes('pdf') || fileName.toLowerCase().endsWith('.pdf')
+    fileType?.includes('pdf') || 
+    fileName.toLowerCase().match(/\.(pdf|doc|docx|xls|xlsx|ppt|pptx)$/i)
   const isTextFile =
     fileType?.includes('text') ||
     fileName.toLowerCase().match(/\.(txt|md|html|xml|csv|py|srt|vtt)$/i)
@@ -242,7 +242,7 @@ const FilePreviewModal: React.FC<{
 
   // Auto-download non-previewable files when modal opens
   useEffect(() => {
-    if (actualFileUrl && isOpen && !isImage && !isPdf && !isTextFile) {
+    if (actualFileUrl && isOpen && !isPdf && !isTextFile) {
       const link = document.createElement('a')
       link.href = actualFileUrl
       link.download = fileName
@@ -251,10 +251,10 @@ const FilePreviewModal: React.FC<{
       document.body.removeChild(link)
       onClose() // Close modal after triggering download
     }
-  }, [actualFileUrl, isOpen, isImage, isPdf, isTextFile, fileName, onClose])
+  }, [actualFileUrl, isOpen, isPdf, isTextFile, fileName, onClose])
 
   // Don't render modal for non-previewable files
-  if (isOpen && !isImage && !isPdf && !isTextFile) {
+  if (isOpen && !isPdf && !isTextFile) {
     return null
   }
 
@@ -274,24 +274,11 @@ const FilePreviewModal: React.FC<{
         </Modal.Header>
         <Modal.Body className="modal-body-common">
           <div className="file-preview-container">
-            {isImage && actualFileUrl ? (
-              <img
-                src={actualFileUrl}
-                alt={fileName}
-                className="file-preview-image"
-                onLoad={() => setActualFileUrl(actualFileUrl)}
-                onError={() => {
-                  setActualFileUrl('')
-                }}
-              />
-            ) : isPdf && actualFileUrl ? (
+            {isPdf && actualFileUrl ? (
               <iframe
                 src={actualFileUrl}
                 className="file-preview-iframe"
-                onLoad={() => setActualFileUrl(actualFileUrl)}
-                onError={() => {
-                  setActualFileUrl('')
-                }}
+                title={fileName}
               />
             ) : isTextFile && actualFileUrl ? (
               <div className="file-preview-text">
@@ -369,7 +356,7 @@ export interface Props {
   ) => void
   context?: ContextWithMetadata[]
   contentRenderer?: (message: Message) => JSX.Element
-  // onImageUrlsUpdate?: (message: Message, messageIndex: number) => void // Commented out image upload functionality
+      onImageUrlsUpdate?: (message: Message, messageIndex: number) => void
   courseName: string
 }
 
@@ -445,7 +432,7 @@ export const ChatMessage = memo(
     onEdit,
     onRegenerate,
     onFeedback,
-    // onImageUrlsUpdate, // Commented out image upload functionality
+    onImageUrlsUpdate,
     courseName,
   }: Props) => {
     const { t } = useTranslation('chat')
@@ -472,13 +459,7 @@ export const ChatMessage = memo(
     const [localContent, setLocalContent] = useState<string | Content[]>(
       message.content,
     )
-    // Store original file content during edit mode
-    const [originalFileContent, setOriginalFileContent] = useState<{
-      fileName: string
-      fileUrl?: string
-      fileType?: string
-    } | null>(null)
-    // const [imageUrls, setImageUrls] = useState<Set<string>>(new Set()) // Commented out image upload functionality
+    const [imageUrls, setImageUrls] = useState<Set<string>>(new Set())
 
     const [isRightSideVisible, setIsRightSideVisible] = useState(false)
     const [sourceThumbnails, setSourceThumbnails] = useState<string[]>([])
@@ -584,21 +565,17 @@ export const ChatMessage = memo(
               if (content.type === 'image_url' && content.image_url) {
                 isValid = await checkIfUrlIsValid(content.image_url.url)
                 if (isValid) {
-                  // setImageUrls( // Commented out image upload functionality
-                  //   (prevUrls) => // Commented out image upload functionality
-                  //     new Set([...prevUrls, content.image_url?.url as string]), // Commented out image upload functionality
-                  // ) // Commented out image upload functionality
+                  setImageUrls(
+                    (prevUrls) =>
+                      new Set([...prevUrls, content.image_url?.url as string]),
+                  )
                   return content
                 } else {
                   const path = extractPathFromUrl(content.image_url.url)
-                  console.log(
-                    'Image url was invalid, fetching presigned url for: ',
-                    path,
-                  )
                   const presignedUrl = await getPresignedUrl(path, courseName)
-                  // setImageUrls( // Commented out image upload functionality
-                  //   (prevUrls) => new Set([...prevUrls, presignedUrl]), // Commented out image upload functionality
-                  // ) // Commented out image upload functionality
+                  setImageUrls(
+                    (prevUrls) => new Set([...prevUrls, presignedUrl]),
+                  )
                   return { ...content, image_url: { url: presignedUrl } }
                 }
               }
@@ -610,12 +587,6 @@ export const ChatMessage = memo(
             // onImageUrlsUpdate && // Commented out image upload functionality
             !deepEqual(updatedContent, message.content)
           ) {
-            console.log(
-              'Updated content: ',
-              updatedContent,
-              'Previous content: ',
-              message.content,
-            )
             // onImageUrlsUpdate( // Commented out image upload functionality
             //   { ...message, content: updatedContent }, // Commented out image upload functionality
             //   messageIndex, // Commented out image upload functionality
@@ -623,7 +594,8 @@ export const ChatMessage = memo(
           }
         }
       }
-      if (message.role === 'user') {
+      // Call fetchUrl for all messages that contain images
+      if (Array.isArray(message.content) && message.content.some(content => content.type === 'image_url')) {
         fetchUrl()
       }
     }, [message.content, messageIndex, isRunningTool])
@@ -636,27 +608,10 @@ export const ChatMessage = memo(
             .filter((content) => content.type === 'text')
             .map((content) => content.text)
             .join(' ')
-          
-          // Check if this message contains a file upload
-          const fileContent = parseFileContent(textContent)
-          if (fileContent) {
-            // Store the file content for later reconstruction
-            setOriginalFileContent(fileContent)
-            // Extract only the user's message text (remove file reference)
-            const fileUploadText = `📎 Uploaded file: ${fileContent.fileName}|${fileContent.fileUrl}|${fileContent.fileType}`
-            const userMessageText = textContent.replace(fileUploadText, '').trim()
-            setMessageContent(userMessageText)
-          } else {
-            setOriginalFileContent(null)
-            setMessageContent(textContent)
-          }
+          setMessageContent(textContent)
         } else {
-          setOriginalFileContent(null)
           setMessageContent(message.content as string)
         }
-      } else {
-        // When exiting edit mode, clear the stored file content
-        setOriginalFileContent(null)
       }
       setIsEditing(!isEditing)
       // Focus the textarea after the state update and component re-render
@@ -682,42 +637,36 @@ export const ChatMessage = memo(
 
     const handleEditMessage = () => {
       const trimmedContent = messageContent.trim()
-      
-      // Reconstruct the full message content
-      let finalContent: string | Content[]
-      
-      // If there was an original file, add it back to the message
-      if (originalFileContent) {
-        const fileUploadText = `📎 Uploaded file: ${originalFileContent.fileName}|${originalFileContent.fileUrl}|${originalFileContent.fileType}`
-        const fullText = trimmedContent ? `${trimmedContent} ${fileUploadText}` : fileUploadText
+      if (trimmedContent.length === 0) return
+
+      if (selectedConversation && onEdit) {
+        let editedContent: string | Content[]
         
-        // Maintain array structure for proper rendering
-        finalContent = [{ type: 'text' as const, text: fullText }]
-      } else {
-        // No file, just text content
-        finalContent = trimmedContent
-      }
-      
-      if (finalContent.length === 0) return
-
-      if (message.content !== finalContent) {
-        if (selectedConversation && onEdit) {
-          const editedMessage = { ...message, content: finalContent }
-          onEdit(editedMessage)
-
-          // Save to server
-          const updatedConversation = {
-            ...selectedConversation,
-            messages: selectedConversation.messages.map((msg) =>
-              msg.id === message.id ? editedMessage : msg,
-            ),
-          }
-          saveConversationToServer(updatedConversation).catch(
-            (error: Error) => {
-              console.error('Error saving edited message to server:', error)
-            },
-          )
+        if (Array.isArray(message.content)) {
+          // Preserve file and image content, only update text content
+          const nonTextContent = message.content.filter(content => content.type !== 'text')
+          const newTextContent = trimmedContent ? [{ type: 'text' as MessageType, text: trimmedContent }] : []
+          editedContent = [...newTextContent, ...nonTextContent]
+        } else {
+          // If it's a simple string message, just use the edited text
+          editedContent = trimmedContent
         }
+
+        const editedMessage = { ...message, content: editedContent }
+        onEdit(editedMessage)
+
+        // Save to server
+        const updatedConversation = {
+          ...selectedConversation,
+          messages: selectedConversation.messages.map((msg) =>
+            msg.id === message.id ? editedMessage : msg,
+          ),
+        }
+        saveConversationToServer(updatedConversation).catch(
+          (error: Error) => {
+            console.error('Error saving edited message to server:', error)
+          },
+        )
       }
       setIsEditing(false)
     }
@@ -726,8 +675,7 @@ export const ChatMessage = memo(
       if (e.key === 'Enter' && !isTyping && !e.shiftKey) {
         e.preventDefault()
         const trimmedContent = messageContent.trim()
-        // Allow saving even if only file content exists (no user text)
-        if (trimmedContent.length > 0 || originalFileContent) {
+        if (trimmedContent.length > 0) {
           handleEditMessage()
         }
       }
@@ -750,11 +698,11 @@ export const ChatMessage = memo(
       // }
     }, [message.content])
 
-    // useEffect(() => { // Commented out image upload functionality
-    //   // console.log('Resetting image urls because message: ', message, 'selectedConversation: ', selectedConversation) // Commented out image upload functionality
-    //   setImageUrls(new Set()) // Commented out image upload functionality
-    //   // console.log('Set the image urls: ', imageUrls) // Commented out image upload functionality
-    // }, [message]) // Commented out image upload functionality
+    useEffect(() => {
+      // console.log('Resetting image urls because message: ', message, 'selectedConversation: ', selectedConversation)
+      setImageUrls(new Set())
+      // console.log('Set the image urls: ', imageUrls)
+    }, [message])
 
     useEffect(() => {
       if (textareaRef.current) {
@@ -832,12 +780,33 @@ export const ChatMessage = memo(
     }
 
     function extractPathFromUrl(url: string): string {
-      const urlObject = new URL(url)
-      let path = urlObject.pathname
-      if (path.startsWith('/')) {
-        path = path.substring(1)
+      try {
+        // Check if it's already a path (doesn't start with http/https)
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+          // It's already a path, just clean it up
+          let path = url
+          if (path.startsWith('/')) {
+            path = path.substring(1)
+          }
+          return path
+        }
+        
+        // It's a URL, try to parse it
+        const urlObject = new URL(url)
+        let path = urlObject.pathname
+        if (path.startsWith('/')) {
+          path = path.substring(1)
+        }
+        return path
+      } catch (error) {
+        console.error('Failed to extract path from URL:', url, error)
+        // Fallback: try to extract path manually
+        if (url.includes('/')) {
+          const parts = url.split('/')
+          return parts.slice(-1)[0] || url // Return the last part or the original URL
+        }
+        return url
       }
-      return path
     }
 
     useEffect(() => {
@@ -864,7 +833,6 @@ export const ChatMessage = memo(
                     const isValid = await checkIfUrlIsValid(imageUrl)
                     if (!isValid) {
                       // This will only work for internal S3 URLs
-                      console.log('Image URL is expired')
                       const s3_path = extractPathFromUrl(imageUrl)
                       return getPresignedUrl(s3_path, courseName)
                     }
@@ -880,7 +848,6 @@ export const ChatMessage = memo(
                 tool.output.imageUrls.map(async (imageUrl) => {
                   const isValid = await checkIfUrlIsValid(imageUrl)
                   if (!isValid) {
-                    console.log('Image URL is expired')
                     const s3_path = extractPathFromUrl(imageUrl)
                     return getPresignedUrl(s3_path, courseName)
                   }
@@ -1590,26 +1557,6 @@ export const ChatMessage = memo(
                 <div className="flex w-[90%] flex-col">
                   {isEditing ? (
                     <div className="flex w-full flex-col">
-                      {/* Show file card during edit mode if there was an original file */}
-                      {originalFileContent && (
-                        <div className="mb-4">
-                          <div className="flex items-center justify-between rounded-md border border-[--foreground-faded] bg-[--background-faded] p-3">
-                            <FileCard
-                              fileName={originalFileContent.fileName}
-                              fileType={originalFileContent.fileType}
-                              fileUrl={originalFileContent.fileUrl}
-                              onClick={() =>
-                                handleFilePreview(
-                                  originalFileContent.fileName,
-                                  originalFileContent.fileUrl,
-                                  originalFileContent.fileType,
-                                )
-                              }
-                            />                           
-                          </div>
-                        </div>
-                      )}
-                      
                       <textarea
                         ref={textareaRef}
                         className="w-full resize-none whitespace-pre-wrap rounded-md border border-[--foreground-faded] bg-[--background-faded] p-3 focus:border-[--primary] focus:outline-none"
@@ -1618,7 +1565,6 @@ export const ChatMessage = memo(
                         onKeyDown={handlePressEnter}
                         onCompositionStart={() => setIsTyping(true)}
                         onCompositionEnd={() => setIsTyping(false)}
-                        placeholder={originalFileContent ? "Edit your message..." : "Edit message..."}
                         style={{
                           fontFamily: 'inherit',
                           fontSize: 'inherit',
@@ -1640,7 +1586,7 @@ export const ChatMessage = memo(
                         <button
                           className="flex items-center gap-2 rounded-md bg-[--button] px-4 py-2 text-sm font-medium text-[--button-text-color] transition-colors hover:bg-[--button-hover] hover:text-[--button-hover-text-color] disabled:cursor-not-allowed disabled:opacity-50"
                           onClick={handleEditMessage}
-                          disabled={messageContent.trim().length <= 0 && !originalFileContent}
+                          disabled={messageContent.trim().length <= 0}
                         >
                           <IconCheck size={16} />
                           {t('Save & Submit')}
@@ -1662,13 +1608,8 @@ export const ChatMessage = memo(
                                       content.text,
                                     )
                                     if (fileContent) {
-                                      // Extract the user's message text (remove the file upload text)
-                                      const fileUploadText = `📎 Uploaded file: ${fileContent.fileName}|${fileContent.fileUrl}|${fileContent.fileType}`
-                                      const userMessageText = content.text.replace(fileUploadText, '').trim()
-                                      
                                       return (
                                         <div key={index} className="mb-2">
-                                          {/* File card first */}
                                           <FileCard
                                             fileName={fileContent.fileName}
                                             fileType={fileContent.fileType}
@@ -1681,14 +1622,6 @@ export const ChatMessage = memo(
                                               )
                                             }
                                           />
-                                          {/* User's text message below the file card */}
-                                          {userMessageText && (
-                                            <p
-                                              className={`self-start text-lg font-black text-[--chat-user] ${montserrat_heading.variable} font-montserratHeading mt-2`}
-                                            >
-                                              {userMessageText}
-                                            </p>
-                                          )}
                                         </div>
                                       )
                                     }
@@ -1711,28 +1644,54 @@ export const ChatMessage = memo(
                                   }
                                 }
                               })}
+                              {/* File cards for all messages */}
+                              <div className="-m-1 flex w-full flex-wrap justify-start">
+                                {message.content
+                                  .filter((item) => item.type === 'file')
+                                  .map((content, index) => (
+                                    <div key={index} className="mb-2">
+                                      <FileCard
+                                        fileName={content.fileName || 'Unknown file'}
+                                        fileType={content.fileType}
+                                        fileUrl={content.fileUrl}
+                                        onClick={() =>
+                                          handleFilePreview(
+                                            content.fileName || 'Unknown file',
+                                            content.fileUrl,
+                                            content.fileType,
+                                          )
+                                        }
+                                      />
+                                    </div>
+                                  ))}
+                              </div>
+
                               {/* Image previews for all messages */}
                               <div className="-m-1 flex w-full flex-wrap justify-start">
                                 {message.content
                                   .filter((item) => item.type === 'image_url')
-                                  .map((content, index) => (
-                                    <div
-                                      key={index}
-                                      className={classes.imageContainerStyle}
-                                    >
-                                      <div className="overflow-hidden rounded-lg">
-                                        {/* <ImagePreview // Commented out image upload functionality
-                                          src={ // Commented out image upload functionality
-                                            Array.from(imageUrls)[ // Commented out image upload functionality
-                                              index // Commented out image upload functionality
-                                            ] as string // Commented out image upload functionality
-                                          } // Commented out image upload functionality
-                                          alt="Chat message" // Commented out image upload functionality
-                                          className={classes.imageStyle} // Commented out image upload functionality
-                                        /> // Commented out image upload functionality */}
+                                  .map((content, index) => {
+                                    // Try to get the processed URL from imageUrls state first
+                                    const imageUrlsArray = Array.from(imageUrls)
+                                    const processedUrl = imageUrlsArray[index] || content.image_url?.url
+                                    
+
+                                    
+                                    return (
+                                      <div
+                                        key={index}
+                                        className={classes.imageContainerStyle}
+                                      >
+                                        <div className="overflow-hidden rounded-lg">
+                                          <ImagePreview
+                                            src={processedUrl as string}
+                                            alt="Chat message"
+                                            className={classes.imageStyle}
+                                          />
+                                        </div>
                                       </div>
-                                    </div>
-                                  ))}
+                                    )
+                                  })}
                               </div>
 
                               {/* Image description loading state for last message */}

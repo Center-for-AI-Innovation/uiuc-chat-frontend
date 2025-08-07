@@ -61,6 +61,24 @@ const montserrat_med = Montserrat({
   subsets: ['latin'],
 })
 
+// Helper function to create a unique key for file comparison
+const createFileKey = (file: File): string => {
+  return `${file.name}-${file.type}`
+}
+
+// Helper function to remove duplicates from an array of files
+const removeDuplicateFiles = (files: File[]): File[] => {
+  const fileKeys = new Set<string>()
+  return files.filter((file) => {
+    const fileKey = createFileKey(file)
+    if (fileKeys.has(fileKey)) {
+      return false
+    }
+    fileKeys.add(fileKey)
+    return true
+  })
+}
+
 // constant created to check the types of files allowed to be uploaded
 const ALLOWED_FILE_EXTENSIONS = [
   'html',
@@ -88,6 +106,7 @@ const ALLOWED_FILE_EXTENSIONS = [
   'csv',
   'png',
   'jpg',
+  'jpeg',
 ]
 
 type FileUploadStatus = {
@@ -149,33 +168,105 @@ async function fetchFileUploadContexts(
   fileName: string,
 ): Promise<ContextWithMetadata[]> {
   try {
-    const response = await fetch('/api/getContexts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        course_name: courseName,
-        user_id: user_id,
-        search_query: fileName,
-        token_limit: 4000,
-        doc_groups: ['All Documents'],
-        conversation_id: conversationId,
-      }),
-    })
+    console.log('=== FETCHING FILE CONTEXTS DEBUG ===')
+    console.log('Conversation ID:', conversationId)
+    console.log('Course Name:', courseName)
+    console.log('User ID:', user_id)
+    console.log('File Name:', fileName)
+    console.log('=====================================')
 
-    if (!response.ok) {
-      console.error('Failed to fetch file contexts:', response.status)
-    }
-
-    const data = await response.json()
+    // Try multiple approaches to get contexts
+    let allContexts: ContextWithMetadata[] = []
     
-    //Check if data is an array before filtering
-    if (!Array.isArray(data)) {
-      throw new Error('Invalid response format')
+    // Approach 1: Try with conversation ID
+    try {
+      const response1 = await fetch('/api/getContexts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          course_name: courseName,
+          user_id: user_id,
+          search_query: '',
+          token_limit: 4000,
+          doc_groups: ['All Documents'],
+          conversation_id: conversationId,
+        }),
+      })
+      
+      if (response1.ok) {
+        const data1 = await response1.json()
+        if (Array.isArray(data1)) {
+          allContexts = [...allContexts, ...data1]
+        }
+      }
+    } catch (error) {
+      console.log('Approach 1 failed:', error)
     }
+    
+    // Approach 2: Try with filename as search query
+    try {
+      const response2 = await fetch('/api/getContexts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          course_name: courseName,
+          user_id: user_id,
+          search_query: fileName,
+          token_limit: 4000,
+          doc_groups: ['All Documents'],
+          conversation_id: conversationId,
+        }),
+      })
+      
+      if (response2.ok) {
+        const data2 = await response2.json()
+        if (Array.isArray(data2)) {
+          allContexts = [...allContexts, ...data2]
+        }
+      }
+    } catch (error) {
+      console.log('Approach 2 failed:', error)
+    }
+    
+    // Approach 3: Try without conversation ID (get all contexts for course)
+    try {
+      const response3 = await fetch('/api/getContexts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          course_name: courseName,
+          user_id: user_id,
+          search_query: '',
+          token_limit: 4000,
+          doc_groups: ['All Documents'],
+        }),
+      })
+      
+      if (response3.ok) {
+        const data3 = await response3.json()
+        if (Array.isArray(data3)) {
+          allContexts = [...allContexts, ...data3]
+        }
+      }
+    } catch (error) {
+      console.log('Approach 3 failed:', error)
+    }
+    
+    console.log('All contexts found:', allContexts)
+    
+    // Remove duplicates based on context ID
+    const uniqueContexts = allContexts.filter((context, index, self) => 
+      index === self.findIndex(c => c.id === context.id)
+    )
+    
+    console.log('Unique contexts:', uniqueContexts)
 
-    const filteredContexts = data.filter((context: any) => 
+    const filteredContexts = uniqueContexts.filter((context: any) => 
       context.readable_filename === fileName
     )
+    
+    console.log('Filtered contexts for file:', fileName, filteredContexts)
+    console.log('=== END FETCHING FILE CONTEXTS DEBUG ===')
         
     return filteredContexts
   } catch (error) {
@@ -245,7 +336,6 @@ export const ChatInput = ({
   }
 
   const handleTextClick = () => {
-    console.log('handleTextClick')
     homeDispatch({
       field: 'showModelSettings',
       value: !showModelSettings,
@@ -340,19 +430,46 @@ export const ChatInput = ({
       }
 
       // Create file content for the message (files are already processed)
+      console.log('=== FILE CONTENT CREATION DEBUG ===')
+      console.log('File uploads:', fileUploads)
+      console.log('Completed file uploads:', fileUploads.filter((fu) => fu.status === 'completed'))
+      
       fileContent = fileUploads
         .filter((fu) => fu.status === 'completed')
         .map((fu) => {
-          if (fu.contexts && Array.isArray(fu.contexts)) {
-            allFileContexts.push(...fu.contexts)
-          }
-          return {
-            type: 'text' as MessageType,
-            text: `📎 Uploaded file: ${fu.file.name}|${fu.url}|${fu.file.type}`,
+          console.log('Processing file upload:', fu)
+          const isImageFile = fu.file.type.startsWith('image/') || ['png', 'jpg', 'jpeg'].includes(fu.file.name.split('.').pop()?.toLowerCase() || '')
+          
+          if (isImageFile) {
+            // For image files, create image_url content
+            return {
+              type: 'image_url' as MessageType,
+              image_url: {
+                url: fu.url || '',
+              },
+            }
+          } else {
+            // For non-image files, create file content and add contexts
+            console.log('Non-image file contexts:', fu.contexts)
+            if (fu.contexts && Array.isArray(fu.contexts)) {
+              console.log('Adding contexts to allFileContexts:', fu.contexts)
+              allFileContexts.push(...fu.contexts)
+            }
+            return {
+              type: 'file' as MessageType,
+              fileName: fu.file.name,
+              fileUrl: fu.url,
+              fileType: fu.file.type,
+              fileSize: fu.file.size,
+            }
           }
         })
+      
+      console.log('Final allFileContexts:', allFileContexts)
+      console.log('=== END FILE CONTENT CREATION DEBUG ===')
 
-      setFileUploads([]) // Clear after using
+      // Don't clear fileUploads yet - we need them for the file names in the text
+      // setFileUploads([]) // Clear after using
     }
 
     if (!textContent && fileContent.length === 0) {
@@ -360,10 +477,25 @@ export const ChatInput = ({
       return
     }
 
+    // Add file upload indicator text if there are file contexts
+    let finalTextContent = textContent
+    if (allFileContexts.length > 0) {
+      const fileNames = fileUploads
+        .filter((fu) => fu.status === 'completed' && !fu.file.type.startsWith('image/'))
+        .map((fu) => fu.file.name)
+        .join(', ')
+      
+      if (fileNames) {
+        finalTextContent = textContent 
+          ? `${textContent}\n\n📎 Uploaded file: ${fileNames}`
+          : `📎 Uploaded file: ${fileNames}`
+      }
+    }
+
     // Construct the content array
     const contentArray: Content[] = [
-      ...(textContent
-        ? [{ type: 'text' as MessageType, text: textContent }]
+      ...(finalTextContent
+        ? [{ type: 'text' as MessageType, text: finalTextContent }]
         : []),
       ...fileContent,
     ]
@@ -376,13 +508,20 @@ export const ChatInput = ({
       contexts: allFileContexts.length > 0 ? allFileContexts : undefined,
     }
 
+    console.log('=== MESSAGE SENDING DEBUG ===')
+    console.log('Message content:', contentArray)
+    console.log('File contexts count:', allFileContexts.length)
+    console.log('File contexts:', allFileContexts)
+    console.log('Final message:', messageForChat)
+    console.log('=== END MESSAGE SENDING DEBUG ===')
+
     // Use the onSend prop to send the structured message
     onSend(messageForChat, plugin)
 
     // Reset states
     setContent('')
     setPlugin(null)
-    setFileUploads([])
+    setFileUploads([]) // Clear file uploads after sending message
 
     if (fileUploadRef.current) {
       fileUploadRef.current.value = ''
@@ -585,10 +724,12 @@ export const ChatInput = ({
       }
     }
 
-    // Prevent duplicates by name
-    const existingNames = new Set(fileUploads.map((fu) => fu.file.name))
+    // Prevent duplicates by name and type
+    const existingFiles = new Set(
+      fileUploads.map((fu) => createFileKey(fu.file))
+    )
     const uniqueNewFiles = newFiles.filter(
-      (file) => !existingNames.has(file.name),
+      (file) => !existingFiles.has(createFileKey(file)),
     )
 
     if (uniqueNewFiles.length === 0) {
@@ -602,8 +743,36 @@ export const ChatInput = ({
       return
     }
 
-    for (const file of uniqueNewFiles) {
-      // For non-image files, just add to fileUploads
+    // Check for duplicates within the new files themselves
+    const finalUniqueFiles = removeDuplicateFiles(uniqueNewFiles)
+
+    if (finalUniqueFiles.length === 0) {
+      notifications.show({
+        title: 'Duplicate Files',
+        message: 'All selected files are duplicates.',
+        color: 'yellow',
+        icon: <IconAlertCircle />,
+        autoClose: 6000,
+      })
+      return
+    }
+
+    if (finalUniqueFiles.length < uniqueNewFiles.length) {
+      const duplicateCount = uniqueNewFiles.length - finalUniqueFiles.length
+      notifications.show({
+        title: 'Duplicate Files Removed',
+        message: `${duplicateCount} duplicate file(s) were removed from the selection.`,
+        color: 'blue',
+        icon: <IconAlertCircle />,
+        autoClose: 4000,
+      })
+    }
+
+    for (const file of finalUniqueFiles) {
+      // Check if file is an image
+      const isImageFile = file.type.startsWith('image/') || ['png', 'jpg', 'jpeg'].includes(file.name.split('.').pop()?.toLowerCase() || '')
+      
+      // Add to fileUploads
       setFileUploads((prev) => [
         ...prev,
         {
@@ -636,41 +805,86 @@ export const ChatInput = ({
           conversation = await createNewConversation(courseName, homeDispatch)
         }
 
-        // Process the file immediately
-        const response = await fetch('/api/UIUC-api/chat-file-upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            conversationId: conversation.id,
-            courseName: courseName,
-            user_id: user_id,
-            s3Key: s3Key,
-            fileName: file.name,
-            fileType: file.type,
-            model: conversation.model?.id,
-          }),
-        })
+        if (isImageFile) {
+          // For image files, generate a presigned URL for display
+          if (s3Key) {
+            const presignedUrl = await fetchPresignedUrl(s3Key, courseName)
+            if (presignedUrl) {
+              setFileUploads((prev) =>
+                prev.map((f) =>
+                  f.file.name === file.name
+                    ? { ...f, status: 'completed', url: presignedUrl }
+                    : f,
+                ),
+              )
+            } else {
+              // Fallback to S3 key if presigned URL generation fails
+              setFileUploads((prev) =>
+                prev.map((f) =>
+                  f.file.name === file.name
+                    ? { ...f, status: 'completed', url: s3Key }
+                    : f,
+                ),
+              )
+            }
+          } else {
+            // Handle case where s3Key is undefined
+            setFileUploads((prev) =>
+              prev.map((f) =>
+                f.file.name === file.name
+                  ? { ...f, status: 'error' }
+                  : f,
+              ),
+            )
+          }
+        } else {
+          // For non-image files, use the regular file processing
+          const response = await fetch('/api/UIUC-api/chat-file-upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              conversationId: conversation.id,
+              courseName: courseName,
+              user_id: user_id,
+              s3Key: s3Key,
+              fileName: file.name,
+              fileType: file.type,
+              model: conversation.model?.id,
+            }),
+          })
 
-        if (!response.ok) {
-          throw new Error('File processing failed')
+          if (!response.ok) {
+            throw new Error('File processing failed')
+          }
+
+          const result = await response.json()
+          console.log('File processing result:', result)
+          
+          // Add a small delay to allow backend processing to complete
+          console.log('Waiting 2 seconds for backend processing...')
+          await new Promise(resolve => setTimeout(resolve, 2000))
+          console.log('Finished waiting, now fetching contexts...')
+          
+          const contexts = await fetchFileUploadContexts(
+            conversation.id,
+            courseName,
+            user_id,
+            file.name,
+          )
+          console.log('=== CONTEXT SETTING DEBUG ===')
+          console.log('File:', file.name)
+          console.log('Contexts fetched:', contexts)
+          console.log('Contexts length:', contexts.length)
+          console.log('=== END CONTEXT SETTING DEBUG ===')
+          
+          setFileUploads((prev) =>
+            prev.map((f) =>
+              f.file.name === file.name
+                ? { ...f, status: 'completed', contexts }
+                : f,
+            ),
+          )
         }
-
-        const result = await response.json()
-        console.log('File processing completed:', result)
-        
-        const contexts = await fetchFileUploadContexts(
-          conversation.id,
-          courseName,
-          user_id,
-          file.name,
-        )
-        setFileUploads((prev) =>
-          prev.map((f) =>
-            f.file.name === file.name
-              ? { ...f, status: 'completed', contexts }
-              : f,
-          ),
-        )
       } catch (error) {
         setFileUploads((prev) =>
           prev.map((f) =>
