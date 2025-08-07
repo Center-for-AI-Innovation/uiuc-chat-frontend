@@ -44,7 +44,10 @@ export const getNCSAHostedModels = async (
     const downloadedModelIds: string[] = Array.isArray(data?.models)
       ? data.models
           .map((m: { model?: string }) => m?.model)
-          .filter((id: unknown): id is string => typeof id === 'string' && id.length > 0)
+          .filter(
+            (id: unknown): id is string =>
+              typeof id === 'string' && id.length > 0,
+          )
       : []
 
     // Only include models that are downloaded AND in our supported Ollama models list

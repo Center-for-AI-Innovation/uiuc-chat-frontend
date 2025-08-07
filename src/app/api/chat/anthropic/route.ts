@@ -2,9 +2,7 @@ import { createAnthropic } from '@ai-sdk/anthropic'
 import { generateText, smoothStream, streamText, type CoreMessage } from 'ai'
 import { type ChatBody, type Conversation } from '~/types/chat'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
-import {
-  type AnthropicModel
-} from '~/utils/modelProviders/types/anthropic'
+import { type AnthropicModel } from '~/utils/modelProviders/types/anthropic'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
