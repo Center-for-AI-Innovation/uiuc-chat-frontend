@@ -205,7 +205,7 @@ export default function ShareSettingsModal({
                     </p>
                   </div>
                 </div>
-                <button
+                {!useIllinoisChatConfig && (<button
                   onClick={handlePrivacyChange}
                   className={`relative h-6 w-11 rounded-full transition-colors duration-300 ${
                     isPrivate
@@ -218,7 +218,8 @@ export default function ShareSettingsModal({
                       isPrivate ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
-                </button>
+                </button>)}
+
               </div>
             </div>
 
