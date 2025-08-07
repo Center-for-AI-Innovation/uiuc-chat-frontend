@@ -1,8 +1,7 @@
 import { type AnthropicProvider, ProviderNames } from '../LLMProvider'
 import {
-  AnthropicModel,
-  AnthropicModelID,
-  AnthropicModels,
+    AnthropicModelID,
+    AnthropicModels
 } from '../types/anthropic'
 
 export const getAnthropicModels = async (
@@ -41,6 +40,13 @@ export const getAnthropicModels = async (
   anthropicProvider.models = anthropicProvider.models || []
 
   const preferredAnthropicModelIds = [
+    // Prefer newest/best first
+    AnthropicModelID.Claude_Sonnet_4,
+    AnthropicModelID.Claude_Sonnet_4_Thinking,
+    AnthropicModelID.Claude_Opus_4_1,
+    AnthropicModelID.Claude_Opus_4_1_Thinking,
+    AnthropicModelID.Claude_Opus_4,
+    AnthropicModelID.Claude_Opus_4_Thinking,
     AnthropicModelID.Claude_3_7_Sonnet,
     AnthropicModelID.Claude_3_7_Sonnet_Thinking,
     AnthropicModelID.Claude_3_5_Sonnet,
