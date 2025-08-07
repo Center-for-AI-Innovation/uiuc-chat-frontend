@@ -162,19 +162,19 @@ const Home: NextPage = () => {
       </Head>
 
       {/* Rebranding announcement header bar */}
-      <div
-        className="relative w-full py-2 text-center"
-        style={{
-          background: 'var(--illinois-orange)',
-          color: 'var(--illinois-white)',
-        }}
-      >
+      {
+        !useIllinoisChatConfig &&
         <div
-          className={`inline-block ${montserrat_heading.variable} font-montserratHeading`}
+          className="relative w-full py-2 text-center"
+          style={{
+            background: 'var(--illinois-orange)',
+            color: 'var(--illinois-white)',
+          }}
         >
-          <div className="relative inline-block cursor-help">
-            {
-              !useIllinoisChatConfig &&
+          <div
+            className={`inline-block ${montserrat_heading.variable} font-montserratHeading`}
+          >
+            <div className="relative inline-block cursor-help">
                 <span
                   className="text-lg font-bold"
                   onMouseEnter={() => setIsTooltipVisible(true)}
@@ -188,30 +188,30 @@ const Home: NextPage = () => {
                     chat.illinois.edu
                   </a>
               </span>
-            }
 
-            <div
-              className={`absolute left-1/2 top-full z-50 mt-2 w-72 -translate-x-1/2 transform rounded p-2 text-sm transition duration-300 ${isTooltipVisible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
-              style={{
-                background: '#333',
-                border: '1px solid #444',
-                boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-              }}
-            >
-              We&apos;re on our way to becoming a production service for all U
-              of I campuses.
               <div
-                className="absolute bottom-full left-1/2 h-0 w-0 -translate-x-1/2 transform"
+                className={`absolute left-1/2 top-full z-50 mt-2 w-72 -translate-x-1/2 transform rounded p-2 text-sm transition duration-300 ${isTooltipVisible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
                 style={{
-                  borderLeft: '8px solid transparent',
-                  borderRight: '8px solid transparent',
-                  borderBottom: '8px solid #333',
+                  background: '#333',
+                  border: '1px solid #444',
+                  boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
                 }}
-              ></div>
+              >
+                We&apos;re on our way to becoming a production service for all U
+                of I campuses.
+                <div
+                  className="absolute bottom-full left-1/2 h-0 w-0 -translate-x-1/2 transform"
+                  style={{
+                    borderLeft: '8px solid transparent',
+                    borderRight: '8px solid transparent',
+                    borderBottom: '8px solid #333',
+                  }}
+                ></div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      }
 
       <LandingPageHeader />
 
@@ -304,34 +304,34 @@ const Home: NextPage = () => {
           {
             !useIllinoisChatConfig &&
 
-          <div className="mt-12 w-[100vw] rounded-lg bg-[--dashboard-background-faded] p-8 pb-14">
-            <div className="mb-6 w-full pt-8 text-center">
-              <h2
-                className={`
+            <div className="mt-12 w-[100vw] rounded-lg bg-[--dashboard-background-faded] p-8 pb-14">
+              <div className="mb-6 w-full pt-8 text-center">
+                <h2
+                  className={`
                   pt-12
                   text-2xl font-bold sm:pt-2 
                   ${montserrat_heading.variable} font-montserratHeading
                 `}
-                style={{ color: 'var(--illinois-blue)' }}
-              >
-                Flagship Chatbots
-              </h2>
-              <p
-                className={`
+                  style={{ color: 'var(--illinois-blue)' }}
+                >
+                  Flagship Chatbots
+                </h2>
+                <p
+                  className={`
                   text-md mt-2
                   ${montserrat_paragraph.variable} font-montserratParagraph
                 `}
-              >
-                Dive right into our bots trained on everything Illinois
-              </p>
+                >
+                  Dive right into our bots trained on everything Illinois
+                </p>
+              </div>
+
+              <div className="w-full max-w-5xl">
+                <FlagshipChatbots />
+              </div>
             </div>
 
-            <div className="w-full max-w-5xl">
-              <FlagshipChatbots />
-            </div>
-          </div>
-
-        }
+          }
         </div>
 
         {/* orange banner */}
