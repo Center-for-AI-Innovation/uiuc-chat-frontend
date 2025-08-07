@@ -277,6 +277,8 @@ export default async function chat(
     updatedConversation = await handleToolsServer(
       lastMessage,
       availableTools,
+      imageUrls,
+      imgDesc,
       conversation,
       llmProviders[ProviderNames.OpenAI]?.apiKey as string,
       course_name,
