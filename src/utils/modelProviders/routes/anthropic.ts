@@ -1,8 +1,5 @@
 import { type AnthropicProvider, ProviderNames } from '../LLMProvider'
-import {
-    AnthropicModelID,
-    AnthropicModels
-} from '../types/anthropic'
+import { AnthropicModelID, AnthropicModels } from '../types/anthropic'
 
 export const getAnthropicModels = async (
   anthropicProvider: AnthropicProvider,

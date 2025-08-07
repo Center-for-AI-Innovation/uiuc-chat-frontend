@@ -3,7 +3,7 @@ import {
   GPT5Models,
   ModelIDsThatUseDeveloperMessage,
   type OpenAIModel,
-  type OpenAIModelID
+  type OpenAIModelID,
 } from '~/utils/modelProviders/types/openai'
 
 import {
@@ -24,7 +24,7 @@ import {
   type NCSAHostedVLMProvider,
   type OpenAIProvider,
   ProviderNames,
-  ReasoningCapableModels
+  ReasoningCapableModels,
 } from '~/utils/modelProviders/LLMProvider'
 import { decryptKeyIfNeeded } from '../crypto'
 
@@ -110,7 +110,9 @@ export const OpenAIStream = async (
   )
   const isGPT5Model = GPT5Models.includes(model.id as OpenAIModelID)
 
-  const isReasoningCapableModel = ReasoningCapableModels.has(model.id as OpenAIModelID)
+  const isReasoningCapableModel = ReasoningCapableModels.has(
+    model.id as OpenAIModelID,
+  )
 
   // strip 'thinking' from the model id if it exists
   const modelId = isReasoningCapableModel
