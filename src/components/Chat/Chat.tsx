@@ -369,7 +369,7 @@ export const Chat = memo(
           if (deleteCount) {
             // ✅ FIXED: Don't clear contexts if they come from a file upload
             const isFileUploadMessage = Array.isArray(message.content) && message.content.some(c => 
-              typeof c === 'object' && c.text?.includes('📎 Uploaded file:')
+              typeof c === 'object' && c.type === 'file'
             )
             
             if (!isFileUploadMessage) {
@@ -486,8 +486,7 @@ export const Chat = memo(
               if (Array.isArray(message.content)) {
                 return message.content.some(
                   (content) =>
-                    content.type === 'text' &&
-                    content.text?.includes('📎 Uploaded file:'),
+                    content.type === 'file',
                 )
               }
               return false
@@ -497,7 +496,7 @@ export const Chat = memo(
           // ✅ FIXED: Check if this is a file upload message with contexts
           const isFileUploadMessageWithContexts = Array.isArray(message.content) && 
             message.content.some(c => 
-              typeof c === 'object' && c.text?.includes('📎 Uploaded file:')
+              typeof c === 'object' && c.type === 'file'
             ) && 
             message.contexts && 
             Array.isArray(message.contexts) && 
@@ -901,6 +900,10 @@ export const Chat = memo(
             skipQueryRewrite: documentCount === 0,
             mode: 'chat',
           }
+          
+          console.log('🔍 LLM DEBUG: Final chat body prepared with conversation:', updatedConversation.messages.length, 'messages')
+          console.log('🔍 LLM DEBUG: Last message contexts:', updatedConversation.messages[updatedConversation.messages.length - 1]?.contexts)
+          console.log('🔍 LLM DEBUG: Last message contexts count:', updatedConversation.messages[updatedConversation.messages.length - 1]?.contexts?.length || 0)
           updatedConversation = finalChatBody.conversation!
 
           // Action 4: Build Prompt - Put everything together into a prompt
@@ -952,17 +955,21 @@ export const Chat = memo(
               })
             }
           } else {
-            try {
-              // CALL OUR NEW ENDPOINT... /api/allNewRoutingChat
-              startOfCallToLLM = performance.now()
-              try {
-                response = await fetch('/api/allNewRoutingChat', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify(finalChatBody),
-                })
+                          try {
+                // CALL OUR NEW ENDPOINT... /api/allNewRoutingChat
+                startOfCallToLLM = performance.now()
+                console.log('🔍 LLM DEBUG: Making API call to /api/allNewRoutingChat')
+                console.log('🔍 LLM DEBUG: Request body contexts:', finalChatBody.conversation?.messages[finalChatBody.conversation.messages.length - 1]?.contexts)
+                console.log('🔍 LLM DEBUG: Request body contexts count:', finalChatBody.conversation?.messages[finalChatBody.conversation.messages.length - 1]?.contexts?.length || 0)
+                
+                try {
+                  response = await fetch('/api/allNewRoutingChat', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(finalChatBody),
+                  })
 
                 // Check if response is ok before proceeding
                 if (!response.ok) {
