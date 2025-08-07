@@ -1155,7 +1155,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
           </Flex>
         </div>
 
-        <NomicDocumentMap course_name={course_name as string} />
+        {/*<NomicDocumentMap course_name={course_name as string} />*/}
         <GlobalFooter />
       </main>
 
