@@ -1,29 +1,18 @@
 import {
-  type OllamaModel,
-  OllamaModelIDs,
-  OllamaModels,
-} from '~/utils/modelProviders/ollama'
-import { type WebllmModel } from '~/utils/modelProviders/WebLLM'
-import {
-  type OpenAIModel,
-  OpenAIModelID,
-  OpenAIModels,
-} from '~/utils/modelProviders/types/openai'
-import {
-  type AnthropicModel,
-  AnthropicModelID,
-  AnthropicModels,
-} from '~/utils/modelProviders/types/anthropic'
-import {
   type AzureModel,
   AzureModelID,
   AzureModels,
 } from '~/utils/modelProviders/azure'
 import {
-  type NCSAHostedVLMModel,
-  NCSAHostedVLMModelID,
-  NCSAHostedVLMModels,
-} from '~/utils/modelProviders/types/NCSAHostedVLM'
+  type OllamaModel,
+  OllamaModelIDs,
+  OllamaModels,
+} from '~/utils/modelProviders/ollama'
+import {
+  type AnthropicModel,
+  AnthropicModelID,
+  AnthropicModels,
+} from '~/utils/modelProviders/types/anthropic'
 import {
   type BedrockModel,
   BedrockModelID,
@@ -35,10 +24,21 @@ import {
   GeminiModels,
 } from '~/utils/modelProviders/types/gemini'
 import {
+  type NCSAHostedVLMModel,
+  NCSAHostedVLMModelID,
+  NCSAHostedVLMModels,
+} from '~/utils/modelProviders/types/NCSAHostedVLM'
+import {
+  type OpenAIModel,
+  OpenAIModelID,
+  OpenAIModels,
+} from '~/utils/modelProviders/types/openai'
+import {
   type SambaNovaModel,
   SambaNovaModelID,
   SambaNovaModels,
 } from '~/utils/modelProviders/types/SambaNova'
+import { type WebllmModel } from '~/utils/modelProviders/WebLLM'
 
 export enum ProviderNames {
   Ollama = 'Ollama',
@@ -99,6 +99,7 @@ export const VisionCapableModels: Set<
   OpenAIModelID.GPT_5,
   OpenAIModelID.GPT_5_mini,
   OpenAIModelID.GPT_5_nano,
+  OpenAIModelID.GPT_5_thinking,
 
   AzureModelID.o3,
   AzureModelID.o4_mini,
@@ -158,9 +159,7 @@ export const ReasoningCapableModels: Set<
   OpenAIModelID.o4_mini,
   OpenAIModelID.GPT_4_1,
   // Add GPT-5 family
-  OpenAIModelID.GPT_5,
-  OpenAIModelID.GPT_5_mini,
-  OpenAIModelID.GPT_5_nano,
+  OpenAIModelID.GPT_5_thinking,
   OllamaModelIDs.DEEPSEEK_R1_14b_qwen_fp16,
   // Add other reasoning-capable models as they become available
 ])
@@ -295,6 +294,11 @@ export type AllLLMProviders = {
 
 // Ordered list of preferred model IDs -- the first available model will be used as default
 export const preferredModelIds = [
+  // Prefer GPT-5 family next when available
+  OpenAIModelID.GPT_5_thinking,
+  OpenAIModelID.GPT_5,
+  OpenAIModelID.GPT_5_mini,
+  OpenAIModelID.GPT_5_nano,
   OpenAIModelID.GPT_4_1,
   OpenAIModelID.GPT_4_1_mini,
   // Prefer GPT-5 family next when available
