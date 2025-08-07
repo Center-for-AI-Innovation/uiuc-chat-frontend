@@ -505,6 +505,7 @@ export default function WebsiteIngestForm({
                               width: '100%',
                             },
                           }}
+                          disabled={useIllinoisChatConfig}
                         />
                       </div>
                     </Tooltip>
