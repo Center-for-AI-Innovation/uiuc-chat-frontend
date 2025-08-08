@@ -105,9 +105,6 @@ export function LargeDropzone({
   const uploadToS3 = async (file: File | null, uniqueFileName: string) => {
     if (!file) return
 
-    // Get Keycloak user ID with fallback to email
-    const userId = auth.user?.profile.sub || current_user_email
-
     const requestObject = {
       method: 'POST',
       headers: {
@@ -117,7 +114,7 @@ export function LargeDropzone({
         uniqueFileName: uniqueFileName,
         fileType: file.type,
         courseName: courseName,
-        user_id: userId,
+        // No user_id needed since document uploads use courses/${courseName}/ path
       }),
     }
 
