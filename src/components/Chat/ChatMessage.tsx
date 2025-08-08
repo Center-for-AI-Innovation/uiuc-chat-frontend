@@ -110,7 +110,8 @@ const FileCard: React.FC<{
   fileType?: string
   fileUrl?: string
   onClick: () => void
-}> = ({ fileName, fileType, fileUrl, onClick }) => {
+  isPreviewable?: boolean
+}> = ({ fileName, fileType, fileUrl, onClick, isPreviewable = true }) => {
   const getFileIcon = (name: string, type?: string) => {
     const extension = name.split('.').pop()?.toLowerCase()
     const iconProps = { size: 20 }
@@ -174,7 +175,11 @@ const FileCard: React.FC<{
       >
         {truncateFileName(fileName)}
       </span>
-      <IconEye size={16} style={{ color: 'var(--illinois-orange)' }} />
+      {isPreviewable ? (
+        <IconEye size={16} style={{ color: 'var(--illinois-orange)' }} />
+      ) : (
+        <IconFile size={16} style={{ color: 'var(--illinois-orange)' }} />
+      )}
     </div>
   )
 }
@@ -240,19 +245,6 @@ const FilePreviewModal: React.FC<{
     }
   }, [isTextFile, actualFileUrl, isOpen])
 
-  // Auto-download non-previewable files when modal opens
-  useEffect(() => {
-    if (actualFileUrl && isOpen && !isPdf && !isTextFile) {
-      const link = document.createElement('a')
-      link.href = actualFileUrl
-      link.download = fileName
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      onClose() // Close modal after triggering download
-    }
-  }, [actualFileUrl, isOpen, isPdf, isTextFile, fileName, onClose])
-
   // Don't render modal for non-previewable files
   if (isOpen && !isPdf && !isTextFile) {
     return null
@@ -292,21 +284,7 @@ const FilePreviewModal: React.FC<{
   )
 }
 
-// Helper function to parse file content from message text
-function parseFileContent(
-  text: string,
-): { fileName: string; fileUrl?: string; fileType?: string } | null {
-  // New format: "📎 Uploaded file: filename|s3Key|fileType"
-  const fileMatch = text.match(/📎 Uploaded file: (.+)\|(.+)\|(.+)/)
-  if (fileMatch && fileMatch[1] && fileMatch[2]) {
-    return {
-      fileName: fileMatch[1],
-      fileUrl: fileMatch[2], // This will be the S3 key
-      fileType: fileMatch[3],
-    }
-  }
-  return null
-}
+
 
 // Add context for managing the active sources sidebar
 const SourcesSidebarContext = createContext<{
@@ -416,6 +394,25 @@ function getFileType(s3Path?: string, url?: string) {
   }
   if (url) return 'web'
   return 'other'
+}
+
+function isFilePreviewable(fileName: string, fileType?: string): boolean {
+  const extension = fileName.split('.').pop()?.toLowerCase()
+  
+  // PDFs can be previewed
+  if (fileType?.includes('pdf') || extension === 'pdf') {
+    return true
+  }
+  
+  // Text files can be previewed
+  if (fileType?.includes('text') || extension === 'txt' || extension === 'md' || 
+      extension === 'html' || extension === 'xml' || extension === 'csv' || 
+      extension === 'py' || extension === 'srt' || extension === 'vtt') {
+    return true
+  }
+  
+  // Office documents and other files cannot be previewed
+  return false
 }
 
 // Add this helper function at the top
@@ -1523,6 +1520,34 @@ export const ChatMessage = memo(
       })
     }
 
+    const handleFileAction = async (
+      fileName: string,
+      fileUrl?: string,
+      fileType?: string,
+    ) => {
+      if (isFilePreviewable(fileName, fileType)) {
+        // For previewable files, open the modal
+        handleFilePreview(fileName, fileUrl, fileType)
+      } else {
+        // For non-previewable files, trigger direct download
+        if (fileUrl) {
+          try {
+            const presignedUrl = await fetchPresignedUrl(fileUrl, courseName, undefined, fileName)
+            if (presignedUrl) {
+              const link = document.createElement('a')
+              link.href = presignedUrl
+              link.download = fileName
+              document.body.appendChild(link)
+              link.click()
+              document.body.removeChild(link)
+            }
+          } catch (error) {
+            console.error('Failed to download file:', error)
+          }
+        }
+      }
+    }
+
     const closeFilePreview = () => {
       setFilePreviewModal({
         isOpen: false,
@@ -1602,32 +1627,7 @@ export const ChatMessage = memo(
                               {/* User message text for all messages */}
                               {message.content.map((content, index) => {
                                 if (content.type === 'text') {
-                                  // NEW: Check if this is a file upload message
-                                  if (content.text) {
-                                    const fileContent = parseFileContent(
-                                      content.text,
-                                    )
-                                    if (fileContent) {
-                                      return (
-                                        <div key={index} className="mb-2">
-                                          <FileCard
-                                            fileName={fileContent.fileName}
-                                            fileType={fileContent.fileType}
-                                            fileUrl={fileContent.fileUrl}
-                                            onClick={() =>
-                                              handleFilePreview(
-                                                fileContent.fileName,
-                                                fileContent.fileUrl,
-                                                fileContent.fileType,
-                                              )
-                                            }
-                                          />
-                                        </div>
-                                      )
-                                    }
-                                  }
-
-                                  // EXISTING: Regular text content (unchanged)
+                                  // Regular text content
                                   if (
                                     !(content.text as string)
                                       .trim()
@@ -1648,22 +1648,27 @@ export const ChatMessage = memo(
                               <div className="-m-1 flex w-full flex-wrap justify-start">
                                 {message.content
                                   .filter((item) => item.type === 'file')
-                                  .map((content, index) => (
-                                    <div key={index} className="mb-2">
-                                      <FileCard
-                                        fileName={content.fileName || 'Unknown file'}
-                                        fileType={content.fileType}
-                                        fileUrl={content.fileUrl}
-                                        onClick={() =>
-                                          handleFilePreview(
-                                            content.fileName || 'Unknown file',
-                                            content.fileUrl,
-                                            content.fileType,
-                                          )
-                                        }
-                                      />
-                                    </div>
-                                  ))}
+                                  .map((content, index) => {
+                                    const fileName = content.fileName || 'Unknown file'
+                                    const isPreviewable = isFilePreviewable(fileName, content.fileType)
+                                    return (
+                                      <div key={index} className="mb-2">
+                                        <FileCard
+                                          fileName={fileName}
+                                          fileType={content.fileType}
+                                          fileUrl={content.fileUrl}
+                                          isPreviewable={isPreviewable}
+                                          onClick={() =>
+                                            handleFileAction(
+                                              fileName,
+                                              content.fileUrl,
+                                              content.fileType,
+                                            )
+                                          }
+                                        />
+                                      </div>
+                                    )
+                                  })}
                               </div>
 
                               {/* Image previews for all messages */}

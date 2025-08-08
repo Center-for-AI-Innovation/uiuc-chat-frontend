@@ -133,13 +133,14 @@ export async function fetchPresignedUrl(
   filePath: string,
   courseName?: string,
   page?: string,
+  fileName?: string,
 ): Promise<string | null> {
   try {
     const endpoint = `${getBaseUrl()}/api/download`
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ filePath, courseName, page }),
+      body: JSON.stringify({ filePath, courseName, page, fileName }),
     })
 
     if (!response.ok)
