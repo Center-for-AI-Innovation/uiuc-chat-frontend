@@ -520,20 +520,48 @@ export default async function handler(
 
       try {
         if (id) {
-          // Delete single conversation
+          // 1. Delete all file_uploads for this conversation
+          const { error: fileDeleteError } = await supabase
+            .from('file_uploads')
+            .delete()
+            .eq('conversation_id', id)
+          if (fileDeleteError) throw fileDeleteError
+
+          // 2. Delete the conversation itself
           const { data, error } = await supabase
             .from('conversations')
             .delete()
             .eq('id', id)
           if (error) throw error
         } else if (userEmail && course_name) {
-          // Delete all conversations that are not in folders
+          // 1. Get all conversation IDs to be deleted
+          const { data: conversations, error: fetchError } = await supabase
+            .from('conversations')
+            .select('id')
+            .eq('user_email', userEmail)
+            .eq('project_name', course_name)
+            .is('folder_id', null)
+          if (fetchError) throw fetchError
+
+          const conversationIds = (conversations || []).map(
+            (conv: any) => conv.id,
+          )
+          if (conversationIds.length > 0) {
+            // 2. Delete all file_uploads for these conversations
+            const { error: fileDeleteError } = await supabase
+              .from('file_uploads')
+              .delete()
+              .in('conversation_id', conversationIds)
+            if (fileDeleteError) throw fileDeleteError
+          }
+
+          // 3. Delete all conversations that are not in folders
           const { data, error } = await supabase
             .from('conversations')
             .delete()
             .eq('user_email', userEmail)
             .eq('project_name', course_name)
-            .is('folder_id', null) // Only delete conversations that are not in folders
+            .is('folder_id', null)
           if (error) throw error
         } else {
           res.status(400).json({ error: 'Invalid request parameters' })

@@ -1,9 +1,9 @@
 import { type OpenAIChatMessage } from '@/types/chat'
 import {
+  GPT5Models,
   ModelIDsThatUseDeveloperMessage,
-  type OpenAIModelID,
-  OpenAIModels,
   type OpenAIModel,
+  type OpenAIModelID,
 } from '~/utils/modelProviders/types/openai'
 
 import {
@@ -18,16 +18,15 @@ import {
   type ReconnectInterval,
   createParser,
 } from 'eventsource-parser'
-import { decryptKeyIfNeeded } from '../crypto'
 import {
   type AllLLMProviders,
   type AzureProvider,
   type NCSAHostedVLMProvider,
   type OpenAIProvider,
   ProviderNames,
+  ReasoningCapableModels,
 } from '~/utils/modelProviders/LLMProvider'
-import { AzureModels } from '../modelProviders/azure'
-import { NCSAHostedVLMModels } from '../modelProviders/types/NCSAHostedVLM'
+import { decryptKeyIfNeeded } from '../crypto'
 
 export class OpenAIError extends Error {
   constructor(
@@ -109,8 +108,19 @@ export const OpenAIStream = async (
   const isOModel = ModelIDsThatUseDeveloperMessage.includes(
     model.id as OpenAIModelID,
   )
-  const body = JSON.stringify({
-    ...(OPENAI_API_TYPE === 'openai' && { model: model.id }),
+  const isGPT5Model = GPT5Models.includes(model.id as OpenAIModelID)
+
+  const isReasoningCapableModel = ReasoningCapableModels.has(
+    model.id as OpenAIModelID,
+  )
+
+  // strip 'thinking' from the model id if it exists
+  const modelId = isReasoningCapableModel
+    ? model.id.replace('-thinking', '')
+    : model.id
+
+  const jsonBody = {
+    ...(OPENAI_API_TYPE === 'openai' && { model: modelId }),
     messages: [
       {
         role: isOModel ? 'developer' : 'system',
@@ -118,9 +128,12 @@ export const OpenAIStream = async (
       },
       ...messages,
     ],
-    ...(isOModel ? {} : { temperature: temperature }),
+    ...(isOModel || isGPT5Model ? {} : { temperature: temperature }),
     stream: stream,
-  })
+    ...(isReasoningCapableModel ? { reasoning_effort: 'medium' } : {}),
+  }
+
+  const body = JSON.stringify(jsonBody)
 
   if (!url) {
     throw new Error('URL is undefined')

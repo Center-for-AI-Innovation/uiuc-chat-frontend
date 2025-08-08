@@ -9,7 +9,7 @@ import { runAnthropicChat } from '~/app/utils/anthropic'
 import { runOllamaChat } from '~/app/utils/ollama'
 import { runVLLM } from '~/app/utils/vllm'
 import { fetchContexts } from '~/pages/api/getContexts'
-import fetchMQRContexts from '~/pages/api/getContextsMQR'
+import { fetchMQRContexts }from '~/pages/api/getContextsMQR'
 import { fetchImageDescription } from '~/pages/api/UIUC-api/fetchImageDescription'
 import {
   type ChatApiBody,
@@ -422,6 +422,10 @@ export const handleContextSearch = async (
   searchQuery: string,
   documentGroups: string[],
 ): Promise<ContextWithMetadata[]> => {
+  // Check if this message already has contexts (from file upload)
+  if (message.contexts && Array.isArray(message.contexts) && message.contexts.length > 0) {
+    return message.contexts
+  }
   if (courseName !== 'gpt4') {
     // If no document groups are specified, skip context search entirely
     if (!documentGroups || documentGroups.length === 0) {
@@ -439,6 +443,7 @@ export const handleContextSearch = async (
       searchQuery,
       token_limit,
       documentGroups,
+      '',
     )
 
     message.contexts = curr_contexts as ContextWithMetadata[]

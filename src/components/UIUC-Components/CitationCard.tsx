@@ -172,7 +172,17 @@ export const CitationCard = ({
         pagenumber,
         pagenumber_or_timestamp,
       })
-      const presignedUrl = await fetchPresignedUrl(s3_path, course_name)
+      // Get filename from s3_path if readable_filename doesn't include extension
+      let downloadFilename = readable_filename
+      if (!readable_filename.includes('.')) {
+        const s3Filename = s3_path.split('/').pop() || readable_filename
+        const extension = s3Filename.split('.').pop()
+        if (extension) {
+          downloadFilename = `${readable_filename}.${extension}`
+        }
+      }
+
+      const presignedUrl = await fetchPresignedUrl(s3_path, course_name, undefined, downloadFilename)
 
       // For PDFs, open in new tab for inline viewing with page number if available
       if (s3_path.toLowerCase().endsWith('.pdf')) {
@@ -188,17 +198,6 @@ export const CitationCard = ({
         // For other file types, trigger download
         const link = document.createElement('a')
         link.href = presignedUrl as string
-
-        // Get filename from s3_path if readable_filename doesn't include extension
-        let downloadFilename = readable_filename
-        if (!readable_filename.includes('.')) {
-          const s3Filename = s3_path.split('/').pop() || readable_filename
-          const extension = s3Filename.split('.').pop()
-          if (extension) {
-            downloadFilename = `${readable_filename}.${extension}`
-          }
-        }
-
         link.download = downloadFilename
         document.body.appendChild(link)
         link.click()

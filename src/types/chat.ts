@@ -86,7 +86,7 @@ export interface ToolOutput {
 }
 
 // tool_image_url is for images returned by tools
-export type MessageType = 'text' | 'image_url' | 'tool_image_url'
+export type MessageType = 'text' | 'image_url' | 'tool_image_url' | 'file'
 
 export interface Content {
   type: MessageType
@@ -94,6 +94,10 @@ export interface Content {
   image_url?: {
     url: string
   }
+  fileName?: string
+  fileUrl?: string
+  fileType?: string
+  fileSize?: number
 }
 
 export interface OpenAIChatMessage {
@@ -131,6 +135,7 @@ export interface ChatBody {
   llmProviders?: AllLLMProviders
   skipQueryRewrite?: boolean
   mode: 'chat' | 'optimize_prompt'
+  conversation_id?: string
 }
 
 export interface ImageBody {
