@@ -34,7 +34,6 @@ export const ImagePreview: React.FC<ImagePreviewProps> = ({
   const { classes, theme } = useStyles()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isImageLoaded, setIsImageLoaded] = useState(false)
-  
   return (
     <>
       <img
