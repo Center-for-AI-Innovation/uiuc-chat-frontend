@@ -10,7 +10,7 @@ import {
 } from '~/components/UIUC-Components/MainPageBackground'
 import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
-import { CourseMetadata } from '~/types/courseMetadata'
+import { type CourseMetadata } from '~/types/courseMetadata'
 import NomicDocumentMap from '~/components/UIUC-Components/NomicDocumentsMap'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 import { useAuth } from 'react-oidc-context'

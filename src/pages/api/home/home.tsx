@@ -9,8 +9,7 @@ import { useCreateReducer } from '@/hooks/useCreateReducer'
 import useErrorService from '@/services/errorService'
 
 import { cleanSelectedConversation } from '@/utils/app/clean'
-import { DEFAULT_SYSTEM_PROMPT, DEFAULT_TEMPERATURE } from '@/utils/app/const'
-import { getSettings } from '@/utils/app/settings'
+import { DEFAULT_SYSTEM_PROMPT } from '@/utils/app/const'
 
 import { type Conversation } from '@/types/chat'
 import { type KeyValuePair } from '@/types/data'
@@ -21,8 +20,11 @@ import { Chatbar } from '@/components/Chatbar/Chatbar'
 import HomeContext from './home.context'
 import { type HomeInitialState, initialState } from './home.state'
 
+import { useQueryClient } from '@tanstack/react-query'
+import { montserrat_heading } from 'fonts'
 import { v4 as uuidv4 } from 'uuid'
 import { type CourseMetadata } from '~/types/courseMetadata'
+import { type FolderType, type FolderWithConversation } from '~/types/folder'
 import {
   selectBestModel,
   VisionCapableModels,
@@ -161,7 +163,6 @@ const Home = ({
   const {
     state: {
       apiKey,
-      lightMode,
       folders,
       conversations,
       selectedConversation,
@@ -634,7 +635,7 @@ const Home = ({
       height="256"
       viewBox="0 0 24 24"
       strokeWidth="1.5"
-      stroke="url(#gradient)"
+      stroke="var(--foreground)"
       fill="none"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -729,8 +730,6 @@ const Home = ({
 
   useEffect(() => {
     const initialSetup = async () => {
-      // console.log('current_email: ', current_email)
-      console.log('isInitialSetupDone: ', isInitialSetupDone)
       if (isInitialSetupDone) return
       
       // Skip normal initialization if we have a shared conversation
@@ -873,22 +872,25 @@ const Home = ({
         </Head>
         {selectedConversation && (
           <main
-            className={`flex h-screen w-screen flex-col text-sm text-white dark:text-white ${lightMode}`}
+            className={`flex h-screen w-screen flex-col pt-20  text-sm text-white dark:text-white`}
           >
-            <div className="flex h-full w-full sm:pt-0">
+            <Navbar isPlain={false} />
+
+            <div className="flex h-full w-full overflow-y-auto sm:pt-0">
               {isDragging &&
                 VisionCapableModels.has(
                   selectedConversation?.model.id as OpenAIModelID,
                 ) && (
-                  <div className="absolute inset-0 z-10 flex h-full w-full flex-col items-center justify-center bg-black opacity-75">
+                  <div className="absolute inset-0 z-10 flex h-full w-full flex-col items-center justify-center bg-[--background-dark] opacity-90">
                     <GradientIconPhoto />
-                    <span className="text-3xl font-extrabold text-white">
+                    <span className="text-3xl font-extrabold text-[--foreground]">
                       Drop your image here!
                     </span>
                   </div>
                 )}
               {!isReadOnly && (
-                <Chatbar 
+  
+              <Chatbar 
                   current_email={current_email} 
                   courseName={course_name} 
                   courseMetadata={currentCourseMetadata} 

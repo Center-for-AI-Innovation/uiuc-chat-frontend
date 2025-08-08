@@ -8,16 +8,16 @@ import {
   IconShare,
 } from '@tabler/icons-react'
 import {
-  DragEvent,
-  KeyboardEvent,
-  MouseEventHandler,
+  type DragEvent,
+  type KeyboardEvent,
+  type MouseEventHandler,
   useContext,
   useEffect,
   useState,
 } from 'react'
 import { Menu, UnstyledButton, createStyles, Modal, Text, Button, Group } from '@mantine/core'
 
-import { Conversation } from '@/types/chat'
+import { type Conversation } from '@/types/chat'
 
 import HomeContext from '~/pages/api/home/home.context'
 
@@ -213,12 +213,20 @@ export const ConversationComponent = ({ conversation }: Props) => {
 
   return (
     <>
-      <div className="relative flex items-center">
+      <div className="relative flex items-start text-[--sidebar]">
         {isRenaming && selectedConversation?.id === conversation.id ? (
-          <div className="flex w-full items-center gap-3 rounded-lg bg-[#343541]/90 p-3">
-            <IconMessage size={18} />
+          <div
+          className={`flex w-full items-start gap-3 rounded-lg p-3
+          ${
+            selectedConversation?.id === conversation.id
+              ? 'border border-[--sidebar-selected]'
+              : ''
+          }
+        `}
+        >
+            <IconMessage size={16} className="text-[--sidebar]" />
             <input
-              className="mr-12 flex-1 overflow-hidden overflow-ellipsis border-neutral-400 bg-transparent text-left text-[12.5px] leading-3 text-white outline-none focus:border-neutral-100"
+              className="mr-12 flex-1 overflow-hidden overflow-ellipsis border-0 bg-transparent text-left text-[.75rem] leading-3 text-[--sidebar] outline-none"
               type="text"
               value={renameValue}
               onChange={(e) => setRenameValue(e.target.value)}
@@ -228,43 +236,49 @@ export const ConversationComponent = ({ conversation }: Props) => {
           </div>
         ) : (
           <button
-            className={`flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 text-sm transition-colors duration-200 hover:bg-[#343541]/90 ${
+            className={`flex w-full cursor-pointer items-start gap-3 rounded-lg p-3 text-[.75rem] transition-colors duration-200 ${
               messageIsStreaming ? 'disabled:cursor-not-allowed' : ''
             } ${
               selectedConversation?.id === conversation.id
-                ? 'bg-[#343541]/90'
-                : ''
+                ? 'border border-[--sidebar-selected] bg-[--sidebar-selected]'
+                : 'hover:bg-white/10'
             }`}
             onClick={() => handleSelectConversation(conversation)}
             disabled={messageIsStreaming}
             draggable="true"
             onDragStart={(e) => handleDragStart(e, conversation)}
           >
-            <IconMessage size={18} />
+            <IconMessage size={16} className="text-[--sidebar]" />
             <div
-              className={`relative flex-1 overflow-hidden text-ellipsis whitespace-nowrap break-all text-left text-[12.5px] leading-3 ${
+              className={`relative flex-1 overflow-hidden text-ellipsis whitespace-nowrap break-all text-left leading-3 ${
                 selectedConversation?.id === conversation.id ? 'pr-12' : 'pr-1'
               }`}
             >
               {conversation.name}
               {customGPTName && (
-                <div className="text-xs text-gray-400">{customGPTName}</div>
+                <div className="text-xs opacity-50">{customGPTName}</div>
               )}
             </div>
           </button>
         )}
 
-        {(isDeleting || isRenaming) &&
-          selectedConversation?.id === conversation.id && (
-            <div className="absolute right-1 z-10 flex text-gray-300">
-              <SidebarActionButton handleClick={handleConfirm}>
-                <IconCheck size={18} />
-              </SidebarActionButton>
-              <SidebarActionButton handleClick={handleCancel}>
-                <IconX size={18} />
-              </SidebarActionButton>
-            </div>
-          )}
+      {(isDeleting || isRenaming) &&
+        selectedConversation?.id === conversation.id && (
+          <div className="absolute right-1 top-[.5rem] z-10 flex">
+            <SidebarActionButton handleClick={handleConfirm}>
+              <IconCheck
+                size={16}
+                className="text-[--sidebar] opacity-50 hover:opacity-100"
+              />
+            </SidebarActionButton>
+            <SidebarActionButton handleClick={handleCancel}>
+              <IconX
+                size={16}
+                className="text-[--sidebar] opacity-50 hover:opacity-100"
+              />
+            </SidebarActionButton>
+          </div>
+        )}
 
         {selectedConversation?.id === conversation.id &&
           !isDeleting &&

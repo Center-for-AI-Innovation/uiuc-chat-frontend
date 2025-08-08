@@ -1,10 +1,13 @@
 import {
-  QueryClient,
+  type QueryClient,
   useMutation,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
-import { FolderInterface, FolderWithConversation } from '~/types/folder'
+import {
+  type FolderInterface,
+  type FolderWithConversation,
+} from '~/types/folder'
 import {
   deleteFolderFromServer,
   fetchFolders,

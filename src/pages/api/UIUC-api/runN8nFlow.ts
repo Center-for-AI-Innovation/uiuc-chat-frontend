@@ -10,7 +10,7 @@ export const runN8nFlowBackend = async (
   const backendUrl = getBackendUrl()
 
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), 30000)
+  const timeoutId = setTimeout(() => controller.abort(), 300000) // 5minutes timeout
 
   try {
     const body = JSON.stringify({
@@ -71,6 +71,11 @@ export const runN8nFlowBackend = async (
     
     throw error
   }
+}
+
+// This function can run for a maximum of 5 minutes
+export const config = {
+  maxDuration: 300, // 5 minutes
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {

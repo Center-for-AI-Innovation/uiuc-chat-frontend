@@ -1,6 +1,9 @@
 // all values are email addresses
 
-import { LLMProvider, ProviderNames } from '../utils/modelProviders/LLMProvider'
+import {
+  type LLMProvider,
+  type ProviderNames,
+} from '../utils/modelProviders/LLMProvider'
 
 // Define the CustomSystemPrompt interface here so it can be reused
 export interface CustomSystemPrompt {

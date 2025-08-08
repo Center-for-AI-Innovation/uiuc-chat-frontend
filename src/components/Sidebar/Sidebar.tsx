@@ -1,5 +1,5 @@
 import { IconFolderPlus, IconMistOff, IconPlus } from '@tabler/icons-react'
-import { ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Switch, Text } from '@mantine/core'
 
@@ -8,8 +8,8 @@ import {
   OpenSidebarButton,
 } from './components/OpenCloseButton'
 
+import { type FolderWithConversation } from '~/types/folder'
 import Search from '../Search'
-import { FolderWithConversation } from '~/types/folder'
 
 interface Props<T> {
   isOpen: boolean
@@ -63,22 +63,26 @@ const Sidebar = <T,>({
   }
 
   return isOpen ? (
-    <div>
+    <div className="relative h-full">
       <div
-        className={`fixed top-0 ${side}-0 z-40 flex h-full w-[260px] flex-none flex-col space-y-2  bg-[#131426] p-2 text-[14px] transition-all sm:relative sm:top-0`}
+        className={`relative ${side}-0 z-40 flex h-full w-[260px] flex-none flex-col space-y-2 border-r border-[--dashboard-border] bg-[--sidebar-background] p-2 text-[14px] shadow-xl transition-all sm:relative sm:top-0`}
       >
         <div className="flex items-center">
           <button
-            className="text-sidebar flex w-[190px] flex-shrink-0 cursor-pointer select-none items-center gap-3 rounded-md border border-white/20 p-3 text-white transition-colors duration-200 hover:bg-gray-500/10"
+            className="text-sidebar flex w-[190px] flex-shrink-0 cursor-pointer select-none items-center gap-3 rounded-md border border-[--button-border] p-3 text-[--foreground] 
+            transition-colors duration-200
+            hover:border-[--button-hover] hover:bg-[--button-hover] hover:text-[--button-text-color]"
             onClick={() => {
               handleCreateItem()
               handleSearchTerm('')
               setTimeout(() => {
-                const chatInput = document.querySelector('textarea.chat-input') as HTMLTextAreaElement;
+                const chatInput = document.querySelector(
+                  'textarea.chat-input',
+                ) as HTMLTextAreaElement
                 if (chatInput) {
-                  chatInput.focus();
+                  chatInput.focus()
                 }
-              }, 100);
+              }, 100)
             }}
           >
             <IconPlus size={16} />
@@ -86,7 +90,9 @@ const Sidebar = <T,>({
           </button>
 
           <button
-            className="ml-2 flex flex-shrink-0 cursor-pointer items-center gap-3 rounded-md border border-white/20 p-3 text-sm text-white transition-colors duration-200 hover:bg-gray-500/10"
+            className="ml-2 flex flex-shrink-0 cursor-pointer items-center gap-3 rounded-md border border-[--button-border] p-3 text-sm text-[--foreground] 
+            transition-colors duration-200
+            hover:border-[--button-hover] hover:bg-[--button-hover] hover:text-[--button-text-color]"
             onClick={handleCreateFolder}
           >
             <IconFolderPlus size={16} />
@@ -108,6 +114,8 @@ const Sidebar = <T,>({
                 Folders
               </Text>
                 {folderComponent}
+            <div className="flex border-b border-[--dashboard-border] pb-2">
+              {folderComponent}
             </div>
           )}
 
@@ -127,7 +135,7 @@ const Sidebar = <T,>({
               </div>
             </div>
           ) : (
-            <div className="mt-8 select-none text-center text-white opacity-50">
+            <div className="mt-8 select-none text-center text-[--foreground] opacity-50">
               <IconMistOff className="mx-auto mb-3" />
               <span className="text-[14px] leading-normal">
                 {t('No data.')}
@@ -135,13 +143,16 @@ const Sidebar = <T,>({
             </div>
           )}
         </div>
+
         {footerComponent}
       </div>
 
       <CloseSidebarButton onClick={toggleOpen} side={side} />
     </div>
   ) : (
-    <OpenSidebarButton onClick={toggleOpen} side={side} />
+    <div className="relative">
+      <OpenSidebarButton onClick={toggleOpen} side={side} />
+    </div>
   )
 }
 

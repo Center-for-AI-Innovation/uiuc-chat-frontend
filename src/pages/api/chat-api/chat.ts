@@ -10,8 +10,8 @@ import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { validateApiKeyAndRetrieveData } from './keys/validate'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import posthog from 'posthog-js'
-import { NextApiRequest, NextApiResponse } from 'next'
-import { CourseMetadata } from '~/types/courseMetadata'
+import { type NextApiRequest, type NextApiResponse } from 'next'
+import { type CourseMetadata } from '~/types/courseMetadata'
 import {
   attachContextsToLastMessage,
   constructSearchQuery,
@@ -37,7 +37,7 @@ import {
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { buildPrompt } from '~/app/utils/buildPromptUtils'
-import { AuthContextProps } from 'react-oidc-context'
+import { type AuthContextProps } from 'react-oidc-context'
 import { selectBestTemperature } from '~/components/Chat/Temperature'
 
 /**
@@ -225,7 +225,7 @@ export default async function chat(
     prompt:
       messages.filter((message) => message.role === 'system').length > 0
         ? ((messages.filter((message) => message.role === 'system')[0]
-          ?.content as string) ??
+            ?.content as string) ??
           (messages.filter((message) => message.role === 'system')[0]
             ?.content as string))
         : DEFAULT_SYSTEM_PROMPT,
@@ -238,8 +238,8 @@ export default async function chat(
   // Check if the content is an array and filter out image content
   const imageContent = Array.isArray(lastMessage.content)
     ? (lastMessage.content as Content[]).filter(
-      (content) => content.type === 'image_url',
-    )
+        (content) => content.type === 'image_url',
+      )
     : []
 
   const imageUrls = imageContent.map(

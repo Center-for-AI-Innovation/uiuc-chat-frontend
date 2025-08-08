@@ -57,10 +57,10 @@ export const ImagePreview: React.FC<ImagePreviewProps> = ({
         overlayProps={{ blur: 3, opacity: 0.55 }}
         styles={{
           header: {
-            backgroundColor: '#15162c',
+            backgroundColor: 'var(--modal-border)',
           },
           body: {
-            backgroundColor: '#15162c',
+            backgroundColor: 'var(--modal-border)',
           },
           title: {
             color: 'white',

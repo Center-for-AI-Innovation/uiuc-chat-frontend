@@ -1,8 +1,6 @@
 // src/pages/[course_name]/prompt.tsx
 'use client'
 import { type NextPage } from 'next'
-import MakeNewCoursePage from '~/components/UIUC-Components/MakeNewCoursePage'
-import React, { useEffect, useState, useRef } from 'react'
 import { Montserrat } from 'next/font/google'
 import { useRouter } from 'next/router'
 
@@ -15,16 +13,32 @@ import {
 } from '~/components/UIUC-Components/MainPageBackground'
 import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 import {
+  Button,
   Card,
+  Collapse,
+  Divider,
   Flex,
   Group,
-  type MantineTheme,
+  Image,
+  Indicator,
+  List,
+  Modal,
+  Paper,
+  Select,
   Text,
   Title,
   useMantineTheme,
+  type MantineTheme,
 } from '@mantine/core'
-
+import { useAuth } from 'react-oidc-context'
+import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
+import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
+import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import {
+  LoadingPlaceholderForAdminPages,
+  MainPageBackground,
+} from '~/components/UIUC-Components/MainPageBackground'
+
   DEFAULT_SYSTEM_PROMPT,
   GUIDED_LEARNING_PROMPT,
   DOCUMENT_FOCUS_PROMPT,
@@ -35,22 +49,55 @@ import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { callUpsertCustomGPT, callSetCustomGPTPinned } from '~/utils/customGPTUtils'
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 import { useDisclosure, useMediaQuery } from '@mantine/hooks'
+import { notifications } from '@mantine/notifications'
 import {
   IconAlertTriangle,
+  IconAlertTriangleFilled,
+  IconBook,
   IconCheck,
+  IconChevronDown,
+  IconExternalLink,
+  IconInfoCircle,
+  IconLayoutSidebarRight,
+  IconLayoutSidebarRightExpand,
+  IconLink,
+  IconSparkles,
 } from '@tabler/icons-react'
+import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { notifications } from '@mantine/notifications'
 import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
 import { useDebouncedCallback } from 'use-debounce'
+import { v4 as uuidv4 } from 'uuid'
+import CustomCopyButton from '~/components/Buttons/CustomCopyButton'
+import { getModelLogo } from '~/components/Chat/ModelSelect'
+import SettingsLayout, {
+  getInitialCollapsedState,
+} from '~/components/Layout/SettingsLayout'
+import { LinkGeneratorModal } from '~/components/Modals/LinkGeneratorModal'
+import CustomSwitch from '~/components/Switches/CustomSwitch'
 import { findDefaultModel } from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
+import { type ChatBody } from '~/types/chat'
+import { type CourseMetadata } from '~/types/courseMetadata'
+import { callSetCourseMetadata } from '~/utils/apiUtils'
 import {
+  DEFAULT_SYSTEM_PROMPT,
+  DOCUMENT_FOCUS_PROMPT,
+  GUIDED_LEARNING_PROMPT,
+} from '~/utils/app/const'
+import {
+  recommendedModelIds,
+  warningLargeModelIds,
+} from '~/utils/modelProviders/ConfigWebLLM'
+import {
+  LLM_PROVIDER_ORDER,
+  ProviderNames,
   ReasoningCapableModels,
   type AllLLMProviders,
-  ProviderNames,
-  LLM_PROVIDER_ORDER,
   type AnySupportedModel,
 } from '~/utils/modelProviders/LLMProvider'
 import { type AnthropicModel } from '~/utils/modelProviders/types/anthropic'
+import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
+import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
 import { v4 as uuidv4 } from 'uuid'
 import { type ChatBody } from '~/types/chat'
 import CustomPromptsTable from '~/components/Course/CustomGPTTable'
@@ -218,6 +265,12 @@ const CourseMain: NextPage = () => {
     Array<{ role: string; content: string }>
   >([])
   const [isOptimizing, setIsOptimizing] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    getInitialCollapsedState(),
+  )
+
+  // Get responsive card width classes based on sidebar state
+  const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed)
 
   // State for custom GPTs
   const [customSystemPrompts, setCustomSystemPrompts] = useState<
@@ -1241,16 +1294,23 @@ CRITICAL: The optimized prompt must:
   }
 
   return (
-    <>
-      <Navbar course_name={router.query.course_name as string} />
+    <SettingsLayout
+      course_name={course_name}
+      sidebarCollapsed={sidebarCollapsed}
+      setSidebarCollapsed={setSidebarCollapsed}
+    >
       <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
         <div className="items-left flex w-full flex-col justify-center py-0">
           <Flex direction="column" align="center" w="100%">
             <Card
-              shadow="xs"
+              withBorder
               padding="none"
               radius="xl"
-              className="mt-[2%] w-[96%] md:w-[90%] 2xl:w-[90%]"
+              className={`mt-[2%] ${cardWidthClasses}`}
+              style={{
+                backgroundColor: 'var(--background)',
+                borderColor: 'var(--dashboard-border)',
+              }}
             >
               <Flex direction={isSmallScreen ? 'column' : 'row'}>
                 <div
@@ -1259,23 +1319,21 @@ CRITICAL: The optimized prompt must:
                     border: 'None',
                     color: 'white',
                   }}
-                  className="min-h-full bg-gradient-to-r from-purple-900 via-indigo-800 to-blue-800"
+                  className="min-h-full bg-[--background]"
                 >
-                  <div className="w-full border-b border-white/10 bg-black/20 px-4 py-3 sm:px-6 sm:py-4 md:px-8">
+                  <div className="w-full px-4 py-3 sm:px-6 sm:py-4 md:px-8">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex min-w-0 flex-wrap items-center gap-2">
                         <Title
                           order={2}
-                          className={`${montserrat_heading.variable} font-montserratHeading text-lg text-white/90 sm:text-2xl`}
+                          className={`${montserrat_heading.variable} font-montserratHeading text-lg text-[--foreground] sm:text-2xl`}
                         >
                           Prompting
                         </Title>
-                        <Text className="text-white/60">/</Text>
+                        <Text className="text-[--foreground]">/</Text>
                         <Title
                           order={3}
-                          variant="gradient"
-                          gradient={{ from: 'gold', to: 'white', deg: 50 }}
-                          className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base sm:text-xl ${
+                          className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base text-[--illinois-orange] sm:text-xl ${
                             course_name.length > 40
                               ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
                               : ''
@@ -1297,10 +1355,10 @@ CRITICAL: The optimized prompt must:
                   >
                     <div className="card flex h-full flex-col">
                       <Group
-                        m="2rem"
+                        m="0rem"
                         align="center"
                         variant="column"
-                        className="w-[100%] md:w-[95%] lg:w-[95%]"
+                        className={cardWidthClasses}
                         style={{
                           justifyContent: 'center',
                           alignSelf: 'center',
@@ -1308,6 +1366,160 @@ CRITICAL: The optimized prompt must:
                         }}
                       >
                         {/* Prompt Engineering Guide */}
+                        <Paper
+                          className="w-full rounded-xl bg-[--dashboard-background-faded] px-4 sm:px-6 md:px-8"
+                          p="md"
+                          sx={{
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                          }}
+                          onClick={() => setInsightsOpen(!insightsOpen)}
+                        >
+                          <Flex
+                            align="center"
+                            justify="space-between"
+                            sx={{
+                              padding: '4px 8px',
+                              borderRadius: '8px',
+                            }}
+                          >
+                            <Flex align="center" gap="md">
+                              <IconBook
+                                size={24}
+                                style={{
+                                  color: 'var(--dashboard-button)',
+                                }}
+                              />
+                              <Text
+                                size="md"
+                                weight={600}
+                                className={`${montserrat_paragraph.variable} select-text font-montserratParagraph text-[--dashboard-foreground]`}
+                              >
+                                Prompt Engineering Guide
+                              </Text>
+                            </Flex>
+                            <div
+                              className="transition-transform duration-200"
+                              style={{
+                                transform: insightsOpen
+                                  ? 'rotate(180deg)'
+                                  : 'rotate(0deg)',
+                                color: 'var(--dashboard-foreground)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              <IconChevronDown size={24} />
+                            </div>
+                          </Flex>
+
+                          <Collapse in={insightsOpen} transitionDuration={200}>
+                            <div className="mt-4 px-2 text-[--dashboard-foreground]">
+                              <Text
+                                size="md"
+                                className={`${montserrat_paragraph.variable} select-text font-montserratParagraph`}
+                              >
+                                For additional insights and best practices on
+                                prompt creation, please review:
+                                <List
+                                  withPadding
+                                  className="mt-2"
+                                  spacing="sm"
+                                  icon={
+                                    <div
+                                      style={{
+                                        width: '6px',
+                                        height: '6px',
+                                        borderRadius: '50%',
+                                        backgroundColor:
+                                          'var(--dashboard-foreground)',
+                                        marginTop: '8px',
+                                      }}
+                                    />
+                                  }
+                                >
+                                  <List.Item>
+                                    <a
+                                      className={`text-sm text-[--dashboard-button] transition-colors duration-200 hover:text-[--dashboard-button-hover] ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                      href="https://platform.openai.com/docs/guides/prompt-engineering"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      The Official OpenAI Prompt Engineering
+                                      Guide
+                                      <IconExternalLink
+                                        size={18}
+                                        className="inline-block pl-1"
+                                        style={{
+                                          position: 'relative',
+                                          top: '-2px',
+                                        }}
+                                      />
+                                    </a>
+                                  </List.Item>
+                                  <List.Item>
+                                    <a
+                                      className={`text-sm text-[--dashboard-button] transition-colors duration-200 hover:text-[--dashboard-button-hover] ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                      href="https://docs.anthropic.com/claude/prompt-library"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      The Official Anthropic Prompt Library
+                                      <IconExternalLink
+                                        size={18}
+                                        className="inline-block pl-1"
+                                        style={{
+                                          position: 'relative',
+                                          top: '-2px',
+                                        }}
+                                      />
+                                    </a>
+                                  </List.Item>
+                                </List>
+                                <Text
+                                  className={`label ${montserrat_paragraph.variable} inline-block select-text font-montserratParagraph`}
+                                  size="md"
+                                  style={{ marginTop: '1.5rem' }}
+                                >
+                                  The System Prompt provides the foundation for
+                                  every conversation in this project. It defines
+                                  the model&apos;s role, tone, and behavior.
+                                  Consider including:
+                                  <List
+                                    withPadding
+                                    className="mt-2 text-[--dashboard-foreground]"
+                                    spacing="xs"
+                                    icon={
+                                      <div
+                                        style={{
+                                          width: '6px',
+                                          height: '6px',
+                                          borderRadius: '50%',
+                                          backgroundColor:
+                                            'var(--dashboard-foreground)',
+                                          marginTop: '8px',
+                                        }}
+                                      />
+                                    }
+                                  >
+                                    <List.Item>
+                                      Key instructions or examples
+                                    </List.Item>
+                                    <List.Item>
+                                      A warm welcome message
+                                    </List.Item>
+                                    <List.Item>
+                                      Helpful links for further learning
+                                    </List.Item>
+                                  </List>
+                                </Text>
+                              </Text>
+                            </div>
+                          </Collapse>
+                        </Paper>
                         <PromptEngineeringGuide 
                           insightsOpen={insightsOpen} 
                           setInsightsOpen={setInsightsOpen} 
@@ -1343,108 +1555,482 @@ CRITICAL: The optimized prompt must:
                 </div>
                 {/* RIGHT SIDE OF CARD */}
                 {isRightSideVisible && courseMetadata && (
-                  <div
-                    style={{
-                      flex: isSmallScreen ? '1 1 100%' : '1 1 40%',
-                      // The BehaviorSettingsPanel's internal styles will handle its height and background.
-                      // This div ensures that the space allocated for the right panel stretches correctly.
-                    }}
-                  >
-                    <BehaviorSettingsPanel
-                      theme={theme}
-                      courseMetadata={courseMetadata}
-                      vectorSearchRewrite={vectorSearchRewrite}
-                      handleSettingChange={handleSettingChange}
-                      guidedLearning={guidedLearning}
-                      documentsOnly={documentsOnly}
-                      systemPromptOnly={systemPromptOnly}
-                      handleCheckboxChange={handleCheckboxChange}
-                      handleCopyDefaultPrompt={handleCopyDefaultPrompt}
-                      resetModalOpened={resetModalOpened}
-                      openResetModal={openResetModal}
-                      closeResetModal={closeResetModal}
-                      resetSystemPrompt={resetSystemPrompt}
-                      linkGeneratorOpened={linkGeneratorOpened}
-                      openLinkGenerator={openLinkGenerator}
-                      closeLinkGenerator={() => {
-                        closeLinkGenerator();
-                        setLinkGenInitialPromptSuffix(undefined); // Reset suffix on close
+                  <>
+                    <div
+                      style={{
+                        flex: isSmallScreen ? '1 1 100%' : '1 1 40%',
+                        padding: '1rem',
+                        color: 'var(--dashboard-foreground)',
+                        backgroundColor: 'var(--dashboard-sidebar-background)',
+                        borderLeft: '1px solid var(--dashboard-border)',
                       }}
-                      course_name={course_name}
-                      customSystemPrompts={customSystemPrompts}
-                      initialActivePromptForLink={linkGenInitialPromptSuffix} // Pass new state
-                    />
-                  </div>
+                    >
+                      <div className="card flex h-full flex-col">
+                        <Flex direction="column" m="1rem" gap="md">
+                          <Flex align="flex-start">
+                            <Title
+                              className={`${montserrat_heading.variable} font-montserratHeading`}
+                              order={3}
+                              pl={'md'}
+                              pr={'md'}
+                              pb={'xs'}
+                              style={{ alignSelf: 'left', marginLeft: '-11px' }}
+                            >
+                              Document Search Optimization
+                            </Title>
+                            <Indicator
+                              label={
+                                <Text
+                                  className={`${montserrat_heading.variable} font-montserratHeading`}
+                                >
+                                  New
+                                </Text>
+                              }
+                              color="var(--dashboard-button)"
+                              size={13}
+                              styles={{
+                                indicator: {
+                                  top: '-1.1rem !important',
+                                  right: '.25rem !important',
+                                },
+                              }}
+                            >
+                              <span
+                                className={`${montserrat_heading.variable} font-montserratHeading`}
+                              ></span>
+                            </Indicator>
+                          </Flex>
+
+                          <CustomSwitch
+                            label="Smart Document Search"
+                            tooltip="When enabled, UIUC.chat optimizes your queries to better search through course materials and find relevant content. Note: This only affects how documents are searched - your chat messages remain exactly as you write them."
+                            checked={vectorSearchRewrite}
+                            onChange={(value: boolean) => {
+                              handleSettingChange({
+                                vector_search_rewrite_disabled: !value,
+                              })
+                            }}
+                          />
+
+                          <Divider />
+
+                          <Flex align="center" style={{ paddingTop: '15px' }}>
+                            <Title
+                              className={`label ${montserrat_heading.variable} mr-[8px] font-montserratHeading`}
+                              order={3}
+                            >
+                              AI Behavior Settings
+                            </Title>
+                            <Indicator
+                              label={
+                                <Text
+                                  className={`${montserrat_heading.variable} font-montserratHeading`}
+                                >
+                                  New
+                                </Text>
+                              }
+                              color="var(--dashboard-button)"
+                              size={13}
+                              // styles={{ indicator: { top: '-10px !important', right: '265px !important' } }}
+                              styles={{
+                                indicator: {
+                                  top: '-17px !important',
+                                  right: '7px !important',
+                                },
+                              }}
+                            >
+                              {' '}
+                              <span
+                                className={`${montserrat_heading.variable} font-montserratHeading`}
+                              ></span>
+                            </Indicator>
+                          </Flex>
+
+                          {/* Enhanced Switches */}
+                          <Flex direction="column" gap="md">
+                            <div className="flex flex-col gap-1">
+                              <CustomSwitch
+                                label="Guided Learning"
+                                tooltip="When enabled course-wide, this setting applies to all students and cannot be disabled by them. The AI will encourage independent problem-solving by providing hints and questions instead of direct answers, while still finding and citing relevant course materials. This promotes critical thinking while ensuring students have access to proper resources."
+                                checked={guidedLearning}
+                                onChange={(value: boolean) =>
+                                  handleCheckboxChange({
+                                    guidedLearning: value,
+                                  })
+                                }
+                              />
+
+                              <CustomSwitch
+                                label="Document-Based References Only"
+                                tooltip="Restricts the AI to use only information from the provided documents. Useful for maintaining accuracy in fields like legal research where external knowledge could be problematic."
+                                checked={documentsOnly}
+                                onChange={(value: boolean) =>
+                                  handleCheckboxChange({ documentsOnly: value })
+                                }
+                              />
+
+                              <CustomSwitch
+                                label="Bypass UIUC.chat's internal prompting"
+                                tooltip="Internally, we prompt the model to (1) add citations and (2) always be as helpful as possible. You can bypass this for full un-modified control over your bot."
+                                checked={systemPromptOnly}
+                                onChange={(value: boolean) =>
+                                  handleCheckboxChange({
+                                    systemPromptOnly: value,
+                                  })
+                                }
+                              />
+
+                              {/* Conditional Button */}
+                              {systemPromptOnly && (
+                                <Flex
+                                  mt="sm"
+                                  direction="column"
+                                  gap="xs"
+                                  className="mt-[-4px] pl-[82px]"
+                                >
+                                  <CustomCopyButton
+                                    label="Copy UIUC.chat's internal prompt"
+                                    tooltip="You can use and customize our default internal prompting to suit your needs. Note, only the specific citation formatting described will work with our citation 'find and replace' system. This provides a solid starting point for defining AI behavior in raw prompt mode."
+                                    onClick={handleCopyDefaultPrompt}
+                                  />
+                                </Flex>
+                              )}
+
+                              {/* Reset Button and Modal */}
+                              <Modal
+                                opened={resetModalOpened}
+                                onClose={closeResetModal}
+                                title={
+                                  <Text
+                                    className={`${montserrat_heading.variable} font-montserratHeading`}
+                                    size="lg"
+                                    weight={700}
+                                    gradient={{
+                                      from: 'red',
+                                      to: 'white',
+                                      deg: 45,
+                                    }}
+                                    variant="gradient"
+                                  >
+                                    Reset Prompting Settings
+                                  </Text>
+                                }
+                                centered
+                                radius="md"
+                                size="md"
+                                styles={{
+                                  header: {
+                                    backgroundColor: '#15162c',
+                                    borderBottom: '1px solid #2D2F48',
+                                    padding: '20px 24px',
+                                    marginBottom: '16px',
+                                  },
+                                  content: {
+                                    backgroundColor: '#15162c',
+                                    border: '1px solid #2D2F48',
+                                  },
+                                  body: {
+                                    padding: '0 24px 24px 24px',
+                                  },
+                                  title: {
+                                    marginBottom: '0',
+                                  },
+                                  close: {
+                                    marginTop: '4px',
+                                  },
+                                }}
+                              >
+                                <Flex
+                                  direction="column"
+                                  gap="xl"
+                                  style={{ marginTop: '8px' }}
+                                >
+                                  <Flex align="flex-start" gap="md">
+                                    <IconAlertTriangle
+                                      size={24}
+                                      color={theme.colors.red[5]}
+                                      style={{ marginTop: '2px' }}
+                                    />
+                                    <Text
+                                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                      size="sm"
+                                      weight={500}
+                                      style={{
+                                        color: 'white',
+                                        lineHeight: 1.5,
+                                      }}
+                                    >
+                                      Are you sure you want to reset your system
+                                      prompt and all behavior settings to their
+                                      default values?
+                                    </Text>
+                                  </Flex>
+
+                                  <Divider
+                                    style={{
+                                      borderColor: 'rgba(255,255,255,0.1)',
+                                    }}
+                                  />
+
+                                  <div>
+                                    <Text
+                                      size="sm"
+                                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                      weight={600}
+                                      style={{
+                                        color: '#D1D1D1',
+                                        marginBottom: '12px',
+                                      }}
+                                    >
+                                      This action will:
+                                    </Text>
+                                    <List
+                                      size="sm"
+                                      spacing="sm"
+                                      style={{ color: '#D1D1D1' }}
+                                      icon={
+                                        <div
+                                          style={{
+                                            width: '6px',
+                                            height: '6px',
+                                            borderRadius: '50%',
+                                            backgroundColor: 'hsl(0,100%,70%)',
+                                            marginTop: '8px',
+                                          }}
+                                        />
+                                      }
+                                    >
+                                      <List.Item>
+                                        Restore the system prompt to the default
+                                        template
+                                      </List.Item>
+                                      <List.Item>
+                                        Disable Guided Learning, Document-Only
+                                        mode, and other custom settings
+                                      </List.Item>
+                                    </List>
+                                  </div>
+
+                                  <Text
+                                    size="sm"
+                                    style={{ color: '#D1D1D1' }}
+                                    className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                  >
+                                    This cannot be undone. Please confirm you
+                                    wish to proceed.
+                                  </Text>
+
+                                  <Group position="right" mt="md">
+                                    <Button
+                                      variant="outline"
+                                      color="gray"
+                                      radius="md"
+                                      onClick={closeResetModal}
+                                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                      styles={(theme) => ({
+                                        root: {
+                                          borderColor: theme.colors.gray[6],
+                                          color: '#fff',
+                                          '&:hover': {
+                                            backgroundColor:
+                                              theme.colors.gray[8],
+                                          },
+                                        },
+                                      })}
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      variant="filled"
+                                      color="red"
+                                      radius="md"
+                                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                      sx={(theme) => ({
+                                        backgroundColor: `${theme.colors.red[8]} !important`,
+                                        border: 'none',
+                                        color: '#fff',
+                                        padding: '10px 20px',
+                                        fontWeight: 600,
+                                        boxShadow:
+                                          '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                        transition: 'all 0.2s ease',
+                                        '&:hover': {
+                                          backgroundColor: `${theme.colors.red[9]} !important`,
+                                          transform: 'translateY(-1px)',
+                                          boxShadow:
+                                            '0 4px 8px rgba(0, 0, 0, 0.3)',
+                                        },
+                                        '&:active': {
+                                          transform: 'translateY(0)',
+                                          boxShadow:
+                                            '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                        },
+                                      })}
+                                      onClick={() => {
+                                        resetSystemPrompt()
+                                        closeResetModal()
+                                      }}
+                                    >
+                                      Confirm
+                                    </Button>
+                                  </Group>
+                                </Flex>
+                              </Modal>
+
+                              {/* Reset and Share Link buttons */}
+                              <Flex
+                                direction="column"
+                                mt="md"
+                                justify="flex-start"
+                                gap="md"
+                              >
+                                <Button
+                                  variant="filled"
+                                  color="red"
+                                  radius="md"
+                                  leftIcon={<IconAlertTriangle size={16} />}
+                                  className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                  sx={(theme) => ({
+                                    backgroundColor: `${theme.colors.red[8]} !important`,
+                                    border: 'none',
+                                    color: '#fff',
+                                    padding: '10px 20px',
+                                    fontWeight: 600,
+                                    transition: 'all 0.2s ease',
+                                    '&:hover': {
+                                      backgroundColor: `${theme.colors.red[9]} !important`,
+                                    },
+                                    '&:active': {},
+                                  })}
+                                  onClick={openResetModal}
+                                >
+                                  Reset Prompting Settings
+                                </Button>
+
+                                <Button
+                                  variant="filled"
+                                  radius="md"
+                                  leftIcon={<IconLink size={16} />}
+                                  onClick={openLinkGenerator}
+                                  className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                  sx={(theme) => ({
+                                    background:
+                                      'var(--dashboard-button) !important',
+                                    border: 'none',
+                                    color: '#fff',
+                                    padding: '10px 20px',
+                                    fontWeight: 600,
+                                    transition: 'all 0.2s ease',
+                                    '&:hover': {
+                                      background:
+                                        'var(--dashboard-button-hover) !important',
+                                    },
+                                    '&:active': {},
+                                  })}
+                                >
+                                  Generate Share Link
+                                </Button>
+                              </Flex>
+
+                              {/* Add the Link Generator Modal */}
+                              <LinkGeneratorModal
+                                opened={linkGeneratorOpened}
+                                onClose={closeLinkGenerator}
+                                course_name={course_name}
+                                currentSettings={{
+                                  guidedLearning,
+                                  documentsOnly,
+                                  systemPromptOnly,
+                                }}
+                              />
+                            </div>
+                          </Flex>
+                        </Flex>
+                      </div>
+                    </div>
+                  </>
                 )}
 
                 {/* End of right side of Card */}
               </Flex>
             </Card>
-
-            {/* Custom GPTs Section */}
-            <CustomPromptsTable
-              customSystemPrompts={customSystemPrompts}
-              theme={theme}
-              montserrat_heading={montserrat_heading}
-              montserrat_paragraph={montserrat_paragraph}
-              onOpenAddEditModal={handleOpenCustomPromptModal}
-              onDeletePrompt={handleDeletePrompt}
-              onTogglePinned={handleTogglePinnedPrompt}
-              onToggleEnabled={handleToggleEnabledPrompt}
-              onOpenLinkGeneratorModal={handleOpenLinkGeneratorModal}
-              onCopyToClipboard={(text, type) => {
-                if (type === 'url') {
-                  // Create the full URL with course name and GPT ID
-                  const baseUrl = window.location.origin;
-                  const fullUrl = `${baseUrl}/${course_name}/chat?gpt=${text}`;
-                  navigator.clipboard.writeText(fullUrl);
-                  showToastNotification(
-                    theme,
-                    'Success',
-                    'Chat link copied to clipboard!'
-                  );
-                } else {
-                  navigator.clipboard.writeText(text);
-                  showToastNotification(
-                    theme,
-                    'Success',
-                    'Prompt copied to clipboard!'
-                  );
-                }
-              }}
-            />
-
-            {/* Modal for Adding/Editing Custom GPTs */}
-            <CustomGPTModal
-              opened={customPromptModalOpened}
-              onClose={handleCloseCustomPromptModal}
-              editingCustomPromptId={editingCustomPromptId}
-              customPromptForm={customPromptForm}
-              handleCustomPromptFormChange={handleCustomPromptFormChange}
-              handleSaveCustomPrompt={handleSaveCustomPrompt}
-              theme={theme}
-              montserrat_heading={montserrat_heading}
-              montserrat_paragraph={montserrat_paragraph}
-            />
-
-            {/* Delete Confirmation Modal */}
-            <DeleteCustomPromptModal
-              opened={deleteConfirmModalOpened}
-              onClose={closeDeleteConfirmModal}
-              onConfirm={handleConfirmDeleteCustomPrompt}
-              promptName={promptToDelete?.name}
-              theme={theme}
-              montserrat_heading={montserrat_heading}
-              montserrat_paragraph={montserrat_paragraph}
-            />
-
-            {/* End of Custom GPTs Section */}
           </Flex>
         </div>
         <GlobalFooter />
       </main>
-    </>
+    </SettingsLayout>
   )
+}
+
+export const showToastNotification = (
+  theme: MantineTheme,
+  title: string,
+  message: string,
+  isError = false,
+  icon?: React.ReactNode,
+) => {
+  // Calculate duration based on message length (minimum 5 seconds, add 1 second for every 20 characters)
+  const baseDuration = 5000
+  const durationPerChar = 50 // 50ms per character
+  const duration = Math.max(
+    baseDuration,
+    Math.min(15000, message.length * durationPerChar),
+  )
+
+  notifications.show({
+    withCloseButton: true,
+    autoClose: duration,
+    title: title,
+    message: message,
+    icon: icon || (isError ? <IconAlertTriangle /> : <IconCheck />),
+    styles: {
+      root: {
+        backgroundColor: 'var(--notification)', // Dark background to match the page
+        borderColor: isError ? '#E53935' : 'var(--notification-border)', // Red for errors,  for success
+        borderWidth: '1px',
+        borderStyle: 'solid',
+        borderRadius: '8px', // Added rounded corners
+      },
+      title: {
+        color: 'var(--notification-title)', // White text for the title
+        fontWeight: 600,
+      },
+      description: {
+        color: 'var(--notification-message)', // Light gray text for the message
+      },
+      closeButton: {
+        color: 'var(--notification-title)', // White color for the close button
+        borderRadius: '4px', // Added rounded corners to close button
+        '&:hover': {
+          backgroundColor: 'rgba(255, 255, 255, 0.1)', // Subtle hover effect
+        },
+      },
+      icon: {
+        backgroundColor: 'transparent', // Transparent background for the icon
+        color: isError ? '#E53935' : 'var(--notification-title)', // Icon color matches the border
+      },
+    },
+  })
+}
+
+export const showToastOnPromptUpdate = (
+  theme: MantineTheme,
+  was_error = false,
+  isReset = false,
+) => {
+  const title = was_error
+    ? 'Error Updating Prompt'
+    : isReset
+      ? 'Prompt Reset to Default'
+      : 'Prompt Updated Successfully'
+  const message = was_error
+    ? 'An error occurred while updating the prompt. Please try again.'
+    : isReset
+      ? 'The system prompt has been reset to default settings.'
+      : 'The system prompt has been updated.'
+  const isError = was_error
+
+  showToastNotification(theme, title, message, isError)
 }
 
 export default CourseMain
