@@ -901,9 +901,6 @@ export const Chat = memo(
             mode: 'chat',
           }
           
-          console.log('🔍 LLM DEBUG: Final chat body prepared with conversation:', updatedConversation.messages.length, 'messages')
-          console.log('🔍 LLM DEBUG: Last message contexts:', updatedConversation.messages[updatedConversation.messages.length - 1]?.contexts)
-          console.log('🔍 LLM DEBUG: Last message contexts count:', updatedConversation.messages[updatedConversation.messages.length - 1]?.contexts?.length || 0)
           updatedConversation = finalChatBody.conversation!
 
           // Action 4: Build Prompt - Put everything together into a prompt
@@ -958,9 +955,6 @@ export const Chat = memo(
                           try {
                 // CALL OUR NEW ENDPOINT... /api/allNewRoutingChat
                 startOfCallToLLM = performance.now()
-                console.log('🔍 LLM DEBUG: Making API call to /api/allNewRoutingChat')
-                console.log('🔍 LLM DEBUG: Request body contexts:', finalChatBody.conversation?.messages[finalChatBody.conversation.messages.length - 1]?.contexts)
-                console.log('🔍 LLM DEBUG: Request body contexts count:', finalChatBody.conversation?.messages[finalChatBody.conversation.messages.length - 1]?.contexts?.length || 0)
                 
                 try {
                   response = await fetch('/api/allNewRoutingChat', {
