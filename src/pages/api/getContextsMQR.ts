@@ -70,9 +70,8 @@ export const fetchMQRContexts = async (
     // Handle doc_groups array
     doc_groups.forEach((group) => params.append('doc_groups', group))
 
-      params.append('conversation_id', conversation_id)
+    params.append('conversation_id', conversation_id)
     
-
     const response = await fetch(`/api/getContextsMQR?${params.toString()}`)
 
     if (!response.ok) {
