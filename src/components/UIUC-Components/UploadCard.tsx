@@ -426,11 +426,11 @@ export const UploadCard = memo(function UploadCard({
                     // Assuming the file is converted to a URL somewhere else
                     if (e.target.files?.length) {
                       console.log('Uploading to s3')
-                      const userId = auth.user?.profile.sub || current_user_email
                       const banner_s3_image = await uploadToS3(
                         e.target.files?.[0] ?? null,
-                        userId,
+                        '', // No user_id needed for course logos
                         projectName,
+                        'document-group', // Course logos belong with course materials
                       )
                       if (banner_s3_image && metadata) {
                         metadata.banner_image_s3 = banner_s3_image
