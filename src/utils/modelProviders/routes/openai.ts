@@ -1,11 +1,11 @@
+import OpenAI from 'openai'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
+import { preferredModelIds, ProviderNames } from '../LLMProvider'
 import {
   OpenAIModelID,
   OpenAIModels,
   type OpenAIProvider,
 } from '../types/openai'
-import OpenAI from 'openai'
-import { preferredModelIds, ProviderNames } from '../LLMProvider'
 
 export const getOpenAIModels = async (
   openAIProvider: OpenAIProvider,
@@ -38,6 +38,20 @@ export const getOpenAIModels = async (
 
     if (!response.data) {
       openAIProvider.error = `Error fetching models from OpenAI, unexpected response format. Response: ${response}`
+    }
+
+    // gpt-5-thinking will not be explictly listed in the response, it will just be gpt-5
+    // so we need to add it manually if gpt-5 is in the response
+    const gpt5ThinkingModel = response.data.find(
+      (model: any) => model.id === 'gpt-5',
+    )
+    if (gpt5ThinkingModel) {
+      response.data.push({
+        id: 'gpt-5-thinking',
+        object: 'model',
+        created: 1728288000,
+        owned_by: 'openai',
+      })
     }
 
     // Iterate through the models and sort them based on preferredModelIds
