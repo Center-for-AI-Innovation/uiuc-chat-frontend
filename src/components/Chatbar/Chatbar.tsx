@@ -404,7 +404,7 @@ export const Chatbar = ({
         isExporting,
       }}
     >
-      <Sidebar<Conversation>
+      <Sidebar
         side={'left'}
         isOpen={showChatbar}
         addItemButtonTitle={t('New chat')}

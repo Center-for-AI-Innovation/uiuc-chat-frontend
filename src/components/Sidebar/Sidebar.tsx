@@ -11,11 +11,11 @@ import {
 import { type FolderWithConversation } from '~/types/folder'
 import Search from '../Search'
 
-interface Props<T> {
+interface Props {
   isOpen: boolean
   addItemButtonTitle: string
   side: 'left' | 'right'
-  items: T[]
+  items: any[]
   itemComponent: ReactNode
   folderComponent: ReactNode
   folders: FolderWithConversation[]
@@ -30,7 +30,7 @@ interface Props<T> {
   customGPTsComponent?: ReactNode
 }
 
-const Sidebar = <T,>({
+const Sidebar = ({
   isOpen,
   addItemButtonTitle,
   side,
@@ -47,7 +47,7 @@ const Sidebar = <T,>({
   handleDrop,
   onScroll,
   customGPTsComponent,
-}: Props<T>) => {
+}: Props) => {
   const { t } = useTranslation('promptbar')
 
   const allowDrop = (e: any) => {
@@ -113,9 +113,9 @@ const Sidebar = <T,>({
               <Text size="sm" color="dimmed" className="mb-2 px-3">
                 Folders
               </Text>
+              <div className="flex border-b border-[--dashboard-border] pb-2">
                 {folderComponent}
-            <div className="flex border-b border-[--dashboard-border] pb-2">
-              {folderComponent}
+              </div>
             </div>
           )}
 

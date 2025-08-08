@@ -30,16 +30,6 @@ export function useFetchConversationHistory(
       if (!isValidEmail || !isValidCourse) {
         return Promise.reject(new Error('Invalid email or course name'))
       }
-      return fetchConversationHistory(
-        user_email!,
-        searchTerm,
-        courseName!,
-        pageParam,
-      )
-        console.warn('Invalid email or course name in fetchConversationHistory');
-        return { conversations: [], nextCursor: null };
-      }
-      
       try {
         const result = await fetchConversationHistory(user_email!, searchTerm, courseName!, pageParam);
         // Ensure the result has the expected structure

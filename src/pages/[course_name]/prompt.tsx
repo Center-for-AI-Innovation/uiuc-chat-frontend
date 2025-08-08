@@ -1,5 +1,6 @@
 // src/pages/[course_name]/prompt.tsx
 'use client'
+import React, { useState, useEffect, useRef } from 'react'
 import { type NextPage } from 'next'
 import { Montserrat } from 'next/font/google'
 import { useRouter } from 'next/router'
@@ -30,21 +31,12 @@ import {
   useMantineTheme,
   type MantineTheme,
 } from '@mantine/core'
-import { useAuth } from 'react-oidc-context'
-import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
-import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
-import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import {
-  LoadingPlaceholderForAdminPages,
-  MainPageBackground,
-} from '~/components/UIUC-Components/MainPageBackground'
-
   DEFAULT_SYSTEM_PROMPT,
   GUIDED_LEARNING_PROMPT,
   DOCUMENT_FOCUS_PROMPT,
 } from '~/utils/app/const'
 import { type CourseMetadata } from '~/types/courseMetadata'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { callUpsertCustomGPT, callSetCustomGPTPinned } from '~/utils/customGPTUtils'
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
@@ -63,8 +55,6 @@ import {
   IconLink,
   IconSparkles,
 } from '@tabler/icons-react'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { notifications } from '@mantine/notifications'
 import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
 import { useDebouncedCallback } from 'use-debounce'
 import { v4 as uuidv4 } from 'uuid'
@@ -77,13 +67,6 @@ import { LinkGeneratorModal } from '~/components/Modals/LinkGeneratorModal'
 import CustomSwitch from '~/components/Switches/CustomSwitch'
 import { findDefaultModel } from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
 import { type ChatBody } from '~/types/chat'
-import { type CourseMetadata } from '~/types/courseMetadata'
-import { callSetCourseMetadata } from '~/utils/apiUtils'
-import {
-  DEFAULT_SYSTEM_PROMPT,
-  DOCUMENT_FOCUS_PROMPT,
-  GUIDED_LEARNING_PROMPT,
-} from '~/utils/app/const'
 import {
   recommendedModelIds,
   warningLargeModelIds,
@@ -97,9 +80,6 @@ import {
 } from '~/utils/modelProviders/LLMProvider'
 import { type AnthropicModel } from '~/utils/modelProviders/types/anthropic'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
-import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
-import { v4 as uuidv4 } from 'uuid'
-import { type ChatBody } from '~/types/chat'
 import CustomPromptsTable from '~/components/Course/CustomGPTTable'
 import CustomGPTModal from '~/components/Modals/CustomGPTModal'
 import PromptEngineeringGuide from '~/components/Course/PromptEngineeringGuide';
@@ -107,6 +87,8 @@ import SystemPromptControls from '~/components/Course/SystemPromptControls';
 import BehaviorSettingsPanel from '~/components/Course/BehaviorSettingsPanel';
 import DeleteCustomPromptModal from '~/components/Modals/DeleteCustomPromptModal';
 import { CustomSystemPrompt } from '~/types/courseMetadata';
+import { montserrat_heading, montserrat_paragraph } from 'fonts';
+import MakeNewCoursePage from '~/components/UIUC-Components/MakeNewCoursePage';
 
 // Moved utility functions before the component that uses them
 const showToastNotification = (
@@ -1962,75 +1944,6 @@ CRITICAL: The optimized prompt must:
   )
 }
 
-export const showToastNotification = (
-  theme: MantineTheme,
-  title: string,
-  message: string,
-  isError = false,
-  icon?: React.ReactNode,
-) => {
-  // Calculate duration based on message length (minimum 5 seconds, add 1 second for every 20 characters)
-  const baseDuration = 5000
-  const durationPerChar = 50 // 50ms per character
-  const duration = Math.max(
-    baseDuration,
-    Math.min(15000, message.length * durationPerChar),
-  )
 
-  notifications.show({
-    withCloseButton: true,
-    autoClose: duration,
-    title: title,
-    message: message,
-    icon: icon || (isError ? <IconAlertTriangle /> : <IconCheck />),
-    styles: {
-      root: {
-        backgroundColor: 'var(--notification)', // Dark background to match the page
-        borderColor: isError ? '#E53935' : 'var(--notification-border)', // Red for errors,  for success
-        borderWidth: '1px',
-        borderStyle: 'solid',
-        borderRadius: '8px', // Added rounded corners
-      },
-      title: {
-        color: 'var(--notification-title)', // White text for the title
-        fontWeight: 600,
-      },
-      description: {
-        color: 'var(--notification-message)', // Light gray text for the message
-      },
-      closeButton: {
-        color: 'var(--notification-title)', // White color for the close button
-        borderRadius: '4px', // Added rounded corners to close button
-        '&:hover': {
-          backgroundColor: 'rgba(255, 255, 255, 0.1)', // Subtle hover effect
-        },
-      },
-      icon: {
-        backgroundColor: 'transparent', // Transparent background for the icon
-        color: isError ? '#E53935' : 'var(--notification-title)', // Icon color matches the border
-      },
-    },
-  })
-}
-
-export const showToastOnPromptUpdate = (
-  theme: MantineTheme,
-  was_error = false,
-  isReset = false,
-) => {
-  const title = was_error
-    ? 'Error Updating Prompt'
-    : isReset
-      ? 'Prompt Reset to Default'
-      : 'Prompt Updated Successfully'
-  const message = was_error
-    ? 'An error occurred while updating the prompt. Please try again.'
-    : isReset
-      ? 'The system prompt has been reset to default settings.'
-      : 'The system prompt has been updated.'
-  const isError = was_error
-
-  showToastNotification(theme, title, message, isError)
-}
 
 export default CourseMain

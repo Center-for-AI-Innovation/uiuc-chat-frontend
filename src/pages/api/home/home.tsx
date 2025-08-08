@@ -36,13 +36,11 @@ import {
   useUpdateFolder,
 } from '~/hooks/folderQueries'
 import { useUpdateConversation } from '~/hooks/conversationQueries'
-import { FolderType, FolderWithConversation } from '~/types/folder'
-import { useQueryClient } from '@tanstack/react-query'
 import { useCreateFolder } from '~/hooks/folderQueries'
 import { selectBestTemperature } from '~/components/Chat/Temperature'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
-import { montserrat_heading } from 'fonts'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
+import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 
 interface Props {
   current_email: string
@@ -739,13 +737,14 @@ const Home = ({
         return
       }
       
-      const settings = getSettings()
-      if (settings.theme) {
-        dispatch({
-          field: 'lightMode',
-          value: settings.theme,
-        })
-      }
+      // Theme handling is now managed by ThemeContext
+      // const settings = getSettings()
+      // if (settings.theme) {
+      //   dispatch({
+      //     field: 'lightMode',
+      //     value: settings.theme,
+      //   })
+      // }
 
       if (window.innerWidth < 640) {
         dispatch({ field: 'showChatbar', value: false })
