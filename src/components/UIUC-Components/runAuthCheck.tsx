@@ -20,6 +20,10 @@ export const get_user_permission = (
 
     // if private && not signed in, redirect
     if (course_metadata.is_private && !auth.isAuthenticated) {
+      if (course_metadata.allow_logged_in_users) {
+        console.log('private && allow_loggedin_users, redirect ', auth.user)
+        return 'view'
+      }
       console.log('private && not signed in, redirect ', auth.user)
       return 'no_permission'
     }
