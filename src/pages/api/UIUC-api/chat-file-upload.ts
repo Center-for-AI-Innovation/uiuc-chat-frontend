@@ -54,9 +54,9 @@ const handler = async (
         .from('conversations')
         .insert({
           id: conversationId,
-          name: 'File Upload Conversation', // ✅ Required field added
+          name: 'File Upload Conversation', // Required field added
           user_email: 'placeholder@example.com',
-          project_name: courseName, // ✅ Correct column name
+          project_name: courseName, // Correct column name
           model: model || 'gpt-4o-mini',
           prompt: 'You are a helpful assistant.',
           temperature: 0.7,
@@ -165,7 +165,7 @@ const handler = async (
       })
       .eq('id', fileUploadId)
 
-    // ✅ Return success only after processing is complete
+    // Return success only after processing is complete
     res.status(200).json({
       success: true,
       fileUploadId,

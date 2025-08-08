@@ -367,7 +367,7 @@ export const Chat = memo(
 
           let updatedConversation: Conversation
           if (deleteCount) {
-            // ✅ FIXED: Don't clear contexts if they come from a file upload
+            // FIXED: Don't clear contexts if they come from a file upload
             const isFileUploadMessage = Array.isArray(message.content) && message.content.some(c => 
               typeof c === 'object' && c.type === 'file'
             )
@@ -434,8 +434,7 @@ export const Chat = memo(
             key: 'messages',
             value: updatedConversation.messages,
           })
-          updateConversationMutation.mutate(updatedConversation)
-          
+          updateConversationMutation.mutate(updatedConversation)          
           homeDispatch({ field: 'loading', value: true })
           homeDispatch({ field: 'messageIsStreaming', value: true })
           const controller = new AbortController()
@@ -493,7 +492,7 @@ export const Chat = memo(
             })
           }
 
-          // ✅ FIXED: Check if this is a file upload message with contexts
+          // FIXED: Check if this is a file upload message with contexts
           const isFileUploadMessageWithContexts = Array.isArray(message.content) && 
             message.content.some(c => 
               typeof c === 'object' && c.type === 'file'
@@ -513,14 +512,13 @@ export const Chat = memo(
             homeDispatch({ field: 'queryRewriteText', value: null })
             message.wasQueryRewritten = undefined
             message.queryRewriteText = undefined
-            // ✅ FIXED: Don't clear contexts if this is a file upload message with contexts
+            // FIXED: Don't clear contexts if this is a file upload message with contexts
             if (!isFileUploadMessageWithContexts) {
               message.contexts = []
             }
           } else {
             // Action 2: Context Retrieval: Vector Search
             let rewrittenQuery = searchQuery // Default to original query
-            
             // Skip query rewrite if disabled in course metadata, if it's the first message, or if there are no documents
             if (
               courseMetadata?.vector_search_rewrite_disabled ||
@@ -899,8 +897,7 @@ export const Chat = memo(
             model: selectedConversation.model,
             skipQueryRewrite: documentCount === 0,
             mode: 'chat',
-          }
-          
+          }    
           updatedConversation = finalChatBody.conversation!
 
           // Action 4: Build Prompt - Put everything together into a prompt
@@ -952,7 +949,7 @@ export const Chat = memo(
               })
             }
           } else {
-                          try {
+                try {
                 // CALL OUR NEW ENDPOINT... /api/allNewRoutingChat
                 startOfCallToLLM = performance.now()
                 
