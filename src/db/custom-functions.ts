@@ -15,6 +15,8 @@ async function runPsqlFile() {
         process.env.POSTGRES_USERNAME as string,
         '-d',
         process.env.POSTGRES_DATABASE as string,
+        '-p',
+        process.env.POSTGRES_PORT as string,
         '-f',
         './src/db/migrations/0001_custom_functions.sql',
       ],
