@@ -647,7 +647,7 @@ export const ChatInput = ({
 
       // Upload all files to S3 and update status
       try {
-        const s3Key = await uploadToS3(file, user_id, courseName)
+        const s3Key = await uploadToS3(file, user_id, courseName, 'chat')
         
         setFileUploads((prev) =>
           prev.map((f) =>
