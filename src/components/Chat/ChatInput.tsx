@@ -4,7 +4,6 @@ import { type Plugin } from '@/types/plugin'
 import { type Prompt } from '@/types/prompt'
 import { Text } from '@mantine/core'
 import {
-  IconAlertCircle,
   IconArrowDown,
   IconPlayerStop,
   IconRepeat,
@@ -35,7 +34,7 @@ import { PromptList } from './PromptList'
 import { VariableModal } from './VariableModal'
 
 import { Tooltip, useMantineTheme } from '@mantine/core'
-import { notifications } from '@mantine/notifications'
+import { showToast, showErrorToast, showWarningToast, showInfoToast } from '~/utils/toastUtils'
 import { Montserrat } from 'next/font/google'
 
 import React from 'react'
@@ -332,11 +331,7 @@ export const ChatInput = ({
 
     if (messageIsStreaming || hasProcessingFiles) {
       if (hasProcessingFiles) {
-        notifications.show({
-          title: 'Files Processing',
-          message: 'Please wait for all files to finish processing',
-          color: 'yellow',
-        })
+        showWarningToast('Please wait for all files to finish processing', 'Files Processing')
       }
       return
     }
@@ -351,12 +346,7 @@ export const ChatInput = ({
       const pendingFiles = fileUploads.filter((fu) => fu.status !== 'completed')
 
       if (pendingFiles.length > 0) {
-        notifications.show({
-          title: 'Files Still Processing',
-          message:
-            'Please wait for all files to finish processing before sending',
-          color: 'yellow',
-        })
+        showWarningToast('Please wait for all files to finish processing before sending', 'Files Still Processing')
         return
       }
 
@@ -563,21 +553,16 @@ export const ChatInput = ({
         const errorMessage =
           errorResponse.error ||
           'An error occurred while processing your request'
-        notifications.show({
-          message: errorMessage,
-          color: 'red',
-        })
+        showErrorToast(errorMessage)
         return
       }
     } catch (error) {
       console.error('Error in chat submission:', error)
-      notifications.show({
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Failed to send message. Please try again.',
-        color: 'red',
-      })
+      showErrorToast(
+        error instanceof Error
+          ? error.message
+          : 'Failed to send message. Please try again.'
+      )
     }
   }
 
@@ -586,12 +571,10 @@ export const ChatInput = ({
 
     // 1. Validation: number of files
     if (allFiles.length > 5) {
-      notifications.show({
+      showToast({
         title: 'Too Many Files',
-        message:
-          'You can upload a maximum of 5 files at once. Please remove some files before adding new ones.',
-        color: 'red',
-        icon: <IconAlertCircle />,
+        message: 'You can upload a maximum of 5 files at once. Please remove some files before adding new ones.',
+        type: 'error',
         autoClose: 6000,
       })
       return
@@ -600,12 +583,10 @@ export const ChatInput = ({
     // 2. Validation: total size
     const totalSize = allFiles.reduce((sum, file) => sum + file.size, 0)
     if (totalSize > 25 * 1024 * 1024) {
-      notifications.show({
+      showToast({
         title: 'Files Too Large',
-        message:
-          'The total size of all files cannot exceed 25MB. Please remove large files or upload smaller ones.',
-        color: 'red',
-        icon: <IconAlertCircle />,
+        message: 'The total size of all files cannot exceed 25MB. Please remove large files or upload smaller ones.',
+        type: 'error',
         autoClose: 6000,
       })
       return
@@ -615,11 +596,10 @@ export const ChatInput = ({
     for (const file of newFiles) {
       const ext = file.name.split('.').pop()?.toLowerCase()
       if (!ext || !ALLOWED_FILE_EXTENSIONS.includes(ext)) {
-        notifications.show({
+        showToast({
           title: 'Unsupported File Type',
           message: `The file "${file.name}" is not supported. Please upload files of the following types: ${ALLOWED_FILE_EXTENSIONS.join(', ')}.`,
-          color: 'red',
-          icon: <IconAlertCircle />,
+          type: 'error',
           autoClose: 6000,
         })
         return
@@ -635,13 +615,7 @@ export const ChatInput = ({
     )
 
     if (uniqueNewFiles.length === 0) {
-      notifications.show({
-        title: 'Duplicate Files',
-        message: 'All selected files are already uploaded or in progress.',
-        color: 'yellow',
-        icon: <IconAlertCircle />,
-        autoClose: 6000,
-      })
+      showWarningToast('All selected files are already uploaded or in progress.', 'Duplicate Files')
       return
     }
 
@@ -649,25 +623,13 @@ export const ChatInput = ({
     const finalUniqueFiles = removeDuplicateFiles(uniqueNewFiles)
 
     if (finalUniqueFiles.length === 0) {
-      notifications.show({
-        title: 'Duplicate Files',
-        message: 'All selected files are duplicates.',
-        color: 'yellow',
-        icon: <IconAlertCircle />,
-        autoClose: 6000,
-      })
+      showWarningToast('All selected files are duplicates.', 'Duplicate Files')
       return
     }
 
     if (finalUniqueFiles.length < uniqueNewFiles.length) {
       const duplicateCount = uniqueNewFiles.length - finalUniqueFiles.length
-      notifications.show({
-        title: 'Duplicate Files Removed',
-        message: `${duplicateCount} duplicate file(s) were removed from the selection.`,
-        color: 'blue',
-        icon: <IconAlertCircle />,
-        autoClose: 4000,
-      })
+      showInfoToast(`${duplicateCount} duplicate file(s) were removed from the selection.`, 'Duplicate Files Removed')
     }
 
     for (const file of finalUniqueFiles) {
@@ -792,10 +754,7 @@ export const ChatInput = ({
             f.file.name === file.name ? { ...f, status: 'error' } : f,
           ),
         )
-        notifications.show({
-          message: `Failed to process ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          color: 'red',
-        })
+        showErrorToast(`Failed to process ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`)
       }
     }
   }
