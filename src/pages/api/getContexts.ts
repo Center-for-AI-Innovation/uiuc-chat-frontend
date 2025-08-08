@@ -8,6 +8,7 @@ export const fetchContextsFromBackend = async (
   search_query: string,
   token_limit = 4000,
   doc_groups: string[] = [],
+  conversation_id?: string,
 ): Promise<ContextWithMetadata[]> => {
   const backendUrl = getBackendUrl()
 
@@ -16,6 +17,7 @@ export const fetchContextsFromBackend = async (
     search_query: search_query,
     token_limit: token_limit,
     doc_groups: doc_groups,
+    conversation_id: conversation_id,
   }
 
   const response = await fetch(`${backendUrl}/getTopContexts`, {
@@ -40,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { course_name, search_query, token_limit = 4000, doc_groups = [] } = req.body
+    const { course_name, search_query, token_limit = 4000, doc_groups = [], conversation_id } = req.body
 
     if (!course_name || !search_query) {
       return res.status(400).json({ 
@@ -49,7 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Use the common function
-    const data = await fetchContextsFromBackend(course_name, search_query, token_limit, doc_groups)
+    const data = await fetchContextsFromBackend(course_name, search_query, token_limit, doc_groups, conversation_id)
     return res.status(200).json(data)
   } catch (error) {
     console.error('Error fetching contexts:', error)
@@ -66,6 +68,7 @@ export const fetchContexts = async (
   search_query: string,
   token_limit = 4000,
   doc_groups: string[] = [],
+  conversation_id?: string,
 ): Promise<ContextWithMetadata[]> => {
   // Check if we're running on client-side (browser) or server-side
   const isClientSide = typeof window !== 'undefined'
@@ -83,6 +86,7 @@ export const fetchContexts = async (
           search_query,
           token_limit,
           doc_groups,
+          conversation_id,
         }),
       })
 
@@ -95,7 +99,7 @@ export const fetchContexts = async (
       return data
     } else {
       // Server-side: use the common function directly
-      return await fetchContextsFromBackend(course_name, search_query, token_limit, doc_groups)
+      return await fetchContextsFromBackend(course_name, search_query, token_limit, doc_groups, conversation_id)
     }
   } catch (error) {
     console.error('Error fetching contexts:', error)
