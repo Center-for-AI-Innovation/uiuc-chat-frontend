@@ -4,9 +4,10 @@
  */
 
 const fetch = require('node-fetch')
+const { getKeycloakBaseUrl } = require('../src/utils/authHelpers')
 
 async function updateKeycloakRedirectURIs() {
-  const keycloakUrl = process.env.NEXT_PUBLIC_KEYCLOAK_URL
+  const keycloakBaseUrl = getKeycloakBaseUrl();
   const realm = process.env.NEXT_PUBLIC_KEYCLOAK_REALM
   const clientId = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID
   const adminUser = process.env.KEYCLOAK_ADMIN_USERNAME
@@ -18,7 +19,7 @@ async function updateKeycloakRedirectURIs() {
   try {
     // Get access token
     const tokenResponse = await fetch(
-      `${keycloakUrl}realms/master/protocol/openid-connect/token`,
+      `${keycloakBaseUrl}realms/master/protocol/openid-connect/token`,
       {
         method: 'POST',
         headers: {
@@ -37,7 +38,7 @@ async function updateKeycloakRedirectURIs() {
 
     // Get current client config
     const clientResponse = await fetch(
-      `${keycloakUrl}admin/realms/${realm}/clients?clientId=${clientId}`,
+      `${keycloakBaseUrl}admin/realms/${realm}/clients?clientId=${clientId}`,
       {
         headers: {
           Authorization: `Bearer ${access_token}`,
@@ -77,7 +78,7 @@ async function updateKeycloakRedirectURIs() {
     }
 
     // Update client
-    await fetch(`${keycloakUrl}admin/realms/${realm}/clients/${client.id}`, {
+    await fetch(`${keycloakBaseUrl}admin/realms/${realm}/clients/${client.id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
