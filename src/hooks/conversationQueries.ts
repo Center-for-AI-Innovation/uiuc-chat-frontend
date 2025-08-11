@@ -1,11 +1,11 @@
 import {
-  QueryClient,
+  type QueryClient,
   useInfiniteQuery,
   useMutation,
   useQuery,
 } from '@tanstack/react-query'
-import { Conversation, ConversationPage } from '~/types/chat'
-import { FolderWithConversation } from '~/types/folder'
+import { type Conversation, type ConversationPage } from '~/types/chat'
+import { type FolderWithConversation } from '~/types/folder'
 import {
   deleteAllConversationsFromServer,
   deleteConversationFromServer,
@@ -22,9 +22,9 @@ export function useFetchConversationHistory(
   const normalizedSearchTerm = searchTerm || '';
   
   // Move the type checking outside of Boolean to handle each case explicitly
-  const isValidEmail = typeof user_email === 'string' && user_email.length > 0;
-  const isValidCourse = typeof courseName === 'string' && courseName.length > 0;
-  const isEnabled = isValidEmail && isValidCourse;
+  const isValidEmail = typeof user_email === 'string' && user_email.length > 0
+  const isValidCourse = typeof courseName === 'string' && courseName.length > 0
+  const isEnabled = isValidEmail && isValidCourse
 
   return useInfiniteQuery({
     queryKey: ['conversationHistory', user_email, courseName, normalizedSearchTerm],

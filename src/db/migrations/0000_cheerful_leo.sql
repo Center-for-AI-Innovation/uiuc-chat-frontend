@@ -3,7 +3,7 @@
 --- The tables and columns are created from schema.ts file mentioned in drizzle.config.ts
 ---
 
-CREATE TABLE "api_keys" (
+CREATE TABLE IF NOT EXISTS "api_keys" (
 	"user_id" text NOT NULL,
 	"key" text NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE "api_keys" (
 	"email" varchar(255)
 );
 --> statement-breakpoint
-CREATE TABLE "cedar_chunks" (
+CREATE TABLE IF NOT EXISTS "cedar_chunks" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"document_id" text,
@@ -24,14 +24,14 @@ CREATE TABLE "cedar_chunks" (
 	"metadata" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "cedar_document_metadata" (
+CREATE TABLE IF NOT EXISTS "cedar_document_metadata" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"document_id" text,
 	"metadata" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "cedar_documents" (
+CREATE TABLE IF NOT EXISTS "cedar_documents" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"document_id" text,
@@ -43,7 +43,7 @@ CREATE TABLE "cedar_documents" (
 	"metadata" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "cedar_runs" (
+CREATE TABLE IF NOT EXISTS "cedar_runs" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"run_id" text,
@@ -52,7 +52,7 @@ CREATE TABLE "cedar_runs" (
 	"metadata" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "conversations" (
+CREATE TABLE IF NOT EXISTS "conversations" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"uuid" uuid DEFAULT gen_random_uuid() NOT NULL,
 	"user_email" text,
@@ -61,12 +61,12 @@ CREATE TABLE "conversations" (
 	"updated_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "course_names" (
+CREATE TABLE IF NOT EXISTS "course_names" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"course_name" text
 );
 --> statement-breakpoint
-CREATE TABLE "doc_groups" (
+CREATE TABLE IF NOT EXISTS "doc_groups" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"name" text NOT NULL,
 	"course_name" text NOT NULL,
@@ -77,7 +77,7 @@ CREATE TABLE "doc_groups" (
 	"doc_count" integer DEFAULT 0
 );
 --> statement-breakpoint
-CREATE TABLE "doc_groups_sharing" (
+CREATE TABLE IF NOT EXISTS "doc_groups_sharing" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"doc_group_id" integer NOT NULL,
 	"shared_with_email" text,
@@ -86,7 +86,7 @@ CREATE TABLE "doc_groups_sharing" (
 	"updated_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "documents" (
+CREATE TABLE IF NOT EXISTS "documents" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"s3_path" text,
 	"course_name" text,
@@ -99,14 +99,14 @@ CREATE TABLE "documents" (
 	"metadata" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "documents_doc_groups" (
+CREATE TABLE IF NOT EXISTS "documents_doc_groups" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"document_id" integer NOT NULL,
 	"doc_group_id" integer NOT NULL,
 	"created_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "documents_failed" (
+CREATE TABLE IF NOT EXISTS "documents_failed" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"s3_path" text,
@@ -119,7 +119,7 @@ CREATE TABLE "documents_failed" (
 	"error" text
 );
 --> statement-breakpoint
-CREATE TABLE "documents_in_progress" (
+CREATE TABLE IF NOT EXISTS "documents_in_progress" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"s3_path" text,
@@ -133,20 +133,20 @@ CREATE TABLE "documents_in_progress" (
 	"beam_task_id" text
 );
 --> statement-breakpoint
-CREATE TABLE "email-newsletter" (
+CREATE TABLE IF NOT EXISTS "email-newsletter" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"created_at" timestamp DEFAULT now(),
 	"email" text
 );
 --> statement-breakpoint
-CREATE TABLE "folders" (
+CREATE TABLE IF NOT EXISTS "folders" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"name" text,
 	"user_email" text,
 	"created_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "llm-convo-monitor" (
+CREATE TABLE IF NOT EXISTS "llm-convo-monitor" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"created_at" timestamp DEFAULT now(),
 	"convo" jsonb,
@@ -157,7 +157,7 @@ CREATE TABLE "llm-convo-monitor" (
 	"convo_analysis_tags" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "llm-guided-contexts" (
+CREATE TABLE IF NOT EXISTS "llm-guided-contexts" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"text" text,
@@ -167,7 +167,7 @@ CREATE TABLE "llm-guided-contexts" (
 	"section_id" uuid
 );
 --> statement-breakpoint
-CREATE TABLE "llm-guided-docs" (
+CREATE TABLE IF NOT EXISTS "llm-guided-docs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"doc_name" text,
@@ -176,7 +176,7 @@ CREATE TABLE "llm-guided-docs" (
 	"course_name" text
 );
 --> statement-breakpoint
-CREATE TABLE "llm-guided-sections" (
+CREATE TABLE IF NOT EXISTS "llm-guided-sections" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"num_tokens" bigint,
@@ -185,11 +185,11 @@ CREATE TABLE "llm-guided-sections" (
 	"doc_id" uuid
 );
 --> statement-breakpoint
-CREATE TABLE "LLMProvider" (
+CREATE TABLE IF NOT EXISTS "LLMProvider" (
 	"value" text
 );
 --> statement-breakpoint
-CREATE TABLE "messages" (
+CREATE TABLE IF NOT EXISTS "messages" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"conversation_id" integer,
 	"message" text,
@@ -202,12 +202,12 @@ CREATE TABLE "messages" (
 	"total_tokens" integer
 );
 --> statement-breakpoint
-CREATE TABLE "n8n_workflows" (
+CREATE TABLE IF NOT EXISTS "n8n_workflows" (
 	"latest_workflow_id" serial NOT NULL,
 	"is_locked" boolean NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "nal_publications" (
+CREATE TABLE IF NOT EXISTS "nal_publications" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"pmid" varchar,
@@ -217,7 +217,7 @@ CREATE TABLE "nal_publications" (
 	"filepath" text
 );
 --> statement-breakpoint
-CREATE TABLE "pre_authorized_api_keys" (
+CREATE TABLE IF NOT EXISTS "pre_authorized_api_keys" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"email" text,
@@ -232,16 +232,20 @@ CREATE TABLE "pre_authorized_api_keys" (
 	"keycloak_id" text
 );
 --> statement-breakpoint
-CREATE TABLE "project_stats" (
+CREATE TABLE IF NOT EXISTS "project_stats" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"project_id" integer NOT NULL,
+    "project_name" text NOT NULL,
 	"total_messages" integer DEFAULT 0,
 	"total_conversations" integer DEFAULT 0,
+    "unique_users" integer DEFAULT 0,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+    "model_usage_counts" jsonb
 );
+
 --> statement-breakpoint
-CREATE TABLE "projects" (
+CREATE TABLE IF NOT EXISTS "projects" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"uuid" uuid DEFAULT gen_random_uuid() NOT NULL,
 	"name" text NOT NULL,
@@ -252,7 +256,7 @@ CREATE TABLE "projects" (
 	"owner_id" text
 );
 --> statement-breakpoint
-CREATE TABLE "publications" (
+CREATE TABLE IF NOT EXISTS "publications" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"pmid" varchar NOT NULL,
@@ -273,7 +277,7 @@ CREATE TABLE "publications" (
 	"xml_filename" text
 );
 --> statement-breakpoint
-CREATE TABLE "pubmed_daily_update" (
+CREATE TABLE IF NOT EXISTS "pubmed_daily_update" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"pmid" varchar NOT NULL,
@@ -294,7 +298,7 @@ CREATE TABLE "pubmed_daily_update" (
 	"xml_filename" text
 );
 --> statement-breakpoint
-CREATE TABLE "uiuc-course-table" (
+CREATE TABLE IF NOT EXISTS "uiuc-course-table" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"total_tokens" jsonb,
@@ -305,7 +309,7 @@ CREATE TABLE "uiuc-course-table" (
 	"course_name" text
 );
 --> statement-breakpoint
-CREATE TABLE "usage_metrics" (
+CREATE TABLE IF NOT EXISTS "usage_metrics" (
 	"id" bigint NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"course_name" text,

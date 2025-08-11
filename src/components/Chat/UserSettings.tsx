@@ -12,19 +12,20 @@ import { ModelParams } from './ModelParams'
 import { useTranslation } from 'react-i18next'
 import { prebuiltAppConfig } from '~/utils/modelProviders/ConfigWebLLM'
 import * as webllm from '@mlc-ai/web-llm'
-import { WebllmModel, webLLMModels } from '~/utils/modelProviders/WebLLM'
+import { type WebllmModel, webLLMModels } from '~/utils/modelProviders/WebLLM'
 
 const useStyles = createStyles((theme) => ({
   modalContent: {
     height: '95%',
     width: '90%',
-    borderRadius: '10px',
-    backgroundColor: '#1d1f33',
+    borderRadius: '.25rem',
+    color: 'var(--modal-text)',
+    backgroundColor: 'var(--modal)',
   },
   modalHeader: {
     width: '100%',
-    borderRadius: '10px',
-    backgroundColor: '#15162c',
+    borderRadius: '.5rem',
+    backgroundColor: 'var(--modal-dark)',
   },
   title: {
     fontFamily: montserrat_heading.variable,
@@ -33,10 +34,15 @@ const useStyles = createStyles((theme) => ({
   tab: {
     fontFamily: montserrat_paragraph.variable,
     '&:hover': {
-      background: '#15162c',
+      color: 'white',
+      backgroundColor: 'var(--modal-active)',
     },
     '&[data-active="true"]': {
-      background: 'linear-gradient(to right, #6d28d9, #4f46e5, #2563eb)',
+      backgroundColor: 'var(--modal-active)',
+      '&:hover': {
+        color: 'white',
+        backgroundColor: 'var(--modal-active)',
+      },
     },
     whiteSpace: 'normal',
   },
@@ -97,19 +103,22 @@ export const UserSettings = () => {
 
   return (
     <Modal.Root opened={opened} onClose={handleClose} centered size={'800px'}>
-      <Modal.Overlay style={{ width: '100%', color: '#1d1f33' }} />
+      <Modal.Overlay
+        style={{ width: '100%', color: 'var(--background-faded)' }}
+      />
       <Modal.Content
-        className={`${classes.modalContent} ${isSmallScreen ? 'p-2' : 'p-4'} overflow-x-hidden md:rounded-lg`}
+        className={`${classes.modalContent} ${isSmallScreen ? 'p-2' : 'p-4'} overflow-x-hidden bg-[--modal] text-[--modal-text] md:rounded-lg`}
       >
         <Modal.Header className={classes.modalHeader}>
           <Modal.Title
-            className={`${classes.title} ${montserrat_heading.variable} font-montserratHeading text-white`}
+            className={`${classes.title} ${montserrat_heading.variable} font-montserratHeading`}
           >
             Settings
           </Modal.Title>
           <Modal.CloseButton
             onClick={handleClose}
             aria-label="Close settings"
+            className="text-[--foreground-faded] hover:text-[--foreground]"
           />
         </Modal.Header>
         <Modal.Body className="mt-4" p={isSmallScreen ? 'xs' : 'md'}>
@@ -125,19 +134,19 @@ export const UserSettings = () => {
           >
             <Tabs.List mt={'xl'} ml="xs">
               <Tabs.Tab
-                className={`${classes.tab} ${isSmallScreen ? 'px-2 text-xs' : 'text-md'} ${montserrat_paragraph.variable} font-montserratParagraph`}
+                className={`${classes.tab} ${isSmallScreen ? 'px-2 text-xs' : 'text-md'} ${montserrat_paragraph.variable} font-montserratParagraph text-[--modal-text]`}
                 value="model"
               >
                 Model
               </Tabs.Tab>
               <Tabs.Tab
-                className={`${classes.tab} ${isSmallScreen ? 'px-2 text-xs' : 'text-md'} ${montserrat_paragraph.variable} font-montserratParagraph`}
+                className={`${classes.tab} ${isSmallScreen ? 'px-2 text-xs' : 'text-md'} ${montserrat_paragraph.variable} font-montserratParagraph text-[--modal-text]`}
                 value="documentGroups"
               >
                 Document Groups
               </Tabs.Tab>
               <Tabs.Tab
-                className={`${classes.tab} ${isSmallScreen ? 'px-2 text-xs' : 'text-md'} ${montserrat_paragraph.variable} font-montserratParagraph`}
+                className={`${classes.tab} ${isSmallScreen ? 'px-2 text-xs' : 'text-md'} ${montserrat_paragraph.variable} font-montserratParagraph text-[--modal-text]`}
                 value="tools"
               >
                 Tools
@@ -164,27 +173,15 @@ export const UserSettings = () => {
                   w={isSmallScreen ? '70%' : '90%'}
                 />
                 <FancyRetrieval />
-                <Divider
-                  className={classes.divider}
-                  w={isSmallScreen ? '70%' : '90%'}
-                />
               </Flex>
             </Tabs.Panel>
 
             <Tabs.Panel value="documentGroups" pt="xs">
               <DocumentGroupsItem />
-              <Divider
-                className={classes.divider}
-                w={isSmallScreen ? '70%' : '90%'}
-              />
             </Tabs.Panel>
 
             <Tabs.Panel value="tools" pt="xs">
               <ToolsItem />
-              <Divider
-                className={classes.divider}
-                w={isSmallScreen ? '70%' : '90%'}
-              />
             </Tabs.Panel>
           </Tabs>
         </Modal.Body>

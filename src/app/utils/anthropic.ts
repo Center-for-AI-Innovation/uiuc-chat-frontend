@@ -2,11 +2,11 @@ import { type CoreMessage, generateText, streamText, smoothStream } from 'ai'
 import { type Conversation } from '~/types/chat'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import {
-  AnthropicProvider,
+  type AnthropicProvider,
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
-import { AnthropicModel } from '~/utils/modelProviders/types/anthropic'
+import { type AnthropicModel } from '~/utils/modelProviders/types/anthropic'
 export const dynamic = 'force-dynamic'
 
 /**

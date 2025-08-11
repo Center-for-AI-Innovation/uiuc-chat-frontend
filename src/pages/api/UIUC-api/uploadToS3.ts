@@ -1,6 +1,6 @@
 // upload.ts
 import { S3Client } from '@aws-sdk/client-s3'
-import { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiRequest, type NextApiResponse } from 'next'
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post'
 
 const region = process.env.AWS_REGION
@@ -14,8 +14,8 @@ if (region && process.env.AWS_KEY && process.env.AWS_SECRET) {
       accessKeyId: process.env.AWS_KEY,
       secretAccessKey: process.env.AWS_SECRET,
     },
-    endpoint: process.env.MINIO_ENDPOINT,
-    forcePathStyle: true, // Required for MinIO
+    // endpoint: process.env.MINIO_ENDPOINT,
+    //forcePathStyle: true, // Required for MinIO
   })
 }
 

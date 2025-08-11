@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useDebouncedState } from '@mantine/hooks'
 import {
   IconLock,
@@ -37,6 +37,10 @@ export default function ShareSettingsModal({
   projectName,
   metadata: initialMetadata,
 }: ShareSettingsModalProps) {
+  const useIllinoisChatConfig = useMemo(() => {
+    return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
+  }, [])
+
   const queryClient = useQueryClient()
   const [metadata, setMetadata] = useState<CourseMetadata>(initialMetadata)
 
@@ -107,29 +111,29 @@ export default function ShareSettingsModal({
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.2 }}
-        className="relative mx-4 max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-[#15162c] shadow-2xl ring-1 ring-white/10 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-violet-500/40 [&::-webkit-scrollbar-track]:bg-[#1e1f3a] [&::-webkit-scrollbar]:w-2"
+        className="relative mx-4 max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-[--modal] text-[--modal-text] shadow-2xl ring-1 ring-white/10"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Add subtle gradient border */}
-        <div className="absolute inset-0 -z-10 rounded-2xl bg-gradient-to-tr from-violet-500/20 to-transparent blur-xl" />
+        <div className="blur-xlxl absolute inset-0 -z-10 rounded-2xl" />
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-[--modal-border] px-6 py-4">
           <div className="flex flex-col">
             <h2
-              className={`${montserrat_heading.variable} font-montserratHeading text-xl font-semibold text-white`}
+              className={`${montserrat_heading.variable} font-montserratHeading text-xl font-semibold`}
             >
               Share your chatbot
             </h2>
             <p
-              className={`${montserrat_paragraph.variable} mt-1 font-montserratParagraph text-sm text-gray-400`}
+              className={`${montserrat_paragraph.variable} mt-1 font-montserratParagraph text-sm text-[--foreground-faded]`}
             >
               Collaborate with members on this project
             </p>
           </div>
           <button
             onClick={onClose}
-            className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-800/50 hover:text-red-500"
+            className="rounded-full p-2  transition-colors hover:bg-[--background-faded]"
           >
             <div className="flex h-5 w-5 items-center justify-center rounded-full">
               ✕
@@ -138,26 +142,27 @@ export default function ShareSettingsModal({
         </div>
 
         {/* Content */}
-        <div className="divide-y divide-white/10">
+        <div className="">
           {/* Chatbot Link section */}
-          <div className="p-6">
+          <div className="p-6 pb-0">
             <h3
-              className={`${montserrat_heading.variable} mb-3 font-montserratHeading text-sm font-medium text-gray-400`}
+              className={`${montserrat_heading.variable} font-montserratHeading text-sm font-medium`}
             >
               Chatbot Link
             </h3>
-            <div className="relative flex gap-2">
+
+            <div className="relative mt-2 flex gap-2">
               <div className="group relative flex-1">
                 <input
                   type="text"
                   value={shareUrl}
                   readOnly
-                  className={`${montserrat_paragraph.variable} w-full rounded-lg bg-[#1e1f3a]/80 px-4 py-2.5 font-montserratParagraph text-sm text-white/90 ring-1 ring-white/10 backdrop-blur-sm transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-violet-500/50`}
+                  className={`${montserrat_paragraph.variable} w-full rounded-lg bg-[--background-faded] px-4 py-2.5 font-montserratParagraph text-sm text-[--foreground] ring-1 ring-[--background-dark] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[--illinois-orange]`}
                 />
               </div>
               <button
                 onClick={handleCopy}
-                className="flex min-w-[42px] items-center justify-center rounded-lg bg-violet-600 p-2.5 text-white transition-all duration-300 hover:bg-violet-500 active:scale-95"
+                className="flex min-w-[42px] items-center justify-center rounded-lg bg-[--dashboard-button] p-2.5 text-[--dashboard-button-foreground] transition-all duration-300 hover:bg-[--dashboard-button-hover] active:scale-95"
               >
                 {isCopied ? <IconCheck size={16} /> : <IconCopy size={16} />}
               </button>
@@ -165,34 +170,34 @@ export default function ShareSettingsModal({
           </div>
 
           {/* Access Control section */}
-          <div className="space-y-4 p-6">
+          <div className="space-y-2 p-6">
             <h3
-              className={`${montserrat_heading.variable} font-montserratHeading text-sm font-medium text-gray-400`}
+              className={`${montserrat_heading.variable} font-montserratHeading text-sm font-medium`}
             >
               Access Control
             </h3>
 
             {/* Privacy toggle */}
-            <div className="rounded-lg bg-[#1e1f3a] p-4 ring-1 ring-white/10 transition-all duration-300 hover:ring-violet-500/50">
+            <div className="rounded-lg bg-[--background-faded] p-4 transition-all duration-300">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {isPrivate ? (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#15162c] ring-1 ring-white/10">
-                      <IconLock className="h-5 w-5 text-violet-400" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[--dashboard-button]">
+                      <IconLock className="h-5 w-5 text-[--dashboard-button-foreground]" />
                     </div>
                   ) : (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#15162c] ring-1 ring-white/10">
-                      <IconLockOpen className="h-5 w-5 text-violet-400" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[--modal]">
+                      <IconLockOpen className="h-5 w-5 text-[--foreground-faded]" />
                     </div>
                   )}
                   <div>
                     <p
-                      className={`${montserrat_heading.variable} font-montserratHeading text-sm font-medium text-white`}
+                      className={`${montserrat_heading.variable} font-montserratHeading text-sm font-medium`}
                     >
                       {isPrivate ? 'Private Project' : 'Public Project'}
                     </p>
                     <p
-                      className={`${montserrat_paragraph.variable} font-montserratParagraph text-xs text-gray-400`}
+                      className={`${montserrat_paragraph.variable} font-montserratParagraph text-xs`}
                     >
                       {isPrivate
                         ? 'Only specified people can access'
@@ -200,18 +205,21 @@ export default function ShareSettingsModal({
                     </p>
                   </div>
                 </div>
-                <button
+                {!useIllinoisChatConfig && (<button
                   onClick={handlePrivacyChange}
                   className={`relative h-6 w-11 rounded-full transition-colors duration-300 ${
-                    isPrivate ? 'bg-violet-600' : 'bg-gray-600'
+                    isPrivate
+                      ? 'bg-[--dashboard-button]'
+                      : 'bg-[--background-dark]'
                   }`}
                 >
                   <span
-                    className={`absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ${
+                    className={`absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full bg-[--dashboard-button-foreground] shadow-md transition-transform duration-300 ${
                       isPrivate ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
-                </button>
+                </button>)}
+
               </div>
             </div>
 
@@ -228,7 +236,7 @@ export default function ShareSettingsModal({
                     <Accordion
                       type="single"
                       defaultValue="members"
-                      className="w-full"
+                      className="w-full bg-[--dashboard-background]"
                     >
                       <EmailListAccordion
                         course_name={projectName}

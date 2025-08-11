@@ -1,30 +1,42 @@
-import { type AppType } from 'next/app'
 import { MantineProvider } from '@mantine/core'
 import { Notifications } from '@mantine/notifications'
 import { appWithTranslation } from 'next-i18next'
+import { type AppType } from 'next/app'
 
-import '~/styles/globals.css'
-import '~/styles/citation-tooltips.css'
 import Maintenance from '~/components/UIUC-Components/Maintenance'
+import '~/styles/citation-tooltips.css'
+import '~/styles/globals.css'
 
-import posthog from 'posthog-js'
-import { PostHogProvider } from 'posthog-js/react'
-import { useRouter } from 'next/router'
-import { useEffect, useRef, useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { useRouter } from 'next/router'
+import posthog from 'posthog-js'
+import { PostHogProvider } from 'posthog-js/react'
+import { useEffect, useRef, useState } from 'react'
 
 // import { SpeedInsights } from '@vercel/speed-insights/next'
 import { Analytics } from '@vercel/analytics/next'
 
+import { ThemeProvider } from '~/contexts/ThemeContext'
 import { KeycloakProvider } from '../providers/KeycloakProvider'
 
 // Check that PostHog is client-side (used to handle Next.js SSR)
 if (typeof window !== 'undefined') {
-  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY as string, {
-    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com',
+  const key = process.env.NEXT_PUBLIC_POSTHOG_KEY
+  const host = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://posthog-dev.ilchat.mss.illinois.edu'
+
+  console.log('🔑 PostHog key:', key)
+  console.log('🌐 PostHog host:', host)
+
+  if (!key) {
+    console.warn('⚠️  No POSTHOG key—skipping init.')
+  } else {
+  posthog.init(key, {
+    api_host: host,
     opt_in_site_apps: true,
     autocapture: false,
+    person_profiles: 'always',
+    defaults: '2025-05-24',
     session_recording: {
       maskAllInputs: false,
       maskInputOptions: {
@@ -36,8 +48,9 @@ if (typeof window !== 'undefined') {
     },
     loaded: (posthog) => {
       if (process.env.NODE_ENV === 'development') posthog.debug()
-    },
-  })
+      },
+    })
+  }
 }
 
 const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
@@ -87,7 +100,7 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
             <ReactQueryDevtools
               initialIsOpen={false}
               position="left"
-              buttonPosition="bottom-left"
+              buttonPosition="bottom-right"
             />
             <MantineProvider
               withGlobalStyles
@@ -125,7 +138,9 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
                 },
               }}
             >
-              <Component {...pageProps} />
+              <ThemeProvider>
+                <Component {...pageProps} />
+              </ThemeProvider>
             </MantineProvider>
           </PostHogProvider>
         </QueryClientProvider>
