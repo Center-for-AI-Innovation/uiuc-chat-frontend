@@ -59,7 +59,7 @@ jobs:
       run: |
         SHORT_SHA=$(git rev-parse --short HEAD)
         BRANCH_TAG=$(echo "${GITHUB_REF##*/}" | tr '/' '-')
-        IMAGE_TAG="${SHORT_SHA}-${BRANCH_TAG}"
+        IMAGE_TAG="${BRANCH_TAG}-${SHORT_SHA}"
         echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
         echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
         echo "branch_tag=${BRANCH_TAG}" >> $GITHUB_OUTPUT
