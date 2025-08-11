@@ -6,7 +6,7 @@ import { eq, desc, gt, asc, and, inArray } from 'drizzle-orm'
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -14,7 +14,7 @@ export default async function handler(
 
   try {
     const { message, conversationId, user_email, course_name } = req.body
-    
+
     // First check if the message exists
     const existingMessage = await db
       .select()
@@ -91,7 +91,7 @@ export default async function handler(
 
     return res.status(200).json({ success: true });
   } catch (error: any) {
-    console.error('Error in upsert handler:', error);
-    return res.status(500).json({ error: error.message });
+    console.error('Error in upsert handler:', error)
+    return res.status(500).json({ error: error.message })
   }
-} 
+}

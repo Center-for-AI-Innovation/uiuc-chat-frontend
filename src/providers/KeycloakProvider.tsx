@@ -1,5 +1,5 @@
 import { AuthProvider } from 'react-oidc-context'
-import { ReactNode, useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import { WebStorageStateStore } from 'oidc-client-ts'
 
 interface AuthProviderProps {
@@ -14,8 +14,17 @@ const getBaseUrl = () => {
 // Function to save the current path before login
 const saveCurrentPath = () => {
   if (typeof window !== 'undefined') {
-    const currentPath = window.location.pathname + window.location.search
-    // Don't save the login callback URL with all the OIDC parameters
+    let currentPath = window.location.pathname + window.location.search
+
+    // Redirect "/" to "/chat" if using Illinois Chat config
+    if (
+      currentPath === '/' &&
+      process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
+    ) {
+      currentPath = '/chat'
+    }
+
+    // Don't save the login callback URL with OIDC params
     if (!currentPath.includes('state=') && !currentPath.includes('code=')) {
       localStorage.setItem('auth_redirect_path', currentPath)
       console.log('Saved redirect path:', currentPath)
@@ -65,13 +74,16 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
         silent_redirect_uri: `${baseUrl}/silent-renew`,
         post_logout_redirect_uri: baseUrl,
         userStore: new WebStorageStateStore({
-          store: window.localStorage
+          store: window.localStorage,
         }),
         automaticSilentRenew: true,
       }))
 
       // Only save the path when component mounts if we're not on the callback URL
-      if (!window.location.search.includes('state=') && !window.location.search.includes('code=')) {
+      if (
+        !window.location.search.includes('state=') &&
+        !window.location.search.includes('code=')
+      ) {
         saveCurrentPath()
       }
     }
@@ -85,14 +97,16 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
     }
 
     // Find login buttons by commonly used selectors
-    const loginButtons = document.querySelectorAll('.login-btn, [data-login], button[type="login"]')
-    loginButtons.forEach(button => {
+    const loginButtons = document.querySelectorAll(
+      '.login-btn, [data-login], button[type="login"]',
+    )
+    loginButtons.forEach((button) => {
       button.addEventListener('click', handleLoginClick)
     })
 
     return () => {
       // Clean up event listeners on unmount
-      loginButtons.forEach(button => {
+      loginButtons.forEach((button) => {
         button.removeEventListener('click', handleLoginClick)
       })
     }

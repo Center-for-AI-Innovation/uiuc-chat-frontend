@@ -1,4 +1,4 @@
-CREATE TABLE "user_entity" (
+CREATE TABLE IF NOT EXISTS "user_entity" (
 	"id" text PRIMARY KEY NOT NULL,
 	"email" text,
 	"email_constraint" text,
@@ -45,7 +45,6 @@ ALTER TABLE "messages" ALTER COLUMN "role" SET NOT NULL;--> statement-breakpoint
 ALTER TABLE "messages" ALTER COLUMN "created_at" SET DATA TYPE timestamp with time zone;--> statement-breakpoint
 ALTER TABLE "messages" ALTER COLUMN "created_at" DROP DEFAULT;--> statement-breakpoint
 ALTER TABLE "messages" ALTER COLUMN "created_at" SET NOT NULL;--> statement-breakpoint
-ALTER TABLE "projects" ALTER COLUMN "id" SET DATA TYPE bigserial;--> statement-breakpoint
 ALTER TABLE "projects" ALTER COLUMN "created_at" SET DATA TYPE timestamp with time zone;--> statement-breakpoint
 ALTER TABLE "projects" ALTER COLUMN "created_at" SET DEFAULT now();--> statement-breakpoint
 ALTER TABLE "projects" ALTER COLUMN "created_at" SET NOT NULL;--> statement-breakpoint

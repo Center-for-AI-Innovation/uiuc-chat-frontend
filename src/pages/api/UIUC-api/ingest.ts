@@ -57,29 +57,6 @@ const handler = async (
       responseBody,
     )
 
-    // Send to ingest-in-progress table
-    try {
-      const result = await db.insert(documentsInProgress).values({
-        s3_path: s3_filepath,
-        course_name: courseName,
-        readable_filename: readableFilename,
-        beam_task_id: responseBody.task_id,
-      })
-    } catch (error: any) {
-      console.error(
-        '❌❌ Database failed to insert into `documents_in_progress`:',
-        error,
-      )
-      // TODO need to update event name to remove supabase
-      posthog.capture('supabase_failure_insert_documents_in_progress', {
-        s3_path: s3_filepath,
-        course_name: courseName,
-        readable_filename: readableFilename,
-        error: error,
-        beam_task_id: responseBody.task_id,
-      })
-    }
-
     return res.status(200).json(responseBody)
   } catch (error) {
     const err = `❌❌ -- Bottom of /ingest -- Internal Server Error during ingest submission to Beam: ${error}`

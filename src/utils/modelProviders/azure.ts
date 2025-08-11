@@ -1,5 +1,5 @@
 import {
-  AzureProvider,
+  type AzureProvider,
   preferredModelIds,
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'

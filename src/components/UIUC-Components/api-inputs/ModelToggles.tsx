@@ -1,7 +1,7 @@
 import React from 'react'
 import { IconCheck, IconX } from '@tabler/icons-react'
 import { Switch, Stack } from '@mantine/core'
-import { LLMProvider } from '~/utils/modelProviders/LLMProvider'
+import { type LLMProvider } from '~/utils/modelProviders/LLMProvider'
 
 export function ModelToggles({
   form,
@@ -35,19 +35,26 @@ export function ModelToggles({
                 }}
                 thumbIcon={
                   field.state.value ? (
-                    <IconCheck size="0.8rem" color="purple" stroke={3} />
+                    <IconCheck
+                      size="0.8rem"
+                      color="var(--dashboard-button)"
+                      stroke={3}
+                    />
                   ) : (
                     <IconX size="0.8rem" color="grey" stroke={3} />
                   )
                 }
                 styles={{
+                  label: {
+                    color: 'var(--dashboard-foreground)',
+                  },
                   track: {
                     backgroundColor: field.state.value
-                      ? '#6a29a4 !important'
-                      : '#25262b',
+                      ? 'var(--dashboard-button) !important'
+                      : 'var(--dashboard-background-faded)',
                     borderColor: field.state.value
-                      ? '#6a29a4 !important'
-                      : '#25262b',
+                      ? 'var(--dashboard-button) !important'
+                      : 'var(--dashboard-background-faded)',
                   },
                 }}
               />
