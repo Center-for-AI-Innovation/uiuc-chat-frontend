@@ -20,12 +20,15 @@ export const get_user_permission = (
 
     // if private && not signed in, redirect
     if (course_metadata.is_private && !auth.isAuthenticated) {
+      console.log('private && not signed in. Auth: no_permission.')
+      return 'no_permission'
+    }
+
+    if (course_metadata.is_private && auth.isAuthenticated){
       if (course_metadata.allow_logged_in_users) {
-        console.log('private && allow_loggedin_users, redirect ', auth.user)
+        console.log('private && allow_logged_in_users. Auth: view.')
         return 'view'
       }
-      console.log('private && not signed in, redirect ', auth.user)
-      return 'no_permission'
     }
 
     // Get user email from OIDC profile
