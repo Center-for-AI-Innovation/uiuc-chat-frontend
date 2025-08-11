@@ -51,9 +51,12 @@ Add these secrets in GitHub repository settings for ECS deployment:
 - `AWS_SECRET_ACCESS_KEY` - AWS secret access key
 
 ### Frontend Build Environment Variables:
-- `NEXT_PUBLIC_KEYCLOAK_URL` - Keycloak server URL for authentication
 - `NEXT_PUBLIC_KEYCLOAK_REALM` - Keycloak realm name
 - `NEXT_PUBLIC_KEYCLOAK_CLIENT_ID` - Keycloak client ID
+- `NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG` - "True" to use Illinois Chat config which controls the appearance 
+- `NEXT_PUBLIC_ILLINOIS_CHAT_BANNER_CONTENT` - Illinois Chat Banner content HTML
+- `NEXT_PUBLIC_POSTHOG_KEY` - PostHog analytics key
+- `NEXT_PUBLIC_POSTHOG_HOST` - PostHog host URL
 
 ## 📋 ECS Deployment - Process
 
