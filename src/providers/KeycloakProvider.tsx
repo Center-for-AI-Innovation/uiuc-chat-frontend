@@ -1,6 +1,7 @@
 import { AuthProvider } from 'react-oidc-context'
 import { type ReactNode, useEffect, useState } from 'react'
 import { WebStorageStateStore } from 'oidc-client-ts'
+import { getKeycloakBaseUrl } from '~/utils/authHelpers'
 
 interface AuthProviderProps {
   children: ReactNode
@@ -35,12 +36,8 @@ const saveCurrentPath = () => {
 export const KeycloakProvider = ({ children }: AuthProviderProps) => {
   // Add state to track if we're on client side
   const [isMounted, setIsMounted] = useState(false)
-
   const [oidcConfig, setOidcConfig] = useState({
-    authority:
-      process.env.NEXT_PUBLIC_KEYCLOAK_URL +
-      'realms/' +
-      process.env.NEXT_PUBLIC_KEYCLOAK_REALM,
+    authority: `${getKeycloakBaseUrl()}realms/${process.env.NEXT_PUBLIC_KEYCLOAK_REALM}`,
     client_id: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'uiucchat',
     redirect_uri: '',
     silent_redirect_uri: '',
