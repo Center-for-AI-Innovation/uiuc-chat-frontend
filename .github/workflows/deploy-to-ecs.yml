@@ -72,6 +72,7 @@ jobs:
       run: |
         set -euo pipefail
         echo "Building image with tag: $IMAGE_TAG"
+        BRANCH_TAG=${{ steps.set-tag.outputs.branch_tag }}
         docker build \
           --build-arg NEXT_PUBLIC_KEYCLOAK_URL=${{ secrets.NEXT_PUBLIC_KEYCLOAK_URL }} \
           --build-arg NEXT_PUBLIC_KEYCLOAK_REALM=${{ secrets.NEXT_PUBLIC_KEYCLOAK_REALM }} \
