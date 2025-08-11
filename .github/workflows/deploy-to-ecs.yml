@@ -54,24 +54,36 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2
 
+    - name: Set image tag (adaptive short commit hash + branch)
+      id: set-tag
+      run: |
+        SHORT_SHA=$(git rev-parse --short HEAD)
+        BRANCH_TAG=$(echo "${GITHUB_REF##*/}" | tr '/' '-')
+        IMAGE_TAG="${SHORT_SHA}-${BRANCH_TAG}"
+        echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
+        echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
+        echo "branch_tag=${BRANCH_TAG}" >> $GITHUB_OUTPUT
+        echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+
     - name: Build, tag, and push image to Amazon ECR
       id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        IMAGE_TAG: ${{ github.sha }}
       run: |
-        # Build a docker container with build args for environment variables
+        set -euo pipefail
+        echo "Building image with tag: $IMAGE_TAG"
         docker build \
           --build-arg NEXT_PUBLIC_KEYCLOAK_URL=${{ secrets.NEXT_PUBLIC_KEYCLOAK_URL }} \
           --build-arg NEXT_PUBLIC_KEYCLOAK_REALM=${{ secrets.NEXT_PUBLIC_KEYCLOAK_REALM }} \
           --build-arg NEXT_PUBLIC_KEYCLOAK_CLIENT_ID=${{ secrets.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID }} \
           -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        
-        # Also tag as latest
+        # Also tag with branch only (optional, for easy rollback by branch)
+        docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:${BRANCH_TAG}
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:${BRANCH_TAG}
+        # Maintain latest tag
         docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-        
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
     - name: Download current task definition
