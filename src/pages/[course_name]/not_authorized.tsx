@@ -1,5 +1,5 @@
 import { useAuth } from 'react-oidc-context'
-import { NextPage } from 'next'
+import { type NextPage } from 'next'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { CanViewOnlyCourse } from '~/components/UIUC-Components/CanViewOnlyCourse'
@@ -7,7 +7,7 @@ import { CannotViewCourse } from '~/components/UIUC-Components/CannotViewCourse'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
-import { CourseMetadata } from '~/types/courseMetadata'
+import { type CourseMetadata } from '~/types/courseMetadata'
 import { initiateSignIn } from '~/utils/authHelpers'
 
 const NotAuthorizedPage: NextPage = () => {

@@ -1,5 +1,5 @@
-import { NextApiRequest, NextApiResponse } from 'next'
-import { ChatBody } from '@/types/chat'
+import { type NextApiRequest, type NextApiResponse } from 'next'
+import { type ChatBody } from '@/types/chat'
 import { buildPrompt } from '~/app/utils/buildPromptUtils'
 
 export default async function handler(

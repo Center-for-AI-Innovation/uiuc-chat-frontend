@@ -5,19 +5,18 @@ import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { IconSunset2, IconX } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/router';
-
+import { useRouter } from 'next/router'
 
 export default function Unsubscribe() {
-  const [email, setEmail] = useState('');
-  const router = useRouter();
+  const [email, setEmail] = useState('')
+  const router = useRouter()
 
   useEffect(() => {
     if (router.isReady) {
-      const emailParam = router.query.email;
-      if (typeof emailParam === 'string') setEmail(emailParam);
+      const emailParam = router.query.email
+      if (typeof emailParam === 'string') setEmail(emailParam)
     }
-  }, [router.isReady, router.query]);
+  }, [router.isReady, router.query])
 
   const handleSubmit = async (event: any) => {
     if (!email) {
@@ -65,7 +64,8 @@ export default function Unsubscribe() {
       notifications.show({
         id: 'success-notification',
         title: 'Successfully unsubscribed.',
-        message: "See ya, wouldn't wanna be ya! 🌅 Redirecting to home page in 5 seconds...",
+        message:
+          "See ya, wouldn't wanna be ya! 🌅 Redirecting to home page in 5 seconds...",
         autoClose: 5000,
         // color: 'green',
         radius: 'lg',
@@ -76,8 +76,8 @@ export default function Unsubscribe() {
       })
 
       setTimeout(() => {
-        router.push('/');
-      }, 5000);
+        router.push('/')
+      }, 5000)
     } catch (error) {
       console.error('There was a problem with the fetch operation:', error)
       notifications.show({
@@ -125,12 +125,14 @@ export default function Unsubscribe() {
           >
             Email:
           </Text>
-          <Badge size="lg" color="grape" radius="md">{email}</Badge>
+          <Badge size="lg" color="var(--link)" radius="md">
+            {email}
+          </Badge>
         </Group>
 
         <div>
           <button
-            className="flex w-full justify-center rounded-md border border-transparent bg-[#9d4edd] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#8441ba] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:bg-indigo-500 dark:hover:bg-indigo-600"
+            className="flex w-full justify-center rounded-md border border-transparent bg-[--button] px-4 py-2 text-sm font-medium text-[--button-text-color] hover:bg-[--button-hover] hover:text-[--button-hover-text-color] focus:outline-none focus:ring-2"
             onClick={handleSubmit}
           >
             Unsubscribe

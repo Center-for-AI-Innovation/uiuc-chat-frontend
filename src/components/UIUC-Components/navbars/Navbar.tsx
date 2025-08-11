@@ -1,31 +1,25 @@
-import Link from 'next/link'
-import Image from 'next/image'
-import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
-import { montserrat_heading } from 'fonts'
-import GlobalHeader from '~/components/UIUC-Components/navbars/GlobalHeader'
 import {
-  Flex,
-  Indicator,
-  Container,
   Burger,
-  Paper,
+  Container,
   createStyles,
+  Flex,
+  Paper,
   rem,
   Transition,
-  Tooltip,
-  Divider,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import {
-  ChartDots3,
-  MessageChatbot,
-  ReportAnalytics,
-  MessageCode,
-  Code,
-  Brain,
-} from 'tabler-icons-react'
-import { IconHome, IconFilePlus, IconClipboardText } from '@tabler/icons-react'
+  IconClipboardText,
+  IconFilePlus,
+  IconHome,
+  IconSparkles,
+} from '@tabler/icons-react'
+import { montserrat_heading } from 'fonts'
+import Image from 'next/image'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
+import { useEffect, useState } from 'react'
+import GlobalHeader from '~/components/UIUC-Components/navbars/GlobalHeader'
 
 interface NavbarProps {
   course_name?: string
@@ -52,7 +46,6 @@ const HEADER_HEIGHT = rem(90)
 
 const useStyles = createStyles((theme) => ({
   burger: {
-    color: '#f1f5f9',
     [theme.fn.largerThan('md')]: {
       display: 'none',
     },
@@ -70,65 +63,92 @@ const useStyles = createStyles((theme) => ({
   },
 
   inner: {
-    height: HEADER_HEIGHT,
+    //    height: HEADER_HEIGHT,
     display: 'flex',
-    alignItems: 'center',
+    alignItems: 'start',
     justifyContent: 'space-between',
   },
 
   link: {
     fontSize: rem(13),
     padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
-    margin: '0.1rem',
-    fontWeight: 700,
+    //    margin: '0.1rem',
+    fontWeight: 500,
+    color: 'var(--navbar-foreground)',
     transition:
       'border-color 100ms ease, color 100ms ease, background-color 100ms ease',
     borderRadius: theme.radius.sm,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#f1f5f9',
+    gap: '.4rem',
 
     '&:hover': {
-      color: 'hsl(280,100%,70%)',
-      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      color: 'var(--navbar-hover)',
+      backgroundColor: 'var(--navbar-hover-background)',
       textDecoration: 'none',
-      borderRadius: '8px',
     },
 
     '&[data-active="true"]': {
-      color: 'hsl(280,100%,70%)',
-      borderBottom: '2px solid hsl(280,100%,70%)',
+      color: 'var(--navbar-active)',
+      /*      borderBottom: '2px solid var(--navbar-hover)',*/
       textDecoration: 'none',
-      borderRadius: '8px',
-      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-      textAlign: 'right',
+      backgroundColor: 'var(--navbar-background)', //keep the same background color, so only changes on hover of non-active links
+      //      textAlign: 'left',
     },
 
     [theme.fn.smallerThan('md')]: {
-      display: 'list-item',
-      textAlign: 'center',
+      justifyContent: 'flex-start',
       borderRadius: 0,
-      padding: theme.spacing.xs,
+      backgroundColor: 'var(--navbar-background)',
+      padding: `${theme.spacing.lg} ${theme.spacing.sm}`, //extra padding for larger tap area
+    },
+  },
+
+  chatButton: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+
+    fontSize: rem(13),
+    fontWeight: 500,
+
+    color: 'var(--foreground-faded)',
+
+    padding: `.4rem ${theme.spacing.sm}`,
+    border: '1px solid var(--navbar-border)',
+    borderRadius: theme.radius.sm,
+
+    transition:
+      'border-color 100ms ease, color 100ms ease, background-color 100ms ease',
+
+    '&:hover': {
+      color: 'var(--dashboard-button)',
+      borderColor: 'var(--dashboard-button)',
+      textDecoration: 'none',
     },
   },
 
   dropdown: {
     position: 'absolute',
-    top: HEADER_HEIGHT,
-    right: '20px',
+    top: '4rem',
+    right: '.5rem',
     zIndex: 2,
+    border: '1px solid var(--navbar-border)',
     borderRadius: '10px',
     overflow: 'hidden',
-    width: '200px',
-    backgroundColor: 'rgb(26, 27, 30)',
+    width: 'calc(100% - 1rem)',
+    maxWidth: '330px',
+    backgroundColor: 'var(--background-faded)',
+    boxShadow: theme.shadows.lg,
     [theme.fn.largerThan('lg')]: {
       display: 'none',
     },
+    '& a': {},
   },
 
   iconButton: {
-    color: '#f1f5f9',
+    color: 'var(--navbar-foreground)',
     width: '40px',
     height: '40px',
     display: 'flex',
@@ -138,7 +158,7 @@ const useStyles = createStyles((theme) => ({
     transition: 'all 0.2s ease',
 
     '&:hover': {
-      color: 'hsl(280,100%,70%)',
+      color: 'var(--navbar-hover)',
       backgroundColor: 'rgba(255, 255, 255, 0.1)',
     },
   },
@@ -175,9 +195,25 @@ function Logo() {
   return (
     <div className="flex-1">
       <Link href="/">
-        <h2 className="ms-4 cursor-pointer text-2xl font-extrabold tracking-tight text-white sm:text-[1.8rem]">
-          Illinois <span className="text-[hsl(280,100%,70%)]">Chat</span>
-        </h2>
+        <div
+          className={`ms-4 flex items-center gap-1 font-bold ${montserrat_heading.variable} font-montserratHeading`}
+        >
+          <div style={{ width: '2.5rem', height: '2.5rem' }}>
+            <img
+              src="/media/logo_illinois.png"
+              width="auto"
+              height="100%"
+              alt="Illinois Logo"
+            />
+          </div>
+          <div className="text-2xl font-extrabold tracking-tight text-[--illinois-orange] sm:ml-2 sm:text-[1.8rem]">
+            Illinois
+          </div>
+          <br />
+          <div className="text-2xl font-extrabold tracking-tight text-[--foreground] sm:text-[1.8rem]">
+            Chat
+          </div>
+        </div>
       </Link>
     </div>
   )
@@ -207,6 +243,14 @@ function NavText({ children }: { children: React.ReactNode }) {
   )
 }
 
+function getCurrentPageName(link: string, items: NavItem[]) {
+  const found: any = items.filter(
+    (item: NavItem) => item.link && link == item.link,
+  )
+
+  return found.length > 0 ? found.shift().name : ''
+}
+
 function NavigationContent({
   items,
   opened,
@@ -231,36 +275,14 @@ function NavigationContent({
                 data-active={activeLink === item.link}
                 className={classes.link}
               >
-                <span style={{ display: 'flex', alignItems: 'center' }}>
-                  {item.icon}
-                  {item.name}
-                </span>
+                {item.icon}
+                {item.name}
               </Link>
             ))}
           </Paper>
         )}
       </Transition>
-      <button
-        className={classes.link}
-        onClick={() => {
-          if (courseName) router.push(`/${courseName}/chat`)
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-          <MessageChatIcon />
-          <span
-            style={{
-              whiteSpace: 'nowrap',
-              marginRight: '-5px',
-              paddingRight: '2px',
-              padding: '4px 0',
-            }}
-            className={`${montserrat_heading.variable} font-montserratHeading`}
-          >
-            Chat
-          </span>
-        </div>
-      </button>
+
       <Container className={classes.inner} style={{ paddingLeft: '0px' }}>
         <div className={classes.links}>
           {items.map((item, index) => (
@@ -271,102 +293,49 @@ function NavigationContent({
               data-active={activeLink === item.link}
               className={classes.link}
             >
-              <span style={{ display: 'flex', alignItems: 'center' }}>
-                {item.icon}
-                {item.name}
-              </span>
+              {item.icon}
+              {item.name}
             </Link>
           ))}
         </div>
       </Container>
+
       <Burger
         opened={opened}
         onClick={onToggle}
         className={classes.burger}
         size="sm"
-        color="#f1f5f9"
+        color="var(--foreground)"
       />
     </>
   )
 }
 
 // Icon Components
-export function MessageChatIcon() {
-  return (
-    <MessageChatbot
-      size={18}
-      strokeWidth={2}
-      style={{ marginRight: '3px', marginLeft: '3px' }}
-    />
-  )
-}
-
 export function DashboardIcon() {
-  return (
-    <IconHome
-      size={20}
-      strokeWidth={2}
-      style={{ marginRight: '4px', marginLeft: '4px' }}
-    />
-  )
-}
-
-export function LLMIcon() {
-  return (
-    <Brain
-      size={18}
-      strokeWidth={2}
-      style={{ marginRight: '3px', marginLeft: '3px' }}
-    />
-  )
-}
-
-export function MessageCodeIcon() {
-  return (
-    <MessageCode
-      size={18}
-      strokeWidth={2}
-      style={{ marginRight: '3px', marginLeft: '3px' }}
-    />
-  )
-}
-
-export function ReportIcon() {
-  return (
-    <ReportAnalytics
-      size={18}
-      strokeWidth={2}
-      style={{ marginRight: '3px', marginLeft: '3px' }}
-    />
-  )
-}
-
-export function ApiIcon() {
-  return (
-    <Code
-      size={18}
-      strokeWidth={2}
-      style={{ marginRight: '3px', marginLeft: '3px' }}
-    />
-  )
-}
-
-export function ChartDots3Icon() {
-  return (
-    <ChartDots3
-      size={18}
-      strokeWidth={2}
-      style={{ marginRight: '3px', marginLeft: '3px' }}
-    />
-  )
+  return <IconHome size={20} strokeWidth={2} />
 }
 
 export function FileIcon() {
-  return <IconFilePlus size={20} strokeWidth={2} style={{ margin: '0' }} />
+  return (
+    <IconFilePlus
+      color="var(--foreground)"
+      size={20}
+      strokeWidth={2}
+      style={{ margin: '0' }}
+    />
+  )
 }
 
 export function ClipboardIcon() {
-  return <IconClipboardText size={20} strokeWidth={2} style={{ margin: '0' }} />
+  return (
+    <IconClipboardText
+      color="var(--foreground)"
+      size={20}
+      strokeWidth={2}
+      style={{ margin: '0' }}
+    />
+  )
 }
 
 export default function Navbar({
@@ -385,86 +354,75 @@ export default function Navbar({
     if (path) setActiveLink(path)
   }, [router.asPath, router.isReady])
 
-  const items: NavItem[] = [
+  const navItems: NavItem[] = [
     {
-      name: <NavText>Dashboard</NavText>,
+      name: <NavText>My Chatbots</NavText>,
       icon: <DashboardIcon />,
-      link: course_name ? `/${course_name}/dashboard` : '/dashboard', // Add conditional
+      link: '/chatbots', // Add conditional course_name ? `/${course_name}/dashboard` :
     },
+    // {
+    //   name: <NavText>Explore Chatbots</NavText>,
+    //   icon: <IconCompass />,
+    //   link: '/explore',
+    // },
     {
-      name: <NavText>LLMs</NavText>,
-      icon: <LLMIcon />,
-      link: course_name ? `/${course_name}/llms` : '/llms', // Add conditional
-    },
-    {
-      name: (
-        <Indicator
-          label="New"
-          color="hsl(280,100%,70%)"
-          size={13}
-          styles={{ indicator: { top: '-4px !important' } }}
-        >
-          <NavText>Analysis</NavText>
-        </Indicator>
-      ),
-      icon: <ReportIcon />,
-      link: course_name ? `/${course_name}/analysis` : '/analysis', // Add conditional
-    },
-    {
-      name: <NavText>Prompting</NavText>,
-      icon: <MessageCodeIcon />,
-      link: course_name ? `/${course_name}/prompt` : '/prompt', // Add conditional
-    },
-    {
-      name: <NavText>Tools</NavText>,
-      icon: <ChartDots3Icon />,
-      link: course_name ? `/${course_name}/tools` : '/tools', // Add conditional
-    },
-    {
-      name: <NavText>API</NavText>,
-      icon: <ApiIcon />,
-      link: course_name ? `/${course_name}/api` : '/api', // Add conditional
+      name: <NavText>Create Your Own Bot</NavText>,
+      icon: <IconSparkles />,
+      link: '/new',
     },
   ]
 
   return (
-    <div className="bg-[#2e026d]">
+    <div className="fixed left-0 right-0 top-0 z-[999] bg-[--navbar-background]">
+      {/***************** top navigation for all pages *****************/}
+
       <Flex direction="row" align="center" justify="center">
-        <div className="mt-2 w-full max-w-[98%]">
-          <div className="navbar rounded-badge h-20 bg-[#15162c] shadow-lg shadow-purple-800">
-            <Logo />
-            {bannerUrl && <BannerImage url={bannerUrl} />}
-            {!isPlain && (
-              <NavigationContent
-                items={items}
-                opened={opened}
-                activeLink={activeLink}
-                onLinkClick={close}
-                onToggle={toggle}
-                courseName={course_name}
-              />
-            )}
-            <div className="flex items-center">
-              <div className="hidden items-center md:flex">
-                <Divider orientation="vertical" className={classes.divider} />
-                <div className="flex items-center gap-1 px-2">
-                  <Tooltip label="New Project" position="bottom" withArrow>
-                    <Link href="/new" className={classes.iconButton}>
-                      <FileIcon />
-                    </Link>
-                  </Tooltip>
-                  <Tooltip label="Documentation" position="bottom" withArrow>
-                    <Link
-                      href="https://docs.uiuc.chat/"
-                      className={classes.iconButton}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <ClipboardIcon />
-                    </Link>
-                  </Tooltip>
+        <div className="navbar h-20 w-full border-b border-[--navbar-border] bg-[--navbar-background]">
+          <Logo />
+
+          {/* TODO determine where to show the uploaded banner logo image (assume on the chat sidebar above or replace the project name?)
+          {bannerUrl && <BannerImage url={bannerUrl} />}
+*/}
+
+          {!isPlain && (
+            <NavigationContent
+              items={navItems}
+              opened={opened}
+              activeLink={activeLink}
+              onLinkClick={close}
+              onToggle={toggle}
+              courseName={course_name}
+            />
+          )}
+          {/* TODO decide where to move the link to documents (new project button alrady exists in new nav)
+                <div className="flex items-center">
+                  <div className="hidden items-center md:flex">
+                    <Divider orientation="vertical" className={classes.divider} />
+
+                    <div className="flex items-center gap-1 px-2">
+                      <Tooltip label="New Project" position="bottom" withArrow>
+                        <Link href="/new" className={classes.iconButton}>
+                          <FileIcon />
+                        </Link>
+                      </Tooltip>
+
+                      <Tooltip label="Documentation" position="bottom" withArrow>
+                        <Link
+                          href="https://docs.uiuc.chat/"
+                          className={classes.iconButton}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <ClipboardIcon />
+                        </Link>
+                      </Tooltip>
+                    </div>
+                  </div>
                 </div>
-              </div>
+*/}
+
+          <div className="flex items-center">
+            <div className="hidden items-center md:flex">
               <GlobalHeader isNavbar={true} />
             </div>
           </div>

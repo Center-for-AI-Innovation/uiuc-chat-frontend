@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'
 import {
   Modal,
   Button,
@@ -8,36 +8,37 @@ import {
   useMantineTheme,
   Text,
   Group,
-  MantineTheme,
-} from '@mantine/core';
+  type MantineTheme,
+} from '@mantine/core'
 
 const useStyles = createStyles((theme: MantineTheme) => ({
   root: {
-    backgroundColor: theme.colors.dark[7],
+    backgroundColor: 'var(--modal)',
     padding: theme.spacing.xl,
     borderRadius: theme.radius.md,
   },
   title: {
-    color: theme.white,
+    color: 'var(--modal-text)',
     fontSize: theme.fontSizes.xl,
     fontWeight: 700,
     marginBottom: 0,
   },
   close: {
-    color: theme.white,
+    color: 'var(--modal-text)',
     '&:hover': {
-      backgroundColor: theme.colors.dark[6],
+      color: 'var(--modal-button-text-hover)',
+      backgroundColor: 'var(--modal-button-hover)',
     },
   },
   textarea: {
-    backgroundColor: theme.colors.dark[6],
-    borderColor: theme.colors.dark[4],
-    color: theme.white,
+    color: 'var(--modal-text)',
+    backgroundColor: 'var(--background-faded)',
+    borderColor: 'var(--modal-border)',
     '&::placeholder': {
-      color: theme.colors.dark[2],
+      color: 'var(--foreground-faded)',
     },
     '&:focus': {
-      borderColor: theme.colors.violet[4],
+      borderColor: 'var(--background-darker)',
     },
   },
   buttonGroup: {
@@ -46,15 +47,15 @@ const useStyles = createStyles((theme: MantineTheme) => ({
     gap: theme.spacing.sm,
   },
   label: {
-    color: theme.white,
+    color: 'var(--modal-text)',
     marginBottom: theme.spacing.xs,
   },
-}));
+}))
 
 interface FeedbackModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (feedback: string, category: string) => void;
+  isOpen: boolean
+  onClose: () => void
+  onSubmit: (feedback: string, category: string) => void
 }
 
 export const FeedbackModal: React.FC<FeedbackModalProps> = ({
@@ -62,25 +63,25 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
   onClose,
   onSubmit,
 }) => {
-  const { classes } = useStyles();
-  const theme = useMantineTheme();
-  const [feedback, setFeedback] = useState<string>('');
-  const [category, setCategory] = useState<string>('other');
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const { classes } = useStyles()
+  const theme = useMantineTheme()
+  const [feedback, setFeedback] = useState<string>('')
+  const [category, setCategory] = useState<string>('other')
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 
   const handleSubmit = async () => {
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     try {
-      await onSubmit(feedback, category);
-      setFeedback('');
-      setCategory('other');
-      onClose();
+      await onSubmit(feedback, category)
+      setFeedback('')
+      setCategory('other')
+      onClose()
     } catch (error) {
-      console.error('Feedback submission failed:', error);
+      console.error('Feedback submission failed:', error)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <Modal
@@ -91,12 +92,20 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
       centered
       withCloseButton={false}
       overlayProps={{
-        color: theme.colors.dark[9],
+        color: 'theme.colors.dark[9]',
         opacity: 0.75,
         blur: 3,
       }}
       styles={{
-        header: { zIndex: 1 },
+        header: {
+          zIndex: 1,
+          color: 'var(--modal-text)',
+          backgroundColor: 'var(--modal)',
+        },
+        body: {
+          color: 'var(--modal-text)',
+          backgroundColor: 'var(--modal)',
+        },
       }}
     >
       <Select
@@ -108,7 +117,10 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
           { value: 'unclear', label: 'Unclear Response' },
           { value: 'ui_bug', label: 'UI bug' },
           { value: 'overactive_refusal', label: 'Overactive refusal' },
-          { value: 'incomplete_request', label: 'Did not fully follow my request' },
+          {
+            value: 'incomplete_request',
+            label: 'Did not fully follow my request',
+          },
           { value: 'other', label: 'Other' },
         ]}
         value={category}
@@ -118,34 +130,39 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
         withinPortal
         styles={(theme) => ({
           input: {
-            backgroundColor: theme.colors.dark[6],
-            borderColor: theme.colors.dark[4],
-            color: theme.white,
+            color: 'var(--modal-text)',
+            backgroundColor: 'var(--modal-dark)',
+            borderColor: 'var(--modal-border)',
             '&::placeholder': {
-              color: theme.colors.dark[2],
+              color: 'var(--foreground-faded)',
             },
             '&:focus': {
-              borderColor: theme.colors.violet[4],
+              borderColor: 'var(--background-darker)',
             },
           },
           dropdown: {
-            backgroundColor: theme.colors.dark[6],
-            borderColor: theme.colors.dark[4],
+            backgroundColor: 'var(--modal-dark)',
+            borderColor: 'var(--modal-border)',
             maxHeight: '250px',
             overflowY: 'auto',
           },
           item: {
-            color: theme.white,
+            color: 'var(--modal-text)',
             '&[data-selected]': {
-              backgroundColor: theme.colors.violet[6],
-              color: theme.white,
+              color: 'var(--dashboard-button-foreground)',
+              backgroundColor: 'var(--dashboard-button)',
+              '&[data-hovered]': {
+                color: 'var(--dashboard-button-foreground)',
+                backgroundColor: 'var(--dashboard-button-hover)',
+              },
             },
             '&[data-hovered]': {
-              backgroundColor: theme.colors.violet[5],
+              color: 'var(--foreground)',
+              backgroundColor: 'var(--background-dark)',
             },
           },
           label: {
-            color: theme.white,
+            color: 'var(--modal-text)',
             marginBottom: theme.spacing.xs,
           },
         })}
@@ -154,8 +171,8 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
       <Textarea
         label={
           <Group spacing={4}>
-            <Text>Feedback Details</Text>
-            <Text size="sm" color="dimmed">
+            <Text className="text-[--modal-text]">Feedback Details</Text>
+            <Text size="sm" className="text-[--foreground-faded]">
               (Optional)
             </Text>
           </Group>
@@ -176,10 +193,11 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
           aria-label="Cancel"
           sx={{
             backgroundColor: 'transparent',
-            color: theme.white,
-            border: `1px solid ${theme.colors.dark[3]}`,
+            color: 'var(--foreground-faded)',
+            border: `1px solid var(--background-faded)`,
             '&:hover': {
-              backgroundColor: theme.colors.dark[6],
+              color: 'var(--foreground)',
+              backgroundColor: 'var(--background-faded)',
             },
           }}
         >
@@ -191,22 +209,22 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
           loading={isSubmitting}
           aria-label="Submit Feedback"
           sx={{
-            backgroundColor: `${theme.colors.violet[5]} !important`,
-            color: theme.white,
+            backgroundColor: `var(--dashboard-button) !important`,
+            color: 'var(--dashboard-button-foreground)',
             border: 'none',
             transition: 'background-color 200ms ease',
             '&:not(:disabled)': {
-              backgroundColor: `${theme.colors.violet[5]} !important`,
+              backgroundColor: `var(--dashboard-button) !important`,
               '&:hover': {
-                backgroundColor: `${theme.colors.violet[6]} !important`,
+                backgroundColor: `var(--dashboard-button-hover) !important`,
               },
               '&:active': {
-                backgroundColor: `${theme.colors.violet[7]} !important`,
+                backgroundColor: `var(--dashboard-button) !important`,
               },
             },
             '&:disabled': {
-              backgroundColor: `${theme.colors.dark[5]} !important`,
-              color: theme.colors.dark[3],
+              backgroundColor: `var(--background-faded) !important`,
+              color: 'var(--foreground-faded)',
               opacity: 0.6,
             },
           }}
@@ -215,5 +233,5 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
         </Button>
       </Group>
     </Modal>
-  );
-};
+  )
+}

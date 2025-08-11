@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Title, Text } from '@mantine/core'
 import Link from 'next/link'
 
-const Maintenance = ({ }: {
+const Maintenance = ({}: {
   // Prevent search engine indexing of Maintenance page (because it'll ruin our entire search results): https://github.com/vercel/next.js/discussions/12850#discussioncomment-3335807
   // in _document.tsx
 }) => {
@@ -28,7 +28,7 @@ const Maintenance = ({ }: {
 
   return (
     <>
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
+      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[--background] to-[--background-dark]">
         <div className="container flex flex-col items-center justify-center gap-8 px-4 py-8 text-center">
           <Link href="/">
             <h2 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
