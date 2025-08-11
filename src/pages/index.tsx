@@ -131,6 +131,9 @@ const Home: NextPage = () => {
   const useIllinoisChatConfig = useMemo(() => {
     return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
   }, [])
+  const IllinoisChatBannerContent = useMemo(() => {
+    return process.env.NEXT_PUBLIC_ILLINOIS_CHAT_BANNER_CONTENT || null
+  }, [])
 
   return (
     <>
@@ -162,56 +165,64 @@ const Home: NextPage = () => {
       </Head>
 
       {/* Rebranding announcement header bar */}
-      {
-        !useIllinoisChatConfig &&
+      <div
+        className="relative w-full py-2 text-center"
+        style={{
+          background: 'var(--illinois-orange)',
+          color: 'var(--illinois-white)',
+        }}
+      >
         <div
-          className="relative w-full py-2 text-center"
-          style={{
-            background: 'var(--illinois-orange)',
-            color: 'var(--illinois-white)',
-          }}
+          className={`inline-block ${montserrat_heading.variable} font-montserratHeading`}
         >
-          <div
-            className={`inline-block ${montserrat_heading.variable} font-montserratHeading`}
-          >
-            <div className="relative inline-block cursor-help">
+          <div className="relative inline-block cursor-help">
                 <span
                   className="text-lg font-bold"
                   onMouseEnter={() => setIsTooltipVisible(true)}
                   onMouseLeave={() => setIsTooltipVisible(false)}
                 >
-                Heads up: we’ve rebranded to Illinois Chat — please visit{' '}
-                  <a
-                    href="https://chat.illinois.edu"
-                    className="underline"
-                  >
-                    chat.illinois.edu
-                  </a>
+                  {/*1. If useIllinoisChatConfig && IllinoisChatBannerContent → render HTML from IllinoisChatBannerContent*/}
+                  {/*2. If !useIllinoisChatConfig → render default "Heads up" banner*/}
+                  {/*3. Otherwise → render nothing*/}
+                  {
+                    useIllinoisChatConfig && IllinoisChatBannerContent ? (
+                      <div dangerouslySetInnerHTML={{ __html: IllinoisChatBannerContent }} />
+                    ) : !useIllinoisChatConfig ? (
+                      <>
+                        Heads up: we’ve rebranded to Illinois Chat — please visit{' '}
+                        <a
+                          href="https://chat.illinois.edu"
+                          className="underline"
+                        >
+                          chat.illinois.edu
+                        </a>
+                      </>
+                    ) : null
+                  }
               </span>
 
+            <div
+              className={`absolute left-1/2 top-full z-50 mt-2 w-72 -translate-x-1/2 transform rounded p-2 text-sm transition duration-300 ${isTooltipVisible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+              style={{
+                background: '#333',
+                border: '1px solid #444',
+                boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+              }}
+            >
+              We&apos;re on our way to becoming a production service for all U
+              of I campuses.
               <div
-                className={`absolute left-1/2 top-full z-50 mt-2 w-72 -translate-x-1/2 transform rounded p-2 text-sm transition duration-300 ${isTooltipVisible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+                className="absolute bottom-full left-1/2 h-0 w-0 -translate-x-1/2 transform"
                 style={{
-                  background: '#333',
-                  border: '1px solid #444',
-                  boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+                  borderLeft: '8px solid transparent',
+                  borderRight: '8px solid transparent',
+                  borderBottom: '8px solid #333',
                 }}
-              >
-                We&apos;re on our way to becoming a production service for all U
-                of I campuses.
-                <div
-                  className="absolute bottom-full left-1/2 h-0 w-0 -translate-x-1/2 transform"
-                  style={{
-                    borderLeft: '8px solid transparent',
-                    borderRight: '8px solid transparent',
-                    borderBottom: '8px solid #333',
-                  }}
-                ></div>
-              </div>
+              ></div>
             </div>
           </div>
         </div>
-      }
+      </div>
 
       <LandingPageHeader />
 
