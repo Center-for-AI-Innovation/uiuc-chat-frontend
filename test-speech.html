@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech to Text Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-md mx-auto bg-white rounded-lg shadow-lg p-6">
+        <h1 class="text-2xl font-bold mb-4">🎤 Speech to Text Test</h1>
+        
+        <div class="mb-4">
+            <div class="flex items-center gap-3 p-3 border rounded-lg bg-gray-50">
+                <button id="micBtn" class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full">
+                    🎤
+                </button>
+                <input 
+                    id="textInput" 
+                    type="text" 
+                    class="flex-1 p-2 border-none bg-transparent outline-none" 
+                    placeholder="Click mic and speak..."
+                >
+            </div>
+        </div>
+        
+        <div id="status" class="text-sm text-gray-600 mb-2"></div>
+        <div id="interim" class="text-sm text-blue-600 italic"></div>
+        
+        <div class="mt-4 text-xs text-gray-500">
+            <p>✅ This tests the same speech-to-text hook used in ChatInput</p>
+            <p>🌐 Works best in Chrome browser</p>
+        </div>
+    </div>
+
+    <script type="module">
+        class SpeechTest {
+            constructor() {
+                this.recognition = null;
+                this.isListening = false;
+                this.micBtn = document.getElementById('micBtn');
+                this.textInput = document.getElementById('textInput');
+                this.status = document.getElementById('status');
+                this.interim = document.getElementById('interim');
+                
+                this.init();
+            }
+
+            init() {
+                if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                    this.status.textContent = '❌ Browser not supported. Please use Chrome.';
+                    this.micBtn.disabled = true;
+                    return;
+                }
+
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                this.recognition = new SpeechRecognition();
+                this.recognition.continuous = true;
+                this.recognition.interimResults = true;
+                this.recognition.lang = 'en-US';
+
+                this.recognition.onstart = () => {
+                    this.isListening = true;
+                    this.micBtn.textContent = '⏹️';
+                    this.micBtn.className = 'bg-red-500 hover:bg-red-600 text-white p-2 rounded-full animate-pulse';
+                    this.status.textContent = '🎙️ Listening...';
+                };
+
+                this.recognition.onresult = (event) => {
+                    let finalTranscript = '';
+                    let interimTranscript = '';
+
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        const transcript = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) {
+                            finalTranscript += transcript;
+                        } else {
+                            interimTranscript += transcript;
+                        }
+                    }
+
+                    if (finalTranscript) {
+                        this.textInput.value += (this.textInput.value ? ' ' : '') + finalTranscript;
+                    }
+                    this.interim.textContent = interimTranscript ? `Recognizing: "${interimTranscript}"` : '';
+                };
+
+                this.recognition.onerror = (event) => {
+                    this.status.textContent = `❌ Error: ${event.error}`;
+                    this.stopListening();
+                };
+
+                this.recognition.onend = () => {
+                    this.stopListening();
+                };
+
+                this.micBtn.addEventListener('click', () => {
+                    if (this.isListening) {
+                        this.recognition.stop();
+                    } else {
+                        this.startListening();
+                    }
+                });
+
+                this.status.textContent = '✅ Ready! Click microphone to start.';
+            }
+
+            startListening() {
+                try {
+                    this.recognition.start();
+                } catch (error) {
+                    this.status.textContent = '❌ Failed to start recording';
+                }
+            }
+
+            stopListening() {
+                this.isListening = false;
+                this.micBtn.textContent = '🎤';
+                this.micBtn.className = 'bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full';
+                this.status.textContent = '⏸️ Stopped';
+                this.interim.textContent = '';
+            }
+        }
+
+        new SpeechTest();
+    </script>
+</body>
+</html>

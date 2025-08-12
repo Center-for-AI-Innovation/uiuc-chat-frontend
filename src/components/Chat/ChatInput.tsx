@@ -6,6 +6,8 @@ import { Text } from '@mantine/core'
 import {
   IconAlertCircle,
   IconArrowDown,
+  IconMicrophone,
+  IconMicrophoneOff,
   IconPhoto,
   IconPlayerStop,
   IconRepeat,
@@ -51,6 +53,7 @@ import { type OpenAIModelID } from '~/utils/modelProviders/types/openai'
 import type ChatUI from '~/utils/modelProviders/WebLLM'
 import { webLLMModels } from '~/utils/modelProviders/WebLLM'
 import { ImagePreview } from './ImagePreview'
+import { useSpeechToText } from '~/hooks/useSpeechToText'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -126,6 +129,18 @@ export const ChatInput = ({
   const [imageUrls, setImageUrls] = useState<string[]>([])
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const modelSelectContainerRef = useRef<HTMLDivElement | null>(null)
+  
+  // Speech-to-text functionality
+  const {
+    isListening,
+    transcript,
+    interimTranscript,
+    startListening,
+    stopListening,
+    clearTranscript,
+    isSupported: isSpeechSupported,
+    error: speechError,
+  } = useSpeechToText()
 
   const handleFocus = () => {
     setIsFocused(true)
@@ -138,6 +153,14 @@ export const ChatInput = ({
     setIsFocused(false)
     if (chatInputParentContainerRef.current) {
       chatInputParentContainerRef.current.style.boxShadow = 'none'
+    }
+  }
+
+  const handleSpeechToggle = () => {
+    if (isListening) {
+      stopListening()
+    } else {
+      startListening()
     }
   }
 
@@ -740,6 +763,28 @@ export const ChatInput = ({
     }
   }, [inputContent, textareaRef])
 
+  // Update content when speech transcript changes
+  useEffect(() => {
+    if (transcript) {
+      setContent(prevContent => {
+        const newContent = prevContent + (prevContent ? ' ' : '') + transcript
+        clearTranscript() // Clear transcript after adding to content
+        return newContent
+      })
+    }
+  }, [transcript, clearTranscript])
+
+  // Show speech error notifications
+  useEffect(() => {
+    if (speechError) {
+      notifications.show({
+        message: speechError,
+        color: 'red',
+        autoClose: 5000,
+      })
+    }
+  }, [speechError])
+
   // This is where we upload images and generate their presigned url
   async function uploadImageAndGetUrl(
     file: File,
@@ -859,6 +904,33 @@ export const ChatInput = ({
                 </div>
               </button>
             )}
+          
+          {/* Speech-to-Text Button */}
+          {isSpeechSupported && (
+            <button
+              className={`absolute bottom-[2.25rem] ${
+                selectedConversation?.model?.id &&
+                VisionCapableModels.has(
+                  selectedConversation.model?.id as OpenAIModelID,
+                )
+                  ? 'left-16'
+                  : 'left-5'
+              } rounded-full p-2 opacity-50 hover:opacity-100 ${
+                isListening 
+                  ? 'bg-red-500/70 animate-pulse' 
+                  : 'bg-white/30'
+              }`}
+              onClick={handleSpeechToggle}
+              style={{ pointerEvents: 'auto' }}
+              title={isListening ? 'Stop listening' : 'Start voice input'}
+            >
+              {isListening ? (
+                <IconMicrophoneOff size={18} className="text-white" />
+              ) : (
+                <IconMicrophone size={18} />
+              )}
+            </button>
+          )}
           <input
             type="file"
             multiple
@@ -971,8 +1043,8 @@ export const ChatInput = ({
                   VisionCapableModels.has(
                     selectedConversation?.model?.id as OpenAIModelID,
                   )
-                    ? 'pl-8'
-                    : 'pl-1'
+                    ? isSpeechSupported ? 'pl-20' : 'pl-8'
+                    : isSpeechSupported ? 'pl-12' : 'pl-1'
                 }
                   `}
             >
@@ -989,7 +1061,13 @@ export const ChatInput = ({
                   overflow: 'hidden',
                   pointerEvents: 'auto',
                 }}
-                placeholder={'Message UIUC.chat'}
+                placeholder={
+                  isListening 
+                    ? interimTranscript 
+                      ? `Listening... "${interimTranscript}"` 
+                      : 'Listening... speak now'
+                    : 'Message UIUC.chat'
+                }
                 value={content}
                 rows={1}
                 onCompositionStart={() => setIsTyping(true)}
