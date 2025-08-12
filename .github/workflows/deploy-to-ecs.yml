@@ -72,7 +72,6 @@ jobs:
       run: |
         set -euo pipefail
         echo "Building image with tag: $IMAGE_TAG"
-        BRANCH_TAG=${{ steps.set-tag.outputs.branch_tag }}
         docker build \
           --build-arg NEXT_PUBLIC_KEYCLOAK_URL=${{ secrets.NEXT_PUBLIC_KEYCLOAK_URL }} \
           --build-arg NEXT_PUBLIC_KEYCLOAK_REALM=${{ secrets.NEXT_PUBLIC_KEYCLOAK_REALM }} \
@@ -83,6 +82,9 @@ jobs:
           --build-arg NEXT_PUBLIC_POSTHOG_HOST=${{ secrets.NEXT_PUBLIC_POSTHOG_HOST }} \
           -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        # Also tag with branch only (optional, for easy rollback by branch)
+        docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:${{ steps.set-tag.outputs.branch_tag }}
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ steps.set-tag.outputs.branch_tag }}
         # Also tag with branch only (optional, for easy rollback by branch)
         docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:${BRANCH_TAG}
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:${BRANCH_TAG}
