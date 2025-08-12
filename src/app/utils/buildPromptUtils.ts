@@ -585,6 +585,7 @@ export const getDefaultPostPrompt = (): string => {
     guidedLearning: false,
     systemPromptOnly: false,
     vector_search_rewrite_disabled: false,
+    allow_logged_in_users: false,
   }
 
   // Call getSystemPostPrompt with default values
