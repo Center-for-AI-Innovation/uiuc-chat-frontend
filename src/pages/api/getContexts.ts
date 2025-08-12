@@ -12,8 +12,6 @@ export const fetchContextsFromBackend = async (
 ): Promise<ContextWithMetadata[]> => {
   const backendUrl = getBackendUrl()
 
-  // const backendUrl = 'http://localhost:8000'
-
   const requestBody = {
     course_name: course_name,
     search_query: search_query,
@@ -21,33 +19,6 @@ export const fetchContextsFromBackend = async (
     doc_groups: doc_groups,
     conversation_id: conversation_id,
   }
-
-  // UESFUL FOR TESTING -- SHORTEN CONTEXTS
-  // const dummyContexts: ContextWithMetadata[] = [
-  //   {
-  //     id: 1,
-  //     text: 'This is a dummy context',
-  //     readable_filename: 'dummy_filename_1.pdf',
-  //     course_name: 'dummy course 1',
-  //     'course_name ': 'dummy course 1',
-  //     s3_path: 'dummy_s3_path_1',
-  //     pagenumber: '1',
-  //     url: 'dummy_url_1',
-  //     base_url: 'dummy_base_url_1',
-  //   },
-  //   {
-  //     id: 2,
-  //     text: 'This is another dummy context',
-  //     readable_filename: 'dummy_filename_2.pdf',
-  //     course_name: 'dummy course 2',
-  //     'course_name ': 'dummy course 2',
-  //     s3_path: 'dummy_s3_path_2',
-  //     pagenumber: '2',
-  //     url: 'dummy_url_2',
-  //     base_url: 'dummy_base_url_2',
-  //   },
-  // ]
-  // return dummyContexts
 
   const response = await fetch(`${backendUrl}/getTopContexts`, {
     method: 'POST',

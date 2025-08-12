@@ -32,27 +32,32 @@ import {
   IconEye,
 } from '@tabler/icons-react'
 
+import {
+  type Content,
+  type ContextWithMetadata,
+  type Message,
+  type MessageType,
+} from '@/types/chat'
 import { useTranslation } from 'next-i18next'
-import { Content, ContextWithMetadata, Message } from '@/types/chat'
 import HomeContext from '~/pages/api/home/home.context'
+import { fetchPresignedUrl } from '~/utils/apiUtils'
 import { CodeBlock } from '../Markdown/CodeBlock'
 import { MemoizedReactMarkdown } from '../Markdown/MemoizedReactMarkdown'
-import { ImagePreview } from './ImagePreview'
 import { LoadingSpinner } from '../UIUC-Components/LoadingSpinner'
-import { fetchPresignedUrl } from '~/utils/apiUtils'
-import ThinkTagDropdown, { extractThinkTagContent } from './ThinkTagDropdown'
+import SourcesSidebar from '../UIUC-Components/SourcesSidebar'
+import { ImagePreview } from './ImagePreview'
 import MessageActions from './MessageActions'
+import ThinkTagDropdown, { extractThinkTagContent } from './ThinkTagDropdown'
 
-import rehypeMathjax from 'rehype-mathjax'
-import remarkGfm from 'remark-gfm'
-import remarkMath from 'remark-math'
+import { saveConversationToServer } from '@/utils/app/conversation'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import rehypeMathjax from 'rehype-mathjax'
+import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
 import { IntermediateStateAccordion } from '../UIUC-Components/IntermediateStateAccordion'
 import { FeedbackModal } from './FeedbackModal'
-import { saveConversationToServer } from '@/utils/app/conversation'
-import SourcesSidebar from '../UIUC-Components/SourcesSidebar'
 
 const useStyles = createStyles((theme) => ({
   imageContainerStyle: {
@@ -66,7 +71,7 @@ const useStyles = createStyles((theme) => ({
     height: '100px',
     objectFit: 'cover',
     borderRadius: '0.5rem',
-    borderColor: theme.colors.gray[6],
+    borderColor: 'var(--dashboard-border)',
     borderWidth: '1px',
     borderStyle: 'solid',
   },
@@ -105,21 +110,22 @@ const FileCard: React.FC<{
   fileType?: string
   fileUrl?: string
   onClick: () => void
-}> = ({ fileName, fileType, fileUrl, onClick }) => {
+  isPreviewable?: boolean
+}> = ({ fileName, fileType, fileUrl, onClick, isPreviewable = true }) => {
   const getFileIcon = (name: string, type?: string) => {
     const extension = name.split('.').pop()?.toLowerCase()
     const iconProps = { size: 20 }
 
     if (type?.includes('pdf') || extension === 'pdf') {
-      return <IconFileTypePdf {...iconProps} className="text-red-500" />
+      return <IconFileTypePdf {...iconProps} style={{ color: 'var(--illinois-orange)' }} />
     }
     if (type?.includes('doc') || extension === 'docx' || extension === 'doc') {
-      return <IconFileTypeDocx {...iconProps} className="text-blue-500" />
+      return <IconFileTypeDocx {...iconProps} style={{ color: 'var(--illinois-orange)' }} />
     }
     if (type?.includes('text') || extension === 'txt') {
-      return <IconFileTypeTxt {...iconProps} className="text-gray-500" />
+      return <IconFileTypeTxt {...iconProps} style={{ color: 'var(--illinois-orange)' }} />
     }
-    return <IconFile {...iconProps} className="text-gray-600" />
+    return <IconFile {...iconProps} style={{ color: 'var(--illinois-orange)' }} />
   }
 
   const truncateFileName = (name: string, maxLength = 30) => {
@@ -135,13 +141,45 @@ const FileCard: React.FC<{
   return (
     <div
       onClick={onClick}
-      className="inline-flex max-w-xs cursor-pointer items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 transition-all hover:border-gray-300 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600 dark:hover:bg-gray-700"
+      style={{
+        display: 'inline-flex',
+        maxWidth: '320px',
+        cursor: 'pointer',
+        alignItems: 'center',
+        gap: '8px',
+        borderRadius: '8px',
+        border: '1px solid var(--border)',
+        backgroundColor: 'var(--background-faded)',
+        padding: '8px 12px',
+        transition: 'all 0.2s ease',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = 'var(--primary)'
+        e.currentTarget.style.backgroundColor = 'var(--background-dark)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = 'var(--border)'
+        e.currentTarget.style.backgroundColor = 'var(--background-faded)'
+      }}
     >
       {getFileIcon(fileName, fileType)}
-      <span className="truncate text-sm font-medium text-gray-700 dark:text-gray-300">
+      <span 
+        style={{
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          fontSize: '14px',
+          fontWeight: '500',
+          color: 'var(--foreground)',
+        }}
+      >
         {truncateFileName(fileName)}
       </span>
-      <IconEye size={16} className="text-gray-400" />
+      {isPreviewable ? (
+        <IconEye size={16} style={{ color: 'var(--illinois-orange)' }} />
+      ) : (
+        <IconFile size={16} style={{ color: 'var(--illinois-orange)' }} />
+      )}
     </div>
   )
 }
@@ -177,11 +215,10 @@ const FilePreviewModal: React.FC<{
   const [actualFileUrl, setActualFileUrl] = useState<string>('')
   const [textContent, setTextContent] = useState<string>('')
 
-  const isImage =
-    fileType?.includes('image') ||
-    fileName.toLowerCase().match(/\.(jpg|jpeg|png)$/i)
+  // Handle PDFs and Office documents that can be displayed in iframes
   const isPdf =
-    fileType?.includes('pdf') || fileName.toLowerCase().endsWith('.pdf')
+    fileType?.includes('pdf') || 
+    fileName.toLowerCase().match(/\.(pdf|doc|docx|xls|xlsx|ppt|pptx)$/i)
   const isTextFile =
     fileType?.includes('text') ||
     fileName.toLowerCase().match(/\.(txt|md|html|xml|csv|py|srt|vtt)$/i)
@@ -208,81 +245,46 @@ const FilePreviewModal: React.FC<{
     }
   }, [isTextFile, actualFileUrl, isOpen])
 
-  // Auto-download non-previewable files when modal opens
-  useEffect(() => {
-    if (actualFileUrl && isOpen && !isImage && !isPdf && !isTextFile) {
-      const link = document.createElement('a')
-      link.href = actualFileUrl
-      link.download = fileName
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      onClose() // Close modal after triggering download
-    }
-  }, [actualFileUrl, isOpen, isImage, isPdf, isTextFile, fileName, onClose])
-
   // Don't render modal for non-previewable files
-  if (isOpen && !isImage && !isPdf && !isTextFile) {
+  if (isOpen && !isPdf && !isTextFile) {
     return null
   }
 
   return (
-    <Modal
-      opened={isOpen}
-      onClose={onClose}
-      title={fileName}
-      size="xl"
-      centered
-    >
-      <div className="space-y-4">
-        <div className="min-h-[400px] rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
-          {isImage && actualFileUrl ? (
-            <img
-              src={actualFileUrl}
-              alt={fileName}
-              className="h-full w-full rounded-lg object-contain"
-              onLoad={() => setActualFileUrl(actualFileUrl)}
-              onError={() => {
-                setActualFileUrl('')
-              }}
-            />
-          ) : isPdf && actualFileUrl ? (
-            <iframe
-              src={actualFileUrl}
-              className="h-[400px] w-full rounded-lg"
-              onLoad={() => setActualFileUrl(actualFileUrl)}
-              onError={() => {
-                setActualFileUrl('')
-              }}
-            />
-          ) : isTextFile && actualFileUrl ? (
-            <div className="h-[400px] w-full overflow-auto p-4">
-              <pre className="whitespace-pre-wrap font-mono text-sm text-gray-800 dark:text-gray-200">
-                {textContent}
-              </pre>
-            </div>
-          ) : null}
-        </div>
-      </div>
-    </Modal>
+    <Modal.Root opened={isOpen} onClose={onClose} centered size="xl">
+      <Modal.Overlay className="modal-overlay-common" />
+      <Modal.Content className="modal-common">
+        <Modal.Header className="modal-header-common">
+          <Modal.Title className={`modal-title-common ${montserrat_heading.variable} font-montserratHeading`}>
+            {fileName}
+          </Modal.Title>
+          <Modal.CloseButton
+            onClick={onClose}
+            aria-label="Close file preview"
+            className="modal-close-button-common"
+          />
+        </Modal.Header>
+        <Modal.Body className="modal-body-common">
+          <div className="file-preview-container">
+            {isPdf && actualFileUrl ? (
+              <iframe
+                src={actualFileUrl}
+                className="file-preview-iframe"
+                title={fileName}
+              />
+            ) : isTextFile && actualFileUrl ? (
+              <div className="file-preview-text">
+                <pre>{textContent}</pre>
+              </div>
+            ) : null}
+          </div>
+        </Modal.Body>
+      </Modal.Content>
+    </Modal.Root>
   )
 }
 
-// Helper function to parse file content from message text
-function parseFileContent(
-  text: string,
-): { fileName: string; fileUrl?: string; fileType?: string } | null {
-  // New format: "📎 Uploaded file: filename|s3Key|fileType"
-  const fileMatch = text.match(/📎 Uploaded file: (.+)\|(.+)\|(.+)/)
-  if (fileMatch && fileMatch[1] && fileMatch[2]) {
-    return {
-      fileName: fileMatch[1],
-      fileUrl: fileMatch[2], // This will be the S3 key
-      fileType: fileMatch[3],
-    }
-  }
-  return null
-}
+
 
 // Add context for managing the active sources sidebar
 const SourcesSidebarContext = createContext<{
@@ -299,6 +301,16 @@ export const SourcesSidebarProvider: React.FC<{
   const [activeSidebarMessageId, setActiveSidebarMessageId] = useState<
     string | null
   >(null)
+
+  // Close sidebar when conversations change by listening to context changes
+  const {
+    state: { selectedConversation },
+  } = useContext(HomeContext)
+
+  useEffect(() => {
+    // Close sidebar when conversation changes
+    setActiveSidebarMessageId(null)
+  }, [selectedConversation?.id])
 
   return (
     <SourcesSidebarContext.Provider
@@ -322,7 +334,7 @@ export interface Props {
   ) => void
   context?: ContextWithMetadata[]
   contentRenderer?: (message: Message) => JSX.Element
-  onImageUrlsUpdate?: (message: Message, messageIndex: number) => void
+      onImageUrlsUpdate?: (message: Message, messageIndex: number) => void
   courseName: string
 }
 
@@ -382,6 +394,25 @@ function getFileType(s3Path?: string, url?: string) {
   }
   if (url) return 'web'
   return 'other'
+}
+
+function isFilePreviewable(fileName: string, fileType?: string): boolean {
+  const extension = fileName.split('.').pop()?.toLowerCase()
+  
+  // PDFs can be previewed
+  if (fileType?.includes('pdf') || extension === 'pdf') {
+    return true
+  }
+  
+  // Text files can be previewed
+  if (fileType?.includes('text') || extension === 'txt' || extension === 'md' || 
+      extension === 'html' || extension === 'xml' || extension === 'csv' || 
+      extension === 'py' || extension === 'srt' || extension === 'vtt') {
+    return true
+  }
+  
+  // Office documents and other files cannot be previewed
+  return false
 }
 
 // Add this helper function at the top
@@ -538,10 +569,6 @@ export const ChatMessage = memo(
                   return content
                 } else {
                   const path = extractPathFromUrl(content.image_url.url)
-                  console.log(
-                    'Image url was invalid, fetching presigned url for: ',
-                    path,
-                  )
                   const presignedUrl = await getPresignedUrl(path, courseName)
                   setImageUrls(
                     (prevUrls) => new Set([...prevUrls, presignedUrl]),
@@ -554,23 +581,18 @@ export const ChatMessage = memo(
           )
           if (
             !isValid &&
-            onImageUrlsUpdate &&
+            // onImageUrlsUpdate && // Commented out image upload functionality
             !deepEqual(updatedContent, message.content)
           ) {
-            console.log(
-              'Updated content: ',
-              updatedContent,
-              'Previous content: ',
-              message.content,
-            )
-            onImageUrlsUpdate(
-              { ...message, content: updatedContent },
-              messageIndex,
-            )
+            // onImageUrlsUpdate( // Commented out image upload functionality
+            //   { ...message, content: updatedContent }, // Commented out image upload functionality
+            //   messageIndex, // Commented out image upload functionality
+            // ) // Commented out image upload functionality
           }
         }
       }
-      if (message.role === 'user') {
+      // Call fetchUrl for all messages that contain images
+      if (Array.isArray(message.content) && message.content.some(content => content.type === 'image_url')) {
         fetchUrl()
       }
     }, [message.content, messageIndex, isRunningTool])
@@ -614,24 +636,34 @@ export const ChatMessage = memo(
       const trimmedContent = messageContent.trim()
       if (trimmedContent.length === 0) return
 
-      if (message.content !== trimmedContent) {
-        if (selectedConversation && onEdit) {
-          const editedMessage = { ...message, content: trimmedContent }
-          onEdit(editedMessage)
-
-          // Save to server
-          const updatedConversation = {
-            ...selectedConversation,
-            messages: selectedConversation.messages.map((msg) =>
-              msg.id === message.id ? editedMessage : msg,
-            ),
-          }
-          saveConversationToServer(updatedConversation).catch(
-            (error: Error) => {
-              console.error('Error saving edited message to server:', error)
-            },
-          )
+      if (selectedConversation && onEdit) {
+        let editedContent: string | Content[]
+        
+        if (Array.isArray(message.content)) {
+          // Preserve file and image content, only update text content
+          const nonTextContent = message.content.filter(content => content.type !== 'text')
+          const newTextContent = trimmedContent ? [{ type: 'text' as MessageType, text: trimmedContent }] : []
+          editedContent = [...newTextContent, ...nonTextContent]
+        } else {
+          // If it's a simple string message, just use the edited text
+          editedContent = trimmedContent
         }
+
+        const editedMessage = { ...message, content: editedContent }
+        onEdit(editedMessage)
+
+        // Save to server
+        const updatedConversation = {
+          ...selectedConversation,
+          messages: selectedConversation.messages.map((msg) =>
+            msg.id === message.id ? editedMessage : msg,
+          ),
+        }
+        saveConversationToServer(updatedConversation).catch(
+          (error: Error) => {
+            console.error('Error saving edited message to server:', error)
+          },
+        )
       }
       setIsEditing(false)
     }
@@ -745,12 +777,33 @@ export const ChatMessage = memo(
     }
 
     function extractPathFromUrl(url: string): string {
-      const urlObject = new URL(url)
-      let path = urlObject.pathname
-      if (path.startsWith('/')) {
-        path = path.substring(1)
+      try {
+        // Check if it's already a path (doesn't start with http/https)
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+          // It's already a path, just clean it up
+          let path = url
+          if (path.startsWith('/')) {
+            path = path.substring(1)
+          }
+          return path
+        }
+        
+        // It's a URL, try to parse it
+        const urlObject = new URL(url)
+        let path = urlObject.pathname
+        if (path.startsWith('/')) {
+          path = path.substring(1)
+        }
+        return path
+      } catch (error) {
+        console.error('Failed to extract path from URL:', url, error)
+        // Fallback: try to extract path manually
+        if (url.includes('/')) {
+          const parts = url.split('/')
+          return parts.slice(-1)[0] || url // Return the last part or the original URL
+        }
+        return url
       }
-      return path
     }
 
     useEffect(() => {
@@ -777,7 +830,6 @@ export const ChatMessage = memo(
                     const isValid = await checkIfUrlIsValid(imageUrl)
                     if (!isValid) {
                       // This will only work for internal S3 URLs
-                      console.log('Image URL is expired')
                       const s3_path = extractPathFromUrl(imageUrl)
                       return getPresignedUrl(s3_path, courseName)
                     }
@@ -793,7 +845,6 @@ export const ChatMessage = memo(
                 tool.output.imageUrls.map(async (imageUrl) => {
                   const isValid = await checkIfUrlIsValid(imageUrl)
                   if (!isValid) {
-                    console.log('Image URL is expired')
                     const s3_path = extractPathFromUrl(imageUrl)
                     return getPresignedUrl(s3_path, courseName)
                   }
@@ -1062,96 +1113,112 @@ export const ChatMessage = memo(
 
     // Modify the content rendering logic
     const renderContent = () => {
-      const content = messageContent || message.content
+      let contentToRender = ''
+      let thoughtsContent = null
 
-      if (typeof content === 'string') {
-        // NEW: Check if this is a file upload message
-        const fileContent = parseFileContent(content)
-        if (fileContent) {
-          return (
-            <div className="mb-2">
-              <FileCard
-                fileName={fileContent.fileName}
-                fileType={fileContent.fileType}
-                fileUrl={fileContent.fileUrl}
-                onClick={() =>
-                  handleFilePreview(
-                    fileContent.fileName,
-                    fileContent.fileUrl,
-                    fileContent.fileType,
-                  )
-                }
-              />
-            </div>
-          )
-        }
-        return (
-          <MemoizedReactMarkdown
-            className="dark:prose-invert linkMarkDown supMarkDown codeBlock prose mb-2 flex-1 flex-col items-start space-y-2 overflow-visible"
-            remarkPlugins={[remarkGfm, remarkMath]}
-            rehypePlugins={[rehypeMathjax]}
-            components={{
-              code({ node, inline, className, children, ...props }) {
-                const text = String(children)
+      // Always use localContent for rendering
+      if (typeof localContent === 'string') {
+        const { thoughts, remainingContent } =
+          extractThinkTagContent(localContent)
+        thoughtsContent = thoughts
+        contentToRender = remainingContent
+      } else if (Array.isArray(localContent)) {
+        contentToRender = localContent
+          .filter((content) => content.type === 'text')
+          .map((content) => content.text)
+          .join(' ')
+        const { thoughts, remainingContent } =
+          extractThinkTagContent(contentToRender)
+        thoughtsContent = thoughts
+        contentToRender = remainingContent
+      }
 
-                // Simple regex to see if there's a [title](url) pattern
-                const linkRegex = /\[[^\]]+\]\([^)]+\)/
+      return (
+        <>
+          {thoughtsContent && (
+            <ThinkTagDropdown
+              content={
+                messageIsStreaming &&
+                messageIndex ===
+                  (selectedConversation?.messages.length ?? 0) - 1
+                  ? `${thoughtsContent} ▍`
+                  : thoughtsContent
+              }
+              isStreaming={
+                messageIsStreaming &&
+                messageIndex ===
+                  (selectedConversation?.messages.length ?? 0) - 1 &&
+                !contentToRender
+              }
+            />
+          )}
+          {contentToRender && (
+            <MemoizedReactMarkdown
+              className="linkMarkDown supMarkDown codeBlock prose mb-2 flex-1 flex-col items-start space-y-2 overflow-visible"
+              remarkPlugins={[remarkGfm, remarkMath]}
+              rehypePlugins={[rehypeMathjax]}
+              components={{
+                code({ node, inline, className, children, ...props }) {
+                  const text = String(children)
 
-                // If it looks like a link, parse it again as normal Markdown
-                if (linkRegex.test(text)) {
-                  return (
-                    <MemoizedReactMarkdown
-                      remarkPlugins={[remarkGfm, remarkMath]}
-                      rehypePlugins={[rehypeMathjax]}
-                    >
-                      {text}
-                    </MemoizedReactMarkdown>
-                  )
-                }
+                  // Simple regex to see if there's a [title](url) pattern
+                  const linkRegex = /\[[^\]]+\]\([^)]+\)/
 
-                // Handle cursor placeholder
-                if (children.length) {
-                  if (children[0] == '▍') {
+                  // If it looks like a link, parse it again as normal Markdown
+                  if (linkRegex.test(text)) {
                     return (
-                      <span className="mt-1 animate-pulse cursor-default">
-                        ▍
-                      </span>
+                      <MemoizedReactMarkdown
+                        remarkPlugins={[remarkGfm, remarkMath]}
+                        rehypePlugins={[rehypeMathjax]}
+                      >
+                        {text}
+                      </MemoizedReactMarkdown>
                     )
                   }
 
-                  children[0] = (children[0] as string).replace('`▍`', '▍')
-                }
+                  // Handle cursor placeholder
+                  if (children.length) {
+                    if (children[0] == '▍') {
+                      return (
+                        <span className="mt-1 animate-pulse cursor-default">
+                          ▍
+                        </span>
+                      )
+                    }
 
-                const match = /language-(\w+)/.exec(className || '')
+                    children[0] = (children[0] as string).replace('`▍`', '▍')
+                  }
 
-                return !inline ? (
-                  <CodeBlock
-                    key={Math.random()}
-                    language={(match && match[1]) || ''}
-                    value={String(children).replace(/\n$/, '')}
-                    style={{
-                      maxWidth: '100%',
-                      overflowX: 'auto',
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-all',
-                      overflowWrap: 'anywhere',
-                    }}
-                    {...props}
-                  />
-                ) : (
-                  <code
-                    className={'codeBlock'}
-                    {...props}
-                    style={{
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-all',
-                      overflowWrap: 'anywhere',
-                    }}
-                  >
-                    {children}
-                  </code>
-                )
-              },
+                  const match = /language-(\w+)/.exec(className || '')
+
+                  return !inline ? (
+                    <CodeBlock
+                      key={Math.random()}
+                      language={(match && match[1]) || ''}
+                      value={String(children).replace(/\n$/, '')}
+                      style={{
+                        maxWidth: '100%',
+                        overflowX: 'auto',
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-all',
+                        overflowWrap: 'anywhere',
+                      }}
+                      {...props}
+                    />
+                  ) : (
+                    <code
+                      className={'codeBlock'}
+                      {...props}
+                      style={{
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-all',
+                        overflowWrap: 'anywhere',
+                      }}
+                    >
+                      {children}
+                    </code>
+                  )
+                },
               p({ node, children }) {
                 return (
                   <p
@@ -1268,11 +1335,11 @@ export const ChatMessage = memo(
               },
             }}
           >
-            {content}
+            {contentToRender}
           </MemoizedReactMarkdown>
-        )
-      }
-      return <div>Content array handling...</div>
+          )}
+        </>
+      )
     }
 
     // Add MarkdownLink component definition
@@ -1453,6 +1520,34 @@ export const ChatMessage = memo(
       })
     }
 
+    const handleFileAction = async (
+      fileName: string,
+      fileUrl?: string,
+      fileType?: string,
+    ) => {
+      if (isFilePreviewable(fileName, fileType)) {
+        // For previewable files, open the modal
+        handleFilePreview(fileName, fileUrl, fileType)
+      } else {
+        // For non-previewable files, trigger direct download
+        if (fileUrl) {
+          try {
+            const presignedUrl = await fetchPresignedUrl(fileUrl, courseName, undefined, fileName)
+            if (presignedUrl) {
+              const link = document.createElement('a')
+              link.href = presignedUrl
+              link.download = fileName
+              document.body.appendChild(link)
+              link.click()
+              document.body.removeChild(link)
+            }
+          } catch (error) {
+            console.error('Failed to download file:', error)
+          }
+        }
+      }
+    }
+
     const closeFilePreview = () => {
       setFilePreviewModal({
         isOpen: false,
@@ -1465,12 +1560,12 @@ export const ChatMessage = memo(
         <div
           className={`group md:px-6 ${
             message.role === 'assistant'
-              ? 'border-b border-black/10 bg-gray-50/50 text-gray-800 dark:border-[rgba(42,42,120,0.50)] dark:bg-[#202134] dark:text-gray-100'
-              : 'border-b border-black/10 bg-white/50 text-gray-800 dark:border-[rgba(42,42,120,0.50)] dark:bg-[#15162B] dark:text-gray-100'
+              ? 'bg-[--chat-background]'
+              : 'bg-[--chat-background-user] pt-4'
           } max-w-[100%]`}
           style={{ overflowWrap: 'anywhere' }}
         >
-          <div className="relative flex w-full overflow-visible px-2 py-4 text-base md:mx-[5%] md:max-w-[90%] md:gap-6 md:p-6 lg:mx-[10%]">
+          <div className="relative flex w-full overflow-visible px-2 py-2 pt-4 text-base md:mx-[5%] md:max-w-[90%] md:gap-6  lg:mx-[10%]">
             <div className="min-w-[40px] text-left">
               {message.role === 'assistant' ? (
                 <>
@@ -1478,18 +1573,18 @@ export const ChatMessage = memo(
                   <Timer timerVisible={timerVisible} />
                 </>
               ) : (
-                <IconUser size={30} />
+                <IconUser size={30} color="var(--chat-user)" />
               )}
             </div>
 
-            <div className="dark:prose-invert prose mt-[-2px] flex w-full max-w-full flex-wrap overflow-visible lg:w-[90%]">
+            <div className="prose mt-[-2px] flex w-full max-w-full flex-wrap overflow-visible lg:w-[90%]">
               {message.role === 'user' ? (
                 <div className="flex w-[90%] flex-col">
                   {isEditing ? (
                     <div className="flex w-full flex-col">
                       <textarea
                         ref={textareaRef}
-                        className="w-full resize-none whitespace-pre-wrap rounded-md border border-gray-300 bg-transparent p-3 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:border-gray-600 dark:bg-[#1E1E3F] dark:focus:border-purple-400"
+                        className="w-full resize-none whitespace-pre-wrap rounded-md border border-[--foreground-faded] bg-[--background-faded] p-3 focus:border-[--primary] focus:outline-none"
                         value={messageContent}
                         onChange={handleInputChange}
                         onKeyDown={handlePressEnter}
@@ -1504,7 +1599,7 @@ export const ChatMessage = memo(
                       />
                       <div className="mt-4 flex justify-end space-x-3">
                         <button
-                          className="flex items-center gap-2 rounded-md border border-gray-300 bg-transparent px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                          className="flex items-center gap-2 rounded-md border border-[--button] bg-transparent px-4 py-2 text-sm font-medium text-[--foreground] opacity-50 transition-colors hover:opacity-100"
                           onClick={() => {
                             setMessageContent(messageContent)
                             setIsEditing(false)
@@ -1514,7 +1609,7 @@ export const ChatMessage = memo(
                           {t('Cancel')}
                         </button>
                         <button
-                          className="flex items-center gap-2 rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-purple-500 dark:hover:bg-purple-600"
+                          className="flex items-center gap-2 rounded-md bg-[--button] px-4 py-2 text-sm font-medium text-[--button-text-color] transition-colors hover:bg-[--button-hover] hover:text-[--button-hover-text-color] disabled:cursor-not-allowed disabled:opacity-50"
                           onClick={handleEditMessage}
                           disabled={messageContent.trim().length <= 0}
                         >
@@ -1525,39 +1620,14 @@ export const ChatMessage = memo(
                     </div>
                   ) : (
                     <>
-                      <div className="dark:prose-invert prose w-full flex-1 overflow-visible whitespace-pre-wrap">
+                      <div className="prose w-full flex-1 overflow-visible whitespace-pre-wrap">
                         {Array.isArray(message.content) ? (
                           <>
-                            <div className="mb-2 flex w-full flex-col items-start space-y-2">
+                            <div className="mb-0 flex w-full flex-col items-start space-y-2">
                               {/* User message text for all messages */}
                               {message.content.map((content, index) => {
                                 if (content.type === 'text') {
-                                  // NEW: Check if this is a file upload message
-                                  if (content.text) {
-                                    const fileContent = parseFileContent(
-                                      content.text,
-                                    )
-                                    if (fileContent) {
-                                      return (
-                                        <div key={index} className="mb-2">
-                                          <FileCard
-                                            fileName={fileContent.fileName}
-                                            fileType={fileContent.fileType}
-                                            fileUrl={fileContent.fileUrl}
-                                            onClick={() =>
-                                              handleFilePreview(
-                                                fileContent.fileName,
-                                                fileContent.fileUrl,
-                                                fileContent.fileType,
-                                              )
-                                            }
-                                          />
-                                        </div>
-                                      )
-                                    }
-                                  }
-
-                                  // EXISTING: Regular text content (unchanged)
+                                  // Regular text content
                                   if (
                                     !(content.text as string)
                                       .trim()
@@ -1566,7 +1636,7 @@ export const ChatMessage = memo(
                                     return (
                                       <p
                                         key={index}
-                                        className={`self-start text-base font-normal ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                        className={`self-start text-lg font-black text-[--chat-user] ${montserrat_heading.variable} font-montserratHeading`}
                                       >
                                         {content.text}
                                       </p>
@@ -1574,28 +1644,59 @@ export const ChatMessage = memo(
                                   }
                                 }
                               })}
+                              {/* File cards for all messages */}
+                              <div className="-m-1 flex w-full flex-wrap justify-start">
+                                {message.content
+                                  .filter((item) => item.type === 'file')
+                                  .map((content, index) => {
+                                    const fileName = content.fileName || 'Unknown file'
+                                    const isPreviewable = isFilePreviewable(fileName, content.fileType)
+                                    return (
+                                      <div key={index} className="mb-2">
+                                        <FileCard
+                                          fileName={fileName}
+                                          fileType={content.fileType}
+                                          fileUrl={content.fileUrl}
+                                          isPreviewable={isPreviewable}
+                                          onClick={() =>
+                                            handleFileAction(
+                                              fileName,
+                                              content.fileUrl,
+                                              content.fileType,
+                                            )
+                                          }
+                                        />
+                                      </div>
+                                    )
+                                  })}
+                              </div>
+
                               {/* Image previews for all messages */}
                               <div className="-m-1 flex w-full flex-wrap justify-start">
                                 {message.content
                                   .filter((item) => item.type === 'image_url')
-                                  .map((content, index) => (
-                                    <div
-                                      key={index}
-                                      className={classes.imageContainerStyle}
-                                    >
-                                      <div className="overflow-hidden rounded-lg shadow-lg">
-                                        <ImagePreview
-                                          src={
-                                            Array.from(imageUrls)[
-                                              index
-                                            ] as string
-                                          }
-                                          alt="Chat message"
-                                          className={classes.imageStyle}
-                                        />
+                                  .map((content, index) => {
+                                    // Try to get the processed URL from imageUrls state first
+                                    const imageUrlsArray = Array.from(imageUrls)
+                                    const processedUrl = imageUrlsArray[index] || content.image_url?.url
+                                    
+
+                                    
+                                    return (
+                                      <div
+                                        key={index}
+                                        className={classes.imageContainerStyle}
+                                      >
+                                        <div className="overflow-hidden rounded-lg">
+                                          <ImagePreview
+                                            src={processedUrl as string}
+                                            alt="Chat message"
+                                            className={classes.imageStyle}
+                                          />
+                                        </div>
                                       </div>
-                                    </div>
-                                  ))}
+                                    )
+                                  })}
                               </div>
 
                               {/* Image description loading state for last message */}
@@ -1653,7 +1754,7 @@ export const ChatMessage = memo(
                         ) : (
                           <>{message.content}</>
                         )}
-                        <div className="flex w-full flex-col items-start space-y-2">
+                        <div className="mt-2 flex w-full flex-col items-start space-y-2">
                           {/* Query rewrite loading state - only show for current message */}
                           {isQueryRewriting &&
                             messageIndex ===
@@ -1756,9 +1857,16 @@ export const ChatMessage = memo(
                                       <>
                                         Routing the request to{' '}
                                         <Badge
-                                          color="grape"
+                                          color="var(--background-dark)"
                                           radius="md"
                                           size="sm"
+                                          styles={{
+                                            root: {
+                                              color: 'var(--foreground)',
+                                              backgroundColor:
+                                                'var(--background-dark)',
+                                            },
+                                          }}
                                         >
                                           {response.readableName}
                                         </Badge>
@@ -1793,7 +1901,7 @@ export const ChatMessage = memo(
                                                         classes.imageContainerStyle
                                                       }
                                                     >
-                                                      <div className="overflow-hidden rounded-lg shadow-lg">
+                                                      <div className="overflow-hidden rounded-lg">
                                                         <ImagePreview
                                                           src={imageUrl}
                                                           alt={`Tool image argument ${index}`}
@@ -1841,9 +1949,19 @@ export const ChatMessage = memo(
                                     <>
                                       Tool output from{' '}
                                       <Badge
-                                        color={response.error ? 'red' : 'grape'}
+                                        color="var(--background-dark)"
                                         radius="md"
                                         size="sm"
+                                        styles={{
+                                          root: {
+                                            color: response.error
+                                              ? 'var(--illinois-white)'
+                                              : 'var(--foreground)',
+                                            backgroundColor: response.error
+                                              ? 'var(--badge-error)'
+                                              : 'var(--background-dark)',
+                                          },
+                                        }}
                                       >
                                         {response.readableName}
                                       </Badge>
@@ -1876,7 +1994,7 @@ export const ChatMessage = memo(
                                                       classes.imageContainerStyle
                                                     }
                                                   >
-                                                    <div className="overflow-hidden rounded-lg shadow-lg">
+                                                    <div className="overflow-hidden rounded-lg">
                                                       <ImagePreview
                                                         src={imageUrl}
                                                         alt={`Tool output image ${index}`}
@@ -1956,7 +2074,7 @@ export const ChatMessage = memo(
                                     style={{
                                       marginRight: '10px',
                                       fontWeight: 'bold',
-                                      textShadow: '0 0 10px',
+                                      textShadow: '0 0 15px',
                                     }}
                                     className={`pulsate text-base ${montserrat_paragraph.variable} font-montserratParagraph`}
                                   >
@@ -1969,7 +2087,7 @@ export const ChatMessage = memo(
                         </div>
                       </div>
                       {!isEditing && (
-                        <div className="mt-2 flex items-center justify-start gap-4">
+                        <div className="mt-0 flex items-center justify-start gap-4">
                           <Tooltip
                             label="Edit Message"
                             position="bottom"
@@ -1980,17 +2098,23 @@ export const ChatMessage = memo(
                               duration: 200,
                             }}
                             classNames={{
-                              tooltip:
-                                'bg-gray-700 text-white text-sm py-1 px-2',
+                              tooltip: 'text-sm py-1 px-2',
                               arrow: 'border-gray-700',
+                            }}
+                            style={{
+                              color: 'var(--tooltip)',
+                              backgroundColor: 'var(--tooltip-background)',
                             }}
                           >
                             <button
-                              className={`invisible text-gray-500 hover:text-gray-700 focus:visible group-hover:visible dark:text-gray-400 dark:hover:text-gray-300 
+                              className={`invisible text-[--foreground-faded] hover:text-[--foreground] focus:visible group-hover:visible
                                 ${Array.isArray(message.content) && message.content.some((content) => content.type === 'image_url') ? 'hidden' : ''}`}
                               onClick={toggleEditing}
                             >
-                              <IconEdit size={20} />
+                              <IconEdit
+                                size={20}
+                                className="text-[--button-faded] hover:text-[--button]"
+                              />
                             </button>
                           </Tooltip>
                         </div>
@@ -2020,24 +2144,26 @@ export const ChatMessage = memo(
                       ) && (
                         <div className="relative z-0 mb-1 flex justify-start">
                           <button
-                            className="group/button relative flex items-center gap-0 rounded-xl border border-gray-200 bg-gray-50/50 px-3 py-1.5 text-sm font-medium text-gray-600 shadow-sm transition-all duration-200 hover:border-purple-300 hover:bg-purple-50/50 hover:text-gray-900 dark:border-gray-700 dark:bg-gray-800/30 dark:text-gray-300 dark:hover:border-purple-500/40 dark:hover:bg-purple-900/20 dark:hover:text-gray-100"
+                            className="group/button relative flex items-center gap-0 rounded-xl bg-[--dashboard-button] px-3 py-1.5 text-sm font-medium text-[--dashboard-button-foreground] transition-all duration-200 hover:bg-[--dashboard-button-hover]"
                             onClick={() => handleSourcesSidebarToggle(true)}
                           >
-                            <span className="whitespace-nowrap">
+                            <span
+                              className={`whitespace-nowrap ${montserrat_paragraph.variable} font-montserratParagraph font-bold`}
+                            >
                               Sources
-                              <span className="ml-0.5 rounded-md bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600 group-hover/button:bg-purple-100 group-hover/button:text-purple-600 dark:bg-gray-700/50 dark:text-gray-400 dark:group-hover/button:bg-purple-900/30 dark:group-hover/button:text-purple-300">
+                              <span className="ml-0.5 rounded-full bg-[--background] px-1.5 py-0.5 text-xs text-[--foreground]">
                                 {getContextsLength(message.contexts)}
                               </span>
                             </span>
 
                             {sourceThumbnails.length > 0 && (
                               <div className="flex items-center">
-                                <div className="ml-0.5 mr-1 h-4 border-l border-gray-300 dark:border-gray-600"></div>
+                                <div className="ml-1 mr-1 h-4 border-l border-gray-300"></div>
                                 <div className="relative flex">
                                   {sourceThumbnails.map((thumbnail, index) => (
                                     <div
                                       key={index}
-                                      className="relative h-7 w-7 overflow-hidden rounded-lg border-2 border-gray-200 bg-white shadow-sm transition-transform duration-200 group-hover/button:shadow dark:border-gray-700 dark:bg-gray-800"
+                                      className="relative h-7 w-7 overflow-hidden rounded-md border-2 border-gray-200 bg-[--dashboard-button-foreground] transition-transform duration-200"
                                       style={{
                                         marginLeft:
                                           index > 0 ? '-0.75rem' : '0',
@@ -2045,7 +2171,7 @@ export const ChatMessage = memo(
                                         transform: `rotate(${index % 2 === 0 ? '-1deg' : '1deg'})`,
                                       }}
                                     >
-                                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity duration-200 group-hover/button:opacity-100"></div>
+                                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-100 transition-opacity duration-200"></div>
                                       <img
                                         src={thumbnail}
                                         alt={`Source ${index + 1}`}
@@ -2093,6 +2219,10 @@ export const ChatMessage = memo(
               )}
             </div>
           </div>
+
+          {/* for testing citation styling, can remove later
+<div class="supMarkDown p-8">For grapevines, consider using imidacloprid (Merit) or other appropriate insecticides, but be cautious or their impact on pollinators <a href="#">KY_Apple_CropProfile.pdf</a>; <a href="#">mw-grape-productn-b919-1.pdf, p.108</a>; <a href="#">mw-grape-productn-b919.pdf, p.108</a>;</div>
+*/}
         </div>
 
         {/* Move SourcesSidebar outside the message div but keep it in the fragment */}

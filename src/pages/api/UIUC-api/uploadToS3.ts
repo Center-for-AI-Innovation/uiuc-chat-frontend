@@ -1,6 +1,6 @@
 // upload.ts
 import { S3Client } from '@aws-sdk/client-s3'
-import { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiRequest, type NextApiResponse } from 'next'
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post'
 
 const region = process.env.AWS_REGION
@@ -37,13 +37,25 @@ if (
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
-    const { uniqueFileName, courseName } = req.body as {
+    const { uniqueFileName, user_id, courseName, uploadType } = req.body as {
       uniqueFileName: string
+      user_id?: string
       courseName: string
+      uploadType?: 'chat' | 'document-group'
     }
 
-    const s3_filepath = `courses/${courseName}/${uniqueFileName}`
+    // Validate required parameters based on upload type
+    if (uploadType === 'chat' && !user_id) {
+      return res.status(400).json({ 
+        message: 'user_id is required for chat uploads',
+        error: 'Missing required parameter: user_id for chat upload'
+      })
+    }
 
+    // Use different path structures based on upload type
+    const s3_filepath = uploadType === 'chat' 
+      ? `users/${user_id}/${uniqueFileName}` 
+      : `courses/${courseName}/${uniqueFileName}`
     let post
     if (courseName === 'vyriad') {
       if (!vyriadMinioClient) {

@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { type FC } from 'react'
 import { LoadingSpinner } from '../UIUC-Components/LoadingSpinner'
 
 interface Props {
@@ -11,7 +11,9 @@ interface Props {
 export const SidebarButton: FC<Props> = ({ text, icon, onClick, loading }) => {
   return (
     <button
-      className="relative flex w-full cursor-pointer select-none items-center gap-3 rounded-md px-3 py-3 text-[14px] leading-3 text-white transition-colors duration-200 hover:bg-gray-500/10"
+      className="relative flex w-full cursor-pointer select-none items-center gap-3 rounded-md px-3 py-3 text-[14px] leading-3 text-[--foreground] transition-colors
+      duration-200
+      hover:bg-[--button-hover] hover:text-[--button-text-color]"
       onClick={onClick}
     >
       <div className="flex items-center gap-3">

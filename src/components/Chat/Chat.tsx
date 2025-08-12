@@ -1,5 +1,11 @@
 // src/components/Chat/Chat.tsx
-import { IconArrowRight, IconAlertCircle } from '@tabler/icons-react'
+import { Button, Text } from '@mantine/core'
+import {
+  IconAlertCircle,
+  IconArrowRight,
+  IconSettings,
+} from '@tabler/icons-react'
+import { useTranslation } from 'next-i18next'
 import {
   type MutableRefObject,
   memo,
@@ -9,28 +15,25 @@ import {
   useRef,
   useState,
 } from 'react'
-import { Button, Text } from '@mantine/core'
-import { useTranslation } from 'next-i18next'
 
-import posthog from 'posthog-js'
-import { throttle } from '@/utils/data/throttle'
-import { v4 as uuidv4 } from 'uuid'
 import {
   type ChatBody,
+  type Content,
   type Conversation,
   type Message,
-  Content,
-  UIUCTool,
+  type UIUCTool,
 } from '@/types/chat'
 import { type Plugin } from '@/types/plugin'
+import posthog from 'posthog-js'
+import { v4 as uuidv4 } from 'uuid'
 
 import HomeContext from '~/pages/api/home/home.context'
 
+import { fetchPresignedUrl } from '~/utils/apiUtils'
 import { ChatInput } from './ChatInput'
 import { ChatLoader } from './ChatLoader'
 import { ErrorMessageDiv } from './ErrorMessageDiv'
 import { MemoizedChatMessage } from './MemoizedChatMessage'
-import { fetchPresignedUrl } from '~/utils/apiUtils'
 
 import { type CourseMetadata } from '~/types/courseMetadata'
 
@@ -44,36 +47,37 @@ interface Props {
   documentCount: number | null
 }
 
+import { notifications } from '@mantine/notifications'
+import type * as webllm from '@mlc-ai/web-llm'
+import { MLCEngine } from '@mlc-ai/web-llm'
+import { useQueryClient } from '@tanstack/react-query'
+import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import { motion } from 'framer-motion'
+import { Montserrat } from 'next/font/google'
+import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useAuth } from 'react-oidc-context'
-import ChatNavbar from '../UIUC-Components/navbars/ChatNavbar'
-import { notifications } from '@mantine/notifications'
-import { Montserrat } from 'next/font/google'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import {
-  State,
-  getOpenAIKey,
-  handleContextSearch,
-  processChunkWithStateMachine,
-} from '~/utils/streamProcessing'
+import { useUpdateConversation } from '~/hooks/conversationQueries'
+import { useFetchEnabledDocGroups } from '~/hooks/docGroupsQueries'
+import { useDeleteMessages } from '~/hooks/messageQueries'
+import { CropwizardLicenseDisclaimer } from '~/pages/cropwizard-licenses'
 import {
   handleFunctionCall,
   handleToolCall,
   useFetchAllWorkflows,
 } from '~/utils/functionCalling/handleFunctionCalling'
-import { useFetchEnabledDocGroups } from '~/hooks/docGroupsQueries'
-import { CropwizardLicenseDisclaimer } from '~/pages/cropwizard-licenses'
-import Head from 'next/head'
-import ChatUI, { webLLMModels } from '~/utils/modelProviders/WebLLM'
-import { MLCEngine } from '@mlc-ai/web-llm'
-import * as webllm from '@mlc-ai/web-llm'
-import { WebllmModel } from '~/utils/modelProviders/WebLLM'
-import { handleImageContent } from '~/utils/streamProcessing'
-import { useQueryClient } from '@tanstack/react-query'
-import { useUpdateConversation } from '~/hooks/conversationQueries'
-import { motion } from 'framer-motion'
-import { useDeleteMessages } from '~/hooks/messageQueries'
-import { AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
+import { type AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
+import ChatUI, {
+  type WebllmModel,
+  webLLMModels,
+} from '~/utils/modelProviders/WebLLM'
+import {
+  State,
+  getOpenAIKey,
+  handleContextSearch,
+  handleImageContent,
+  processChunkWithStateMachine,
+} from '~/utils/streamProcessing'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -363,9 +367,9 @@ export const Chat = memo(
 
           let updatedConversation: Conversation
           if (deleteCount) {
-            // ✅ FIXED: Don't clear contexts if they come from a file upload
+            // FIXED: Don't clear contexts if they come from a file upload
             const isFileUploadMessage = Array.isArray(message.content) && message.content.some(c => 
-              typeof c === 'object' && c.text?.includes('📎 Uploaded file:')
+              typeof c === 'object' && c.type === 'file'
             )
             
             if (!isFileUploadMessage) {
@@ -406,9 +410,12 @@ export const Chat = memo(
             // Update the name of the conversation if it's the first message
             if (updatedConversation.messages?.length === 1) {
               const { content } = message
-              // Use only texts instead of content itself
+              // Use only text content, exclude file content
               const contentText = Array.isArray(content)
-                ? content.map((content) => content.text).join(' ')
+                ? content
+                    .filter((content) => content.type === 'text')
+                    .map((content) => content.text)
+                    .join(' ')
                 : content
 
               // This is where we can customize the name of the conversation
@@ -427,8 +434,7 @@ export const Chat = memo(
             key: 'messages',
             value: updatedConversation.messages,
           })
-          updateConversationMutation.mutate(updatedConversation)
-          
+          updateConversationMutation.mutate(updatedConversation)          
           homeDispatch({ field: 'loading', value: true })
           homeDispatch({ field: 'messageIsStreaming', value: true })
           const controller = new AbortController()
@@ -479,18 +485,17 @@ export const Chat = memo(
               if (Array.isArray(message.content)) {
                 return message.content.some(
                   (content) =>
-                    content.type === 'text' &&
-                    content.text?.includes('📎 Uploaded file:'),
+                    content.type === 'file',
                 )
               }
               return false
             })
           }
 
-          // ✅ FIXED: Check if this is a file upload message with contexts
+          // FIXED: Check if this is a file upload message with contexts
           const isFileUploadMessageWithContexts = Array.isArray(message.content) && 
             message.content.some(c => 
-              typeof c === 'object' && c.text?.includes('📎 Uploaded file:')
+              typeof c === 'object' && c.type === 'file'
             ) && 
             message.contexts && 
             Array.isArray(message.contexts) && 
@@ -507,14 +512,13 @@ export const Chat = memo(
             homeDispatch({ field: 'queryRewriteText', value: null })
             message.wasQueryRewritten = undefined
             message.queryRewriteText = undefined
-            // ✅ FIXED: Don't clear contexts if this is a file upload message with contexts
+            // FIXED: Don't clear contexts if this is a file upload message with contexts
             if (!isFileUploadMessageWithContexts) {
               message.contexts = []
             }
           } else {
             // Action 2: Context Retrieval: Vector Search
             let rewrittenQuery = searchQuery // Default to original query
-            
             // Skip query rewrite if disabled in course metadata, if it's the first message, or if there are no documents
             if (
               courseMetadata?.vector_search_rewrite_disabled ||
@@ -893,7 +897,7 @@ export const Chat = memo(
             model: selectedConversation.model,
             skipQueryRewrite: documentCount === 0,
             mode: 'chat',
-          }
+          }    
           updatedConversation = finalChatBody.conversation!
 
           // Action 4: Build Prompt - Put everything together into a prompt
@@ -945,17 +949,18 @@ export const Chat = memo(
               })
             }
           } else {
-            try {
-              // CALL OUR NEW ENDPOINT... /api/allNewRoutingChat
-              startOfCallToLLM = performance.now()
-              try {
-                response = await fetch('/api/allNewRoutingChat', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify(finalChatBody),
-                })
+                try {
+                // CALL OUR NEW ENDPOINT... /api/allNewRoutingChat
+                startOfCallToLLM = performance.now()
+                
+                try {
+                  response = await fetch('/api/allNewRoutingChat', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(finalChatBody),
+                  })
 
                 // Check if response is ok before proceeding
                 if (!response.ok) {
@@ -1649,17 +1654,17 @@ export const Chat = memo(
     // Add this function to create dividers with statements
     const renderIntroductoryStatements = () => {
       return (
-        <div className="xs:mx-2 mt-4 max-w-3xl gap-3 px-4 last:mb-2 sm:mx-4 md:mx-auto lg:mx-auto ">
-          <div className="backdrop-filter-[blur(10px)] rounded-lg border-2 border-[rgba(42,42,120,0.55)] bg-[rgba(42,42,64,0.4)] p-6">
+        <div className="chat_welcome xs:mx-2 mt-4 max-w-3xl gap-3 px-4 last:mb-2 sm:mx-4 md:mx-auto lg:mx-auto ">
+          <div className="backdrop-filter-[blur(10px)] rounded-lg bg-[--welcome-background] p-6">
             <Text
-              className={`mb-2 text-lg text-white ${montserrat_heading.variable} font-montserratHeading`}
+              className={`mb-2 text-lg ${montserrat_heading.variable} font-montserratHeading`}
               style={{ whiteSpace: 'pre-wrap' }}
               dangerouslySetInnerHTML={{
                 __html:
                   courseMetadata?.course_intro_message
                     ?.replace(
                       /(https?:\/\/([^\s]+))/g,
-                      '<a href="https://$1" target="_blank" rel="noopener noreferrer" class="text-purple-400 hover:underline">$2</a>',
+                      '<a href="https://$1" target="_blank" rel="noopener noreferrer" class="text-[--link] hover:underline hover:text-[--link-hover]">$2</a>',
                     )
                     ?.replace(
                       /href="https:\/\/(https?:\/\/)/g,
@@ -1669,7 +1674,7 @@ export const Chat = memo(
             />
 
             <h4
-              className={`text-md mb-2 text-white ${montserrat_paragraph.variable} font-montserratParagraph`}
+              className={`text-md mb-2 text-[--welcome-foreground] ${montserrat_paragraph.variable} font-montserratParagraph`}
             >
               {getCurrentPageName() === 'cropwizard-1.5' && (
                 <CropwizardLicenseDisclaimer />
@@ -1684,7 +1689,7 @@ export const Chat = memo(
                 statements.map((statement, index) => (
                   <div
                     key={index}
-                    className="w-full rounded-lg border-b-2 border-[rgba(42,42,64,0.4)] hover:cursor-pointer hover:bg-[rgba(42,42,64,0.9)]"
+                    className="w-full rounded-lg hover:cursor-pointer hover:bg-[--welcome-button-hover]"
                     onClick={() => {
                       setInputContent('') // First clear the input
                       setTimeout(() => {
@@ -1696,7 +1701,7 @@ export const Chat = memo(
                   >
                     <Button
                       variant="link"
-                      className={`text-md h-auto p-2 font-bold leading-relaxed text-white hover:underline ${montserrat_paragraph.variable} font-montserratParagraph `}
+                      className={`text-md h-auto p-2 font-bold leading-relaxed text-[--foreground] hover:text-[--background] hover:underline ${montserrat_paragraph.variable} font-montserratParagraph `}
                     >
                       <IconArrowRight size={25} className="mr-2 min-w-[40px]" />
                       <p className="whitespace-break-spaces">{statement}</p>
@@ -1753,7 +1758,7 @@ export const Chat = memo(
       )
     }
 
-    const onImageUrlsUpdate = useCallback(
+    /**const onImageUrlsUpdate = useCallback(
       (updatedMessage: Message, messageIndex: number) => {
         if (!selectedConversation) {
           throw new Error('No selected conversation found')
@@ -1783,7 +1788,7 @@ export const Chat = memo(
         // saveConversations(updatedConversations)
       },
       [selectedConversation, conversations],
-    )
+    )**/
 
     const handleFeedback = useCallback(
       async (
@@ -1938,19 +1943,40 @@ export const Chat = memo(
           />
           <link rel="icon" href="/favicon.ico" />
         </Head>
+
         <SourcesSidebarProvider>
-          <div className="overflow-wrap relative flex h-screen w-full flex-col overflow-hidden bg-white dark:bg-[#15162c]">
+          <div className="overflow-wrap relative flex h-full w-full flex-col overflow-hidden bg-[--background] text-[--foreground]">
+            {/*
             <div className="justify-center" style={{ height: '40px' }}>
               <ChatNavbar bannerUrl={bannerUrl as string} isgpt4={true} />
             </div>
-            <div className="mt-10 max-w-full flex-grow overflow-y-auto overflow-x-hidden">
+*/}
+            <div className="group absolute right-4 top-4 z-20">
+              <button
+                className="rounded-md bg-[--dashboard-button] p-2 text-[--dashboard-button-foreground] transition-opacity hover:opacity-80"
+                onClick={() => {
+                  if (courseName) router.push(`/${courseName}/dashboard`)
+                }}
+              >
+                <IconSettings
+                  stroke={2}
+                  size={20}
+                  color="var(--dashboard-button-foreground)"
+                />
+              </button>
+              <div className="pointer-events-none absolute right-0 top-full z-50 mt-2 whitespace-nowrap rounded bg-[--background-faded] px-2 py-1 text-sm text-[--foreground] opacity-0 transition-opacity group-hover:opacity-100">
+                Admin Dashboard
+              </div>
+            </div>
+
+            <div className="relative max-w-full flex-1 overflow-y-auto overflow-x-hidden pb-32">
               {modelError ? (
                 <ErrorMessageDiv error={modelError} />
               ) : (
                 <>
                   <motion.div
                     key={selectedConversation?.id}
-                    className="mt-4 max-h-full"
+                    className="max-h-full"
                     ref={chatContainerRef}
                     onScroll={handleScroll}
                     initial={{ opacity: 1, scale: 1 }}
@@ -1987,43 +2013,52 @@ export const Chat = memo(
                               }}
                               onRegenerate={() => handleRegenerate(index)}
                               onFeedback={handleFeedback}
-                              onImageUrlsUpdate={onImageUrlsUpdate}
                               courseName={courseName}
                             />
                           ),
                         )}
                         {loading && <ChatLoader />}
+                        {/*                          className="h-[162px] bg-gradient-to-t from-transparent to-[rgba(14,14,14,0.4)]"
+//safe to remove in the future- left here in case we want the gradient in dark mode (in light mode, it really sticks
+ */}
                         <div
-                          className="h-[162px] bg-gradient-to-t from-transparent to-[rgba(14,14,21,0.4)]"
+                          className="h-[162px] bg-gradient-to-t from-transparent to-[var(--chat-background)]"
                           ref={messagesEndRef}
                         />
                       </>
                     )}
                   </motion.div>
-                  {/* <div className="w-full max-w-[calc(100% - var(--sidebar-width))] mx-auto flex justify-center"> */}
-                  <ChatInput
-                    stopConversationRef={stopConversationRef}
-                    textareaRef={textareaRef}
-                    onSend={(message, plugin) => {
-                      handleSend(
-                        message,
-                        0,
-                        plugin,
-                        tools,
-                        enabledDocumentGroups,
-                        llmProviders,
-                      )
-                    }}
-                    onScrollDownClick={handleScrollDown}
-                    showScrollDownButton={showScrollDownButton}
-                    onRegenerate={() => handleRegenerate()}
-                    inputContent={inputContent}
-                    setInputContent={setInputContent}
-                    courseName={getCurrentPageName()}
-                    chat_ui={chat_ui}
-                  />
                 </>
               )}
+            </div>
+
+            {/* ChatInput moved outside scroll container and positioned at bottom */}
+            <div className="absolute bottom-0 left-0 right-0 z-10">
+              <ChatInput
+                stopConversationRef={stopConversationRef}
+                textareaRef={textareaRef}
+                onSend={(message, plugin) => {
+                  handleSend(
+                    message,
+                    0,
+                    plugin,
+                    tools,
+                    enabledDocumentGroups,
+                    llmProviders,
+                  )
+                }}
+                onScrollDownClick={handleScrollDown}
+                showScrollDownButton={showScrollDownButton}
+                onRegenerate={() => handleRegenerate()}
+                inputContent={inputContent}
+                setInputContent={setInputContent}
+                user_id={(() => {
+                  const userId = auth.user?.profile.sub || currentEmail
+                  return userId
+                })()}
+                courseName={courseName}
+                chat_ui={chat_ui}
+              />
             </div>
           </div>
         </SourcesSidebarProvider>
@@ -2048,23 +2083,29 @@ export function errorToast({
     onOpen: () => console.log('error mounted'),
     autoClose: 12000,
     title: (
-      <Text size={'lg'} className={`${montserrat_med.className}`}>
+      <Text
+        size={'lg'}
+        className={`${montserrat_med.className} font-bold text-[--notification-title]`}
+      >
         {title}
       </Text>
     ),
     message: (
-      <Text className={`${montserrat_med.className} text-neutral-200`}>
+      <Text
+        className={`${montserrat_med.className} text-[--notification-message]`}
+      >
         {message}
       </Text>
     ),
-    color: 'red',
+    color: '',
     radius: 'lg',
-    icon: <IconAlertCircle />,
+    icon: <IconAlertCircle color="#fff" />,
     className: 'my-notification-class',
     style: {
-      backgroundColor: 'rgba(42,42,64,0.3)',
+      backgroundColor: 'var(--notification)',
       backdropFilter: 'blur(10px)',
-      borderLeft: '5px solid red',
+      borderColor: 'var(--notification-border)',
+      borderLeft: '5px solid var(--notification-highlight)',
     },
     withBorder: true,
     loading: false,

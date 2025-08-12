@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { Conversation } from '@/types/chat'
+import { type Conversation } from '@/types/chat'
 import { ConversationComponent } from './Conversation'
 import { motion } from 'framer-motion'
 

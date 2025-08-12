@@ -67,14 +67,14 @@ const ConversationsPerHourChart: React.FC<ChartProps> = ({
           <XAxis
             dataKey="hour"
             tick={{
-              fill: '#fff',
               fontFamily: montserrat_paragraph.style.fontFamily,
+              fontSize: '.75rem',
             }}
             label={{
               value: 'Hour',
               position: 'insideBottom',
               offset: -5,
-              fill: '#fff',
+              fill: 'var(--foreground)',
               fontFamily: montserrat_paragraph.style.fontFamily,
               dy: 5,
             }}
@@ -82,14 +82,14 @@ const ConversationsPerHourChart: React.FC<ChartProps> = ({
           <YAxis
             allowDecimals={false}
             tick={{
-              fill: '#fff',
               fontFamily: montserrat_paragraph.style.fontFamily,
+              fontSize: '.75rem',
             }}
             label={{
               value: 'Number of Conversations',
               angle: -90,
               position: 'center',
-              fill: '#fff',
+              fill: 'var(--foreground)',
               fontFamily: montserrat_paragraph.style.fontFamily,
               dx: getYAxisLabelPadding(chartData),
             }}
@@ -104,7 +104,11 @@ const ConversationsPerHourChart: React.FC<ChartProps> = ({
             formatter={(value) => [`Conversations: ${value}`]}
             labelFormatter={(label) => `Hour: ${label}`}
           />
-          <Bar dataKey="count" fill="#7e57c2" name="Number of Conversations" />
+          <Bar
+            dataKey="count"
+            fill="var(--dashboard-stat)"
+            name="Number of Conversations"
+          />
         </BarChart>
       </ResponsiveContainer>
     </div>

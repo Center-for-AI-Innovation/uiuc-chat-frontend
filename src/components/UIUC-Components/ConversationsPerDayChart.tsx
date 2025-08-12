@@ -135,20 +135,32 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
   return (
     <div>
       <div className="mb-4 flex items-center justify-end gap-2">
-        <Text size="sm" color="dimmed">
-          Linear
-        </Text>
+        <Text size="sm">Linear</Text>
         <Switch
           checked={useLogScale}
           onChange={(event) => setUseLogScale(event.currentTarget.checked)}
           size="sm"
-          color="violet"
+          color="var(--dashboard-button)"
           aria-label="Toggle between linear and logarithmic scale"
           title="Switch between linear and logarithmic scale visualization"
+          styles={{
+            track: {
+              cursor: 'pointer',
+              backgroundColor: useLogScale
+                ? 'var(--dashboard-button) !important'
+                : 'var(--dashboard-background-dark) !important',
+              borderColor: useLogScale
+                ? 'var(--dashboard-button) !important'
+                : 'var(--dashboard-background-darker) !important',
+            },
+            thumb: {
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+            },
+          }}
         />
-        <Text size="sm" color="dimmed">
-          Logarithmic
-        </Text>
+        <Text size="sm">Logarithmic</Text>
       </div>
 
       <div
@@ -161,11 +173,13 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
             data={chartData}
             margin={{ top: 20, right: 30, left: 20, bottom: 50 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#3a3a4a" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="var(--dashboard-foreground)"
+            />
             <XAxis
               dataKey="date"
               tick={{
-                fill: '#fff',
                 fontFamily: montserrat_paragraph.style.fontFamily,
                 fontSize: chartData.length > 30 ? 12 : 15,
                 dx: chartData.length > 30 ? -3 : -5,
@@ -176,7 +190,7 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
                 value: 'Date',
                 position: 'insideBottom',
                 offset: -20,
-                fill: '#fff',
+                fill: 'var(--dashboard-foreground)',
                 fontFamily: montserrat_paragraph.style.fontFamily,
                 dy: 25,
               }}
@@ -188,8 +202,8 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
             <YAxis
               allowDecimals={false}
               tick={{
-                fill: '#fff',
                 fontFamily: montserrat_paragraph.style.fontFamily,
+                fontSize: '.75rem',
               }}
               label={{
                 value: useLogScale
@@ -197,7 +211,7 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
                   : 'Number of Conversations',
                 angle: -90,
                 position: 'center',
-                fill: '#fff',
+                fill: 'var(--dashboard-foreground)',
                 fontFamily: montserrat_paragraph.style.fontFamily,
                 dx: getYAxisLabelPadding(chartData),
               }}
@@ -220,7 +234,7 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
             />
             <Bar
               dataKey="count"
-              fill="#7e57c2"
+              fill="var(--dashboard-stat)"
               name="Number of Conversations"
             />
           </BarChart>
