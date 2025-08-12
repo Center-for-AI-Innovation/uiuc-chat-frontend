@@ -223,11 +223,19 @@ export function convertConversatonToVercelAISDKv3(
       // Use finalPromtEngineeredMessage for the most recent user message
       content = message.finalPromtEngineeredMessage || ''
     } else if (Array.isArray(message.content)) {
-      // Combine text content from array
-      content = message.content
-        .filter((c) => c.type === 'text')
-        .map((c) => c.text)
-        .join('\n')
+      // Handle both text and file content
+      const textParts: string[] = []
+      
+      message.content.forEach((c) => {
+        if (c.type === 'text') {
+          textParts.push(c.text || '')
+        } else if (c.type === 'file') {
+          // Convert file content to text representation
+          textParts.push(`[File: ${c.fileName || 'unknown'} (${c.fileType || 'unknown type'}, ${c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'})]`)
+        }
+      })
+      
+      content = textParts.join('\n')
     } else {
       content = message.content as string
     }
@@ -255,6 +263,12 @@ export function convertConversationToCoreMessagesWithoutSystem(
           return { type: 'text', text: c.text }
         } else if (c.type === 'image_url') {
           return { type: 'image', image: c.image_url!.url }
+        } else if (c.type === 'file') {
+          // Convert file content to text representation
+          return { 
+            type: 'text', 
+            text: `[File: ${c.fileName || 'unknown'} (${c.fileType || 'unknown type'}, ${c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'})]`
+          }
         }
         return c
       })

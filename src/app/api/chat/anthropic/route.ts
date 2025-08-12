@@ -153,10 +153,20 @@ function convertConversationToVercelAISDKv3(
     if (index === conversation.messages.length - 1 && message.role === 'user') {
       content = message.finalPromtEngineeredMessage || ''
     } else if (Array.isArray(message.content)) {
-      content = message.content
-        .filter((c) => c.type === 'text')
-        .map((c) => c.text)
-        .join('\n')
+      // Handle both text and file content
+      const textParts: string[] = []
+      
+      message.content.forEach((c) => {
+        if (c.type === 'text') {
+          textParts.push(c.text || '')
+        } else if (c.type === 'file') {
+          // Convert file content to text representation for Anthropic
+          textParts.push(`[File: ${c.fileName || 'unknown'} (${c.fileType || 'unknown type'}, ${c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'})]`)
+        }
+        // Note: image_url content is handled differently by Anthropic and may need special processing
+      })
+      
+      content = textParts.join('\n')
     } else {
       content = message.content as string
     }
