@@ -1,10 +1,8 @@
 import {
-  IconCirclePlus,
   IconClipboardText,
-  IconFile,
+  IconHome,
   IconNews,
-  IconPlus,
-  IconSquareRoundedPlus,
+  IconSparkles,
 } from '@tabler/icons-react'
 import { Menu2 } from 'tabler-icons-react'
 
@@ -65,12 +63,11 @@ export default function Header({ isNavbar = false }: { isNavbar?: boolean }) {
   )
 }
 
-import Link from 'next/link'
-import { montserrat_heading } from 'fonts'
 import { createStyles, rem } from '@mantine/core'
-import { useEffect, useState, useRef } from 'react'
+import { montserrat_heading } from 'fonts'
+import Link from 'next/link'
 import { usePostHog } from 'posthog-js/react'
-import { IconFilePlus } from '@tabler/icons-react'
+import { useEffect, useRef, useState } from 'react'
 
 export function LandingPageHeader({
   forGeneralPurposeNotLandingpage = false,
@@ -105,13 +102,17 @@ export function LandingPageHeader({
   const [menuPosition, setMenuPosition] = useState({ right: '20px' })
 
   // Determine which elements should be visible based on screen width
-  const showDocsInNav = windowWidth >= 640 // Changed from 768 to 568 (subtract 200px)
-  const showNewsInNav = windowWidth >= 700 // Changed from 900 to 700 (subtract 200px)
-  const showNewProjectInNav = windowWidth >= 824 // Changed from 1024 to 824 (subtract 200px)
+  const showMyChatbotsInNav = windowWidth >= 580 // New: My Chatbots button
+  const showDocsInNav = windowWidth >= 680 // Adjusted to make room for My Chatbots
+  const showNewsInNav = windowWidth >= 740 // Adjusted to make room for My Chatbots
+  const showNewProjectInNav = windowWidth >= 864 // Adjusted to make room for My Chatbots
 
   // Fix for hamburger menu logic to ensure menu is shown until all items are visible in nav
   const showHamburgerMenu =
-    (!showDocsInNav || !showNewsInNav || !showNewProjectInNav) &&
+    (!showMyChatbotsInNav ||
+      !showDocsInNav ||
+      !showNewsInNav ||
+      !showNewProjectInNav) &&
     forGeneralPurposeNotLandingpage === false
 
   // Update window width on resize
@@ -184,11 +185,22 @@ export function LandingPageHeader({
 
   // Modify this effect to only reset the menu when ALL nav items are visible
   useEffect(() => {
-    if (showDocsInNav && showNewsInNav && showNewProjectInNav) {
+    if (
+      showMyChatbotsInNav &&
+      showDocsInNav &&
+      showNewsInNav &&
+      showNewProjectInNav
+    ) {
       setIsMenuOpen(false)
       setMenuVisible(false)
     }
-  }, [windowWidth, showDocsInNav, showNewsInNav, showNewProjectInNav])
+  }, [
+    windowWidth,
+    showMyChatbotsInNav,
+    showDocsInNav,
+    showNewsInNav,
+    showNewProjectInNav,
+  ])
 
   // Handle link click to close menu
   const handleLinkClick = (e: React.MouseEvent) => {
@@ -231,7 +243,7 @@ export function LandingPageHeader({
             <>
               <Link href="/new" className={classes.link}>
                 <span style={{ display: 'flex', alignItems: 'center' }}>
-                  <IconFilePlus
+                  <IconSparkles
                     size={20}
                     strokeWidth={2}
                     style={{ marginRight: '5px' }}
@@ -239,7 +251,7 @@ export function LandingPageHeader({
                   <span
                     className={`${montserrat_heading.variable} font-montserratHeading`}
                   >
-                    New project
+                    Create Your Own Bot
                   </span>
                 </span>
               </Link>
@@ -280,15 +292,20 @@ export function LandingPageHeader({
         <div
           className={`relative flex grow items-center gap-1 font-bold ${montserrat_heading.variable} font-montserratHeading`}
         >
-          <div style={{ width: '1.95rem', height: '1.95rem' }}>
+          <div style={{ width: '2.5rem', height: '2.5rem' }}>
             <img
               src="/media/logo_illinois.png"
               width="auto"
               height="100%"
             ></img>
           </div>
-          <div className="text-[var(--illinois-orange)] sm:ml-4">Illinois</div>
-          <div className="text-[var(--illinois-blue)]">Chat</div>
+          <div className="text-2xl font-extrabold tracking-tight text-[--illinois-orange] sm:ml-2 sm:text-[1.8rem]">
+            Illinois
+          </div>
+          <br />
+          <div className="text-2xl font-extrabold tracking-tight text-[--foreground] sm:text-[1.8rem]">
+            Chat
+          </div>
         </div>
 
         {/* Navigation links on desktop */}
@@ -346,10 +363,10 @@ export function LandingPageHeader({
                 </Link>
               )}
 
-              {showNewProjectInNav && (
-                <Link href="/new" className={classes.link}>
+              {showMyChatbotsInNav && (
+                <Link href="/chatbots" className={classes.link}>
                   <span className="flex items-center">
-                    <IconPlus
+                    <IconHome
                       size={18}
                       strokeWidth={2}
                       style={{
@@ -361,7 +378,28 @@ export function LandingPageHeader({
                       className={`${montserrat_heading.variable} font-montserratHeading`}
                       style={{ color: 'var(--illinois-orange)' }}
                     >
-                      New Project
+                      My Chatbots
+                    </span>
+                  </span>
+                </Link>
+              )}
+
+              {showNewProjectInNav && (
+                <Link href="/new" className={classes.link}>
+                  <span className="flex items-center">
+                    <IconSparkles
+                      size={18}
+                      strokeWidth={2}
+                      style={{
+                        marginRight: '8px',
+                        color: 'var(--illinois-orange)',
+                      }}
+                    />
+                    <span
+                      className={`${montserrat_heading.variable} font-montserratHeading`}
+                      style={{ color: 'var(--illinois-orange)' }}
+                    >
+                      Create Your Own Bot
                     </span>
                   </span>
                 </Link>
@@ -461,14 +499,15 @@ export function LandingPageHeader({
                     </Link>
                   )}
 
-                  {!showNewProjectInNav && (
+                  {/* Show My Chatbots in dropdown whenever not visible in main nav */}
+                  {!showMyChatbotsInNav && (
                     <Link
-                      href="/new"
+                      href="/chatbots"
                       className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
                       onClick={(e) => handleLinkClick(e)}
                     >
                       <div className="menu-item-content flex items-center p-2">
-                        <IconPlus
+                        <IconHome
                           size={18}
                           strokeWidth={2}
                           style={{
@@ -480,7 +519,32 @@ export function LandingPageHeader({
                           className={`${montserrat_heading.variable} font-montserratHeading`}
                           style={{ color: 'var(--illinois-orange)' }}
                         >
-                          New Project
+                          My Chatbots
+                        </span>
+                      </div>
+                    </Link>
+                  )}
+
+                  {!showNewProjectInNav && (
+                    <Link
+                      href="/new"
+                      className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
+                      onClick={(e) => handleLinkClick(e)}
+                    >
+                      <div className="menu-item-content flex items-center p-2">
+                        <IconSparkles
+                          size={18}
+                          strokeWidth={2}
+                          style={{
+                            marginRight: '8px',
+                            color: 'var(--illinois-orange)',
+                          }}
+                        />
+                        <span
+                          className={`${montserrat_heading.variable} font-montserratHeading`}
+                          style={{ color: 'var(--illinois-orange)' }}
+                        >
+                          Create Your Own Bot
                         </span>
                       </div>
                     </Link>

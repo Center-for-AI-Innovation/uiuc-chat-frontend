@@ -1,5 +1,5 @@
 import { IconX } from '@tabler/icons-react'
-import { FC } from 'react'
+import { type FC } from 'react'
 
 import { useTranslation } from 'next-i18next'
 
@@ -22,7 +22,7 @@ const Search: FC<Props> = ({ placeholder, searchTerm, onSearch }) => {
   return (
     <div className="relative flex items-center">
       <input
-        className="w-full flex-1 rounded-md border border-neutral-600 bg-[#2A2A40] px-4 py-3 pr-10 text-[14px] leading-3 text-white"
+        className="w-full flex-1 rounded-md border border-[--button-border] bg-transparent px-4 py-3 pr-10 text-[14px] leading-3 text-[--foreground] outline-none focus:border-[--button]"
         type="text"
         placeholder={t(placeholder) || ''}
         value={searchTerm}
@@ -31,7 +31,7 @@ const Search: FC<Props> = ({ placeholder, searchTerm, onSearch }) => {
 
       {searchTerm && (
         <IconX
-          className="absolute right-4 cursor-pointer text-neutral-300 hover:text-neutral-400"
+          className="absolute right-4 cursor-pointer text-[--foreground-faded] hover:text-[--foreground]"
           size={18}
           onClick={clearSearch}
         />

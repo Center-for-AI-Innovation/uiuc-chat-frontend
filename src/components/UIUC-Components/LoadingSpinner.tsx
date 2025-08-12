@@ -5,7 +5,7 @@ export const LoadingSpinner = ({ size = 'md' }: { size?: string }) => {
     <div role="status">
       {/*<svg*/}
       {/*  aria-hidden="true"*/}
-      {/*  className="mr-2 h-8 w-8 animate-spin fill-purple-600 text-gray-200 dark:text-gray-600"*/}
+      {/*  className="mr-2 h-8 w-8 animate-spin fill-[--illinois-orange] text-gray-200 dark:text-gray-600"*/}
       {/*  viewBox="0 0 100 101"*/}
       {/*  fill="none"*/}
       {/*  xmlns="http://www.w3.org/2000/svg"*/}
@@ -20,7 +20,7 @@ export const LoadingSpinner = ({ size = 'md' }: { size?: string }) => {
       {/*  />*/}
       {/*</svg>*/}
       <span
-        className={`loading loading-spinner loading-${size} text-purple-600`}
+        className={`loading loading-spinner loading-${size} text-[--spinner]`}
       ></span>
     </div>
   )

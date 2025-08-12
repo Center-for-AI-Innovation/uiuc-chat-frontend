@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Text, Title, Flex } from '@mantine/core'
 import GlobalHeader from './navbars/GlobalHeader'
-import { CourseMetadata } from '~/types/courseMetadata'
+import { type CourseMetadata } from '~/types/courseMetadata'
 import React, { useState, useEffect } from 'react'
 import { LoadingSpinner } from './LoadingSpinner'
 import { useRouter } from 'next/router'

@@ -3,7 +3,7 @@ import type {
   ChatCompletionMessageToolCall,
   ChatCompletionTool,
 } from 'openai/resources/chat/completions'
-import { Conversation } from '~/types/chat'
+import { type Conversation } from '~/types/chat'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 
 // Change runtime to edge
@@ -35,13 +35,13 @@ export async function POST(req: Request) {
     conversation,
     tools,
     openaiKey,
-    imageUrls,
-    imageDescription,
+    imageUrls = [],
+    imageDescription = '',
   }: {
     tools: ChatCompletionTool[]
     conversation: Conversation
-    imageUrls: string[]
-    imageDescription: string
+    imageUrls?: string[]
+    imageDescription?: string
     openaiKey: string
   } = await req.json()
 
@@ -69,7 +69,7 @@ export async function POST(req: Request) {
   })
 
   // Add image info if present
-  if (imageUrls.length > 0 && imageDescription) {
+  if (imageUrls && imageUrls.length > 0 && imageDescription) {
     const imageInfo = `Image URL(s): ${imageUrls.join(', ')};\nImage Description: ${imageDescription}`
     if (message_to_send.length > 0) {
       const lastMessage = message_to_send[message_to_send.length - 1]

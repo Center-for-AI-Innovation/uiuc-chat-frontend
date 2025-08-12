@@ -1,10 +1,9 @@
-import { CourseMetadata } from './courseMetadata'
-import { N8NParameter } from './tools'
 import {
-  AnySupportedModel,
-  BaseLLMProvider,
-  AllLLMProviders,
+  type AllLLMProviders,
+  type AnySupportedModel,
 } from '../utils/modelProviders/LLMProvider'
+import { type CourseMetadata } from './courseMetadata'
+import { type N8NParameter } from './tools'
 
 export interface ConversationPage {
   conversations: Conversation[]
@@ -84,7 +83,7 @@ export interface ToolOutput {
 }
 
 // tool_image_url is for images returned by tools
-export type MessageType = 'text' | 'image_url' | 'tool_image_url'
+export type MessageType = 'text' | 'image_url' | 'tool_image_url' | 'file'
 
 export interface Content {
   type: MessageType
@@ -92,6 +91,10 @@ export interface Content {
   image_url?: {
     url: string
   }
+  fileName?: string
+  fileUrl?: string
+  fileType?: string
+  fileSize?: number
 }
 
 export interface OpenAIChatMessage {

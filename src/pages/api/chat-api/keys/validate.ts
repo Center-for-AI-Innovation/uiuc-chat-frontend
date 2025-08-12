@@ -2,7 +2,7 @@
 
 import { supabase } from '~/utils/supabaseClient'
 import posthog from 'posthog-js'
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import type { AuthContextProps } from 'react-oidc-context'
 
 /**
