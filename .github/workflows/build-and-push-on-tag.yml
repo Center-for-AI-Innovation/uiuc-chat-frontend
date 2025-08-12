@@ -98,8 +98,8 @@ jobs:
             --build-arg NEXT_PUBLIC_KEYCLOAK_REALM=${{ secrets.NEXT_PUBLIC_KEYCLOAK_REALM }} \
             --build-arg NEXT_PUBLIC_KEYCLOAK_CLIENT_ID=${{ secrets.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID }} \
             --build-arg NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG=${{ secrets.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG }} \
-            --build-arg NEXT_PUBLIC_POSTHOG_KEY=${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }} \
-            --build-arg NEXT_PUBLIC_POSTHOG_HOST=${{ secrets.NEXT_PUBLIC_POSTHOG_HOST }} \
+            --build-arg NEXT_PUBLIC_POSTHOG_KEY=${{ secrets.PROD_NEXT_PUBLIC_POSTHOG_KEY }} \
+            --build-arg NEXT_PUBLIC_POSTHOG_HOST=${{ secrets.PROD_NEXT_PUBLIC_POSTHOG_HOST }} \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$PROD_IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$PROD_IMAGE_TAG
 
