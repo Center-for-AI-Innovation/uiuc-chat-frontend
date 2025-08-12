@@ -51,6 +51,9 @@ const setCourseMetadata = async (req: any, res: any) => {
   const vector_search_rewrite_disabled = JSON.parse(
     req.nextUrl.searchParams.get('vector_search_rewrite_disabled') || 'false',
   )
+  const allow_logged_in_users = JSON.parse(
+    req.nextUrl.searchParams.get('allow_logged_in_users') || 'false',
+  )
 
   try {
     const course_metadata: CourseMetadata = {
@@ -69,6 +72,7 @@ const setCourseMetadata = async (req: any, res: any) => {
       guidedLearning,
       systemPromptOnly,
       vector_search_rewrite_disabled,
+      allow_logged_in_users,
     }
     console.log('Right before setting course_metadata with: ', course_metadata)
     await redisClient.hSet('course_metadatas', {
