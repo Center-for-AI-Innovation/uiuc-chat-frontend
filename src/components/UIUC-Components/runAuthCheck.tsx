@@ -1,4 +1,4 @@
-import { CourseMetadata } from '~/types/courseMetadata'
+import { type CourseMetadata } from '~/types/courseMetadata'
 import type { AuthContextProps } from 'react-oidc-context'
 
 export const get_user_permission = (

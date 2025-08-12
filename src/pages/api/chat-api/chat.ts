@@ -10,8 +10,8 @@ import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { validateApiKeyAndRetrieveData } from './keys/validate'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import posthog from 'posthog-js'
-import { NextApiRequest, NextApiResponse } from 'next'
-import { CourseMetadata } from '~/types/courseMetadata'
+import { type NextApiRequest, type NextApiResponse } from 'next'
+import { type CourseMetadata } from '~/types/courseMetadata'
 import {
   attachContextsToLastMessage,
   constructSearchQuery,
@@ -37,7 +37,7 @@ import {
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { buildPrompt } from '~/app/utils/buildPromptUtils'
-import { AuthContextProps } from 'react-oidc-context'
+import { type AuthContextProps } from 'react-oidc-context'
 import { selectBestTemperature } from '~/components/Chat/Temperature'
 
 /**
@@ -246,7 +246,13 @@ export default async function chat(
     searchQuery = newSearchQuery
     imgDesc = newImgDesc
   }
-
+  
+  // Fetch Contexts
+  console.log('Before context search:', {
+    courseName: course_name,
+    searchQuery,
+    documentGroups: doc_groups,
+  })
   const contexts = await handleContextSearch(
     lastMessage,
     course_name,
@@ -254,7 +260,6 @@ export default async function chat(
     searchQuery,
     doc_groups,
   )
-
   // Check if contexts were found
   if (contexts.length === 0) {
     console.error('No contexts found')
@@ -262,12 +267,15 @@ export default async function chat(
       distinct_id: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
       user_id: email,
     })
+    // res.status(500).json({ error: 'No contexts found' })
+    // return
   } else {
     if (retrieval_only) {
       res.status(200).json({ contexts: contexts })
       return
     }
 
+    // Attach contexts to the last message
     attachContextsToLastMessage(lastMessage, contexts)
   }
 
