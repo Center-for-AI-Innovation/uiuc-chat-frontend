@@ -114,6 +114,7 @@ export function LargeDropzone({
         uniqueFileName: uniqueFileName,
         fileType: file.type,
         courseName: courseName,
+        // No user_id needed since document uploads use courses/${courseName}/ path
       }),
     }
 
