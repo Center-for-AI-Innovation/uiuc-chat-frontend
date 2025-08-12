@@ -69,6 +69,7 @@ jobs:
       id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        BRANCH_TAG: ${{ steps.set-tag.outputs.branch_tag }}
       run: |
         set -euo pipefail
         echo "Building image with tag: $IMAGE_TAG"
