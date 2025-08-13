@@ -118,7 +118,11 @@ const SupportedFileUploadTypes = () => {
     { icon: IconPhoto, label: 'Image', color: 'text-pink-500' },
     { icon: IconMusic, label: 'Audio', color: 'text-yellow-500' },
     { icon: IconCode, label: 'Code', color: 'text-cyan-500' },
-    { icon: IconFileTypeTxt, label: 'Text', color: 'text-white' },
+    {
+      icon: IconFileTypeTxt,
+      label: 'Text',
+      color: 'text-[--foreground-faded]',
+    },
   ]
 
   return (
