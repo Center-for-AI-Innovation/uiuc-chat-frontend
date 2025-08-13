@@ -12,6 +12,8 @@ import {
   Tooltip,
 } from '@mantine/core'
 
+import router from 'next/router'
+
 //import { montserrat_heading, montserrat_paragraph } from 'fonts'
 
 //import HeaderStepNavigation from './HeaderStepNavigation'
@@ -27,7 +29,17 @@ const StepSuccess = ({ project_name }: { project_name: string }) => {
               Success! Your chatbot is live!
             </h2>
 
-            <div className="mt-4">{project_name}</div>
+            <Button
+              size="sm"
+              radius="sm"
+              classNames={componentClasses.button}
+              className="mt-4"
+              onClick={(e) => {
+                router.push(`/${project_name}/dashboard`)
+              }}
+            >
+              Fine tune your settings
+            </Button>
           </div>
         </div>
       </div>
@@ -36,19 +48,20 @@ const StepSuccess = ({ project_name }: { project_name: string }) => {
 }
 
 const componentClasses = {
-  input: {
-    label: 'font-semibold text-base text-[--foreground]',
-    wrapper: '-ml-4',
-    input: `
-      mt-1
+  button: {
+    root: `
+      !text-[--foreground-faded]
+      bg-transparent
+      border-[--background-faded]
 
-      placeholder:text-[--foreground-faded]
-      text-[--foreground] bg-[--background]
+      hover:!text-[--dashboard-button]
+      hover:hover:bg-transparent
+      hover:hover:border-[--dashboard-button]
 
-      border-[--foreground-faded] focus:border-[--foreground]
-      overflow-ellipsis
+      disabled:bg-transparent
+      disabled:border-[--button-disabled]
+      disabled:!text-[--button-disabled-text-color]
     `,
-    description: 'text-sm text-[--foreground-faded]',
   },
 }
 

@@ -158,26 +158,26 @@ const MakeNewCoursePage = ({
         //   padding: '1rem',
         // }}
       >
-        <div className="flex w-full flex-1 flex-col items-center justify-center py-0 pb-20">
+        <div className="mt-12 flex w-full flex-1 flex-col items-center justify-center py-0 pb-20">
           <Card
             padding="none"
             withBorder={true}
             radius="md"
-            className="w-[96%] !border-[--dashboard-border] bg-[--background] p-8 text-[--foreground] md:w-[90%] lg:max-w-[750px]"
+            className="w-[96%] !border-[--dashboard-border] bg-[--background] p-8 text-[--foreground] md:w-[90%] lg:max-w-[860px]"
           >
             <div className="step_container min-h-[16rem]">
               {allSteps[currentStep]}
             </div>
-
-            <NewCourseNavigation
-              currentStep={currentStep}
-              allSteps={allSteps}
-              project_name={projectName}
-              canCreateProject={canCreateProject}
-              onSetCreated={canCreateProject}
-              onSetStep={setStep}
-            ></NewCourseNavigation>
           </Card>
+
+          <NewCourseNavigation
+            currentStep={currentStep}
+            allSteps={allSteps}
+            project_name={projectName}
+            canCreateProject={canCreateProject}
+            onSetCreated={canCreateProject}
+            onSetStep={setStep}
+          ></NewCourseNavigation>
 
           <div className="hidden">
             <Card

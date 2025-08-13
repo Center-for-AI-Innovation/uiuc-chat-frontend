@@ -75,33 +75,52 @@ export default function SetExampleQuestions({
             <TextInput
               key={i}
               // withAsterisk
-              label="Example question"
               name="question"
-              placeholder="Contrast Shakespeare against Kierkegaard..."
+              placeholder="Add sample queries to illustrate usage of your AI."
               styles={{
-                label: {
-                  color: 'var(--foreground-faded)',
-                },
                 input: {
                   color: 'var(--foreground)',
                   backgroundColor: 'var(--background)',
+                  borderColor: 'var(--dashboard-border)',
+                  padding: 'calc(var(--padding) * .75)',
+                  paddingRight: '6rem', //make room for button
+                  marginTop: '.25rem',
+
+                  '&:focus': {
+                    borderColor: 'var(--background-darker)',
+                  },
                 },
               }}
               value={value}
               onChange={(e) => handleInputChange(e, i)}
               onFocus={() => handleInputFocus(i)}
               // onBlur={() => handleInputBlur(i)} I couldn't get this working to remove boxes...
+
+              rightSectionPointerEvents="all"
+              rightSection={
+                <Button
+                  type="submit"
+                  size={'xs'}
+                  disabled={value == ''}
+                  className="mr-8 bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--foreground-fadaed] disabled:opacity-50"
+                  onClick={async () => {}}
+                >
+                  Save
+                </Button>
+              }
             />
           )
         })}
+        {/*
         <Group position="right" mt="md">
           <Button
             className="bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover]"
             type="submit"
           >
-            Submit
+            Add
           </Button>
         </Group>
+*/}
       </form>
     </Box>
   )

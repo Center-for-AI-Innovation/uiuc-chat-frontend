@@ -421,7 +421,7 @@ export const UploadCard = memo(function UploadCard({
                 </Text>
                 <input
                   type="file"
-                  className={`file-input-bordered file-input w-full cursor-pointer border-[--foreground] bg-[--background] text-sm text-[--foreground] shadow-inner hover:border-[--dashboard-button] hover:bg-[--dashboard-button] hover:text-[--dashboard-button-foreground] ${montserrat_paragraph.variable} font-montserratParagraph`}
+                  className={`file-input file-input-bordered w-full cursor-pointer border-[--foreground] bg-[--background] text-sm text-[--foreground] shadow-inner hover:border-[--dashboard-button] hover:bg-[--dashboard-button] hover:text-[--dashboard-button-foreground] ${montserrat_paragraph.variable} font-montserratParagraph`}
                   onChange={async (e) => {
                     // Assuming the file is converted to a URL somewhere else
                     if (e.target.files?.length) {
