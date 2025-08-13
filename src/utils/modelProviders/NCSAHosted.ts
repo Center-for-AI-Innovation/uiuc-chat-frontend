@@ -32,7 +32,13 @@ export const getNCSAHostedModels = async (
   try {
     // /api/tags - all downloaded models - might not have room on the GPUs.
     // /api/ps - all HOT AND LOADED models
-    const response = await fetch(process.env.OLLAMA_SERVER_URL + '/api/ps')
+    const headers = {
+      Authorization: `Bearer ${process.env.NCSA_HOSTED_API_KEY || ''}`,
+    }
+
+    const response = await fetch(process.env.OLLAMA_SERVER_URL + '/api/ps', {
+      headers,
+    })
 
     if (!response.ok) {
       ncsaHostedProvider.error = `HTTP error ${response.status} ${response.statusText}.`
