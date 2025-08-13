@@ -356,21 +356,13 @@ export function LargeDropzone({
               cursor: isDisabled ? 'not-allowed' : 'pointer',
               borderWidth: '2px',
               borderStyle: 'dashed',
-              borderColor: 'var(--foreground)',
+              borderColor: 'var(--dashboard-border)',
               borderRadius: rem(12),
               padding: '1rem',
               margin: '0 auto',
               maxWidth: '100%',
               overflow: 'hidden',
-              background:
-                'linear-gradient(135deg, var(--dashboard-background-faded) 0%, var(--dashboard-background) 100%)',
-              transition: 'all 0.3s ease, background-position 0.3s ease',
-              backgroundSize: '200% 200%',
-              // backgroundPosition: '0% 0%',
-              // ':hover': {
-              //   backgroundPosition: '100% 100%',
-              //   background: 'linear-gradient(135deg, #2a2a40 0%, #1c1c2e 100%)',
-              // },
+              background: 'var(--background)',
             }}
             onDrop={async (files) => {
               ingestFiles(files, is_new_course).catch((error) => {

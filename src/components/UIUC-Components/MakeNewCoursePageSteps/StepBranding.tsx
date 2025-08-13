@@ -15,6 +15,7 @@ import {
 //import { montserrat_heading, montserrat_paragraph } from 'fonts'
 
 import HeaderStepNavigation from './HeaderStepNavigation'
+import BrandingForm from '../BrandingForm'
 
 const StepBranding = ({ project_name }: { project_name: string }) => {
   return (
@@ -30,9 +31,7 @@ const StepBranding = ({ project_name }: { project_name: string }) => {
         <div className="step_content">
           {/* TODO: move this into a separate component so it can be shared in wizard and the project /dashboard/ page */}
 
-          <div className="flex justify-center p-16">
-            [[ chat identity / branding ]]
-          </div>
+          <BrandingForm project_name={project_name}></BrandingForm>
         </div>
       </div>
     </>
