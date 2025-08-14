@@ -3,22 +3,35 @@
  * We will have an ever growing list of redirectURIs and WebOrigins to enable keycloak on each unique preview deploy URI.
  */
 
-const fetch = require('node-fetch')
+const { getKeycloakBaseUrl } = require('./shared-utils')
 
 async function updateKeycloakRedirectURIs() {
-  const keycloakUrl = process.env.NEXT_PUBLIC_KEYCLOAK_URL
+  const keycloakBaseUrl = getKeycloakBaseUrl();
   const realm = process.env.NEXT_PUBLIC_KEYCLOAK_REALM
   const clientId = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID
   const adminUser = process.env.KEYCLOAK_ADMIN_USERNAME
   const adminPass = process.env.KEYCLOAK_ADMIN_PASSWORD
   const branchURL = process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL}` : null
 
+  // Check if all required environment variables are present
+  if (!keycloakBaseUrl || !realm || !clientId || !adminUser || !adminPass) {
+    console.log('Skipping Keycloak configuration update - missing required environment variables')
+    console.log('Required vars:', {
+      keycloakBaseUrl: !!keycloakBaseUrl,
+      realm: !!realm,
+      clientId: !!clientId,
+      adminUser: !!adminUser,
+      adminPass: !!adminPass
+    })
+    return
+  }
+
   // Log the branch URL for debugging purposes
   // console.log(`TEST Branch URL: ${branchURL}`)
   try {
     // Get access token
     const tokenResponse = await fetch(
-      `${keycloakUrl}realms/master/protocol/openid-connect/token`,
+      `${keycloakBaseUrl}realms/master/protocol/openid-connect/token`,
       {
         method: 'POST',
         headers: {
@@ -33,11 +46,21 @@ async function updateKeycloakRedirectURIs() {
       },
     )
 
+    if (!tokenResponse.ok) {
+      console.log('Failed to get Keycloak access token, skipping configuration update')
+      return
+    }
+
     const { access_token } = await tokenResponse.json()
+
+    if (!access_token) {
+      console.log('No access token received from Keycloak, skipping configuration update')
+      return
+    }
 
     // Get current client config
     const clientResponse = await fetch(
-      `${keycloakUrl}admin/realms/${realm}/clients?clientId=${clientId}`,
+      `${keycloakBaseUrl}admin/realms/${realm}/clients?clientId=${clientId}`,
       {
         headers: {
           Authorization: `Bearer ${access_token}`,
@@ -45,7 +68,18 @@ async function updateKeycloakRedirectURIs() {
       },
     )
 
-    const [client] = await clientResponse.json()
+    if (!clientResponse.ok) {
+      console.log('Failed to get Keycloak client configuration, skipping update')
+      return
+    }
+
+    const clients = await clientResponse.json()
+    if (!clients || clients.length === 0) {
+      console.log('No Keycloak client found, skipping configuration update')
+      return
+    }
+
+    const [client] = clients
 
     // Ensure redirectUris and webOrigins are arrays before creating Sets
     const currentRedirectUris = new Set(client.redirectUris || [])
@@ -77,7 +111,7 @@ async function updateKeycloakRedirectURIs() {
     }
 
     // Update client
-    await fetch(`${keycloakUrl}admin/realms/${realm}/clients/${client.id}`, {
+    const updateResponse = await fetch(`${keycloakBaseUrl}admin/realms/${realm}/clients/${client.id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -90,13 +124,17 @@ async function updateKeycloakRedirectURIs() {
       }),
     })
 
-    console.log('Successfully updated Keycloak client configuration:', {
-      branchURL: branchURL || 'not available',
-      addedUrls
-    })
+    if (updateResponse.ok) {
+      console.log('Successfully updated Keycloak client configuration:', {
+        branchURL: branchURL || 'not available',
+        addedUrls
+      })
+    } else {
+      console.log('Failed to update Keycloak client configuration')
+    }
   } catch (error) {
-    console.error('Error updating Keycloak client configuration:', error)
-    process.exit(1)
+    console.log('Error updating Keycloak client configuration (non-fatal):', error.message)
+    // Don't exit with error code - let the build continue
   }
 }
 

@@ -1,6 +1,7 @@
-import { type NextApiRequest, type NextApiResponse } from 'next'
-import { supabase } from '~/utils/supabaseClient'
+import { NextApiRequest, NextApiResponse } from 'next'
+import { db } from '~/db/dbClient'
 import posthog from 'posthog-js'
+import { documentsInProgress } from '~/db/schema'
 
 type IngestResponse = {
   task_id?: string
@@ -37,51 +38,24 @@ const handler = async (
 
     const s3_filepath = `courses/${courseName}/${uniqueFileName}`
 
-    const response = await fetch(
-      'https://app.beam.cloud/taskqueue/ingest_task_queue/latest',
-      {
-        method: 'POST',
-        headers: {
-          Accept: '*/*',
-          'Accept-Encoding': 'gzip, deflate',
-          Authorization: `Bearer ${process.env.BEAM_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          course_name: courseName,
-          readable_filename: readableFilename,
-          s3_paths: s3_filepath,
-        }),
+    const response = await fetch(`${process.env.INGEST_URL}`, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
       },
-    )
+      body: JSON.stringify({
+        course_name: courseName,
+        readable_filename: readableFilename,
+        s3_paths: s3_filepath,
+      }),
+    })
 
     const responseBody = await response.json()
     console.log(
       `📤 Submitted to ingest queue: ${s3_filepath}. Response status: ${response.status}`,
       responseBody,
     )
-
-    // Send to ingest-in-progress table
-    const { error } = await supabase.from('documents_in_progress').insert({
-      s3_path: s3_filepath,
-      course_name: courseName,
-      readable_filename: readableFilename,
-      beam_task_id: responseBody.task_id,
-    })
-
-    if (error) {
-      console.error(
-        '❌❌ Supabase failed to insert into `documents_in_progress`:',
-        error,
-      )
-      posthog.capture('supabase_failure_insert_documents_in_progress', {
-        s3_path: s3_filepath,
-        course_name: courseName,
-        readable_filename: readableFilename,
-        error: error.message,
-        beam_task_id: responseBody.task_id,
-      })
-    }
 
     return res.status(200).json(responseBody)
   } catch (error) {

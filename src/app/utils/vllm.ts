@@ -17,7 +17,7 @@ export async function runVLLM(
 
     const vlmModel = createOpenAI({
       baseURL: process.env.NCSA_HOSTED_VLM_BASE_URL,
-      apiKey: 'non-empty',
+      apiKey: process.env.NCSA_HOSTED_API_KEY || '',
       compatibility: 'compatible', // strict/compatible - enable 'strict' when using the OpenAI API
     })
     if (conversation.messages.length === 0) {
@@ -53,7 +53,9 @@ export async function runVLLM(
       if (error instanceof Error && error.message.includes('timeout')) {
         throw new Error(`VLLM request timed out: ${error.message}`)
       } else if (error instanceof Error && error.message.includes('apiKey')) {
-        throw new Error(`VLLM authentication error: Please check API configuration`)
+        throw new Error(
+          `VLLM authentication error: Please check API configuration`,
+        )
       } else {
         throw error // rethrow the original error with context
       }
@@ -62,14 +64,18 @@ export async function runVLLM(
     console.error('Error in runVLLM:', error)
     return new Response(
       JSON.stringify({
-        error: error instanceof Error ? error.message : 'Unknown error occurred when running VLLM',
-        detailed_error: error instanceof Error ? error.toString() : 'Unknown error',
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Unknown error occurred when running VLLM',
+        detailed_error:
+          error instanceof Error ? error.toString() : 'Unknown error',
         source: 'VLLM',
       }),
       {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
-      }
+      },
     )
   }
 }
