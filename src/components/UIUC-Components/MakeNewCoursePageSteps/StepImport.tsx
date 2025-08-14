@@ -27,7 +27,7 @@ const StepImport = ({ project_name }: { project_name: string }) => {
       <div className="step">
         <HeaderStepNavigation
           project_name={project_name}
-          title="Import Websites"
+          title="Import Websites and Connect Platform Data"
           description="Use URLs to connect more data to your bot."
         />
 
