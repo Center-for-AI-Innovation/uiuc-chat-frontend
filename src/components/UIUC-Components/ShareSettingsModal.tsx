@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useDebouncedState } from '@mantine/hooks'
 import {
   IconLock,
@@ -37,6 +37,10 @@ export default function ShareSettingsModal({
   projectName,
   metadata: initialMetadata,
 }: ShareSettingsModalProps) {
+  const useIllinoisChatConfig = useMemo(() => {
+    return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
+  }, [])
+
   const queryClient = useQueryClient()
   const [metadata, setMetadata] = useState<CourseMetadata>(initialMetadata)
 
@@ -111,7 +115,7 @@ export default function ShareSettingsModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Add subtle gradient border */}
-        <div className="absolute inset-0 -z-10 rounded-2xl blur-xl" />
+        <div className="blur-xlxl absolute inset-0 -z-10 rounded-2xl" />
 
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[--modal-border] px-6 py-4">
@@ -201,8 +205,7 @@ export default function ShareSettingsModal({
                     </p>
                   </div>
                 </div>
-
-                <button
+                {!useIllinoisChatConfig && (<button
                   onClick={handlePrivacyChange}
                   className={`relative h-6 w-11 rounded-full transition-colors duration-300 ${
                     isPrivate
@@ -215,7 +218,8 @@ export default function ShareSettingsModal({
                       isPrivate ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
-                </button>
+                </button>)}
+
               </div>
             </div>
 

@@ -2,7 +2,7 @@ import { Menu, Avatar, type MantineNumberSize, rem } from '@mantine/core'
 import { useAuth } from 'react-oidc-context'
 import { montserrat_heading } from 'fonts'
 import { createStyles } from '@mantine/core'
-import { initiateSignIn } from '~/utils/authHelpers'
+import { getKeycloakBaseUrl, initiateSignIn } from '~/utils/authHelpers'
 
 const useStyles = createStyles((theme) => ({
   link: {
@@ -117,7 +117,7 @@ export const AuthMenu = ({ size = 34 }: AuthMenuProps) => {
             onClick={() => {
               // Fixed URL construction to avoid realm duplication
               window.open(
-                `https://login.uiuc.chat/realms/${process.env.NEXT_PUBLIC_KEYCLOAK_REALM}/account`,
+                `${getKeycloakBaseUrl()}realms/${process.env.NEXT_PUBLIC_KEYCLOAK_REALM}/account`,
                 '_blank',
               )
             }}

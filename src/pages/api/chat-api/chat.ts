@@ -107,7 +107,7 @@ export default async function chat(
     isValidApiKey,
     authContext,
   }: { isValidApiKey: boolean; authContext: AuthContextProps } =
-    await validateApiKeyAndRetrieveData(api_key, course_name)
+    await validateApiKeyAndRetrieveData(api_key)
 
   const email = authContext.user?.profile.email
 
