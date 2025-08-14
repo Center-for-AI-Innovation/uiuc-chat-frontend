@@ -129,7 +129,7 @@ const StepCreate = ({
         <HeaderStepNavigation
           project_name="" //don't send project name for create page
           title="Create a new chatbot"
-          description="First describe what’s it all about."
+          description="What’s it all about?"
         />
 
         <div className="step_content mt-4">
@@ -177,7 +177,7 @@ const StepCreate = ({
           <Textarea
             value={projectDescription}
             label="Description"
-            placeholder="Describe your project, goals, expected impact etc..."
+            placeholder="Describe your project, goals, expected impact etc...."
             description=""
             className="mt-4"
             classNames={componentClasses.input}
