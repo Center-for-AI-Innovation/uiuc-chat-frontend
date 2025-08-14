@@ -150,7 +150,6 @@ Amazon Web Services
 Vercel
 Railway
 UpStash
-Supabase
 
 Web and Mobile Analytics:
 Segment

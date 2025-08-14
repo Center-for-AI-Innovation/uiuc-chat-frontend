@@ -14,6 +14,12 @@ if (region && process.env.AWS_KEY && process.env.AWS_SECRET) {
       accessKeyId: process.env.AWS_KEY,
       secretAccessKey: process.env.AWS_SECRET,
     },
+    // endpoint: process.env.MINIO_ENDPOINT,
+    //forcePathStyle: true, // Required for MinIO
+  })
+} else if (region) {
+  s3Client = new S3Client({
+    region: region,
   })
 }
 
