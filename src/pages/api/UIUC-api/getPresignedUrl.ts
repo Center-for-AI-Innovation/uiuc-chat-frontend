@@ -4,6 +4,8 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getS3Client, getS3BucketName } from '~/utils/s3Client'
 
+import { S3Client } from '@aws-sdk/client-s3'
+
 // MinIO Client configuration (keeping existing MinIO support)
 let vyriadMinioClient: any = null
 if (
@@ -11,7 +13,6 @@ if (
   process.env.MINIO_SECRET &&
   process.env.MINIO_ENDPOINT
 ) {
-  const { S3Client } = require('@aws-sdk/client-s3')
   vyriadMinioClient = new S3Client({
     region: process.env.MINIO_REGION || 'us-east-1', // MinIO requires a region, but it can be arbitrary
     credentials: {
@@ -40,8 +41,12 @@ export default async function handler(
             'MinIO client not configured - missing required environment variables',
           )
         }
+        const bucketName = process.env.S3_BUCKET_NAME
+        if (!bucketName) {
+          throw new Error('S3_BUCKET_NAME environment variable is not configured')
+        }
         const command = new GetObjectCommand({
-          Bucket: process.env.S3_BUCKET_NAME!,
+          Bucket: bucketName,
           Key: s3_path as string,
         })
         presignedUrl = await getSignedUrl(vyriadMinioClient, command, {
@@ -56,8 +61,11 @@ export default async function handler(
             'S3 client not configured - missing required environment variables',
           )
         }
+        if (!bucketName) {
+          throw new Error('Bucket name is not configured for this course')
+        }
         const command = new GetObjectCommand({
-          Bucket: bucketName!,
+          Bucket: bucketName,
           Key: s3_path as string,
         })
         presignedUrl = await getSignedUrl(s3Client, command, {

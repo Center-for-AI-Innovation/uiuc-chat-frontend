@@ -3,7 +3,7 @@ import { supabase } from '@/utils/supabaseClient'
 const newsletterUnsubscribe = async (req: any, res: any) => {
   const { email } = req.body
 
-  const { data, error } = await supabase.from('email-newsletter').upsert(
+  const { error } = await supabase.from('email-newsletter').upsert(
     [
       {
         email: email,

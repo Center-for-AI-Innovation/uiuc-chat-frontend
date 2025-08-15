@@ -2,6 +2,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post'
 import { getS3Client, getS3BucketName } from '~/utils/s3Client'
+import { S3Client } from '@aws-sdk/client-s3'
 
 // MinIO Client configuration (keeping existing MinIO support)
 let vyriadMinioClient: any = null
@@ -10,7 +11,6 @@ if (
   process.env.MINIO_SECRET &&
   process.env.MINIO_ENDPOINT
 ) {
-  const { S3Client } = require('@aws-sdk/client-s3')
   vyriadMinioClient = new S3Client({
     region: process.env.MINIO_REGION || 'us-east-1', // MinIO requires a region, but it can be arbitrary
     credentials: {
@@ -38,8 +38,12 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           'MinIO client not configured - missing required environment variables',
         )
       }
+      const bucketName = process.env.S3_BUCKET_NAME
+      if (!bucketName) {
+        throw new Error('S3_BUCKET_NAME environment variable is not configured')
+      }
       post = await createPresignedPost(vyriadMinioClient, {
-        Bucket: process.env.S3_BUCKET_NAME!,
+        Bucket: bucketName,
         Key: s3_filepath,
         Expires: 60 * 60, // 1 hour
       })
@@ -52,8 +56,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           'S3 client not configured - missing required environment variables',
         )
       }
+      if (!bucketName) {
+        throw new Error('Bucket name is not configured for this course')
+      }
       post = await createPresignedPost(s3Client, {
-        Bucket: bucketName!,
+        Bucket: bucketName,
         Key: s3_filepath,
         Expires: 60 * 60, // 1 hour
       })

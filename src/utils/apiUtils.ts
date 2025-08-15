@@ -23,7 +23,8 @@ export const getBaseUrl = () => {
  * @throws {Error} - If RAILWAY_URL is not set
  */
 export const getBackendUrl = (): string => {
-  const backendUrl = process.env.RAILWAY_URL
+  // For testing purposes, use the testing backend URL
+  const backendUrl = 'https://flask-cropwizard-testing.up.railway.app'
   
   if (!backendUrl) {
     throw new Error(

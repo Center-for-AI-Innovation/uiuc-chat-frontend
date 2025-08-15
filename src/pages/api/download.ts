@@ -1,4 +1,4 @@
-import { GetObjectCommand } from '@aws-sdk/client-s3'
+import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getS3Client, getS3BucketName } from '~/utils/s3Client'
@@ -10,7 +10,6 @@ if (
   process.env.MINIO_SECRET &&
   process.env.MINIO_ENDPOINT
 ) {
-  const { S3Client } = require('@aws-sdk/client-s3')
   vyriadMinioClient = new S3Client({
     region: process.env.MINIO_REGION || 'us-east-1', // MinIO requires a region, but it can be arbitrary
     credentials: {
@@ -72,8 +71,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         )
       }
 
+      if (!bucketName) {
+        throw new Error('Bucket name is not configured for this course')
+      }
       const command = new GetObjectCommand({
-        Bucket: bucketName!,
+        Bucket: bucketName,
         Key: filePath,
         ResponseContentDisposition: 'inline',
         ResponseContentType: ResponseContentType,

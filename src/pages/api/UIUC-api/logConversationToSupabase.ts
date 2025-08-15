@@ -21,7 +21,7 @@ const logConversationToSupabase = async (req: any, res: any) => {
   // Sanitize the entire conversation object
   const sanitizedConversation = sanitizeForLogging(conversation)
 
-  const { data, error } = await supabase.from('llm-convo-monitor').upsert(
+  const { error } = await supabase.from('llm-convo-monitor').upsert(
     [
       {
         convo: sanitizedConversation,
