@@ -1,29 +1,16 @@
 // upload.ts
-import { S3Client } from '@aws-sdk/client-s3'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post'
+import { getS3Client, getS3BucketName } from '~/utils/s3Client'
 
-const region = process.env.AWS_REGION
-
-// S3 Client configuration
-let s3Client: S3Client | null = null
-if (region && process.env.AWS_KEY && process.env.AWS_SECRET) {
-  s3Client = new S3Client({
-    region: region,
-    credentials: {
-      accessKeyId: process.env.AWS_KEY,
-      secretAccessKey: process.env.AWS_SECRET,
-    },
-  })
-}
-
-// MinIO Client configuration
-let vyriadMinioClient: S3Client | null = null
+// MinIO Client configuration (keeping existing MinIO support)
+let vyriadMinioClient: any = null
 if (
   process.env.MINIO_KEY &&
   process.env.MINIO_SECRET &&
   process.env.MINIO_ENDPOINT
 ) {
+  const { S3Client } = require('@aws-sdk/client-s3')
   vyriadMinioClient = new S3Client({
     region: process.env.MINIO_REGION || 'us-east-1', // MinIO requires a region, but it can be arbitrary
     credentials: {
@@ -57,13 +44,16 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         Expires: 60 * 60, // 1 hour
       })
     } else {
+      const s3Client = getS3Client(courseName)
+      const bucketName = getS3BucketName(courseName)
+
       if (!s3Client) {
         throw new Error(
           'S3 client not configured - missing required environment variables',
         )
       }
       post = await createPresignedPost(s3Client, {
-        Bucket: process.env.S3_BUCKET_NAME!,
+        Bucket: bucketName!,
         Key: s3_filepath,
         Expires: 60 * 60, // 1 hour
       })

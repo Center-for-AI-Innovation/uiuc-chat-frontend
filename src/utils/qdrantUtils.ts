@@ -1,29 +1,26 @@
 // qdrantUtils.ts
 import { CourseDocument } from '~/types/courseMaterials'
-import { qdrant } from '@/utils/qdrantClient'
+import { getQdrantClient, getQdrantCollectionName } from '@/utils/qdrantClient'
 import posthog from 'posthog-js'
-
-const collection_name = process.env.QDRANT_COLLECTION_NAME
-
-// Uncomment to test collection schema:
-// async function getCollectionSchema(collectionName: string) {
-//   try {
-//     const response = await qdrant.getCollection(collectionName);
-//     return response;
-//   } catch (error) {
-//     console.error('Error retrieving collection schema:', error);
-//     throw error;
-//   }
-// }
 
 export async function addDocumentsToDocGroupQdrant(
   courseName: string,
   doc: CourseDocument,
 ) {
   try {
+    const qdrant = getQdrantClient(courseName)
+    const collection_name = getQdrantCollectionName(courseName)
+
     // Uncomment with function definition to test collection schema:
-    // const schema = await getCollectionSchema(collection_name ? collection_name : "");
-    // console.log("Collection Schema:", schema);
+    // const schema = await getCollectionSchema(collectionName: string) {
+    //   try {
+    //     const response = await qdrant.getCollection(collectionName);
+    //     return response;
+    //   } catch (error) {
+    //     console.error('Error retrieving collection schema:', error);
+    //     throw error;
+    //   }
+    // }
 
     const searchFilter = {
       must: [
