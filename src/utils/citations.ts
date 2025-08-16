@@ -2,6 +2,25 @@ import { type ContextWithMetadata, type Message } from '~/types/chat'
 import { fetchPresignedUrl } from './apiUtils'
 import sanitizeHtml, { type IOptions } from 'sanitize-html'
 
+/**
+ * CITATION DISPLAY CONFIGURATION
+ * 
+ * This setting controls how citations are displayed in the chat interface.
+ * 
+ * Options:
+ * - 'titles': Always show full document titles (e.g., "KY_Apple_Crop-Profile.pdf, p.79")
+ * - 'numbers': Always show citation numbers (e.g., "1, p.79")
+ * - 'smart': Use numbers for 3+ citations, titles for 1-2 citations (default)
+ * 
+ * To change the behavior, modify the CITATION_DISPLAY_MODE constant below.
+ * 
+ * Examples:
+ * - Smart mode with 1 citation: "KY_Apple_Crop-Profile.pdf, p.79"
+ * - Smart mode with 2 citations: "KY_Apple_Crop-Profile.pdf, p.79; Search | Integrated Crop Management"
+ * - Smart mode with 3+ citations: "1, p.79; 2; 3, p.15"
+ */
+const CITATION_DISPLAY_MODE: 'titles' | 'numbers' | 'smart' = 'smart'
+
 // Strict sanitization options for text content
 const SANITIZE_OPTIONS: IOptions = {
   allowedTags: [], // No HTML tags allowed
