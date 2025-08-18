@@ -1,5 +1,6 @@
+import { and, eq } from 'drizzle-orm'
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { supabase } from '@/utils/supabaseClient'
+import { db, apiKeys } from '~/db/dbClient'
 
 type ApiResponse = {
   apiKey?: string | null
@@ -50,34 +51,24 @@ export default async function fetchKey(
     console.log('User email:', email)
 
     // First delete any inactive keys for this user
-    const { error: deleteError } = await supabase
-      .from('api_keys')
-      .delete()
-      .eq('email', email)
-      .eq('is_active', false)
+    const deleteError = await db
+      .delete(apiKeys)
+      .where(and(eq(apiKeys.email, email), eq(apiKeys.is_active, false)))
 
     if (deleteError) {
       console.error('Error deleting inactive keys:', deleteError)
     }
 
     // Then fetch the remaining (active) key
-    const { data, error } = await supabase
-      .from('api_keys')
-      .select('key')
-      .eq('email', email)
-      .eq('is_active', true)
+    const data = await db
+      .select({ key: apiKeys.key })
+      .from(apiKeys)
+      .where(and(eq(apiKeys.email, email), eq(apiKeys.is_active, true)))
 
-    console.log('Supabase query result:', {
+    console.log('Db query result:', {
       data: data,
       recordCount: Array.isArray(data) ? data.length : 0,
-      hasError: !!error,
-      error,
     })
-
-    if (error) {
-      console.error('Supabase error:', error)
-      throw error
-    }
 
     if (!data || data.length === 0) {
       return res.status(200).json({ apiKey: null })

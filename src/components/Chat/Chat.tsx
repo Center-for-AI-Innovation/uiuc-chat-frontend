@@ -61,6 +61,9 @@ import { useUpdateConversation } from '~/hooks/conversationQueries'
 import { useFetchEnabledDocGroups } from '~/hooks/docGroupsQueries'
 import { useDeleteMessages } from '~/hooks/messageQueries'
 import { CropwizardLicenseDisclaimer } from '~/pages/cropwizard-licenses'
+
+import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
+
 import {
   handleFunctionCall,
   handleToolCall,
@@ -130,6 +133,8 @@ export const Chat = memo(
       isError: isErrorTools,
       error: toolLoadingError,
     } = useFetchAllWorkflows(getCurrentPageName())
+
+    const permission = get_user_permission(courseMetadata, auth)
 
     useEffect(() => {
       if (
@@ -261,21 +266,18 @@ export const Chat = memo(
     }, [tools])
 
     const onMessageReceived = async (conversation: Conversation) => {
-      // Log conversation to Supabase
+      // Log conversation to database
       try {
-        const response = await fetch(
-          `/api/UIUC-api/logConversationToSupabase`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              course_name: getCurrentPageName(),
-              conversation: conversation,
-            }),
+        const response = await fetch(`/api/UIUC-api/logConversation`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-        )
+          body: JSON.stringify({
+            course_name: getCurrentPageName(),
+            conversation: conversation,
+          }),
+        })
         // const data = await response.json()
         // return data.success
       } catch (error) {
@@ -1899,8 +1901,8 @@ export const Chat = memo(
           // Update database
           await updateConversationMutation.mutateAsync(updatedConversation)
 
-          // Log to Supabase
-          await fetch('/api/UIUC-api/logConversationToSupabase', {
+          // Log to database
+          await fetch('/api/UIUC-api/logConversation', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -1951,23 +1953,25 @@ export const Chat = memo(
               <ChatNavbar bannerUrl={bannerUrl as string} isgpt4={true} />
             </div>
 */}
-            <div className="group absolute right-4 top-4 z-20">
-              <button
-                className="rounded-md bg-[--dashboard-button] p-2 text-[--dashboard-button-foreground] transition-opacity hover:opacity-80"
-                onClick={() => {
-                  if (courseName) router.push(`/${courseName}/dashboard`)
-                }}
-              >
-                <IconSettings
-                  stroke={2}
-                  size={20}
-                  color="var(--dashboard-button-foreground)"
-                />
-              </button>
-              <div className="pointer-events-none absolute right-0 top-full z-50 mt-2 whitespace-nowrap rounded bg-[--background-faded] px-2 py-1 text-sm text-[--foreground] opacity-0 transition-opacity group-hover:opacity-100">
-                Admin Dashboard
+            {permission == 'edit' ? (
+              <div className="group absolute right-4 top-4 z-20">
+                <button
+                  className="rounded-md bg-[--dashboard-button] p-2 text-[--dashboard-button-foreground] transition-opacity hover:opacity-80"
+                  onClick={() => {
+                    if (courseName) router.push(`/${courseName}/dashboard`)
+                  }}
+                >
+                  <IconSettings
+                    stroke={2}
+                    size={20}
+                    color="var(--dashboard-button-foreground)"
+                  />
+                </button>
+                <div className="pointer-events-none absolute right-0 top-full z-50 mt-2 whitespace-nowrap rounded bg-[--background-faded] px-2 py-1 text-sm text-[--foreground] opacity-0 transition-opacity group-hover:opacity-100">
+                  Admin Dashboard
+                </div>
               </div>
-            </div>
+            ) : null}
 
             <div className="relative max-w-full flex-1 overflow-y-auto overflow-x-hidden pb-32">
               {modelError ? (
