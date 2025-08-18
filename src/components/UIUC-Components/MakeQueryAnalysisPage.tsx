@@ -870,129 +870,144 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                   </div>
                 </div>
 
-                {/* Charts Section - Using filtered stats */}
-                <div
-                  className={`grid w-[95%] gap-6 pb-10 ${chartsGridClasses}`}
-                >
-                  {/* Date Range Selector - Always visible */}
-                  <div className="rounded-xl bg-[--dashboard-background-faded] p-6 lg:col-span-2">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Title order={4} className="text-[--foreground]">
-                          Conversation Visualizations
-                        </Title>
-                        <Text size="sm" color="dimmed" mt={1}>
-                          Select a time range to filter the visualizations below
-                        </Text>
-                      </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <Select
-                          size="sm"
-                          w={200}
-                          value={dateRangeType}
-                          onChange={(value) => {
-                            setDateRangeType(value || 'all')
-                            if (value !== 'custom') {
-                              setDateRange([null, null])
-                            }
-                          }}
-                          data={[
-                            { value: 'all', label: 'All Time' },
-                            { value: 'last_week', label: 'Last Week' },
-                            { value: 'last_month', label: 'Last Month' },
-                            { value: 'last_year', label: 'Last Year' },
-                            { value: 'custom', label: 'Custom Range' },
-                          ]}
-                          styles={(theme: MantineTheme) => ({
+              {/* Charts Section - Using filtered stats */}
+              <div className="grid w-[95%] grid-cols-1 gap-6 pb-10 lg:grid-cols-2">
+                {/* Date Range Selector - Always visible */}
+                <div className="rounded-xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-200 lg:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Title order={4}>
+                        Conversation Visualizations
+                      </Title>
+                      <Text size="sm" mt={1}>
+                        Select a time range to filter the visualizations below
+                      </Text>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <Select
+                        size="sm"
+                        w={200}
+                        value={dateRangeType}
+                        onChange={(value) => {
+                          setDateRangeType(value || 'all')
+                          if (value !== 'custom') {
+                            setDateRange([null, null])
+                          }
+                        }}
+                        data={[
+                          { value: 'all', label: 'All Time' },
+                          { value: 'last_week', label: 'Last Week' },
+                          { value: 'last_month', label: 'Last Month' },
+                          { value: 'last_year', label: 'Last Year' },
+                          { value: 'custom', label: 'Custom Range' },
+                        ]}
+                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                          styles={(theme) => ({
                             input: {
-                              backgroundColor: 'var(--button)',
-                              borderColor: 'var(--button)',
-                              color: 'var(--button-text-color)',
-                              '&:hover': {
-                                color: 'var(--button-hover-text-color)',
-                                borderColor: 'var(--button-hover)',
+                              '&:focus': {
+                                borderColor: 'var(--dashboard-button)',
                               },
+                              color: 'var(--foreground)',
+                              backgroundColor: 'var(--background)',
+                              fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
+                            },
+                            dropdown: {
+                              backgroundColor: 'var(--background)',
+                              border: '1px solid var(--background-dark)',
                             },
                             item: {
-                              backgroundColor: 'var(--button)',
-                              color: 'var(--button-text-color)',
+                              color: 'var(--foreground)',
+                              backgroundColor: 'var(--background)',
+                              borderRadius: theme.radius.md,
+                              margin: '2px',
+                              '&[data-selected]': {
+                                '&': {
+                                  color: 'var(--foreground)',
+                                  backgroundColor: 'transparent',
+                                },
+                                '&:hover': {
+                                  color: 'var(--foreground)',
+                                  backgroundColor: 'var(--foreground-faded)',
+                                },
+                              },
+                              '&[data-hovered]': {
+                                color: 'var(--foreground)',
+                                backgroundColor: 'var(--foreground-faded)',
+                              },
+                            },
+                          })}
+                      />
+                      {dateRangeType === 'custom' && (
+                        <DatePickerInput
+                          firstDayOfWeek={0}
+                          icon={<IconCalendar size="1.1rem" stroke={1.5} />}
+                          type="range"
+                          size="sm"
+                          w={200}
+                          value={dateRange}
+                          onChange={setDateRange}
+                          // TODO fix me type error complaining placeholder doesn't exist for mantine/date v6
+                          // placeholder="Pick date range"
+                          className="date_picker"
+                          styles={(theme: MantineTheme) => ({
+                            icon: {
+                              color: 'var(--foreground)',
+                            },
+                            input: {
+                              backgroundColor: 'var(--background)',
+                              borderColor: 'var(--foreground-faded)',
+                              color: 'var(--foreground)',
+                              '&:selected': {
+                                color: 'var(--button-text-color)',
+                                backgroundColor: 'var(--button)',
+                                borderColor: 'var(--button)',
+                              },
                               '&:hover': {
-                                color: 'var(--button-hover-text-color)',
+                                borderColor: 'var(--dashboard-button)',
+                              },
+                              '&:focus': {
+                                borderColor: 'var(--button)',
+                              }
+                            },
+                            calendarHeader: {
+                              borderColor: 'var(--button)',
+                              color: theme.white,
+                            },
+                            calendarHeaderControl: {
+                              color: theme.white,
+                              '&:hover': {
+                                color: theme.white,
+                              },
+                            },
+                            monthPickerControl: {
+                              color: theme.white,
+                              '&:hover': {
                                 backgroundColor: 'var(--button-hover)',
                               },
                             },
-                            dropdown: {
-                              backgroundColor: 'var(--button)',
-                              borderColor: 'var(--button)',
+                            yearPickerControl: {
+                              color: theme.white,
+                              '&:hover': {
+                                backgroundColor: 'var(--button-hover)',
+                              },
+                            },
+                            day: {
+                              color: theme.white,
+                              // '&:hover': {
+                              //   backgroundColor: theme.colors.grape[8],
+                              // },
                             },
                           })}
                         />
-                        {dateRangeType === 'custom' && (
-                          <DatePickerInput
-                            firstDayOfWeek={0}
-                            icon={<IconCalendar size="1.1rem" stroke={1.5} />}
-                            type="range"
-                            size="sm"
-                            w={200}
-                            value={dateRange}
-                            onChange={setDateRange}
-                            placeholder="Pick date range"
-                            styles={(theme: MantineTheme) => ({
-                              input: {
-                                backgroundColor: 'var(--button)',
-                                borderColor: 'var(--button)',
-                                color: 'var(--foreground)',
-                                '&:selected': {
-                                  color: 'var(--button-text-color)',
-                                  backgroundColor: 'var(--button)',
-                                  borderColor: 'var(--button)',
-                                },
-                                '&:hover': {
-                                  borderColor: 'var(--button-hover)',
-                                },
-                                '&:focus': {
-                                  borderColor: 'var(--button)',
-                                },
-                              },
-                              calendarHeader: {
-                                borderColor: 'var(--button)',
-                                color: theme.white,
-                              },
-                              calendarHeaderControl: {
-                                color: theme.white,
-                                '&:hover': {
-                                  color: theme.white,
-                                },
-                              },
-                              monthPickerControl: {
-                                color: theme.white,
-                                '&:hover': {
-                                  backgroundColor: 'var(--button-hover)',
-                                },
-                              },
-                              yearPickerControl: {
-                                color: theme.white,
-                                '&:hover': {
-                                  backgroundColor: 'var(--button-hover)',
-                                },
-                              },
-                              day: {
-                                color: theme.white,
-                                // '&:hover': {
-                                //   backgroundColor: theme.colors.grape[8],
-                                // },
-                              },
-                            })}
-                          />
-                        )}
-                        {totalCount > 0 && (
-                          <Text size="sm" color="dimmed">
-                            {totalCount} conversations in selected range
-                          </Text>
-                        )}
-                      </div>
+                      )}
+                      {totalCount > 0 && (
+                        <Text size="sm" color="dimmed">
+                          {totalCount} conversations in selected range
+                        </Text>
+                      )}
                     </div>
                   </div>
+                </div>
 
                   {!hasConversationData ? (
                     <div className="rounded-xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-200">
@@ -1114,30 +1129,36 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         )}
                       </div>
 
-                      {/* Heatmap Chart */}
-                      <div className="rounded-xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-200">
-                        <Title order={4} mb="md" align="left">
-                          Conversations Per Day and Hour
-                        </Title>
-                        <Text size="sm" mb="xl">
-                          A heatmap showing conversation density across both
-                          days and hours
-                        </Text>
-                        <ConversationsHeatmapByHourChart
-                          data={filteredConversationStats?.heatmap}
-                          isLoading={filteredStatsLoading}
-                          error={filteredStatsError}
-                        />
-                      </div>
-                    </>
-                  )}
-                </div>
+                    {/* Heatmap Chart */}
+                    <div className="rounded-xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-200">
+                      <Title
+                        order={4}
+                        mb="md"
+                        align="left"
+                      >
+                        Conversations Per Day and Hour
+                      </Title>
+                      <Text size="sm" mb="xl">
+                        A heatmap showing conversation density across both days
+                        and hours
+                      </Text>
+                      <ConversationsHeatmapByHourChart
+                        data={filteredConversationStats?.heatmap}
+                        isLoading={filteredStatsLoading}
+                        error={filteredStatsError}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
-            </Flex>
-          </div>
-          <NomicDocumentMap course_name={course_name as string} />
-          <GlobalFooter />
-        </main>
+            </div>
+          </Flex>
+        </div>
+
+        {/*<NomicDocumentMap course_name={course_name as string} />*/}
+        <GlobalFooter />
+      </main>
+
       </SettingsLayout>
     </>
   )
