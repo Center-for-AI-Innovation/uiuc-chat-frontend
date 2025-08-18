@@ -23,8 +23,13 @@ export const getBaseUrl = () => {
  * @throws {Error} - If RAILWAY_URL is not set
  */
 export const getBackendUrl = (): string => {
-  // Hardcoded testing backend URL
-  const backendUrl = 'https://flask-vyriad-debug.up.railway.app'
+  const backendUrl = process.env.RAILWAY_URL
+  
+  if (!backendUrl) {
+    throw new Error(
+      'Backend URL is not configured. Please set the RAILWAY_URL environment variable.'
+    )
+  }
   
   // Remove trailing slash if present for consistency
   return backendUrl.endsWith('/') ? backendUrl.slice(0, -1) : backendUrl
