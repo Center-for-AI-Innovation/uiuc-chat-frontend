@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { supabase } from '@/utils/supabaseClient'
-
+import { db, documents } from '~/db/dbClient'
+import { eq } from 'drizzle-orm'
 // This is for "Documents" table, completed docs.
 
 type SuccessDocsResponse = {
@@ -20,21 +20,21 @@ export default async function successDocs(
   const course_name = req.query.course_name as string
 
   try {
-    const { data, error } = await supabase
-      .from('documents')
-      .select('readable_filename, base_url, url')
-      .eq('course_name', course_name)
-
-    if (error) {
-      throw error
-    }
+    const data = await db
+      .select({ readable_filename: documents.readable_filename, base_url: documents.base_url, url: documents.url })
+      .from(documents)
+      .where(eq(documents.course_name, course_name))
 
     if (!data || data.length === 0) {
       return res.status(200).json({ documents: [] })
     }
 
     if (data && data.length > 0) {
-      return res.status(200).json({ documents: data })
+      return res.status(200).json({ documents: data.map((doc) => ({ 
+        readable_filename: doc.readable_filename || '', 
+        base_url: doc.base_url || '', 
+        url: doc.url || ''
+      })) })
     }
   } catch (error) {
     console.error('Failed to fetch documents:', error)

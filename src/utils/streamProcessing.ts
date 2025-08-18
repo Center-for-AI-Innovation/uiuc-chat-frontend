@@ -632,11 +632,11 @@ export async function updateConversationInDatabase(
   course_name: string,
   req: NextApiRequest,
 ) {
-  // Log conversation to Supabase
+  // Log conversation
   try {
     const baseUrl = await getBaseUrl()
     const response = await fetch(
-      `${baseUrl}/api/UIUC-api/logConversationToSupabase`,
+      `${baseUrl}/api/UIUC-api/logConversation`,
       {
         method: 'POST',
         headers: {

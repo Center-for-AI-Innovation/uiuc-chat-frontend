@@ -95,7 +95,7 @@ export const OpenAIStream = async (
         ProviderNames.NCSAHostedVLM
       ] as NCSAHostedVLMProvider
       // provider.apiKey = await decryptKeyIfNeeded(provider.apiKey!)
-      provider.apiKey = 'non-empty'
+      provider.apiKey = process.env.NCSA_HOSTED_API_KEY || ''
       apiType = ProviderNames.NCSAHostedVLM
       url = `${process.env.NCSA_HOSTED_VLM_BASE_URL}/chat/completions`
     } else {

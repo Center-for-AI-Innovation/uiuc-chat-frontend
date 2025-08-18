@@ -1,6 +1,7 @@
 import { AuthProvider } from 'react-oidc-context'
 import { type ReactNode, useEffect, useState } from 'react'
 import { WebStorageStateStore } from 'oidc-client-ts'
+import { getKeycloakBaseUrl } from '~/utils/authHelpers'
 
 interface AuthProviderProps {
   children: ReactNode
@@ -14,8 +15,17 @@ const getBaseUrl = () => {
 // Function to save the current path before login
 const saveCurrentPath = () => {
   if (typeof window !== 'undefined') {
-    const currentPath = window.location.pathname + window.location.search
-    // Don't save the login callback URL with all the OIDC parameters
+    let currentPath = window.location.pathname + window.location.search
+
+    // Redirect "/" to "/chat" if using Illinois Chat config
+    if (
+      currentPath === '/' &&
+      process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
+    ) {
+      currentPath = '/chat'
+    }
+
+    // Don't save the login callback URL with OIDC params
     if (!currentPath.includes('state=') && !currentPath.includes('code=')) {
       localStorage.setItem('auth_redirect_path', currentPath)
       console.log('Saved redirect path:', currentPath)
@@ -26,12 +36,8 @@ const saveCurrentPath = () => {
 export const KeycloakProvider = ({ children }: AuthProviderProps) => {
   // Add state to track if we're on client side
   const [isMounted, setIsMounted] = useState(false)
-
   const [oidcConfig, setOidcConfig] = useState({
-    authority:
-      process.env.NEXT_PUBLIC_KEYCLOAK_URL +
-      'realms/' +
-      process.env.NEXT_PUBLIC_KEYCLOAK_REALM,
+    authority: `${getKeycloakBaseUrl()}realms/${process.env.NEXT_PUBLIC_KEYCLOAK_REALM}`,
     client_id: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'uiucchat',
     redirect_uri: '',
     silent_redirect_uri: '',

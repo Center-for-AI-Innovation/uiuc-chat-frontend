@@ -282,7 +282,16 @@ export function LargeDropzone({
                 doc.readable_filename === file.name,
             )
             if (isIngesting) {
-              return { ...file, status: 'ingesting' as const }
+              return { ...file, status: 'ingesting' }
+            } else {
+              // Ingest can happen very quickly, check if completed also
+              const isInCompletedDocs = docsData?.documents?.some(
+                (doc: { readable_filename: string }) =>
+                  doc.readable_filename === file.name,
+              )
+              if (isInCompletedDocs) {
+                return { ...file, status: 'complete' }
+              }
             }
           } else if (file.status === 'ingesting') {
             const isStillIngesting = data?.documents?.some(

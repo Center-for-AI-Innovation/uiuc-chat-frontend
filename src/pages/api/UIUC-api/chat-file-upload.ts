@@ -1,7 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { supabase } from '~/utils/supabaseClient'
+import { db, conversations as conversationsTable, documentsInProgress } from '~/db/dbClient'
 import { v4 as uuidv4 } from 'uuid'
 import { getBackendUrl } from '~/utils/apiUtils'
+import { eq } from 'drizzle-orm'
 
 type ChatFileUploadResponse = {
   success?: boolean
@@ -38,35 +39,27 @@ const handler = async (
     }
 
     // 1. Verify conversation exists
-    const { data: existingConv, error: findError } = await supabase
-      .from('conversations')
-      .select('id, user_email')
-      .eq('id', conversationId)
-      .maybeSingle()
+    const existingConv = await db
+      .select({ id: conversationsTable.id, user_email: conversationsTable.user_email })
+      .from(conversationsTable)
+      .where(eq(conversationsTable.id, conversationId))
+      .limit(1)
 
-    if (!existingConv) {
-      if (findError) {
-        console.error('Error checking conversation:', findError)
-        return res.status(500).json({ error: 'Database error' })
-      }
+    if (existingConv.length === 0) {
       // Create conversation with ALL required fields
-      const { data: newConv, error: convError } = await supabase
-        .from('conversations')
-        .insert({
+      try {
+        await db.insert(conversationsTable).values({
           id: conversationId,
           name: 'File Upload Conversation', // Required field added
-          user_email: 'placeholder@example.com',
+          user_email: user_id,
           project_name: courseName, // Correct column name
           model: model || 'gpt-4o-mini',
           prompt: 'You are a helpful assistant.',
           temperature: 0.7,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          created_at: new Date(),
+          updated_at: new Date(),
         })
-        .select('id, user_email')
-        .single()
-
-      if (convError || !newConv) {
+      } catch (convError) {
         console.error(
           'Failed to create conversation:',
           conversationId,
@@ -78,28 +71,32 @@ const handler = async (
       }
     }
 
-    // 2. Create file_uploads record
+    // 2. Create documents_in_progress record instead of file_uploads
     const fileUploadId = uuidv4()
-    const { error: uploadError } = await supabase.from('file_uploads').insert({
-      id: fileUploadId,
-      conversation_id: conversationId,
-      s3_path: s3Key,
-      readable_filename: fileName,
-      course_name: courseName,
-      created_at: new Date().toISOString(),
-    })
-
-    if (uploadError) {
-      console.error(' Failed to create file_upload record:', uploadError)
+    try {
+      await db.insert(documentsInProgress).values({
+        s3_path: s3Key,
+        readable_filename: fileName,
+        course_name: courseName,
+        contexts: {
+          status: 'processing',
+          conversation_id: conversationId,
+          user_id: user_id,
+          created_at: new Date().toISOString(),
+        },
+        created_at: new Date(),
+      })
+    } catch (uploadError) {
+      console.error(' Failed to create document_in_progress record:', uploadError)
       return res.status(500).json({
-        error: ' Failed to create file record',
+        error: ' Failed to create document record',
       })
     }
 
     // 3. Call your new chat file processing endpoint
     const s3_filepath = s3Key // s3Key should already be the full path
     // Get user email from the conversation record we already fetched
-    const userEmail = existingConv?.user_email || 'unknown@example.com'
+    const userEmail = existingConv[0]?.user_email || user_id
 
     const backendUrl = getBackendUrl()
     //const backendUrl = 'http://localhost:8000';
@@ -152,18 +149,23 @@ const handler = async (
       })
     }
 
-    // 4. Update file_uploads with success and task_id
-    await supabase
-      .from('file_uploads')
-      .update({
-        contexts: {
-          status: 'completed',
-          chunks_created: responseBody.chunks_created || 0,
-          completed_at: new Date().toISOString(),
-        },
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', fileUploadId)
+    // 4. Update documents_in_progress with success and task_id
+    try {
+      await db
+        .update(documentsInProgress)
+        .set({
+          contexts: {
+            status: 'completed',
+            chunks_created: responseBody.chunks_created || 0,
+            completed_at: new Date().toISOString(),
+            beam_task_id: responseBody.beam_task_id,
+          },
+        })
+        .where(eq(documentsInProgress.s3_path, s3Key))
+    } catch (updateError) {
+      console.error('Failed to update document status:', updateError)
+      // Continue anyway since the main processing was successful
+    }
 
     // Return success only after processing is complete
     res.status(200).json({

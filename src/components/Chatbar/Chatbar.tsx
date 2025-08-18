@@ -183,7 +183,7 @@ export const Chatbar = ({
               distinctId: current_email,
             })
             console.log(
-              'Migrating conversations from local storage to supabase',
+              'Migrating conversations from local storage to database',
             )
             const conversationHistory = JSON.parse(
               localStorage.getItem('conversationHistory') || '[]',

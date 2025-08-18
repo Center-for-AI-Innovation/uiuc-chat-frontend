@@ -542,6 +542,7 @@ export async function fetchTools(
         throw new Error("Failed to fetch Project's N8N API key")
       }
       api_key = await response.json()
+
     } catch (error) {
       console.error('Error fetching N8N API key:', error)
       return []
@@ -575,6 +576,7 @@ export async function fetchTools(
       `${backendUrl}/getworkflows?api_key=${api_key}&limit=${limit}&pagination=${parsedPagination}`,
     )
   }
+
   if (!response.ok) {
     // return res.status(response.status).json({ error: response.statusText })
     throw new Error(`Unable to fetch n8n tools: ${response.statusText}`)
