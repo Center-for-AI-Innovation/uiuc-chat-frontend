@@ -40,9 +40,10 @@ if (
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
-    const { filePath, courseName } = req.body as {
+    const { filePath, courseName, fileName } = req.body as {
       filePath: string
       courseName: string
+      fileName?: string
     }
 
     let ResponseContentType = undefined
@@ -71,7 +72,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       const command = new GetObjectCommand({
         Bucket: bucketName,
         Key: actualKey,
-        ResponseContentDisposition: 'inline',
+        ResponseContentDisposition: fileName ? `attachment; filename="${fileName}"` : 'inline',
         ResponseContentType: ResponseContentType,
       })
 
@@ -88,7 +89,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       const command = new GetObjectCommand({
         Bucket: process.env.S3_BUCKET_NAME!,
         Key: filePath,
-        ResponseContentDisposition: 'inline',
+        ResponseContentDisposition: fileName ? `attachment; filename="${fileName}"` : 'inline',
         ResponseContentType: ResponseContentType,
       })
 

@@ -98,6 +98,9 @@
 
   --border: var(--illinois-storm-light);
   --input: var(--illinois-storm-light);
+  
+  /* Font Variables */
+  --font-montserrat-heading: 'Montserrat', sans-serif;
   --ring: var(--illinois-blue);
 
   --padding: 1rem;
@@ -293,6 +296,15 @@
 
   100% {
     translate: -100% 0%;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }
 
@@ -1281,4 +1293,153 @@ https://icflorescu.github.io/mantine-datatable/examples/records-selection/
       }
     }
   }
+}
+
+/* Common Modal Styles */
+.modal-common {
+  background-color: var(--modal);
+  color: var(--modal-text);
+  border-radius: 0.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.modal-header-common {
+  background-color: var(--modal-dark);
+  border-bottom: 1px solid var(--modal-border);
+  border-radius: 0.5rem 0.5rem 0 0;
+  padding: 1rem 1.5rem;
+}
+
+.modal-title-common {
+  font-family: var(--font-montserrat-heading);
+  font-weight: 600;
+  color: var(--modal-text);
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+
+.modal-close-button-common {
+  color: var(--foreground-faded);
+  transition: color 0.2s ease;
+}
+
+.modal-close-button-common:hover {
+  color: var(--foreground);
+  background-color: var(--background-dark);
+}
+
+.modal-body-common {
+  background-color: var(--modal);
+  padding: 1.5rem;
+  border-radius: 0 0 0.5rem 0.5rem;
+  max-height: 600px; /* Fixed height instead of viewport units */
+  overflow: auto; /* Allow scrolling if content is too tall */
+}
+
+.modal-overlay-common {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+/* File Preview Specific Styles */
+.file-preview-container {
+  height: 500px; /* Fixed height instead of viewport units */
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  background-color: var(--background-faded);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.file-preview-image {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 0.5rem;
+}
+
+.file-preview-iframe {
+  height: 500px; /* Match the container height */
+  width: 100%;
+  border-radius: 0.5rem;
+  border: none;
+  background-color: var(--background-faded); /* Match container background */
+}
+
+/* Remove gray border from browser PDF viewer */
+.file-preview-iframe::-webkit-scrollbar {
+  display: none; /* Hide scrollbars in PDF viewer */
+}
+
+/* Target PDF viewer elements to remove gray borders */
+.file-preview-iframe embed,
+.file-preview-iframe object {
+  border: none !important;
+}
+
+/* Additional PDF viewer styling to remove gray borders */
+.file-preview-iframe::-webkit-pdf-toolbar {
+  border: none !important;
+}
+
+.file-preview-iframe::-webkit-pdf-toolbar-button {
+  border: none !important;
+}
+
+.file-preview-iframe::-webkit-pdf-page {
+  border: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.file-preview-iframe::-webkit-pdf-page-container {
+  border: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Alternative approach: Remove container border when iframe is present */
+.file-preview-container:has(.file-preview-iframe) {
+  border: none;
+  background-color: transparent;
+}
+
+/* Additional PDF viewer border removal */
+.file-preview-iframe {
+  /* Remove any internal borders from the PDF viewer */
+  border: none !important;
+  outline: none !important;
+}
+
+/* Target the PDF viewer's internal elements more specifically */
+.file-preview-iframe {
+  /* Remove borders from PDF viewer toolbar and content areas */
+  background: transparent !important;
+}
+
+/* Override any browser default PDF viewer styling */
+.file-preview-iframe {
+  /* Ensure no borders appear around the PDF content */
+  box-shadow: none !important;
+  border-radius: 0.5rem;
+}
+
+.file-preview-text {
+  height: 500px; /* Match the container height */
+  width: 100%;
+  overflow: auto;
+  padding: 1rem;
+}
+
+.file-preview-text pre {
+  white-space: pre-wrap;
+  font-family: monospace;
+  font-size: 14px;
+  color: var(--foreground);
+  margin: 0;
+  line-height: 1.5;
 }
