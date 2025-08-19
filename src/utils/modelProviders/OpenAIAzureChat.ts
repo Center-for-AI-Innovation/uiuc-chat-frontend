@@ -80,10 +80,17 @@ const convertConversationToOpenAIMessages = (
     const strippedMessage = { ...message }
     // When content is an array
     if (Array.isArray(strippedMessage.content)) {
-      strippedMessage.content.map((content, contentIndex) => {
+      strippedMessage.content = strippedMessage.content.map((content, contentIndex) => {
         // Convert tool_image_url to image_url for OpenAI
         if (content.type === 'tool_image_url') {
           content.type = 'image_url'
+        }
+        // Handle file content for OpenAI - convert to text representation
+        else if (content.type === 'file') {
+          return {
+            type: 'text',
+            text: `[File: ${content.fileName || 'unknown'} (${content.fileType || 'unknown type'}, ${content.fileSize ? Math.round(content.fileSize / 1024) + 'KB' : 'unknown size'})]`
+          }
         }
         // Add final prompt to last message
         if (
