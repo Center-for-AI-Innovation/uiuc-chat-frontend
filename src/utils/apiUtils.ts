@@ -79,12 +79,16 @@ export const callSetCourseMetadata = async (
 /**
  * Uploads a file to S3 using a pre-signed URL.
  * @param {File | null} file - The file to upload.
+ * @param {string} user_id - The user ID associated with the file.
  * @param {string} course_name - The name of the course associated with the file.
+ * @param {string} uploadType - The type of upload ('chat' or 'document-group').
  * @returns {Promise<string | undefined>} - A promise that resolves to the key of the uploaded file or undefined.
  */
 export const uploadToS3 = async (
   file: File | null,
+  user_id: string,
   course_name: string,
+  uploadType: 'chat' | 'document-group' = 'document-group',
 ): Promise<string | undefined> => {
   if (!file) return
 
@@ -95,8 +99,10 @@ export const uploadToS3 = async (
     body: JSON.stringify({
       fileName: file.name,
       fileType: file.type,
+      user_id: user_id,
       courseName: course_name,
       uniqueFileName,
+      uploadType,
     }),
   }
 
@@ -130,13 +136,14 @@ export async function fetchPresignedUrl(
   filePath: string,
   courseName?: string,
   page?: string,
+  fileName?: string,
 ): Promise<string | null> {
   try {
     const endpoint = `${getBaseUrl()}/api/download`
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ filePath, courseName, page }),
+      body: JSON.stringify({ filePath, courseName, page, fileName }),
     })
 
     if (!response.ok)
@@ -216,11 +223,19 @@ export function convertConversatonToVercelAISDKv3(
       // Use finalPromtEngineeredMessage for the most recent user message
       content = message.finalPromtEngineeredMessage || ''
     } else if (Array.isArray(message.content)) {
-      // Combine text content from array
-      content = message.content
-        .filter((c) => c.type === 'text')
-        .map((c) => c.text)
-        .join('\n')
+      // Handle both text and file content
+      const textParts: string[] = []
+      
+      message.content.forEach((c) => {
+        if (c.type === 'text') {
+          textParts.push(c.text || '')
+        } else if (c.type === 'file') {
+          // Convert file content to text representation
+          textParts.push(`[File: ${c.fileName || 'unknown'} (${c.fileType || 'unknown type'}, ${c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'})]`)
+        }
+      })
+      
+      content = textParts.join('\n')
     } else {
       content = message.content as string
     }
@@ -248,6 +263,12 @@ export function convertConversationToCoreMessagesWithoutSystem(
           return { type: 'text', text: c.text }
         } else if (c.type === 'image_url') {
           return { type: 'image', image: c.image_url!.url }
+        } else if (c.type === 'file') {
+          // Convert file content to text representation
+          return { 
+            type: 'text', 
+            text: `[File: ${c.fileName || 'unknown'} (${c.fileType || 'unknown type'}, ${c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'})]`
+          }
         }
         return c
       })

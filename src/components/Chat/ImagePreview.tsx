@@ -46,40 +46,41 @@ export const ImagePreview: React.FC<ImagePreviewProps> = ({
           isImageLoaded ? className : `${className} ${classes.imageLoading}`
         }
       />
-      <Modal
+      <Modal.Root
         opened={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        size={'xxl'}
-        closeOnEscape={true}
-        transitionProps={{ transition: 'fade', duration: 200 }}
+        size="xl"
         centered
-        radius={'lg'}
-        overlayProps={{ blur: 3, opacity: 0.55 }}
-        styles={{
-          header: {
-            backgroundColor: 'var(--modal-border)',
-          },
-          body: {
-            backgroundColor: 'var(--modal-border)',
-          },
-          title: {
-            color: 'white',
-            fontFamily: montserrat_heading.variable,
-            fontWeight: 'bold',
-          },
-        }}
       >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '100%',
-          }}
-        >
-          <img src={src} alt={alt} />
-        </div>
-      </Modal>
+        <Modal.Overlay className="modal-overlay-common" />
+        <Modal.Content className="modal-common">
+          <Modal.Header className="modal-header-common">
+            <Modal.Title className={`modal-title-common ${montserrat_heading.variable} font-montserratHeading`}>
+              {alt || 'Image Preview'}
+            </Modal.Title>
+            <Modal.CloseButton
+              onClick={() => setIsModalOpen(false)}
+              aria-label="Close image preview"
+              className="modal-close-button-common"
+            />
+          </Modal.Header>
+          <Modal.Body className="modal-body-common">
+            <div className="file-preview-container">
+              <img 
+                src={src} 
+                alt={alt} 
+                className="file-preview-image"
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: '100%',
+                }}
+              />
+            </div>
+          </Modal.Body>
+        </Modal.Content>
+      </Modal.Root>
     </>
   )
 }

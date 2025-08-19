@@ -91,6 +91,7 @@ export default async function chat(
     stream,
     api_key,
     retrieval_only,
+    conversation_id,
   }: {
     model: string
     messages: Message[]
@@ -100,6 +101,7 @@ export default async function chat(
     stream: boolean
     api_key: string
     retrieval_only: boolean
+    conversation_id?: string
   } = body
 
   // Validate the API key and retrieve user data
@@ -201,7 +203,7 @@ export default async function chat(
 
   // Construct the conversation object
   const conversation: Conversation = {
-    id: uuidv4(),
+    id: conversation_id || uuidv4(),
     name: 'New Conversation',
     messages: messages,
     model: selectedModel,
@@ -244,7 +246,7 @@ export default async function chat(
     searchQuery = newSearchQuery
     imgDesc = newImgDesc
   }
-
+  
   // Fetch Contexts
   console.log('Before context search:', {
     courseName: course_name,
