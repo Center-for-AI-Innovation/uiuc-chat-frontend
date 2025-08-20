@@ -1,6 +1,6 @@
 import { ChatBody } from '~/types/chat'
 import {
-  OllamaProvider,
+  type OllamaProvider,
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 
@@ -30,26 +30,36 @@ export enum OllamaModelIDs {
 
   QWEN25_14b_fp16 = 'qwen2.5:14b-instruct-fp16',
   QWEN25_7b_fp16 = 'qwen2.5:7b-instruct-fp16',
+
+  // Newly added for NCSA hosted
+  GPT_OSS_120B = 'gpt-oss:120b',
+  GPT_OSS_20B = 'gpt-oss:20b',
+  DEEPSEEK_R1_32B = 'deepseek-r1:32b',
+  GEMMA3_27B = 'gemma3:27b',
+  LLAMA4_16x17B = 'llama4:16x17b',
+  QWEN3_32B = 'qwen3:32b',
+  DEEPSEEK_R1_70B = 'deepseek-r1:70b',
+  LLAMA31_70B_INSTRUCT_FP16 = 'llama3.1:70b-instruct-fp16',
 }
 
 export const OllamaModels: Record<OllamaModelIDs, OllamaModel> = {
   [OllamaModelIDs.LLAMA32_1b_fp16]: {
     id: OllamaModelIDs.LLAMA32_1b_fp16,
-    name: 'llama 3.2 1B',
+    name: 'Llama 3.2 1B',
     parameterSize: '1B',
     tokenLimit: 21_760,
     enabled: true,
   },
   [OllamaModelIDs.LLAMA32_3b_fp16]: {
     id: OllamaModelIDs.LLAMA32_3b_fp16,
-    name: 'llama 3.2 3B',
-    parameterSize: '1B',
+    name: 'Llama 3.2 3B',
+    parameterSize: '3B',
     tokenLimit: 15_500,
     enabled: true,
   },
   [OllamaModelIDs.LLAMA31_8b_instruct_fp16]: {
     id: OllamaModelIDs.LLAMA31_8b_instruct_fp16,
-    name: 'Llama 3.1 8B',
+    name: 'Llama 3.1 8B Instruct (FP16)',
     parameterSize: '8B',
     tokenLimit: 11_500,
     enabled: true,
@@ -64,23 +74,81 @@ export const OllamaModels: Record<OllamaModelIDs, OllamaModel> = {
   // },
   [OllamaModelIDs.QWEN25_7b_fp16]: {
     id: OllamaModelIDs.QWEN25_7b_fp16,
-    name: 'Qwen 7B',
+    name: 'Qwen 2.5 7B Instruct (FP16)',
     parameterSize: '7B',
     tokenLimit: 15_500,
     enabled: true,
   },
   [OllamaModelIDs.QWEN25_14b_fp16]: {
     id: OllamaModelIDs.QWEN25_14b_fp16,
-    name: 'Qwen 14B',
+    name: 'Qwen 2.5 14B Instruct (FP16)',
     parameterSize: '14B',
     tokenLimit: 6_300,
     enabled: true,
   },
   [OllamaModelIDs.DEEPSEEK_R1_14b_qwen_fp16]: {
     id: OllamaModelIDs.DEEPSEEK_R1_14b_qwen_fp16,
-    name: 'Deepseek R1 14B (based on Qwen)',
+    name: 'DeepSeek R1 14B (Qwen distill, FP16)',
     parameterSize: '14B',
     tokenLimit: 6_300,
+    enabled: true,
+  },
+
+  // Newly added for NCSA hosted
+  [OllamaModelIDs.GPT_OSS_120B]: {
+    id: OllamaModelIDs.GPT_OSS_120B,
+    name: 'GPT-OSS 120B',
+    parameterSize: '120B',
+    tokenLimit: 8_192,
+    enabled: true,
+  },
+  [OllamaModelIDs.GPT_OSS_20B]: {
+    id: OllamaModelIDs.GPT_OSS_20B,
+    name: 'GPT-OSS 20B',
+    parameterSize: '20B',
+    tokenLimit: 8_192,
+    enabled: true,
+  },
+  [OllamaModelIDs.DEEPSEEK_R1_32B]: {
+    id: OllamaModelIDs.DEEPSEEK_R1_32B,
+    name: 'DeepSeek R1 32B',
+    parameterSize: '32B',
+    tokenLimit: 8_192,
+    enabled: true,
+  },
+  [OllamaModelIDs.GEMMA3_27B]: {
+    id: OllamaModelIDs.GEMMA3_27B,
+    name: 'Gemma 3 27B',
+    parameterSize: '27B',
+    tokenLimit: 8_192,
+    enabled: true,
+  },
+  [OllamaModelIDs.LLAMA4_16x17B]: {
+    id: OllamaModelIDs.LLAMA4_16x17B,
+    name: 'Llama 4 16x17B (MoE)',
+    parameterSize: '16x17B',
+    tokenLimit: 8_192,
+    enabled: true,
+  },
+  [OllamaModelIDs.QWEN3_32B]: {
+    id: OllamaModelIDs.QWEN3_32B,
+    name: 'Qwen 3 32B',
+    parameterSize: '32B',
+    tokenLimit: 8_192,
+    enabled: true,
+  },
+  [OllamaModelIDs.DEEPSEEK_R1_70B]: {
+    id: OllamaModelIDs.DEEPSEEK_R1_70B,
+    name: 'DeepSeek R1 70B',
+    parameterSize: '70B',
+    tokenLimit: 8_192,
+    enabled: true,
+  },
+  [OllamaModelIDs.LLAMA31_70B_INSTRUCT_FP16]: {
+    id: OllamaModelIDs.LLAMA31_70B_INSTRUCT_FP16,
+    name: 'Llama 3.1 70B Instruct (FP16)',
+    parameterSize: '70B',
+    tokenLimit: 8_192,
     enabled: true,
   },
   // [OllamaModelIDs.LLAMA31_70b_instruct_fp16]: {

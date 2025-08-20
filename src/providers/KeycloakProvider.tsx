@@ -1,5 +1,5 @@
 import { AuthProvider } from 'react-oidc-context'
-import { ReactNode, useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import { WebStorageStateStore } from 'oidc-client-ts'
 
 interface AuthProviderProps {
@@ -80,13 +80,16 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
         silent_redirect_uri: `${baseUrl}/silent-renew`,
         post_logout_redirect_uri: baseUrl,
         userStore: new WebStorageStateStore({
-          store: window.localStorage
+          store: window.localStorage,
         }),
         automaticSilentRenew: true,
       }))
 
       // Only save the path when component mounts if we're not on the callback URL
-      if (!window.location.search.includes('state=') && !window.location.search.includes('code=')) {
+      if (
+        !window.location.search.includes('state=') &&
+        !window.location.search.includes('code=')
+      ) {
         saveCurrentPath()
       }
     }

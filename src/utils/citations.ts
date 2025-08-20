@@ -1,6 +1,41 @@
-import { ContextWithMetadata, Message } from '~/types/chat'
+import { type ContextWithMetadata, type Message } from '~/types/chat'
 import { fetchPresignedUrl } from './apiUtils'
-import sanitizeHtml, { IOptions } from 'sanitize-html'
+import sanitizeHtml, { type IOptions } from 'sanitize-html'
+
+/**
+ * CITATION DISPLAY CONFIGURATION
+ * 
+ * This setting controls how citations are displayed in the chat interface.
+ * 
+ * Global Options:
+ * - 'titles': Always show full document titles (e.g., "KY_Apple_Crop-Profile.pdf, p.79")
+ * - 'numbers': Always show citation numbers (e.g., "1, p.79")
+ * - 'smart': Use numbers for 3+ citations, titles for 1-2 citations
+ * 
+ * Course-Specific Configuration:
+ * - CropWizard uses smart formatting to reduce long citation lists
+ * - Other courses use titles for better context
+ * 
+ * Examples:
+ * - Smart mode with 1 citation: "KY_Apple_Crop-Profile.pdf, p.79"
+ * - Smart mode with 2 citations: "KY_Apple_Crop-Profile.pdf, p.79; Search | Integrated Crop Management"
+ * - Smart mode with 3+ citations: "1, p.79; 2; 3, p.15"
+ */
+
+// Global default mode (for non-CropWizard courses)
+const DEFAULT_CITATION_DISPLAY_MODE: 'titles' | 'numbers' | 'smart' = 'titles'
+
+// CropWizard-specific mode (smart formatting to reduce long lists)
+const CROPWIZARD_CITATION_DISPLAY_MODE: 'titles' | 'numbers' | 'smart' = 'smart'
+
+// Function to get citation mode based on course
+function getCitationDisplayMode(courseName: string): 'titles' | 'numbers' | 'smart' {
+  // Check if this is CropWizard (case-insensitive)
+  if (courseName.toLowerCase().includes('cropwizard')) {
+    return CROPWIZARD_CITATION_DISPLAY_MODE
+  }
+  return DEFAULT_CITATION_DISPLAY_MODE
+}
 
 // Strict sanitization options for text content
 const SANITIZE_OPTIONS: IOptions = {
@@ -158,13 +193,31 @@ export async function replaceCitationLinks(
 
     let replacementText = ''
 
+    // Determine citation display mode based on course
+    const citationMode = getCitationDisplayMode(courseName)
+    
     if (validCitations.length === 1) {
-      // Single citation case - no parentheses
+      // Single citation case
       const citation = validCitations[0]!
-      // Create inner text without parentheses
-      const innerText = citation.pageNumber
-        ? `${citation.title}, p.${citation.pageNumber}`
-        : `${citation.title}`
+      
+      // Choose display text based on course and mode
+      let innerText: string
+      if (citationMode === 'smart') {
+        // Smart mode: always show title for single citation
+        innerText = citation.pageNumber
+          ? `${citation.title}, p.${citation.pageNumber}`
+          : `${citation.title}`
+      } else if (citationMode === 'numbers') {
+        // Numbers mode: show number
+        innerText = citation.pageNumber
+          ? `${citation.index}, p.${citation.pageNumber}`
+          : `${citation.index}`
+      } else {
+        // Titles mode: show title
+        innerText = citation.pageNumber
+          ? `${citation.title}, p.${citation.pageNumber}`
+          : `${citation.title}`
+      }
 
       // Create tooltip with citation number
       const tooltipTitle = `Citation ${citation.index}`
@@ -177,14 +230,34 @@ export async function replaceCitationLinks(
       // No parentheses around the link
       replacementText = linkText
     } else {
-      // Multiple citations case - no parentheses
-      // Add each citation as a separate link, separated by semicolons with minimal space for better wrapping
+      // Multiple citations case
       replacementText = validCitations
         .map((citation, idx) => {
-          // For each citation, create the inner text without parentheses
-          const innerText = citation.pageNumber
-            ? `${citation.title}, p.${citation.pageNumber}`
-            : `${citation.title}`
+          // Choose display text based on course and mode
+          let innerText: string
+          if (citationMode === 'smart') {
+            // Smart mode: use numbers for 3+ citations, titles for 2 citations
+            const shouldUseNumbers = validCitations.length >= 3
+            if (shouldUseNumbers) {
+              innerText = citation.pageNumber
+                ? `${citation.index}, p.${citation.pageNumber}`
+                : `${citation.index}`
+            } else {
+              innerText = citation.pageNumber
+                ? `${citation.title}, p.${citation.pageNumber}`
+                : `${citation.title}`
+            }
+          } else if (citationMode === 'numbers') {
+            // Numbers mode: show number
+            innerText = citation.pageNumber
+              ? `${citation.index}, p.${citation.pageNumber}`
+              : `${citation.index}`
+          } else {
+            // Titles mode: show title
+            innerText = citation.pageNumber
+              ? `${citation.title}, p.${citation.pageNumber}`
+              : `${citation.title}`
+          }
 
           // Create tooltip with citation number
           const tooltipTitle = `Citation ${citation.index}`

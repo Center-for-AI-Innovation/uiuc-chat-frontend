@@ -1,5 +1,5 @@
 // ingest.ts
-import { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiRequest, type NextApiResponse } from 'next'
 import { supabase } from '~/utils/supabaseClient'
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
