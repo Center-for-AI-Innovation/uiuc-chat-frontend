@@ -603,11 +603,11 @@ export const ChatInput = ({
 
     // 2. Validation: total size
     const totalSize = allFiles.reduce((sum, file) => sum + file.size, 0)
-    if (totalSize > 15 * 1024 * 1024) {
+    const limit = 15 * 1024 * 1024
+    if (totalSize > limit) {
       showToast({
         title: 'Files Too Large',
-        message:
-          'The total size of all files cannot exceed 25MB. Please remove large files or upload smaller ones.',
+        message: `The total size of all files cannot exceed ${limit / 1024 / 1024}MB. Please remove large files or upload smaller ones.`,
         type: 'error',
         autoClose: 6000,
       })
