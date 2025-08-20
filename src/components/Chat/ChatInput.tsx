@@ -1,5 +1,10 @@
 // chatinput.tsx
-import { type Content, type Message, type MessageType, type Conversation } from '@/types/chat'
+import {
+  type Content,
+  type Message,
+  type MessageType,
+  type Conversation,
+} from '@/types/chat'
 import { type Plugin } from '@/types/plugin'
 import { type Prompt } from '@/types/prompt'
 import { Text } from '@mantine/core'
@@ -34,7 +39,12 @@ import { PromptList } from './PromptList'
 import { VariableModal } from './VariableModal'
 
 import { Tooltip, useMantineTheme } from '@mantine/core'
-import { showToast, showErrorToast, showWarningToast, showInfoToast } from '~/utils/toastUtils'
+import {
+  showToast,
+  showErrorToast,
+  showWarningToast,
+  showInfoToast,
+} from '~/utils/toastUtils'
 import { Montserrat } from 'next/font/google'
 
 import React from 'react'
@@ -171,27 +181,27 @@ async function fetchFileUploadContexts(
     const requestBody = {
       course_name: courseName,
       user_id: user_id,
-      search_query: fileName,  // Use filename as search query
+      search_query: fileName, // Use filename as search query
       token_limit: 4000,
       doc_groups: ['All Documents'],
       conversation_id: conversationId,
     }
- 
+
     const response = await fetch('/api/getContexts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(requestBody),
     })
-    
+
     if (response.ok) {
       const data = await response.json()
-      
+
       if (Array.isArray(data)) {
         // Filter by filename to ensure we get contexts for this specific file
-        const filteredContexts = data.filter((context: any) => 
-          context.readable_filename === fileName
+        const filteredContexts = data.filter(
+          (context: any) => context.readable_filename === fileName,
         )
-        
+
         return filteredContexts
       } else {
         return []
@@ -331,7 +341,10 @@ export const ChatInput = ({
 
     if (messageIsStreaming || hasProcessingFiles) {
       if (hasProcessingFiles) {
-        showWarningToast('Please wait for all files to finish processing', 'Files Processing')
+        showWarningToast(
+          'Please wait for all files to finish processing',
+          'Files Processing',
+        )
       }
       return
     }
@@ -341,12 +354,15 @@ export const ChatInput = ({
 
     // Handle file uploads: Only proceed if all files are completed
     const allFileContexts: ContextWithMetadata[] = []
-    
+
     if (fileUploads.length > 0) {
       const pendingFiles = fileUploads.filter((fu) => fu.status !== 'completed')
 
       if (pendingFiles.length > 0) {
-        showWarningToast('Please wait for all files to finish processing before sending', 'Files Still Processing')
+        showWarningToast(
+          'Please wait for all files to finish processing before sending',
+          'Files Still Processing',
+        )
         return
       }
 
@@ -354,8 +370,12 @@ export const ChatInput = ({
       fileContent = fileUploads
         .filter((fu) => fu.status === 'completed')
         .map((fu) => {
-          const isImageFile = fu.file.type.startsWith('image/') || ['png', 'jpg', 'jpeg'].includes(fu.file.name.split('.').pop()?.toLowerCase() || '')
-          
+          const isImageFile =
+            fu.file.type.startsWith('image/') ||
+            ['png', 'jpg', 'jpeg'].includes(
+              fu.file.name.split('.').pop()?.toLowerCase() || '',
+            )
+
           if (isImageFile) {
             // For image files, create image_url content
             return {
@@ -561,7 +581,7 @@ export const ChatInput = ({
       showErrorToast(
         error instanceof Error
           ? error.message
-          : 'Failed to send message. Please try again.'
+          : 'Failed to send message. Please try again.',
       )
     }
   }
@@ -573,7 +593,8 @@ export const ChatInput = ({
     if (allFiles.length > 5) {
       showToast({
         title: 'Too Many Files',
-        message: 'You can upload a maximum of 5 files at once. Please remove some files before adding new ones.',
+        message:
+          'You can upload a maximum of 5 files at once. Please remove some files before adding new ones.',
         type: 'error',
         autoClose: 6000,
       })
@@ -582,10 +603,11 @@ export const ChatInput = ({
 
     // 2. Validation: total size
     const totalSize = allFiles.reduce((sum, file) => sum + file.size, 0)
-    if (totalSize > 25 * 1024 * 1024) {
+    if (totalSize > 15 * 1024 * 1024) {
       showToast({
         title: 'Files Too Large',
-        message: 'The total size of all files cannot exceed 25MB. Please remove large files or upload smaller ones.',
+        message:
+          'The total size of all files cannot exceed 25MB. Please remove large files or upload smaller ones.',
         type: 'error',
         autoClose: 6000,
       })
@@ -608,14 +630,17 @@ export const ChatInput = ({
 
     // Prevent duplicates by name and type
     const existingFiles = new Set(
-      fileUploads.map((fu) => createFileKey(fu.file))
+      fileUploads.map((fu) => createFileKey(fu.file)),
     )
     const uniqueNewFiles = newFiles.filter(
       (file) => !existingFiles.has(createFileKey(file)),
     )
 
     if (uniqueNewFiles.length === 0) {
-      showWarningToast('All selected files are already uploaded or in progress.', 'Duplicate Files')
+      showWarningToast(
+        'All selected files are already uploaded or in progress.',
+        'Duplicate Files',
+      )
       return
     }
 
@@ -629,13 +654,20 @@ export const ChatInput = ({
 
     if (finalUniqueFiles.length < uniqueNewFiles.length) {
       const duplicateCount = uniqueNewFiles.length - finalUniqueFiles.length
-      showInfoToast(`${duplicateCount} duplicate file(s) were removed from the selection.`, 'Duplicate Files Removed')
+      showInfoToast(
+        `${duplicateCount} duplicate file(s) were removed from the selection.`,
+        'Duplicate Files Removed',
+      )
     }
 
     for (const file of finalUniqueFiles) {
       // Check if file is an image
-      const isImageFile = file.type.startsWith('image/') || ['png', 'jpg', 'jpeg'].includes(file.name.split('.').pop()?.toLowerCase() || '')
-      
+      const isImageFile =
+        file.type.startsWith('image/') ||
+        ['png', 'jpg', 'jpeg'].includes(
+          file.name.split('.').pop()?.toLowerCase() || '',
+        )
+
       // Add to fileUploads
       setFileUploads((prev) => [
         ...prev,
@@ -648,7 +680,7 @@ export const ChatInput = ({
       // Upload all files to S3 and update status
       try {
         const s3Key = await uploadToS3(file, user_id, courseName, 'chat')
-        
+
         setFileUploads((prev) =>
           prev.map((f) =>
             f.file.name === file.name
@@ -694,21 +726,20 @@ export const ChatInput = ({
                     : f,
                 ),
               )
-              console.log('Image file processing completed (fallback to S3 key)')
+              console.log(
+                'Image file processing completed (fallback to S3 key)',
+              )
             }
           } else {
             // Handle case where s3Key is undefined
             setFileUploads((prev) =>
               prev.map((f) =>
-                f.file.name === file.name
-                  ? { ...f, status: 'error' }
-                  : f,
+                f.file.name === file.name ? { ...f, status: 'error' } : f,
               ),
             )
             console.log('Image file processing failed: no S3 key')
           }
         } else {
-          
           // For non-image files, use the regular file processing
           const response = await fetch('/api/UIUC-api/chat-file-upload', {
             method: 'POST',
@@ -725,21 +756,21 @@ export const ChatInput = ({
           })
 
           if (!response.ok) {
-            throw new Error('File processing failed')
+            throw new Error('File too large, please upload a smaller file')
           }
 
           await response.json()
-          
+
           // Add a small delay to allow backend processing to complete
-          await new Promise(resolve => setTimeout(resolve, 2000))
-          
+          await new Promise((resolve) => setTimeout(resolve, 2000))
+
           const contexts = await fetchFileUploadContexts(
             conversation.id,
             courseName,
             user_id,
             file.name,
           )
-          
+
           setFileUploads((prev) =>
             prev.map((f) =>
               f.file.name === file.name
@@ -754,7 +785,9 @@ export const ChatInput = ({
             f.file.name === file.name ? { ...f, status: 'error' } : f,
           ),
         )
-        showErrorToast(`Failed to process ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        showErrorToast(
+          `Failed to process ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        )
       }
     }
   }
@@ -907,7 +940,6 @@ export const ChatInput = ({
               </button>
             )}
 
-
           {/* Chat input and preview container */}
           <div
             ref={chatInputContainerRef}
@@ -923,7 +955,14 @@ export const ChatInput = ({
           >
             {/* File upload preview section */}
             {fileUploads.length > 0 && (
-              <div style={{ marginBottom: '16px', display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+              <div
+                style={{
+                  marginBottom: '16px',
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '12px',
+                }}
+              >
                 {fileUploads.map((fu, index) => {
                   const getFileIcon = (name: string, type?: string) => {
                     const extension = name.split('.').pop()?.toLowerCase()
@@ -957,7 +996,12 @@ export const ChatInput = ({
                         />
                       )
                     }
-                    return <IconFile {...iconProps} style={{ color: 'var(--illinois-orange)' }} />
+                    return (
+                      <IconFile
+                        {...iconProps}
+                        style={{ color: 'var(--illinois-orange)' }}
+                      />
+                    )
                   }
 
                   const getStatusIcon = (status: string) => {
@@ -965,7 +1009,7 @@ export const ChatInput = ({
                       case 'uploading':
                       case 'processing':
                         return (
-                          <div 
+                          <div
                             style={{
                               height: '16px',
                               width: '16px',
@@ -978,7 +1022,7 @@ export const ChatInput = ({
                         )
                       case 'completed':
                         return (
-                          <div 
+                          <div
                             style={{
                               display: 'flex',
                               height: '16px',
@@ -990,7 +1034,11 @@ export const ChatInput = ({
                             }}
                           >
                             <svg
-                              style={{ height: '10px', width: '10px', color: 'white' }}
+                              style={{
+                                height: '10px',
+                                width: '10px',
+                                color: 'white',
+                              }}
                               fill="currentColor"
                               viewBox="0 0 20 20"
                             >
@@ -1004,7 +1052,7 @@ export const ChatInput = ({
                         )
                       case 'error':
                         return (
-                          <div 
+                          <div
                             style={{
                               display: 'flex',
                               height: '16px',
@@ -1016,7 +1064,11 @@ export const ChatInput = ({
                             }}
                           >
                             <svg
-                              style={{ height: '10px', width: '10px', color: 'white' }}
+                              style={{
+                                height: '10px',
+                                width: '10px',
+                                color: 'white',
+                              }}
                               fill="currentColor"
                               viewBox="0 0 20 20"
                             >
@@ -1059,7 +1111,7 @@ export const ChatInput = ({
                     >
                       {getFileIcon(fu.file.name, fu.file.type)}
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span 
+                        <span
                           style={{
                             fontSize: '14px',
                             fontWeight: '500',
@@ -1068,7 +1120,7 @@ export const ChatInput = ({
                         >
                           {truncateFileName(fu.file.name)}
                         </span>
-                        <span 
+                        <span
                           style={{
                             fontSize: '12px',
                             color: 'var(--foreground-faded)',
@@ -1099,10 +1151,12 @@ export const ChatInput = ({
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.color = 'var(--foreground)'
-                          e.currentTarget.style.backgroundColor = 'var(--background-dark)'
+                          e.currentTarget.style.backgroundColor =
+                            'var(--background-dark)'
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.color = 'var(--foreground-faded)'
+                          e.currentTarget.style.color =
+                            'var(--foreground-faded)'
                           e.currentTarget.style.backgroundColor = 'transparent'
                         }}
                       >
@@ -1115,10 +1169,10 @@ export const ChatInput = ({
             )}
 
             {/* Main input area */}
-            <div className="flex w-full items-center relative">
+            <div className="relative flex w-full items-center">
               {/* File upload button */}
               <button
-                className="mr-2 rounded-full p-2 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200 flex items-center justify-center"
+                className="mr-2 flex items-center justify-center rounded-full p-2 text-neutral-100 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
                 onClick={() => fileUploadRef.current?.click()}
                 type="button"
                 title="Upload files"
@@ -1171,7 +1225,7 @@ export const ChatInput = ({
 
               {/* Send button */}
               <button
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full bg-[white/30] p-2 opacity-50 hover:opacity-100 flex items-center justify-center"
+                className="absolute right-2 top-1/2 flex -translate-y-1/2 transform items-center justify-center rounded-full bg-[white/30] p-2 opacity-50 hover:opacity-100"
                 onClick={handleSend}
                 style={{ pointerEvents: 'auto' }}
               >
