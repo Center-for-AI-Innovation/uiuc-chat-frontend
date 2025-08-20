@@ -94,18 +94,36 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
 
   // Add effect to save the path when user clicks login
   useEffect(() => {
+    // Only run this effect when we're mounted on the client side
+    if (!isMounted) return
+
     // Add event listener for login button clicks
     const handleLoginClick = () => {
       saveCurrentPath()
     }
+
+    // Set to track which buttons already have listeners to prevent duplicates
+    const buttonsWithListeners = new WeakSet<Element>()
 
     // Function to find and attach listeners to login buttons
     const attachListeners = () => {
       // Find login buttons by commonly used selectors
       const loginButtons = document.querySelectorAll('.login-btn, [data-login], button[type="login"]')
       loginButtons.forEach((button) => {
-        button.addEventListener('click', handleLoginClick)
+        // Only add listener if this button doesn't already have one
+        if (!buttonsWithListeners.has(button)) {
+          button.addEventListener('click', handleLoginClick)
+          buttonsWithListeners.add(button)
+        }
       })
+    }
+
+    // Function to attach listener to a single button with duplicate check
+    const attachSingleListener = (button: Element) => {
+      if (!buttonsWithListeners.has(button)) {
+        button.addEventListener('click', handleLoginClick)
+        buttonsWithListeners.add(button)
+      }
     }
 
     // Attach listeners immediately
@@ -120,12 +138,12 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
               const element = node as Element
               // Check if the added element is a login button
               if (element.matches && element.matches('.login-btn, [data-login], button[type="login"]')) {
-                element.addEventListener('click', handleLoginClick)
+                attachSingleListener(element)
               }
               // Check if the added element contains login buttons
               const loginButtons = element.querySelectorAll('.login-btn, [data-login], button[type="login"]')
               loginButtons.forEach((button) => {
-                button.addEventListener('click', handleLoginClick)
+                attachSingleListener(button)
               })
             }
           })
@@ -141,6 +159,7 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
 
     return () => {
       // Clean up event listeners and observer on unmount
+      // Note: We use the same handler function, so this will remove all instances
       const loginButtons = document.querySelectorAll('.login-btn, [data-login], button[type="login"]')
       loginButtons.forEach(button => {
         button.removeEventListener('click', handleLoginClick)
