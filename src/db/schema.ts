@@ -157,18 +157,14 @@ export const conversations = pgTable('conversations', {
   folder_id: uuid('folder_id'),
 })
 
-// Documents table - updated with missing fields from migration
+// Documents table 
 export const documents = pgTable('documents', {
   id: serial('id').primaryKey(),
   s3_path: text('s3_path'),
   course_name: text('course_name'),
   url: text('url'),
   created_at: timestamp('created_at').defaultNow(),
-  updated_at: timestamp('updated_at').defaultNow(),
-  status: varchar('status', { length: 255 }),
   readable_filename: text('readable_filename'),
-  failed_reason: text('failed_reason'),
-  metadata: jsonb('metadata'),
   base_url: text('base_url'),
   contexts: jsonb('contexts'),
 })
@@ -222,15 +218,14 @@ export const courseNames = pgTable('course_names', {
   course_name: text('course_name'),
 })
 
-// DocGroups table - updated with missing fields from migration
+// DocGroups table
 export const docGroups = pgTable('doc_groups', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
   course_name: text('course_name').notNull(),
-  description: text('description'),
   created_at: timestamp('created_at').defaultNow(),
-  updated_at: timestamp('updated_at').defaultNow(),
   enabled: boolean('enabled').default(true),
+  private: boolean('private').default(true),
   doc_count: integer('doc_count').default(0),
 })
 
