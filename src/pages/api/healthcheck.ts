@@ -1,30 +1,58 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { redisClient } from '~/utils/redisClient'
+import { createClient } from 'redis'
 import { HeadBucketCommand } from '@aws-sdk/client-s3'
 import { db, keycloakDB } from '~/db/dbClient'
 import { s3Client } from '~/utils/s3Client'
 
+function serializeError(err: any) {
+  try {
+    return JSON.stringify(
+      {
+        name: err?.name,
+        message: err?.message,
+        stack: err?.stack,
+        code: err?.code,
+        ...err,
+      },
+      null,
+      2,
+    )
+  } catch (e) {
+    return String(err)
+  }
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const checks: Record<string, { status: string; error?: string }> = {
-    app: { status: 'ok' }, // Always alive if route responds
+    app: { status: 'ok' },
   }
 
   // Redis
-  try {
-    await redisClient.ping()
-    checks.redis = { status: 'ok' }
-  } catch (err: any) {
-    checks.redis = { status: 'error', error: err.message }
+  if (process.env.REDIS_URL) {
+    try {
+      const redis = createClient({
+        url: process.env.REDIS_URL!,
+        socket: { reconnectStrategy: false },
+      })
+      await redis.connect()
+      await redis.ping()
+      checks.redis = { status: 'ok' }
+      await redis.disconnect()
+    } catch (err: any) {
+      checks.redis = { status: 'error', error: serializeError(err) }
+    }
+  }
+  else {
+    checks.redis = { status: 'skipped', error: 'No Redis config' }
   }
 
   // S3
-  if (s3Client && process.env.S3_BUCKET) {
+  if (s3Client && process.env.S3_BUCKET_NAME) {
     try {
-      await s3Client.send(new HeadBucketCommand({ Bucket: process.env.S3_BUCKET }))
+      await s3Client.send(new HeadBucketCommand({ Bucket: process.env.S3_BUCKET_NAME }))
       checks.s3 = { status: 'ok' }
     } catch (err: any) {
-      checks.s3 = { status: 'error', error: err.message }
+      checks.s3 = { status: 'error', error: serializeError(err) }
     }
   } else {
     checks.s3 = { status: 'skipped', error: 'No S3 config' }
@@ -35,7 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await db.execute('SELECT 1')
     checks.postgres = { status: 'ok' }
   } catch (err: any) {
-    checks.postgres = { status: 'error', error: err.message }
+    checks.postgres = { status: 'error', error: serializeError(err) }
   }
 
   // Postgres Keycloak DB
@@ -43,14 +71,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await keycloakDB.execute('SELECT 1')
     checks.keycloak = { status: 'ok' }
   } catch (err: any) {
-    checks.keycloak = { status: 'error', error: err.message }
+    checks.keycloak = { status: 'error', error: serializeError(err) }
   }
 
-  const isHealthy = Object.values(checks).every(c => c.status === 'ok' || c.status === 'skipped')
+  const isHealthy = Object.values(checks).every(
+    (c) => c.status === 'ok' || c.status === 'skipped',
+  )
+
   res.status(isHealthy ? 200 : 500).json({
-    status: isHealthy ? 'UP' : 'DOWN',   // overall status
-    healthy: isHealthy,                  // boolean summary
-    checks,                              // detailed per-service results
-    timestamp: new Date().toISOString(), // optional: useful for logs/monitoring
+    status: isHealthy ? 'UP' : 'DOWN',
+    healthy: isHealthy,
+    checks,
+    timestamp: new Date().toISOString(),
   })
 }

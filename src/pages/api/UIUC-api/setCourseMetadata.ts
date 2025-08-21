@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { type CourseMetadata } from '~/types/courseMetadata'
-import { redisClient } from '~/utils/redisClient'
+import { ensureRedisConnected } from '~/utils/redisClient'
 
 const setCourseMetadata = async (req: any, res: any) => {
   if (req.method !== 'POST') {
@@ -75,6 +75,7 @@ const setCourseMetadata = async (req: any, res: any) => {
       allow_logged_in_users,
     }
     console.log('Right before setting course_metadata with: ', course_metadata)
+    const redisClient = await ensureRedisConnected()
     await redisClient.hSet('course_metadatas', {
       [course_name]: JSON.stringify(course_metadata),
     })

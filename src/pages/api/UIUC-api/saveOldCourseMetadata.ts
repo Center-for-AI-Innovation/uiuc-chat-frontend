@@ -3,12 +3,13 @@ import { type CourseMetadata } from '~/types/courseMetadata'
 import { type NextRequest, NextResponse } from 'next/server'
 import { promises as fs } from 'fs'
 import { join } from 'path'
-import { redisClient } from '~/utils/redisClient'
+import { ensureRedisConnected } from '~/utils/redisClient'
 
 export default async function handler(req: NextRequest, res: NextResponse) {
   try {
     // Fetch all keys from the KV store
     // Filter out keys that end with '_metadata'
+    const redisClient = await ensureRedisConnected()
     const oldMetadataKeys = await redisClient.keys('*_metadata')
     console.log('Starting backup for keys: ', oldMetadataKeys.length)
 
