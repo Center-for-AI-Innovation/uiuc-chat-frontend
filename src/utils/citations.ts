@@ -163,6 +163,8 @@ export async function replaceCitationLinks(
 
         // Sanitize all text content and validate URL
         const safeLink = safeUrl(link)
+        // For smart mode, we'll use the citation index as the display title
+        // since we want numbers for 3+ citations in CropWizard
         const displayTitle = safeText(
           context.readable_filename || `Document ${citationIndex}`,
         )
@@ -208,10 +210,10 @@ export async function replaceCitationLinks(
           ? `${citation.title}, p.${citation.pageNumber}`
           : `${citation.title}`
       } else if (citationMode === 'numbers') {
-        // Numbers mode: show number
+        // Numbers mode: show number in brackets
         innerText = citation.pageNumber
-          ? `${citation.index}, p.${citation.pageNumber}`
-          : `${citation.index}`
+          ? `[${citation.index}], p.${citation.pageNumber}`
+          : `[${citation.index}]`
       } else {
         // Titles mode: show title
         innerText = citation.pageNumber
@@ -239,19 +241,21 @@ export async function replaceCitationLinks(
             // Smart mode: use numbers for 3+ citations, titles for 2 citations
             const shouldUseNumbers = validCitations.length >= 3
             if (shouldUseNumbers) {
+              // For 3+ citations, show just the number like [1], [2], etc.
               innerText = citation.pageNumber
-                ? `${citation.index}, p.${citation.pageNumber}`
-                : `${citation.index}`
+                ? `[${citation.index}], p.${citation.pageNumber}`
+                : `[${citation.index}]`
             } else {
+              // For 1-2 citations, show the actual document title
               innerText = citation.pageNumber
                 ? `${citation.title}, p.${citation.pageNumber}`
                 : `${citation.title}`
             }
           } else if (citationMode === 'numbers') {
-            // Numbers mode: show number
+            // Numbers mode: show number in brackets
             innerText = citation.pageNumber
-              ? `${citation.index}, p.${citation.pageNumber}`
-              : `${citation.index}`
+              ? `[${citation.index}], p.${citation.pageNumber}`
+              : `[${citation.index}]`
           } else {
             // Titles mode: show title
             innerText = citation.pageNumber
