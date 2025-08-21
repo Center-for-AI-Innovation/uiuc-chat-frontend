@@ -20,7 +20,7 @@ import { getWebLLMModels } from '~/utils/modelProviders/WebLLM'
 import { type NextApiRequest, type NextApiResponse } from 'next'
 import { getNCSAHostedModels } from '~/utils/modelProviders/NCSAHosted'
 import { getOpenAIModels } from '~/utils/modelProviders/routes/openai'
-import { redisClient } from '~/utils/redisClient'
+import { ensureRedisConnected } from '~/utils/redisClient'
 import { getNCSAHostedVLMModels } from '~/utils/modelProviders/types/NCSAHostedVLM'
 import { getBedrockModels } from '~/utils/modelProviders/routes/bedrock'
 import { getGeminiModels } from '~/utils/modelProviders/routes/gemini'
@@ -41,6 +41,7 @@ export default async function handler(
 
     // Fetch the project's API keys
     let llmProviders: AllLLMProviders
+    const redisClient = await ensureRedisConnected()
     const redisValue = await redisClient.get(`${projectName}-llms`)
     if (!redisValue) {
       llmProviders = {} as AllLLMProviders
