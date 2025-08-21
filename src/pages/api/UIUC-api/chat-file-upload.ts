@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { db, conversations as conversationsTable, fileUploads, documentsInProgress } from '~/db/dbClient'
+import { db, conversations as conversationsTable, fileUploads } from '~/db/dbClient'
 import { v4 as uuidv4 } from 'uuid'
 import { getBackendUrl } from '~/utils/apiUtils'
 import { eq } from 'drizzle-orm'
@@ -71,49 +71,8 @@ const handler = async (
       }
     }
 
-    // 2. Create documents_in_progress record for S3 upload tracking
+    // 2. Create file_uploads record for chat file tracking
     const fileUploadId = uuidv4()
-    try {
-      await db.insert(documentsInProgress).values({
-        s3_path: s3Key,
-        readable_filename: fileName,
-        course_name: courseName,
-        contexts: {
-          status: 'uploading_to_s3',
-          conversation_id: conversationId,
-          user_id: user_id,
-          file_upload_id: fileUploadId,
-          created_at: new Date().toISOString(),
-        },
-        created_at: new Date(),
-      })
-    } catch (uploadError) {
-      console.error(' Failed to create document_in_progress record:', uploadError)
-      return res.status(500).json({
-        error: ' Failed to create document record',
-      })
-    }
-
-    // 3. Update documents_in_progress to completed (S3 upload finished)
-    try {
-      await db
-        .update(documentsInProgress)
-        .set({
-          contexts: {
-            status: 's3_upload_completed',
-            conversation_id: conversationId,
-            user_id: user_id,
-            file_upload_id: fileUploadId,
-            s3_upload_completed_at: new Date().toISOString(),
-          },
-        })
-        .where(eq(documentsInProgress.s3_path, s3Key))
-    } catch (updateError) {
-      console.error('Failed to update S3 upload status:', updateError)
-      // Continue anyway since the main processing should continue
-    }
-
-    // 4. Create file_uploads record for chat processing tracking
     try {
       await db.insert(fileUploads).values({
         id: fileUploadId,
@@ -124,17 +83,18 @@ const handler = async (
         contexts: {
           status: 'processing_for_chat',
           user_id: user_id,
-          s3_upload_completed_at: new Date().toISOString(),
           created_at: new Date().toISOString(),
         },
         created_at: new Date(),
       })
-    } catch (fileUploadError) {
-      console.error(' Failed to create file_uploads record:', fileUploadError)
-      // Continue anyway since the main processing should continue
+    } catch (uploadError) {
+      console.error(' Failed to create file_uploads record:', uploadError)
+      return res.status(500).json({
+        error: ' Failed to create file upload record',
+      })
     }
 
-    // 5. Call your new chat file processing endpoint
+    // 3. Call your new chat file processing endpoint
     const s3_filepath = s3Key // s3Key should already be the full path
     // Get user email from the conversation record we already fetched
     const userEmail = existingConv[0]?.user_email || user_id
@@ -190,25 +150,8 @@ const handler = async (
       })
     }
 
-    // 6. Update both tables with final completion status
+    // 4. Update file_uploads with completion status
     try {
-      // Update documents_in_progress with final completion
-      await db
-        .update(documentsInProgress)
-        .set({
-          contexts: {
-            status: 'completed',
-            conversation_id: conversationId,
-            user_id: user_id,
-            file_upload_id: fileUploadId,
-            chunks_created: responseBody.chunks_created || 0,
-            completed_at: new Date().toISOString(),
-            beam_task_id: responseBody.beam_task_id,
-          },
-        })
-        .where(eq(documentsInProgress.s3_path, s3Key))
-
-      // Update file_uploads with final completion
       await db
         .update(fileUploads)
         .set({
@@ -221,7 +164,7 @@ const handler = async (
         })
         .where(eq(fileUploads.id, fileUploadId))
     } catch (updateError) {
-      console.error('Failed to update final completion status:', updateError)
+      console.error('Failed to update file upload status:', updateError)
       // Continue anyway since the main processing was successful
     }
 
