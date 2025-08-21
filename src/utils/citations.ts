@@ -275,13 +275,33 @@ export async function replaceCitationLinks(
     }
 
     // Replace at exact position accounting for previous replacements
-    result =
-      result.slice(0, match.index + offset) +
-      replacementText +
-      result.slice(match.index + offset + originalCitation.length)
+    // Add proper spacing around the citation to prevent concatenation issues
+    const beforeCitation = result.slice(0, match.index + offset)
+    const afterCitation = result.slice(match.index + offset + originalCitation.length)
+    
+    // Check if we need to add space before the citation
+    const needsSpaceBefore = beforeCitation.length > 0 && 
+      !beforeCitation.endsWith(' ') && 
+      !beforeCitation.endsWith('\n') && 
+      !beforeCitation.endsWith('\t') &&
+      !replacementText.startsWith(' ')
+    
+    // Check if we need to add space after the citation
+    const needsSpaceAfter = afterCitation.length > 0 && 
+      !afterCitation.startsWith(' ') && 
+      !afterCitation.startsWith('\n') && 
+      !afterCitation.startsWith('\t') &&
+      !replacementText.endsWith(' ')
+    
+    const spacedReplacement = 
+      (needsSpaceBefore ? ' ' : '') + 
+      replacementText + 
+      (needsSpaceAfter ? ' ' : '')
+    
+    result = beforeCitation + spacedReplacement + afterCitation
 
     // Adjust offset for future replacements
-    offset += replacementText.length - originalCitation.length
+    offset += spacedReplacement.length - originalCitation.length
   }
 
   // Fast path - if no filename patterns, return early
