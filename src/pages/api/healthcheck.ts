@@ -3,6 +3,7 @@ import { createClient } from 'redis'
 import { HeadBucketCommand } from '@aws-sdk/client-s3'
 import { db, keycloakDB } from '~/db/dbClient'
 import { s3Client } from '~/utils/s3Client'
+import { qdrant } from '~/utils/qdrantClient'
 
 function serializeError(err: any) {
   try {
@@ -41,8 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } catch (err: any) {
       checks.redis = { status: 'error', error: serializeError(err) }
     }
-  }
-  else {
+  } else {
     checks.redis = { status: 'skipped', error: 'No Redis config' }
   }
 
@@ -71,13 +71,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await keycloakDB.execute('SELECT 1')
     checks.keycloak = { status: 'ok' }
   } catch (err: any) {
-    checks.keycloak = { status: 'error', error: serializeError(err) }
+    checks.keycloakDB = { status: 'error', error: serializeError(err) }
+  }
+
+  // Qdrant
+  if (process.env.QDRANT_URL && process.env.QDRANT_API_KEY) {
+    try {
+      await qdrant.getCollections()
+      checks.qdrant = { status: 'ok' }
+    } catch (err: any) {
+      checks.qdrant = { status: 'error', error: serializeError(err) }
+    }
+  } else {
+    checks.qdrant = { status: 'skipped', error: 'No Qdrant config' }
   }
 
   const isHealthy = Object.values(checks).every(
     (c) => c.status === 'ok' || c.status === 'skipped',
   )
-
   res.status(isHealthy ? 200 : 500).json({
     status: isHealthy ? 'UP' : 'DOWN',
     healthy: isHealthy,
