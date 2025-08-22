@@ -66,7 +66,7 @@ export const runN8nFlowBackend = async (
     clearTimeout(timeoutId)
     
     if (error.name === 'AbortError') {
-      throw new Error('Request timed out after 30 seconds, try "Regenerate Response" button')
+      throw new Error('Request timed out after 5 minutes, try "Regenerate Response" button')
     }
     
     throw error

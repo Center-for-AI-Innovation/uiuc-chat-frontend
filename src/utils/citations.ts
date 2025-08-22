@@ -2,6 +2,41 @@ import { type ContextWithMetadata, type Message } from '~/types/chat'
 import { fetchPresignedUrl } from './apiUtils'
 import sanitizeHtml, { type IOptions } from 'sanitize-html'
 
+/**
+ * CITATION DISPLAY CONFIGURATION
+ * 
+ * This setting controls how citations are displayed in the chat interface.
+ * 
+ * Global Options:
+ * - 'titles': Always show full document titles (e.g., "KY_Apple_Crop-Profile.pdf, p.79")
+ * - 'numbers': Always show citation numbers (e.g., "1, p.79")
+ * - 'smart': Use numbers for 3+ citations, titles for 1-2 citations
+ * 
+ * Course-Specific Configuration:
+ * - CropWizard uses smart formatting to reduce long citation lists
+ * - Other courses use titles for better context
+ * 
+ * Examples:
+ * - Smart mode with 1 citation: "KY_Apple_Crop-Profile.pdf, p.79"
+ * - Smart mode with 2 citations: "KY_Apple_Crop-Profile.pdf, p.79; Search | Integrated Crop Management"
+ * - Smart mode with 3+ citations: "1, p.79; 2; 3, p.15"
+ */
+
+// Global default mode (for non-CropWizard courses)
+const DEFAULT_CITATION_DISPLAY_MODE: 'titles' | 'numbers' | 'smart' = 'titles'
+
+// CropWizard-specific mode (smart formatting to reduce long lists)
+const CROPWIZARD_CITATION_DISPLAY_MODE: 'titles' | 'numbers' | 'smart' = 'smart'
+
+// Function to get citation mode based on course
+function getCitationDisplayMode(courseName: string): 'titles' | 'numbers' | 'smart' {
+  // Check if this is CropWizard (case-insensitive)
+  if (courseName.toLowerCase().includes('cropwizard')) {
+    return CROPWIZARD_CITATION_DISPLAY_MODE
+  }
+  return DEFAULT_CITATION_DISPLAY_MODE
+}
+
 // Strict sanitization options for text content
 const SANITIZE_OPTIONS: IOptions = {
   allowedTags: [], // No HTML tags allowed
@@ -128,6 +163,8 @@ export async function replaceCitationLinks(
 
         // Sanitize all text content and validate URL
         const safeLink = safeUrl(link)
+        // For smart mode, we'll use the citation index as the display title
+        // since we want numbers for 3+ citations in CropWizard
         const displayTitle = safeText(
           context.readable_filename || `Document ${citationIndex}`,
         )
@@ -158,13 +195,31 @@ export async function replaceCitationLinks(
 
     let replacementText = ''
 
+    // Determine citation display mode based on course
+    const citationMode = getCitationDisplayMode(courseName)
+    
     if (validCitations.length === 1) {
-      // Single citation case - no parentheses
+      // Single citation case
       const citation = validCitations[0]!
-      // Create inner text without parentheses
-      const innerText = citation.pageNumber
-        ? `${citation.title}, p.${citation.pageNumber}`
-        : `${citation.title}`
+      
+      // Choose display text based on course and mode
+      let innerText: string
+      if (citationMode === 'smart') {
+        // Smart mode: always show title for single citation
+        innerText = citation.pageNumber
+          ? `${citation.title}, p.${citation.pageNumber}`
+          : `${citation.title}`
+      } else if (citationMode === 'numbers') {
+        // Numbers mode: show number in brackets
+        innerText = citation.pageNumber
+          ? `[${citation.index}], p.${citation.pageNumber}`
+          : `[${citation.index}]`
+      } else {
+        // Titles mode: show title
+        innerText = citation.pageNumber
+          ? `${citation.title}, p.${citation.pageNumber}`
+          : `${citation.title}`
+      }
 
       // Create tooltip with citation number
       const tooltipTitle = `Citation ${citation.index}`
@@ -177,14 +232,36 @@ export async function replaceCitationLinks(
       // No parentheses around the link
       replacementText = linkText
     } else {
-      // Multiple citations case - no parentheses
-      // Add each citation as a separate link, separated by semicolons with minimal space for better wrapping
+      // Multiple citations case
       replacementText = validCitations
         .map((citation, idx) => {
-          // For each citation, create the inner text without parentheses
-          const innerText = citation.pageNumber
-            ? `${citation.title}, p.${citation.pageNumber}`
-            : `${citation.title}`
+          // Choose display text based on course and mode
+          let innerText: string
+          if (citationMode === 'smart') {
+            // Smart mode: use numbers for 3+ citations, titles for 2 citations
+            const shouldUseNumbers = validCitations.length >= 3
+            if (shouldUseNumbers) {
+              // For 3+ citations, show just the number like [1], [2], etc.
+              innerText = citation.pageNumber
+                ? `[${citation.index}], p.${citation.pageNumber}`
+                : `[${citation.index}]`
+            } else {
+              // For 1-2 citations, show the actual document title
+              innerText = citation.pageNumber
+                ? `${citation.title}, p.${citation.pageNumber}`
+                : `${citation.title}`
+            }
+          } else if (citationMode === 'numbers') {
+            // Numbers mode: show number in brackets
+            innerText = citation.pageNumber
+              ? `[${citation.index}], p.${citation.pageNumber}`
+              : `[${citation.index}]`
+          } else {
+            // Titles mode: show title
+            innerText = citation.pageNumber
+              ? `${citation.title}, p.${citation.pageNumber}`
+              : `${citation.title}`
+          }
 
           // Create tooltip with citation number
           const tooltipTitle = `Citation ${citation.index}`
@@ -202,13 +279,33 @@ export async function replaceCitationLinks(
     }
 
     // Replace at exact position accounting for previous replacements
-    result =
-      result.slice(0, match.index + offset) +
-      replacementText +
-      result.slice(match.index + offset + originalCitation.length)
+    // Add proper spacing around the citation to prevent concatenation issues
+    const beforeCitation = result.slice(0, match.index + offset)
+    const afterCitation = result.slice(match.index + offset + originalCitation.length)
+    
+    // Check if we need to add space before the citation
+    const needsSpaceBefore = beforeCitation.length > 0 && 
+      !beforeCitation.endsWith(' ') && 
+      !beforeCitation.endsWith('\n') && 
+      !beforeCitation.endsWith('\t') &&
+      !replacementText.startsWith(' ')
+    
+    // Check if we need to add space after the citation
+    const needsSpaceAfter = afterCitation.length > 0 && 
+      !afterCitation.startsWith(' ') && 
+      !afterCitation.startsWith('\n') && 
+      !afterCitation.startsWith('\t') &&
+      !replacementText.endsWith(' ')
+    
+    const spacedReplacement = 
+      (needsSpaceBefore ? ' ' : '') + 
+      replacementText + 
+      (needsSpaceAfter ? ' ' : '')
+    
+    result = beforeCitation + spacedReplacement + afterCitation
 
     // Adjust offset for future replacements
-    offset += replacementText.length - originalCitation.length
+    offset += spacedReplacement.length - originalCitation.length
   }
 
   // Fast path - if no filename patterns, return early

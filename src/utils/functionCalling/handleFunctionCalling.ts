@@ -233,7 +233,7 @@ const callN8nFunction = async (
   base_url?: string,
 ): Promise<ToolOutput> => {
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), 30000)
+  const timeoutId = setTimeout(() => controller.abort(), 300000) // 5 minutes timeout to match backend
 
   // get n8n api key per project
   if (!n8n_api_key) {
@@ -276,7 +276,7 @@ const callN8nFunction = async (
     }).catch((error) => {
       if (error.name === 'AbortError') {
         throw new Error(
-          'Request timed out after 30 seconds, try "Regenerate Response" button',
+          'Request timed out after 5 minutes, try "Regenerate Response" button',
         )
       }
       throw error
@@ -304,7 +304,7 @@ const callN8nFunction = async (
     } catch (error: any) {
       if (error.message.includes('timed out')) {
         throw new Error(
-          'Request timed out after 30 seconds, try "Regenerate Response" button',
+          'Request timed out after 5 minutes, try "Regenerate Response" button',
         )
       }
       throw error
