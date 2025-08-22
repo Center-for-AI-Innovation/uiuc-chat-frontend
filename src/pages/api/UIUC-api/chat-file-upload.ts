@@ -9,7 +9,6 @@ type ChatFileUploadResponse = {
   fileUploadId?: string
   message?: string
   error?: string
-  beam_task_id?: string
   details?: string
   chunks_created?: number
 }
@@ -159,7 +158,6 @@ const handler = async (
             status: 'completed',
             chunks_created: responseBody.chunks_created || 0,
             completed_at: new Date().toISOString(),
-            beam_task_id: responseBody.beam_task_id,
           },
         })
         .where(eq(fileUploads.id, fileUploadId))
