@@ -246,16 +246,6 @@ export const documentsDocGroups = pgTable(
   },
 )
 
-// Doc Groups Sharing table (from schema.sql)
-export const docGroupsSharing = pgTable('doc_groups_sharing', {
-  id: serial('id').primaryKey(),
-  doc_group_id: integer('doc_group_id').notNull(),
-  shared_with_email: text('shared_with_email'),
-  permission_level: text('permission_level'),
-  created_at: timestamp('created_at').defaultNow(),
-  updated_at: timestamp('updated_at').defaultNow(),
-})
-
 // Cedar Documents (from schema.sql)
 export const cedarDocuments = pgTable('cedar_documents', {
   id: serial('id').primaryKey(),
@@ -478,11 +468,6 @@ export const projectsRelations = relations(projects, ({ many, one }) => ({
   }),
 }))
 
-export const docGroupsRelations = relations(docGroups, ({ many }) => ({
-  documentsJunction: many(documentsDocGroups),
-  sharing: many(docGroupsSharing),
-}))
-
 export const documentsRelations = relations(documents, ({ many }) => ({
   docGroupsJunction: many(documentsDocGroups),
 }))
@@ -538,9 +523,6 @@ export type NewDocuments = typeof documents.$inferInsert
 
 export type DocumentsDocGroups = typeof documentsDocGroups.$inferSelect
 export type NewDocumentsDocGroups = typeof documentsDocGroups.$inferInsert
-
-export type DocGroupsSharing = typeof docGroupsSharing.$inferSelect
-export type NewDocGroupsSharing = typeof docGroupsSharing.$inferInsert
 
 export type CedarDocuments = typeof cedarDocuments.$inferSelect
 export type NewCedarDocuments = typeof cedarDocuments.$inferInsert
