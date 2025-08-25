@@ -9,7 +9,7 @@ interface AuthProviderProps {
 
 // --- Secure Redirect Path Validation ---
 const isValidRedirectPath = (path: string): boolean => {
-  if (!path || typeof path !== 'string' || !path.startsWith('/')) return false;
+  if (!path || typeof path !== 'string' || !path.startsWith('/')) return false
   const dangerousPatterns = [
     /^\/api\//,
     /^\/_next\//,
@@ -19,9 +19,9 @@ const isValidRedirectPath = (path: string): boolean => {
     /data:/i,
     /vbscript:/i,
     /file:/i,
-  ];
-  return !dangerousPatterns.some((pattern) => pattern.test(path));
-};
+  ]
+  return !dangerousPatterns.some((pattern) => pattern.test(path))
+}
 // ---------------------------------------
 
 const getBaseUrl = () => {
@@ -32,13 +32,13 @@ const getBaseUrl = () => {
 // Function to save the current path before login
 const saveCurrentPath = () => {
   if (typeof window !== 'undefined') {
-    const currentPath = window.location.pathname + window.location.search;
+    const currentPath = window.location.pathname + window.location.search
     if (
       !currentPath.includes('state=') &&
       !currentPath.includes('code=') &&
       isValidRedirectPath(currentPath)
     ) {
-      sessionStorage.setItem('auth_redirect_path', currentPath);
+      sessionStorage.setItem('auth_redirect_path', currentPath)
     }
   }
 }
@@ -57,10 +57,22 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
     loadUserInfo: true,
     onSigninCallback: async () => {
       if (typeof window !== 'undefined') {
-        let redirectPath = sessionStorage.getItem('auth_redirect_path') || '/';
-        if (!isValidRedirectPath(redirectPath)) redirectPath = '/';
-        sessionStorage.removeItem('auth_redirect_path');
-        window.location.replace(redirectPath);
+        let redirectPath = sessionStorage.getItem('auth_redirect_path') || '/'
+
+        if (!isValidRedirectPath(redirectPath)) {
+          redirectPath = '/'
+        }
+
+        // Extra logic: if root path and Illinois Chat config enabled → go to /chat
+        if (
+          redirectPath === '/' &&
+          process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
+        ) {
+          redirectPath = '/chat'
+        }
+
+        sessionStorage.removeItem('auth_redirect_path')
+        window.location.replace(redirectPath)
       }
     },
   })
@@ -136,7 +148,7 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
     // Start observing
     observer.observe(document.body, {
       childList: true,
-      subtree: true
+      subtree: true,
     })
 
     return () => {
