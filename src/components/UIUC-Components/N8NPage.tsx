@@ -79,7 +79,6 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
   // Get responsive card width classes
   const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed)
 
-
   const {
     data: flows_table,
     isSuccess: isSuccess,
@@ -351,6 +350,23 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
       <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
         <div className="items-left flex w-full flex-col justify-center py-0">
           <Flex direction="column" align="center" w="100%">
+            {useIllinoisChatConfig && (
+              <Card
+                padding="none"
+                style={{
+                  color: 'var(--foreground)',
+                  margin: '5%',
+                  backgroundColor: 'var(--background)',
+                }}
+              >
+                <Title
+                  className={`${montserrat_heading.variable} ml-4 font-montserratHeading`}
+                  order={2}
+                >
+                  Coming soon!
+                </Title>
+              </Card>
+            )}
             <Card
               withBorder
               padding="none"
@@ -395,7 +411,9 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                           ml={'md'}
                           style={{
                             textAlign: 'left',
-                            ...(useIllinoisChatConfig && { color: 'var(--illinois-storm-dark)' }),
+                            ...(useIllinoisChatConfig && {
+                              color: 'var(--illinois-storm-dark)',
+                            }),
                           }}
                         >
                           Use{' '}
@@ -428,80 +446,79 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                           {'Create/Edit Workflows'}
                         </Button>
                       </div>
-                      {
-                        useIllinoisChatConfig ?
-                          <Title className={`${montserrat_heading.variable} flex-[1_1_50%] font-montserratHeading`}
-                                 order={3}
-                                 w={'100%'}
-                                 ml={'md'}
-                                 style={{ textAlign: 'left', color: 'var(--illinois-storm-dark)' }}>Coming
-                            soon...</Title>
-                          :
-                          <IntermediateStateAccordion
-                            accordionKey="setup-instructions"
-                            chevron={
-                              n8nApiKey ? <IconCircleCheck /> : <IconCircleDashed />
-                            }
-                            disableChevronRotation
-                            title={
-                              <Title
-                                style={{ margin: '0 auto', textAlign: 'left' }}
-                                order={4}
-                                size={'xl'}
-                                className={`pb-3 pt-3 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                              >
-                                Setup Instructions 🤠
-                              </Title>
-                            }
-                            isLoading={false}
-                            error={false}
-                            defaultValue={
-                              !n8nApiKey ? 'setup-instructions' : undefined
-                            }
-                            content={
-                              <List
-                                type="ordered"
-                                withPadding
-                                className={`${montserrat_paragraph.variable} font-montserratParagraph text-[--foreground]`}
-                              >
-                                <List.Item>
-                                  Tool use via LLMs is invite-only to prevent abuse.
-                                  Please shoot our admin an email for access:{' '}
+                      {useIllinoisChatConfig ? (
+                        <div />
+                      ) : (
+                        <IntermediateStateAccordion
+                          accordionKey="setup-instructions"
+                          chevron={
+                            n8nApiKey ? (
+                              <IconCircleCheck />
+                            ) : (
+                              <IconCircleDashed />
+                            )
+                          }
+                          disableChevronRotation
+                          title={
+                            <Title
+                              style={{ margin: '0 auto', textAlign: 'left' }}
+                              order={4}
+                              size={'xl'}
+                              className={`pb-3 pt-3 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                            >
+                              Setup Instructions 🤠
+                            </Title>
+                          }
+                          isLoading={false}
+                          error={false}
+                          defaultValue={
+                            !n8nApiKey ? 'setup-instructions' : undefined
+                          }
+                          content={
+                            <List
+                              type="ordered"
+                              withPadding
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-[--foreground]`}
+                            >
+                              <List.Item>
+                                Tool use via LLMs is invite-only to prevent
+                                abuse. Please shoot our admin an email for
+                                access:{' '}
+                                <a
+                                  href="mailto:rohan13@illinois.edu"
+                                  style={{
+                                    color: 'var(--link)',
+                                    textDecoration: 'underline',
+                                  }}
+                                >
+                                  rohan13@illinois.edu
+                                </a>
+                              </List.Item>
+                              <List.Item>
+                                Once you have access, please{' '}
+                                <b>
                                   <a
-                                    href="mailto:rohan13@illinois.edu"
+                                    href="https://tools.uiuc.chat/setup"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[--dashboard-button] hover:text-[--dashboard-button-hover]"
                                     style={{
-                                      color: 'var(--link)',
                                       textDecoration: 'underline',
                                     }}
                                   >
-                                    rohan13@illinois.edu
+                                    login with this link
                                   </a>
-                                </List.Item>
-                                <List.Item>
-                                  Once you have access, please{' '}
-                                  <b>
-                                    <a
-                                      href="https://tools.uiuc.chat/setup"
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-[--dashboard-button] hover:text-[--dashboard-button-hover]"
-                                      style={{
-                                        textDecoration: 'underline',
-                                      }}
-                                    >
-                                      login with this link
-                                    </a>
-                                    .
-                                  </b>
-                                </List.Item>
-                                <List.Item>
-                                  Inside n8n,{' '}
-                                  <b>create an n8n API key and save it here</b>.
-                                </List.Item>
-                              </List>
-                            }
-                          />
-                      }
+                                  .
+                                </b>
+                              </List.Item>
+                              <List.Item>
+                                Inside n8n,{' '}
+                                <b>create an n8n API key and save it here</b>.
+                              </List.Item>
+                            </List>
+                          }
+                        />
+                      )}
                       {n8nApiKey && (
                         <IntermediateStateAccordion
                           accordionKey="usage-instructions"
