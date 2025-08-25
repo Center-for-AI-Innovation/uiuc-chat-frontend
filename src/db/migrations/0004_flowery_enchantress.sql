@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX "doc_groups_name_course_unique" ON "doc_groups" USING btree ("name","course_name");--> statement-breakpoint
+CREATE UNIQUE INDEX "documents_doc_groups_document_group_id_unique" ON "documents_doc_groups" USING btree ("document_id","doc_group_id");
