@@ -6,6 +6,23 @@ interface AuthProviderProps {
   children: ReactNode
 }
 
+// --- Secure Redirect Path Validation ---
+const isValidRedirectPath = (path: string): boolean => {
+  if (!path || typeof path !== 'string' || !path.startsWith('/')) return false;
+  const dangerousPatterns = [
+    /^\/api\//,
+    /^\/_next\//,
+    /^\/admin\//,
+    /^\/internal\//,
+    /javascript:/i,
+    /data:/i,
+    /vbscript:/i,
+    /file:/i,
+  ];
+  return !dangerousPatterns.some((pattern) => pattern.test(path));
+};
+// ---------------------------------------
+
 const getBaseUrl = () => {
   if (typeof window === 'undefined') return ''
   return window.location.origin
@@ -14,11 +31,13 @@ const getBaseUrl = () => {
 // Function to save the current path before login
 const saveCurrentPath = () => {
   if (typeof window !== 'undefined') {
-    const currentPath = window.location.pathname + window.location.search
-    // Don't save the login callback URL with all the OIDC parameters
-    if (!currentPath.includes('state=') && !currentPath.includes('code=')) {
-      localStorage.setItem('auth_redirect_path', currentPath)
-      console.log('Saved redirect path:', currentPath)
+    const currentPath = window.location.pathname + window.location.search;
+    if (
+      !currentPath.includes('state=') &&
+      !currentPath.includes('code=') &&
+      isValidRedirectPath(currentPath)
+    ) {
+      sessionStorage.setItem('auth_redirect_path', currentPath);
     }
   }
 }
@@ -41,14 +60,16 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
     loadUserInfo: true,
     onSigninCallback: async () => {
       if (typeof window !== 'undefined') {
-        // Retrieve the saved path or default to home page
-        const redirectPath = localStorage.getItem('auth_redirect_path') || '/'
-        console.log('Retrieved redirect path:', redirectPath)
-
-        // Clear the saved path
-        localStorage.removeItem('auth_redirect_path')
-
-        window.location.href = redirectPath
+        let redirectPath = sessionStorage.getItem('auth_redirect_path') || '/';
+        if (!isValidRedirectPath(redirectPath)) redirectPath = '/';
+        
+        // If the user was on the root path, redirect to /chat after login
+        if (redirectPath === '/') {
+          redirectPath = '/chat';
+        }
+        
+        sessionStorage.removeItem('auth_redirect_path');
+        window.location.replace(redirectPath);
       }
     },
   })
@@ -82,24 +103,77 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
 
   // Add effect to save the path when user clicks login
   useEffect(() => {
+    // Only run this effect when we're mounted on the client side
+    if (!isMounted) return
+
     // Add event listener for login button clicks
     const handleLoginClick = () => {
       saveCurrentPath()
     }
 
-    // Find login buttons by commonly used selectors
-    const loginButtons = document.querySelectorAll(
-      '.login-btn, [data-login], button[type="login"]',
-    )
-    loginButtons.forEach((button) => {
-      button.addEventListener('click', handleLoginClick)
+    // Set to track which buttons already have listeners to prevent duplicates
+    const buttonsWithListeners = new WeakSet<Element>()
+
+    // Function to find and attach listeners to login buttons
+    const attachListeners = () => {
+      // Find login buttons by commonly used selectors
+      const loginButtons = document.querySelectorAll('.login-btn, [data-login], button[type="login"]')
+      loginButtons.forEach((button) => {
+        // Only add listener if this button doesn't already have one
+        if (!buttonsWithListeners.has(button)) {
+          button.addEventListener('click', handleLoginClick)
+          buttonsWithListeners.add(button)
+        }
+      })
+    }
+
+    // Function to attach listener to a single button with duplicate check
+    const attachSingleListener = (button: Element) => {
+      if (!buttonsWithListeners.has(button)) {
+        button.addEventListener('click', handleLoginClick)
+        buttonsWithListeners.add(button)
+      }
+    }
+
+    // Attach listeners immediately
+    attachListeners()
+
+    // Also set up a mutation observer to catch dynamically added buttons
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'childList') {
+          mutation.addedNodes.forEach((node) => {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              const element = node as Element
+              // Check if the added element is a login button
+              if (element.matches && element.matches('.login-btn, [data-login], button[type="login"]')) {
+                attachSingleListener(element)
+              }
+              // Check if the added element contains login buttons
+              const loginButtons = element.querySelectorAll('.login-btn, [data-login], button[type="login"]')
+              loginButtons.forEach((button) => {
+                attachSingleListener(button)
+              })
+            }
+          })
+        }
+      })
+    })
+
+    // Start observing
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
     })
 
     return () => {
-      // Clean up event listeners on unmount
-      loginButtons.forEach((button) => {
+      // Clean up event listeners and observer on unmount
+      // Note: We use the same handler function, so this will remove all instances
+      const loginButtons = document.querySelectorAll('.login-btn, [data-login], button[type="login"]')
+      loginButtons.forEach(button => {
         button.removeEventListener('click', handleLoginClick)
       })
+      observer.disconnect()
     }
   }, [isMounted])
 
