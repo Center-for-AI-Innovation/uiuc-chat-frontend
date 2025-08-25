@@ -180,14 +180,14 @@ const MakeNewCoursePage = ({
                       data-form-type="other"
                       styles={{
                         input: {
-                          backgroundColor: '#1A1B1E',
+                          backgroundColor: 'var(--background)',
                           paddingRight: '6rem',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
                           color:
                             isCourseAvailable && projectName != ''
-                              ? 'green'
+                              ? 'var(--foreground)'
                               : 'red',
                           '&:focus-within': {
                             borderColor:
@@ -200,13 +200,13 @@ const MakeNewCoursePage = ({
                         },
                         label: {
                           fontWeight: 'bold',
-                          fontSize: isSmallScreen ? '14px' : '20px',
-                          color: 'white',
+                          fontSize: '1rem',
+                          color: 'var(--foreground)',
                           marginBottom: '1rem',
                         },
                       }}
                       placeholder="Project name"
-                      radius={'lg'}
+                      radius={'md'}
                       type="text"
                       value={projectName}
                       label="What is the project name?"
@@ -220,39 +220,45 @@ const MakeNewCoursePage = ({
                       className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                       rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
                     />
+
+                    <div className="text-sm text-[--foreground-faded]">
+                      The project name will be used as part of the unique url
+                      across the entire campus.
+                    </div>
+
                     <Flex direction="row" align="flex-end">
                       <label
-                        className={`${montserrat_paragraph.variable} mt-4 font-montserratParagraph font-bold`}
-                        style={{ fontSize: isSmallScreen ? '14px' : '20px' }}
+                        className={`${montserrat_paragraph.variable} mt-4 font-montserratParagraph font-bold text-[--foreground]`}
                       >
                         What do you want to achieve?
                       </label>
                       <label
-                        className={`${montserrat_paragraph.variable} mt-5 pl-2 font-montserratParagraph text-gray-400`}
+                        className={`${montserrat_paragraph.variable} mt-5 pl-2 font-montserratParagraph text-[--foreground-faded]`}
                       >
                         (optional)
                       </label>
                     </Flex>
                     <Textarea
                       placeholder="Describe your project, goals, expected impact etc..."
-                      radius={'lg'}
+                      radius={'md'}
                       value={projectDescription}
                       onChange={(e) => setProjectDescription(e.target.value)}
                       size={'lg'}
                       minRows={4}
                       styles={{
                         input: {
-                          backgroundColor: '#1A1B1E',
+                          color: 'var(--foreground)',
+                          backgroundColor: 'var(--background)',
                           fontSize: isSmallScreen ? '12px' : '16px', // Added text styling
                           font: `${montserrat_paragraph.variable} font-montserratParagraph`,
                           // borderColor: '#8e44ad', // Grape color
                           '&:focus': {
-                            borderColor: '#8e44ad', // Grape color when focused/selected
+                            borderColor: 'var(--illinois-orange)', // Grape color when focused/selected
                           },
                         },
                         label: {
                           fontWeight: 'bold',
-                          color: 'white',
+                          color: 'var(--foreground)',
                         },
                       }}
                       className={`${montserrat_paragraph.variable} font-montserratParagraph`}
@@ -260,7 +266,7 @@ const MakeNewCoursePage = ({
                     <Flex direction={'row'}>
                       <Title
                         order={isSmallScreen ? 5 : 4}
-                        className={`w-full pr-2 pr-7 text-right ${montserrat_paragraph.variable} mt-2 font-montserratParagraph`}
+                        className={`w-full pr-2 pr-7 ${montserrat_paragraph.variable} mt-2 font-montserratParagraph text-sm text-[--foreground]`}
                       >
                         Next: let&apos;s upload some documents
                       </Title>
@@ -274,6 +280,12 @@ const MakeNewCoursePage = ({
                         }
                         withArrow
                         disabled={projectName !== '' && isCourseAvailable}
+                        styles={{
+                          tooltip: {
+                            color: 'var(--tooltip)',
+                            backgroundColor: 'var(--tooltip-background)',
+                          },
+                        }}
                       >
                         <span>
                           <Button
@@ -285,11 +297,10 @@ const MakeNewCoursePage = ({
                                 useIllinoisChatConfig, // isPrivate: illinois chat project default to private
                               )
                             }}
-                            size="md"
-                            radius={'md'}
-                            className={`${isCourseAvailable && projectName !== '' ? 'bg-purple-800' : 'border-purple-800'}
-                        overflow-ellipsis text-ellipsis p-2 ${isCourseAvailable && projectName !== '' ? 'text-white' : 'text-gray-500'}
-                        mt-2 min-w-[5-rem] transform hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none lg:min-w-[8rem]`}
+                            size="sm"
+                            radius={'sm'}
+                            className={`${isCourseAvailable && projectName !== '' ? 'bg-[--illinois-orange] text-white hover:bg-[--illinois-orange] hover:text-white' : 'disabled:bg-[--button-disabled] disabled:text-[--button-disabled-text-color]'}
+                        mt-2 min-w-[5-rem] transform overflow-ellipsis text-ellipsis p-2 focus:shadow-none focus:outline-none lg:min-w-[8rem]`}
                             // w={`${isSmallScreen ? '5rem' : '50%'}`}
                             style={{
                               alignSelf: 'flex-end',
@@ -316,6 +327,7 @@ const MakeNewCoursePage = ({
             </Flex>
           </Card>
         </div>
+        <GlobalFooter />
       </main>
     </>
   )
