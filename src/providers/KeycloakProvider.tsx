@@ -62,6 +62,12 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
       if (typeof window !== 'undefined') {
         let redirectPath = sessionStorage.getItem('auth_redirect_path') || '/';
         if (!isValidRedirectPath(redirectPath)) redirectPath = '/';
+        
+        // If the user was on the root path, redirect to /chat after login
+        if (redirectPath === '/') {
+          redirectPath = '/chat';
+        }
+        
         sessionStorage.removeItem('auth_redirect_path');
         window.location.replace(redirectPath);
       }
