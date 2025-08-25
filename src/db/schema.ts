@@ -82,6 +82,19 @@ export const documentsInProgress = pgTable('documents_in_progress', {
   beam_task_id: text('beam_task_id'),
 })
 
+// File uploads table - dedicated table for tracking file uploads
+export const fileUploads = pgTable('file_uploads', {
+  id: uuid('id').defaultRandom().notNull().primaryKey(),
+  conversation_id: uuid('conversation_id').notNull(),
+  base_url: text('base_url'),
+  contexts: jsonb('contexts'),
+  course_name: text('course_name'),
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  readable_filename: text('readable_filename'),
+  s3_path: text('s3_path'),
+  url: text('url'),
+})
+
 // n8n_workflows table
 export const n8nWorkflows = pgTable('n8n_workflows', {
   latest_workflow_id: serial('latest_workflow_id').notNull(),
@@ -145,7 +158,7 @@ export const conversations = pgTable('conversations', {
   folder_id: uuid('folder_id'),
 })
 
-// Documents table
+// Documents table 
 export const documents = pgTable('documents', {
   id: serial('id').primaryKey(),
   s3_path: text('s3_path'),
@@ -459,6 +472,7 @@ export const conversationsRelations = relations(
       fields: [conversations.folder_id],
       references: [folders.id],
     }),
+    fileUploads: many(fileUploads),
   }),
 )
 
@@ -503,6 +517,13 @@ export const documentsDocGroupsRelations = relations(
 
 export const foldersRelations = relations(folders, ({ many }) => ({
   conversations: many(conversations),
+}))
+
+export const fileUploadsRelations = relations(fileUploads, ({ one }) => ({
+  conversation: one(conversations, {
+    fields: [fileUploads.conversation_id],
+    references: [conversations.id],
+  }),
 }))
 
 // Export types
@@ -583,3 +604,7 @@ export type NewPubmedDailyUpdate = typeof pubmedDailyUpdate.$inferInsert
 // export types for keycloak users
 export type KeycloakUsers = typeof keycloakUsers.$inferSelect
 export type NewKeycloakUsers = typeof keycloakUsers.$inferInsert
+
+// export types for file uploads
+export type FileUploads = typeof fileUploads.$inferSelect
+export type NewFileUploads = typeof fileUploads.$inferInsert

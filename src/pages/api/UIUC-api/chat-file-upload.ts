@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { db, conversations as conversationsTable, documentsInProgress } from '~/db/dbClient'
+import { db, conversations as conversationsTable, fileUploads } from '~/db/dbClient'
 import { v4 as uuidv4 } from 'uuid'
 import { getBackendUrl } from '~/utils/apiUtils'
 import { eq } from 'drizzle-orm'
@@ -9,7 +9,6 @@ type ChatFileUploadResponse = {
   fileUploadId?: string
   message?: string
   error?: string
-  beam_task_id?: string
   details?: string
   chunks_created?: number
 }
@@ -71,25 +70,26 @@ const handler = async (
       }
     }
 
-    // 2. Create documents_in_progress record instead of file_uploads
+    // 2. Create file_uploads record for chat file tracking
     const fileUploadId = uuidv4()
     try {
-      await db.insert(documentsInProgress).values({
+      await db.insert(fileUploads).values({
+        id: fileUploadId,
+        conversation_id: conversationId,
         s3_path: s3Key,
         readable_filename: fileName,
         course_name: courseName,
         contexts: {
-          status: 'processing',
-          conversation_id: conversationId,
+          status: 'processing_for_chat',
           user_id: user_id,
           created_at: new Date().toISOString(),
         },
         created_at: new Date(),
       })
     } catch (uploadError) {
-      console.error(' Failed to create document_in_progress record:', uploadError)
+      console.error(' Failed to create file_uploads record:', uploadError)
       return res.status(500).json({
-        error: ' Failed to create document record',
+        error: ' Failed to create file upload record',
       })
     }
 
@@ -149,21 +149,20 @@ const handler = async (
       })
     }
 
-    // 4. Update documents_in_progress with success and task_id
+    // 4. Update file_uploads with completion status
     try {
       await db
-        .update(documentsInProgress)
+        .update(fileUploads)
         .set({
           contexts: {
             status: 'completed',
             chunks_created: responseBody.chunks_created || 0,
             completed_at: new Date().toISOString(),
-            beam_task_id: responseBody.beam_task_id,
           },
         })
-        .where(eq(documentsInProgress.s3_path, s3Key))
+        .where(eq(fileUploads.id, fileUploadId))
     } catch (updateError) {
-      console.error('Failed to update document status:', updateError)
+      console.error('Failed to update file upload status:', updateError)
       // Continue anyway since the main processing was successful
     }
 
