@@ -7,6 +7,8 @@ import { type ChatBody, type Conversation, type Message, type UIUCTool } from '@
 import { convertConversationToCoreMessagesWithoutSystem } from '~/utils/apiUtils'
 import { determineAndValidateModel } from '~/utils/streamProcessing'
 import { fetchTools } from '~/utils/functionCalling/handleFunctionCalling'
+import { decryptKeyIfNeeded } from '~/utils/crypto'
+import { OpenAIModelID } from '~/utils/modelProviders/types/openai'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -90,9 +92,38 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Only support OpenAI models for the agent for now
+    if (!(Object.values(OpenAIModelID) as string[]).includes(activeModel.id)) {
+      return new Response(
+        `event: tool\ndata: ${JSON.stringify({ type: 'tool-error', name: 'agent', error: 'Agent currently supports OpenAI models only.' })}\n\n`,
+        {
+          headers: {
+            'Content-Type': 'text/event-stream; charset=utf-8',
+            'Cache-Control': 'no-cache, no-transform',
+            Connection: 'keep-alive',
+          },
+        },
+      )
+    }
+
+    let apiKey = (llmProviders?.OpenAI?.apiKey as string) || (process.env.VLADS_OPENAI_KEY as string)
+    if (!apiKey) {
+      return new Response(
+        `event: tool\ndata: ${JSON.stringify({ type: 'tool-error', name: 'agent', error: 'No OpenAI API key configured for agent.' })}\n\n`,
+        {
+          headers: {
+            'Content-Type': 'text/event-stream; charset=utf-8',
+            'Cache-Control': 'no-cache, no-transform',
+            Connection: 'keep-alive',
+          },
+        },
+      )
+    }
+    apiKey = await decryptKeyIfNeeded(apiKey)
+
     // Prepare model client
     const openAIClient = createOpenAI({
-      apiKey: (llmProviders?.OpenAI?.apiKey as string) || process.env.VLADS_OPENAI_KEY!,
+      apiKey,
       baseURL: 'https://api.openai.com/v1',
       compatibility: 'strict',
     })
