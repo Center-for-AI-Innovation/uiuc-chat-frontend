@@ -596,6 +596,21 @@ export const Chat = memo(
                         }
                       }
                     }
+                    // Additionally support Vercel AI DataStream short channel lines inside the frame (0:, e:, d:)
+                    const lines = frame.split('\n')
+                    for (const ln of lines) {
+                      const trimmed = ln.trim()
+                      if (/^\d+:/.test(trimmed)) {
+                        const content = trimmed.slice(trimmed.indexOf(':') + 1).trim()
+                        try {
+                          const parsed = JSON.parse(content)
+                          if (typeof parsed === 'string') appendAssistantChunk(parsed)
+                        } catch {
+                          const unquoted = content.replace(/^\"|\"$/g, '')
+                          if (unquoted) appendAssistantChunk(unquoted)
+                        }
+                      }
+                    }
                   }
                 }
               }
