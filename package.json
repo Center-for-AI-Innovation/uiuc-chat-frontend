@@ -5,7 +5,7 @@
   "scripts": {
     "build": "node scripts/update-keycloak-urls.js && next build",
     "build:self-hosted": "next build",
-    "bd": "infisical run --env=dev -- next build",
+    "bd": "sh -c 'command -v infisical >/dev/null 2>&1 && infisical run --env=dev -- next build || next build'",
     "dev": "infisical run --env=dev -- next dev",
     "lint": "next lint",
     "start": "infisical run --env=dev -- next start",
