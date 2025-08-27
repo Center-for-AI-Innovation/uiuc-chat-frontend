@@ -7,7 +7,6 @@ import {
   type ChatBody,
   type Content,
   type Conversation,
-  type ImageBody,
   type Message,
   type UIUCTool,
 } from '@/types/chat'
@@ -23,6 +22,7 @@ import {
   handleFunctionCall,
   handleToolCall,
 } from '~/utils/functionCalling/handleFunctionCalling'
+import { fetchImageDescription } from '~/pages/api/UIUC-api/fetchImageDescription'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -85,65 +85,51 @@ export async function POST(req: NextRequest, res: NextResponse) {
             ? (lastMessage.content as Content[]).some((c) => c.type === 'image_url')
             : false
 
+          let imageDescription = ''
+          let imageUrls: string[] = []
+          let searchQuery = constructSearchQuery(conversation.messages)
+
           // 1) Image → text
           if (hasImages) {
             emitEvent({ type: 'img2text-start' })
             const controllerAbort = new AbortController()
             try {
-              const lastMessageContents = lastMessage.content
-              const contentArray: Content[] = Array.isArray(lastMessageContents)
-                ? (lastMessageContents as Content[])
-                : [
-                    {
-                      type: 'text',
-                      text: (lastMessageContents as string) || '',
-                    },
-                  ]
-
-              // Get the first image URL for the event
-              const firstImageUrl = contentArray.find(c => c.type === 'image_url')?.image_url?.url || ''
-
-              const imageBody: ImageBody = {
-                contentArray,
-                llmProviders: llmProviders!,
-                model: conversation.model,
+              // Collect image URLs
+              if (Array.isArray(lastMessage.content)) {
+                imageUrls = (lastMessage.content as Content[])
+                  .filter((c) => c.type === 'image_url' && c.image_url?.url)
+                  .map((c) => c.image_url!.url)
               }
 
-              const resp = await fetch(`${getBaseUrl()}/api/imageDescription`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(imageBody),
-                signal: controllerAbort.signal,
+              // Fetch image description
+              if (llmProviders) {
+                imageDescription = await fetchImageDescription(
+                  course_name,
+                  conversation,
+                  llmProviders,
+                  controllerAbort,
+                )
+              }
+
+              // Update search query to include image description
+              if (imageDescription) {
+                searchQuery += ` Image description: ${imageDescription}`
+              }
+              
+              emitEvent({ 
+                type: 'img2text-done', 
+                description: imageDescription,
+                imageUrl: imageUrls[0] || ''
               })
-              if (resp.ok) {
-                const data = await resp.json()
-                const imgDesc =
-                  data.choices?.[0]?.message?.content ||
-                  'Error: no image description available...'
-                if (Array.isArray(lastMessage.content)) {
-                  ;(lastMessage.content as Content[]).push({
-                    type: 'text',
-                    text: `Image description: ${imgDesc}`,
-                  })
-                }
-                emitEvent({ 
-                  type: 'img2text-done', 
-                  description: imgDesc,
-                  imageUrl: firstImageUrl 
-                })
-              } else {
-                emitEvent({ type: 'img2text-error' })
-              }
             } catch (error) {
               emitEvent({ type: 'img2text-error' })
-              controllerAbort.abort()
+              console.error('Image description error:', error)
             }
           }
 
           // 2) Retrieval
           emitEvent({ type: 'retrieval-start' })
           try {
-            const searchQuery = constructSearchQuery(conversation.messages)
             const contexts = await handleContextSearch(
               lastMessage,
               course_name,
@@ -151,6 +137,8 @@ export async function POST(req: NextRequest, res: NextResponse) {
               searchQuery,
               enabledDocumentGroups,
             )
+            
+            // The contexts are already attached to lastMessage by handleContextSearch
             emitEvent({
               type: 'retrieval-done',
               count: contexts.length,
@@ -158,70 +146,82 @@ export async function POST(req: NextRequest, res: NextResponse) {
             })
           } catch (error) {
             emitEvent({ type: 'retrieval-error' })
+            console.error('Retrieval error:', error)
           }
 
           // 3) Tool routing + execution (n8n)
-          emitEvent({ type: 'routing-start' })
           let selectedTools: UIUCTool[] = []
-          try {
-            const allTools = (await fetchTools(
-              course_name!,
-              '',
-              20,
-              'true',
-              false,
-              getBaseUrl(),
-            )) as UIUCTool[]
-            // Filter tools if enabledTools passed
-            const filtered = body.enabledTools && body.enabledTools.length > 0
-              ? allTools.filter((t) => body.enabledTools!.includes(t.name))
-              : allTools
+          const allTools = (await fetchTools(
+            course_name!,
+            '',
+            20,
+            'true',
+            false,
+            getBaseUrl(),
+          )) as UIUCTool[]
+          
+          // Filter tools if enabledTools passed
+          const availableTools = body.enabledTools && body.enabledTools.length > 0
+            ? allTools.filter((t) => body.enabledTools!.includes(t.name))
+            : allTools
 
-            // Collect image urls if any
-            const imageUrls: string[] = Array.isArray(lastMessage.content)
-              ? (lastMessage.content as Content[])
-                  .filter((c) => c.type === 'image_url' && c.image_url?.url)
-                  .map((c) => c.image_url!.url)
-              : []
-
-            // Ask OpenAI function calling to pick tools
-            selectedTools = await handleFunctionCall(
-              lastMessage,
-              filtered,
-              imageUrls,
-              '',
-              conversation,
-              body.key,
-              getBaseUrl(),
-            )
-            emitEvent({
-              type: 'routing-done',
-              tools: selectedTools.map((t) => ({
-                name: t.name,
-                readableName: t.readableName,
-                invocationId: t.invocationId,
-                aiGeneratedArgumentValues: t.aiGeneratedArgumentValues,
-              })),
-            })
-          } catch (error) {
-            emitEvent({ type: 'routing-error' })
-          }
-
-          if (selectedTools.length > 0) {
-            emitEvent({ type: 'tools-running' })
+          if (availableTools.length > 0) {
+            emitEvent({ type: 'routing-start' })
             try {
-              await handleToolCall(selectedTools, conversation, course_name!, getBaseUrl())
-              const updatedLast = conversation.messages[conversation.messages.length - 1] as Message
-              emitEvent({ type: 'tools-done', tools: updatedLast?.tools || [] })
+              // Ask OpenAI function calling to pick tools
+              selectedTools = await handleFunctionCall(
+                lastMessage,
+                availableTools,
+                imageUrls,
+                imageDescription,
+                conversation,
+                body.key,
+                getBaseUrl(),
+              )
+              
+              emitEvent({
+                type: 'routing-done',
+                tools: selectedTools.map((t) => ({
+                  name: t.name,
+                  readableName: t.readableName,
+                  invocationId: t.invocationId,
+                  aiGeneratedArgumentValues: t.aiGeneratedArgumentValues,
+                })),
+              })
             } catch (error) {
-              emitEvent({ type: 'tools-error' })
+              emitEvent({ type: 'routing-error' })
+              console.error('Tool routing error:', error)
+            }
+
+            if (selectedTools.length > 0) {
+              emitEvent({ type: 'tools-running' })
+              try {
+                await handleToolCall(selectedTools, conversation, course_name!, getBaseUrl())
+                const updatedLast = conversation.messages[conversation.messages.length - 1] as Message
+                emitEvent({ type: 'tools-done', tools: updatedLast?.tools || [] })
+              } catch (error) {
+                emitEvent({ type: 'tools-error' })
+                console.error('Tool execution error:', error)
+              }
             }
           }
 
           // 4) Build prompt and stream final answer
-          // Ensure the conversation has the updated message with contexts
+          // Create a modified conversation for buildPrompt that includes image description
+          const conversationForPrompt = JSON.parse(JSON.stringify(conversation))
+          const lastMessageForPrompt = conversationForPrompt.messages[conversationForPrompt.messages.length - 1]
+          
+          // Add image description to the prompt conversation (not the original)
+          if (imageDescription && Array.isArray(lastMessageForPrompt.content)) {
+            lastMessageForPrompt.content.push({
+              type: 'text',
+              text: `Image description: ${imageDescription}`,
+            })
+          }
+
+          // Build prompt with the modified conversation
           const preparedConversation = await buildPrompt({
-            conversation,
+            conversation: conversationForPrompt,
             projectName: course_name!,
             courseMetadata,
             mode: 'chat',
@@ -262,7 +262,7 @@ export async function POST(req: NextRequest, res: NextResponse) {
             emitText((result?.text as string) || '')
           }
         } catch (e) {
-          // On error, close stream
+          console.error('Error in agent processing:', e)
         } finally {
           controller.close()
         }
@@ -277,7 +277,6 @@ export async function POST(req: NextRequest, res: NextResponse) {
       },
     })
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Error in /api/agent/chat:', error)
     return new Response(
       JSON.stringify({
@@ -294,4 +293,3 @@ export async function POST(req: NextRequest, res: NextResponse) {
     )
   }
 }
-
