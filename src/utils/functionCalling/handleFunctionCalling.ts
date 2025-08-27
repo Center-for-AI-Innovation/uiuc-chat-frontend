@@ -226,7 +226,7 @@ export async function handleToolsServer(
   return selectedConversation
 }
 
-const callN8nFunction = async (
+export const callN8nFunction = async (
   tool: UIUCTool,
   projectName: string,
   n8n_api_key: string | undefined,

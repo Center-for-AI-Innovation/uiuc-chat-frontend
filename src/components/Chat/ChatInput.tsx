@@ -96,6 +96,7 @@ export const ChatInput = ({
       prompts,
       showModelSettings,
       llmProviders,
+      agentMode,
     },
 
     dispatch: homeDispatch,
@@ -872,6 +873,18 @@ export const ChatInput = ({
               }
             }}
           />
+
+          {/* Agent pill toggle */}
+          <button
+            className={`absolute bottom-[2.25rem] left-14 rounded-full px-3 py-1 text-xs font-semibold transition-opacity ${agentMode ? 'bg-[--primary] text-[--background]' : 'bg-white/30 text-[--foreground]'} opacity-70 hover:opacity-100`}
+            onClick={() =>
+              homeDispatch({ field: 'agentMode', value: !agentMode })
+            }
+            style={{ pointerEvents: 'auto' }}
+            title="Toggle Agent Mode"
+          >
+            agent
+          </button>
 
           {showPluginSelect && (
             <div

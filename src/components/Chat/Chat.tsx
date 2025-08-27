@@ -158,6 +158,7 @@ export const Chat = memo(
         tools,
         llmProviders,
         selectedModel,
+        agentMode,
       },
       handleUpdateConversation,
       handleFeedbackUpdate,
@@ -431,6 +432,161 @@ export const Chat = memo(
 
           let imgDesc = ''
           let imageUrls: string[] = []
+
+          // Agent Mode: bypass sequential pipeline and call agent endpoint
+          if (agentMode) {
+            try {
+              const agentBody = {
+                conversation: updatedConversation,
+                course_name: courseName,
+                stream: true,
+                courseMetadata: courseMetadata,
+                llmProviders: llmProviders,
+                model: selectedConversation.model,
+                enabledDocumentGroups,
+                enabledTools: tools,
+              }
+
+              const response = await fetch('/api/agent/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(agentBody),
+              })
+
+              if (!response.ok || !response.body) {
+                throw new Error('Agent route failed to respond')
+              }
+
+              const reader = response.body.getReader()
+              const decoder = new TextDecoder()
+              let isFirstChunk = true
+              let finalAssistant = ''
+              let buffer = ''
+
+              const appendAssistantChunk = (delta: string) => {
+                if (!delta) return
+                if (isFirstChunk) {
+                  isFirstChunk = false
+                  const updatedMessages: Message[] = [
+                    ...updatedConversation.messages,
+                    {
+                      id: uuidv4(),
+                      role: 'assistant',
+                      content: delta,
+                      contexts: message.contexts,
+                      feedback: message.feedback,
+                      wasQueryRewritten: message.wasQueryRewritten,
+                      queryRewriteText: message.queryRewriteText,
+                    },
+                  ]
+                  finalAssistant += delta
+                  updatedConversation = { ...updatedConversation, messages: updatedMessages }
+                  homeDispatch({ field: 'selectedConversation', value: updatedConversation })
+                } else {
+                  const lastIndex = updatedConversation.messages.length - 1
+                  finalAssistant += delta
+                  const updatedMessages = updatedConversation.messages.map((m, i) =>
+                    i === lastIndex ? { ...m, content: finalAssistant } : m,
+                  )
+                  updatedConversation = { ...updatedConversation, messages: updatedMessages }
+                  homeDispatch({ field: 'selectedConversation', value: updatedConversation })
+                }
+              }
+
+              const processToolEvent = (payload: any) => {
+                const lastIndex = updatedConversation.messages.length - 1
+                const lastUser = updatedConversation.messages[lastIndex - (isFirstChunk ? 0 : 1)]
+                if (!lastUser || lastUser.role !== 'user') return
+                if (!lastUser.tools) lastUser.tools = []
+
+                if (payload.type === 'tool-start') {
+                  homeDispatch({ field: 'isRouting', value: true })
+                  if (payload.name === 'retrieve_documents') {
+                    homeDispatch({ field: 'isRetrievalLoading', value: true })
+                  }
+                  lastUser.tools.push({
+                    id: payload.name,
+                    name: payload.name,
+                    readableName: payload.name,
+                    description: '',
+                    aiGeneratedArgumentValues: payload.args,
+                  } as any)
+                } else if (payload.type === 'tool-end') {
+                  homeDispatch({ field: 'isRouting', value: false })
+                  const t = lastUser.tools.find((t) => t.name === payload.name)
+                  if (t) t.output = payload.output
+                  if (payload.name === 'retrieve_documents' && payload.output?.contexts) {
+                    lastUser.contexts = payload.output.contexts
+                    homeDispatch({ field: 'isRetrievalLoading', value: false })
+                  }
+                } else if (payload.type === 'tool-error') {
+                  homeDispatch({ field: 'isRouting', value: false })
+                  const t = lastUser.tools.find((t) => t.name === payload.name)
+                  if (t) t.error = payload.error
+                  if (payload.name === 'retrieve_documents') {
+                    homeDispatch({ field: 'isRetrievalLoading', value: false })
+                  }
+                }
+              }
+
+              const toolEventPrefix = 'event: tool\n'
+              while (true) {
+                const { done, value } = await reader.read()
+                if (done) break
+                buffer += decoder.decode(value, { stream: true })
+
+                // Parse frames separated by double newlines (SSE framing)
+                let splitIndex
+                while ((splitIndex = buffer.indexOf('\n\n')) !== -1) {
+                  const frame = buffer.slice(0, splitIndex)
+                  buffer = buffer.slice(splitIndex + 2)
+
+                  if (frame.startsWith(toolEventPrefix)) {
+                    const dataLine = frame.split('\n').find((l) => l.startsWith('data: '))
+                    if (!dataLine) continue
+                    try {
+                      const payload = JSON.parse(dataLine.slice(6))
+                      processToolEvent(payload)
+                    } catch (e) {
+                      console.error('Failed to parse tool event:', e)
+                    }
+                  } else if (frame.startsWith('data: ')) {
+                    // Text stream from AI SDK toAIStream: JSON payload
+                    const jsonText = frame.slice(6)
+                    if (jsonText === '[DONE]') continue
+                    try {
+                      const payload = JSON.parse(jsonText)
+                      if (payload.type === 'text-delta' && typeof payload.text === 'string') {
+                        appendAssistantChunk(payload.text)
+                      } else if (payload.type === 'message' && typeof payload.data?.content === 'string') {
+                        appendAssistantChunk(payload.data.content)
+                      }
+                    } catch {
+                      // If not JSON, ignore
+                    }
+                  } else {
+                    // Fallback: treat as raw text delta
+                    appendAssistantChunk(frame)
+                  }
+                }
+              }
+
+              handleUpdateConversation(updatedConversation, {
+                key: 'messages',
+                value: updatedConversation.messages,
+              })
+              updateConversationMutation.mutate(updatedConversation)
+              homeDispatch({ field: 'messageIsStreaming', value: false })
+              homeDispatch({ field: 'loading', value: false })
+              return
+            } catch (e) {
+              console.error('Agent mode error:', e)
+              homeDispatch({ field: 'messageIsStreaming', value: false })
+              homeDispatch({ field: 'loading', value: false })
+              errorToast({ title: 'Agent error', message: (e as Error).message })
+              return
+            }
+          }
 
           // Action 1: Image to Text Conversion
           if (Array.isArray(message.content)) {
