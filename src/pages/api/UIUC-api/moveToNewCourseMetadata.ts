@@ -2,13 +2,14 @@
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { type NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
-import { redisClient } from '~/utils/redisClient'
+import { ensureRedisConnected } from '~/utils/redisClient'
 // export const runtime = 'edge'
 
 export default async function handler(req: NextRequest, res: NextResponse) {
   try {
     // Fetch all keys from the KV store
     // Filter out keys that end with '_metadata'
+    const redisClient = await ensureRedisConnected()
     const oldMetadataKeys = await redisClient.keys('*_metadata')
     console.log('Starting migration for keys: ', oldMetadataKeys.length)
 

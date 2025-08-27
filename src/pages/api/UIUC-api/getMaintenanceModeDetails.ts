@@ -1,5 +1,5 @@
 import { type NextApiRequest, type NextApiResponse } from 'next'
-import { redisClient } from '~/utils/redisClient'
+import { ensureRedisConnected } from '~/utils/redisClient'
 
 export default async function handler(
     req: NextApiRequest,
@@ -8,6 +8,7 @@ export default async function handler(
     const startTime = Date.now()
     try {
         // const redisStartTime = Date.now()
+        const redisClient = await ensureRedisConnected()
         const [titleText, bodyText] = await Promise.all([
             // redisClient.get('maintenance-mode'),
             redisClient.get('maintenance-title-text'),

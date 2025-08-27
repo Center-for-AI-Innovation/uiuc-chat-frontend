@@ -1,7 +1,7 @@
 import { kv } from '@vercel/kv'
 import { NextResponse } from 'next/server'
 import { type CourseMetadata } from '~/types/courseMetadata'
-import { redisClient } from '~/utils/redisClient'
+import { ensureRedisConnected } from '~/utils/redisClient'
 
 export const runtime = 'edge'
 
@@ -15,6 +15,7 @@ const removeUserFromCourse = async (req: any, res: any) => {
   console.log('removeUserFromCourse: email_to_remove', email_to_remove)
 
   try {
+    const redisClient = await ensureRedisConnected();
     const courseMetadataString = await redisClient.get(
       course_name + '_metadata',
     )

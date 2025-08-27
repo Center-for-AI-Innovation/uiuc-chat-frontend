@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { redisClient } from '~/utils/redisClient'
+import { ensureRedisConnected } from '~/utils/redisClient'
 
 export default async function handler(
   req: NextApiRequest,
@@ -8,6 +8,7 @@ export default async function handler(
   const course_name = req.query.course_name as string
 
   try {
+    const redisClient = await ensureRedisConnected()
     const courseExists = await redisClient.hExists(
       'course_metadatas',
       course_name,

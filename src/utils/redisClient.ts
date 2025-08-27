@@ -1,17 +1,24 @@
 import { createClient } from 'redis'
 
-// Create a Redis client
-export const redisClient = createClient({
+const redisClient = createClient({
   url: process.env.REDIS_URL!,
-  // password: process.env.REDIS_PASSWORD,
+  socket: {
+    reconnectStrategy: false, // stop retry loop
+  },
 })
 
-// Connect to the Redis server
-redisClient
-  .connect()
-  .then(() => {
-    // console.log('Connected to Redis')
-  })
-  .catch((err) => {
-    console.error('Redis connection error:', err)
-  })
+// log errors but not infinite spam
+let logged = false
+redisClient.on('error', (err) => {
+  if (!logged) {
+    console.error('Redis client error:', err.message)
+    logged = true
+  }
+})
+
+export async function ensureRedisConnected() {
+  if (!redisClient.isOpen) {
+    await redisClient.connect()
+  }
+  return redisClient
+}

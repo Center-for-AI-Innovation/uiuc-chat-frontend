@@ -1,6 +1,6 @@
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { type NextRequest, NextResponse } from 'next/server'
-import { redisClient } from '~/utils/redisClient'
+import { ensureRedisConnected } from '~/utils/redisClient'
 
 export const runtime = 'edge'
 
@@ -25,6 +25,7 @@ export default async function handler(req: NextRequest) {
 
     try {
       // FYI Redis itself doesn't provide direct commands to manipulate JSON data within a hash field, so this workaround is necessary.
+      const redisClient = await ensureRedisConnected()
       const course_metadata_string = await redisClient.hGet(
         'course_metadatas',
         course_name,

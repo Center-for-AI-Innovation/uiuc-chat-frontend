@@ -1,12 +1,13 @@
 // ~/src/pages/api/UIUC-api/getCourseMetadata.ts
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { type CourseMetadata } from '~/types/courseMetadata'
-import { redisClient } from '~/utils/redisClient'
+import { ensureRedisConnected } from '~/utils/redisClient'
 
 export const getCourseMetadata = async (
   course_name: string,
 ): Promise<CourseMetadata | null> => {
   try {
+    const redisClient = await ensureRedisConnected()
     const rawMetadata = await redisClient.hGet('course_metadatas', course_name)
     const course_metadata: CourseMetadata = rawMetadata
       ? JSON.parse(rawMetadata)

@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { type CourseMetadata } from '~/types/courseMetadata'
-import { redisClient } from '~/utils/redisClient'
+import { ensureRedisConnected } from '~/utils/redisClient'
 
 export default async function handler(
   req: NextApiRequest,
@@ -10,6 +10,7 @@ export default async function handler(
   const is_private = req.query.is_private === 'true'
 
   try {
+    const redisClient = await ensureRedisConnected()
     const course_metadata_string = await redisClient.hGet(
       'course_metadatas',
       course_name,
