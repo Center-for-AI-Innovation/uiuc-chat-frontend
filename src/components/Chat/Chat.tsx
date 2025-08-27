@@ -529,88 +529,112 @@ export const Chat = memo(
                 }
               }
 
-              const toolEventPrefix = 'event: tool\n'
+              // Robust parser: handle both SSE frames and Vercel AI DataStream channel lines (0:, d:, e:, f:, etc.)
+              const toolEventPrefix = 'event: tool'
+              let sseEventBuffer: string[] = []
               while (true) {
                 const { done, value } = await reader.read()
                 if (done) break
                 buffer += decoder.decode(value, { stream: true })
 
-                // Parse frames separated by double newlines (SSE framing)
-                let splitIndex
-                while ((splitIndex = buffer.indexOf('\n\n')) !== -1) {
-                  const frame = buffer.slice(0, splitIndex)
-                  buffer = buffer.slice(splitIndex + 2)
+                // Process line-by-line
+                let newlineIndex
+                while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
+                  const line = buffer.slice(0, newlineIndex)
+                  buffer = buffer.slice(newlineIndex + 1)
 
-                  if (frame.startsWith(toolEventPrefix)) {
-                    const dataLine = frame.split('\n').find((l) => l.startsWith('data: '))
-                    if (!dataLine) continue
-                    try {
-                      const payload = JSON.parse(dataLine.slice(6))
-                      processToolEvent(payload)
-                    } catch (e) {
-                      console.error('Failed to parse tool event:', e)
-                    }
-                  } else if (frame.startsWith('data: ')) {
-                    // Text stream from AI SDK toAIStream: JSON payload
-                    const jsonText = frame.slice(6)
-                    if (jsonText === '[DONE]') continue
-                    try {
-                      const payload = JSON.parse(jsonText)
-                      if (payload.type === 'text-delta' && typeof payload.text === 'string') {
-                        appendAssistantChunk(payload.text)
-                      } else if (typeof payload.text === 'string') {
-                        appendAssistantChunk(payload.text)
-                      } else if (payload.type === 'message') {
-                        const content = payload?.data?.content || payload?.message?.content || ''
-                        if (typeof content === 'string' && content.length > 0) {
-                          appendAssistantChunk(content)
-                        }
-                      }
-                    } catch {
-                      // If not JSON, ignore
-                    }
-                  } else {
-                    // Generic event frame. Try to extract data: payload and parse
-                    const dataLine = frame.split('\n').find((l) => l.startsWith('data: '))
-                    if (dataLine) {
-                      const jsonText = dataLine.slice(6)
-                      if (jsonText !== '[DONE]') {
-                        try {
-                          const payload = JSON.parse(jsonText)
-                          if (payload?.type === 'error' && (payload?.error?.message || payload?.message)) {
-                            const msg = payload?.error?.message || payload?.message
-                            appendAssistantChunk(`Error: ${msg}`)
-                          } else if (typeof payload?.text === 'string') {
-                            appendAssistantChunk(payload.text)
-                          } else if (typeof payload?.data?.text === 'string') {
-                            appendAssistantChunk(payload.data.text)
-                          } else if (typeof payload?.data?.content === 'string') {
-                            appendAssistantChunk(payload.data.content)
-                          } else if (typeof payload?.data?.textDelta === 'string') {
-                            appendAssistantChunk(payload.data.textDelta)
-                          } else if (typeof payload?.delta?.text === 'string') {
-                            appendAssistantChunk(payload.delta.text)
+                  const trimmed = line.trimEnd()
+
+                  // Accumulate SSE multi-line events (terminated by blank line)
+                  if (trimmed.length === 0) {
+                    // End of an SSE event block
+                    if (sseEventBuffer.length > 0) {
+                      const block = sseEventBuffer.join('\n')
+                      sseEventBuffer = []
+                      if (block.startsWith(toolEventPrefix)) {
+                        const dataLine = block
+                          .split('\n')
+                          .find((l) => l.startsWith('data: '))
+                        if (dataLine) {
+                          try {
+                            const payload = JSON.parse(dataLine.slice(6))
+                            processToolEvent(payload)
+                          } catch (e) {
+                            console.error('Failed to parse tool event:', e)
                           }
-                        } catch {
-                          // ignore non-JSON
+                        }
+                      } else {
+                        const dataLine = block
+                          .split('\n')
+                          .find((l) => l.startsWith('data: '))
+                        if (dataLine) {
+                          const jsonText = dataLine.slice(6)
+                          if (jsonText !== '[DONE]') {
+                            try {
+                              const payload = JSON.parse(jsonText)
+                              if (payload.type === 'text-delta' && typeof payload.text === 'string') {
+                                appendAssistantChunk(payload.text)
+                              } else if (typeof payload.text === 'string') {
+                                appendAssistantChunk(payload.text)
+                              } else if (payload.type === 'message') {
+                                const content = payload?.data?.content || payload?.message?.content || ''
+                                if (typeof content === 'string' && content.length > 0) {
+                                  appendAssistantChunk(content)
+                                }
+                              }
+                            } catch {
+                              // ignore
+                            }
+                          }
                         }
                       }
                     }
-                    // Additionally support Vercel AI DataStream short channel lines inside the frame (0:, e:, d:)
-                    const lines = frame.split('\n')
-                    for (const ln of lines) {
-                      const trimmed = ln.trim()
-                      if (/^\d+:/.test(trimmed)) {
-                        const content = trimmed.slice(trimmed.indexOf(':') + 1).trim()
-                        try {
-                          const parsed = JSON.parse(content)
-                          if (typeof parsed === 'string') appendAssistantChunk(parsed)
-                        } catch {
-                          const unquoted = content.replace(/^\"|\"$/g, '')
-                          if (unquoted) appendAssistantChunk(unquoted)
-                        }
+                    continue
+                  }
+
+                  // Start or continue an SSE event block
+                  if (trimmed.startsWith('event: ') || trimmed.startsWith('data: ') || sseEventBuffer.length > 0) {
+                    sseEventBuffer.push(trimmed)
+                    continue
+                  }
+
+                  // Handle Vercel AI DataStream channel lines
+                  // Format: 0:"text", d:{...}, e:{...}, f:{...}, etc.
+                  const channelMatch = trimmed.match(/^([0-9a-zA-Z]+):\s*(.*)$/)
+                  if (channelMatch) {
+                    const chan = channelMatch[1]
+                    const payloadStr = channelMatch[2] || ''
+
+                    if (chan === '0') {
+                      // text chunk
+                      const contentRaw = payloadStr.trim()
+                      try {
+                        const parsed = JSON.parse(contentRaw)
+                        if (typeof parsed === 'string') appendAssistantChunk(parsed)
+                      } catch {
+                        const unquoted = contentRaw.replace(/^\"|\"$/g, '')
+                        if (unquoted) appendAssistantChunk(unquoted)
                       }
+                    } else if (chan === 'e') {
+                      // error
+                      try {
+                        const err = JSON.parse(payloadStr)
+                        const msg = err?.error?.message || err?.message
+                        if (msg) appendAssistantChunk(`Error: ${msg}`)
+                      } catch {
+                        // ignore
+                      }
+                    } else if (chan === 'd') {
+                      // done/summary; nothing to append
+                    } else {
+                      // other channels like f (messageId) or tool-call ids — ignore
                     }
+                    continue
+                  }
+
+                  // Fallback: append any stray text
+                  if (trimmed) {
+                    appendAssistantChunk(trimmed)
                   }
                 }
               }

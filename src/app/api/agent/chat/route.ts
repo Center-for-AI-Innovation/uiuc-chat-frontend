@@ -161,7 +161,10 @@ export async function POST(req: NextRequest) {
     } as any)
 
     // Pipe the AI SDK data stream (SSE with data: {...})
-    const dataResponse = result.toDataStreamResponse()
+    const dataResponse = result.toDataStreamResponse({
+      // Ensure we include text-delta short channel lines (0:, e:, d:, f:)
+      // No custom options required; using default framing
+    })
     const reader = (dataResponse as Response).body!.getReader()
 
     ;(async () => {
