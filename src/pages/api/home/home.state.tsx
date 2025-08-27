@@ -40,6 +40,7 @@ export interface HomeInitialState {
   serverSidePluginKeysSet: boolean
   cooldown: number
   showModelSettings: boolean
+  agentMode: boolean
   isImg2TextLoading: boolean
   isRouting: boolean | undefined
   isRunningTool: boolean | undefined
@@ -78,6 +79,7 @@ export const initialState: HomeInitialState = {
   serverSidePluginKeysSet: false,
   cooldown: 0,
   showModelSettings: false,
+  agentMode: false,
   isRouting: undefined,
   isRunningTool: undefined,
   isRetrievalLoading: undefined,

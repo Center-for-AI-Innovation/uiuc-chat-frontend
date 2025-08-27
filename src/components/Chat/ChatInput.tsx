@@ -96,6 +96,7 @@ export const ChatInput = ({
       prompts,
       showModelSettings,
       llmProviders,
+      agentMode,
     },
 
     dispatch: homeDispatch,
@@ -1067,6 +1068,23 @@ export const ChatInput = ({
               '  Please wait while the model is loading...'}
             <IconChevronRight size={isSmallScreen ? '10px' : '13px'} />
           </Text>
+          <div
+            className={`absolute bottom-[.35rem] right-5 -mr-2 flex items-center gap-2 rounded-full px-2 py-1 text-[--message-faded] opacity-60 hover:opacity-100`}
+            style={{ pointerEvents: 'auto' }}
+          >
+            <label htmlFor="agent-mode-toggle" className="text-xs">
+              Agent Mode
+            </label>
+            <input
+              id="agent-mode-toggle"
+              type="checkbox"
+              checked={!!agentMode}
+              onChange={(e) =>
+                homeDispatch({ field: 'agentMode', value: e.target.checked })
+              }
+              style={{ cursor: 'pointer' }}
+            />
+          </div>
           {showModelSettings && (
             <div
               ref={modelSelectContainerRef}

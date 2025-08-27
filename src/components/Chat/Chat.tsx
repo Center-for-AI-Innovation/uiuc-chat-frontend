@@ -158,6 +158,7 @@ export const Chat = memo(
         tools,
         llmProviders,
         selectedModel,
+        agentMode,
       },
       handleUpdateConversation,
       handleFeedbackUpdate,
@@ -428,6 +429,139 @@ export const Chat = memo(
           homeDispatch({ field: 'loading', value: true })
           homeDispatch({ field: 'messageIsStreaming', value: true })
           const controller = new AbortController()
+
+          // If Agent Mode is ON, bypass sequential pipeline and call agent endpoint
+          if (agentMode) {
+            try {
+              const finalChatBody: ChatBody = {
+                conversation: updatedConversation,
+                key: getOpenAIKey(llmProviders, courseMetadata, apiKey),
+                course_name: courseName,
+                stream: true,
+                courseMetadata: courseMetadata,
+                llmProviders: llmProviders,
+                model: selectedConversation.model,
+                skipQueryRewrite: false,
+                mode: 'chat',
+              }
+              const response = await fetch('/api/agent/chat', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  ...finalChatBody,
+                  enabledDocumentGroups,
+                }),
+              })
+
+              if (!response.ok) {
+                const errorData = await response.json()
+                errorToast({
+                  title: errorData.title || 'Agent Error',
+                  message:
+                    errorData.message ||
+                    'There was an error running the agent. Try again.',
+                })
+                homeDispatch({ field: 'loading', value: false })
+                homeDispatch({ field: 'messageIsStreaming', value: false })
+                return
+              }
+
+              // Stream result similarly to existing path
+              let data = response.body
+              if (!data) {
+                homeDispatch({ field: 'loading', value: false })
+                homeDispatch({ field: 'messageIsStreaming', value: false })
+                return
+              }
+              const reader = data.getReader()
+              const decoder = new TextDecoder()
+              let done = false
+              let isFirst = true
+              let text = ''
+              let chunkValue
+              let finalAssistantRespose = ''
+              const citationLinkCache = new Map<number, string>()
+              const stateMachineContext = { state: State.Normal, buffer: '' }
+              while (!done) {
+                const { value, done: doneReading } = await reader.read()
+                done = doneReading
+                chunkValue = decoder.decode(value)
+                text += chunkValue
+                if (isFirst) {
+                  isFirst = false
+                  const updatedMessages: Message[] = [
+                    ...updatedConversation.messages,
+                    {
+                      id: uuidv4(),
+                      role: 'assistant',
+                      content: chunkValue,
+                      contexts: message.contexts,
+                      feedback: message.feedback,
+                      wasQueryRewritten: message.wasQueryRewritten,
+                      queryRewriteText: message.queryRewriteText,
+                    },
+                  ]
+                  finalAssistantRespose += chunkValue
+                  updatedConversation = {
+                    ...updatedConversation,
+                    messages: updatedMessages,
+                  }
+                  homeDispatch({
+                    field: 'selectedConversation',
+                    value: updatedConversation,
+                  })
+                } else {
+                  if (updatedConversation.messages?.length > 0) {
+                    const lastMessageIndex =
+                      updatedConversation.messages?.length - 1
+                    const lastUserMessage =
+                      updatedConversation.messages[lastMessageIndex - 1]
+                    finalAssistantRespose += await processChunkWithStateMachine(
+                      chunkValue,
+                      lastUserMessage,
+                      stateMachineContext,
+                      citationLinkCache,
+                      getCurrentPageName(),
+                    )
+                    const updatedMessages = updatedConversation.messages?.map(
+                      (msg, index) =>
+                        index === lastMessageIndex
+                          ? { ...msg, content: finalAssistantRespose }
+                          : msg,
+                    )
+                    updatedConversation = {
+                      ...updatedConversation,
+                      messages: updatedMessages,
+                    }
+                    homeDispatch({
+                      field: 'selectedConversation',
+                      value: updatedConversation,
+                    })
+                  }
+                }
+              }
+              handleUpdateConversation(updatedConversation, {
+                key: 'messages',
+                value: updatedConversation.messages,
+              })
+              updateConversationMutation.mutate(updatedConversation)
+              homeDispatch({ field: 'loading', value: false })
+              homeDispatch({ field: 'messageIsStreaming', value: false })
+              return
+            } catch (error) {
+              console.error('Agent mode error:', error)
+              homeDispatch({ field: 'loading', value: false })
+              homeDispatch({ field: 'messageIsStreaming', value: false })
+              errorToast({
+                title: 'Agent Error',
+                message:
+                  error instanceof Error ? error.message : 'Unknown error',
+              })
+              return
+            }
+          }
 
           let imgDesc = ''
           let imageUrls: string[] = []
