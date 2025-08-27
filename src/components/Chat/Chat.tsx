@@ -469,7 +469,7 @@ export const Chat = memo(
               }
 
               // Stream result similarly to existing path
-              let data = response.body
+              const data = response.body
               if (!data) {
                 homeDispatch({ field: 'loading', value: false })
                 homeDispatch({ field: 'messageIsStreaming', value: false })
@@ -518,13 +518,18 @@ export const Chat = memo(
                       updatedConversation.messages?.length - 1
                     const lastUserMessage =
                       updatedConversation.messages[lastMessageIndex - 1]
-                    finalAssistantRespose += await processChunkWithStateMachine(
-                      chunkValue,
-                      lastUserMessage,
-                      stateMachineContext,
-                      citationLinkCache,
-                      getCurrentPageName(),
-                    )
+                    if (lastUserMessage) {
+                      finalAssistantRespose +=
+                        await processChunkWithStateMachine(
+                          chunkValue,
+                          lastUserMessage,
+                          stateMachineContext,
+                          citationLinkCache,
+                          getCurrentPageName(),
+                        )
+                    } else {
+                      finalAssistantRespose += chunkValue
+                    }
                     const updatedMessages = updatedConversation.messages?.map(
                       (msg, index) =>
                         index === lastMessageIndex

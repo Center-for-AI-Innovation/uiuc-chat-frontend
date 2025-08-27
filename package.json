@@ -5,7 +5,7 @@
   "scripts": {
     "build": "node scripts/update-keycloak-urls.js && next build",
     "build:self-hosted": "next build",
-    "bd": "sh -c 'command -v infisical >/dev/null 2>&1 && infisical run --env=dev -- next build || next build'",
+    "bd": "infisical run --env=dev -- next build",
     "dev": "infisical run --env=dev -- next dev",
     "lint": "next lint",
     "start": "infisical run --env=dev -- next start",
@@ -72,6 +72,7 @@
     "dayjs": "^1.11.7",
     "dotenv": "^16.3.1",
     "embla-carousel-react": "^7.1.0",
+    "encoding": "^0.1.13",
     "endent": "^2.1.0",
     "eventsource-parser": "^1.0.0",
     "framer-motion": "^11.5.2",

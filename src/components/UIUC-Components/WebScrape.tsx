@@ -139,7 +139,7 @@ export const WebScrape = ({
         }
       }
 
-      let data = null
+      let data: Promise<any> | null = null
       // Make API call based on URL
       if (url.includes('coursera.org')) {
         // TODO: coursera ingest

@@ -71,8 +71,7 @@ export default function MITIngestForm({
           file.name === url ? { ...file, status: 'ingesting' } : file,
         ),
       )
-      let data = null
-      data = downloadMITCourse(url, project_name, 'local_dir') // no await -- do in background
+      const data = downloadMITCourse(url, project_name, 'local_dir') // no await -- do in background
     } else {
       alert('Invalid URL (please include https://)')
     }
