@@ -100,6 +100,9 @@ export async function POST(req: NextRequest, res: NextResponse) {
                     },
                   ]
 
+              // Get the first image URL for the event
+              const firstImageUrl = contentArray.find(c => c.type === 'image_url')?.image_url?.url || ''
+
               const imageBody: ImageBody = {
                 contentArray,
                 llmProviders: llmProviders!,
@@ -123,7 +126,11 @@ export async function POST(req: NextRequest, res: NextResponse) {
                     text: `Image description: ${imgDesc}`,
                   })
                 }
-                emitEvent({ type: 'img2text-done', imgDesc })
+                emitEvent({ 
+                  type: 'img2text-done', 
+                  description: imgDesc,
+                  imageUrl: firstImageUrl 
+                })
               } else {
                 emitEvent({ type: 'img2text-error' })
               }
@@ -137,7 +144,7 @@ export async function POST(req: NextRequest, res: NextResponse) {
           emitEvent({ type: 'retrieval-start' })
           try {
             const searchQuery = constructSearchQuery(conversation.messages)
-            await handleContextSearch(
+            const contexts = await handleContextSearch(
               lastMessage,
               course_name,
               conversation,
@@ -146,7 +153,8 @@ export async function POST(req: NextRequest, res: NextResponse) {
             )
             emitEvent({
               type: 'retrieval-done',
-              count: Array.isArray(lastMessage.contexts) ? lastMessage.contexts.length : 0,
+              count: contexts.length,
+              contexts: contexts
             })
           } catch (error) {
             emitEvent({ type: 'retrieval-error' })
@@ -211,6 +219,7 @@ export async function POST(req: NextRequest, res: NextResponse) {
           }
 
           // 4) Build prompt and stream final answer
+          // Ensure the conversation has the updated message with contexts
           const preparedConversation = await buildPrompt({
             conversation,
             projectName: course_name!,

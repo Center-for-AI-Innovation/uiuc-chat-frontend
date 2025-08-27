@@ -487,15 +487,23 @@ export const Chat = memo(
               while (!done) {
                 const { value, done: doneReading } = await reader.read()
                 done = doneReading
-                chunkValue = decoder.decode(value)
-                text += chunkValue
-                // Handle agent events (prefixed lines)
-                const lines = chunkValue.split('\n')
-                for (const line of lines) {
-                  if (!line) continue
-                  if (line.startsWith('AGENT_EVENT:')) {
+                const rawChunk = decoder.decode(value)
+                
+                // Process chunk line by line to filter out AGENT_EVENT lines
+                const lines = rawChunk.split('\n')
+                let filteredChunk = ''
+                let hasEvents = false
+                
+                for (let i = 0; i < lines.length; i++) {
+                  const line = lines[i]
+                  
+                  if (line && line.startsWith('AGENT_EVENT:')) {
+                    hasEvents = true
+                    // Process agent events for UI state updates
                     try {
                       const evt = JSON.parse(line.replace('AGENT_EVENT:', ''))
+                      
+                      // Update loading states
                       if (evt.type === 'img2text-start') homeDispatch({ field: 'isImg2TextLoading', value: true })
                       if (evt.type === 'img2text-done' || evt.type === 'img2text-error') homeDispatch({ field: 'isImg2TextLoading', value: false })
                       if (evt.type === 'retrieval-start') homeDispatch({ field: 'isRetrievalLoading', value: true })
@@ -504,19 +512,76 @@ export const Chat = memo(
                       if (evt.type === 'routing-done' || evt.type === 'routing-error') homeDispatch({ field: 'isRouting', value: false })
                       if (evt.type === 'tools-running') homeDispatch({ field: 'isRunningTool', value: true })
                       if (evt.type === 'tools-done' || evt.type === 'tools-error') homeDispatch({ field: 'isRunningTool', value: false })
-                      if ((evt.type === 'routing-done' || evt.type === 'tools-done') && evt.tools) {
-                        const lastIndex = updatedConversation.messages.length - 1
-                        const lastUser = updatedConversation.messages[lastIndex]
-                        if (lastUser) {
-                          lastUser.tools = evt.tools
-                          updatedConversation = { ...updatedConversation }
-                          homeDispatch({ field: 'selectedConversation', value: updatedConversation })
+                      
+                      // Update message with image description (update the USER message)
+                      if (evt.type === 'img2text-done' && evt.description && updatedConversation.messages.length > 0) {
+                        const userMessageIndex = isFirst ? updatedConversation.messages.length - 1 : updatedConversation.messages.length - 2
+                        const userMessage = updatedConversation.messages[userMessageIndex]
+                        if (userMessage && userMessage.role === 'user' && Array.isArray(userMessage.content)) {
+                          const updatedContent = userMessage.content.map(item => {
+                            if (item.type === 'image_url' && item.image_url?.url === evt.imageUrl) {
+                              return { ...item, image_description: evt.description }
+                            }
+                            return item
+                          })
+                          updatedConversation.messages[userMessageIndex] = {
+                            ...userMessage,
+                            content: updatedContent
+                          }
+                          homeDispatch({ field: 'selectedConversation', value: { ...updatedConversation } })
                         }
                       }
-                    } catch {}
-                    continue
+                      
+                      // Update message with tools (update the USER message)
+                      if ((evt.type === 'routing-done' || evt.type === 'tools-done') && evt.tools && updatedConversation.messages.length > 0) {
+                        const userMessageIndex = isFirst ? updatedConversation.messages.length - 1 : updatedConversation.messages.length - 2
+                        const userMessage = updatedConversation.messages[userMessageIndex]
+                        if (userMessage && userMessage.role === 'user') {
+                          updatedConversation.messages[userMessageIndex] = {
+                            ...userMessage,
+                            tools: evt.tools
+                          }
+                          homeDispatch({ field: 'selectedConversation', value: { ...updatedConversation } })
+                        }
+                      }
+                      
+                      // Update message with contexts for retrieval (update the USER message)
+                      if (evt.type === 'retrieval-done' && updatedConversation.messages.length > 0) {
+                        const userMessageIndex = isFirst ? updatedConversation.messages.length - 1 : updatedConversation.messages.length - 2
+                        const userMessage = updatedConversation.messages[userMessageIndex]
+                        if (userMessage && userMessage.role === 'user') {
+                          // Use actual contexts from the event or create placeholders
+                          const contexts = evt.contexts || (evt.count ? Array(evt.count).fill({ text: '', metadata: {} }) : [])
+                          updatedConversation.messages[userMessageIndex] = {
+                            ...userMessage,
+                            contexts: contexts
+                          }
+                          homeDispatch({ field: 'selectedConversation', value: { ...updatedConversation } })
+                        }
+                      }
+                    } catch (e) {
+                      console.error('Error parsing agent event:', e)
+                    }
+                  } else {
+                    // Include non-event lines in the filtered chunk
+                    const prevLine = i > 0 ? lines[i-1] : undefined
+                    if (filteredChunk.length > 0 || (i > 0 && prevLine && !prevLine.startsWith('AGENT_EVENT:'))) {
+                      filteredChunk += '\n'
+                    }
+                    filteredChunk += line
                   }
                 }
+                
+                // Trim trailing newline if last line was an event
+                if (hasEvents && filteredChunk.endsWith('\n')) {
+                  filteredChunk = filteredChunk.slice(0, -1)
+                }
+                
+                // Only process non-empty filtered chunks
+                if (filteredChunk.length === 0) continue
+                
+                text += filteredChunk
+                chunkValue = filteredChunk
                 if (isFirst) {
                   isFirst = false
                   const updatedMessages: Message[] = [
@@ -547,14 +612,15 @@ export const Chat = memo(
                     const lastUserMessage =
                       updatedConversation.messages[lastMessageIndex - 1]
                     if (lastUserMessage) {
-                      finalAssistantRespose +=
-                        await processChunkWithStateMachine(
-                          chunkValue,
-                          lastUserMessage,
-                          stateMachineContext,
-                          citationLinkCache,
-                          getCurrentPageName(),
-                        )
+                      // Process citations in the filtered chunk
+                      const processedChunk = await processChunkWithStateMachine(
+                        chunkValue,
+                        lastUserMessage,
+                        stateMachineContext,
+                        citationLinkCache,
+                        getCurrentPageName(),
+                      )
+                      finalAssistantRespose += processedChunk
                     } else {
                       finalAssistantRespose += chunkValue
                     }
