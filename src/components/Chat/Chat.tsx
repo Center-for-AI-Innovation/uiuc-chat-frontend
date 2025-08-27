@@ -489,6 +489,34 @@ export const Chat = memo(
                 done = doneReading
                 chunkValue = decoder.decode(value)
                 text += chunkValue
+                // Handle agent events (prefixed lines)
+                const lines = chunkValue.split('\n')
+                for (const line of lines) {
+                  if (!line) continue
+                  if (line.startsWith('AGENT_EVENT:')) {
+                    try {
+                      const evt = JSON.parse(line.replace('AGENT_EVENT:', ''))
+                      if (evt.type === 'img2text-start') homeDispatch({ field: 'isImg2TextLoading', value: true })
+                      if (evt.type === 'img2text-done' || evt.type === 'img2text-error') homeDispatch({ field: 'isImg2TextLoading', value: false })
+                      if (evt.type === 'retrieval-start') homeDispatch({ field: 'isRetrievalLoading', value: true })
+                      if (evt.type === 'retrieval-done' || evt.type === 'retrieval-error') homeDispatch({ field: 'isRetrievalLoading', value: false })
+                      if (evt.type === 'routing-start') homeDispatch({ field: 'isRouting', value: true })
+                      if (evt.type === 'routing-done' || evt.type === 'routing-error') homeDispatch({ field: 'isRouting', value: false })
+                      if (evt.type === 'tools-running') homeDispatch({ field: 'isRunningTool', value: true })
+                      if (evt.type === 'tools-done' || evt.type === 'tools-error') homeDispatch({ field: 'isRunningTool', value: false })
+                      if ((evt.type === 'routing-done' || evt.type === 'tools-done') && evt.tools) {
+                        const lastIndex = updatedConversation.messages.length - 1
+                        const lastUser = updatedConversation.messages[lastIndex]
+                        if (lastUser) {
+                          lastUser.tools = evt.tools
+                          updatedConversation = { ...updatedConversation }
+                          homeDispatch({ field: 'selectedConversation', value: updatedConversation })
+                        }
+                      }
+                    } catch {}
+                    continue
+                  }
+                }
                 if (isFirst) {
                   isFirst = false
                   const updatedMessages: Message[] = [
