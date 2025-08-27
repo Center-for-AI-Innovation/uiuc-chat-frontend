@@ -558,15 +558,44 @@ export const Chat = memo(
                       const payload = JSON.parse(jsonText)
                       if (payload.type === 'text-delta' && typeof payload.text === 'string') {
                         appendAssistantChunk(payload.text)
-                      } else if (payload.type === 'message' && typeof payload.data?.content === 'string') {
-                        appendAssistantChunk(payload.data.content)
+                      } else if (typeof payload.text === 'string') {
+                        appendAssistantChunk(payload.text)
+                      } else if (payload.type === 'message') {
+                        const content = payload?.data?.content || payload?.message?.content || ''
+                        if (typeof content === 'string' && content.length > 0) {
+                          appendAssistantChunk(content)
+                        }
                       }
                     } catch {
                       // If not JSON, ignore
                     }
                   } else {
-                    // Fallback: treat as raw text delta
-                    appendAssistantChunk(frame)
+                    // Generic event frame. Try to extract data: payload and parse
+                    const dataLine = frame.split('\n').find((l) => l.startsWith('data: '))
+                    if (dataLine) {
+                      const jsonText = dataLine.slice(6)
+                      if (jsonText !== '[DONE]') {
+                        try {
+                          const payload = JSON.parse(jsonText)
+                          if (payload?.type === 'error' && (payload?.error?.message || payload?.message)) {
+                            const msg = payload?.error?.message || payload?.message
+                            appendAssistantChunk(`Error: ${msg}`)
+                          } else if (typeof payload?.text === 'string') {
+                            appendAssistantChunk(payload.text)
+                          } else if (typeof payload?.data?.text === 'string') {
+                            appendAssistantChunk(payload.data.text)
+                          } else if (typeof payload?.data?.content === 'string') {
+                            appendAssistantChunk(payload.data.content)
+                          } else if (typeof payload?.data?.textDelta === 'string') {
+                            appendAssistantChunk(payload.data.textDelta)
+                          } else if (typeof payload?.delta?.text === 'string') {
+                            appendAssistantChunk(payload.delta.text)
+                          }
+                        } catch {
+                          // ignore non-JSON
+                        }
+                      }
+                    }
                   }
                 }
               }
