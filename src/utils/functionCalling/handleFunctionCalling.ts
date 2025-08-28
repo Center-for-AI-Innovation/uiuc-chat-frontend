@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { type ChatCompletionMessageToolCall } from 'openai/resources/chat/completions'
 import posthog from 'posthog-js'
 import { runN8nFlowBackend } from '~/pages/api/UIUC-api/runN8nFlow'
+import { handleContextSearch } from '~/utils/streamProcessing'
 import type { ToolOutput } from '~/types/chat'
 import { type Conversation, type Message, type UIUCTool } from '~/types/chat'
 import {
@@ -27,13 +28,33 @@ export async function handleFunctionCall(
     const url = base_url
       ? `${base_url}/api/chat/openaiFunctionCall`
       : '/api/chat/openaiFunctionCall'
+    // Create a trimmed conversation payload to avoid large bodies
+    const maxMessages = 8
+    const trimmedMessages = selectedConversation.messages
+      .slice(-maxMessages)
+      .map((m) => ({
+        id: m.id,
+        role: m.role,
+        content: Array.isArray(m.content)
+          ? m.content.filter((c) => c.type === 'text')
+          : m.content,
+        contexts: undefined,
+        tools: undefined,
+        latestSystemMessage: undefined,
+        finalPromtEngineeredMessage: undefined,
+      }))
+    const trimmedConversation = {
+      ...selectedConversation,
+      messages: trimmedMessages,
+    }
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        conversation: selectedConversation,
+        conversation: trimmedConversation,
         tools: openAITools,
         imageUrls: imageUrls,
         imageDescription: imageDescription,
@@ -93,8 +114,27 @@ export async function handleFunctionCall(
       (tool) => tool.id !== 'error',
     )
 
-    // Update the message object with the array of tool invocations
-    message.tools = [...validUiucToolsToRun]
+    // Append tool invocations to message.tools instead of replacing
+    const existingTools: UIUCTool[] = Array.isArray(message.tools)
+      ? (message.tools as UIUCTool[])
+      : []
+
+    const dedupedNewTools = validUiucToolsToRun.filter((newTool) => {
+      if (!newTool.invocationId) return true
+      return !existingTools.some((t) => t.invocationId === newTool.invocationId)
+    })
+
+    message.tools = [...existingTools, ...dedupedNewTools]
+    // Persist inputs for this batch in server memory
+    try {
+      const convoId = selectedConversation.id
+      const batchId = (dedupedNewTools[0]?.batchId as number) || 1
+      await fetch(`/api/agent-memory?convoId=${encodeURIComponent(convoId)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ batchId, inputs: dedupedNewTools }),
+      })
+    } catch (_) {}
     selectedConversation.messages[selectedConversation.messages.length - 1] =
       message
     console.log(
@@ -117,6 +157,7 @@ export async function handleToolCall(
   selectedConversation: Conversation,
   projectName: string,
   base_url?: string,
+  documentGroups?: string[],
 ) {
   try {
     if (uiucToolsToRun.length > 0) {
@@ -154,19 +195,71 @@ export async function handleToolCall(
         }
 
         try {
-          const toolOutput = await callN8nFunction(
-            tool,
-            projectName,
-            undefined,
-            base_url,
-          )
-          // Add success output: update message with tool output, but don't add another tool.
-          // ✅ TOOL SUCCEEDED
-          targetToolInMessage.output = toolOutput
+          if (tool.name === 'retrieve_documents') {
+            const query =
+              tool.aiGeneratedArgumentValues?.query ||
+              (typeof lastMessage.content === 'string'
+                ? (lastMessage.content as string)
+                : Array.isArray(lastMessage.content)
+                  ? lastMessage.content
+                      .filter((c) => c.type === 'text')
+                      .map((c) => c.text)
+                      .join(' ')
+                  : '')
+
+            const groups = Array.isArray(documentGroups)
+              ? documentGroups
+              : []
+
+            const contexts = await handleContextSearch(
+              lastMessage,
+              projectName,
+              selectedConversation,
+              query,
+              groups,
+            )
+            // Attach contexts explicitly and also surface in tool output
+            if (Array.isArray(contexts) && contexts.length > 0) {
+              lastMessage.contexts = contexts
+            }
+            targetToolInMessage.contexts = lastMessage.contexts || []
+            targetToolInMessage.output = {
+              data: {
+                contextsFound: (lastMessage.contexts || []).length,
+                contexts: (lastMessage.contexts || []).slice(0, 5),
+              },
+            }
+          } else {
+            const toolOutput = await callN8nFunction(
+              tool,
+              projectName,
+              undefined,
+              base_url,
+            )
+            // ✅ TOOL SUCCEEDED
+            // If this tool is called multiple times, aggregate outputs as an array
+            if (targetToolInMessage.output && !Array.isArray(targetToolInMessage.output)) {
+              targetToolInMessage.output = [targetToolInMessage.output]
+            }
+            if (Array.isArray(targetToolInMessage.output)) {
+              targetToolInMessage.output.push(toolOutput)
+            } else {
+              targetToolInMessage.output = toolOutput
+            }
+            // Persist outputs for this batch in server memory
+            try {
+              const convoId = selectedConversation.id
+              const batchId = (targetToolInMessage.batchId as number) || 1
+              await fetch(`/api/agent-memory?convoId=${encodeURIComponent(convoId)}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ batchId, outputs: [targetToolInMessage] }),
+              })
+            } catch (_) {}
+          }
         } catch (error: unknown) {
           // ❌ TOOL ERRORED
           console.error(`Error running tool ${tool.readableName}: ${error}`)
-          // Add error output
           targetToolInMessage.error = `Error running tool: ${error}`
         }
       })
@@ -226,7 +319,7 @@ export async function handleToolsServer(
   return selectedConversation
 }
 
-const callN8nFunction = async (
+export const callN8nFunction = async (
   tool: UIUCTool,
   projectName: string,
   n8n_api_key: string | undefined,

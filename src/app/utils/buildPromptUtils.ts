@@ -86,11 +86,13 @@ export const buildPrompt = async ({
   projectName,
   courseMetadata,
   mode,
+  agentMode,
 }: {
   conversation: Conversation | undefined
   projectName: string
   courseMetadata: CourseMetadata | undefined
   mode?: BuildPromptMode
+  agentMode?: boolean
 }): Promise<Conversation> => {
   /*
     System prompt -- defined by user. If documents are provided, add the citations instructions to it.
@@ -115,7 +117,10 @@ export const buildPrompt = async ({
     // Execute asynchronous operations in parallel and await their results
     if (mode === 'optimize_prompt') {
       // Extract system messages from conversation history
-      const systemMessagesFromHistory = _extractSystemMessages(conversation)
+      const systemMessagesFromHistory = conversation.messages
+        .filter((m) => m.latestSystemMessage)
+        .map((m) => m.latestSystemMessage)
+        .join('\n\n')
 
       if (systemMessagesFromHistory && conversation.messages.length > 0) {
         const lastMessage =
@@ -132,7 +137,7 @@ export const buildPrompt = async ({
     allPromises.push(_getLastUserTextInput({ conversation }))
     allPromises.push(_getLastToolResult({ conversation }))
     allPromises.push(_getSystemPrompt({ courseMetadata, conversation }))
-    const [lastUserTextInput, lastToolResult, systemPrompt] =
+    const [lastUserTextInput, lastToolResult, systemPromptRaw] =
       (await Promise.all(allPromises)) as [
         string,
         UIUCTool[],
@@ -140,7 +145,14 @@ export const buildPrompt = async ({
       ]
 
     // Build the final system prompt with all components
-    const finalSystemPrompt = systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
+    let finalSystemPrompt = systemPromptRaw ?? DEFAULT_SYSTEM_PROMPT ?? ''
+
+    if (agentMode) {
+      const AGENT_CORE_INSTRUCTIONS = `\n\n<AgentMode>
+You can plan and execute multiple tool calls sequentially or in parallel as needed. Prefer exhaustive evidence gathering from tools and retrieved documents before drafting the final answer. If multiple tools are relevant, include all of them with complete, explicit arguments. Ask for clarification only when inputs are truly ambiguous. The final response should be structured, well-organized, and comprehensive. Always keep citations in the specified XML format (<cite>1</cite>) when referencing retrieved documents, and clearly indicate any information derived from tools using code-formatted tool names.
+</AgentMode>`
+      finalSystemPrompt += AGENT_CORE_INSTRUCTIONS
+    }
 
     // Adjust remaining token budget based on the system prompt length
     if (encoding) {
@@ -170,7 +182,7 @@ export const buildPrompt = async ({
       (conversation.messages[conversation.messages.length - 1]
         ?.contexts as ContextWithMetadata[]) || []
 
-    if (contexts && contexts.length > 0) {
+    if (!agentMode && contexts && contexts.length > 0) {
       // Documents are present; maintain all existing processes as normal
       // P5: query_topContext
 
@@ -206,7 +218,7 @@ export const buildPrompt = async ({
       conversation.messages[conversation.messages.length - 1]
 
     // Move Tool Outputs to be added before the userQuery
-    if (latestUserMessage?.tools) {
+    if (!agentMode && latestUserMessage?.tools) {
       const toolsOutputResults = _buildToolsOutputResults({ conversation })
 
       // Add Tool Instructions and outputs
@@ -245,6 +257,10 @@ export const buildPrompt = async ({
     console.error('Error in buildPrompt:', error)
     throw error
   }
+}
+
+export function getDefaultPostPrompt(): string {
+  return `Please provide a clear, concise, and well-structured answer. Use bullet points where helpful, include citations like <cite>1</cite> when referencing retrieved documents, and avoid unsupported claims.`
 }
 
 const _getRecentConvoTokens = ({
@@ -287,22 +303,32 @@ const _buildToolsOutputResults = ({
     let toolMsg = `The following API(s), aka tool(s), were invoked, and here's the tool output(s). Remember, use this information when relevant in crafting your response. The user may or may not reference the tool directly, either way provide a helpful response and infer what they want based on the information you have available. Never tell the user "I will run theses for you" because they have already run! Always use past tense to refer to the tool outputs. NEVER request access to the tools because you are guarenteed to have access when appropraite; e.g. nevery say "I would need access to the tool." When using tool results in your answer, always tell the user the answer came from a specific tool name and cite it using code notation something like '... as per tool \`tool name\`...' or 'According to tool \`tool name\` ...'.\n<Tool Outputs>\n`
     latestUserMessage?.tools?.forEach((tool) => {
       let toolOutput = ''
-      if (tool.output && tool.output.text) {
-        toolOutput += `Tool: ${tool.readableName}\nOutput: ${tool.output.text}\n`
-      } else if (tool.output && tool.output.imageUrls) {
-        toolOutput += `Tool: ${tool.readableName}\nOutput: Images were generated by this tool call and the generated image(s) is/are provided below`
-        // Add image urls to message content
-        ;(latestUserMessage.content as Content[]).push(
-          ...tool.output.imageUrls.map((imageUrl) => ({
-            type: 'tool_image_url' as MessageType,
-            image_url: { url: imageUrl },
-          })),
-        )
-      } else if (tool.output && tool.output.data) {
-        toolOutput += `Tool: ${tool.readableName}\nOutput: ${JSON.stringify(tool.output.data)}\n`
-      } else if (tool.error) {
-        toolOutput += `Tool: ${tool.readableName}\n${tool.error}\n`
+      const outputs = Array.isArray(tool.output)
+        ? tool.output
+        : tool.output
+          ? [tool.output]
+          : []
+
+      if (outputs.length === 0 && tool.error) {
+        toolMsg += `Tool: ${tool.readableName}\n${tool.error}\n`
+        return
       }
+
+      outputs.forEach((out) => {
+        if (out.text) {
+          toolOutput += `Tool: ${tool.readableName}\nOutput: ${out.text}\n`
+        } else if (out.imageUrls) {
+          toolOutput += `Tool: ${tool.readableName}\nOutput: Images were generated by this tool call and the generated image(s) is/are provided below`
+          ;(latestUserMessage.content as Content[]).push(
+            ...out.imageUrls.map((imageUrl) => ({
+              type: 'tool_image_url' as MessageType,
+              image_url: { url: imageUrl },
+            })),
+          )
+        } else if (out.data) {
+          toolOutput += `Tool: ${tool.readableName}\nOutput: ${JSON.stringify(out.data)}\n`
+        }
+      })
       toolMsg += toolOutput
     })
     if (toolMsg.length > 0) {
@@ -488,140 +514,6 @@ const _getSystemPrompt = async ({
   }
 
   // Add math notation instructions
-  systemPrompt += `\nWhen responding with equations, use MathJax/KaTeX notation. Equations should be wrapped in either:
-
-  * Single dollar signs $...$ for inline math
-  * Double dollar signs $$...$$ for display/block math
-  * Or \\[...\\] for display math
-  
-  Here's how the equations should be formatted in the markdown: Schrödinger Equation: $i\\hbar \\frac{\\partial}{\\partial t} \\Psi(\\mathbf{r}, t) = \\hat{H} \\Psi(\\mathbf{r}, t)$`
-
-  // Check if contexts are present
-  const contexts =
-    (conversation.messages[conversation.messages.length - 1]
-      ?.contexts as ContextWithMetadata[]) || []
-
-  if (!contexts || contexts.length === 0) {
-    // No documents retrieved, return only system prompt
-    return systemPrompt.trim()
-  } else {
-    // Documents are present, combine system prompt with system post prompt
-    const systemPostPrompt = getSystemPostPrompt({
-      conversation: conversation as Conversation,
-      courseMetadata: courseMetadata ?? ({} as CourseMetadata),
-    })
-    return [systemPrompt, systemPostPrompt]
-      .filter((prompt) => prompt?.trim())
-      .join('\n\n')
-  }
-}
-
-export const getSystemPostPrompt = ({
-  conversation,
-  courseMetadata,
-}: {
-  conversation: Conversation
-  courseMetadata: CourseMetadata
-}): string => {
-  // If systemPromptOnly is true, return an empty string
-  if (isSystemPromptOnlyEnabled(conversation, courseMetadata)) {
-    return ''
-  }
-
-  const isGuidedLearning = isGuidedLearningEnabled(conversation, courseMetadata)
-  const isDocumentsOnly = isDocumentsOnlyEnabled(conversation, courseMetadata)
-
-  const postPrompt =
-    `Please analyze and respond to the following question using the excerpts from the provided documents. These documents can be PDF files or web pages. You may also see output from API calls (labeled as "tools") and image descriptions. Use this information to craft a detailed and accurate answer.
-
-When referencing information from the documents, you MUST include citations in your response. Citations should be placed at the end of complete thoughts, immediately before the period. For each distinct piece of information or section, cite the relevant source(s) using XML-style citation tags in the following format:
-- Use "<cite>1</cite>" when referencing document 1, placing it immediately before the period
-- For multiple sources, include all citation numbers within a single tag, separated by commas: "<cite>1, 2, 3</cite>"
-
-Here are examples of how to properly integrate citations in your response:
-- "The loop invariant is a condition that must be true before and after each iteration of the loop. This fundamental concept helps prove the correctness of loop-based algorithms <cite>1</cite>."
-- "Python lists are implemented as dynamic arrays. When the allocated space is filled, Python will automatically resize the array to accommodate more elements <cite>2</cite>."
-- "The course has a strict late submission policy. All assignments are due every Friday by 11:59 PM, and late submissions will incur a 10% penalty per day <cite>3</cite>."
-- "Object-oriented programming combines data and functionality into objects, while functional programming treats computation as the evaluation of mathematical functions and avoids changing state <cite>1, 3</cite>."
-
-Citations should be placed at the end of complete thoughts or sections, immediately before the period if applicable. This makes the text more readable while still maintaining clear attribution of information. Break down information into logical sections and cite the sources at the end of each complete thought.
-
-Note: You may see citations in the conversation history that appear differently due to post-processing formatting. Regardless of how they appear in previous messages, always use the XML-style citation format specified above in your responses.
-
-${
-  isGuidedLearning
-    ? 'IMPORTANT: While in guided learning mode, you must still cite all relevant course materials using the exact citation format—even if they contain direct answers. Never filter out or omit relevant materials.'
-    : ''
-}
-
-${
-  !isGuidedLearning && !isDocumentsOnly
-    ? 'If the answer is not in the provided documents, state so but still provide as helpful a response as possible to directly answer the question.'
-    : ''
-}
-
-When using tool outputs in your response, place the tool reference at the end of the relevant statement, before the period, using code notation. For example: "The repository contains three JavaScript files \`as per tool ls\`." Always be honest and transparent about tool results.
-
-The user message includes XML-style tags (e.g., <Potentially Relevant Documents>, <Tool Outputs>). Make sure to integrate this information appropriately in your answer.`.trim()
-
-  return postPrompt
-}
-
-export const getDefaultPostPrompt = (): string => {
-  // The default values for courseMetadata
-  const defaultCourseMetadata: CourseMetadata = {
-    is_private: false,
-    course_owner: '',
-    course_admins: [],
-    approved_emails_list: [],
-    example_questions: undefined,
-    banner_image_s3: undefined,
-    course_intro_message: undefined,
-    system_prompt: undefined,
-    openai_api_key: undefined, // TODO: remove
-    disabled_models: undefined, // TODO: remove
-    project_description: undefined,
-    documentsOnly: false,
-    guidedLearning: false,
-    systemPromptOnly: false,
-    vector_search_rewrite_disabled: false,
-  }
-
-  // Call getSystemPostPrompt with default values
-  return getSystemPostPrompt({
-    conversation: {
-      id: uuidv4(),
-      name: '',
-      messages: [],
-      model: {} as AnySupportedModel,
-      prompt: DEFAULT_SYSTEM_PROMPT,
-      temperature: 0.7,
-      folderId: null,
-      linkParameters: {
-        guidedLearning: false,
-        documentsOnly: false,
-        systemPromptOnly: false,
-      },
-    } as Conversation,
-    courseMetadata: defaultCourseMetadata,
-  })
-}
-
-const _extractSystemMessages = (conversation: Conversation): string => {
-  const systemMessages = conversation.messages
-    .filter((message) => message.role === 'system')
-    .map((message) => {
-      if (typeof message.content === 'string') {
-        return message.content
-      } else if (Array.isArray(message.content)) {
-        return message.content
-          .filter((c) => c.type === 'text')
-          .map((c) => c.text)
-          .join('\n')
-      }
-      return ''
-    })
-    .filter((content) => content.length > 0)
-
-  return systemMessages.join('\n\n')
+  systemPrompt += `\nWhen responding with equations, use MathJax/KaTeX notation. Equations should be wrapped in either:\n\n  * Single dollar signs $...$ for inline math\n  * Double dollar signs $$...$$ for display/block math\n  * Or \\[...\\] for display math\n  \n  Here's how the equations should be formatted in the markdown: Schrödinger Equation: $i\\hbar \\frac{\\partial}{\\partial t} \\Psi(\\mathbf{r}, t) = \\hat{H} \\Psi(\\mathbf{r}, t)$`
+  return systemPrompt
 }

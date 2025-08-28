@@ -56,6 +56,7 @@ export type MessageFeedback = {
 export interface UIUCTool {
   id: string // This is the N8N workflow ID
   invocationId?: string // This is the unique ID for a specific tool *call* from OpenAI
+  batchId?: number // Agent round/batch number for grouping
   name: string // Openai uses this
   readableName: string // N8N uses this
   description: string
@@ -69,7 +70,7 @@ export interface UIUCTool {
   enabled?: boolean
   createdAt?: string
   updatedAt?: string
-  output?: ToolOutput // Use a unified output type
+  output?: ToolOutput | ToolOutput[] // Use a unified output type or an array for repeated calls
   error?: string
   tags?: { name: string }[]
   contexts?: ContextWithMetadata[]
@@ -128,6 +129,7 @@ export interface ChatBody {
   llmProviders?: AllLLMProviders
   skipQueryRewrite?: boolean
   mode: 'chat' | 'optimize_prompt'
+  agentMode?: boolean
 }
 
 export interface ImageBody {

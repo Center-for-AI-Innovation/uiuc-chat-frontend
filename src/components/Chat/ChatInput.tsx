@@ -96,6 +96,7 @@ export const ChatInput = ({
       prompts,
       showModelSettings,
       llmProviders,
+      agentMode,
     },
 
     dispatch: homeDispatch,
@@ -873,6 +874,17 @@ export const ChatInput = ({
             }}
           />
 
+          {/* Agent pill toggle - repositioned next to send, consistent spacing */}
+          <button
+            className={`absolute bottom-[2.25rem] right-16 rounded-full px-3 py-1 text-xs font-semibold transition-all ${agentMode ? 'bg-[--primary] text-[--background]' : 'bg-white/30 text-[--foreground]'} opacity-80 hover:opacity-100 shadow-sm`}
+            onClick={() => homeDispatch({ field: 'agentMode', value: !agentMode })}
+            style={{ pointerEvents: 'auto' }}
+            title="Toggle Agent Mode"
+            aria-pressed={agentMode}
+          >
+            Agent
+          </button>
+
           {showPluginSelect && (
             <div
               className="absolute bottom-14 left-0 rounded"
@@ -1057,8 +1069,9 @@ export const ChatInput = ({
             className={`font-montserratHeading ${montserrat_heading.variable} absolute bottom-[.35rem] left-5 -ml-2 flex items-center gap-1 break-words rounded-full px-3 py-1 text-[--message-faded] opacity-60 hover:bg-white/20 hover:text-[--message] hover:opacity-100`}
             onClick={handleTextClick}
             style={{ cursor: 'pointer', pointerEvents: 'auto' }}
+            title={agentMode ? 'Agent Mode On' : 'Agent Mode Off'}
           >
-            {selectBestModel(llmProviders)?.name}
+            {agentMode ? 'Agent' : selectBestModel(llmProviders)?.name}
             {selectedConversation?.model &&
               webLLMModels.some(
                 (m) => m.name === selectedConversation?.model?.name,

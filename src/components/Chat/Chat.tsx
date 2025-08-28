@@ -158,6 +158,7 @@ export const Chat = memo(
         tools,
         llmProviders,
         selectedModel,
+        agentMode,
       },
       handleUpdateConversation,
       handleFeedbackUpdate,
@@ -432,6 +433,73 @@ export const Chat = memo(
           let imgDesc = ''
           let imageUrls: string[] = []
 
+          // Agent Mode orchestration (tools + retrieval), otherwise fall back to default flow
+          let ranAgentPipeline = false
+          if (agentMode) {
+            ranAgentPipeline = true
+            try {
+              const retrievalTool: UIUCTool = {
+                id: 'internal-retrieval',
+                name: 'retrieve_documents',
+                readableName: 'Retrieve documents',
+                description:
+                  'Retrieve relevant course documents given a search query. Parameters: query (string). Optionally provide groups as a comma-separated string to restrict retrieval to specific document groups.',
+                inputParameters: {
+                  type: 'object',
+                  properties: {
+                    query: { type: 'string', description: 'Search query' },
+                    groups: {
+                      type: 'string',
+                      description:
+                        'Optional comma-separated document group names to search within',
+                    },
+                  },
+                  required: ['query'],
+                },
+              }
+              const agentTools: UIUCTool[] = [...tools, retrievalTool]
+
+              for (let round = 0; round < 3; round++) {
+                homeDispatch({ field: 'isRouting', value: true })
+                const proposed = await handleFunctionCall(
+                  message,
+                  agentTools,
+                  imageUrls,
+                  imgDesc,
+                  updatedConversation,
+                  getOpenAIKey(llmProviders, courseMetadata, apiKey),
+                )
+                homeDispatch({ field: 'isRouting', value: false })
+                // Tag this batch on the just-appended tool placeholders
+                if (proposed && message.tools) {
+                  const ids = new Set(proposed.map((t) => t.invocationId))
+                  message.tools.forEach((t) => {
+                    if (t.invocationId && ids.has(t.invocationId)) {
+                      t.batchId = round + 1
+                    }
+                  })
+                }
+                homeDispatch({ field: 'selectedConversation', value: updatedConversation })
+                if (!proposed || proposed.length === 0) break
+
+                homeDispatch({ field: 'isRunningTool', value: true })
+                await handleToolCall(
+                  proposed,
+                  updatedConversation,
+                  courseName,
+                  undefined,
+                  enabledDocumentGroups,
+                )
+                homeDispatch({ field: 'isRunningTool', value: false })
+                homeDispatch({ field: 'selectedConversation', value: updatedConversation })
+              }
+            } catch (e) {
+              console.error('Agent pipeline error:', e)
+              homeDispatch({ field: 'isRouting', value: false })
+              homeDispatch({ field: 'isRunningTool', value: false })
+            }
+          }
+
           // Action 1: Image to Text Conversion
           if (Array.isArray(message.content)) {
             const imageContent = (message.content as Content[]).filter(
@@ -466,15 +534,18 @@ export const Chat = memo(
             }
           }
 
-          // Skip vector search entirely if there are no documents
-          if (documentCount === 0) {
+          // Skip vector search entirely if there are no documents (unless Agent pipeline already ran)
+          // In Agent Mode, skip retrieval in the default flow entirely
+          if (agentMode) {
+            // no-op: retrieval handled inside the agent pipeline when needed
+          } else if (!ranAgentPipeline && documentCount === 0) {
             // console.log('Vector search skipped: no documents available')
             homeDispatch({ field: 'wasQueryRewritten', value: false })
             homeDispatch({ field: 'queryRewriteText', value: null })
             message.wasQueryRewritten = undefined
             message.queryRewriteText = undefined
             message.contexts = []
-          } else {
+          } else if (!ranAgentPipeline) {
             // Action 2: Context Retrieval: Vector Search
             let rewrittenQuery = searchQuery // Default to original query
 
@@ -803,16 +874,22 @@ export const Chat = memo(
             await handleContextSearch(
               message,
               courseName,
-              selectedConversation,
+              updatedConversation,
               rewrittenQuery,
               enabledDocumentGroups,
             )
 
+            // Update conversation so retrieval accordions render immediately
+            homeDispatch({
+              field: 'selectedConversation',
+              value: updatedConversation,
+            })
+
             homeDispatch({ field: 'isRetrievalLoading', value: false })
           }
 
-          // Action 3: Tool Execution
-          if (tools.length > 0) {
+          // Action 3: Tool Execution (skip if Agent pipeline already handled tools)
+          if (!ranAgentPipeline && !agentMode && tools.length > 0) {
             try {
               homeDispatch({ field: 'isRouting', value: true })
               // Check if any tools need to be run
@@ -825,6 +902,12 @@ export const Chat = memo(
                 getOpenAIKey(llmProviders, courseMetadata, apiKey),
               )
               homeDispatch({ field: 'isRouting', value: false })
+
+              // Refresh selectedConversation so tool input accordions render
+              homeDispatch({
+                field: 'selectedConversation',
+                value: updatedConversation,
+              })
               if (uiucToolsToRun.length > 0) {
                 homeDispatch({ field: 'isRunningTool', value: true })
                 // Run the tools
@@ -832,7 +915,15 @@ export const Chat = memo(
                   uiucToolsToRun,
                   updatedConversation,
                   courseName,
+                  undefined,
+                  enabledDocumentGroups,
                 )
+
+                // Refresh after tool outputs arrive
+                homeDispatch({
+                  field: 'selectedConversation',
+                  value: updatedConversation,
+                })
               }
 
               homeDispatch({ field: 'isRunningTool', value: false })
@@ -847,7 +938,24 @@ export const Chat = memo(
           }
 
           const finalChatBody: ChatBody = {
-            conversation: updatedConversation,
+            conversation: agentMode
+              ? {
+                  ...updatedConversation,
+                  messages: updatedConversation.messages
+                    .slice(-10)
+                    .map((m) => ({
+                      id: m.id,
+                      role: m.role,
+                      content: Array.isArray(m.content)
+                        ? m.content.filter((c) => c.type === 'text')
+                        : m.content,
+                      contexts: undefined,
+                      tools: undefined,
+                      latestSystemMessage: undefined,
+                      finalPromtEngineeredMessage: undefined,
+                    })),
+                }
+              : updatedConversation,
             key: getOpenAIKey(llmProviders, courseMetadata, apiKey),
             course_name: courseName,
             stream: true,
@@ -856,8 +964,9 @@ export const Chat = memo(
             model: selectedConversation.model,
             skipQueryRewrite: documentCount === 0,
             mode: 'chat',
+            agentMode: agentMode === true,
           }
-          updatedConversation = finalChatBody.conversation!
+          // Keep local updatedConversation unchanged for UI (full data), but send trimmed to server
 
           // Action 4: Build Prompt - Put everything together into a prompt
           // const buildPromptResponse = await fetch('/api/buildPrompt', {
@@ -909,7 +1018,7 @@ export const Chat = memo(
             }
           } else {
             try {
-              // CALL OUR NEW ENDPOINT... /api/allNewRoutingChat
+              // CALL shared provider-agnostic endpoint... /api/allNewRoutingChat
               startOfCallToLLM = performance.now()
               try {
                 response = await fetch('/api/allNewRoutingChat', {

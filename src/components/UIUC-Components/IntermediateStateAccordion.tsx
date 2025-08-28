@@ -25,7 +25,7 @@ export const IntermediateStateAccordion = ({
 }) => {
   // console.log('IntermediateStateAccordion, key:', accordionKey, 'isLoading:', isLoading, 'error:', error, 'default value:', defaultValue)
   return (
-    <div className="w-full">
+    <div className="w-full max-w-full">
       <Accordion
         variant="separated"
         radius={'lg'}
@@ -68,6 +68,7 @@ export const IntermediateStateAccordion = ({
           </Accordion.Control>
           <Accordion.Panel
             className={`${montserrat_paragraph.variable} rounded-lg bg-[--background-faded] pt-2 font-montserratParagraph text-sm text-white ${error ? 'border-2 border-red-500' : ''}`}
+            style={{ width: '100%' }}
           >
             <div style={{ position: 'relative' }}>
               <pre
