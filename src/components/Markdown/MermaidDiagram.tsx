@@ -25,6 +25,7 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
         theme: 'default',
         securityLevel: 'loose',
         fontFamily: 'monospace',
+        logLevel: 1, // Only show errors
       })
     } catch (err) {
       console.error('Failed to initialize Mermaid:', err)
@@ -68,8 +69,6 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
     }
 
     const renderDiagram = async () => {
-      let tempDiv: HTMLDivElement | null = null
-      
       try {
         setError(null)
         setIsRendered(false)
@@ -92,6 +91,9 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
             }
             return replacements[char] || char
           })
+          // Additional cleaning for problematic patterns
+          .replace(/[^\w\s\-_()[\]{}.,:;]/g, ' ') // Replace problematic characters with spaces
+          .replace(/\s+/g, ' ') // Normalize multiple spaces
           .trim()
 
         // Don't render if chart is empty after cleaning
@@ -125,22 +127,9 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
         if (containerRef.current) {
           containerRef.current.innerHTML = ''
         }
-        
-        // Create a temporary element to render the diagram
-        tempDiv = document.createElement('div')
-        tempDiv.id = id
-        tempDiv.className = 'mermaid'
-        tempDiv.textContent = cleanChart
-        
-        // Check if container still exists before appending
-        if (containerRef.current && isMountedRef.current) {
-          containerRef.current.appendChild(tempDiv)
-        } else {
-          return
-        }
 
-        // Check if container and tempDiv still exist before rendering
-        if (!containerRef.current || !tempDiv || !tempDiv.parentNode || !isMountedRef.current) {
+        // Check if container still exists after clearing
+        if (!containerRef.current || !isMountedRef.current) {
           return
         }
 
@@ -148,8 +137,8 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
           // Use the safer render approach directly instead of run
           const { svg } = await mermaid.render(id, cleanChart)
           
-          if (isMountedRef.current && tempDiv && containerRef.current) {
-            tempDiv.innerHTML = svg
+          if (isMountedRef.current && containerRef.current) {
+            containerRef.current.innerHTML = svg
             setIsRendered(true)
           }
         } catch (mermaidErr) {
@@ -213,8 +202,19 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
       {isStreaming && (
         <div className="text-gray-500 text-sm">Waiting for complete diagram...</div>
       )}
-      {!isRendered && !isStreaming && (
+      {!isRendered && !isStreaming && !error && (
         <div className="text-gray-500 text-sm">Rendering diagram...</div>
+      )}
+      {error && (
+        <div className="text-red-500 text-sm">
+          <div>Failed to render diagram</div>
+          <details className="mt-2">
+            <summary className="cursor-pointer text-xs">Show error details</summary>
+            <pre className="mt-1 text-xs bg-gray-100 p-2 rounded overflow-auto max-h-32">
+              {error}
+            </pre>
+          </details>
+        </div>
       )}
     </div>
   )
