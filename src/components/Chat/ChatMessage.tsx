@@ -1539,7 +1539,7 @@ export const ChatMessage = memo(
                                       <IntermediateStateAccordion
                                         accordionKey={`routing-batch-${batch}`}
                                         title={`Tool calls (batch ${batch}) - inputs`}
-                                        isLoading={isRunningTool}
+                                        isLoading={!!isRunningTool}
                                         error={false}
                                         content={
                                           <div className="flex flex-col gap-2">
