@@ -63,9 +63,8 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
         }
         return replacements[char] || char
       })
-      // Additional cleaning for problematic patterns
-      .replace(/[^\w\s\-_()[\]{}.,:;]/g, ' ') // Replace problematic characters with spaces
-      .replace(/\s+/g, ' ') // Normalize multiple spaces
+      // Only normalize multiple spaces, preserve newlines and other whitespace
+      .replace(/[ \t]+/g, ' ') // Normalize spaces and tabs, but keep newlines
       .trim()
   }, [])
 
