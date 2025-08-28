@@ -15,23 +15,33 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
   const containerRef = useRef<HTMLDivElement>(null)
   const [error, setError] = useState<string | null>(null)
   const [isRendered, setIsRendered] = useState(false)
+  const isMountedRef = useRef(true)
 
   useEffect(() => {
     // Initialize mermaid with configuration
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: 'default',
-      securityLevel: 'loose',
-      fontFamily: 'monospace',
-    })
+    try {
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'default',
+        securityLevel: 'loose',
+        fontFamily: 'monospace',
+      })
+    } catch (err) {
+      console.error('Failed to initialize Mermaid:', err)
+    }
   }, [])
 
   // Cleanup effect to prevent memory leaks
   useEffect(() => {
     return () => {
+      isMountedRef.current = false
       // Clean up any existing mermaid elements when component unmounts
       if (containerRef.current) {
-        containerRef.current.innerHTML = ''
+        try {
+          containerRef.current.innerHTML = ''
+        } catch (err) {
+          // Ignore cleanup errors
+        }
       }
     }
   }, [])
@@ -45,6 +55,8 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
     }
 
     const renderDiagram = async () => {
+      let tempDiv: HTMLDivElement | null = null
+      
       try {
         setError(null)
         setIsRendered(false)
@@ -62,7 +74,25 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
 
         // Don't render if chart is empty after cleaning
         if (!cleanChart) {
-          setError('Empty or invalid Mermaid diagram')
+          if (isMountedRef.current) {
+            setError('Empty or invalid Mermaid diagram')
+          }
+          return
+        }
+
+        // Basic validation - check if it looks like a mermaid diagram
+        const mermaidKeywords = ['graph', 'flowchart', 'sequenceDiagram', 'classDiagram', 'stateDiagram', 'erDiagram', 'journey', 'gantt', 'pie', 'gitgraph']
+        const hasMermaidKeyword = mermaidKeywords.some(keyword => cleanChart.toLowerCase().includes(keyword))
+        
+        if (!hasMermaidKeyword) {
+          if (isMountedRef.current) {
+            setError('Invalid Mermaid diagram syntax')
+          }
+          return
+        }
+
+        // Check if container still exists before proceeding
+        if (!containerRef.current) {
           return
         }
 
@@ -70,24 +100,59 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
         const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`
         
         // Create a temporary element to render the diagram
-        const tempDiv = document.createElement('div')
+        tempDiv = document.createElement('div')
         tempDiv.id = id
         tempDiv.className = 'mermaid'
         tempDiv.textContent = cleanChart
         
+        // Check if container still exists before appending
         if (containerRef.current) {
           containerRef.current.appendChild(tempDiv)
+        } else {
+          return
         }
 
-        // Render the diagram
-        await mermaid.run({
-          nodes: [tempDiv],
-        })
+        // Wait a bit to ensure DOM is ready
+        await new Promise(resolve => setTimeout(resolve, 10))
+
+        // Check if container and tempDiv still exist before rendering
+        if (!containerRef.current || !tempDiv || !tempDiv.parentNode) {
+          return
+        }
+
+        // Render the diagram with error handling
+        try {
+          await mermaid.run({
+            nodes: [tempDiv],
+          })
+        } catch (mermaidErr) {
+          // If mermaid.run fails, try a different approach
+          console.warn('Mermaid run failed, trying alternative approach:', mermaidErr)
+          
+          // Try rendering with render function instead
+          const { svg } = await mermaid.render(id, cleanChart)
+          if (tempDiv && containerRef.current) {
+            tempDiv.innerHTML = svg
+          }
+        }
         
-        setIsRendered(true)
+        if (isMountedRef.current) {
+          setIsRendered(true)
+        }
       } catch (err) {
         console.error('Error rendering Mermaid diagram:', err)
-        setError(err instanceof Error ? err.message : 'Failed to render diagram')
+        if (isMountedRef.current) {
+          setError(err instanceof Error ? err.message : 'Failed to render diagram')
+        }
+        
+        // Clean up on error
+        if (tempDiv && tempDiv.parentNode) {
+          try {
+            tempDiv.parentNode.removeChild(tempDiv)
+          } catch (cleanupErr) {
+            // Ignore cleanup errors
+          }
+        }
       }
     }
 
