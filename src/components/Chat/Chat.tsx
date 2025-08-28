@@ -598,6 +598,12 @@ export const Chat = memo(
                     continue
                   }
 
+                  // Handle explicit message events (event: message / data: { type: 'text', delta })
+                  if (trimmed.startsWith('event: message')) {
+                    sseEventBuffer.push(trimmed)
+                    continue
+                  }
+
                   // Handle Vercel AI DataStream channel lines
                   // Format: 0:"text", d:{...}, e:{...}, f:{...}, etc.
                   const channelMatch = trimmed.match(/^([0-9a-zA-Z]+):\s*(.*)$/)

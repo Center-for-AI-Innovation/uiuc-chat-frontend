@@ -1,5 +1,7 @@
 import { type NextRequest } from 'next/server'
 import { createOpenAI } from '@ai-sdk/openai'
+import { createAnthropic } from '@ai-sdk/anthropic'
+import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { streamText, type CoreMessage } from 'ai'
 import { z } from 'zod'
 import { buildImageDescriptionTool, buildN8nToolsFromWorkflows, buildRetrievalTool } from '~/utils/agent/tools'
@@ -9,20 +11,31 @@ import { determineAndValidateModel } from '~/utils/streamProcessing'
 import { fetchTools } from '~/utils/functionCalling/handleFunctionCalling'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 import { OpenAIModelID } from '~/utils/modelProviders/types/openai'
+import { AnthropicModelID } from '~/utils/modelProviders/types/anthropic'
+import { GeminiModelID } from '~/utils/modelProviders/types/gemini'
+import { BedrockModelID } from '~/utils/modelProviders/types/bedrock'
+import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 export const revalidate = 0
 
-function getAgentSystemPrompt(): string {
+function getAgentSystemPrompt(defaultPrompt: string): string {
   return [
-    'You are an autonomous research and execution agent. You can call tools multiple times (sequentially or in parallel) to gather facts, retrieve course documents for citations, describe images, and run workflows. Use tools as needed, then produce a final answer. Do not include intermediate tool I/O in your final answer; that will be shown separately in the UI.',
-    'Guidelines:',
-    '- Prefer retrieval for course-grounded answers; cite sources using <cite>...> pattern in the final response when relevant.',
-    '- Use image description only if the user supplied images or when absolutely necessary.',
-    '- Use workflows (n8n tools) to perform actions or structured tasks. Return concise summaries of results.',
-    '- Avoid loops: maximum of 8 tool steps. Think stepwise but be concise.',
+    defaultPrompt,
+    '',
+    'Agent Capabilities:',
+    'You can call tools multiple times (sequentially or in parallel) to gather facts, retrieve course documents for citations, describe images, and run workflows. Use tools as needed, then produce a final answer. Do not include intermediate tool I/O in your final answer; that will be shown separately in the UI.',
+    '',
+    'Citations:',
+    'Always place citations using <cite>N</cite> format (or <cite>1, 2</cite> for multiple), at the end of complete thoughts where relevant. Do not include raw URLs in the body; use citations only.',
+    '',
+    'Style:',
+    'Follow the existing formatting and markdown rules. Keep answers concise, structured, and accurate.',
+    '',
+    'Constraints:',
+    'Avoid excessive looping. Maximum of 8 tool steps. Think stepwise but be concise.',
   ].join('\n')
 }
 
@@ -50,7 +63,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { activeModel } = await determineAndValidateModel(
+    const { activeModel, modelsWithProviders } = await determineAndValidateModel(
       conversation.model.id,
       course_name,
     )
@@ -92,49 +105,60 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Only support OpenAI models for the agent for now
-    if (!(Object.values(OpenAIModelID) as string[]).includes(activeModel.id)) {
+    // Prepare model client for supported providers (OpenAI, Anthropic, Google)
+    let model: any
+    if ((Object.values(OpenAIModelID) as string[]).includes(activeModel.id)) {
+      let apiKey = (llmProviders?.OpenAI?.apiKey as string) || (process.env.VLADS_OPENAI_KEY as string)
+      if (!apiKey) {
+        return new Response(
+          `event: tool\ndata: ${JSON.stringify({ type: 'tool-error', name: 'agent', error: 'No OpenAI API key configured for agent.' })}\n\n`,
+          { headers: { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive' } },
+        )
+      }
+      apiKey = await decryptKeyIfNeeded(apiKey)
+      const openAIClient = createOpenAI({ apiKey, baseURL: 'https://api.openai.com/v1', compatibility: 'strict' })
+      model = openAIClient(activeModel.id)
+    } else if ((Object.values(AnthropicModelID) as string[]).includes(activeModel.id)) {
+      let apiKey = (llmProviders?.Anthropic?.apiKey as string) || (process.env.ANTHROPIC_API_KEY as string)
+      if (!apiKey) {
+        return new Response(
+          `event: tool\ndata: ${JSON.stringify({ type: 'tool-error', name: 'agent', error: 'No Anthropic API key configured for agent.' })}\n\n`,
+          { headers: { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive' } },
+        )
+      }
+      apiKey = await decryptKeyIfNeeded(apiKey)
+      const anthropic = createAnthropic({ apiKey })
+      model = anthropic(activeModel.id)
+    } else if ((Object.values(GeminiModelID) as string[]).includes(activeModel.id)) {
+      let apiKey = (llmProviders?.Gemini?.apiKey as string) || (process.env.GOOGLE_GENERATIVE_AI_API_KEY as string)
+      if (!apiKey) {
+        return new Response(
+          `event: tool\ndata: ${JSON.stringify({ type: 'tool-error', name: 'agent', error: 'No Google API key configured for agent.' })}\n\n`,
+          { headers: { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive' } },
+        )
+      }
+      apiKey = await decryptKeyIfNeeded(apiKey)
+      const google = createGoogleGenerativeAI({ apiKey })
+      model = google(activeModel.id)
+    } else if ((Object.values(BedrockModelID) as string[]).includes(activeModel.id)) {
+      // Bedrock via AI SDK (requires AWS credentials in env)
+      const region = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || 'us-east-1'
+      const bedrock = createAmazonBedrock({ region })
+      model = bedrock(activeModel.id)
+    } else {
       return new Response(
-        `event: tool\ndata: ${JSON.stringify({ type: 'tool-error', name: 'agent', error: 'Agent currently supports OpenAI models only.' })}\n\n`,
-        {
-          headers: {
-            'Content-Type': 'text/event-stream; charset=utf-8',
-            'Cache-Control': 'no-cache, no-transform',
-            Connection: 'keep-alive',
-          },
-        },
+        `event: tool\ndata: ${JSON.stringify({ type: 'tool-error', name: 'agent', error: `Model '${activeModel.id}' is not supported by Agent tools yet.` })}\n\n`,
+        { headers: { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive' } },
       )
     }
 
-    let apiKey = (llmProviders?.OpenAI?.apiKey as string) || (process.env.VLADS_OPENAI_KEY as string)
-    if (!apiKey) {
-      return new Response(
-        `event: tool\ndata: ${JSON.stringify({ type: 'tool-error', name: 'agent', error: 'No OpenAI API key configured for agent.' })}\n\n`,
-        {
-          headers: {
-            'Content-Type': 'text/event-stream; charset=utf-8',
-            'Cache-Control': 'no-cache, no-transform',
-            Connection: 'keep-alive',
-          },
-        },
-      )
-    }
-    apiKey = await decryptKeyIfNeeded(apiKey)
-
-    // Prepare model client
-    const openAIClient = createOpenAI({
-      apiKey,
-      baseURL: 'https://api.openai.com/v1',
-      compatibility: 'strict',
-    })
-    const model = openAIClient(activeModel.id)
-
-    const systemPrompt = getAgentSystemPrompt()
+    const defaultSystem = process.env.NEXT_PUBLIC_DEFAULT_SYSTEM_PROMPT || ''
+    const systemPrompt = getAgentSystemPrompt(defaultSystem)
     const coreMessages: CoreMessage[] = convertConversationToCoreMessagesWithoutSystem(
       conversation as Conversation,
     ) as CoreMessage[]
 
-    // Create a TransformStream to multiplex tool events and final text
+    // Create a TransformStream to multiplex tool events and final text (AWS-friendly SSE)
     const stream = new TransformStream()
     const writer = stream.writable.getWriter()
 
@@ -160,21 +184,17 @@ export async function POST(req: NextRequest) {
       },
     } as any)
 
-    // Pipe the AI SDK data stream (SSE with data: {...})
-    const dataResponse = result.toDataStreamResponse({
-      // Ensure we include text-delta short channel lines (0:, e:, d:, f:)
-      // No custom options required; using default framing
-    })
-    const reader = (dataResponse as Response).body!.getReader()
-
+    // Stream plain JSON SSE for message tokens (no Vercel channel lines)
     ;(async () => {
-      const encoder = new TextEncoder()
       try {
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-          await writer.write(value)
+        const encoder = new TextEncoder()
+        for await (const delta of result.textStream) {
+          const frame = `event: message\ndata: ${JSON.stringify({ type: 'text', text: delta })}\n\n`
+          await writer.write(encoder.encode(frame))
         }
+      } catch (e) {
+        const encoder = new TextEncoder()
+        await writer.write(encoder.encode(encodeSSEEvent({ type: 'tool-error', name: 'agent', error: (e as Error).message })))
       } finally {
         await writer.close()
       }
