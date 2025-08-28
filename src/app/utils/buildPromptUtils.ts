@@ -117,7 +117,10 @@ export const buildPrompt = async ({
     // Execute asynchronous operations in parallel and await their results
     if (mode === 'optimize_prompt') {
       // Extract system messages from conversation history
-      const systemMessagesFromHistory = _extractSystemMessages(conversation)
+      const systemMessagesFromHistory = conversation.messages
+        .filter((m) => m.latestSystemMessage)
+        .map((m) => m.latestSystemMessage)
+        .join('\n\n')
 
       if (systemMessagesFromHistory && conversation.messages.length > 0) {
         const lastMessage =
@@ -179,7 +182,7 @@ You can plan and execute multiple tool calls sequentially or in parallel as need
       (conversation.messages[conversation.messages.length - 1]
         ?.contexts as ContextWithMetadata[]) || []
 
-    if (contexts && contexts.length > 0) {
+    if (!agentMode && contexts && contexts.length > 0) {
       // Documents are present; maintain all existing processes as normal
       // P5: query_topContext
 
@@ -254,6 +257,10 @@ You can plan and execute multiple tool calls sequentially or in parallel as need
     console.error('Error in buildPrompt:', error)
     throw error
   }
+}
+
+export function getDefaultPostPrompt(): string {
+  return `Please provide a clear, concise, and well-structured answer. Use bullet points where helpful, include citations like <cite>1</cite> when referencing retrieved documents, and avoid unsupported claims.`
 }
 
 const _getRecentConvoTokens = ({
@@ -507,140 +514,6 @@ const _getSystemPrompt = async ({
   }
 
   // Add math notation instructions
-  systemPrompt += `\nWhen responding with equations, use MathJax/KaTeX notation. Equations should be wrapped in either:
-
-  * Single dollar signs $...$ for inline math
-  * Double dollar signs $$...$$ for display/block math
-  * Or \\[...\\] for display math
-  
-  Here's how the equations should be formatted in the markdown: Schrödinger Equation: $i\\hbar \\frac{\\partial}{\\partial t} \\Psi(\\mathbf{r}, t) = \\hat{H} \\Psi(\\mathbf{r}, t)$`
-
-  // Check if contexts are present
-  const contexts =
-    (conversation.messages[conversation.messages.length - 1]
-      ?.contexts as ContextWithMetadata[]) || []
-
-  if (!contexts || contexts.length === 0) {
-    // No documents retrieved, return only system prompt
-    return systemPrompt.trim()
-  } else {
-    // Documents are present, combine system prompt with system post prompt
-    const systemPostPrompt = getSystemPostPrompt({
-      conversation: conversation as Conversation,
-      courseMetadata: courseMetadata ?? ({} as CourseMetadata),
-    })
-    return [systemPrompt, systemPostPrompt]
-      .filter((prompt) => prompt?.trim())
-      .join('\n\n')
-  }
-}
-
-export const getSystemPostPrompt = ({
-  conversation,
-  courseMetadata,
-}: {
-  conversation: Conversation
-  courseMetadata: CourseMetadata
-}): string => {
-  // If systemPromptOnly is true, return an empty string
-  if (isSystemPromptOnlyEnabled(conversation, courseMetadata)) {
-    return ''
-  }
-
-  const isGuidedLearning = isGuidedLearningEnabled(conversation, courseMetadata)
-  const isDocumentsOnly = isDocumentsOnlyEnabled(conversation, courseMetadata)
-
-  const postPrompt =
-    `Please analyze and respond to the following question using the excerpts from the provided documents. These documents can be PDF files or web pages. You may also see output from API calls (labeled as "tools") and image descriptions. Use this information to craft a detailed and accurate answer.
-
-When referencing information from the documents, you MUST include citations in your response. Citations should be placed at the end of complete thoughts, immediately before the period. For each distinct piece of information or section, cite the relevant source(s) using XML-style citation tags in the following format:
-- Use "<cite>1</cite>" when referencing document 1, placing it immediately before the period
-- For multiple sources, include all citation numbers within a single tag, separated by commas: "<cite>1, 2, 3</cite>"
-
-Here are examples of how to properly integrate citations in your response:
-- "The loop invariant is a condition that must be true before and after each iteration of the loop. This fundamental concept helps prove the correctness of loop-based algorithms <cite>1</cite>."
-- "Python lists are implemented as dynamic arrays. When the allocated space is filled, Python will automatically resize the array to accommodate more elements <cite>2</cite>."
-- "The course has a strict late submission policy. All assignments are due every Friday by 11:59 PM, and late submissions will incur a 10% penalty per day <cite>3</cite>."
-- "Object-oriented programming combines data and functionality into objects, while functional programming treats computation as the evaluation of mathematical functions and avoids changing state <cite>1, 3</cite>."
-
-Citations should be placed at the end of complete thoughts or sections, immediately before the period if applicable. This makes the text more readable while still maintaining clear attribution of information. Break down information into logical sections and cite the sources at the end of each complete thought.
-
-Note: You may see citations in the conversation history that appear differently due to post-processing formatting. Regardless of how they appear in previous messages, always use the XML-style citation format specified above in your responses.
-
-${
-  isGuidedLearning
-    ? 'IMPORTANT: While in guided learning mode, you must still cite all relevant course materials using the exact citation format—even if they contain direct answers. Never filter out or omit relevant materials.'
-    : ''
-}
-
-${
-  !isGuidedLearning && !isDocumentsOnly
-    ? 'If the answer is not in the provided documents, state so but still provide as helpful a response as possible to directly answer the question.'
-    : ''
-}
-
-When using tool outputs in your response, place the tool reference at the end of the relevant statement, before the period, using code notation. For example: "The repository contains three JavaScript files \`as per tool ls\`." Always be honest and transparent about tool results.
-
-The user message includes XML-style tags (e.g., <Potentially Relevant Documents>, <Tool Outputs>). Make sure to integrate this information appropriately in your answer.`.trim()
-
-  return postPrompt
-}
-
-export const getDefaultPostPrompt = (): string => {
-  // The default values for courseMetadata
-  const defaultCourseMetadata: CourseMetadata = {
-    is_private: false,
-    course_owner: '',
-    course_admins: [],
-    approved_emails_list: [],
-    example_questions: undefined,
-    banner_image_s3: undefined,
-    course_intro_message: undefined,
-    system_prompt: undefined,
-    openai_api_key: undefined, // TODO: remove
-    disabled_models: undefined, // TODO: remove
-    project_description: undefined,
-    documentsOnly: false,
-    guidedLearning: false,
-    systemPromptOnly: false,
-    vector_search_rewrite_disabled: false,
-  }
-
-  // Call getSystemPostPrompt with default values
-  return getSystemPostPrompt({
-    conversation: {
-      id: uuidv4(),
-      name: '',
-      messages: [],
-      model: {} as AnySupportedModel,
-      prompt: DEFAULT_SYSTEM_PROMPT,
-      temperature: 0.7,
-      folderId: null,
-      linkParameters: {
-        guidedLearning: false,
-        documentsOnly: false,
-        systemPromptOnly: false,
-      },
-    } as Conversation,
-    courseMetadata: defaultCourseMetadata,
-  })
-}
-
-const _extractSystemMessages = (conversation: Conversation): string => {
-  const systemMessages = conversation.messages
-    .filter((message) => message.role === 'system')
-    .map((message) => {
-      if (typeof message.content === 'string') {
-        return message.content
-      } else if (Array.isArray(message.content)) {
-        return message.content
-          .filter((c) => c.type === 'text')
-          .map((c) => c.text)
-          .join('\n')
-      }
-      return ''
-    })
-    .filter((content) => content.length > 0)
-
-  return systemMessages.join('\n\n')
+  systemPrompt += `\nWhen responding with equations, use MathJax/KaTeX notation. Equations should be wrapped in either:\n\n  * Single dollar signs $...$ for inline math\n  * Double dollar signs $$...$$ for display/block math\n  * Or \\[...\\] for display math\n  \n  Here's how the equations should be formatted in the markdown: Schrödinger Equation: $i\\hbar \\frac{\\partial}{\\partial t} \\Psi(\\mathbf{r}, t) = \\hat{H} \\Psi(\\mathbf{r}, t)$`
+  return systemPrompt
 }

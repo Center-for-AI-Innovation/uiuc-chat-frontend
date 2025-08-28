@@ -535,7 +535,10 @@ export const Chat = memo(
           }
 
           // Skip vector search entirely if there are no documents (unless Agent pipeline already ran)
-          if (!ranAgentPipeline && documentCount === 0) {
+          // In Agent Mode, skip retrieval in the default flow entirely
+          if (agentMode) {
+            // no-op: retrieval handled inside the agent pipeline when needed
+          } else if (!ranAgentPipeline && documentCount === 0) {
             // console.log('Vector search skipped: no documents available')
             homeDispatch({ field: 'wasQueryRewritten', value: false })
             homeDispatch({ field: 'queryRewriteText', value: null })
@@ -886,7 +889,7 @@ export const Chat = memo(
           }
 
           // Action 3: Tool Execution (skip if Agent pipeline already handled tools)
-          if (!ranAgentPipeline && tools.length > 0) {
+          if (!ranAgentPipeline && !agentMode && tools.length > 0) {
             try {
               homeDispatch({ field: 'isRouting', value: true })
               // Check if any tools need to be run
@@ -934,8 +937,27 @@ export const Chat = memo(
             }
           }
 
+          // Build a trimmed conversation for the final LLM call to avoid large payloads
+          const trimmedForFinal = {
+            ...updatedConversation,
+            messages: updatedConversation.messages
+              .slice(-10)
+              .map((m) => ({
+                id: m.id,
+                role: m.role,
+                content: Array.isArray(m.content)
+                  ? m.content.filter((c) => c.type === 'text')
+                  : m.content,
+                // strip heavy fields
+                contexts: undefined,
+                tools: undefined,
+                latestSystemMessage: undefined,
+                finalPromtEngineeredMessage: undefined,
+              })),
+          }
+
           const finalChatBody: ChatBody = {
-            conversation: updatedConversation,
+            conversation: trimmedForFinal,
             key: getOpenAIKey(llmProviders, courseMetadata, apiKey),
             course_name: courseName,
             stream: true,
@@ -946,7 +968,7 @@ export const Chat = memo(
             mode: 'chat',
             agentMode: agentMode === true,
           }
-          updatedConversation = finalChatBody.conversation!
+          // Keep local updatedConversation unchanged for UI (full data), but send trimmed to server
 
           // Action 4: Build Prompt - Put everything together into a prompt
           // const buildPromptResponse = await fetch('/api/buildPrompt', {
