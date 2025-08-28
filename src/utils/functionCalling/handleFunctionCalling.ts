@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { type ChatCompletionMessageToolCall } from 'openai/resources/chat/completions'
 import posthog from 'posthog-js'
 import { runN8nFlowBackend } from '~/pages/api/UIUC-api/runN8nFlow'
+import { handleContextSearch } from '~/utils/streamProcessing'
 import type { ToolOutput } from '~/types/chat'
 import { type Conversation, type Message, type UIUCTool } from '~/types/chat'
 import {
@@ -117,6 +118,7 @@ export async function handleToolCall(
   selectedConversation: Conversation,
   projectName: string,
   base_url?: string,
+  documentGroups?: string[],
 ) {
   try {
     if (uiucToolsToRun.length > 0) {
@@ -154,19 +156,46 @@ export async function handleToolCall(
         }
 
         try {
-          const toolOutput = await callN8nFunction(
-            tool,
-            projectName,
-            undefined,
-            base_url,
-          )
-          // Add success output: update message with tool output, but don't add another tool.
-          // ✅ TOOL SUCCEEDED
-          targetToolInMessage.output = toolOutput
+          if (tool.name === 'retrieve_documents') {
+            const query =
+              tool.aiGeneratedArgumentValues?.query ||
+              (typeof lastMessage.content === 'string'
+                ? (lastMessage.content as string)
+                : Array.isArray(lastMessage.content)
+                  ? lastMessage.content
+                      .filter((c) => c.type === 'text')
+                      .map((c) => c.text)
+                      .join(' ')
+                  : '')
+
+            const groups = Array.isArray(documentGroups)
+              ? documentGroups
+              : []
+
+            await handleContextSearch(
+              lastMessage,
+              projectName,
+              selectedConversation,
+              query,
+              groups,
+            )
+
+            targetToolInMessage.output = {
+              data: { contextsFound: (lastMessage.contexts || []).length },
+            }
+          } else {
+            const toolOutput = await callN8nFunction(
+              tool,
+              projectName,
+              undefined,
+              base_url,
+            )
+            // ✅ TOOL SUCCEEDED
+            targetToolInMessage.output = toolOutput
+          }
         } catch (error: unknown) {
           // ❌ TOOL ERRORED
           console.error(`Error running tool ${tool.readableName}: ${error}`)
-          // Add error output
           targetToolInMessage.error = `Error running tool: ${error}`
         }
       })

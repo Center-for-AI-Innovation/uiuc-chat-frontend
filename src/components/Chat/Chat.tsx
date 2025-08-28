@@ -847,6 +847,8 @@ export const Chat = memo(
                   uiucToolsToRun,
                   updatedConversation,
                   courseName,
+                  undefined,
+                  enabledDocumentGroups,
                 )
 
                 // Refresh after tool outputs arrive
