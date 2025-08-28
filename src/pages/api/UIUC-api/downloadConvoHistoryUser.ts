@@ -1,5 +1,5 @@
 import { getBackendUrl } from '~/utils/apiUtils'
-import { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiRequest, type NextApiResponse } from 'next'
 
 interface DownloadResult {
   message: string

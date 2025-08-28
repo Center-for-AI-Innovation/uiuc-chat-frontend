@@ -960,7 +960,16 @@ export const ChatMessage = memo(
                     <CodeBlock
                       key={Math.random()}
                       language={(match && match[1]) || ''}
-                      value={String(children).replace(/\n$/, '')}
+                      value={
+                        (match && match[1] && match[1].toLowerCase() === 'mermaid') 
+                          ? String(children) // Don't remove trailing newline for Mermaid
+                          : String(children).replace(/\n$/, '') // Remove trailing newline for other languages
+                      }
+                      isStreaming={
+                        messageIsStreaming &&
+                        messageIndex ===
+                          (selectedConversation?.messages.length ?? 0) - 1
+                      }
                       style={{
                         maxWidth: '100%',
                         overflowX: 'auto',
