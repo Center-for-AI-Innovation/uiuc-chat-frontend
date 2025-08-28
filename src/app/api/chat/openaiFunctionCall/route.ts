@@ -18,16 +18,18 @@ const conversationToMessages = (
   const transformedData: ChatCompletionMessageParam[] = []
 
   inputData.messages.forEach((message) => {
+    const contentText = Array.isArray(message.content)
+      ? (message.content.find((c) => c.type === 'text')?.text ?? '')
+      : message.content
     const simpleMessage: ChatCompletionMessageParam = {
       role: message.role,
-      content: Array.isArray(message.content)
-        ? (message.content[0]?.text ?? '')
-        : message.content,
+      content: contentText?.slice(0, 4000) || '',
     }
     transformedData.push(simpleMessage)
   })
 
-  return transformedData
+  // limit to last 10 messages server-side as a safeguard
+  return transformedData.slice(-10)
 }
 
 export async function POST(req: Request) {

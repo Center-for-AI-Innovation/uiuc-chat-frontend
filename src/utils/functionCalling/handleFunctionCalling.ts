@@ -28,13 +28,29 @@ export async function handleFunctionCall(
     const url = base_url
       ? `${base_url}/api/chat/openaiFunctionCall`
       : '/api/chat/openaiFunctionCall'
+    // Create a trimmed conversation payload to avoid large bodies
+    const maxMessages = 8
+    const trimmedMessages = selectedConversation.messages
+      .slice(-maxMessages)
+      .map((m) => ({
+        ...m,
+        contexts: undefined,
+        tools: undefined,
+        latestSystemMessage: undefined,
+        finalPromtEngineeredMessage: undefined,
+      }))
+    const trimmedConversation = {
+      ...selectedConversation,
+      messages: trimmedMessages,
+    }
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        conversation: selectedConversation,
+        conversation: trimmedConversation,
         tools: openAITools,
         imageUrls: imageUrls,
         imageDescription: imageDescription,
