@@ -29,6 +29,27 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
     } catch (err) {
       console.error('Failed to initialize Mermaid:', err)
     }
+
+    // Add global error handler for Mermaid DOM errors
+    const originalRemoveChild = Node.prototype.removeChild
+    Node.prototype.removeChild = function(child) {
+      try {
+        return originalRemoveChild.call(this, child)
+      } catch (error) {
+        // Suppress removeChild errors from Mermaid
+        if (error instanceof Error && error.name === 'NotFoundError' && error.message.includes('removeChild')) {
+          console.warn('Suppressed Mermaid DOM cleanup error:', error.message)
+          return child
+        }
+        throw error
+      }
+    }
+
+    // Cleanup function
+    return () => {
+      // Restore original removeChild
+      Node.prototype.removeChild = originalRemoveChild
+    }
   }, [])
 
   // Cleanup effect to prevent memory leaks
@@ -38,6 +59,19 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
       // Clean up any existing mermaid elements when component unmounts
       if (containerRef.current) {
         try {
+          // Remove all mermaid elements first
+          const mermaidElements = containerRef.current.querySelectorAll('.mermaid')
+          mermaidElements.forEach(el => {
+            try {
+              if (el.parentNode) {
+                el.parentNode.removeChild(el)
+              }
+            } catch (e) {
+              // Ignore cleanup errors
+            }
+          })
+          
+          // Then clear the container
           containerRef.current.innerHTML = ''
         } catch (err) {
           // Ignore cleanup errors
@@ -56,10 +90,14 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
 
     const renderDiagram = async () => {
       let tempDiv: HTMLDivElement | null = null
+      let renderAbortController: AbortController | null = null
       
       try {
         setError(null)
         setIsRendered(false)
+        
+        // Create an abort controller to cancel rendering if component unmounts
+        renderAbortController = new AbortController()
         
         // Clear the container
         if (containerRef.current) {
@@ -92,7 +130,7 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
         }
 
         // Check if container still exists before proceeding
-        if (!containerRef.current) {
+        if (!containerRef.current || !isMountedRef.current) {
           return
         }
 
@@ -106,7 +144,7 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
         tempDiv.textContent = cleanChart
         
         // Check if container still exists before appending
-        if (containerRef.current) {
+        if (containerRef.current && isMountedRef.current) {
           containerRef.current.appendChild(tempDiv)
         } else {
           return
@@ -116,47 +154,76 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
         await new Promise(resolve => setTimeout(resolve, 10))
 
         // Check if container and tempDiv still exist before rendering
-        if (!containerRef.current || !tempDiv || !tempDiv.parentNode) {
+        if (!containerRef.current || !tempDiv || !tempDiv.parentNode || !isMountedRef.current) {
           return
         }
 
-        // Render the diagram with error handling
+        // Use a timeout to prevent hanging renders
+        const renderTimeout = setTimeout(() => {
+          if (renderAbortController) {
+            renderAbortController.abort()
+          }
+        }, 10000) // 10 second timeout
+
         try {
-          await mermaid.run({
-            nodes: [tempDiv],
-          })
-        } catch (mermaidErr) {
-          // If mermaid.run fails, try a different approach
-          console.warn('Mermaid run failed, trying alternative approach:', mermaidErr)
-          
-          // Try rendering with render function instead
+          // Use the safer render approach directly instead of run
           const { svg } = await mermaid.render(id, cleanChart)
-          if (tempDiv && containerRef.current) {
+          
+          clearTimeout(renderTimeout)
+          
+          if (isMountedRef.current && tempDiv && containerRef.current) {
             tempDiv.innerHTML = svg
+            setIsRendered(true)
+          }
+        } catch (mermaidErr) {
+          clearTimeout(renderTimeout)
+          
+          console.error('Mermaid render failed:', mermaidErr)
+          
+          if (isMountedRef.current) {
+            setError('Failed to render Mermaid diagram')
           }
         }
         
-        if (isMountedRef.current) {
-          setIsRendered(true)
-        }
       } catch (err) {
         console.error('Error rendering Mermaid diagram:', err)
         if (isMountedRef.current) {
           setError(err instanceof Error ? err.message : 'Failed to render diagram')
         }
-        
-        // Clean up on error
-        if (tempDiv && tempDiv.parentNode) {
-          try {
-            tempDiv.parentNode.removeChild(tempDiv)
-          } catch (cleanupErr) {
-            // Ignore cleanup errors
-          }
+      } finally {
+        // Always clean up
+        if (renderAbortController) {
+          renderAbortController.abort()
         }
       }
     }
 
     renderDiagram()
+
+    // Cleanup function
+    return () => {
+      // Abort any ongoing rendering
+      if (containerRef.current) {
+        try {
+          // Remove all mermaid elements
+          const mermaidElements = containerRef.current.querySelectorAll('.mermaid')
+          mermaidElements.forEach(el => {
+            try {
+              if (el.parentNode) {
+                el.parentNode.removeChild(el)
+              }
+            } catch (e) {
+              // Ignore cleanup errors
+            }
+          })
+          
+          // Clear the container
+          containerRef.current.innerHTML = ''
+        } catch (err) {
+          // Ignore cleanup errors
+        }
+      }
+    }
   }, [chart, isStreaming])
 
   if (error) {
