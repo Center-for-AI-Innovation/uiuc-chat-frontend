@@ -1519,8 +1519,8 @@ export const ChatMessage = memo(
                             </div>
                           )}
 
-                          {/* Tool inputs - agent mode uses batch grouping; default shows original routing accordion */}
-                          {agentMode && isRouting === false && message.tools && (
+                          {/* Tool inputs - show immediately when tools exist; keep visible during routing */}
+                          {agentMode && message.tools && message.tools.length > 0 && (
                             (() => {
                               const tools = message.tools
                               const batches = tools.reduce((acc: Record<number, typeof tools>, t) => {
@@ -1539,7 +1539,7 @@ export const ChatMessage = memo(
                                       <IntermediateStateAccordion
                                         accordionKey={`routing-batch-${batch}`}
                                         title={`Tool calls (batch ${batch}) - inputs`}
-                                        isLoading={false}
+                                        isLoading={isRunningTool}
                                         error={false}
                                         content={
                                           <div className="flex flex-col gap-2">
@@ -1562,81 +1562,6 @@ export const ChatMessage = memo(
                                                   ) : (
                                                     <pre>{JSON.stringify(response.aiGeneratedArgumentValues, null, 2)}</pre>
                                                   )}
-                                                </div>
-                                              </div>
-                                            ))}
-                                          </div>
-                                        }
-                                      />
-                                      <IntermediateStateAccordion
-                                        accordionKey={`tool-batch-${batch}`}
-                                        title={`Tool calls (batch ${batch}) - outputs`}
-                                        isLoading={false}
-                                        error={false}
-                                        content={
-                                          <div className="flex flex-col gap-3">
-                                            {(batches[batch] || []).map((response, index) => (
-                                              <div key={`out-${batch}-${index}`}>
-                                                <Badge
-                                                  color="var(--background-dark)"
-                                                  radius="md"
-                                                  size="sm"
-                                                  styles={{
-                                                    root: {
-                                                      color: response.error
-                                                        ? 'var(--illinois-white)'
-                                                        : 'var(--foreground)',
-                                                      backgroundColor: response.error
-                                                        ? 'var(--badge-error)'
-                                                        : 'var(--background-dark)',
-                                                    },
-                                                  }}
-                                                >
-                                                  {response.readableName}
-                                                </Badge>
-                                                <div className="mt-1 text-xs">
-                                                  {(() => {
-                                                    if (response.error) return <span>{response.error}</span>
-                                                    const outputs = Array.isArray(response.output)
-                                                      ? response.output
-                                                      : response.output
-                                                        ? [response.output]
-                                                        : []
-                                                    if (outputs.length > 1) {
-                                                      return (
-                                                        <div className="flex flex-wrap gap-2">
-                                                          {outputs.map((out, i) => (
-                                                            <span key={i} className="rounded-full bg-[--background] px-3 py-1 text-xs text-[--foreground]">
-                                                              {out.text
-                                                                ? out.text
-                                                                : out.data
-                                                                  ? Object.keys(out.data).slice(0, 3).join(', ')
-                                                                  : out.imageUrls
-                                                                    ? `${out.imageUrls.length} image(s)`
-                                                                    : 'Done'}
-                                                            </span>
-                                                          ))}
-                                                        </div>
-                                                      )
-                                                    }
-                                                    const single = outputs[0]
-                                                    return (
-                                                      <>
-                                                        <div style={{ display: 'flex', overflowX: 'auto', gap: '10px' }}>
-                                                          {single?.imageUrls && single.imageUrls.map((imageUrl: string, i: number) => (
-                                                            <div key={i} className={classes.imageContainerStyle}>
-                                                              <div className="overflow-hidden rounded-lg">
-                                                                <ImagePreview src={imageUrl} alt={`Tool output image ${i}`} className={classes.imageStyle} />
-                                                              </div>
-                                                            </div>
-                                                          ))}
-                                                        </div>
-                                                        <div>
-                                                          {single?.text ? single.text : JSON.stringify(single?.data, null, 2)}
-                                                        </div>
-                                                      </>
-                                                    )
-                                                  })()}
                                                 </div>
                                               </div>
                                             ))}
