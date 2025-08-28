@@ -1483,7 +1483,17 @@ export const ChatMessage = memo(
                               />
                             )}
 
-                          {/* Hide standalone retrieval accordion in Agent mode; tool output shows contexts */}
+                          {/* Retrieval results (default chat only) */}
+                          {!agentMode && Array.isArray(message.contexts) &&
+                            message.contexts.length > 0 && (
+                              <IntermediateStateAccordion
+                                accordionKey="retrieval-results"
+                                title="Retrieved documents"
+                                isLoading={false}
+                                error={false}
+                                content={`Found ${getContextsLength(message.contexts)} document chunks.`}
+                              />
+                            )}
 
                           {/* Retrieval loading state (default chat only) */}
                           {!agentMode && isRetrievalLoading &&
