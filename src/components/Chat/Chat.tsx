@@ -433,7 +433,63 @@ export const Chat = memo(
           let imgDesc = ''
           let imageUrls: string[] = []
 
-          // Agent Mode now reuses the existing provider-agnostic flow below
+          // Agent Mode orchestration (tools + retrieval), otherwise fall back to default flow
+          let ranAgentPipeline = false
+          if (agentMode) {
+            ranAgentPipeline = true
+            try {
+              const retrievalTool: UIUCTool = {
+                id: 'internal-retrieval',
+                name: 'retrieve_documents',
+                readableName: 'Retrieve documents',
+                description:
+                  'Retrieve relevant course documents given a search query. Parameters: query (string). Optionally provide groups as a comma-separated string to restrict retrieval to specific document groups.',
+                inputParameters: {
+                  type: 'object',
+                  properties: {
+                    query: { type: 'string', description: 'Search query' },
+                    groups: {
+                      type: 'string',
+                      description:
+                        'Optional comma-separated document group names to search within',
+                    },
+                  },
+                  required: ['query'],
+                },
+              }
+              const agentTools: UIUCTool[] = [...tools, retrievalTool]
+
+              for (let round = 0; round < 3; round++) {
+                homeDispatch({ field: 'isRouting', value: true })
+                const proposed = await handleFunctionCall(
+                  message,
+                  agentTools,
+                  imageUrls,
+                  imgDesc,
+                  updatedConversation,
+                  getOpenAIKey(llmProviders, courseMetadata, apiKey),
+                )
+                homeDispatch({ field: 'isRouting', value: false })
+                homeDispatch({ field: 'selectedConversation', value: updatedConversation })
+                if (!proposed || proposed.length === 0) break
+
+                homeDispatch({ field: 'isRunningTool', value: true })
+                await handleToolCall(
+                  proposed,
+                  updatedConversation,
+                  courseName,
+                  undefined,
+                  enabledDocumentGroups,
+                )
+                homeDispatch({ field: 'isRunningTool', value: false })
+                homeDispatch({ field: 'selectedConversation', value: updatedConversation })
+              }
+            } catch (e) {
+              console.error('Agent pipeline error:', e)
+              homeDispatch({ field: 'isRouting', value: false })
+              homeDispatch({ field: 'isRunningTool', value: false })
+            }
+          }
 
           // Action 1: Image to Text Conversion
           if (Array.isArray(message.content)) {
@@ -469,15 +525,15 @@ export const Chat = memo(
             }
           }
 
-          // Skip vector search entirely if there are no documents
-          if (documentCount === 0) {
+          // Skip vector search entirely if there are no documents (unless Agent pipeline already ran)
+          if (!ranAgentPipeline && documentCount === 0) {
             // console.log('Vector search skipped: no documents available')
             homeDispatch({ field: 'wasQueryRewritten', value: false })
             homeDispatch({ field: 'queryRewriteText', value: null })
             message.wasQueryRewritten = undefined
             message.queryRewriteText = undefined
             message.contexts = []
-          } else {
+          } else if (!ranAgentPipeline) {
             // Action 2: Context Retrieval: Vector Search
             let rewrittenQuery = searchQuery // Default to original query
 
@@ -820,8 +876,8 @@ export const Chat = memo(
             homeDispatch({ field: 'isRetrievalLoading', value: false })
           }
 
-          // Action 3: Tool Execution
-          if (tools.length > 0) {
+          // Action 3: Tool Execution (skip if Agent pipeline already handled tools)
+          if (!ranAgentPipeline && tools.length > 0) {
             try {
               homeDispatch({ field: 'isRouting', value: true })
               // Check if any tools need to be run
