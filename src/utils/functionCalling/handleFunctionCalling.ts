@@ -33,7 +33,11 @@ export async function handleFunctionCall(
     const trimmedMessages = selectedConversation.messages
       .slice(-maxMessages)
       .map((m) => ({
-        ...m,
+        id: m.id,
+        role: m.role,
+        content: Array.isArray(m.content)
+          ? m.content.filter((c) => c.type === 'text')
+          : m.content,
         contexts: undefined,
         tools: undefined,
         latestSystemMessage: undefined,

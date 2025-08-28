@@ -215,7 +215,7 @@ You can plan and execute multiple tool calls sequentially or in parallel as need
       conversation.messages[conversation.messages.length - 1]
 
     // Move Tool Outputs to be added before the userQuery
-    if (latestUserMessage?.tools) {
+    if (!agentMode && latestUserMessage?.tools) {
       const toolsOutputResults = _buildToolsOutputResults({ conversation })
 
       // Add Tool Instructions and outputs
