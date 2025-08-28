@@ -937,27 +937,25 @@ export const Chat = memo(
             }
           }
 
-          // Build a trimmed conversation for the final LLM call to avoid large payloads
-          const trimmedForFinal = {
-            ...updatedConversation,
-            messages: updatedConversation.messages
-              .slice(-10)
-              .map((m) => ({
-                id: m.id,
-                role: m.role,
-                content: Array.isArray(m.content)
-                  ? m.content.filter((c) => c.type === 'text')
-                  : m.content,
-                // strip heavy fields
-                contexts: undefined,
-                tools: undefined,
-                latestSystemMessage: undefined,
-                finalPromtEngineeredMessage: undefined,
-              })),
-          }
-
           const finalChatBody: ChatBody = {
-            conversation: trimmedForFinal,
+            conversation: agentMode
+              ? {
+                  ...updatedConversation,
+                  messages: updatedConversation.messages
+                    .slice(-10)
+                    .map((m) => ({
+                      id: m.id,
+                      role: m.role,
+                      content: Array.isArray(m.content)
+                        ? m.content.filter((c) => c.type === 'text')
+                        : m.content,
+                      contexts: undefined,
+                      tools: undefined,
+                      latestSystemMessage: undefined,
+                      finalPromtEngineeredMessage: undefined,
+                    })),
+                }
+              : updatedConversation,
             key: getOpenAIKey(llmProviders, courseMetadata, apiKey),
             course_name: courseName,
             stream: true,
