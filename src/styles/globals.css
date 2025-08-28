@@ -1282,3 +1282,64 @@ https://icflorescu.github.io/mantine-datatable/examples/records-selection/
     }
   }
 }
+
+/* Mermaid Diagram Styles */
+.mermaid-container {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.mermaid-container svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.mermaid-error {
+  border: 1px solid #fca5a5;
+  background-color: #fef2f2;
+  border-radius: 0.375rem;
+  padding: 1rem;
+}
+
+.mermaid-error p {
+  margin: 0;
+}
+
+.mermaid-error details {
+  margin-top: 0.5rem;
+}
+
+.mermaid-error summary {
+  cursor: pointer;
+  font-weight: 500;
+  color: #dc2626;
+}
+
+.mermaid-error pre {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background-color: #f3f4f6;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Dark mode support for Mermaid */
+@media (prefers-color-scheme: dark) {
+  .mermaid-error {
+    border-color: #7f1d1d;
+    background-color: #450a0a;
+  }
+  
+  .mermaid-error summary {
+    color: #fca5a5;
+  }
+  
+  .mermaid-error pre {
+    background-color: #1f2937;
+    color: #d1d5db;
+  }
+}

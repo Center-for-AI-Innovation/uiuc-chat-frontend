@@ -9,6 +9,7 @@ import {
   generateRandomString,
   programmingLanguages,
 } from '@/utils/app/codeblock'
+import { MermaidDiagram } from './MermaidDiagram'
 
 interface Props {
   language: string
@@ -32,6 +33,7 @@ export const CodeBlock: FC<Props> = memo(({ language, value }) => {
       }, 2000)
     })
   }
+  
   const downloadAsFile = () => {
     const fileExtension = programmingLanguages[language] || '.file'
     const suggestedFileName = `file-${generateRandomString(
@@ -59,6 +61,41 @@ export const CodeBlock: FC<Props> = memo(({ language, value }) => {
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
   }
+
+  // Check if this is a Mermaid diagram
+  if (language.toLowerCase() === 'mermaid') {
+    return (
+      <div
+        className="codeblock relative font-sans text-[16px]"
+        style={{ maxWidth: '100%', overflowX: 'auto' }}
+      >
+        <div className="flex items-center justify-between px-4 py-1.5">
+          <span className="text-xs lowercase text-white">mermaid</span>
+
+          <div className="flex items-center">
+            <button
+              className="codeblock-button flex items-center gap-1.5 rounded bg-none p-1 text-xs text-white"
+              onClick={copyToClipboard}
+            >
+              {isCopied ? <IconCheck size={18} /> : <IconClipboard size={18} />}
+              {isCopied ? t('Copied!') : t('Copy code')}
+            </button>
+            <button
+              className="codeblock-button flex items-center rounded bg-none p-1 text-xs text-white"
+              onClick={downloadAsFile}
+            >
+              <IconDownload size={18} />
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-gray-900 p-4 rounded-b">
+          <MermaidDiagram chart={value} />
+        </div>
+      </div>
+    )
+  }
+
   return (
     // <div className="codeblock relative font-sans text-[16px]">
 
