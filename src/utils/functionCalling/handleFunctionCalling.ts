@@ -94,8 +94,17 @@ export async function handleFunctionCall(
       (tool) => tool.id !== 'error',
     )
 
-    // Update the message object with the array of tool invocations
-    message.tools = [...validUiucToolsToRun]
+    // Append tool invocations to message.tools instead of replacing
+    const existingTools: UIUCTool[] = Array.isArray(message.tools)
+      ? (message.tools as UIUCTool[])
+      : []
+
+    const dedupedNewTools = validUiucToolsToRun.filter((newTool) => {
+      if (!newTool.invocationId) return true
+      return !existingTools.some((t) => t.invocationId === newTool.invocationId)
+    })
+
+    message.tools = [...existingTools, ...dedupedNewTools]
     selectedConversation.messages[selectedConversation.messages.length - 1] =
       message
     console.log(
@@ -191,7 +200,15 @@ export async function handleToolCall(
               base_url,
             )
             // ✅ TOOL SUCCEEDED
-            targetToolInMessage.output = toolOutput
+            // If this tool is called multiple times, aggregate outputs as an array
+            if (targetToolInMessage.output && !Array.isArray(targetToolInMessage.output)) {
+              targetToolInMessage.output = [targetToolInMessage.output]
+            }
+            if (Array.isArray(targetToolInMessage.output)) {
+              targetToolInMessage.output.push(toolOutput)
+            } else {
+              targetToolInMessage.output = toolOutput
+            }
           }
         } catch (error: unknown) {
           // ❌ TOOL ERRORED

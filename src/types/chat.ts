@@ -69,7 +69,7 @@ export interface UIUCTool {
   enabled?: boolean
   createdAt?: string
   updatedAt?: string
-  output?: ToolOutput // Use a unified output type
+  output?: ToolOutput | ToolOutput[] // Use a unified output type or an array for repeated calls
   error?: string
   tags?: { name: string }[]
   contexts?: ContextWithMetadata[]

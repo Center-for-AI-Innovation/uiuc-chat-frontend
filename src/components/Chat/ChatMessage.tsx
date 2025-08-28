@@ -573,15 +573,22 @@ export const ChatMessage = memo(
       const processTools = async () => {
         if (message.tools && message.tools.length > 0) {
           for (const tool of message.tools) {
-            if (tool.output && tool.output.s3Paths) {
-              const imageUrls = await Promise.all(
-                tool.output.s3Paths.map(async (s3Path) => {
-                  return getPresignedUrl(s3Path, courseName)
-                }),
-              )
-              tool.output.imageUrls = tool.output.imageUrls
-                ? [...tool.output.imageUrls, ...imageUrls]
-                : imageUrls
+            const outputs = Array.isArray(tool.output)
+              ? tool.output
+              : tool.output
+                ? [tool.output]
+                : []
+            for (const out of outputs) {
+              if (out && out.s3Paths) {
+                const imageUrls = await Promise.all(
+                  out.s3Paths.map(async (s3Path) => {
+                    return getPresignedUrl(s3Path, courseName)
+                  }),
+                )
+                out.imageUrls = out.imageUrls
+                  ? [...out.imageUrls, ...imageUrls]
+                  : imageUrls
+              }
             }
             if (
               tool.aiGeneratedArgumentValues &&
@@ -604,19 +611,23 @@ export const ChatMessage = memo(
               tool.aiGeneratedArgumentValues.image_urls =
                 JSON.stringify(validUrls)
             }
-            if (tool.output && tool.output.imageUrls) {
-              const validUrls = await Promise.all(
-                tool.output.imageUrls.map(async (imageUrl) => {
-                  const isValid = await checkIfUrlIsValid(imageUrl)
-                  if (!isValid) {
-                    console.log('Image URL is expired')
-                    const s3_path = extractPathFromUrl(imageUrl)
-                    return getPresignedUrl(s3_path, courseName)
-                  }
-                  return imageUrl
-                }),
-              )
-              tool.output.imageUrls = validUrls
+            if (outputs.length > 0) {
+              for (const out of outputs) {
+                if (out.imageUrls) {
+                  const validUrls = await Promise.all(
+                    out.imageUrls.map(async (imageUrl) => {
+                      const isValid = await checkIfUrlIsValid(imageUrl)
+                      if (!isValid) {
+                        console.log('Image URL is expired')
+                        const s3_path = extractPathFromUrl(imageUrl)
+                        return getPresignedUrl(s3_path, courseName)
+                      }
+                      return imageUrl
+                    }),
+                  )
+                  out.imageUrls = validUrls
+                }
+              }
             }
           }
         }
@@ -1471,17 +1482,7 @@ export const ChatMessage = memo(
                               />
                             )}
 
-                          {/* Retrieval results for all messages */}
-                          {Array.isArray(message.contexts) &&
-                            message.contexts.length > 0 && (
-                              <IntermediateStateAccordion
-                                accordionKey="retrieval loading"
-                                title="Retrieved documents"
-                                isLoading={false}
-                                error={false}
-                                content={`Found ${getContextsLength(message.contexts)} document chunks.`}
-                              />
-                            )}
+                          {/* Hide standalone retrieval accordion in Agent mode; tool output shows contexts */}
 
                           {/* Retrieval loading state for last message */}
                           {isRetrievalLoading &&
@@ -1500,22 +1501,12 @@ export const ChatMessage = memo(
                               />
                             )}
 
-                          {/* Tool Routing loading state for last message */}
-                          {isRouting &&
-                            (messageIndex ===
-                              (selectedConversation?.messages.length ?? 0) -
-                                1 ||
-                              messageIndex ===
-                                (selectedConversation?.messages.length ?? 0) -
-                                  2) && (
-                              <IntermediateStateAccordion
-                                accordionKey={`routing tools`}
-                                title={'Routing the request to relevant tools'}
-                                isLoading={isRouting}
-                                error={false}
-                                content={<></>}
-                              />
-                            )}
+                          {/* Agent overall thinking shimmer when routing */}
+                          {isRouting && (
+                            <div className="my-1 w-full animate-pulse rounded-md bg-[--background-faded] p-2 text-sm text-[--foreground]">
+                              Thinking...
+                            </div>
+                          )}
 
                           {/* Tool input arguments state for last message */}
                           {isRouting === false &&
@@ -1650,54 +1641,65 @@ export const ChatMessage = memo(
                                     response.error === undefined
                                   }
                                   error={response.error ? true : false}
-                                  content={
-                                    <>
-                                      {response.error ? (
-                                        <span>{response.error}</span>
-                                      ) : (
-                                        <>
-                                          <div
-                                            style={{
-                                              display: 'flex',
-                                              overflowX: 'auto',
-                                              gap: '10px',
-                                            }}
-                                          >
-                                            {response.output?.imageUrls &&
-                                              response.output?.imageUrls.map(
-                                                (imageUrl, index) => (
-                                                  <div
-                                                    key={index}
-                                                    className={
-                                                      classes.imageContainerStyle
-                                                    }
-                                                  >
-                                                    <div className="overflow-hidden rounded-lg">
-                                                      <ImagePreview
-                                                        src={imageUrl}
-                                                        alt={`Tool output image ${index}`}
-                                                        className={
-                                                          classes.imageStyle
-                                                        }
-                                                      />
-                                                    </div>
-                                                  </div>
-                                                ),
-                                              )}
-                                          </div>
-                                          <div>
-                                            {response.output?.text
-                                              ? response.output.text
-                                              : JSON.stringify(
-                                                  response.output?.data,
-                                                  null,
-                                                  2,
-                                                )}
-                                          </div>
-                                        </>
-                                      )}
-                                    </>
-                                  }
+                                  content={(() => {
+                                    if (response.error) return <span>{response.error}</span>
+                                    const outputs = Array.isArray(response.output)
+                                      ? response.output
+                                      : response.output
+                                        ? [response.output]
+                                        : []
+
+                                    if (outputs.length > 1) {
+                                      // Multiple calls to the same tool: render pills
+                                      return (
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                          {outputs.map((out, i) => (
+                                            <span
+                                              key={i}
+                                              className="rounded-full bg-[--background] px-3 py-1 text-xs text-[--foreground]"
+                                            >
+                                              {out.text
+                                                ? out.text
+                                                : out.data
+                                                  ? Object.keys(out.data)
+                                                      .slice(0, 3)
+                                                      .join(', ')
+                                                  : out.imageUrls
+                                                    ? `${out.imageUrls.length} image(s)`
+                                                    : 'Done'}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      )
+                                    }
+
+                                    const single = outputs[0]
+                                    return (
+                                      <>
+                                        <div
+                                          style={{ display: 'flex', overflowX: 'auto', gap: '10px' }}
+                                        >
+                                          {single?.imageUrls &&
+                                            single.imageUrls.map((imageUrl: string, index: number) => (
+                                              <div key={index} className={classes.imageContainerStyle}>
+                                                <div className="overflow-hidden rounded-lg">
+                                                  <ImagePreview
+                                                    src={imageUrl}
+                                                    alt={`Tool output image ${index}`}
+                                                    className={classes.imageStyle}
+                                                  />
+                                                </div>
+                                              </div>
+                                            ))}
+                                        </div>
+                                        <div>
+                                          {single?.text
+                                            ? single.text
+                                            : JSON.stringify(single?.data, null, 2)}
+                                        </div>
+                                      </>
+                                    )
+                                  })()}
                                 />
                               ))}
                             </>
