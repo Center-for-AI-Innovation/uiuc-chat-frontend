@@ -181,16 +181,23 @@ export async function handleToolCall(
               ? documentGroups
               : []
 
-            await handleContextSearch(
+            const contexts = await handleContextSearch(
               lastMessage,
               projectName,
               selectedConversation,
               query,
               groups,
             )
-
+            // Attach contexts explicitly and also surface in tool output
+            if (Array.isArray(contexts) && contexts.length > 0) {
+              lastMessage.contexts = contexts
+            }
+            targetToolInMessage.contexts = lastMessage.contexts || []
             targetToolInMessage.output = {
-              data: { contextsFound: (lastMessage.contexts || []).length },
+              data: {
+                contextsFound: (lastMessage.contexts || []).length,
+                contexts: (lastMessage.contexts || []).slice(0, 5),
+              },
             }
           } else {
             const toolOutput = await callN8nFunction(

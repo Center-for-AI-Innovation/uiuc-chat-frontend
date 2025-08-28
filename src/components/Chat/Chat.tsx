@@ -470,6 +470,15 @@ export const Chat = memo(
                   getOpenAIKey(llmProviders, courseMetadata, apiKey),
                 )
                 homeDispatch({ field: 'isRouting', value: false })
+                // Tag this batch on the just-appended tool placeholders
+                if (proposed && message.tools) {
+                  const ids = new Set(proposed.map((t) => t.invocationId))
+                  message.tools.forEach((t) => {
+                    if (t.invocationId && ids.has(t.invocationId)) {
+                      t.batchId = round + 1
+                    }
+                  })
+                }
                 homeDispatch({ field: 'selectedConversation', value: updatedConversation })
                 if (!proposed || proposed.length === 0) break
 
