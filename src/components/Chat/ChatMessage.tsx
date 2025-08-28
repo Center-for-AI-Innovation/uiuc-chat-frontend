@@ -231,6 +231,7 @@ export const ChatMessage = memo(
         isRetrievalLoading,
         isQueryRewriting,
         loading,
+        agentMode,
       },
       dispatch: homeDispatch,
     } = useContext(HomeContext)
@@ -1484,8 +1485,8 @@ export const ChatMessage = memo(
 
                           {/* Hide standalone retrieval accordion in Agent mode; tool output shows contexts */}
 
-                          {/* Retrieval loading state for last message */}
-                          {isRetrievalLoading &&
+                          {/* Retrieval loading state (default chat only) */}
+                          {!agentMode && isRetrievalLoading &&
                             (messageIndex ===
                               (selectedConversation?.messages.length ?? 0) -
                                 1 ||
@@ -1501,15 +1502,15 @@ export const ChatMessage = memo(
                               />
                             )}
 
-                          {/* Agent overall thinking shimmer when routing - subtle and bottom-aligned */}
-                          {isRouting && (
+                          {/* Agent-only thinking shimmer */}
+                          {agentMode && isRouting && (
                             <div className="mt-2 w-full animate-pulse p-1 text-xs text-[--foreground] opacity-70">
                               Thinking...
                             </div>
                           )}
 
-                          {/* Tool input arguments state for last message - grouped by batch */}
-                          {isRouting === false && message.tools && (
+                          {/* Tool inputs - agent mode uses batch grouping; default shows original routing accordion */}
+                          {agentMode && isRouting === false && message.tools && (
                             (() => {
                               const tools = message.tools
                               const batches = tools.reduce((acc: Record<number, typeof tools>, t) => {
@@ -1584,15 +1585,30 @@ export const ChatMessage = memo(
                               )
                             })()
                           )}
+                          {!agentMode && isRouting &&
+                            (messageIndex ===
+                              (selectedConversation?.messages.length ?? 0) -
+                                1 ||
+                              messageIndex ===
+                                (selectedConversation?.messages.length ?? 0) -
+                                  2) && (
+                              <IntermediateStateAccordion
+                                accordionKey={`routing tools`}
+                                title={'Routing the request to relevant tools'}
+                                isLoading={isRouting}
+                                error={false}
+                                content={<></>}
+                              />
+                            )}
 
-                          {/* Tool output states for last message - grouped by batch */}
+                          {/* Tool outputs - agent mode grouped by batch; default unchanged */}
                           {(messageIndex ===
                             (selectedConversation?.messages.length ?? 0) - 1 ||
                             messageIndex ===
                               (selectedConversation?.messages.length ?? 0) -
                                 2) && (
                             <>
-                              {(() => {
+                              {agentMode ? (() => {
                                 if (!message.tools) return null
                                 const tools = message.tools
                                 const batches = tools.reduce((acc: Record<number, typeof tools>, t) => {
@@ -1686,7 +1702,66 @@ export const ChatMessage = memo(
                                     ))}
                                   </>
                                 )
-                              })()}
+                              })() : (
+                                message.tools?.map((response, index) => (
+                                  <IntermediateStateAccordion
+                                    key={`tool-${index}`}
+                                    accordionKey={`tool-${index}`}
+                                    title={
+                                      <>
+                                        Tool output from{' '}
+                                        <Badge
+                                          color="var(--background-dark)"
+                                          radius="md"
+                                          size="sm"
+                                          styles={{
+                                            root: {
+                                              color: response.error
+                                                ? 'var(--illinois-white)'
+                                                : 'var(--foreground)',
+                                              backgroundColor: response.error
+                                                ? 'var(--badge-error)'
+                                                : 'var(--background-dark)',
+                                            },
+                                          }}
+                                        >
+                                          {response.readableName}
+                                        </Badge>
+                                      </>
+                                    }
+                                    isLoading={
+                                      response.output === undefined &&
+                                      response.error === undefined
+                                    }
+                                    error={response.error ? true : false}
+                                    content={(() => {
+                                      if (response.error) return <span>{response.error}</span>
+                                      const outputs = Array.isArray(response.output)
+                                        ? response.output
+                                        : response.output
+                                          ? [response.output]
+                                          : []
+                                      const single = outputs[0]
+                                      return (
+                                        <>
+                                          <div style={{ display: 'flex', overflowX: 'auto', gap: '10px' }}>
+                                            {single?.imageUrls && single.imageUrls.map((imageUrl: string, i: number) => (
+                                              <div key={i} className={classes.imageContainerStyle}>
+                                                <div className="overflow-hidden rounded-lg">
+                                                  <ImagePreview src={imageUrl} alt={`Tool output image ${i}`} className={classes.imageStyle} />
+                                                </div>
+                                              </div>
+                                            ))}
+                                          </div>
+                                          <div>
+                                            {single?.text ? single.text : JSON.stringify(single?.data, null, 2)}
+                                          </div>
+                                        </>
+                                      )
+                                    })()}
+                                  />
+                                ))
+                              )}
                             </>
                           )}
                           {(() => {
