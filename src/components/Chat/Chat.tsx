@@ -806,10 +806,16 @@ export const Chat = memo(
             await handleContextSearch(
               message,
               courseName,
-              selectedConversation,
+              updatedConversation,
               rewrittenQuery,
               enabledDocumentGroups,
             )
+
+            // Update conversation so retrieval accordions render immediately
+            homeDispatch({
+              field: 'selectedConversation',
+              value: updatedConversation,
+            })
 
             homeDispatch({ field: 'isRetrievalLoading', value: false })
           }
@@ -828,6 +834,12 @@ export const Chat = memo(
                 getOpenAIKey(llmProviders, courseMetadata, apiKey),
               )
               homeDispatch({ field: 'isRouting', value: false })
+
+              // Refresh selectedConversation so tool input accordions render
+              homeDispatch({
+                field: 'selectedConversation',
+                value: updatedConversation,
+              })
               if (uiucToolsToRun.length > 0) {
                 homeDispatch({ field: 'isRunningTool', value: true })
                 // Run the tools
@@ -836,6 +848,12 @@ export const Chat = memo(
                   updatedConversation,
                   courseName,
                 )
+
+                // Refresh after tool outputs arrive
+                homeDispatch({
+                  field: 'selectedConversation',
+                  value: updatedConversation,
+                })
               }
 
               homeDispatch({ field: 'isRunningTool', value: false })
