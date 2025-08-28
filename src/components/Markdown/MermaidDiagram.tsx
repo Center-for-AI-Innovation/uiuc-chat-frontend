@@ -29,27 +29,6 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
     } catch (err) {
       console.error('Failed to initialize Mermaid:', err)
     }
-
-    // Add global error handler for Mermaid DOM errors
-    const originalRemoveChild = Node.prototype.removeChild
-    Node.prototype.removeChild = function(child) {
-      try {
-        return originalRemoveChild.call(this, child)
-      } catch (error) {
-        // Suppress removeChild errors from Mermaid
-        if (error instanceof Error && error.name === 'NotFoundError' && error.message.includes('removeChild')) {
-          console.warn('Suppressed Mermaid DOM cleanup error:', error.message)
-          return child
-        }
-        throw error
-      }
-    }
-
-    // Cleanup function
-    return () => {
-      // Restore original removeChild
-      Node.prototype.removeChild = originalRemoveChild
-    }
   }, [])
 
   // Cleanup effect to prevent memory leaks
@@ -90,24 +69,29 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
 
     const renderDiagram = async () => {
       let tempDiv: HTMLDivElement | null = null
-      let renderAbortController: AbortController | null = null
       
       try {
         setError(null)
         setIsRendered(false)
         
-        // Create an abort controller to cancel rendering if component unmounts
-        renderAbortController = new AbortController()
-        
-        // Clear the container
-        if (containerRef.current) {
-          containerRef.current.innerHTML = ''
-        }
-
         // Clean the chart content - remove streaming cursor and other problematic characters
         const cleanChart = chart
           .replace(/▍/g, '') // Remove streaming cursor
           .replace(/\u200B/g, '') // Remove zero-width space
+          .replace(/[\u200C\u200D\uFEFF]/g, '') // Remove other invisible characters
+          .replace(/[^\x00-\x7F]/g, (char) => {
+            // Replace non-ASCII characters with their closest ASCII equivalent or remove them
+            const replacements: { [key: string]: string } = {
+              '\u2013': '-', // en dash
+              '\u2014': '-', // em dash
+              '\u201C': '"', // left double quote
+              '\u201D': '"', // right double quote
+              '\u2018': "'", // left single quote
+              '\u2019': "'", // right single quote
+              '\u2026': '...', // ellipsis
+            }
+            return replacements[char] || char
+          })
           .trim()
 
         // Don't render if chart is empty after cleaning
@@ -137,6 +121,11 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
         // Generate a unique ID for this diagram
         const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`
         
+        // Clear the container first
+        if (containerRef.current) {
+          containerRef.current.innerHTML = ''
+        }
+        
         // Create a temporary element to render the diagram
         tempDiv = document.createElement('div')
         tempDiv.id = id
@@ -150,38 +139,26 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
           return
         }
 
-        // Wait a bit to ensure DOM is ready
-        await new Promise(resolve => setTimeout(resolve, 10))
-
         // Check if container and tempDiv still exist before rendering
         if (!containerRef.current || !tempDiv || !tempDiv.parentNode || !isMountedRef.current) {
           return
         }
 
-        // Use a timeout to prevent hanging renders
-        const renderTimeout = setTimeout(() => {
-          if (renderAbortController) {
-            renderAbortController.abort()
-          }
-        }, 10000) // 10 second timeout
-
         try {
           // Use the safer render approach directly instead of run
           const { svg } = await mermaid.render(id, cleanChart)
-          
-          clearTimeout(renderTimeout)
           
           if (isMountedRef.current && tempDiv && containerRef.current) {
             tempDiv.innerHTML = svg
             setIsRendered(true)
           }
         } catch (mermaidErr) {
-          clearTimeout(renderTimeout)
-          
           console.error('Mermaid render failed:', mermaidErr)
           
           if (isMountedRef.current) {
-            setError('Failed to render Mermaid diagram')
+            // Show the actual error message to help with debugging
+            const errorMessage = mermaidErr instanceof Error ? mermaidErr.message : 'Failed to render Mermaid diagram'
+            setError(`Mermaid parsing error: ${errorMessage}`)
           }
         }
         
@@ -190,11 +167,6 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
         if (isMountedRef.current) {
           setError(err instanceof Error ? err.message : 'Failed to render diagram')
         }
-      } finally {
-        // Always clean up
-        if (renderAbortController) {
-          renderAbortController.abort()
-        }
       }
     }
 
@@ -202,26 +174,12 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
 
     // Cleanup function
     return () => {
-      // Abort any ongoing rendering
+      // Mark as unmounted
+      isMountedRef.current = false
+      
+      // Clean up container
       if (containerRef.current) {
-        try {
-          // Remove all mermaid elements
-          const mermaidElements = containerRef.current.querySelectorAll('.mermaid')
-          mermaidElements.forEach(el => {
-            try {
-              if (el.parentNode) {
-                el.parentNode.removeChild(el)
-              }
-            } catch (e) {
-              // Ignore cleanup errors
-            }
-          })
-          
-          // Clear the container
-          containerRef.current.innerHTML = ''
-        } catch (err) {
-          // Ignore cleanup errors
-        }
+        containerRef.current.innerHTML = ''
       }
     }
   }, [chart, isStreaming])
