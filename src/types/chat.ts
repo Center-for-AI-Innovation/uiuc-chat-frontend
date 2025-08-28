@@ -128,6 +128,7 @@ export interface ChatBody {
   llmProviders?: AllLLMProviders
   skipQueryRewrite?: boolean
   mode: 'chat' | 'optimize_prompt'
+  agentMode?: boolean
 }
 
 export interface ImageBody {

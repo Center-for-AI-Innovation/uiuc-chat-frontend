@@ -86,11 +86,13 @@ export const buildPrompt = async ({
   projectName,
   courseMetadata,
   mode,
+  agentMode,
 }: {
   conversation: Conversation | undefined
   projectName: string
   courseMetadata: CourseMetadata | undefined
   mode?: BuildPromptMode
+  agentMode?: boolean
 }): Promise<Conversation> => {
   /*
     System prompt -- defined by user. If documents are provided, add the citations instructions to it.
@@ -132,7 +134,7 @@ export const buildPrompt = async ({
     allPromises.push(_getLastUserTextInput({ conversation }))
     allPromises.push(_getLastToolResult({ conversation }))
     allPromises.push(_getSystemPrompt({ courseMetadata, conversation }))
-    const [lastUserTextInput, lastToolResult, systemPrompt] =
+    const [lastUserTextInput, lastToolResult, systemPromptRaw] =
       (await Promise.all(allPromises)) as [
         string,
         UIUCTool[],
@@ -140,7 +142,14 @@ export const buildPrompt = async ({
       ]
 
     // Build the final system prompt with all components
-    const finalSystemPrompt = systemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
+    let finalSystemPrompt = systemPromptRaw ?? DEFAULT_SYSTEM_PROMPT ?? ''
+
+    if (agentMode) {
+      const AGENT_CORE_INSTRUCTIONS = `\n\n<AgentMode>
+You can plan and execute multiple tool calls sequentially or in parallel as needed. Prefer exhaustive evidence gathering from tools and retrieved documents before drafting the final answer. If multiple tools are relevant, include all of them with complete, explicit arguments. Ask for clarification only when inputs are truly ambiguous. The final response should be structured, well-organized, and comprehensive. Always keep citations in the specified XML format (<cite>1</cite>) when referencing retrieved documents, and clearly indicate any information derived from tools using code-formatted tool names.
+</AgentMode>`
+      finalSystemPrompt += AGENT_CORE_INSTRUCTIONS
+    }
 
     // Adjust remaining token budget based on the system prompt length
     if (encoding) {

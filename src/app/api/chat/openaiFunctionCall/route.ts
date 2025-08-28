@@ -62,7 +62,8 @@ export async function POST(req: Request) {
 
   // Add system message
   const globalToolsSytemPromptPrefix =
-    "Don't make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous. If you have ideas for suitable defaults, suggest that as an option to the user when asking for clarification.\n"
+    "Don't make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous. If you have ideas for suitable defaults, suggest that as an option to the user when asking for clarification.\n" +
+    "You may propose multiple tool_calls in one response when more than one tool is relevant. Parallelize independent tool invocations. Provide complete, explicit arguments for each call. If a tool is not necessary, return no tool_calls. Keep tool names exactly as provided.\n"
   message_to_send.unshift({
     role: 'system',
     content: globalToolsSytemPromptPrefix + conversation.prompt,
