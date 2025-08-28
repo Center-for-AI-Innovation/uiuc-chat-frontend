@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import mermaid from 'mermaid'
 
 interface MermaidDiagramProps {
@@ -15,7 +15,9 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
   const containerRef = useRef<HTMLDivElement>(null)
   const [error, setError] = useState<string | null>(null)
   const [isRendered, setIsRendered] = useState(false)
+  const [svgContent, setSvgContent] = useState<string>('')
   const isMountedRef = useRef(true)
+  const renderTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     // Initialize mermaid with configuration
@@ -36,142 +38,121 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
   useEffect(() => {
     return () => {
       isMountedRef.current = false
-      // Clean up any existing mermaid elements when component unmounts
-      if (containerRef.current) {
-        try {
-          // Remove all mermaid elements first
-          const mermaidElements = containerRef.current.querySelectorAll('.mermaid')
-          mermaidElements.forEach(el => {
-            try {
-              if (el.parentNode) {
-                el.parentNode.removeChild(el)
-              }
-            } catch (e) {
-              // Ignore cleanup errors
-            }
-          })
-          
-          // Then clear the container
-          containerRef.current.innerHTML = ''
-        } catch (err) {
-          // Ignore cleanup errors
-        }
+      if (renderTimeoutRef.current) {
+        clearTimeout(renderTimeoutRef.current)
       }
     }
   }, [])
 
+  // Clean chart content
+  const cleanChartContent = useCallback((chartText: string) => {
+    return chartText
+      .replace(/▍/g, '') // Remove streaming cursor
+      .replace(/\u200B/g, '') // Remove zero-width space
+      .replace(/[\u200C\u200D\uFEFF]/g, '') // Remove other invisible characters
+      .replace(/[^\x00-\x7F]/g, (char) => {
+        // Replace non-ASCII characters with their closest ASCII equivalent or remove them
+        const replacements: { [key: string]: string } = {
+          '\u2013': '-', // en dash
+          '\u2014': '-', // em dash
+          '\u201C': '"', // left double quote
+          '\u201D': '"', // right double quote
+          '\u2018': "'", // left single quote
+          '\u2019': "'", // right single quote
+          '\u2026': '...', // ellipsis
+        }
+        return replacements[char] || char
+      })
+      // Additional cleaning for problematic patterns
+      .replace(/[^\w\s\-_()[\]{}.,:;]/g, ' ') // Replace problematic characters with spaces
+      .replace(/\s+/g, ' ') // Normalize multiple spaces
+      .trim()
+  }, [])
+
+  // Render diagram in a separate function
+  const renderDiagram = useCallback(async (chartText: string) => {
+    try {
+      setError(null)
+      setIsRendered(false)
+      setSvgContent('')
+      
+      const cleanChart = cleanChartContent(chartText)
+
+      // Don't render if chart is empty after cleaning
+      if (!cleanChart) {
+        if (isMountedRef.current) {
+          setError('Empty or invalid Mermaid diagram')
+        }
+        return
+      }
+
+      // Basic validation - check if it looks like a mermaid diagram
+      const mermaidKeywords = ['graph', 'flowchart', 'sequenceDiagram', 'classDiagram', 'stateDiagram', 'erDiagram', 'journey', 'gantt', 'pie', 'gitgraph']
+      const hasMermaidKeyword = mermaidKeywords.some(keyword => cleanChart.toLowerCase().includes(keyword))
+      
+      if (!hasMermaidKeyword) {
+        if (isMountedRef.current) {
+          setError('Invalid Mermaid diagram syntax')
+        }
+        return
+      }
+
+      // Generate a unique ID for this diagram
+      const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`
+
+      try {
+        // Use the safer render approach directly instead of run
+        const { svg } = await mermaid.render(id, cleanChart)
+        
+        if (isMountedRef.current) {
+          setSvgContent(svg)
+          setIsRendered(true)
+        }
+      } catch (mermaidErr) {
+        console.error('Mermaid render failed:', mermaidErr)
+        
+        if (isMountedRef.current) {
+          // Show the actual error message to help with debugging
+          const errorMessage = mermaidErr instanceof Error ? mermaidErr.message : 'Failed to render Mermaid diagram'
+          setError(`Mermaid parsing error: ${errorMessage}`)
+        }
+      }
+      
+    } catch (err) {
+      console.error('Error rendering Mermaid diagram:', err)
+      if (isMountedRef.current) {
+        setError(err instanceof Error ? err.message : 'Failed to render diagram')
+      }
+    }
+  }, [cleanChartContent])
+
   useEffect(() => {
-    if (!containerRef.current || !chart) return
+    if (!chart) return
 
     // Don't render during streaming to avoid cursor character issues
     if (isStreaming) {
       return
     }
 
-    const renderDiagram = async () => {
-      try {
-        setError(null)
-        setIsRendered(false)
-        
-        // Clean the chart content - remove streaming cursor and other problematic characters
-        const cleanChart = chart
-          .replace(/▍/g, '') // Remove streaming cursor
-          .replace(/\u200B/g, '') // Remove zero-width space
-          .replace(/[\u200C\u200D\uFEFF]/g, '') // Remove other invisible characters
-          .replace(/[^\x00-\x7F]/g, (char) => {
-            // Replace non-ASCII characters with their closest ASCII equivalent or remove them
-            const replacements: { [key: string]: string } = {
-              '\u2013': '-', // en dash
-              '\u2014': '-', // em dash
-              '\u201C': '"', // left double quote
-              '\u201D': '"', // right double quote
-              '\u2018': "'", // left single quote
-              '\u2019': "'", // right single quote
-              '\u2026': '...', // ellipsis
-            }
-            return replacements[char] || char
-          })
-          // Additional cleaning for problematic patterns
-          .replace(/[^\w\s\-_()[\]{}.,:;]/g, ' ') // Replace problematic characters with spaces
-          .replace(/\s+/g, ' ') // Normalize multiple spaces
-          .trim()
-
-        // Don't render if chart is empty after cleaning
-        if (!cleanChart) {
-          if (isMountedRef.current) {
-            setError('Empty or invalid Mermaid diagram')
-          }
-          return
-        }
-
-        // Basic validation - check if it looks like a mermaid diagram
-        const mermaidKeywords = ['graph', 'flowchart', 'sequenceDiagram', 'classDiagram', 'stateDiagram', 'erDiagram', 'journey', 'gantt', 'pie', 'gitgraph']
-        const hasMermaidKeyword = mermaidKeywords.some(keyword => cleanChart.toLowerCase().includes(keyword))
-        
-        if (!hasMermaidKeyword) {
-          if (isMountedRef.current) {
-            setError('Invalid Mermaid diagram syntax')
-          }
-          return
-        }
-
-        // Check if container still exists before proceeding
-        if (!containerRef.current || !isMountedRef.current) {
-          return
-        }
-
-        // Generate a unique ID for this diagram
-        const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`
-        
-        // Clear the container first
-        if (containerRef.current) {
-          containerRef.current.innerHTML = ''
-        }
-
-        // Check if container still exists after clearing
-        if (!containerRef.current || !isMountedRef.current) {
-          return
-        }
-
-        try {
-          // Use the safer render approach directly instead of run
-          const { svg } = await mermaid.render(id, cleanChart)
-          
-          if (isMountedRef.current && containerRef.current) {
-            containerRef.current.innerHTML = svg
-            setIsRendered(true)
-          }
-        } catch (mermaidErr) {
-          console.error('Mermaid render failed:', mermaidErr)
-          
-          if (isMountedRef.current) {
-            // Show the actual error message to help with debugging
-            const errorMessage = mermaidErr instanceof Error ? mermaidErr.message : 'Failed to render Mermaid diagram'
-            setError(`Mermaid parsing error: ${errorMessage}`)
-          }
-        }
-        
-      } catch (err) {
-        console.error('Error rendering Mermaid diagram:', err)
-        if (isMountedRef.current) {
-          setError(err instanceof Error ? err.message : 'Failed to render diagram')
-        }
-      }
+    // Clear any existing timeout
+    if (renderTimeoutRef.current) {
+      clearTimeout(renderTimeoutRef.current)
     }
 
-    renderDiagram()
+    // Use a timeout to debounce rendering and avoid rapid re-renders
+    renderTimeoutRef.current = setTimeout(() => {
+      if (isMountedRef.current) {
+        renderDiagram(chart)
+      }
+    }, 100)
 
     // Cleanup function
     return () => {
-      // Mark as unmounted
-      isMountedRef.current = false
-      
-      // Clean up container
-      if (containerRef.current) {
-        containerRef.current.innerHTML = ''
+      if (renderTimeoutRef.current) {
+        clearTimeout(renderTimeoutRef.current)
       }
     }
-  }, [chart, isStreaming])
+  }, [chart, isStreaming, renderDiagram])
 
   if (error) {
     return (
@@ -204,6 +185,12 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
       )}
       {!isRendered && !isStreaming && !error && (
         <div className="text-gray-500 text-sm">Rendering diagram...</div>
+      )}
+      {isRendered && svgContent && (
+        <div 
+          dangerouslySetInnerHTML={{ __html: svgContent }}
+          style={{ width: '100%', height: 'auto' }}
+        />
       )}
       {error && (
         <div className="text-red-500 text-sm">
