@@ -1535,61 +1535,115 @@ export const ChatMessage = memo(
                               return (
                                 <>
                                   {batchKeys.map((batch) => (
-                                    <IntermediateStateAccordion
-                                      key={`routing-batch-${batch}`}
-                                      accordionKey={`routing-batch-${batch}`}
-                                      title={`Tool calls (batch ${batch}) - inputs`}
-                                      isLoading={false}
-                                      error={false}
-                                      content={
-                                        <div className="flex flex-col gap-2">
-                                          {(batches[batch] || []).map((response, index) => (
-                                            <div key={`arg-${batch}-${index}`} className="text-xs">
-                                              <Badge
-                                                color="var(--background-dark)"
-                                                radius="md"
-                                                size="sm"
-                                                styles={{
-                                                  root: {
-                                                    color: 'var(--foreground)',
-                                                    backgroundColor: 'var(--background-dark)',
-                                                  },
-                                                }}
-                                              >
-                                                {response.readableName}
-                                              </Badge>
-                                              <div className="mt-1">
-                                                {response.aiGeneratedArgumentValues?.image_urls ? (
-                                                  <div className="flex overflow-x-auto">
-                                                    {JSON.parse(
-                                                      response.aiGeneratedArgumentValues.image_urls,
-                                                    ).map((imageUrl: string, i: number) => (
-                                                      <div key={i} className={classes.imageContainerStyle}>
-                                                        <div className="overflow-hidden rounded-lg">
-                                                          <ImagePreview
-                                                            src={imageUrl}
-                                                            alt={`Tool image argument ${i}`}
-                                                            className={classes.imageStyle}
-                                                          />
+                                    <div key={`batch-${batch}`} className="flex flex-col gap-2">
+                                      <IntermediateStateAccordion
+                                        accordionKey={`routing-batch-${batch}`}
+                                        title={`Tool calls (batch ${batch}) - inputs`}
+                                        isLoading={false}
+                                        error={false}
+                                        content={
+                                          <div className="flex flex-col gap-2">
+                                            {(batches[batch] || []).map((response, index) => (
+                                              <div key={`arg-${batch}-${index}`} className="text-xs">
+                                                <Badge color="var(--background-dark)" radius="md" size="sm" styles={{ root: { color: 'var(--foreground)', backgroundColor: 'var(--background-dark)' } }}>
+                                                  {response.readableName}
+                                                </Badge>
+                                                <div className="mt-1">
+                                                  {response.aiGeneratedArgumentValues?.image_urls ? (
+                                                    <div className="flex overflow-x-auto">
+                                                      {JSON.parse(response.aiGeneratedArgumentValues.image_urls).map((imageUrl: string, i: number) => (
+                                                        <div key={i} className={classes.imageContainerStyle}>
+                                                          <div className="overflow-hidden rounded-lg">
+                                                            <ImagePreview src={imageUrl} alt={`Tool image argument ${i}`} className={classes.imageStyle} />
+                                                          </div>
                                                         </div>
-                                                      </div>
-                                                    ))}
-                                                  </div>
-                                                ) : (
-                                                  <pre>
-                                                    {JSON.stringify(
-                                                      response.aiGeneratedArgumentValues,
-                                                      null,
-                                                      2,
-                                                    )}
-                                                  </pre>
-                                                )}
+                                                      ))}
+                                                    </div>
+                                                  ) : (
+                                                    <pre>{JSON.stringify(response.aiGeneratedArgumentValues, null, 2)}</pre>
+                                                  )}
+                                                </div>
                                               </div>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      }
-                                    />
+                                            ))}
+                                          </div>
+                                        }
+                                      />
+                                      <IntermediateStateAccordion
+                                        accordionKey={`tool-batch-${batch}`}
+                                        title={`Tool calls (batch ${batch}) - outputs`}
+                                        isLoading={false}
+                                        error={false}
+                                        content={
+                                          <div className="flex flex-col gap-3">
+                                            {(batches[batch] || []).map((response, index) => (
+                                              <div key={`out-${batch}-${index}`}>
+                                                <Badge
+                                                  color="var(--background-dark)"
+                                                  radius="md"
+                                                  size="sm"
+                                                  styles={{
+                                                    root: {
+                                                      color: response.error
+                                                        ? 'var(--illinois-white)'
+                                                        : 'var(--foreground)',
+                                                      backgroundColor: response.error
+                                                        ? 'var(--badge-error)'
+                                                        : 'var(--background-dark)',
+                                                    },
+                                                  }}
+                                                >
+                                                  {response.readableName}
+                                                </Badge>
+                                                <div className="mt-1 text-xs">
+                                                  {(() => {
+                                                    if (response.error) return <span>{response.error}</span>
+                                                    const outputs = Array.isArray(response.output)
+                                                      ? response.output
+                                                      : response.output
+                                                        ? [response.output]
+                                                        : []
+                                                    if (outputs.length > 1) {
+                                                      return (
+                                                        <div className="flex flex-wrap gap-2">
+                                                          {outputs.map((out, i) => (
+                                                            <span key={i} className="rounded-full bg-[--background] px-3 py-1 text-xs text-[--foreground]">
+                                                              {out.text
+                                                                ? out.text
+                                                                : out.data
+                                                                  ? Object.keys(out.data).slice(0, 3).join(', ')
+                                                                  : out.imageUrls
+                                                                    ? `${out.imageUrls.length} image(s)`
+                                                                    : 'Done'}
+                                                            </span>
+                                                          ))}
+                                                        </div>
+                                                      )
+                                                    }
+                                                    const single = outputs[0]
+                                                    return (
+                                                      <>
+                                                        <div style={{ display: 'flex', overflowX: 'auto', gap: '10px' }}>
+                                                          {single?.imageUrls && single.imageUrls.map((imageUrl: string, i: number) => (
+                                                            <div key={i} className={classes.imageContainerStyle}>
+                                                              <div className="overflow-hidden rounded-lg">
+                                                                <ImagePreview src={imageUrl} alt={`Tool output image ${i}`} className={classes.imageStyle} />
+                                                              </div>
+                                                            </div>
+                                                          ))}
+                                                        </div>
+                                                        <div>
+                                                          {single?.text ? single.text : JSON.stringify(single?.data, null, 2)}
+                                                        </div>
+                                                      </>
+                                                    )
+                                                  })()}
+                                                </div>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        }
+                                      />
+                                    </div>
                                   ))}
                                 </>
                               )

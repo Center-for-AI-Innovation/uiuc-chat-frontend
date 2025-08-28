@@ -121,6 +121,16 @@ export async function handleFunctionCall(
     })
 
     message.tools = [...existingTools, ...dedupedNewTools]
+    // Persist inputs for this batch in server memory
+    try {
+      const convoId = selectedConversation.id
+      const batchId = (dedupedNewTools[0]?.batchId as number) || 1
+      await fetch(`/api/agent-memory?convoId=${encodeURIComponent(convoId)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ batchId, inputs: dedupedNewTools }),
+      })
+    } catch (_) {}
     selectedConversation.messages[selectedConversation.messages.length - 1] =
       message
     console.log(
@@ -232,6 +242,16 @@ export async function handleToolCall(
             } else {
               targetToolInMessage.output = toolOutput
             }
+            // Persist outputs for this batch in server memory
+            try {
+              const convoId = selectedConversation.id
+              const batchId = (targetToolInMessage.batchId as number) || 1
+              await fetch(`/api/agent-memory?convoId=${encodeURIComponent(convoId)}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ batchId, outputs: [targetToolInMessage] }),
+              })
+            } catch (_) {}
           }
         } catch (error: unknown) {
           // ❌ TOOL ERRORED
