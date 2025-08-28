@@ -14,9 +14,10 @@ import { MermaidDiagram } from './MermaidDiagram'
 interface Props {
   language: string
   value: string
+  isStreaming?: boolean
 }
 
-export const CodeBlock: FC<Props> = memo(({ language, value }) => {
+export const CodeBlock: FC<Props> = memo(({ language, value, isStreaming = false }) => {
   const { t } = useTranslation('markdown')
   const [isCopied, setIsCopied] = useState<boolean>(false)
 
@@ -90,7 +91,7 @@ export const CodeBlock: FC<Props> = memo(({ language, value }) => {
         </div>
 
         <div className="bg-gray-900 p-4 rounded-b">
-          <MermaidDiagram chart={value} />
+          <MermaidDiagram chart={value} isStreaming={isStreaming} />
         </div>
       </div>
     )

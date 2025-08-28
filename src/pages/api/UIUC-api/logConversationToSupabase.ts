@@ -1,7 +1,7 @@
 import { sanitizeForLogging } from '@/utils/sanitization'
 import { supabase } from '@/utils/supabaseClient'
 import { RunTree } from 'langsmith'
-import { Content, Conversation } from '~/types/chat'
+import { type Content, type Conversation } from '~/types/chat'
 import { getBackendUrl } from '~/utils/apiUtils'
 
 export const config = {

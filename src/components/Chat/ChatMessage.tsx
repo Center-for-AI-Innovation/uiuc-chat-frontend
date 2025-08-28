@@ -961,6 +961,11 @@ export const ChatMessage = memo(
                       key={Math.random()}
                       language={(match && match[1]) || ''}
                       value={String(children).replace(/\n$/, '')}
+                      isStreaming={
+                        messageIsStreaming &&
+                        messageIndex ===
+                          (selectedConversation?.messages.length ?? 0) - 1
+                      }
                       style={{
                         maxWidth: '100%',
                         overflowX: 'auto',

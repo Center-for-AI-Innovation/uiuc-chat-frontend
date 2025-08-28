@@ -4,11 +4,13 @@ import mermaid from 'mermaid'
 interface MermaidDiagramProps {
   chart: string
   className?: string
+  isStreaming?: boolean
 }
 
 export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
   chart,
   className = '',
+  isStreaming = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const [error, setError] = useState<string | null>(null)
@@ -24,8 +26,23 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
     })
   }, [])
 
+  // Cleanup effect to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      // Clean up any existing mermaid elements when component unmounts
+      if (containerRef.current) {
+        containerRef.current.innerHTML = ''
+      }
+    }
+  }, [])
+
   useEffect(() => {
     if (!containerRef.current || !chart) return
+
+    // Don't render during streaming to avoid cursor character issues
+    if (isStreaming) {
+      return
+    }
 
     const renderDiagram = async () => {
       try {
@@ -37,6 +54,18 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
           containerRef.current.innerHTML = ''
         }
 
+        // Clean the chart content - remove streaming cursor and other problematic characters
+        const cleanChart = chart
+          .replace(/▍/g, '') // Remove streaming cursor
+          .replace(/\u200B/g, '') // Remove zero-width space
+          .trim()
+
+        // Don't render if chart is empty after cleaning
+        if (!cleanChart) {
+          setError('Empty or invalid Mermaid diagram')
+          return
+        }
+
         // Generate a unique ID for this diagram
         const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`
         
@@ -44,7 +73,7 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
         const tempDiv = document.createElement('div')
         tempDiv.id = id
         tempDiv.className = 'mermaid'
-        tempDiv.textContent = chart
+        tempDiv.textContent = cleanChart
         
         if (containerRef.current) {
           containerRef.current.appendChild(tempDiv)
@@ -63,7 +92,7 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
     }
 
     renderDiagram()
-  }, [chart])
+  }, [chart, isStreaming])
 
   if (error) {
     return (
@@ -91,7 +120,10 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
         minHeight: isRendered ? 'auto' : '100px'
       }}
     >
-      {!isRendered && (
+      {isStreaming && (
+        <div className="text-gray-500 text-sm">Waiting for complete diagram...</div>
+      )}
+      {!isRendered && !isStreaming && (
         <div className="text-gray-500 text-sm">Rendering diagram...</div>
       )}
     </div>

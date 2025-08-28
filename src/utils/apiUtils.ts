@@ -1,7 +1,7 @@
 // utils/apiUtils.ts
-import { CoreMessage } from 'ai'
+import { type CoreMessage } from 'ai'
 import { v4 as uuidv4 } from 'uuid'
-import { Conversation, Message } from '~/types/chat'
+import { type Conversation, type Message } from '~/types/chat'
 import {
   type CourseMetadata,
   type CourseMetadataOptionalForUpsert,
