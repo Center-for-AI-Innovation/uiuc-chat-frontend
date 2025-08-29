@@ -761,32 +761,6 @@ const Home: NextPage = () => {
               </div>
             </div>
           </div>
-
-          <div
-            className="
-              mx-auto flex
-              w-full
-
-              max-w-3xl flex-col items-start justify-center
-              gap-16 sm:flex-row
-            "
-          >
-            <div className="mt-16 sm:w-1/2">
-              <h2
-                className={`
-                text-xl font-bold
-                ${montserrat_heading.variable} font-montserratHeading
-              `}
-              >
-                Want something custom?
-              </h2>
-
-              <div className="mt-4">
-                We build features for industry partners to bring GenAI to their
-                org. Reach out at <a href="mailto:hi@uiuc.chat">hi@uiuc.chat</a>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* second section below the blue banner */}
@@ -799,10 +773,10 @@ const Home: NextPage = () => {
           >
             About Us
           </h4>
-          <div className="mt-4 grid grid-cols-1 gap-14 sm:grid-cols-2 md:gap-8">
+          <div className="mt-4 grid grid-cols-1 gap-14 sm:grid-cols-3 md:gap-8">
             <Link
               className="duration-600 flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6 transition-transform hover:scale-[1.01]"
-              href="https://github.com/Center-for-AI-Innovation/uiuc-chat-frontend"
+              href="mailto:genaisupport@mx.uillinois.edu"
               target="_blank"
             >
               <h3
@@ -811,12 +785,35 @@ const Home: NextPage = () => {
                 ${montserrat_heading.variable} font-montserratHeading
               `}
               >
-                Read the code
+                Support
               </h3>
               <div className="text-md">
-                100% free<br></br>100% open source &#40;MIT License&#41;
-                <br></br>100% awesome
+                If you have any questions or would like to submit a bug please
+                email us at{' '}
+                <a
+                  style={{ color: 'var(--illinois-orange)' }}
+                  href="mailto:genaisupport@mx.uillinois.edu"
+                >
+                  genaisupport@mx.uillinois.edu
+                </a>
+                .
               </div>
+              {/* <div className="text-lg">Sponsored by the </div> */}
+            </Link>
+            <Link
+              className="duration-600 flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6 transition-transform hover:scale-[1.01]"
+              href="https://github.com/Center-for-AI-Innovation"
+              target="_blank"
+            >
+              <h3
+                className={`
+                text-xl font-bold
+                ${montserrat_heading.variable} font-montserratHeading
+              `}
+              >
+                Open source
+              </h3>
+              <div className="text-md">MIT License</div>
             </Link>
             <Link
               className="duration-600 flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6 transition-transform hover:scale-[1.01]"
@@ -829,75 +826,16 @@ const Home: NextPage = () => {
                 ${montserrat_heading.variable} font-montserratHeading
               `}
               >
-                Sponsored by the Center of{' '}
-                <span className="whitespace-nowrap">AI Innovation</span>
+                Developed at Illinois
               </h3>
               <div className="text-md">
-                Part of the National Center for Supercomputing Applications.
+                Developed by the Center of{' '}
+                <span className="whitespace-nowrap">AI Innovation</span> at the
+                National Center for Supercomputing Applications.
               </div>
-            </Link>
-            <Link
-              className="duration-600 flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6 transition-transform hover:scale-[1.01]"
-              href="https://rohanmarwaha.com/"
-              target="_blank"
-            >
-              <h3
-                className={`
-                text-xl font-bold
-                ${montserrat_heading.variable} font-montserratHeading
-              `}
-              >
-                Bio
-              </h3>
-              <div className="text-md">
-                Started by Rohan Marwaha at the University of Illinois. But it{' '}
-                <a
-                  href="https://github.com/Center-for-AI-Innovation/uiuc-chat-frontend/graphs/contributors"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    textDecoration: 'underline',
-                    textDecorationColor: 'var(--illinois-blue)',
-                  }}
-                >
-                  takes a village
-                </a>
-                .
-              </div>
-              {/* <div className="text-lg">Sponsored by the </div> */}
-            </Link>
-
-            <Link
-              className="duration-600 flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6 transition-transform hover:scale-[1.01]"
-              href="https://status.uiuc.chat/"
-              target="_blank"
-            >
-              {/* text-[var(--illinois-white)] hover:bg-[var(--illinois-white)]/20 */}
-              <h3
-                className={`
-                text-xl font-bold
-                ${montserrat_heading.variable} font-montserratHeading
-              `}
-              >
-                Status page
-              </h3>
-              {/* <div className="text-lg">Check service uptime.</div> */}
-              <Image
-                src="https://status.uiuc.chat/api/badge/1/uptime/24?label=Uptime%2024%20hours"
-                alt="Service Uptime Badge"
-                width={150}
-                height={50}
-              />
-              <Image
-                src="https://status.uiuc.chat/api/badge/1/uptime/720?label=Uptime%2030%20days"
-                alt="Service Uptime Badge"
-                width={150}
-                height={50}
-              />
             </Link>
           </div>
         </div>
-
         <GlobalFooter />
       </main>
     </>
