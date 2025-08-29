@@ -20,13 +20,15 @@ const HeaderStepNavigation = ({
         )}
 
         {title && (
-          <h4 className="overflow-hidden text-ellipsis whitespace-nowrap text-lg font-semibold">
+          <h4 className="overflow-hidden text-ellipsis whitespace-nowrap text-xl font-semibold">
             {title}
           </h4>
         )}
 
         {description && (
-          <div className="text-sm text-[--foreground-faded]">{description}</div>
+          <div className="mt-1 text-sm text-[--foreground-faded]">
+            {description}
+          </div>
         )}
       </div>
     </>
