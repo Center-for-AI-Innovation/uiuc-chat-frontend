@@ -10,6 +10,9 @@ import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { initiateSignIn } from '~/utils/authHelpers'
 
+import { IconArrowBackUp } from '@tabler/icons-react'
+import { Button } from '@mantine/core'
+
 const NotAuthorizedPage: NextPage = () => {
   const router = useRouter()
   const auth = useAuth()
@@ -108,7 +111,38 @@ const NotAuthorizedPage: NextPage = () => {
     console.debug('not_authorized.tsx -- Loading spinner')
     return (
       <MainPageBackground>
-        <LoadingSpinner />
+        <div className="flex h-full min-h-[16rem] w-full flex-col items-center justify-center p-4">
+          <img src="/media/error_sad_bot_illini_blue.png"></img>
+
+          <div className="mt-4 font-semibold">
+            Sorry, you don’t have access to this chatbot.
+          </div>
+          <div className="mt-1">
+            Contact the project administrator for access.
+          </div>
+
+          <Button
+            className={`
+                mt-8 h-auto border
+                border-[--dashboard-border] bg-transparent
+                p-2 text-sm
+                text-[--foreground] opacity-70
+        
+                hover:border-[--dashboard-button]
+                hover:bg-transparent
+                hover:text-[--dashboard-button]
+                hover:opacity-100
+              `}
+            onClick={() => {
+              router.push(`/`)
+            }}
+          >
+            <IconArrowBackUp className="mr-1 text-sm" />
+            <div>Return to Illinois Chat Home</div>
+          </Button>
+        </div>
+
+        {/*        <LoadingSpinner /> */}
       </MainPageBackground>
     )
   }

@@ -370,10 +370,12 @@ export const Chat = memo(
           let updatedConversation: Conversation
           if (deleteCount) {
             // FIXED: Don't clear contexts if they come from a file upload
-            const isFileUploadMessage = Array.isArray(message.content) && message.content.some(c => 
-              typeof c === 'object' && c.type === 'file'
-            )
-            
+            const isFileUploadMessage =
+              Array.isArray(message.content) &&
+              message.content.some(
+                (c) => typeof c === 'object' && c.type === 'file',
+              )
+
             if (!isFileUploadMessage) {
               message.contexts = []
             }
@@ -436,7 +438,7 @@ export const Chat = memo(
             key: 'messages',
             value: updatedConversation.messages,
           })
-          updateConversationMutation.mutate(updatedConversation)          
+          updateConversationMutation.mutate(updatedConversation)
           homeDispatch({ field: 'loading', value: true })
           homeDispatch({ field: 'messageIsStreaming', value: true })
           const controller = new AbortController()
@@ -486,8 +488,7 @@ export const Chat = memo(
             return conversation.messages.some((message) => {
               if (Array.isArray(message.content)) {
                 return message.content.some(
-                  (content) =>
-                    content.type === 'file',
+                  (content) => content.type === 'file',
                 )
               }
               return false
@@ -495,12 +496,13 @@ export const Chat = memo(
           }
 
           // FIXED: Check if this is a file upload message with contexts
-          const isFileUploadMessageWithContexts = Array.isArray(message.content) && 
-            message.content.some(c => 
-              typeof c === 'object' && c.type === 'file'
-            ) && 
-            message.contexts && 
-            Array.isArray(message.contexts) && 
+          const isFileUploadMessageWithContexts =
+            Array.isArray(message.content) &&
+            message.content.some(
+              (c) => typeof c === 'object' && c.type === 'file',
+            ) &&
+            message.contexts &&
+            Array.isArray(message.contexts) &&
             message.contexts.length > 0
           // Updated condition to include conversation files AND current file upload message with contexts
           const hasAnyDocuments =
@@ -899,7 +901,7 @@ export const Chat = memo(
             model: selectedConversation.model,
             skipQueryRewrite: documentCount === 0,
             mode: 'chat',
-          }    
+          }
           updatedConversation = finalChatBody.conversation!
 
           // Action 4: Build Prompt - Put everything together into a prompt
@@ -951,18 +953,18 @@ export const Chat = memo(
               })
             }
           } else {
-                try {
-                // CALL OUR NEW ENDPOINT... /api/allNewRoutingChat
-                startOfCallToLLM = performance.now()
-                
-                try {
-                  response = await fetch('/api/allNewRoutingChat', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(finalChatBody),
-                  })
+            try {
+              // CALL OUR NEW ENDPOINT... /api/allNewRoutingChat
+              startOfCallToLLM = performance.now()
+
+              try {
+                response = await fetch('/api/allNewRoutingChat', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(finalChatBody),
+                })
 
                 // Check if response is ok before proceeding
                 if (!response.ok) {
@@ -1956,16 +1958,12 @@ export const Chat = memo(
             {permission == 'edit' ? (
               <div className="group absolute right-4 top-4 z-20">
                 <button
-                  className="rounded-md bg-[--dashboard-button] p-2 text-[--dashboard-button-foreground] transition-opacity hover:opacity-80"
+                  className="rounded-md border border-[--dashboard-border] bg-transparent p-[.35rem] text-[--foreground] hover:border-[--dashboard-button] hover:bg-transparent hover:text-[--dashboard-button]"
                   onClick={() => {
                     if (courseName) router.push(`/${courseName}/dashboard`)
                   }}
                 >
-                  <IconSettings
-                    stroke={2}
-                    size={20}
-                    color="var(--dashboard-button-foreground)"
-                  />
+                  <IconSettings stroke={1} size={20} />
                 </button>
                 <div className="pointer-events-none absolute right-0 top-full z-50 mt-2 whitespace-nowrap rounded bg-[--background-faded] px-2 py-1 text-sm text-[--foreground] opacity-0 transition-opacity group-hover:opacity-100">
                   Admin Dashboard

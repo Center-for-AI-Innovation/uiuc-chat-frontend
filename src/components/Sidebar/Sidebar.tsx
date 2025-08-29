@@ -2,6 +2,7 @@ import { IconFolderPlus, IconMistOff, IconPlus } from '@tabler/icons-react'
 import { type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { IconSettings } from '@tabler/icons-react'
 import {
   CloseSidebarButton,
   OpenSidebarButton,
@@ -9,6 +10,8 @@ import {
 
 import { type FolderWithConversation } from '~/types/folder'
 import Search from '../Search'
+import { Button } from '@mantine/core'
+import { courseNames } from '~/db/schema'
 
 interface Props<T> {
   isOpen: boolean
@@ -95,6 +98,38 @@ const Sidebar = <T,>({
             <IconFolderPlus size={16} />
           </button>
         </div>
+
+        <div
+          className="flex items-start justify-start gap-1 bg-[--sidebar-background] py-2 text-[--foreground]"
+          onClick={() => {
+            //TODO: add router push to dashboard
+            //            if (courseName) router.push(`/${courseName}/dashboard`)
+          }}
+        >
+          {/* TODO: change from hard coded logo to variables. also, hide this entire div when there is no logo */}
+          <div className="h-5 w-5 shrink-0">
+            <div className="flex h-full w-full items-center justify-center">
+              {/* insert logo here */}#
+            </div>
+          </div>
+
+          <div className="grow">
+            {/* TODO: change from hard coded to variables */}
+            <div className="font-bold leading-[125%]">
+              Illinois Flagship (courseName)
+            </div>
+            <div className="mt-1 text-xs leading-[125%] text-[--foreground-faded]">
+              The U of I Flagship chatbot. (description)
+            </div>
+          </div>
+
+          <div className="h-5 w-5 shrink-0">
+            <Button className="h-auto w-auto bg-transparent p-0 text-[--foreground] hover:bg-transparent hover:text-[--dashboard-button]">
+              <IconSettings stroke={1} size={20} />
+            </Button>
+          </div>
+        </div>
+
         <Search
           placeholder={t('Search...') || ''}
           searchTerm={searchTerm}
