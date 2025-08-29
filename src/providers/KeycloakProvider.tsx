@@ -46,6 +46,8 @@ const saveCurrentPath = () => {
 export const KeycloakProvider = ({ children }: AuthProviderProps) => {
   // Add state to track if we're on client side
   const [isMounted, setIsMounted] = useState(false)
+  const [isAuthCallback, setIsAuthCallback] = useState(false)
+
   const [oidcConfig, setOidcConfig] = useState({
     authority: `${getKeycloakBaseUrl()}realms/${process.env.NEXT_PUBLIC_KEYCLOAK_REALM}`,
     client_id: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'uiucchat',
@@ -80,8 +82,10 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
   // Set up client-side values after mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setIsMounted(true)
       const baseUrl = getBaseUrl()
+      const searchParams = new URLSearchParams(window.location.search)
+      setIsAuthCallback(searchParams.has('code') && searchParams.has('state'))
+      setIsMounted(true)
 
       setOidcConfig((prev) => ({
         ...prev,
@@ -161,10 +165,16 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
     }
   }, [isMounted])
 
-  // Don't render anything during SSR or before client-side mount
-  if (typeof window === 'undefined' || !isMounted) {
-    return null
-  }
+  if (typeof window === 'undefined' || !isMounted) return null
 
-  return <AuthProvider {...oidcConfig}>{children}</AuthProvider>
+  return (
+    <AuthProvider {...oidcConfig}>
+      {/*If we’re on the callback URL, render a handoff screen instead of the app.*/}
+      {isAuthCallback ? (
+        <div style={{ padding: 24 }}>Finishing sign-in…</div>
+      ) : (
+        children
+      )}
+    </AuthProvider>
+  )
 }
