@@ -1,4 +1,11 @@
-import { IconFolderPlus, IconMistOff, IconPlus } from '@tabler/icons-react'
+import {
+  IconEdit,
+  IconFolderPlus,
+  IconLayoutSidebarLeftCollapse,
+  IconLayoutSidebarLeftExpand,
+  IconMistOff,
+  IconPlus,
+} from '@tabler/icons-react'
 import { type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -67,11 +74,31 @@ const Sidebar = <T,>({
       <div
         className={`relative ${side}-0 z-40 flex h-full w-[260px] flex-none flex-col space-y-2 border-r border-[--dashboard-border] bg-[--sidebar-background] p-2 text-[14px] shadow-xl transition-all sm:relative sm:top-0`}
       >
-        <div className="flex items-center">
+        <div className="flex items-center gap-2">
+          <div className="grow">
+            <button
+              className="flex flex-shrink-0 cursor-pointer items-center gap-3 rounded-md p-1 text-sm text-[--foreground] 
+              transition-colors duration-200
+              hover:bg-[--dashboard-button] hover:text-[--dashboard-button-foreground]"
+              onClick={toggleOpen}
+            >
+              <IconLayoutSidebarLeftCollapse size={20} stroke={1.5} />
+            </button>
+          </div>
+
           <button
-            className="text-sidebar flex w-[190px] flex-shrink-0 cursor-pointer select-none items-center gap-3 rounded-md border border-[--button-border] p-3 text-[--foreground] 
+            className="flex flex-shrink-0 cursor-pointer items-center gap-3 rounded-md p-1 text-sm text-[--foreground] 
             transition-colors duration-200
-            hover:border-[--button-hover] hover:bg-[--button-hover] hover:text-[--button-text-color]"
+            hover:bg-[--dashboard-button] hover:text-[--dashboard-button-foreground]"
+            onClick={handleCreateFolder}
+          >
+            <IconFolderPlus size={20} stroke={1.5} />
+          </button>
+
+          <button
+            className="flex flex-shrink-0 cursor-pointer items-center gap-3 rounded-md p-1 text-sm text-[--foreground] 
+            transition-colors duration-200
+            hover:bg-[--dashboard-button] hover:text-[--dashboard-button-foreground]"
             onClick={() => {
               handleCreateItem()
               handleSearchTerm('')
@@ -85,17 +112,7 @@ const Sidebar = <T,>({
               }, 100)
             }}
           >
-            <IconPlus size={16} />
-            {addItemButtonTitle}
-          </button>
-
-          <button
-            className="ml-2 flex flex-shrink-0 cursor-pointer items-center gap-3 rounded-md border border-[--button-border] p-3 text-sm text-[--foreground] 
-            transition-colors duration-200
-            hover:border-[--button-hover] hover:bg-[--button-hover] hover:text-[--button-text-color]"
-            onClick={handleCreateFolder}
-          >
-            <IconFolderPlus size={16} />
+            <IconEdit size={20} stroke={1.5} />
           </button>
         </div>
 
@@ -125,7 +142,7 @@ const Sidebar = <T,>({
 
           <div className="h-5 w-5 shrink-0">
             <Button className="h-auto w-auto bg-transparent p-0 text-[--foreground] hover:bg-transparent hover:text-[--dashboard-button]">
-              <IconSettings stroke={1} size={20} />
+              <IconSettings stroke={1.5} size={20} />
             </Button>
           </div>
         </div>
@@ -166,11 +183,24 @@ const Sidebar = <T,>({
         {footerComponent}
       </div>
 
-      <CloseSidebarButton onClick={toggleOpen} side={side} />
+      {/* TODO: eventually update the open/close sidebar button component so both sides work... for now, changing just for this sidebar */}
+      {/*      <CloseSidebarButton onClick={toggleOpen} side={side} /> */}
     </div>
   ) : (
     <div className="relative">
-      <OpenSidebarButton onClick={toggleOpen} side={side} />
+      <div className="absolute left-2 top-2 z-[150]">
+        <button
+          className="flex flex-shrink-0 cursor-pointer items-center gap-3 rounded-md p-1 text-sm text-[--foreground] 
+          transition-colors duration-200
+          hover:bg-[--dashboard-button] hover:text-[--dashboard-button-foreground]"
+          onClick={toggleOpen}
+        >
+          <IconLayoutSidebarLeftExpand size={20} stroke={1.5} />
+        </button>
+      </div>
+
+      {/* TODO: eventually update the open/close sidebar button component so both sides work... for now, changing just for this sidebar */}
+      {/*      <OpenSidebarButton onClick={toggleOpen} side={side} /> */}
     </div>
   )
 }

@@ -1963,7 +1963,7 @@ export const Chat = memo(
                     if (courseName) router.push(`/${courseName}/dashboard`)
                   }}
                 >
-                  <IconSettings stroke={1} size={20} />
+                  <IconSettings stroke={1.5} size={20} />
                 </button>
                 <div className="pointer-events-none absolute right-0 top-full z-50 mt-2 whitespace-nowrap rounded bg-[--background-faded] px-2 py-1 text-sm text-[--foreground] opacity-0 transition-opacity group-hover:opacity-100">
                   Admin Dashboard
