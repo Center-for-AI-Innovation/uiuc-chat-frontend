@@ -87,7 +87,7 @@ const BrandingForm = ({ project_name }: { project_name: string }) => {
         <div className="set_greeting form-control relative">
           <div className="mt-4 font-semibold">Greeting</div>
 
-          <div className="-mx-3 mt-1">
+          <div className="-mx-3 mt-1 flex items-start gap-2">
             <Textarea
               autosize
               minRows={2}
@@ -107,43 +107,41 @@ const BrandingForm = ({ project_name }: { project_name: string }) => {
                   },
                 },
               }}
-              rightSectionPointerEvents="all"
-              rightSection={
-                <Button
-                  type="submit"
-                  size={'xs'}
-                  disabled={!isIntroMessageUpdated}
-                  className="index-4 absolute bottom-0 right-0 mb-2 mr-2 bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--foreground-fadaed] disabled:opacity-50"
-                  onClick={async () => {
-                    setIsIntroMessageUpdated(false)
-
-                    if (metadata) {
-                      metadata.course_intro_message = introMessage
-                      // Update the courseMetadata object
-
-                      const resp = await callSetCourseMetadata(
-                        project_name,
-                        metadata,
-                      )
-
-                      if (!resp) {
-                        console.log(
-                          'Error upserting course metadata for course: ',
-                          project_name,
-                        )
-                      }
-                    }
-                  }}
-                >
-                  Update
-                </Button>
-              }
               value={introMessage}
               onChange={(e) => {
                 setIntroMessage(e.target.value)
                 setIsIntroMessageUpdated(true)
               }}
             />
+
+            <Button
+              type="submit"
+              size={'xs'}
+              disabled={!isIntroMessageUpdated}
+              className="bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--foreground-fadaed] disabled:opacity-50"
+              onClick={async () => {
+                setIsIntroMessageUpdated(false)
+
+                if (metadata) {
+                  metadata.course_intro_message = introMessage
+                  // Update the courseMetadata object
+
+                  const resp = await callSetCourseMetadata(
+                    project_name,
+                    metadata,
+                  )
+
+                  if (!resp) {
+                    console.log(
+                      'Error upserting course metadata for course: ',
+                      project_name,
+                    )
+                  }
+                }
+              }}
+            >
+              Update
+            </Button>
           </div>
 
           {isIntroMessageUpdated && (

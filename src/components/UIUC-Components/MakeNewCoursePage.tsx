@@ -158,26 +158,18 @@ const MakeNewCoursePage = ({
         //   padding: '1rem',
         // }}
       >
-        <div className="mt-12 flex w-full flex-1 flex-col items-center justify-center py-0 pb-20">
+        {/* TODO change wrapper and card mt- settings to not have to skip past the top header...will require change to global nav and page structure  */}
+        <div className="mt-12 flex w-full flex-1 flex-col items-center justify-start py-0 pb-20">
           <Card
             padding="none"
             withBorder={true}
             radius="md"
-            className="w-[96%] !border-[--dashboard-border] bg-[--background] p-8 text-[--foreground] md:w-[90%] lg:max-w-[860px]"
+            className="mt-16 w-[96%] !border-[--dashboard-border] bg-[--background] p-8 text-[--foreground] md:w-[90%] lg:max-w-[860px]"
           >
             <div className="step_container min-h-[16rem]">
               {allSteps[currentStep]}
             </div>
           </Card>
-
-          <NewCourseNavigation
-            currentStep={currentStep}
-            allSteps={allSteps}
-            project_name={projectName}
-            canCreateProject={canCreateProject}
-            onSetCreated={canCreateProject}
-            onSetStep={setStep}
-          ></NewCourseNavigation>
 
           <div className="hidden">
             <Card
@@ -379,6 +371,15 @@ const MakeNewCoursePage = ({
             </Card>
           </div>
         </div>
+
+        <NewCourseNavigation
+          currentStep={currentStep}
+          allSteps={allSteps}
+          project_name={projectName}
+          canCreateProject={canCreateProject}
+          onSetCreated={canCreateProject}
+          onSetStep={setStep}
+        ></NewCourseNavigation>
       </main>
     </>
   )

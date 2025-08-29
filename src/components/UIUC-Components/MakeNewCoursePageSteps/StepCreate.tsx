@@ -132,7 +132,7 @@ const StepCreate = ({
           description="What’s it all about?"
         />
 
-        <div className="step_content mt-4">
+        <div className="step_content mt-6">
           <TextInput
             type="text"
             value={projectName}
@@ -161,12 +161,10 @@ const StepCreate = ({
                 </div>
 
                 {isCourseAvailable && projectName && (
-                  <div className="text-[--foreground-faded]">(ok)</div>
+                  <div className="text-green-500">(url available)</div>
                 )}
                 {(!isCourseAvailable || !projectName) && (
-                  <div className="text-[--illinois-orange]">
-                    (not available)
-                  </div>
+                  <div className="text-[--error]">(url not available)</div>
                 )}
               </div>
             )}
@@ -179,7 +177,7 @@ const StepCreate = ({
             label="Description"
             placeholder="Describe your project, goals, expected impact etc...."
             description=""
-            className="mt-4"
+            className="mt-6"
             classNames={componentClasses.input}
             radius={'md'}
             size={'md'}
@@ -236,9 +234,10 @@ const componentClasses = {
 
   input: {
     label: 'font-semibold text-base text-[--foreground]',
-    wrapper: '-ml-4',
+    wrapper: '-ml-3',
     input: `
-      mt-1
+      mt-2
+      px-3
 
       placeholder:text-[--foreground-faded]
       text-[--foreground] bg-[--background]

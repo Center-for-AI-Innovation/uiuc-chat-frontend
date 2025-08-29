@@ -72,43 +72,43 @@ export default function SetExampleQuestions({
       >
         {inputList.map((value, i) => {
           return (
-            <TextInput
-              key={i}
-              // withAsterisk
-              name="question"
-              placeholder="Add sample queries to illustrate usage of your AI."
-              styles={{
-                input: {
-                  color: 'var(--foreground)',
-                  backgroundColor: 'var(--background)',
-                  borderColor: 'var(--dashboard-border)',
-                  padding: 'calc(var(--padding) * .75)',
-                  paddingRight: '6rem', //make room for button
-                  marginTop: '.25rem',
+            <div className="flex items-center gap-2">
+              <TextInput
+                key={i}
+                // withAsterisk
+                name="question"
+                placeholder="Add sample queries to illustrate usage of your AI."
+                className="w-full"
+                styles={{
+                  input: {
+                    color: 'var(--foreground)',
+                    backgroundColor: 'var(--background)',
+                    borderColor: 'var(--dashboard-border)',
+                    padding: 'calc(var(--padding) * .75)',
+                    paddingRight: '6rem', //make room for button
+                    marginTop: '.25rem',
 
-                  '&:focus': {
-                    borderColor: 'var(--background-darker)',
+                    '&:focus': {
+                      borderColor: 'var(--background-darker)',
+                    },
                   },
-                },
-              }}
-              value={value}
-              onChange={(e) => handleInputChange(e, i)}
-              onFocus={() => handleInputFocus(i)}
-              // onBlur={() => handleInputBlur(i)} I couldn't get this working to remove boxes...
+                }}
+                value={value}
+                onChange={(e) => handleInputChange(e, i)}
+                onFocus={() => handleInputFocus(i)}
+                // onBlur={() => handleInputBlur(i)} I couldn't get this working to remove boxes...
+              />
 
-              rightSectionPointerEvents="all"
-              rightSection={
-                <Button
-                  type="submit"
-                  size={'xs'}
-                  disabled={value == ''}
-                  className="mr-8 bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--foreground-fadaed] disabled:opacity-50"
-                  onClick={async () => {}}
-                >
-                  Save
-                </Button>
-              }
-            />
+              <Button
+                type="submit"
+                size={'xs'}
+                disabled={value == ''}
+                className="bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--foreground-fadaed] disabled:opacity-50"
+                onClick={async () => {}}
+              >
+                Save
+              </Button>
+            </div>
           )
         })}
         {/*
