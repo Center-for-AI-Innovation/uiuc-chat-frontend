@@ -5,6 +5,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import React, { useState, useEffect, useMemo } from 'react'
 import { ArrowNarrowRight, ExternalLink } from 'tabler-icons-react'
+// import { useAuth } from 'react-oidc-context'
+// import { useRouter } from 'next/router' // or next/navigation in App Router
 
 import { doto_font, montserrat_heading, montserrat_paragraph } from 'fonts'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
@@ -134,6 +136,14 @@ const Home: NextPage = () => {
   const IllinoisChatBannerContent = useMemo(() => {
     return process.env.NEXT_PUBLIC_ILLINOIS_CHAT_BANNER_CONTENT || null
   }, [])
+
+  // const auth = useAuth()
+  // const router = useRouter()
+  // useEffect(() => {
+  //   if (auth.isAuthenticated) {
+  //     router.replace('/chat')
+  //   }
+  // }, [auth.isAuthenticated, router])
 
   return (
     <>
