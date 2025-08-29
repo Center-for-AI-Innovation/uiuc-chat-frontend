@@ -789,8 +789,9 @@ const Home: NextPage = () => {
                   style={{ color: 'var(--illinois-orange)' }}
                   href="mailto:caii_ai@lists.illinois.edu"
                 >
-                  caii_ai@lists.illinois.edu
+                  contact us
                 </a>
+                .
               </div>
             </div>
           </div>
@@ -817,13 +818,12 @@ const Home: NextPage = () => {
                 Support
               </h3>
               <div className="text-md">
-                If you have any questions or would like to submit a bug please
-                email us at{' '}
+                If you have any questions or would like to submit a bug please{' '}
                 <a
                   style={{ color: 'var(--illinois-orange)' }}
                   href="mailto:genaisupport@mx.uillinois.edu"
                 >
-                  genaisupport@mx.uillinois.edu
+                  email us
                 </a>
                 .
               </div>
@@ -838,12 +838,16 @@ const Home: NextPage = () => {
               >
                 Open source
               </h3>
-              <a
-                style={{ color: 'var(--illinois-orange)' }}
-                href="mailto:genaisupport@mx.uillinois.edu"
-              >
-                MIT License
-              </a>
+              <div className="text-md">
+                All code is open source. Join us on{' '}
+                <a
+                  style={{ color: 'var(--illinois-orange)' }}
+                  href="https://github.com/Center-for-AI-Innovation"
+                >
+                  GitHub
+                </a>
+                .
+              </div>
             </div>
             <div className="flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6">
               <h3
@@ -862,7 +866,7 @@ const Home: NextPage = () => {
                 >
                   Center of AI Innovation
                 </a>{' '}
-                at the{' '}
+                at{' '}
                 <a
                   style={{ color: 'var(--illinois-orange)' }}
                   href="https://ncsa.illinois.edu/"
