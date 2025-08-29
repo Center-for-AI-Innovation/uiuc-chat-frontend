@@ -761,6 +761,39 @@ const Home: NextPage = () => {
               </div>
             </div>
           </div>
+
+          <div
+            className="
+              mx-auto flex
+              w-full
+
+              max-w-3xl flex-col items-start justify-center
+              gap-16 sm:flex-row
+            "
+          >
+            <div className="mt-16">
+              <h2
+                className={`
+                text-xl font-bold
+                ${montserrat_heading.variable} font-montserratHeading
+              `}
+              >
+                Want something custom?
+              </h2>
+
+              <div className="mt-4">
+                We collaborate with researchers and industry partners to develop
+                custom features on this platform. For inquiries, please contact
+                us at{' '}
+                <a
+                  style={{ color: 'var(--illinois-orange)' }}
+                  href="mailto:caii_ai@lists.illinois.edu"
+                >
+                  caii_ai@lists.illinois.edu
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* second section below the blue banner */}
@@ -774,11 +807,7 @@ const Home: NextPage = () => {
             About Us
           </h4>
           <div className="mt-4 grid grid-cols-1 gap-14 sm:grid-cols-3 md:gap-8">
-            <Link
-              className="duration-600 flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6 transition-transform hover:scale-[1.01]"
-              href="mailto:genaisupport@mx.uillinois.edu"
-              target="_blank"
-            >
+            <div className="flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6">
               <h3
                 className={`
                 text-xl font-bold
@@ -799,12 +828,8 @@ const Home: NextPage = () => {
                 .
               </div>
               {/* <div className="text-lg">Sponsored by the </div> */}
-            </Link>
-            <Link
-              className="duration-600 flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6 transition-transform hover:scale-[1.01]"
-              href="https://github.com/Center-for-AI-Innovation"
-              target="_blank"
-            >
+            </div>
+            <div className="flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6">
               <h3
                 className={`
                 text-xl font-bold
@@ -813,13 +838,14 @@ const Home: NextPage = () => {
               >
                 Open source
               </h3>
-              <div className="text-md">MIT License</div>
-            </Link>
-            <Link
-              className="duration-600 flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6 transition-transform hover:scale-[1.01]"
-              href="https://ai.ncsa.illinois.edu/"
-              target="_blank"
-            >
+              <a
+                style={{ color: 'var(--illinois-orange)' }}
+                href="mailto:genaisupport@mx.uillinois.edu"
+              >
+                MIT License
+              </a>
+            </div>
+            <div className="flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6">
               <h3
                 className={`
                 text-xl font-bold
@@ -829,11 +855,23 @@ const Home: NextPage = () => {
                 Developed at Illinois
               </h3>
               <div className="text-md">
-                Developed by the Center of{' '}
-                <span className="whitespace-nowrap">AI Innovation</span> at the
-                National Center for Supercomputing Applications.
+                Developed by the{' '}
+                <a
+                  style={{ color: 'var(--illinois-orange)' }}
+                  href="https://ai.ncsa.illinois.edu/"
+                >
+                  Center of AI Innovation
+                </a>{' '}
+                at the{' '}
+                <a
+                  style={{ color: 'var(--illinois-orange)' }}
+                  href="https://ncsa.illinois.edu/"
+                >
+                  National Center for Supercomputing Applications
+                </a>
+                .
               </div>
-            </Link>
+            </div>
           </div>
         </div>
         <GlobalFooter />
