@@ -127,7 +127,6 @@ const TypingAnimation: React.FC = () => {
 }
 
 const Home: NextPage = () => {
-  const [isTooltipVisible, setIsTooltipVisible] = useState(false)
   const useIllinoisChatConfig = useMemo(() => {
     return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
   }, [])
@@ -176,50 +175,21 @@ const Home: NextPage = () => {
           className={`inline-block ${montserrat_heading.variable} font-montserratHeading`}
         >
           <div className="relative inline-block cursor-help">
-                <span
-                  className="text-lg font-bold"
-                  onMouseEnter={() => setIsTooltipVisible(true)}
-                  onMouseLeave={() => setIsTooltipVisible(false)}
-                >
-                  {/*1. If useIllinoisChatConfig && IllinoisChatBannerContent → render HTML from IllinoisChatBannerContent*/}
-                  {/*2. If !useIllinoisChatConfig → render default "Heads up" banner*/}
-                  {/*3. Otherwise → render nothing*/}
-                  {
-                    useIllinoisChatConfig && IllinoisChatBannerContent ? (
-                      <div dangerouslySetInnerHTML={{ __html: IllinoisChatBannerContent }} />
-                    ) : !useIllinoisChatConfig ? (
-                      <>
-                        Heads up: we’ve rebranded to Illinois Chat — please visit{' '}
-                        <a
-                          href="https://chat.illinois.edu"
-                          className="underline"
-                        >
-                          chat.illinois.edu
-                        </a>
-                      </>
-                    ) : null
-                  }
-              </span>
-
-            <div
-              className={`absolute left-1/2 top-full z-50 mt-2 w-72 -translate-x-1/2 transform rounded p-2 text-sm transition duration-300 ${isTooltipVisible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
-              style={{
-                background: '#333',
-                border: '1px solid #444',
-                boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-              }}
-            >
-              We&apos;re on our way to becoming a production service for all U
-              of I campuses.
+            {/*1. If useIllinoisChatConfig && IllinoisChatBannerContent → render HTML from IllinoisChatBannerContent*/}
+            {/*2. If !useIllinoisChatConfig → render default "Heads up" banner*/}
+            {/*3. Otherwise → render nothing*/}
+            {useIllinoisChatConfig && IllinoisChatBannerContent ? (
               <div
-                className="absolute bottom-full left-1/2 h-0 w-0 -translate-x-1/2 transform"
-                style={{
-                  borderLeft: '8px solid transparent',
-                  borderRight: '8px solid transparent',
-                  borderBottom: '8px solid #333',
-                }}
-              ></div>
-            </div>
+                dangerouslySetInnerHTML={{ __html: IllinoisChatBannerContent }}
+              />
+            ) : !useIllinoisChatConfig ? (
+              <>
+                Heads up: we’ve rebranded to Illinois Chat — please visit{' '}
+                <a href="https://chat.illinois.edu" className="underline">
+                  chat.illinois.edu
+                </a>
+              </>
+            ) : null}
           </div>
         </div>
       </div>
@@ -230,8 +200,7 @@ const Home: NextPage = () => {
         className={`illinois-blue-gradient-bg flex min-h-screen flex-col items-center justify-center overflow-hidden
           ${montserrat_paragraph.variable} font-montserratParagraph`}
       >
-        <div
-          className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 px-4 py-8 sm:px-8 sm:py-20">
+        <div className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 px-4 py-8 sm:px-8 sm:py-20">
           <div
             className="
             flex w-full
@@ -312,9 +281,7 @@ const Home: NextPage = () => {
             </div>
           </div>
 
-          {
-            !useIllinoisChatConfig &&
-
+          {!useIllinoisChatConfig && (
             <div className="mt-12 w-[100vw] rounded-lg bg-[--dashboard-background-faded] p-8 pb-14">
               <div className="mb-6 w-full pt-8 text-center">
                 <h2
@@ -341,8 +308,7 @@ const Home: NextPage = () => {
                 <FlagshipChatbots />
               </div>
             </div>
-
-          }
+          )}
         </div>
 
         {/* orange banner */}
@@ -383,8 +349,7 @@ const Home: NextPage = () => {
         </div>
 
         {/* second section below the orange banner */}
-        <div
-          className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 overflow-hidden px-4 py-8 sm:px-8 sm:py-20">
+        <div className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 overflow-hidden px-4 py-8 sm:px-8 sm:py-20">
           <h2
             className={`
               max-w-lg
@@ -721,7 +686,7 @@ const Home: NextPage = () => {
 
             <div
               className="
-              mt-0 
+              mt-0
               sm:mt-0 sm:w-2/3
             "
             >
@@ -825,8 +790,7 @@ const Home: NextPage = () => {
         </div>
 
         {/* second section below the blue banner */}
-        <div
-          className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 overflow-hidden px-4 py-8 sm:px-8 sm:py-20">
+        <div className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 overflow-hidden px-4 py-8 sm:px-8 sm:py-20">
           <h4
             className={`
             text-4xl font-extrabold tracking-tight
@@ -960,7 +924,7 @@ function FlagshipChatbots() {
       badge: 'Illinois',
       tagline: 'Find professors based on your research interests',
       description:
-        'Using all of Illinois\'s documentation, get detailed examples, advice and information about the conference.',
+        "Using all of Illinois's documentation, get detailed examples, advice and information about the conference.",
     },
     {
       course_slug: 'NeurIPS-2024',
@@ -970,7 +934,7 @@ function FlagshipChatbots() {
       tagline:
         'Trained on all 4,000+ papers from the largest AI conference in the world',
       description:
-        'Using all of NeurIPS 2024\'s documentation, get detailed examples, advice and information about the conference.',
+        "Using all of NeurIPS 2024's documentation, get detailed examples, advice and information about the conference.",
     },
     {
       course_slug: 'NCSADelta',
@@ -978,9 +942,9 @@ function FlagshipChatbots() {
       title: 'NCSA Delta Supercomputer',
       badge: 'NCSA Docs',
       tagline:
-        'Quickstart on our Delta supercomputer, it\'ll write SLRUM scripts for you 😁',
+        "Quickstart on our Delta supercomputer, it'll write SLRUM scripts for you 😁",
       description:
-        'Using all of Delta\'s documentation, get detailed examples, advice and information about how to use the Delta supercomputer.',
+        "Using all of Delta's documentation, get detailed examples, advice and information about how to use the Delta supercomputer.",
     },
     /*
     {
