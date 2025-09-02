@@ -273,7 +273,7 @@ export const Chatbar = ({
             messages: [],
             model: OpenAIModels[defaultModelId],
             prompt: DEFAULT_SYSTEM_PROMPT,
-            // temperature: DEFAULT_TEMPERATURE,
+            temperature: DEFAULT_TEMPERATURE,
             folderId: null,
           },
         })
