@@ -4,7 +4,7 @@ import { WebStorageStateStore } from 'oidc-client-ts'
 import { getKeycloakBaseUrl } from '~/utils/authHelpers'
 import Link from 'next/link'
 import { montserrat_heading } from '../../fonts'
-import { Button, Flex, Title } from '@mantine/core'
+import { Flex, Title } from '@mantine/core'
 
 interface AuthProviderProps {
   children: ReactNode
