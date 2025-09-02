@@ -201,6 +201,12 @@ export default async function chat(
   let searchQuery = constructSearchQuery(messages)
   let imgDesc = ''
 
+  const selectedConversationString = localStorage.getItem('selectedConversation')
+  let selectedConversation: Conversation | undefined = undefined
+  if (selectedConversationString) {
+      selectedConversation = JSON.parse(selectedConversationString)
+  }
+
   // Construct the conversation object
   const conversation: Conversation = {
     id: conversation_id || uuidv4(),
@@ -214,7 +220,7 @@ export default async function chat(
           (messages.filter((message) => message.role === 'system')[0]
             ?.content as string))
         : DEFAULT_SYSTEM_PROMPT,
-    temperature: selectBestTemperature(undefined, selectedModel, llmProviders),
+    temperature: selectBestTemperature(undefined, selectedConversation, llmProviders),
     folderId: null,
     userEmail: email,
   }

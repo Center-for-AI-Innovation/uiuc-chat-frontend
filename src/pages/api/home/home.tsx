@@ -399,7 +399,7 @@ const Home = ({
       messages: [],
       model: model,
       prompt: DEFAULT_SYSTEM_PROMPT,
-      temperature: selectBestTemperature(lastConversation, model, llmProviders),
+      temperature: selectBestTemperature(lastConversation, selectedConversation, llmProviders),
       folderId: null,
       userEmail: current_email,
       projectName: course_name,
@@ -684,10 +684,10 @@ const Home = ({
         dispatch({ field: 'showChatbar', value: showChatbar === 'true' })
       }
 
-      const selectedConversation = localStorage.getItem('selectedConversation')
-      if (selectedConversation) {
+      const selectedConversationString = localStorage.getItem('selectedConversation')
+      if (selectedConversationString) {
         const parsedSelectedConversation: Conversation =
-          JSON.parse(selectedConversation)
+          JSON.parse(selectedConversationString)
         if (parsedSelectedConversation.projectName === course_name) {
           const cleanedSelectedConversation = cleanSelectedConversation(
             parsedSelectedConversation,
