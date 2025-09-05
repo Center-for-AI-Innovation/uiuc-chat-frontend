@@ -6,7 +6,7 @@ import {
   IconMistOff,
   IconPlus,
 } from '@tabler/icons-react'
-import { type ReactNode } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { IconSettings } from '@tabler/icons-react'
@@ -18,7 +18,11 @@ import {
 import { type FolderWithConversation } from '~/types/folder'
 import Search from '../Search'
 import { Button } from '@mantine/core'
-import { courseNames } from '~/db/schema'
+import { useRouter } from 'next/router'
+import { type CourseMetadata } from '~/types/courseMetadata'
+import { fetchPresignedUrl } from '~/utils/apiUtils'
+import { useAuth } from 'react-oidc-context'
+import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 
 interface Props<T> {
   isOpen: boolean
@@ -36,6 +40,8 @@ interface Props<T> {
   handleCreateFolder: () => void
   handleDrop: (e: any) => void
   onScroll: (e: any) => void
+  courseName?: string | undefined
+  courseMetadata?: CourseMetadata | null
 }
 
 const Sidebar = <T,>({
@@ -54,8 +60,46 @@ const Sidebar = <T,>({
   handleCreateFolder,
   handleDrop,
   onScroll,
+  courseName,
+  courseMetadata,
 }: Props<T>) => {
   const { t } = useTranslation('promptbar')
+  const nextRouter = useRouter()
+  const [bannerUrl, setBannerUrl] = useState<string | null>(null)
+  const auth = useAuth()
+  const permission = courseMetadata
+    ? get_user_permission(courseMetadata, auth)
+    : 'no_permission'
+
+  useEffect(() => {
+    let mounted = true
+    const loadBanner = async () => {
+      try {
+        if (courseName === 'chat') {
+          if (mounted) setBannerUrl('/media/logo_illinois.png')
+          return
+        }
+        if (
+          courseMetadata?.banner_image_s3 &&
+          courseMetadata.banner_image_s3 !== ''
+        ) {
+          const url = await fetchPresignedUrl(
+            courseMetadata.banner_image_s3,
+            courseName,
+          )
+          if (mounted) setBannerUrl(url)
+        } else {
+          if (mounted) setBannerUrl(null)
+        }
+      } catch (e) {
+        if (mounted) setBannerUrl(null)
+      }
+    }
+    void loadBanner()
+    return () => {
+      mounted = false
+    }
+  }, [courseMetadata?.banner_image_s3, courseName])
 
   const allowDrop = (e: any) => {
     e.preventDefault()
@@ -72,7 +116,7 @@ const Sidebar = <T,>({
   return isOpen ? (
     <div className="relative h-full">
       <div
-        className={`relative ${side}-0 z-40 flex h-full w-[260px] flex-none flex-col space-y-2 border-r border-[--dashboard-border] bg-[--sidebar-background] p-2 text-[14px] shadow-xl transition-all sm:relative sm:top-0`}
+        className={`relative ${side}-0 z-40 flex h-full w-[300px] flex-none flex-col space-y-2 border-r border-[--dashboard-border] bg-[--sidebar-background] p-2 text-[14px] shadow-xl transition-all sm:relative sm:top-0 md:w-[340px] md:p-3 lg:w-[360px] xl:w-[390px]`}
       >
         <div className="flex items-center gap-2">
           <div className="grow">
@@ -117,34 +161,87 @@ const Sidebar = <T,>({
         </div>
 
         <div
-          className="flex items-start justify-start gap-1 bg-[--sidebar-background] py-2 text-[--foreground]"
-          onClick={() => {
-            //TODO: add router push to dashboard
-            //            if (courseName) router.push(`/${courseName}/dashboard`)
-          }}
+          className={`flex items-center justify-start gap-3 rounded-lg bg-[--sidebar-background] p-2 text-[--foreground] transition-colors md:gap-4 md:p-3 ${permission === 'edit' ? 'cursor-pointer hover:bg-[--navbar-hover-background]' : 'cursor-default'}`}
+          role={permission === 'edit' ? 'button' : undefined}
+          tabIndex={permission === 'edit' ? 0 : -1}
+          onClick={
+            permission === 'edit'
+              ? () => {
+                  if (courseName) {
+                    void nextRouter.push(`/${courseName}/dashboard`)
+                  }
+                }
+              : undefined
+          }
+          onKeyDown={
+            permission === 'edit'
+              ? (e) => {
+                  if ((e.key === 'Enter' || e.key === ' ') && courseName) {
+                    e.preventDefault()
+                    void nextRouter.push(`/${courseName}/dashboard`)
+                  }
+                }
+              : undefined
+          }
         >
-          {/* TODO: change from hard coded logo to variables. also, hide this entire div when there is no logo */}
-          <div className="h-5 w-5 shrink-0">
-            <div className="flex h-full w-full items-center justify-center">
-              {/* insert logo here */}#
+          {/* Banner/logo (if present) */}
+          <div className="h-14 w-14 shrink-0 md:h-16 md:w-16">
+            <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-sm">
+              {bannerUrl ? (
+                <img
+                  src={bannerUrl}
+                  alt={
+                    courseName === 'chat' ? 'Illinois logo' : 'Course banner'
+                  }
+                  className="h-full w-full object-contain"
+                />
+              ) : null}
             </div>
           </div>
 
-          <div className="grow">
-            {/* TODO: change from hard coded to variables */}
-            <div className="font-bold leading-[125%]">
-              Illinois Flagship (courseName)
+          <div className="min-w-0 grow">
+            {/* Name */}
+            <div className="line-clamp-3 max-w-full break-words text-[15px] font-bold leading-[125%] md:text-[16px]">
+              {courseName === 'chat'
+                ? 'Illinois Flagship'
+                : (() => {
+                    const normalized = (courseName || '').replace(/-/g, ' ')
+                    return normalized
+                      .split(/\s+/)
+                      .map((word) =>
+                        word.length === 0
+                          ? ''
+                          : word.match(/^[A-Z0-9]+$/)
+                            ? word // keep acronym casing
+                            : word.charAt(0).toUpperCase() +
+                              word.slice(1).toLowerCase(),
+                      )
+                      .join(' ')
+                  })()}
             </div>
-            <div className="mt-1 text-xs leading-[125%] text-[--foreground-faded]">
-              The U of I Flagship chatbot. (description)
+            {/* Description */}
+            <div className="mt-2 line-clamp-2 max-w-full overflow-hidden text-[13.5px] leading-[145%] text-[--foreground-faded] md:text-[15px]">
+              {courseMetadata?.project_description || ''}
             </div>
           </div>
 
-          <div className="h-5 w-5 shrink-0">
-            <Button className="h-auto w-auto bg-transparent p-0 text-[--foreground] hover:bg-transparent hover:text-[--dashboard-button]">
-              <IconSettings stroke={1.5} size={20} />
-            </Button>
-          </div>
+          {permission === 'edit' ? (
+            <div className="h-5 w-5 shrink-0">
+              <Button
+                className="h-auto w-auto bg-transparent p-0 text-[--foreground] hover:bg-transparent hover:text-[--dashboard-button]"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (courseName) {
+                    void nextRouter.push(`/${courseName}/dashboard`)
+                  }
+                }}
+                title="Admin Dashboard"
+                aria-label="Admin Dashboard"
+              >
+                <IconSettings stroke={1.5} size={20} />
+              </Button>
+            </div>
+          ) : null}
         </div>
 
         <Search
