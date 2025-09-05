@@ -55,20 +55,15 @@ Please review and approve at https://canvas.illinois.edu/ using account uiuc.cha
     // console.debug("Sent email to Kastan to alert him of new Canvas ingest")
 
     const response = await fetch(
-      'https://app.beam.cloud/endpoint/canvas_ingest/latest',
+      `${process.env.INGEST_URL}`.replace('/ingest', '/canvas_ingest'),
       {
         method: 'POST',
         headers: {
           Accept: '*/*',
           'Accept-Encoding': 'gzip, deflate',
-          Authorization: `Bearer ${process.env.BEAM_API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          // course_name: courseName,
-          // readable_filename: readableFilename,
-          // s3_paths: s3_filepath,
-
           canvas_url: canvas_url,
           course_name: courseName,
           files: selectedCanvasOptions.includes('files') ? 'true' : 'false',
