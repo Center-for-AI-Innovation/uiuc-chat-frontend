@@ -175,6 +175,7 @@ const Home: NextPage = () => {
           className={`inline-block ${montserrat_heading.variable} font-montserratHeading`}
         >
           <div className="relative inline-block">
+
             {/*1. If useIllinoisChatConfig && IllinoisChatBannerContent → render HTML from IllinoisChatBannerContent*/}
             {/*2. If !useIllinoisChatConfig → render default "Heads up" banner*/}
             {/*3. Otherwise → render nothing*/}
