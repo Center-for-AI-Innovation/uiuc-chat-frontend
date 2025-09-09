@@ -1,6 +1,6 @@
-import { FC, KeyboardEvent, useEffect, useRef, useState } from 'react'
+import { type FC, type KeyboardEvent, useEffect, useRef, useState } from 'react'
 
-import { Prompt } from '@/types/prompt'
+import { type Prompt } from '@/types/prompt'
 
 interface Props {
   prompt?: Prompt

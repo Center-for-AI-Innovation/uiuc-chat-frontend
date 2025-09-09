@@ -1,18 +1,15 @@
-import { IconFileExport, IconSettings } from '@tabler/icons-react'
+import { IconFileExport } from '@tabler/icons-react'
 import { useContext, useState } from 'react'
 
 import { useTranslation } from 'next-i18next'
 
 import HomeContext from '~/pages/api/home/home.context'
 
-import { SettingDialog } from '@/components/Settings/SettingDialog'
-
-import { Import } from '../../Settings/Import'
 import { Key } from '../../Settings/Key'
 import { SidebarButton } from '../../Sidebar/SidebarButton'
+import { ThemeToggle } from '../../UIUC-Components/ThemeToggle'
 import ChatbarContext from '../Chatbar.context'
 import { ClearConversations } from './ClearConversations'
-// import { PluginKeys } from './PluginKeys'
 
 export const ChatbarSettings = () => {
   const { t } = useTranslation('sidebar')
@@ -21,7 +18,6 @@ export const ChatbarSettings = () => {
   const {
     state: {
       apiKey,
-      lightMode,
       serverSideApiKeyIsSet,
       serverSidePluginKeysSet,
       conversations,
@@ -37,7 +33,7 @@ export const ChatbarSettings = () => {
   } = useContext(ChatbarContext)
 
   return (
-    <div className="flex flex-col items-center space-y-1 border-t border-white/20 pt-1 text-sm">
+    <div className="flex flex-col items-center space-y-1 border-t border-[--dashboard-border] pt-1 text-sm">
       {conversations.length > 0 ? (
         <ClearConversations onClearConversations={handleClearConversations} />
       ) : null}
@@ -53,20 +49,12 @@ export const ChatbarSettings = () => {
         <Key apiKey={apiKey} onApiKeyChange={handleApiKeyChange} />
       ) : null}
 
-      {/* {!serverSidePluginKeysSet ? <PluginKeys /> : null} */}
-
-      {/* Deprecate settings button for now... */}
-      {/* <SidebarButton
-        text={t('Settings')}
-        icon={<IconSettings size={18} />}
-        onClick={() => setIsSettingDialog(true)}
-      /> */}
-      {/* <SettingDialog
-        open={isSettingDialogOpen}
-        onClose={() => {
-          setIsSettingDialog(false)
-        }}
-      /> */}
+      {/* Theme Toggle */}
+      <div className="mt-auto w-full border-t border-[--dashboard-border] pt-4">
+        <div className="flex w-full items-center justify-center rounded-lg px-2 py-2">
+          <ThemeToggle />
+        </div>
+      </div>
     </div>
   )
 }

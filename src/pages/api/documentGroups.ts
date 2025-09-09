@@ -1,5 +1,7 @@
 // src/pages/api/documentGroups.ts
-import { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiRequest, type NextApiResponse } from 'next'
+import posthog from 'posthog-js'
+import { type CourseDocument } from 'src/types/courseMaterials'
 import {
   addDocumentsToDocGroup,
   removeDocGroup,
@@ -8,8 +10,6 @@ import {
   fetchEnabledDocGroups,
 } from '~/utils/dbUtils'
 import { addDocumentsToDocGroupQdrant } from '~/utils/qdrantUtils'
-import posthog from 'posthog-js'
-import { CourseDocument } from '~/types/courseMaterials'
 
 interface RequestBody {
   action:

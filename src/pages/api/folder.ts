@@ -1,7 +1,7 @@
-import { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiRequest, type NextApiResponse } from 'next'
 import { supabase } from '@/utils/supabaseClient'
-import { FolderInterface, FolderWithConversation } from '@/types/folder'
-import { Database } from 'database.types'
+import { FolderInterface, type FolderWithConversation } from '@/types/folder'
+import { type Database } from 'database.types'
 import { convertDBToChatConversation, DBConversation } from './conversation'
 
 type Folder = Database['public']['Tables']['folders']['Row']

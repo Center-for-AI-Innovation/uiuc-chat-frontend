@@ -1,8 +1,8 @@
 // upload.ts
-import { NextApiRequest, NextApiResponse } from 'next'
+import { S3Client } from '@aws-sdk/client-s3'
+import { type NextApiRequest, type NextApiResponse } from 'next'
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post'
 import { getS3Client, getS3BucketName } from '~/utils/s3Client'
-import { S3Client } from '@aws-sdk/client-s3'
 
 // MinIO Client configuration (keeping existing MinIO support)
 let vyriadMinioClient: any = null

@@ -1,4 +1,4 @@
-import { DocumentProps, Head, Html, Main, NextScript } from 'next/document'
+import { type DocumentProps, Head, Html, Main, NextScript } from 'next/document'
 import { useEffect, useState } from 'react'
 import i18nextConfig from '../../next-i18next.config.mjs'
 
@@ -48,6 +48,20 @@ export default function Document(props: Props) {
       <Head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="UIUC.chat"></meta>
+        {/* TODO: review if this is actually necessary, given toggle ThemeToggle.tsx */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                  document.documentElement.classList.add('dark')
+                } else {
+                  document.documentElement.classList.remove('dark')
+                }
+              } catch (_) {}
+            `,
+          }}
+        />
       </Head>
       <body>
         <Main />
