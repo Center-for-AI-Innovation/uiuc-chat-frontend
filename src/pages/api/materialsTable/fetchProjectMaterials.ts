@@ -1,4 +1,4 @@
-import { supabase } from '@/utils/supabaseClient'
+import { getSupabaseClient } from '@/utils/supabaseClient'
 import posthog from 'posthog-js'
 import { type NextApiRequest, type NextApiResponse } from 'next'
 import { type PostgrestError } from '@supabase/supabase-js'
@@ -44,13 +44,16 @@ export default async function fetchDocuments(
       .json({ error: 'Missing required query parameters: from and to' })
   }
 
-  if (sort_column == null || sort_dir == null) {
+  if (sort_column == null || (sort_direction == null as unknown as boolean)) {
     sort_column = 'created_at'
     sort_dir = false // 'desc' equivalent
   }
 
-  const from = parseInt(fromStr)
-  const to = parseInt(toStr)
+  const from = parseInt(fromStr as string)
+  const to = parseInt(toStr as string)
+
+  // Get the appropriate Supabase client based on course name
+  const supabase = getSupabaseClient(course_name as string)
 
   try {
     let documents
@@ -137,9 +140,9 @@ export default async function fetchDocuments(
       throw countError
     }
 
-    const final_docs = documents.map((doc) => ({
+    const final_docs = (documents as any[]).map((doc: any) => ({
       ...doc,
-      doc_groups: doc.doc_groups.map((group) => group.name),
+      doc_groups: (doc.doc_groups || []).map((group: any) => group.name),
     })) as CourseDocument[]
 
     return res.status(200).json({ final_docs, total_count: count ?? undefined })

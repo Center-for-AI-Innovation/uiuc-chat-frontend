@@ -1,5 +1,5 @@
 import { type NextApiRequest, type NextApiResponse } from 'next'
-import { supabase } from '@/utils/supabaseClient'
+import { getSupabaseClient } from '@/utils/supabaseClient'
 import { convertChatToDBMessage } from '@/pages/api/conversation'
 
 export default async function handler(
@@ -12,6 +12,8 @@ export default async function handler(
 
   try {
     const { message, conversationId, user_email, course_name } = req.body
+
+    const supabase = getSupabaseClient(course_name as string)
 
     // First check if the message exists
     const { data: existingMessage } = await supabase
