@@ -44,7 +44,7 @@ export default async function fetchDocuments(
       .json({ error: 'Missing required query parameters: from and to' })
   }
 
-  if (sort_column == null || (sort_direction == null as unknown as boolean)) {
+  if (sort_column == null || sort_direction == null) {
     sort_column = 'created_at'
     sort_dir = false // 'desc' equivalent
   }
