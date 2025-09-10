@@ -8,7 +8,7 @@ export const supabase = createClient(
 // CropWizard-specific Supabase client
 export const cropwizardSupabase = createClient(
   process.env.CROPWIZARD_SUPABASE_URL as string,
-  process.env.CROPWIZARD_SUPABASE_SECRET as string,
+  process.env.CROPWIZARD_SUPABASE_KEY as string,
 )
 
 // Select Supabase client based on course name
