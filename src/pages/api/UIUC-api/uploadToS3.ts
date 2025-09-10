@@ -4,6 +4,7 @@ import { type NextApiRequest, type NextApiResponse } from 'next'
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post'
 
 const region = process.env.AWS_REGION
+const cwRegion = process.env.CROPWIZARD_AWS_REGION
 
 // S3 Client configuration
 let s3Client: S3Client | null = null
@@ -13,6 +14,18 @@ if (region && process.env.AWS_KEY && process.env.AWS_SECRET) {
     credentials: {
       accessKeyId: process.env.AWS_KEY,
       secretAccessKey: process.env.AWS_SECRET,
+    },
+  })
+}
+
+// CropWizard S3 client
+let cropwizardS3Client: S3Client | null = null
+if (cwRegion && process.env.CROPWIZARD_AWS_KEY && process.env.CROPWIZARD_AWS_SECRET) {
+  cropwizardS3Client = new S3Client({
+    region: cwRegion,
+    credentials: {
+      accessKeyId: process.env.CROPWIZARD_AWS_KEY,
+      secretAccessKey: process.env.CROPWIZARD_AWS_SECRET,
     },
   })
 }
@@ -53,6 +66,17 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       }
       post = await createPresignedPost(vyriadMinioClient, {
         Bucket: process.env.S3_BUCKET_NAME!,
+        Key: s3_filepath,
+        Expires: 60 * 60, // 1 hour
+      })
+    } else if (courseName && courseName.toLowerCase().startsWith('cropwizard')) {
+      if (!cropwizardS3Client) {
+        throw new Error(
+          'CropWizard S3 client not configured - missing required environment variables',
+        )
+      }
+      post = await createPresignedPost(cropwizardS3Client, {
+        Bucket: process.env.CROPWIZARD_S3_BUCKET_NAME!,
         Key: s3_filepath,
         Expires: 60 * 60, // 1 hour
       })

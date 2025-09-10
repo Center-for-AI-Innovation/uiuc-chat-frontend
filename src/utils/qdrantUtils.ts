@@ -1,9 +1,11 @@
 // qdrantUtils.ts
 import { type CourseDocument } from '~/types/courseMaterials'
-import { qdrant } from '@/utils/qdrantClient'
+import { getQdrantClient, getQdrantCollectionName } from '@/utils/qdrantClient'
 import posthog from 'posthog-js'
 
-const collection_name = process.env.QDRANT_COLLECTION_NAME
+// Collection name is selected dynamically based on course
+// Default to legacy env when not CropWizard
+let collection_name = process.env.QDRANT_COLLECTION_NAME
 
 // Uncomment to test collection schema:
 // async function getCollectionSchema(collectionName: string) {
@@ -21,6 +23,8 @@ export async function addDocumentsToDocGroupQdrant(
   doc: CourseDocument,
 ) {
   try {
+    const qdrant = getQdrantClient(courseName)
+    collection_name = getQdrantCollectionName(courseName)
     // Uncomment with function definition to test collection schema:
     // const schema = await getCollectionSchema(collection_name ? collection_name : "");
     // console.log("Collection Schema:", schema);

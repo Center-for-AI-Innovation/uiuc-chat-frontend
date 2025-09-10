@@ -1,5 +1,5 @@
 import { type NextApiRequest, type NextApiResponse } from 'next'
-import { supabase } from '~/utils/supabaseClient'
+import { getSupabaseClient } from '~/utils/supabaseClient'
 import posthog from 'posthog-js'
 
 type IngestResponse = {
@@ -19,7 +19,11 @@ const handler = async (
       })
     }
 
-    const { uniqueFileName, courseName, readableFilename } = req.body
+    const { uniqueFileName, courseName, readableFilename } = req.body as {
+      uniqueFileName: string
+      courseName: string
+      readableFilename: string
+    }
 
     console.log(
       '👉 Submitting to ingest queue:',
@@ -60,6 +64,8 @@ const handler = async (
       `📤 Submitted to ingest queue: ${s3_filepath}. Response status: ${response.status}`,
       responseBody,
     )
+
+    const supabase = getSupabaseClient(courseName)
 
     // Send to ingest-in-progress table
     const { error } = await supabase.from('documents_in_progress').insert({
