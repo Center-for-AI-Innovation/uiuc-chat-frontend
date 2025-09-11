@@ -48,10 +48,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         })
       }
     } else if (contentType === 'application/zip') {
-      // Handle ZIP file response - response.data is already a Buffer in Node.js
       res.setHeader('Content-Type', 'application/zip')
       res.setHeader('Content-Disposition', `attachment; filename="${course_name}_documents.zip"`)
-      return res.status(200).send(response.data)
+
+      return res.status(200).send(Buffer.from(response.data))
     } else {
       // Handle unexpected content types
       console.log('Unexpected content type:', contentType)
