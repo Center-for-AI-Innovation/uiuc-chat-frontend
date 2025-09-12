@@ -31,12 +31,16 @@ import posthog from 'posthog-js'
 import { saveConversationToServer } from '~/utils/app/conversation'
 import { downloadConversationHistoryUser } from '~/pages/api/UIUC-api/downloadConvoHistoryUser'
 
+import { type CourseMetadata } from '~/types/courseMetadata'
+
 export const Chatbar = ({
   current_email,
   courseName,
+  courseMetadata,
 }: {
   current_email: string | undefined
   courseName: string | undefined
+  courseMetadata?: CourseMetadata | null
 }) => {
   const { t } = useTranslation('sidebar')
   const chatBarContextValue = useCreateReducer<ChatbarInitialState>({
@@ -384,6 +388,8 @@ export const Chatbar = ({
         handleDrop={handleDrop}
         footerComponent={<ChatbarSettings />}
         onScroll={handleScroll}
+        courseName={courseName}
+        courseMetadata={courseMetadata || null}
       />
     </ChatbarContext.Provider>
   )
