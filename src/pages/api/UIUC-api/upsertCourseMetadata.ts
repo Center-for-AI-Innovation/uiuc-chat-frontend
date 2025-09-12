@@ -3,7 +3,7 @@ import { type CourseMetadataOptionalForUpsert } from '~/types/courseMetadata'
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { encrypt, isEncrypted } from '~/utils/crypto'
 import { getCourseMetadata } from './getCourseMetadata'
-import { redisClient } from '~/utils/redisClient'
+import { ensureRedisConnected } from '~/utils/redisClient'
 import { superAdmins } from '~/utils/superAdmins'
 
 export default async function handler(
@@ -63,6 +63,7 @@ export default async function handler(
     }
 
     // Save the combined metadata
+    const redisClient = await ensureRedisConnected()
     await redisClient.hSet('course_metadatas', {
       [courseName]: JSON.stringify(combined_metadata),
     })

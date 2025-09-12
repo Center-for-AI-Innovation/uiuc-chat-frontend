@@ -8,7 +8,7 @@ import {
 } from '~/utils/modelProviders/types/openai'
 import { ProviderNames } from '~/utils/modelProviders/LLMProvider'
 import { encryptKeyIfNeeded } from '~/utils/crypto'
-import { redisClient } from '~/utils/redisClient'
+import { ensureRedisConnected } from '~/utils/redisClient'
 
 export const runtime = 'edge'
 
@@ -110,7 +110,7 @@ export const migrateAllKeys = async () => {
         }
 
         // HERE WE UPSERT --
-
+        const redisClient = await ensureRedisConnected()
         const llmProvidersInDB = await redisClient.get(`${courseName}-llms`)
 
         if (!llmProvidersInDB) {
