@@ -23,8 +23,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const response = await axios.get(
-      `${getBackendUrl()}/exportDocuments?course_name=${course_name}`,
-      { responseType: 'blob' },
+      `${getBackendUrl()}/exportDocuments`,
+       {
+        params: { course_name },
+        responseType: 'arraybuffer',
+      }
     )
 
     // Check content type from response headers
@@ -35,8 +38,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // In Node.js, response.data is a Buffer when responseType is 'blob'
       const jsonText = response.data.toString('utf-8')
       const jsonData = JSON.parse(jsonText)
-      console.log(jsonData)
-      
+
       if (jsonData.response === 'Download from S3') {
         return res.status(200).json({
           message: 'We have started gathering your documents, you will receive an email shortly.',
@@ -48,10 +50,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         })
       }
     } else if (contentType === 'application/zip') {
-      // Handle ZIP file response - response.data is already a Buffer in Node.js
       res.setHeader('Content-Type', 'application/zip')
       res.setHeader('Content-Disposition', `attachment; filename="${course_name}_documents.zip"`)
-      return res.status(200).send(response.data)
+
+      return res.status(200).send(Buffer.from(response.data))
     } else {
       // Handle unexpected content types
       console.log('Unexpected content type:', contentType)
