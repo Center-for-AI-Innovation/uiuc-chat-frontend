@@ -2,9 +2,8 @@ import { Button, Card } from '@mantine/core'
 import { type NextPage } from 'next'
 import Head from 'next/head'
 import Image from 'next/image'
-import Link from 'next/link'
 import React, { useState, useEffect, useMemo } from 'react'
-import { ArrowNarrowRight, ExternalLink } from 'tabler-icons-react'
+import { ArrowNarrowRight, ExternalLink, Link } from 'tabler-icons-react'
 
 import { doto_font, montserrat_heading, montserrat_paragraph } from 'fonts'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
@@ -174,7 +173,30 @@ const Home: NextPage = () => {
         <div
           className={`inline-block ${montserrat_heading.variable} font-montserratHeading`}
         >
-          <div className="relative inline-block">
+          <div className="relative inline-block cursor-help">
+            <span
+              className="text-lg font-bold"
+              onMouseEnter={() => setIsTooltipVisible(true)}
+              onMouseLeave={() => setIsTooltipVisible(false)}
+            >
+              {/*1. If useIllinoisChatConfig && IllinoisChatBannerContent → render HTML from IllinoisChatBannerContent*/}
+              {/*2. If !useIllinoisChatConfig → render default "Heads up" banner*/}
+              {/*3. Otherwise → render nothing*/}
+              {useIllinoisChatConfig && IllinoisChatBannerContent ? (
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: IllinoisChatBannerContent,
+                  }}
+                />
+              ) : !useIllinoisChatConfig ? (
+                <>
+                  Heads up: we’ve rebranded to Illinois Chat — please visit{' '}
+                  <a href="https://chat.illinois.edu" className="underline">
+                    chat.illinois.edu
+                  </a>
+                </>
+              ) : null}
+            </span>
 
             {/*1. If useIllinoisChatConfig && IllinoisChatBannerContent → render HTML from IllinoisChatBannerContent*/}
             {/*2. If !useIllinoisChatConfig → render default "Heads up" banner*/}
