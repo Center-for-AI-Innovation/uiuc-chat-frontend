@@ -6,7 +6,7 @@ import {
   type AllLLMProviders,
   type LLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
-import { redisClient } from '~/utils/redisClient'
+import { ensureRedisConnected } from '~/utils/redisClient'
 
 export default async function handler(
   req: NextApiRequest,
@@ -19,6 +19,7 @@ export default async function handler(
 
   let courseName: string
   let llmProviders: AllLLMProviders
+  const redisClient = await ensureRedisConnected()
 
   try {
     courseName = req.body.projectName as string
