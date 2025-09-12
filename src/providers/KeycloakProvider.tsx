@@ -1,7 +1,10 @@
 import { AuthProvider } from 'react-oidc-context'
-import { type ReactNode, useEffect, useState } from 'react'
+import React, { type ReactNode, useEffect, useState } from 'react'
 import { WebStorageStateStore } from 'oidc-client-ts'
 import { getKeycloakBaseUrl } from '~/utils/authHelpers'
+import Link from 'next/link'
+import { montserrat_heading } from '../../fonts'
+import { Flex, Title } from '@mantine/core'
 
 interface AuthProviderProps {
   children: ReactNode
@@ -46,6 +49,8 @@ const saveCurrentPath = () => {
 export const KeycloakProvider = ({ children }: AuthProviderProps) => {
   // Add state to track if we're on client side
   const [isMounted, setIsMounted] = useState(false)
+  const [isAuthCallback, setIsAuthCallback] = useState(false)
+
   const [oidcConfig, setOidcConfig] = useState({
     authority: `${getKeycloakBaseUrl()}realms/${process.env.NEXT_PUBLIC_KEYCLOAK_REALM}`,
     client_id: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'uiucchat',
@@ -80,8 +85,10 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
   // Set up client-side values after mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setIsMounted(true)
       const baseUrl = getBaseUrl()
+      const searchParams = new URLSearchParams(window.location.search)
+      setIsAuthCallback(searchParams.has('code') && searchParams.has('state'))
+      setIsMounted(true)
 
       setOidcConfig((prev) => ({
         ...prev,
@@ -161,10 +168,46 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
     }
   }, [isMounted])
 
-  // Don't render anything during SSR or before client-side mount
-  if (typeof window === 'undefined' || !isMounted) {
-    return null
-  }
+  if (typeof window === 'undefined' || !isMounted) return null
 
-  return <AuthProvider {...oidcConfig}>{children}</AuthProvider>
+  return (
+    <AuthProvider {...oidcConfig}>
+      {/*If we’re on the callback URL, render a handoff screen instead of the app.*/}
+      {isAuthCallback ? (
+        <>
+          <main className="justify-center; course-page-main flex min-h-screen flex-col items-center">
+            <div className="container flex flex-col items-center justify-center gap-8 px-4 py-8 ">
+              <Link href="/">
+                <h2
+                  className={`text-5xl font-extrabold tracking-tight text-white sm:text-[5rem] ${montserrat_heading.variable} font-montserratHeading`}
+                >
+                  {' '}
+                  <span className="${inter.style.fontFamily} mr-2 text-[--illinois-orange]">
+                Illinois
+              </span>
+                  <span className="${inter.style.fontFamily} text-[--foreground]">
+                Chat
+              </span>{' '}
+                </h2>
+              </Link>
+            </div>
+            <div className="items-left container flex flex-col justify-center gap-2 py-0">
+              <Flex direction="column" align="center" justify="center">
+                <Title
+                  className={`${montserrat_heading.variable} font-montserratHeading text-[--foreground]`}
+                  order={2}
+                  p="xl"
+                >
+                  {' '}
+                  Signing you in, please wait...
+                </Title>
+              </Flex>
+            </div>
+          </main>
+        </>
+      ) : (
+        children
+      )}
+    </AuthProvider>
+  )
 }
