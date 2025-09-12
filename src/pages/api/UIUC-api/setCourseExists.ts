@@ -1,4 +1,4 @@
-import { redisClient } from '~/utils/redisClient'
+import { ensureRedisConnected } from '~/utils/redisClient'
 
 // export const runtime = "edge";
 // doesn't seem to work...
@@ -9,6 +9,7 @@ const setCourseExists = async (req: any, res: any) => {
   const { course_name } = req.body
 
   try {
+    const redisClient = await ensureRedisConnected()
     await redisClient.set(course_name, 'true')
     res.status(200).json({ success: true })
   } catch (error) {
