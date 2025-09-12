@@ -126,7 +126,6 @@ const TypingAnimation: React.FC = () => {
 }
 
 const Home: NextPage = () => {
-  const [isTooltipVisible, setIsTooltipVisible] = useState(false)
   const useIllinoisChatConfig = useMemo(() => {
     return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
   }, [])
@@ -199,25 +198,21 @@ const Home: NextPage = () => {
               ) : null}
             </span>
 
-            <div
-              className={`absolute left-1/2 top-full z-50 mt-2 w-72 -translate-x-1/2 transform rounded p-2 text-sm transition duration-300 ${isTooltipVisible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
-              style={{
-                background: '#333',
-                border: '1px solid #444',
-                boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-              }}
-            >
-              We&apos;re on our way to becoming a production service for all U
-              of I campuses.
+            {/*1. If useIllinoisChatConfig && IllinoisChatBannerContent → render HTML from IllinoisChatBannerContent*/}
+            {/*2. If !useIllinoisChatConfig → render default "Heads up" banner*/}
+            {/*3. Otherwise → render nothing*/}
+            {useIllinoisChatConfig && IllinoisChatBannerContent ? (
               <div
-                className="absolute bottom-full left-1/2 h-0 w-0 -translate-x-1/2 transform"
-                style={{
-                  borderLeft: '8px solid transparent',
-                  borderRight: '8px solid transparent',
-                  borderBottom: '8px solid #333',
-                }}
-              ></div>
-            </div>
+                dangerouslySetInnerHTML={{ __html: IllinoisChatBannerContent }}
+              />
+            ) : !useIllinoisChatConfig ? (
+              <>
+                Heads up: we’ve rebranded to Illinois Chat — please visit{' '}
+                <a href="https://chat.illinois.edu" className="underline">
+                  chat.illinois.edu
+                </a>
+              </>
+            ) : null}
           </div>
         </div>
       </div>
@@ -714,7 +709,7 @@ const Home: NextPage = () => {
 
             <div
               className="
-              mt-0 
+              mt-0
               sm:mt-0 sm:w-2/3
             "
             >
@@ -799,7 +794,7 @@ const Home: NextPage = () => {
               gap-16 sm:flex-row
             "
           >
-            <div className="mt-16 sm:w-1/2">
+            <div className="mt-16">
               <h2
                 className={`
                 text-xl font-bold
@@ -810,8 +805,16 @@ const Home: NextPage = () => {
               </h2>
 
               <div className="mt-4">
-                We build features for industry partners to bring GenAI to their
-                org. Reach out at <a href="mailto:hi@uiuc.chat">hi@uiuc.chat</a>
+                We collaborate with researchers and industry partners to develop
+                custom features on this platform. For inquiries, please contact
+                us at{' '}
+                <a
+                  style={{ color: 'var(--illinois-orange)' }}
+                  href="mailto:caii_ai@lists.illinois.edu"
+                >
+                  contact us
+                </a>
+                .
               </div>
             </div>
           </div>
@@ -827,105 +830,77 @@ const Home: NextPage = () => {
           >
             About Us
           </h4>
-          <div className="mt-4 grid grid-cols-1 gap-14 sm:grid-cols-2 md:gap-8">
-            <Link
-              className="duration-600 flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6 transition-transform hover:scale-[1.01]"
-              href="https://github.com/Center-for-AI-Innovation/uiuc-chat-frontend"
-              target="_blank"
-            >
+          <div className="mt-4 grid grid-cols-1 gap-14 sm:grid-cols-3 md:gap-8">
+            <div className="flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6">
               <h3
                 className={`
                 text-xl font-bold
                 ${montserrat_heading.variable} font-montserratHeading
               `}
               >
-                Read the code
+                Support
               </h3>
               <div className="text-md">
-                100% free<br></br>100% open source &#40;MIT License&#41;
-                <br></br>100% awesome
-              </div>
-            </Link>
-            <Link
-              className="duration-600 flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6 transition-transform hover:scale-[1.01]"
-              href="https://ai.ncsa.illinois.edu/"
-              target="_blank"
-            >
-              <h3
-                className={`
-                text-xl font-bold
-                ${montserrat_heading.variable} font-montserratHeading
-              `}
-              >
-                Sponsored by the Center of{' '}
-                <span className="whitespace-nowrap">AI Innovation</span>
-              </h3>
-              <div className="text-md">
-                Part of the National Center for Supercomputing Applications.
-              </div>
-            </Link>
-            <Link
-              className="duration-600 flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6 transition-transform hover:scale-[1.01]"
-              href="https://rohanmarwaha.com/"
-              target="_blank"
-            >
-              <h3
-                className={`
-                text-xl font-bold
-                ${montserrat_heading.variable} font-montserratHeading
-              `}
-              >
-                Bio
-              </h3>
-              <div className="text-md">
-                Started by Rohan Marwaha at the University of Illinois. But it{' '}
+                If you have any questions or would like to submit a bug please{' '}
                 <a
-                  href="https://github.com/Center-for-AI-Innovation/uiuc-chat-frontend/graphs/contributors"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    textDecoration: 'underline',
-                    textDecorationColor: 'var(--illinois-blue)',
-                  }}
+                  style={{ color: 'var(--illinois-orange)' }}
+                  href="mailto:genaisupport@mx.uillinois.edu"
                 >
-                  takes a village
+                  email us
                 </a>
                 .
               </div>
               {/* <div className="text-lg">Sponsored by the </div> */}
-            </Link>
-
-            <Link
-              className="duration-600 flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6 transition-transform hover:scale-[1.01]"
-              href="https://status.uiuc.chat/"
-              target="_blank"
-            >
-              {/* text-[var(--illinois-white)] hover:bg-[var(--illinois-white)]/20 */}
+            </div>
+            <div className="flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6">
               <h3
                 className={`
                 text-xl font-bold
                 ${montserrat_heading.variable} font-montserratHeading
               `}
               >
-                Status page
+                Open source
               </h3>
-              {/* <div className="text-lg">Check service uptime.</div> */}
-              <Image
-                src="https://status.uiuc.chat/api/badge/1/uptime/24?label=Uptime%2024%20hours"
-                alt="Service Uptime Badge"
-                width={150}
-                height={50}
-              />
-              <Image
-                src="https://status.uiuc.chat/api/badge/1/uptime/720?label=Uptime%2030%20days"
-                alt="Service Uptime Badge"
-                width={150}
-                height={50}
-              />
-            </Link>
+              <div className="text-md">
+                All code is open source. Join us on{' '}
+                <a
+                  style={{ color: 'var(--illinois-orange)' }}
+                  href="https://github.com/Center-for-AI-Innovation"
+                >
+                  GitHub
+                </a>
+                .
+              </div>
+            </div>
+            <div className="flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6">
+              <h3
+                className={`
+                text-xl font-bold
+                ${montserrat_heading.variable} font-montserratHeading
+              `}
+              >
+                Developed at Illinois
+              </h3>
+              <div className="text-md">
+                Developed by the{' '}
+                <a
+                  style={{ color: 'var(--illinois-orange)' }}
+                  href="https://ai.ncsa.illinois.edu/"
+                >
+                  Center of AI Innovation
+                </a>{' '}
+                at{' '}
+                <a
+                  style={{ color: 'var(--illinois-orange)' }}
+                  href="https://ncsa.illinois.edu/"
+                >
+                  National Center for Supercomputing Applications
+                </a>
+                .
+              </div>
+            </div>
           </div>
         </div>
-
         <GlobalFooter />
       </main>
     </>
