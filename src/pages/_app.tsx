@@ -23,31 +23,30 @@ import { KeycloakProvider } from '../providers/KeycloakProvider'
 // Check that PostHog is client-side (used to handle Next.js SSR)
 if (typeof window !== 'undefined') {
   const key = process.env.NEXT_PUBLIC_POSTHOG_KEY
-  const host = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://posthog-dev.ilchat.mss.illinois.edu'
-
-  console.log('🔑 PostHog key:', key)
-  console.log('🌐 PostHog host:', host)
+  const host =
+    process.env.NEXT_PUBLIC_POSTHOG_HOST ||
+    'https://posthog-dev.ilchat.mss.illinois.edu'
 
   if (!key) {
     console.warn('⚠️  No POSTHOG key—skipping init.')
   } else {
-  posthog.init(key, {
-    api_host: host,
-    opt_in_site_apps: true,
-    autocapture: false,
-    person_profiles: 'always',
-    defaults: '2025-05-24',
-    session_recording: {
-      maskAllInputs: false,
-      maskInputOptions: {
-        password: true,
-        email: true,
-        // @ts-expect-error TODO: Object literal may only specify known properties, and 'creditCard' does not exist...
-        creditCard: true,
+    posthog.init(key, {
+      api_host: host,
+      opt_in_site_apps: true,
+      autocapture: false,
+      person_profiles: 'always',
+      defaults: '2025-05-24',
+      session_recording: {
+        maskAllInputs: false,
+        maskInputOptions: {
+          password: true,
+          email: true,
+          // @ts-expect-error TODO: Object literal may only specify known properties, and 'creditCard' does not exist...
+          creditCard: true,
+        },
       },
-    },
-    loaded: (posthog) => {
-      if (process.env.NODE_ENV === 'development') posthog.debug()
+      loaded: (posthog) => {
+        if (process.env.NODE_ENV === 'development') posthog.debug()
       },
     })
   }
