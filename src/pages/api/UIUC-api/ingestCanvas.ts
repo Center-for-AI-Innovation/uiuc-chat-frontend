@@ -87,7 +87,7 @@ Please review and approve at https://canvas.illinois.edu/ using account uiuc.cha
       `📤 Submitted to ingest queue: ${canvas_url}. Response status: ${response.status}`,
       responseBody,
     )
-    return res.status(200).json(responseBody)
+    return res.status(response.status).json(responseBody)
   } catch (error) {
     console.error(error)
     return res.status(500).json({
