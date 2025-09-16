@@ -15,7 +15,7 @@ export const selectBestTemperature = (
   selectedConversation: Conversation | undefined,
   llmProviders: AllLLMProviders,
 ): number => {
-  // First priority: Selected last converation's temperature
+  // First priority: Selected last conversation's temperature
    if (lastConversation?.temperature !== undefined) {
     return lastConversation.temperature
   }
@@ -24,8 +24,6 @@ export const selectBestTemperature = (
   if (selectedConversation?.temperature !== undefined) {
     return selectedConversation.temperature
   }
-
-  debugger
 
   // Third priority: Default model temperature from LLMProviders
   const defaultModel = Object.values(llmProviders)
