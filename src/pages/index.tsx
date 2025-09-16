@@ -126,6 +126,7 @@ const TypingAnimation: React.FC = () => {
 }
 
 const Home: NextPage = () => {
+  const [isTooltipVisible, setIsTooltipVisible] = useState(false)
   const useIllinoisChatConfig = useMemo(() => {
     return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
   }, [])
