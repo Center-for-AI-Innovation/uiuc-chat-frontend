@@ -1,4 +1,4 @@
-import { type FC, useContext, useState } from 'react'
+import { type FC, useContext, useEffect, useState } from 'react'
 import { useTranslation } from 'next-i18next'
 import { DEFAULT_TEMPERATURE } from '@/utils/app/const'
 import HomeContext from '~/pages/api/home/home.context'
@@ -15,15 +15,17 @@ export const selectBestTemperature = (
   selectedConversation: Conversation | undefined,
   llmProviders: AllLLMProviders,
 ): number => {
-  // First priority: Selected model temperature
+  // First priority: Selected last converation's temperature
+   if (lastConversation?.temperature !== undefined) {
+    return lastConversation.temperature
+  }
+
+   // Second priority: current select model temperature
   if (selectedConversation?.temperature !== undefined) {
     return selectedConversation.temperature
   }
 
-  // Second priority: Last conversation temperature
-  if (lastConversation?.temperature !== undefined) {
-    return lastConversation.temperature
-  }
+  debugger
 
   // Third priority: Default model temperature from LLMProviders
   const defaultModel = Object.values(llmProviders)
