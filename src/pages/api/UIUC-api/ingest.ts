@@ -20,13 +20,15 @@ const handler = async (
       })
     }
 
-    const { uniqueFileName, courseName, readableFilename } = req.body
+    const { uniqueFileName, courseName, readableFilename, forceEmbeddings } =
+      req.body
 
     console.log(
       '👉 Submitting to ingest queue:',
       uniqueFileName,
       courseName,
       readableFilename,
+      forceEmbeddings,
     )
 
     if (!uniqueFileName || !courseName || !readableFilename) {
@@ -48,6 +50,7 @@ const handler = async (
         course_name: courseName,
         readable_filename: readableFilename,
         s3_paths: s3_filepath,
+        force_embeddings: forceEmbeddings,
       }),
     })
 
