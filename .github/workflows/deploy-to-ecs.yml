@@ -78,7 +78,6 @@ jobs:
         echo "ECR Repository: $ECR_REPOSITORY"
         
         docker build \
-          --build-arg NEXT_PUBLIC_KEYCLOAK_URL="${{ secrets.NEXT_PUBLIC_KEYCLOAK_URL }}" \
           --build-arg NEXT_PUBLIC_KEYCLOAK_REALM="${{ vars.NEXT_PUBLIC_KEYCLOAK_REALM }}" \
           --build-arg NEXT_PUBLIC_KEYCLOAK_CLIENT_ID="${{ vars.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID }}" \
           --build-arg NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG="${{ vars.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG }}" \
