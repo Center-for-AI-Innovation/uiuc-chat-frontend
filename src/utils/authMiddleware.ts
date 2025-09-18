@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import jwt from 'jsonwebtoken'
 import jwksClient from 'jwks-rsa'
-import { CookieStorage } from '~/providers/cookie-storage'
 import { getKeycloakBaseUrl } from '~/utils/authHelpers'
 
 // Keycloak configuration
@@ -29,6 +28,24 @@ function getKey(header: any, callback: any) {
     const signingKey = key?.getPublicKey()
     callback(null, signingKey)
   })
+}
+
+function getTokenFromCookies(req: NextApiRequest): string | null {
+  // Find oidc.user:* cookie
+  const names = Object.keys(req.cookies || {});
+  const name = names.find((n) => n.startsWith("oidc.user:"));
+  if (!name) return null;
+
+  const raw = req.cookies[name];
+  if (!raw) return null;
+
+  try {
+    const decoded = decodeURIComponent(raw);
+    const parsed = JSON.parse(decoded);
+    return parsed.access_token || parsed.id_token || null;
+  } catch {
+    return null;
+  }
 }
 
 // JWT verification options
@@ -67,27 +84,12 @@ export function withAuth(
 ) {
   return async (req: AuthenticatedRequest, res: NextApiResponse) => {
     try {
-      // Check for Authorization header
-      const authHeader = req.headers.authorization
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({
-          error: 'Missing or invalid authorization header',
-          message: 'Please provide a valid Bearer token',
-        })
+      const token = getTokenFromCookies(req);
+      console.log('Extracted token:', token ? 'Token found' : 'No token found')
+
+      if (!token) {
+        return res.status(401).json({ error: "Missing token" });
       }
-
-      // Extract token
-      // const token = authHeader.replace('Bearer ', '')
-
-      const cookieStore = new CookieStorage({
-        prefix: 'oidc.',
-        expiresDays: 1,
-        sameSite: 'lax', // if your IdP is on another domain AND you use iframe silent renew, use "none"
-        secure: true,
-      })
-      const token = cookieStore.getItem(
-        `oidc.user:${getKeycloakBaseUrl()}realms/${process.env.NEXT_PUBLIC_KEYCLOAK_REALM}:${process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID}`,
-      )
 
       // Verify JWT token
       const decoded = jwt.verify(
@@ -101,7 +103,8 @@ export function withAuth(
 
       // Call the original handler
       return await handler(req, res)
-    } catch (error) {
+    }
+    catch (error) {
       console.error('JWT verification error:', error)
 
       if (error instanceof jwt.TokenExpiredError) {

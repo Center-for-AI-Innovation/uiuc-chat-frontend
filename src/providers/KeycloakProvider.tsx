@@ -5,7 +5,7 @@ import { getKeycloakBaseUrl } from '~/utils/authHelpers'
 import Link from 'next/link'
 import { montserrat_heading } from '../../fonts'
 import { Flex, Title } from '@mantine/core'
-import { CookieStorage } from './cookie-storage'
+import { CookieStorage } from './CookieStorage'
 
 interface AuthProviderProps {
   children: ReactNode
@@ -92,7 +92,7 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
       setIsMounted(true)
 
       const cookieStore = new CookieStorage({
-        prefix: 'oidc.',
+        prefix: '',
         expiresDays: 1,
         sameSite: 'lax', // if your IdP is on another domain AND you use iframe silent renew, use "none"
         secure: true,

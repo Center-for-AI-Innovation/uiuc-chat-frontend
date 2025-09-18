@@ -14,7 +14,6 @@ type CookieOpts = {
 export class CookieStorage implements Storage {
   private keys: string[] = []
   constructor(private opts: CookieOpts = {}) {
-    this.opts.prefix ??= 'oidc.'
     this.opts.expiresDays ??= 1 // keep short
     this.opts.path ??= '/'
     this.opts.sameSite ??= 'lax'
