@@ -5,6 +5,7 @@ import { getKeycloakBaseUrl } from '~/utils/authHelpers'
 import Link from 'next/link'
 import { montserrat_heading } from '../../fonts'
 import { Flex, Title } from '@mantine/core'
+import { CookieStorage } from './cookie-storage'
 
 interface AuthProviderProps {
   children: ReactNode
@@ -90,13 +91,20 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
       setIsAuthCallback(searchParams.has('code') && searchParams.has('state'))
       setIsMounted(true)
 
+      const cookieStore = new CookieStorage({
+        prefix: 'oidc.',
+        expiresDays: 1,
+        sameSite: 'lax', // if your IdP is on another domain AND you use iframe silent renew, use "none"
+        secure: true,
+      })
+
       setOidcConfig((prev) => ({
         ...prev,
         redirect_uri: baseUrl,
         silent_redirect_uri: `${baseUrl}/silent-renew`,
         post_logout_redirect_uri: baseUrl,
         userStore: new WebStorageStateStore({
-          store: window.localStorage,
+          store: cookieStore,
         }),
         automaticSilentRenew: true,
       }))
@@ -121,7 +129,9 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
     // Function to find and attach listeners to login buttons
     const attachListeners = () => {
       // Find login buttons by commonly used selectors
-      const loginButtons = document.querySelectorAll('.login-btn, [data-login], button[type="login"]')
+      const loginButtons = document.querySelectorAll(
+        '.login-btn, [data-login], button[type="login"]',
+      )
       loginButtons.forEach((button) => {
         button.addEventListener('click', handleLoginClick)
       })
@@ -138,11 +148,18 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
             if (node.nodeType === Node.ELEMENT_NODE) {
               const element = node as Element
               // Check if the added element is a login button
-              if (element.matches && element.matches('.login-btn, [data-login], button[type="login"]')) {
+              if (
+                element.matches &&
+                element.matches(
+                  '.login-btn, [data-login], button[type="login"]',
+                )
+              ) {
                 element.addEventListener('click', handleLoginClick)
               }
               // Check if the added element contains login buttons
-              const loginButtons = element.querySelectorAll('.login-btn, [data-login], button[type="login"]')
+              const loginButtons = element.querySelectorAll(
+                '.login-btn, [data-login], button[type="login"]',
+              )
               loginButtons.forEach((button) => {
                 button.addEventListener('click', handleLoginClick)
               })
@@ -160,8 +177,10 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
 
     return () => {
       // Clean up event listeners and observer on unmount
-      const loginButtons = document.querySelectorAll('.login-btn, [data-login], button[type="login"]')
-      loginButtons.forEach(button => {
+      const loginButtons = document.querySelectorAll(
+        '.login-btn, [data-login], button[type="login"]',
+      )
+      loginButtons.forEach((button) => {
         button.removeEventListener('click', handleLoginClick)
       })
       observer.disconnect()
@@ -183,11 +202,11 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
                 >
                   {' '}
                   <span className="${inter.style.fontFamily} mr-2 text-[--illinois-orange]">
-                Illinois
-              </span>
+                    Illinois
+                  </span>
                   <span className="${inter.style.fontFamily} text-[--foreground]">
-                Chat
-              </span>{' '}
+                    Chat
+                  </span>{' '}
                 </h2>
               </Link>
             </div>

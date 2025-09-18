@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm'
-import type { NextApiRequest, NextApiResponse } from 'next'
+import { type AuthenticatedRequest, type NextApiResponse } from 'next'
+import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 import { db, documentsInProgress } from '~/db/dbClient'
 
 // This is for "Documents in Progress" table, docs that are still being ingested.
@@ -11,7 +12,7 @@ type DocsInProgressResponse = {
 }
 
 export default async function docsInProgress(
-  req: NextApiRequest,
+  req: AuthenticatedRequest,
   res: NextApiResponse<DocsInProgressResponse>,
 ) {
   if (req.method !== 'GET') {
@@ -35,9 +36,9 @@ export default async function docsInProgress(
 
     if (data && data.length > 0) {
       return res.status(200).json({
-        documents: data.map(doc => ({
-          readable_filename: doc.readable_filename || 'Untitled Document'
-        }))
+        documents: data.map((doc) => ({
+          readable_filename: doc.readable_filename || 'Untitled Document',
+        })),
       })
     }
   } catch (error) {

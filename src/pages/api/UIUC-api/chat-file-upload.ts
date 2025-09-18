@@ -1,5 +1,10 @@
-import { NextApiRequest, NextApiResponse } from 'next'
-import { db, conversations as conversationsTable, fileUploads } from '~/db/dbClient'
+import { type AuthenticatedRequest, type NextApiResponse } from 'next'
+import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import {
+  db,
+  conversations as conversationsTable,
+  fileUploads,
+} from '~/db/dbClient'
 import { v4 as uuidv4 } from 'uuid'
 import { getBackendUrl } from '~/utils/apiUtils'
 import { eq } from 'drizzle-orm'
@@ -14,7 +19,7 @@ type ChatFileUploadResponse = {
 }
 
 const handler = async (
-  req: NextApiRequest,
+  req: AuthenticatedRequest,
   res: NextApiResponse<ChatFileUploadResponse>,
 ) => {
   try {
@@ -25,8 +30,15 @@ const handler = async (
       })
     }
 
-    const { conversationId, courseName, user_id, s3Key, fileName, fileType, model } =
-      req.body
+    const {
+      conversationId,
+      courseName,
+      user_id,
+      s3Key,
+      fileName,
+      fileType,
+      model,
+    } = req.body
 
     // Validate required parameters
     if (!conversationId || !courseName || !user_id || !s3Key || !fileName) {
@@ -39,7 +51,10 @@ const handler = async (
 
     // 1. Verify conversation exists
     const existingConv = await db
-      .select({ id: conversationsTable.id, user_email: conversationsTable.user_email })
+      .select({
+        id: conversationsTable.id,
+        user_email: conversationsTable.user_email,
+      })
       .from(conversationsTable)
       .where(eq(conversationsTable.id, conversationId))
       .limit(1)

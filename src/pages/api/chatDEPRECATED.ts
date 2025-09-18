@@ -1,3 +1,5 @@
+import { type AuthenticatedRequest, type NextApiResponse } from 'next'
+import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 // // src/pages/api/chat.ts
 // import { DEFAULT_SYSTEM_PROMPT, DEFAULT_TEMPERATURE } from '@/utils/app/const'
 // import { OpenAIError, OpenAIStream } from '@/utils/server'

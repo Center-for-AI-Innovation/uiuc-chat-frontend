@@ -1,14 +1,11 @@
 // pages/api/getPresignedUrl.ts
 import { GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import type { NextApiRequest, NextApiResponse } from 'next'
+import { type AuthenticatedRequest, type NextApiResponse } from 'next'
+import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 import { s3Client, vyriadMinioClient } from '~/utils/s3Client'
 
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
     const { s3_path, course_name } = req.query
 
@@ -49,3 +46,5 @@ export default async function handler(
     res.status(405).json({ error: 'Method not allowed' })
   }
 }
+
+export default withAuth(handler)

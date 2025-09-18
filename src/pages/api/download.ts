@@ -1,10 +1,10 @@
 import { GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import type { NextApiRequest, NextApiResponse } from 'next'
+import { type AuthenticatedRequest, type NextApiResponse } from 'next'
+import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 import { s3Client, vyriadMinioClient } from '~/utils/s3Client'
 
-
-const handler = async (req: NextApiRequest, res: NextApiResponse) => {
+const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
   try {
     const { filePath, courseName, fileName } = req.body as {
       filePath: string
@@ -38,7 +38,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       const command = new GetObjectCommand({
         Bucket: bucketName,
         Key: actualKey,
-        ResponseContentDisposition: fileName ? `attachment; filename="${fileName}"` : 'inline',
+        ResponseContentDisposition: fileName
+          ? `attachment; filename="${fileName}"`
+          : 'inline',
         ResponseContentType: ResponseContentType,
       })
 
@@ -55,7 +57,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       const command = new GetObjectCommand({
         Bucket: process.env.S3_BUCKET_NAME!,
         Key: filePath,
-        ResponseContentDisposition: fileName ? `attachment; filename="${fileName}"` : 'inline',
+        ResponseContentDisposition: fileName
+          ? `attachment; filename="${fileName}"`
+          : 'inline',
         ResponseContentType: ResponseContentType,
       })
 
