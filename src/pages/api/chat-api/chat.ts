@@ -10,8 +10,8 @@ import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { validateApiKeyAndRetrieveData } from './keys/validate'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import posthog from 'posthog-js'
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import { type NextApiResponse } from 'next'
+import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import {
   attachContextsToLastMessage,

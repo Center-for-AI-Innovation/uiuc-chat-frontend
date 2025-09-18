@@ -1,37 +1,30 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import jwt from 'jsonwebtoken'
-
-
-export function realmB64ToPem(b64: string): string {
-  return `-----BEGIN PUBLIC KEY-----\n${b64}\n-----END PUBLIC KEY-----\n`
-}
-
-// TODO could get the key dynamically from the Keycloak server's JWKS endpoint
-const REALM_PUBKEY_B64 = process.env.KEYCLOAK_REALM_PUBLIC_KEY_B64!
-const KEYCLOAK_PUBLIC_KEY = realmB64ToPem(REALM_PUBKEY_B64)
+import { verifyTokenAsync } from './keycloakClient'
 
 function getTokenFromCookies(req: NextApiRequest): string | null {
   // Find oidc.user* cookie
-  const names = Object.keys(req.cookies || {});
-  const name = names.find((n) => n.startsWith("oidc.user"));
-  if (!name) return null;
+  const names = Object.keys(req.cookies || {})
+  const name = names.find((n) => n.startsWith('oidc.user'))
+  if (!name) return null
 
-  const raw = req.cookies[name];
-  if (!raw) return null;
+  const raw = req.cookies[name]
+  if (!raw) return null
 
   try {
-    const decoded = decodeURIComponent(raw);
-    const parsed = JSON.parse(decoded);
-    return parsed.access_token || parsed.id_token || null;
+    const decoded = decodeURIComponent(raw)
+    const parsed = JSON.parse(decoded)
+    return parsed.access_token || parsed.id_token || null
   } catch {
-    return null;
+    return null
   }
 }
 
 function peekIssuer(token: string): string {
-  const [, p] = token.split(".")
-  const payload = JSON.parse(Buffer.from(p, "base64url").toString("utf8"))
-  return String(payload.iss || "").replace(/\/$/, "")
+  const [, p] = token.split('.')
+  if (!p) return ''
+  const payload = JSON.parse(Buffer.from(p, 'base64url').toString('utf8'))
+  return String(payload.iss || '').replace(/\/$/, '')
 }
 
 export interface AuthenticatedUser {
@@ -63,26 +56,21 @@ export function withAuth(
 ) {
   return async (req: AuthenticatedRequest, res: NextApiResponse) => {
     try {
-      const token = getTokenFromCookies(req);
+      const token = getTokenFromCookies(req)
 
       if (!token) {
-        return res.status(401).json({ error: "Missing token" });
+        return res.status(401).json({ error: 'Missing token' })
       }
 
-      // Verify JWT token
-      const decoded = jwt.verify(token, KEYCLOAK_PUBLIC_KEY, {
-        issuer: peekIssuer(token),
-        algorithms: ['RS256'],
-      }) as AuthenticatedUser
-
+      // Verify JWT token using Keycloak's JWKS endpoint
+      const decoded = (await verifyTokenAsync(token)) as AuthenticatedUser
 
       // Add user to request object
       req.user = decoded
 
       // Call the original handler
       return await handler(req, res)
-    }
-    catch (error) {
+    } catch (error) {
       console.error('JWT verification error:', error)
 
       if (error instanceof jwt.TokenExpiredError) {

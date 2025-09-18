@@ -16,12 +16,18 @@ All API endpoints in `/src/pages/api/` are now secured with JWT authentication m
    - Role-based access control utilities
    - Request/response type definitions
 
-2. **Protected Endpoints**
+2. **Keycloak Client** (`/src/utils/keycloakClient.ts`)
+
+   - Dynamic public key fetching from Keycloak's JWKS endpoint
+   - Keycloak Admin Client integration for advanced operations
+   - Health checking and connectivity testing
+
+3. **Protected Endpoints**
 
    - All API endpoints wrapped with `withAuth()` middleware
    - User information available via `req.user`
 
-3. **Public Endpoints**
+4. **Public Endpoints**
    - Health check and authentication-related endpoints remain public
 
 ## Configuration
@@ -32,6 +38,7 @@ All API endpoints in `/src/pages/api/` are now secured with JWT authentication m
 NEXT_PUBLIC_KEYCLOAK_REALM=illinois-chat-realm
 NEXT_PUBLIC_KEYCLOAK_CLIENT_ID=illinois-chat
 NEXT_PUBLIC_KEYCLOAK_BASE_URL=https://auth.illinois.edu
+KEYCLOAK_CLIENT_SECRET=your-client-secret  # Optional, for admin operations
 ```
 
 ### Keycloak Setup
@@ -40,6 +47,43 @@ The middleware automatically fetches signing keys from:
 
 ```
 {KEYCLOAK_BASE_URL}/realms/{REALM}/protocol/openid-connect/certs
+```
+
+### Keycloak Client Features
+
+The new Keycloak client provides:
+
+- **Dynamic Key Fetching**: Automatically retrieves public keys from Keycloak's JWKS endpoint
+- **Admin Operations**: User management, role checking, and realm information
+- **Health Monitoring**: Connectivity testing and status checking
+- **Caching**: Efficient key caching with automatic rotation support
+
+#### Available Functions
+
+```typescript
+import {
+  checkKeycloakHealth,
+  getOpenIdConfig,
+  fetchRealmPublicKey,
+  getUserInfo,
+  getUserRoles,
+  userHasRole,
+} from '~/utils/keycloakClient'
+
+// Check Keycloak connectivity
+const health = await checkKeycloakHealth()
+
+// Get OpenID Connect configuration
+const config = await getOpenIdConfig()
+
+// Fetch realm public key directly
+const publicKey = await fetchRealmPublicKey()
+
+// Get user information
+const user = await getUserInfo(userId)
+
+// Check user roles
+const hasAdminRole = await userHasRole(userId, 'admin')
 ```
 
 ## Usage
@@ -122,7 +166,9 @@ The middleware returns appropriate HTTP status codes:
 
 ## Testing
 
-### Test Endpoint
+### Test Endpoints
+
+#### Authentication Test
 
 A test endpoint is available at `/api/test-auth` to verify authentication:
 
@@ -133,6 +179,34 @@ curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
 
 # Test without token (should return 401)
 curl http://localhost:3000/api/test-auth
+```
+
+#### Keycloak Connectivity Test
+
+A comprehensive Keycloak test endpoint is available at `/api/keycloak-test`:
+
+```bash
+# Test Keycloak connectivity and configuration
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+     http://localhost:3000/api/keycloak-test
+```
+
+#### Health Check
+
+The health check endpoint now includes Keycloak status:
+
+```bash
+# Check overall system health including Keycloak
+curl http://localhost:3000/api/healthcheck
+```
+
+#### Manual Keycloak Testing
+
+Use the provided test script to verify Keycloak connectivity:
+
+```bash
+# Run Keycloak connectivity test
+node scripts/test-keycloak.js
 ```
 
 ### Expected Response
