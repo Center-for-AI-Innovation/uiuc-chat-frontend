@@ -1,33 +1,14 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import jwt from 'jsonwebtoken'
-import jwksClient from 'jwks-rsa'
 
-// Keycloak configuration
-const KEYCLOAK_REALM =
-  process.env.NEXT_PUBLIC_KEYCLOAK_REALM || 'illinois-chat-realm'
-const KEYCLOAK_BASE_URL =
-  process.env.NEXT_PUBLIC_KEYCLOAK_BASE_URL || 'https://auth.illinois.edu'
 
-// JWKS client for Keycloak
-const client = jwksClient({
-  jwksUri: `${KEYCLOAK_BASE_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/certs`,
-  cache: true,
-  cacheMaxAge: 600000, // 10 minutes
-  rateLimit: true,
-  jwksRequestsPerMinute: 5,
-})
-
-// Get signing key from Keycloak
-function getKey(header: any, callback: any) {
-  client.getSigningKey(header.kid, (err, key) => {
-    if (err) {
-      callback(err)
-      return
-    }
-    const signingKey = key?.getPublicKey()
-    callback(null, signingKey)
-  })
+export function realmB64ToPem(b64: string): string {
+  return `-----BEGIN PUBLIC KEY-----\n${b64}\n-----END PUBLIC KEY-----\n`
 }
+
+// TODO could get the key dynamically from the Keycloak server's JWKS endpoint
+const REALM_PUBKEY_B64 = process.env.KEYCLOAK_REALM_PUBLIC_KEY_B64!
+const KEYCLOAK_PUBLIC_KEY = realmB64ToPem(REALM_PUBKEY_B64)
 
 function getTokenFromCookies(req: NextApiRequest): string | null {
   // Find oidc.user* cookie
@@ -47,19 +28,10 @@ function getTokenFromCookies(req: NextApiRequest): string | null {
   }
 }
 
-const peekJwt = (token: string) => {
-  const [h, p] = token.split(".")
-  return {
-    header: JSON.parse(Buffer.from(h, "base64url").toString("utf8")),
-    payload: JSON.parse(Buffer.from(p, "base64url").toString("utf8")),
-  }
-}
-
-// JWT verification options
-const verifyOptions: jwt.VerifyOptions = {
-  audience: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'illinois-chat',
-  issuer: `${KEYCLOAK_BASE_URL}/realms/${KEYCLOAK_REALM}`,
-  algorithms: ['RS256'],
+function peekIssuer(token: string): string {
+  const [, p] = token.split(".")
+  const payload = JSON.parse(Buffer.from(p, "base64url").toString("utf8"))
+  return String(payload.iss || "").replace(/\/$/, "")
 }
 
 export interface AuthenticatedUser {
@@ -97,30 +69,15 @@ export function withAuth(
         return res.status(401).json({ error: "Missing token" });
       }
 
-      // Discover issuer/audience/kid from token itself
-      const { header, payload } = peekJwt(token)
-      const issuer: string = payload.iss
-      const audience: string =
-        payload.aud || process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "illinois_chat"
-      if (!issuer || !header?.kid)
-        return res.status(401).json({ error: "Malformed token" })
+      // Verify JWT token
+      const decoded = jwt.verify(token, KEYCLOAK_PUBLIC_KEY, {
+        issuer: peekIssuer(token),
+        algorithms: ['RS256'],
+      }) as AuthenticatedUser
 
-      const getKey: jwt.GetPublicKeyOrSecret = (hdr, cb) => {
-        client.getSigningKey(hdr.kid!, (err, key) => {
-          if (err) return cb(err, undefined as any)
-          cb(null, key!.getPublicKey())
-        })
-      }
 
       // Add user to request object
-      req.user = await new Promise<AuthenticatedUser>((resolve, reject) => {
-        jwt.verify(
-          token,
-          getKey, // async resolver -> must use callback form
-          { algorithms: ["RS256"], audience, issuer },
-          (err, payload) => (err ? reject(err) : resolve(payload as AuthenticatedUser))
-        )
-      })
+      req.user = decoded
 
       // Call the original handler
       return await handler(req, res)
