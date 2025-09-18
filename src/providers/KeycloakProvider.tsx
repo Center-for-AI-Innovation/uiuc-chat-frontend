@@ -52,7 +52,13 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
   const [isAuthCallback, setIsAuthCallback] = useState(false)
 
   const [oidcConfig, setOidcConfig] = useState({
-    authority: `${getKeycloakBaseUrl()}realms/${process.env.NEXT_PUBLIC_KEYCLOAK_REALM}`,
+    authority: (() => {
+      const baseUrl = getKeycloakBaseUrl();
+      const realm = process.env.NEXT_PUBLIC_KEYCLOAK_REALM;
+      const authority = `${baseUrl}realms/${realm}`;
+      console.log('[KeycloakProvider] Constructing authority:', { baseUrl, realm, authority });
+      return authority;
+    })(),
     client_id: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'uiucchat',
     redirect_uri: '',
     silent_redirect_uri: '',
