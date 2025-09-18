@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import jwt from 'jsonwebtoken'
 import jwksClient from 'jwks-rsa'
-import { getKeycloakBaseUrl } from '~/utils/authHelpers'
 
 // Keycloak configuration
 const KEYCLOAK_REALM =
@@ -31,9 +30,9 @@ function getKey(header: any, callback: any) {
 }
 
 function getTokenFromCookies(req: NextApiRequest): string | null {
-  // Find oidc.user:* cookie
+  // Find oidc.user* cookie
   const names = Object.keys(req.cookies || {});
-  const name = names.find((n) => n.startsWith("oidc.user:"));
+  const name = names.find((n) => n.startsWith("oidc.user"));
   if (!name) return null;
 
   const raw = req.cookies[name];
@@ -45,6 +44,14 @@ function getTokenFromCookies(req: NextApiRequest): string | null {
     return parsed.access_token || parsed.id_token || null;
   } catch {
     return null;
+  }
+}
+
+const peekJwt = (token: string) => {
+  const [h, p] = token.split(".")
+  return {
+    header: JSON.parse(Buffer.from(h, "base64url").toString("utf8")),
+    payload: JSON.parse(Buffer.from(p, "base64url").toString("utf8")),
   }
 }
 
@@ -85,21 +92,35 @@ export function withAuth(
   return async (req: AuthenticatedRequest, res: NextApiResponse) => {
     try {
       const token = getTokenFromCookies(req);
-      console.log('Extracted token:', token ? 'Token found' : 'No token found')
 
       if (!token) {
         return res.status(401).json({ error: "Missing token" });
       }
 
-      // Verify JWT token
-      const decoded = jwt.verify(
-        token,
-        getKey,
-        verifyOptions,
-      ) as unknown as AuthenticatedUser
+      // Discover issuer/audience/kid from token itself
+      const { header, payload } = peekJwt(token)
+      const issuer: string = payload.iss
+      const audience: string =
+        payload.aud || process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "illinois_chat"
+      if (!issuer || !header?.kid)
+        return res.status(401).json({ error: "Malformed token" })
+
+      const getKey: jwt.GetPublicKeyOrSecret = (hdr, cb) => {
+        client.getSigningKey(hdr.kid!, (err, key) => {
+          if (err) return cb(err, undefined as any)
+          cb(null, key!.getPublicKey())
+        })
+      }
 
       // Add user to request object
-      req.user = decoded
+      req.user = await new Promise<AuthenticatedUser>((resolve, reject) => {
+        jwt.verify(
+          token,
+          getKey, // async resolver -> must use callback form
+          { algorithms: ["RS256"], audience, issuer },
+          (err, payload) => (err ? reject(err) : resolve(payload as AuthenticatedUser))
+        )
+      })
 
       // Call the original handler
       return await handler(req, res)
