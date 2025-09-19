@@ -5,20 +5,9 @@ import jwt from 'jsonwebtoken'
 // Keycloak configuration
 const KEYCLOAK_REALM =
   process.env.NEXT_PUBLIC_KEYCLOAK_REALM || 'illinois_chat_realm'
-const KEYCLOAK_BASE_URL =
-  process.env.NEXT_PUBLIC_KEYCLOAK_BASE_URL || 'http://localhost:8080'
 const KEYCLOAK_CLIENT_ID =
   process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'illinois_chat'
 const KEYCLOAK_CLIENT_SECRET = process.env.KEYCLOAK_CLIENT_SECRET
-
-// JWKS client for fetching public keys
-const jwksClientInstance = jwksClient({
-  jwksUri: `${KEYCLOAK_BASE_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/certs`,
-  cache: true,
-  cacheMaxAge: 600000, // 10 minutes
-  rateLimit: true,
-  jwksRequestsPerMinute: 5,
-})
 
 // Keycloak Admin Client instance
 let kcAdminClient: KcAdminClient | null = null
@@ -26,13 +15,13 @@ let kcAdminClient: KcAdminClient | null = null
 /**
  * Initialize Keycloak Admin Client
  */
-export async function initializeKeycloakAdmin(): Promise<KcAdminClient> {
+export async function initializeKeycloakAdmin(keycloakBaseUrl: string): Promise<KcAdminClient> {
   if (kcAdminClient) {
     return kcAdminClient
   }
 
   kcAdminClient = new KcAdminClient({
-    baseUrl: KEYCLOAK_BASE_URL,
+    baseUrl: keycloakBaseUrl,
     realmName: KEYCLOAK_REALM,
   })
 
@@ -51,7 +40,16 @@ export async function initializeKeycloakAdmin(): Promise<KcAdminClient> {
 /**
  * Get signing key from Keycloak's JWKS endpoint
  */
-export function getSigningKey(header: any, callback: any) {
+export function getSigningKey(keycloakBaseUrl: string, header: any, callback: any) {
+  // JWKS client for fetching public keys
+  const jwksClientInstance = jwksClient({
+    jwksUri: `${keycloakBaseUrl}realms/${KEYCLOAK_REALM}/protocol/openid-connect/certs`,
+    cache: true,
+    cacheMaxAge: 600000, // 10 minutes
+    rateLimit: true,
+    jwksRequestsPerMinute: 5,
+  })
+  if (!header.kid) return callback(new Error('Missing kid in JWT header'))
   jwksClientInstance.getSigningKey(header.kid, (err, key) => {
     if (err) {
       callback(err)
@@ -66,10 +64,10 @@ export function getSigningKey(header: any, callback: any) {
  * Fetch realm public key directly from Keycloak Admin API
  * Note: This requires admin access and may not be available in all Keycloak versions
  */
-export async function fetchRealmPublicKey(): Promise<string | null> {
+export async function fetchRealmPublicKey(keycloakBaseUrl:string): Promise<string | null> {
   try {
     // Try to get the public key from the JWKS endpoint instead
-    const jwksResponse = await fetch(getJwksUri())
+    const jwksResponse = await fetch(getJwksUri(keycloakBaseUrl))
     if (!jwksResponse.ok) {
       throw new Error(`Failed to fetch JWKS: ${jwksResponse.statusText}`)
     }
@@ -93,17 +91,17 @@ export async function fetchRealmPublicKey(): Promise<string | null> {
 /**
  * Get JWKS endpoint URL
  */
-export function getJwksUri(): string {
-  return `${KEYCLOAK_BASE_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/certs`
+export function getJwksUri(keycloakBaseUrl: string): string {
+  return `${keycloakBaseUrl}realms/${KEYCLOAK_REALM}/protocol/openid-connect/certs`
 }
 
 /**
  * Get OpenID Connect configuration
  */
-export async function getOpenIdConfig(): Promise<any> {
+export async function getOpenIdConfig(keycloakBaseUrl: string): Promise<any> {
   try {
     const response = await fetch(
-      `${KEYCLOAK_BASE_URL}/realms/${KEYCLOAK_REALM}/.well-known/openid_configuration`,
+      `${keycloakBaseUrl}realms/${KEYCLOAK_REALM}/.well-known/openid_configuration`,
     )
 
     if (!response.ok) {
@@ -120,11 +118,14 @@ export async function getOpenIdConfig(): Promise<any> {
 /**
  * Verify token using JWKS (recommended approach)
  */
-export function createTokenVerifier() {
+export function createTokenVerifier(keycloakBaseUrl?: string) {
+  if (!keycloakBaseUrl) throw new Error('keycloakBaseUrl is required');
+
   return {
-    getKey: getSigningKey,
+    // Bind baseUrl so signature becomes (header, callback)
+    getKey: getSigningKey.bind(null, keycloakBaseUrl),
     options: {
-      issuer: `${KEYCLOAK_BASE_URL}/realms/${KEYCLOAK_REALM}`,
+      issuer: `${keycloakBaseUrl}realms/${KEYCLOAK_REALM}`,
       algorithms: ['RS256'] as jwt.Algorithm[],
     },
   }
@@ -133,9 +134,9 @@ export function createTokenVerifier() {
 /**
  * Async wrapper for JWT verification
  */
-export function verifyTokenAsync(token: string): Promise<any> {
+export function verifyTokenAsync(token: string, keycloakBaseUrl: string): Promise<any> {
   return new Promise((resolve, reject) => {
-    const verifier = createTokenVerifier()
+    const verifier = createTokenVerifier(keycloakBaseUrl)
     jwt.verify(
       token,
       verifier.getKey,
@@ -154,9 +155,9 @@ export function verifyTokenAsync(token: string): Promise<any> {
 /**
  * Get user information from Keycloak Admin API
  */
-export async function getUserInfo(userId: string): Promise<any> {
+export async function getUserInfo(keycloakBaseUrl: string, userId: string): Promise<any> {
   try {
-    const adminClient = await initializeKeycloakAdmin()
+    const adminClient = await initializeKeycloakAdmin(keycloakBaseUrl)
     const user = await adminClient.users.findOne({ id: userId })
     return user
   } catch (error) {
@@ -168,9 +169,9 @@ export async function getUserInfo(userId: string): Promise<any> {
 /**
  * Get user roles from Keycloak Admin API
  */
-export async function getUserRoles(userId: string): Promise<any> {
+export async function getUserRoles(keycloakBaseUrl: string, userId: string): Promise<any> {
   try {
-    const adminClient = await initializeKeycloakAdmin()
+    const adminClient = await initializeKeycloakAdmin(keycloakBaseUrl)
     const roles = await adminClient.users.listRoleMappings({ id: userId })
     return roles
   } catch (error) {
@@ -183,11 +184,12 @@ export async function getUserRoles(userId: string): Promise<any> {
  * Check if user has specific role
  */
 export async function userHasRole(
+  keycloakBaseUrl: string,
   userId: string,
   roleName: string,
 ): Promise<boolean> {
   try {
-    const roles = await getUserRoles(userId)
+    const roles = await getUserRoles(keycloakBaseUrl, userId)
     return roles.some((role: any) => role.name === roleName)
   } catch (error) {
     console.error('Error checking user role:', error)
@@ -198,9 +200,9 @@ export async function userHasRole(
 /**
  * Get realm information
  */
-export async function getRealmInfo(): Promise<any> {
+export async function getRealmInfo(keycloakBaseUrl: string): Promise<any> {
   try {
-    const adminClient = await initializeKeycloakAdmin()
+    const adminClient = await initializeKeycloakAdmin(keycloakBaseUrl)
     const realm = await adminClient.realms.findOne({ realm: KEYCLOAK_REALM })
     return realm
   } catch (error) {
@@ -212,13 +214,13 @@ export async function getRealmInfo(): Promise<any> {
 /**
  * Health check for Keycloak connectivity
  */
-export async function checkKeycloakHealth(): Promise<{
+export async function checkKeycloakHealth(keycloakBaseUrl: string): Promise<{
   status: 'healthy' | 'unhealthy'
   error?: string
   details?: any
 }> {
   try {
-    const config = await getOpenIdConfig()
+    const config = await getOpenIdConfig(keycloakBaseUrl)
     return {
       status: 'healthy',
       details: {
