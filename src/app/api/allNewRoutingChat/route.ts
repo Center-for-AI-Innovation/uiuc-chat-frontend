@@ -5,13 +5,17 @@ import { routeModelRequest } from '~/utils/streamProcessing'
 import { type NextRequest, type NextResponse } from 'next/server'
 import { buildPrompt } from '~/app/utils/buildPromptUtils'
 import { OpenAIError } from '~/utils/server'
+import {
+  withAppRouterAuth,
+  type AuthenticatedRequest,
+} from '~/utils/appRouterAuth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 export const revalidate = 0
 
-export async function POST(req: NextRequest, res: NextResponse) {
+async function handler(req: AuthenticatedRequest) {
   try {
     const body = await req.json()
     const { conversation, course_name, courseMetadata, mode } = body as ChatBody
@@ -49,3 +53,5 @@ export async function POST(req: NextRequest, res: NextResponse) {
     )
   }
 }
+
+export const POST = withAppRouterAuth(handler)
