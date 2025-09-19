@@ -633,8 +633,8 @@ export const Chat = memo(
                                 .map((content) => content.text!)
                                 .join(' ')
                             : typeof msg.content === 'string'
-                              ? msg.content
-                              : ''
+                            ? msg.content
+                            : ''
                           return `${msg.role}: ${contentText.trim()}`
                         })
                         .filter((text) => text.length > 0)
@@ -653,8 +653,8 @@ export const Chat = memo(
                                 .map((content) => content.text!)
                                 .join(' ')
                             : typeof msg.content === 'string'
-                              ? msg.content
-                              : ''
+                            ? msg.content
+                            : ''
                           return `${msg.role}: ${contentText.trim()}`
                         })
                         .filter((text) => text.length > 0)
@@ -682,11 +682,11 @@ export const Chat = memo(
                         typeof msg.content === 'string'
                           ? msg.content.trim()
                           : Array.isArray(msg.content)
-                            ? msg.content
-                                .map((c) => c.text)
-                                .join(' ')
-                                .trim()
-                            : '',
+                          ? msg.content
+                              .map((c) => c.text)
+                              .join(' ')
+                              .trim()
+                          : '',
                     })),
                   },
                   key: getOpenAIKey(llmProviders, courseMetadata, apiKey),

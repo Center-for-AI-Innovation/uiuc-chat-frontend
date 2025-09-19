@@ -15,7 +15,9 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
 
   try {
     const response = await fetch(
-      `${getBackendUrl()}/getworkflows?api_key=${api_key}&limit=${limit || 10}&pagination=${pagination || 'true'}`,
+      `${getBackendUrl()}/getworkflows?api_key=${api_key}&limit=${
+        limit || 10
+      }&pagination=${pagination || 'true'}`,
     )
 
     if (!response.ok) {

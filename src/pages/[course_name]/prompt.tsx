@@ -664,21 +664,27 @@ CRITICAL: The optimized prompt must:
         currentSwitchState.vectorSearchRewrite
       ) {
         changes.push(
-          `Smart Document Search ${currentSwitchState.vectorSearchRewrite ? 'enabled' : 'disabled'}`,
+          `Smart Document Search ${
+            currentSwitchState.vectorSearchRewrite ? 'enabled' : 'disabled'
+          }`,
         )
       }
       if (
         initialSwitchState.guidedLearning !== currentSwitchState.guidedLearning
       ) {
         changes.push(
-          `Guided Learning ${currentSwitchState.guidedLearning ? 'enabled' : 'disabled'}`,
+          `Guided Learning ${
+            currentSwitchState.guidedLearning ? 'enabled' : 'disabled'
+          }`,
         )
       }
       if (
         initialSwitchState.documentsOnly !== currentSwitchState.documentsOnly
       ) {
         changes.push(
-          `Document-Based References Only ${currentSwitchState.documentsOnly ? 'enabled' : 'disabled'}`,
+          `Document-Based References Only ${
+            currentSwitchState.documentsOnly ? 'enabled' : 'disabled'
+          }`,
         )
       }
       if (
@@ -686,7 +692,9 @@ CRITICAL: The optimized prompt must:
         currentSwitchState.systemPromptOnly
       ) {
         changes.push(
-          `Bypass UIUC.chat's internal prompting ${currentSwitchState.systemPromptOnly ? 'enabled' : 'disabled'}`,
+          `Bypass UIUC.chat's internal prompting ${
+            currentSwitchState.systemPromptOnly ? 'enabled' : 'disabled'
+          }`,
         )
       }
 
@@ -885,7 +893,9 @@ CRITICAL: The optimized prompt must:
                         <Text className="text-[--foreground]">/</Text>
                         <Title
                           order={3}
-                          className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base text-[--illinois-orange] sm:text-xl ${
+                          className={`${
+                            montserrat_heading.variable
+                          } min-w-0 font-montserratHeading text-base text-[--illinois-orange] sm:text-xl ${
                             course_name.length > 40
                               ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
                               : ''
@@ -1336,7 +1346,12 @@ CRITICAL: The optimized prompt must:
                                               opt.value === selectedModel,
                                           )?.modelType || '',
                                         )}
-                                        alt={`${modelOptions.find((opt) => opt.value === selectedModel)?.modelType || ''} logo`}
+                                        alt={`${
+                                          modelOptions.find(
+                                            (opt) =>
+                                              opt.value === selectedModel,
+                                          )?.modelType || ''
+                                        } logo`}
                                         width={20}
                                         height={20}
                                         style={{
@@ -2166,13 +2181,13 @@ export const showToastOnPromptUpdate = (
   const title = was_error
     ? 'Error Updating Prompt'
     : isReset
-      ? 'Prompt Reset to Default'
-      : 'Prompt Updated Successfully'
+    ? 'Prompt Reset to Default'
+    : 'Prompt Updated Successfully'
   const message = was_error
     ? 'An error occurred while updating the prompt. Please try again.'
     : isReset
-      ? 'The system prompt has been reset to default settings.'
-      : 'The system prompt has been updated.'
+    ? 'The system prompt has been reset to default settings.'
+    : 'The system prompt has been updated.'
   const isError = was_error
 
   showToastNotification(theme, title, message, isError)

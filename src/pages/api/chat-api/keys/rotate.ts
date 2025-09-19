@@ -52,7 +52,6 @@ export default async function rotateKey(
       .from(apiKeys)
       .where(and(eq(apiKeys.email, email), eq(apiKeys.is_active, true)))
 
-
     if (existingKey.length === 0) {
       return res.status(404).json({
         error: 'API key not found for user, please generate one!',
@@ -69,19 +68,17 @@ export default async function rotateKey(
         .update(apiKeys)
         .set({ key: newApiKey, is_active: true, modified_at: new Date() })
         .where(eq(apiKeys.email, email))
-      
+
       console.log('Successfully updated API key for user:', email)
-      
+
       return res.status(200).json({
         message: 'API key rotated successfully',
         newApiKey,
       })
-
     } catch (error) {
       console.error('Error updating API key:', error)
       return res.status(500).json({ error: 'Error updating API key' })
     }
-
   } catch (error) {
     console.error('Failed to rotate API key:', error)
     return res.status(500).json({

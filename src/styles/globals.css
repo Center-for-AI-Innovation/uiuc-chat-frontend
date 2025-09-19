@@ -98,7 +98,7 @@
 
   --border: var(--illinois-storm-light);
   --input: var(--illinois-storm-light);
-  
+
   /* Font Variables */
   --font-montserrat-heading: 'Montserrat', sans-serif;
   --ring: var(--illinois-blue);
@@ -441,9 +441,7 @@ pre:has(div.codeblock) {
     color-stop(0.75, var(--illinois-background-dark))
   );
   background-color: var(--illinois-background-darker);
-  background-size:
-    100% 45%,
-    0%;
+  background-size: 100% 45%, 0%;
   background-repeat: no-repeat;
 }
 
@@ -462,9 +460,7 @@ pre:has(div.codeblock) {
   background-color: var(--illinois-background-darker);
   */
   background-color: var(--background);
-  background-size:
-    100% 45%,
-    0%;
+  background-size: 100% 45%, 0%;
   background-repeat: no-repeat;
 }
 
@@ -1020,11 +1016,9 @@ button.css-s37qmw {
   transform-origin: top;
   transform: translateY(-4px);
   will-change: transform, opacity, max-height;
-  transition:
-    max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+  transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
     opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    visibility 0s linear 0.5s;
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0.5s;
 }
 
 .think-tag-content > div {
@@ -1057,11 +1051,9 @@ button.css-s37qmw {
   /* For Firefox */
   scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
   /* For Firefox - thumb and track colors */
-  transition:
-    max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+  transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
     opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    visibility 0s linear;
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear;
 }
 
 /* Custom scrollbar for the expanded content */
@@ -1300,7 +1292,8 @@ https://icflorescu.github.io/mantine-datatable/examples/records-selection/
   background-color: var(--modal);
   color: var(--modal-text);
   border-radius: 0.5rem;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .modal-header-common {

@@ -421,7 +421,9 @@ export function LandingPageHeader({
           {/* Hamburger menu for small screens */}
           {showHamburgerMenu && (
             <div
-              className={`${classes.menuIcon} order-2 ${!showDocsInNav ? 'highlight-button' : ''}`}
+              className={`${classes.menuIcon} order-2 ${
+                !showDocsInNav ? 'highlight-button' : ''
+              }`}
               onClick={(e) => toggleMenu(e)}
               ref={menuButtonRef}
             >
@@ -440,7 +442,9 @@ export function LandingPageHeader({
             }}
           >
             <div
-              className={`dropdown-menu ${menuVisible ? 'menu-visible' : 'menu-hidden'}`}
+              className={`dropdown-menu ${
+                menuVisible ? 'menu-visible' : 'menu-hidden'
+              }`}
             >
               {/* Menu pointer triangle */}
               <div className="menu-pointer"></div>

@@ -174,7 +174,9 @@ export const UploadCard = memo(function UploadCard({
                 <Text className="text-[--foreground]">/</Text>
                 <Title
                   order={3}
-                  className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base text-[--illinois-orange] sm:text-xl ${
+                  className={`${
+                    montserrat_heading.variable
+                  } min-w-0 font-montserratHeading text-base text-[--illinois-orange] sm:text-xl ${
                     projectName.length > 40
                       ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
                       : ''
@@ -421,7 +423,7 @@ export const UploadCard = memo(function UploadCard({
                 </Text>
                 <input
                   type="file"
-                  className={`file-input-bordered file-input w-full cursor-pointer border-[--foreground] bg-[--background] text-sm text-[--foreground] shadow-inner hover:border-[--dashboard-button] hover:bg-[--dashboard-button] hover:text-[--dashboard-button-foreground] ${montserrat_paragraph.variable} font-montserratParagraph`}
+                  className={`file-input file-input-bordered w-full cursor-pointer border-[--foreground] bg-[--background] text-sm text-[--foreground] shadow-inner hover:border-[--dashboard-button] hover:bg-[--dashboard-button] hover:text-[--dashboard-button-foreground] ${montserrat_paragraph.variable} font-montserratParagraph`}
                   onChange={async (e) => {
                     // Assuming the file is converted to a URL somewhere else
                     if (e.target.files?.length) {

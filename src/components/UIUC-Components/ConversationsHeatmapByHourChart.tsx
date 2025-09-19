@@ -115,8 +115,12 @@ const ConversationsHeatmapByHourChart: React.FC<ChartProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: `color-mix(in srgb, var(--dashboard-button-foreground), var(--foreground) ${ratio < 0.5 ? 100 : 0}%)`,
-            background: `color-mix(in srgb, var(--dashboard-stat), transparent ${100 - ratio * 100}%)` /* rgba(74, 116, 170, ${ratio}) */,
+            color: `color-mix(in srgb, var(--dashboard-button-foreground), var(--foreground) ${
+              ratio < 0.5 ? 100 : 0
+            }%)`,
+            background: `color-mix(in srgb, var(--dashboard-stat), transparent ${
+              100 - ratio * 100
+            }%)` /* rgba(74, 116, 170, ${ratio}) */,
             border: '1px solid var(--foreground-faded)',
             fontSize: '.65rem',
           })}

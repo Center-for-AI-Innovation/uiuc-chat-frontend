@@ -23,7 +23,10 @@ function serializeError(err: any) {
   }
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
   const checks: Record<string, { status: string; error?: string }> = {
     app: { status: 'ok' },
   }
@@ -49,7 +52,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // S3
   if (s3Client && process.env.S3_BUCKET_NAME) {
     try {
-      await s3Client.send(new HeadBucketCommand({ Bucket: process.env.S3_BUCKET_NAME }))
+      await s3Client.send(
+        new HeadBucketCommand({ Bucket: process.env.S3_BUCKET_NAME }),
+      )
       checks.s3 = { status: 'ok' }
     } catch (err: any) {
       checks.s3 = { status: 'error', error: serializeError(err) }

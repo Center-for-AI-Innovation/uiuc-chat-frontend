@@ -73,7 +73,9 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       } catch (error) {
         console.error('Error saving folder:', error)
         res.status(500).json({
-          error: `Failed to save folder: ${error instanceof Error ? error.message : String(error)}`,
+          error: `Failed to save folder: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
         })
       }
       break

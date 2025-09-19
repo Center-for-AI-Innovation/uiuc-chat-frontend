@@ -53,7 +53,9 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
 
   try {
     const backendUrl = getBackendUrl()
-    const url = `${backendUrl}/export-convo-history-user?user_email=${encodeURIComponent(userEmail)}&project_name=${encodeURIComponent(projectName)}`
+    const url = `${backendUrl}/export-convo-history-user?user_email=${encodeURIComponent(
+      userEmail,
+    )}&project_name=${encodeURIComponent(projectName)}`
 
     const response = await fetch(url, {
       method: 'GET',
@@ -141,7 +143,9 @@ export const downloadConversationHistoryUser = async (
 
   try {
     const response = await fetch(
-      `/api/UIUC-api/downloadConvoHistoryUser?userEmail=${encodeURIComponent(userEmail)}&projectName=${encodeURIComponent(projectName)}`,
+      `/api/UIUC-api/downloadConvoHistoryUser?userEmail=${encodeURIComponent(
+        userEmail,
+      )}&projectName=${encodeURIComponent(projectName)}`,
       {
         method: 'GET',
         headers: {

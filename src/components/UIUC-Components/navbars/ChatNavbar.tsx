@@ -556,7 +556,9 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                       // Don't prevent default to allow normal right-click menu
                       // But add the URL to the clipboard
                       navigator.clipboard.writeText(
-                        `${window.location.origin}/${getCurrentCourseName()}/dashboard`,
+                        `${
+                          window.location.origin
+                        }/${getCurrentCourseName()}/dashboard`,
                       )
                     }}
                     aria-label={`Go to dashboard`}

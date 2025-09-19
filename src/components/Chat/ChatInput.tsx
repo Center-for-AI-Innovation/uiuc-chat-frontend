@@ -607,7 +607,9 @@ export const ChatInput = ({
     if (totalSize > limit) {
       showToast({
         title: 'Files Too Large',
-        message: `The total size of all files cannot exceed ${limit / 1024 / 1024}MB. Please remove large files or upload smaller ones.`,
+        message: `The total size of all files cannot exceed ${
+          limit / 1024 / 1024
+        }MB. Please remove large files or upload smaller ones.`,
         type: 'error',
         autoClose: 6000,
       })
@@ -620,7 +622,11 @@ export const ChatInput = ({
       if (!ext || !ALLOWED_FILE_EXTENSIONS.includes(ext)) {
         showToast({
           title: 'Unsupported File Type',
-          message: `The file "${file.name}" is not supported. Please upload files of the following types: ${ALLOWED_FILE_EXTENSIONS.join(', ')}.`,
+          message: `The file "${
+            file.name
+          }" is not supported. Please upload files of the following types: ${ALLOWED_FILE_EXTENSIONS.join(
+            ', ',
+          )}.`,
           type: 'error',
           autoClose: 6000,
         })
@@ -786,7 +792,9 @@ export const ChatInput = ({
           ),
         )
         showErrorToast(
-          `Failed to process ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          `Failed to process ${file.name}: ${
+            error instanceof Error ? error.message : 'Unknown error'
+          }`,
         )
       }
     }
@@ -1092,7 +1100,9 @@ export const ChatInput = ({
                       0,
                       name.lastIndexOf('.'),
                     )
-                    return `${nameWithoutExt.substring(0, maxLength - 3)}...${extension ? `.${extension}` : ''}`
+                    return `${nameWithoutExt.substring(0, maxLength - 3)}...${
+                      extension ? `.${extension}` : ''
+                    }`
                   }
 
                   return (

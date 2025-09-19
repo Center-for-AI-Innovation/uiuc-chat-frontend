@@ -16,8 +16,11 @@ export const initiateSignIn = (auth: any, redirectPath: string) => {
 
 // frontend
 export const getKeycloakBaseUrl = () => {
-  if (process.env.NEXT_PUBLIC_KEYCLOAK_URL && process.env.NEXT_PUBLIC_KEYCLOAK_URL.trim() !== '') {
-    return process.env.NEXT_PUBLIC_KEYCLOAK_URL;
+  if (
+    process.env.NEXT_PUBLIC_KEYCLOAK_URL &&
+    process.env.NEXT_PUBLIC_KEYCLOAK_URL.trim() !== ''
+  ) {
+    return process.env.NEXT_PUBLIC_KEYCLOAK_URL
   }
 
   if (typeof window === 'undefined') return ''
@@ -36,11 +39,17 @@ export const getKeycloakBaseUrl = () => {
 }
 
 // backend
-export function getKeycloakBaseFromHost(hostname: string, protocol: string): string {
-  if (process.env.NEXT_PUBLIC_KEYCLOAK_URL && process.env.NEXT_PUBLIC_KEYCLOAK_URL.trim() !== '') {
-    return process.env.NEXT_PUBLIC_KEYCLOAK_URL;
+export function getKeycloakBaseFromHost(
+  hostname: string,
+  protocol: string,
+): string {
+  if (
+    process.env.NEXT_PUBLIC_KEYCLOAK_URL &&
+    process.env.NEXT_PUBLIC_KEYCLOAK_URL.trim() !== ''
+  ) {
+    return process.env.NEXT_PUBLIC_KEYCLOAK_URL
   }
-  if (hostname === 'localhost') return 'http://localhost:8080/';
-  if (hostname === 'uiuc.chat') return 'https://login.uiuc.chat/';
-  return `${protocol}://${hostname}/keycloak/`;
+  if (hostname === 'localhost') return 'http://localhost:8080/'
+  if (hostname === 'uiuc.chat') return 'https://login.uiuc.chat/'
+  return `${protocol}://${hostname}/keycloak/`
 }

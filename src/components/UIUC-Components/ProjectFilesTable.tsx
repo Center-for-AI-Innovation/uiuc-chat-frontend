@@ -819,7 +819,9 @@ export function ProjectFilesTable({
                         selectedCount
                           ? 'bg-red-900 hover:bg-red-800'
                           : 'bg-transparent'
-                      } transition-colors duration-300 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                      } transition-colors duration-300 ${
+                        montserrat_paragraph.variable
+                      } font-montserratParagraph`}
                     >
                       <span className="block sm:hidden">
                         Delete {selectedCount}
@@ -1032,8 +1034,8 @@ export function ProjectFilesTable({
               width: isBetweenSmallAndMediumScreen
                 ? 80
                 : isSmallScreen
-                  ? 60
-                  : 130,
+                ? 60
+                : 130,
               sortable: true,
               // TODO: Think about how to allow filtering on date... need different UI to select date range
               // filter: (

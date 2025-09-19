@@ -154,7 +154,11 @@ const Sidebar = <T,>({
           withinPortal
         >
           <div
-            className={`flex items-center justify-start gap-3 rounded-lg bg-[--sidebar-background] p-2 text-[--foreground] transition-colors md:gap-4 md:p-3 ${permission === 'edit' ? 'cursor-pointer hover:bg-[--navbar-hover-background]' : 'cursor-default'}`}
+            className={`flex items-center justify-start gap-3 rounded-lg bg-[--sidebar-background] p-2 text-[--foreground] transition-colors md:gap-4 md:p-3 ${
+              permission === 'edit'
+                ? 'cursor-pointer hover:bg-[--navbar-hover-background]'
+                : 'cursor-default'
+            }`}
             role={permission === 'edit' ? 'button' : undefined}
             tabIndex={permission === 'edit' ? 0 : -1}
             onClick={
@@ -208,9 +212,9 @@ const Sidebar = <T,>({
                           word.length === 0
                             ? ''
                             : word.match(/^[A-Z0-9]+$/)
-                              ? word // keep acronym casing
-                              : word.charAt(0).toUpperCase() +
-                                word.slice(1).toLowerCase(),
+                            ? word // keep acronym casing
+                            : word.charAt(0).toUpperCase() +
+                              word.slice(1).toLowerCase(),
                         )
                         .join(' ')
                     })()}

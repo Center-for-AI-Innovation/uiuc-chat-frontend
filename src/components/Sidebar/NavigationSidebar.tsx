@@ -290,7 +290,9 @@ function NavText({
 }) {
   return (
     <span
-      className={`${montserrat_heading.variable} font-montserratHeading ${collapsed ? 'hidden' : ''}`}
+      className={`${montserrat_heading.variable} font-montserratHeading ${
+        collapsed ? 'hidden' : ''
+      }`}
     >
       {children}
     </span>
@@ -485,10 +487,14 @@ export default function NavigationSidebar({
 
       {/* Sidebar */}
       <div
-        className={`${classes.sidebar} ${isOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''} md:desktop`}
+        className={`${classes.sidebar} ${isOpen ? 'open' : ''} ${
+          isCollapsed ? 'collapsed' : ''
+        } md:desktop`}
       >
         <div
-          className={`${classes.sidebarContent} ${isCollapsed ? 'collapsed' : ''}`}
+          className={`${classes.sidebarContent} ${
+            isCollapsed ? 'collapsed' : ''
+          }`}
         >
           {/* Header */}
           <div
@@ -496,7 +502,9 @@ export default function NavigationSidebar({
           >
             {/* Breadcrumb - Always visible on mobile, conditionally on desktop */}
             <div
-              className={`${classes.breadcrumb} ${isCollapsed ? 'collapsed' : ''}`}
+              className={`${classes.breadcrumb} ${
+                isCollapsed ? 'collapsed' : ''
+              }`}
             >
               <div
                 className={`flex items-center gap-2 ${montserrat_heading.variable} font-montserratHeading`}
@@ -523,7 +531,9 @@ export default function NavigationSidebar({
 
           {/* Chat Button */}
           <button
-            className={`${classes.chatButton} ${isCollapsed ? 'collapsed' : ''}`}
+            className={`${classes.chatButton} ${
+              isCollapsed ? 'collapsed' : ''
+            }`}
             onClick={handleChatNavigation}
             onMouseEnter={() => {
               if (course_name) {
@@ -536,7 +546,9 @@ export default function NavigationSidebar({
           >
             <IconChevronLeft size={16} strokeWidth={3} />
             <span
-              className={`md:${isCollapsed ? 'hidden' : 'inline'} ${montserrat_paragraph.variable} font-montserratParagraph font-bold`}
+              className={`md:${isCollapsed ? 'hidden' : 'inline'} ${
+                montserrat_paragraph.variable
+              } font-montserratParagraph font-bold`}
             >
               Back to Chat
             </span>
@@ -550,7 +562,9 @@ export default function NavigationSidebar({
                 href={item.link}
                 prefetch={false}
                 data-active={activeLink === item.link}
-                className={`${classes.navLink} ${isCollapsed ? 'collapsed' : ''}`}
+                className={`${classes.navLink} ${
+                  isCollapsed ? 'collapsed' : ''
+                }`}
                 onMouseEnter={() => handleLinkHover(item.link)}
                 onClick={() => {
                   // Close sidebar on mobile after navigation

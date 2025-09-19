@@ -74,7 +74,9 @@ const useStyles = createStyles((theme) => ({
 const getInitials = (name: string) => {
   const names = name.split(' ')
   if (names.length >= 2) {
-    return `${names[0]?.[0] || ''}${names[names.length - 1]?.[0] || ''}`.toUpperCase()
+    return `${names[0]?.[0] || ''}${
+      names[names.length - 1]?.[0] || ''
+    }`.toUpperCase()
   }
   return (names[0]?.[0] || '').toUpperCase()
 }
@@ -117,7 +119,9 @@ export const AuthMenu = ({ size = 34 }: AuthMenuProps) => {
             onClick={() => {
               // Fixed URL construction to avoid realm duplication
               window.open(
-                `${getKeycloakBaseUrl()}realms/${process.env.NEXT_PUBLIC_KEYCLOAK_REALM}/account`,
+                `${getKeycloakBaseUrl()}realms/${
+                  process.env.NEXT_PUBLIC_KEYCLOAK_REALM
+                }/account`,
                 '_blank',
               )
             }}

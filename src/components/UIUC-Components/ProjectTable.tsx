@@ -131,8 +131,8 @@ const ListProjectTable: React.FC = () => {
             metadataA.is_private === metadataB.is_private
               ? 0
               : metadataA.is_private
-                ? 1
-                : -1
+              ? 1
+              : -1
           break
         case 'owner':
           comparison = metadataA.course_owner

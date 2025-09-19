@@ -69,7 +69,9 @@ export const LinkGeneratorModal = ({
     })
 
     const queryString = queryParams.toString()
-    const chatUrl = `${baseUrl}/${course_name}/chat${queryString ? `?${queryString}` : ''}`
+    const chatUrl = `${baseUrl}/${course_name}/chat${
+      queryString ? `?${queryString}` : ''
+    }`
     setGeneratedLink(chatUrl)
   }, [linkSettings, course_name])
 

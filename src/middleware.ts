@@ -71,17 +71,17 @@ export default async function middleware(request: NextRequest) {
       .replace(/=+$/, '')
 
     // Redirect to Keycloak auth URL directly
- const hostname =
+    const hostname =
       request.headers.get('x-forwarded-host') ??
       request.headers.get('host') ??
-      'localhost';
+      'localhost'
 
     const protocol =
       request.headers.get('x-forwarded-proto') ??
       request.nextUrl.protocol.replace(':', '') ??
-      'http';
+      'http'
 
-    const keycloakBaseUrl = getKeycloakBaseFromHost(hostname, protocol);
+    const keycloakBaseUrl = getKeycloakBaseFromHost(hostname, protocol)
     const keycloakUrl = `${keycloakBaseUrl}realms/${process.env.NEXT_PUBLIC_KEYCLOAK_REALM}/protocol/openid-connect/auth`
     const authUrl = new URL(keycloakUrl)
     authUrl.searchParams.set(
@@ -108,7 +108,6 @@ export default async function middleware(request: NextRequest) {
   // Materials Redirect
   const redirectResponse = materialsRedirectMiddleware(request)
   if (redirectResponse) return redirectResponse
-
 
   // Allow public routes
   if (

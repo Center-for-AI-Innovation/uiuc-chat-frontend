@@ -275,8 +275,8 @@ const MakeNewCoursePage = ({
                           projectName === ''
                             ? 'Add a project name above :)'
                             : !isCourseAvailable
-                              ? 'This project name is already taken!'
-                              : ''
+                            ? 'This project name is already taken!'
+                            : ''
                         }
                         withArrow
                         disabled={projectName !== '' && isCourseAvailable}
@@ -299,7 +299,11 @@ const MakeNewCoursePage = ({
                             }}
                             size="sm"
                             radius={'sm'}
-                            className={`${isCourseAvailable && projectName !== '' ? 'bg-[--illinois-orange] text-white hover:bg-[--illinois-orange] hover:text-white' : 'disabled:bg-[--button-disabled] disabled:text-[--button-disabled-text-color]'}
+                            className={`${
+                              isCourseAvailable && projectName !== ''
+                                ? 'bg-[--illinois-orange] text-white hover:bg-[--illinois-orange] hover:text-white'
+                                : 'disabled:bg-[--button-disabled] disabled:text-[--button-disabled-text-color]'
+                            }
                         mt-2 min-w-[5-rem] transform overflow-ellipsis text-ellipsis p-2 focus:shadow-none focus:outline-none lg:min-w-[8rem]`}
                             // w={`${isSmallScreen ? '5rem' : '50%'}`}
                             style={{

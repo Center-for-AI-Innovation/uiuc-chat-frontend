@@ -27,7 +27,9 @@ export async function runOllamaChat(
 
     try {
       const ollama = createOllama({
-        baseURL: `${(await decryptKeyIfNeeded(ollamaProvider.baseUrl!)) as string}/api`,
+        baseURL: `${
+          (await decryptKeyIfNeeded(ollamaProvider.baseUrl!)) as string
+        }/api`,
         headers: {
           Authorization: `Bearer ${process.env.NCSA_HOSTED_API_KEY || ''}`,
         },

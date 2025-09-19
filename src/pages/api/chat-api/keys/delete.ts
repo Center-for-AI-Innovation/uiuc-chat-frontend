@@ -44,7 +44,7 @@ export default async function deleteKey(
       .update(apiKeys)
       .set({ is_active: false })
       .where(eq(apiKeys.email, userEmail))
-      .returning();
+      .returning()
 
     if (data.length === 0) {
       console.error('No API key found for user email:', userEmail)

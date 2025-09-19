@@ -279,9 +279,13 @@ const NewModelDropdown: React.FC<{
         classNames={{
           root: 'w-full',
           wrapper: 'w-full',
-          input: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'} w-full`,
+          input: `${montserrat_paragraph.variable} font-montserratParagraph ${
+            isSmallScreen ? 'text-xs' : 'text-sm'
+          } w-full`,
           rightSection: 'pointer-events-none',
-          item: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`,
+          item: `${montserrat_paragraph.variable} font-montserratParagraph ${
+            isSmallScreen ? 'text-xs' : 'text-sm'
+          }`,
         }}
         styles={(theme) => ({
           input: {

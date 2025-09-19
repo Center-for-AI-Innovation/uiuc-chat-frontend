@@ -171,7 +171,9 @@ export async function replaceCitationLinks(
 
       // Only create link if we have a valid safe URL
       const linkText = citation.link
-        ? `[${innerText}](${citation.link}${citation.pageNumber ? `#page=${citation.pageNumber}` : ''} "${tooltipTitle}")`
+        ? `[${innerText}](${citation.link}${
+            citation.pageNumber ? `#page=${citation.pageNumber}` : ''
+          } "${tooltipTitle}")`
         : innerText // Fallback to plain text if URL is invalid
 
       // No parentheses around the link
@@ -191,7 +193,9 @@ export async function replaceCitationLinks(
 
           // Only create link if we have a valid safe URL
           const linkText = citation.link
-            ? `[${innerText}](${citation.link}${citation.pageNumber ? `#page=${citation.pageNumber}` : ''} "${tooltipTitle}")`
+            ? `[${innerText}](${citation.link}${
+                citation.pageNumber ? `#page=${citation.pageNumber}` : ''
+              } "${tooltipTitle}")`
             : innerText // Fallback to plain text if URL is invalid
 
           // Add semicolon between citations except for the last one
@@ -259,7 +263,9 @@ export async function replaceCitationLinks(
 
       // Only create link if we have a valid safe URL
       const linkText = safeLink
-        ? `[${innerText}](${safeLink}${pageNumber ? `#page=${pageNumber}` : ''} "${tooltipTitle}")`
+        ? `[${innerText}](${safeLink}${
+            pageNumber ? `#page=${pageNumber}` : ''
+          } "${tooltipTitle}")`
         : innerText // Fallback to plain text if URL is invalid
 
       // Keep parentheses outside the link for consistency

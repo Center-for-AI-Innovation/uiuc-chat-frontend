@@ -59,8 +59,8 @@ export default async function generateKey(
       .where(and(eq(apiKeys.email, email), eq(apiKeys.is_active, true)))
 
     if (!keys) {
-      console.error('Error retrieving API keys from DB');
-      throw new Error('Failed to fetch API keys');
+      console.error('Error retrieving API keys from DB')
+      throw new Error('Failed to fetch API keys')
     }
 
     console.log('Existing keys found:', keys.length)
@@ -84,7 +84,7 @@ export default async function generateKey(
           key: apiKey,
           is_active: true,
         })
-        
+
         console.log('Successfully inserted new API key record:', result)
       } catch (error) {
         console.error('Failed to insert API key record:', error)
@@ -101,9 +101,8 @@ export default async function generateKey(
             user_id: decodedPayload.sub,
           })
           .where(eq(apiKeys.email, email))
-        
-        console.log('Successfully updated API key record')
 
+        console.log('Successfully updated API key record')
       } catch (error) {
         console.error('Failed to update API key record:', error)
         throw error

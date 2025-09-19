@@ -307,7 +307,9 @@ const _buildToolsOutputResults = ({
           })),
         )
       } else if (tool.output && tool.output.data) {
-        toolOutput += `Tool: ${tool.readableName}\nOutput: ${JSON.stringify(tool.output.data)}\n`
+        toolOutput += `Tool: ${tool.readableName}\nOutput: ${JSON.stringify(
+          tool.output.data,
+        )}\n`
       } else if (tool.error) {
         toolOutput += `Tool: ${tool.readableName}\n${tool.error}\n`
       }
@@ -324,8 +326,8 @@ const _buildToolsOutputResults = ({
 const _buildConvoHistory = ({
   conversation,
   tokenLimit,
-  // encoding,
-}: {
+}: // encoding,
+{
   conversation: Conversation
   tokenLimit: number
   // encoding: Tiktoken

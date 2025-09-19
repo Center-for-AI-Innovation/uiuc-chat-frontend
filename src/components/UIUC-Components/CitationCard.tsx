@@ -182,7 +182,12 @@ export const CitationCard = ({
         }
       }
 
-      const presignedUrl = await fetchPresignedUrl(s3_path, course_name, undefined, downloadFilename)
+      const presignedUrl = await fetchPresignedUrl(
+        s3_path,
+        course_name,
+        undefined,
+        downloadFilename,
+      )
 
       // For PDFs, open in new tab for inline viewing with page number if available
       if (s3_path.toLowerCase().endsWith('.pdf')) {
@@ -238,14 +243,20 @@ export const CitationCard = ({
         <div className="flex h-full flex-col">
           {thumbnailUrl ? (
             <div
-              className={`relative flex w-full ${isWebIcon ? 'justify-center bg-[--sources-item-header-background] p-2' : 'h-32 overflow-hidden'}`}
+              className={`relative flex w-full ${
+                isWebIcon
+                  ? 'justify-center bg-[--sources-item-header-background] p-2'
+                  : 'h-32 overflow-hidden'
+              }`}
             >
               <Image
                 src={thumbnailUrl}
                 alt={`Thumbnail for ${readable_filename}`}
                 height={isWebIcon ? 48 : 'auto'}
                 width={isWebIcon ? 48 : '100%'}
-                className={`${isWebIcon ? 'object-contain' : 'w-full object-cover'}`}
+                className={`${
+                  isWebIcon ? 'object-contain' : 'w-full object-cover'
+                }`}
                 onError={(e) => {
                   console.log('Failed to load image from URL:', thumbnailUrl)
                   if (isWebIcon) {

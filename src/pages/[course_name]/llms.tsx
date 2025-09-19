@@ -26,8 +26,9 @@ const CourseMain: NextPage = () => {
     const fetchCourseData = async () => {
       const local_course_name = getCurrentPageName()
 
-      const metadata: CourseMetadata =
-        await fetchCourseMetadata(local_course_name)
+      const metadata: CourseMetadata = await fetchCourseMetadata(
+        local_course_name,
+      )
       if (metadata === null) {
         await router.push('/new?course_name=' + local_course_name)
         return

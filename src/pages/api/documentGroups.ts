@@ -47,8 +47,8 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
             doc.url && doc.url !== ''
               ? doc.url
               : doc.s3_path && doc.s3_path !== ''
-                ? doc.s3_path
-                : null,
+              ? doc.s3_path
+              : null,
           doc_groups: doc.doc_groups,
         })
 
@@ -87,8 +87,8 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
             doc.url && doc.url !== ''
               ? doc.url
               : doc.s3_path && doc.s3_path !== ''
-                ? doc.s3_path
-                : null,
+              ? doc.s3_path
+              : null,
           doc_groups: doc.doc_groups,
           doc_group: docGroup,
         })
@@ -136,8 +136,8 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
             doc.url && doc.url !== ''
               ? doc.url
               : doc.s3_path && doc.s3_path !== ''
-                ? doc.s3_path
-                : null,
+              ? doc.s3_path
+              : null,
           doc_groups: doc.doc_groups,
           doc_group: docGroup,
         })

@@ -19,7 +19,9 @@ export async function fetchEnabledDocGroups(courseName: string) {
   } catch (error) {
     console.error('Error in fetchEnabledDocGroups:', error)
     throw new Error(
-      `Failed to fetch enabled document groups: ${error instanceof Error ? error.message : String(error)}`,
+      `Failed to fetch enabled document groups: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
     )
   }
 }
@@ -49,7 +51,9 @@ export async function addDocumentsToDocGroup(
 ) {
   try {
     // Call the Postgres function directly using db.execute and sql
-    const groupArray = `{${doc.doc_groups.map((v) => `"${v.replace(/"/g, '\\"')}"`).join(',')}}`
+    const groupArray = `{${doc.doc_groups
+      .map((v) => `"${v.replace(/"/g, '\\"')}"`)
+      .join(',')}}`
     if (doc.url) {
       const result = await db.execute(sql`
         select add_document_to_group(

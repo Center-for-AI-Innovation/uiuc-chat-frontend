@@ -81,7 +81,9 @@ export const OpenAIStream = async (
       provider.models?.forEach((m) => {
         // find the model who's model.id matches model.id
         if (m.id === model.id) {
-          url = `${provider!.AzureEndpoint}/openai/deployments/${m.azureDeploymentID}/chat/completions?api-version=${OPENAI_API_VERSION}`
+          url = `${provider!.AzureEndpoint}/openai/deployments/${
+            m.azureDeploymentID
+          }/chat/completions?api-version=${OPENAI_API_VERSION}`
         }
       })
     } else if (

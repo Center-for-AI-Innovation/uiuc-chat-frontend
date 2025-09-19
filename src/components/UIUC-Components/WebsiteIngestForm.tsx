@@ -43,10 +43,10 @@ const montserrat_med = Montserrat({
   subsets: ['latin'],
 })
 export default function WebsiteIngestForm({
-                                            project_name,
-                                            setUploadFiles,
-                                            queryClient,
-                                          }: {
+  project_name,
+  setUploadFiles,
+  queryClient,
+}: {
   project_name: string
   setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
   queryClient: QueryClient
@@ -415,12 +415,14 @@ export default function WebsiteIngestForm({
                     event.preventDefault()
                   }}
                 >
-                  {useIllinoisChatConfig && <Text
-                    style={{ color: 'red', fontSize: '16px' }}
-                    className={`${montserrat_heading.variable} font-montserratHeading`}
-                  >
-                    Coming soon! Contact us if interested.
-                  </Text>}
+                  {useIllinoisChatConfig && (
+                    <Text
+                      style={{ color: 'red', fontSize: '16px' }}
+                      className={`${montserrat_heading.variable} font-montserratHeading`}
+                    >
+                      Coming soon! Contact us if interested.
+                    </Text>
+                  )}
 
                   <Input
                     icon={icon}

@@ -33,7 +33,9 @@ export async function runBedrockChat(
       !bedrockProvider.secretAccessKey ||
       !bedrockProvider.region
     ) {
-      throw new Error('AWS credentials are missing - please refresh the page, or add credentials in the Admin Dashboard')
+      throw new Error(
+        'AWS credentials are missing - please refresh the page, or add credentials in the Admin Dashboard',
+      )
     }
 
     const bedrock = createAmazonBedrock({

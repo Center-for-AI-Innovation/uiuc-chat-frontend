@@ -337,7 +337,9 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                 <Text className="">/</Text>
                 <Title
                   order={3}
-                  className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base text-[--illinois-orange] sm:text-xl ${
+                  className={`${
+                    montserrat_heading.variable
+                  } min-w-0 font-montserratHeading text-base text-[--illinois-orange] sm:text-xl ${
                     course_name.length > 40
                       ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
                       : ''

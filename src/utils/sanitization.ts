@@ -7,7 +7,7 @@ export function sanitizeText(text: string): string {
   return text
     .replace(/\u0000/g, '') // Remove null bytes
     .replace(/\\u0000/g, '') // Remove escaped null bytes
-    .replace(/\0/g, ''); // Remove another form of null bytes
+    .replace(/\0/g, '') // Remove another form of null bytes
 }
 
 /**
@@ -17,17 +17,17 @@ export function sanitizeText(text: string): string {
  */
 export function sanitizeForLogging(obj: any): any {
   if (typeof obj === 'string') {
-    return sanitizeText(obj);
+    return sanitizeText(obj)
   }
   if (Array.isArray(obj)) {
-    return obj.map(item => sanitizeForLogging(item));
+    return obj.map((item) => sanitizeForLogging(item))
   }
   if (obj !== null && typeof obj === 'object') {
-    const sanitized: any = {};
+    const sanitized: any = {}
     for (const [key, value] of Object.entries(obj)) {
-      sanitized[key] = sanitizeForLogging(value);
+      sanitized[key] = sanitizeForLogging(value)
     }
-    return sanitized;
+    return sanitized
   }
-  return obj;
-} 
+  return obj
+}

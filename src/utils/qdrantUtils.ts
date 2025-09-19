@@ -104,8 +104,8 @@ export async function addDocumentsToDocGroupQdrant(
         doc.url && doc.url !== ''
           ? doc.url
           : doc.s3_path && doc.s3_path !== ''
-            ? doc.s3_path
-            : null,
+          ? doc.s3_path
+          : null,
       doc_groups: doc.doc_groups,
       error_logs: error,
     })

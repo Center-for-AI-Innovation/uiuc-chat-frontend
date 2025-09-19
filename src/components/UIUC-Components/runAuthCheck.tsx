@@ -61,14 +61,11 @@ export const get_user_permission = (
       ) {
         // Not owner or admin, can't edit. But is USER so CAN VIEW
         return 'view'
-      }
-      else if (course_metadata.allow_logged_in_users) {
+      } else if (course_metadata.allow_logged_in_users) {
         // special case for private courses with allow_logged_in_users
         console.log('private && allow_logged_in_users. Auth: view.')
         return 'view'
-      }
-      else
-      {
+      } else {
         // Cannot edit or view
         console.log(
           'User is not an admin, owner, or approved user. Course is private. Auth: no_permission.',

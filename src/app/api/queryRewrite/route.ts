@@ -1,6 +1,5 @@
 // src/app/api/queryRewrite/route.ts
 
-
 import { routeModelRequest } from '~/utils/streamProcessing'
 import { type ChatBody } from '@/types/chat'
 
@@ -26,7 +25,7 @@ export async function POST(req: Request) {
         headers: {
           'Content-Type': 'application/json',
         },
-      }
+      },
     )
   }
 }

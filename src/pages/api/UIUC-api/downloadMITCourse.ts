@@ -17,7 +17,11 @@ async function handler(req: any, res: any) {
 
   try {
     const response = await fetch(
-      `${getBackendUrl()}/mit-download?url=${encodeURIComponent(url)}&course_name=${encodeURIComponent(course_name)}&local_dir=${encodeURIComponent(local_dir)}`,
+      `${getBackendUrl()}/mit-download?url=${encodeURIComponent(
+        url,
+      )}&course_name=${encodeURIComponent(
+        course_name,
+      )}&local_dir=${encodeURIComponent(local_dir)}`,
     )
 
     if (!response.ok) {

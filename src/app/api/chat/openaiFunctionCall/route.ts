@@ -21,7 +21,7 @@ const conversationToMessages = (
     const simpleMessage: ChatCompletionMessageParam = {
       role: message.role,
       content: Array.isArray(message.content)
-        ? (message.content[0]?.text ?? '')
+        ? message.content[0]?.text ?? ''
         : message.content,
     }
     transformedData.push(simpleMessage)
@@ -70,7 +70,9 @@ export async function POST(req: Request) {
 
   // Add image info if present
   if (imageUrls && imageUrls.length > 0 && imageDescription) {
-    const imageInfo = `Image URL(s): ${imageUrls.join(', ')};\nImage Description: ${imageDescription}`
+    const imageInfo = `Image URL(s): ${imageUrls.join(
+      ', ',
+    )};\nImage Description: ${imageDescription}`
     if (message_to_send.length > 0) {
       const lastMessage = message_to_send[message_to_send.length - 1]
       if (lastMessage) {

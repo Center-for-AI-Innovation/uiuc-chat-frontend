@@ -165,7 +165,9 @@ export default async function fetchDocuments(
           .where(
             and(
               eq(documents.course_name, course_name as string),
-              sql`${documents[search_key as keyof typeof documents] as PgColumn<any>} ILIKE ${`%${search_value}%`}`,
+              sql`${
+                documents[search_key as keyof typeof documents] as PgColumn<any>
+              } ILIKE ${`%${search_value}%`}`,
             ),
           )
 

@@ -98,11 +98,15 @@ export const TemperatureSlider: FC<Props> = ({
           size={isSmallScreen ? 'xs' : 'md'}
           color="orange"
           classNames={{
-            markLabel: `mx-2 text-[--foreground-faded] ${montserrat_paragraph.variable} font-montserratParagraph mt-2 ${isSmallScreen ? 'text-xs' : ''}`,
+            markLabel: `mx-2 text-[--foreground-faded] ${
+              montserrat_paragraph.variable
+            } font-montserratParagraph mt-2 ${isSmallScreen ? 'text-xs' : ''}`,
           }}
         />
         <span
-          className={`mt-8 text-left text-gray-400 dark:text-white/50 ${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`}
+          className={`mt-8 text-left text-gray-400 dark:text-white/50 ${
+            montserrat_paragraph.variable
+          } font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`}
         >
           {t(
             'Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.',

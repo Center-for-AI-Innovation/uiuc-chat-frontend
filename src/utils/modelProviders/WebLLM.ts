@@ -264,7 +264,9 @@ export default class ChatUI {
         const runtimeStats =
           `prompt_tokens: ${usage.prompt_tokens}, ` +
           `completion_tokens: ${usage.completion_tokens}, ` +
-          `prefill: ${usage.extra.prefill_tokens_per_s.toFixed(4)} tokens/sec, ` +
+          `prefill: ${usage.extra.prefill_tokens_per_s.toFixed(
+            4,
+          )} tokens/sec, ` +
           `decoding: ${usage.extra.decode_tokens_per_s.toFixed(4)} tokens/sec`
         setRuntimeStats(runtimeStats)
       }

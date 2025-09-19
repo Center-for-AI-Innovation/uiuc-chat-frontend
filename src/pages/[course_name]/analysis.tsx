@@ -32,8 +32,9 @@ const CourseMain: NextPage = () => {
       const local_course_name = getCurrentPageName()
 
       // Check exists
-      const metadata: CourseMetadata =
-        await fetchCourseMetadata(local_course_name)
+      const metadata: CourseMetadata = await fetchCourseMetadata(
+        local_course_name,
+      )
       if (metadata === null) {
         await router.push('/new?course_name=' + local_course_name)
         return

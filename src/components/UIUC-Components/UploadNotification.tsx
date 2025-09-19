@@ -213,8 +213,8 @@ function UploadNotificationContent({
         return url && isBaseUrl
           ? 'Crawling this website...'
           : type === 'webscrape' || type === 'github'
-            ? 'Crawling this website...'
-            : 'Uploading to secure storage...'
+          ? 'Crawling this website...'
+          : 'Uploading to secure storage...'
       case 'ingesting':
         return url && isBaseUrl
           ? 'Crawling this website...'
@@ -247,8 +247,12 @@ function UploadNotificationContent({
             className={`${montserrat_heading.variable} font-montserratHeading`}
           >
             {allComplete
-              ? `${currentFiles.length} document${currentFiles.length > 1 ? 's' : ''} ready for chat`
-              : `Processing ${currentFiles.length} document${currentFiles.length > 1 ? 's' : ''}`}
+              ? `${currentFiles.length} document${
+                  currentFiles.length > 1 ? 's' : ''
+                } ready for chat`
+              : `Processing ${currentFiles.length} document${
+                  currentFiles.length > 1 ? 's' : ''
+                }`}
           </Text>
           <Text
             size="xs"
@@ -258,10 +262,10 @@ function UploadNotificationContent({
             {currentFiles.some((file) => file.status === 'error')
               ? 'If upload failed, please try again and let us know!'
               : currentFiles.some((file) => file.status === 'uploading')
-                ? 'Please stay on this page while files are uploading'
-                : currentFiles.some((file) => file.status === 'ingesting')
-                  ? 'Files are being processed for chat\nYou can leave this page if you want'
-                  : 'All files processed\nContinue to chat'}
+              ? 'Please stay on this page while files are uploading'
+              : currentFiles.some((file) => file.status === 'ingesting')
+              ? 'Files are being processed for chat\nYou can leave this page if you want'
+              : 'All files processed\nContinue to chat'}
           </Text>
         </div>
         <div className="flex items-center gap-1">

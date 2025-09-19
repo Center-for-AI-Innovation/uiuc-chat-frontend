@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { runGeminiChat } from '~/utils/modelProviders/routes/gemini'
-import { GeminiModels, type GeminiModel } from '~/utils/modelProviders/types/gemini'
+import {
+  GeminiModels,
+  type GeminiModel,
+} from '~/utils/modelProviders/types/gemini'
 import { ProviderNames } from '~/utils/modelProviders/LLMProvider'
 
 export const runtime = 'nodejs'

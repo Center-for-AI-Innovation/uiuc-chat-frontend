@@ -65,7 +65,9 @@ const CustomCopyButton: React.FC<CustomCopyButtonProps> = ({
         <IconCopy size={18} />
       </Button>
       <span
-        className={`${montserrat_paragraph.variable} text-md ml-3 flex items-center font-montserratParagraph transition-colors duration-200 ease-in-out ${
+        className={`${
+          montserrat_paragraph.variable
+        } text-md ml-3 flex items-center font-montserratParagraph transition-colors duration-200 ease-in-out ${
           isHovered ? 'text-white' : 'text-gray-200'
         }`}
       >

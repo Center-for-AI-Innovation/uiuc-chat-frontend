@@ -9,7 +9,7 @@ import { runAnthropicChat } from '~/app/utils/anthropic'
 import { runOllamaChat } from '~/app/utils/ollama'
 import { runVLLM } from '~/app/utils/vllm'
 import { fetchContexts } from '~/pages/api/getContexts'
-import { fetchMQRContexts }from '~/pages/api/getContextsMQR'
+import { fetchMQRContexts } from '~/pages/api/getContextsMQR'
 import { fetchImageDescription } from '~/pages/api/UIUC-api/fetchImageDescription'
 import {
   type ChatApiBody,
@@ -338,9 +338,9 @@ export async function validateRequestBody(body: ChatApiBody): Promise<void> {
   )
   if (!apiSupportedModels.some((model) => model.id === body.model)) {
     throw new Error(
-      `Invalid model provided '${body.model}'. Is not one of our supported models: ${Array.from(
-        apiSupportedModels,
-      )
+      `Invalid model provided '${
+        body.model
+      }'. Is not one of our supported models: ${Array.from(apiSupportedModels)
         .map((model) => model.id)
         .join(', ')}`,
     )
@@ -386,7 +386,11 @@ export async function validateRequestBody(body: ChatApiBody): Promise<void> {
     !VisionCapableModels.has(body.model as OpenAIModelID)
   ) {
     throw new Error(
-      `The selected model '${body.model}' does not support vision capabilities. Use one of these: ${Array.from(VisionCapableModels).join(', ')}`,
+      `The selected model '${
+        body.model
+      }' does not support vision capabilities. Use one of these: ${Array.from(
+        VisionCapableModels,
+      ).join(', ')}`,
     )
   }
 
@@ -423,7 +427,11 @@ export const handleContextSearch = async (
   documentGroups: string[],
 ): Promise<ContextWithMetadata[]> => {
   // Check if this message already has contexts (from file upload)
-  if (message.contexts && Array.isArray(message.contexts) && message.contexts.length > 0) {
+  if (
+    message.contexts &&
+    Array.isArray(message.contexts) &&
+    message.contexts.length > 0
+  ) {
     return message.contexts
   }
   if (courseName !== 'gpt4') {
@@ -635,19 +643,16 @@ export async function updateConversationInDatabase(
   // Log conversation
   try {
     const baseUrl = await getBaseUrl()
-    const response = await fetch(
-      `${baseUrl}/api/UIUC-api/logConversation`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          course_name: course_name,
-          conversation: conversation,
-        }),
+    const response = await fetch(`${baseUrl}/api/UIUC-api/logConversation`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    )
+      body: JSON.stringify({
+        course_name: course_name,
+        conversation: conversation,
+      }),
+    })
     // const data = await response.json()
   } catch (error) {
     console.error('Error setting course data:', error)
@@ -763,17 +768,23 @@ function convertMessagesToVercelAISDKv3(
     } else if (Array.isArray(message.content)) {
       // Handle both text and file content
       const textParts: string[] = []
-      
+
       message.content.forEach((c) => {
         if (c.type === 'text') {
           textParts.push(c.text || '')
         } else if (c.type === 'file') {
           // Convert file content to text representation for commercial models
-          textParts.push(`[File: ${c.fileName || 'unknown'} (${c.fileType || 'unknown type'}, ${c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'})]`)
+          textParts.push(
+            `[File: ${c.fileName || 'unknown'} (${
+              c.fileType || 'unknown type'
+            }, ${
+              c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'
+            })]`,
+          )
         }
         // Note: image_url and other content types may need special handling
       })
-      
+
       content = textParts.join('\n')
     } else {
       content = message.content as string

@@ -146,7 +146,9 @@ export function withAnyRole(requiredRoles: string[]) {
       if (!hasAnyRole(req.user, requiredRoles)) {
         return res.status(403).json({
           error: 'Insufficient permissions',
-          message: `This action requires one of the following roles: ${requiredRoles.join(', ')}`,
+          message: `This action requires one of the following roles: ${requiredRoles.join(
+            ', ',
+          )}`,
         })
       }
 

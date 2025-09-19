@@ -205,21 +205,22 @@ export default function ShareSettingsModal({
                     </p>
                   </div>
                 </div>
-                {!useIllinoisChatConfig && (<button
-                  onClick={handlePrivacyChange}
-                  className={`relative h-6 w-11 rounded-full transition-colors duration-300 ${
-                    isPrivate
-                      ? 'bg-[--dashboard-button]'
-                      : 'bg-[--background-dark]'
-                  }`}
-                >
-                  <span
-                    className={`absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full bg-[--dashboard-button-foreground] shadow-md transition-transform duration-300 ${
-                      isPrivate ? 'translate-x-5' : 'translate-x-0'
+                {!useIllinoisChatConfig && (
+                  <button
+                    onClick={handlePrivacyChange}
+                    className={`relative h-6 w-11 rounded-full transition-colors duration-300 ${
+                      isPrivate
+                        ? 'bg-[--dashboard-button]'
+                        : 'bg-[--background-dark]'
                     }`}
-                  />
-                </button>)}
-
+                  >
+                    <span
+                      className={`absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full bg-[--dashboard-button-foreground] shadow-md transition-transform duration-300 ${
+                        isPrivate ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                )}
               </div>
             </div>
 
