@@ -22,6 +22,7 @@ import {
 import { sanitizeText } from '@/utils/sanitization'
 import { inArray, eq, and, isNull, desc, sql, asc, gt } from 'drizzle-orm'
 import { NewConversations, NewMessages } from '~/db/schema'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
 export const config = {
   api: {
@@ -576,4 +577,8 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   }
 }
 
-export default withAuth(handler)
+export default withCourseAccessFromRequest({
+  GET: 'any',
+  POST: 'admin',
+  DELETE: 'owner',
+})(handler)
