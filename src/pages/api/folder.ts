@@ -27,7 +27,7 @@ export function convertDBFolderToChatFolder(
   }
 }
 
-export default withCourseAccessFromRequest({ GET: 'any', POST: 'admin', DELETE: 'owner'})(handler)
+export default withCourseAccessFromRequest({ GET: 'any', POST: 'any', DELETE: 'owner'})(handler)
 
 export function convertChatFolderToDBFolder(
   folder: FolderWithConversation,

@@ -579,6 +579,6 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
 
 export default withCourseAccessFromRequest({
   GET: 'any',
-  POST: 'admin',
+  POST: 'any',
   DELETE: 'owner',
 })(handler)
