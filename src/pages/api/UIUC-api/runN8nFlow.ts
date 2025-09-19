@@ -1,4 +1,5 @@
-import { type NextApiRequest, type NextApiResponse } from 'next'
+import { type AuthenticatedRequest, type NextApiResponse } from 'next'
+import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 import { getBackendUrl } from '~/utils/apiUtils'
 
 // Common function to run N8N flow - can be used anywhere
@@ -19,18 +20,15 @@ export const runN8nFlowBackend = async (
       data: data,
     })
 
-    const response = await fetch(
-      `${backendUrl}/run_flow`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache',
-        },
-        body: body,
-        signal: controller.signal,
+    const response = await fetch(`${backendUrl}/run_flow`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
       },
-    )
+      body: body,
+      signal: controller.signal,
+    })
 
     clearTimeout(timeoutId)
 
@@ -38,7 +36,7 @@ export const runN8nFlowBackend = async (
       // Better error handling - check if response is JSON or HTML
       const contentType = response.headers.get('content-type')
       let errorMessage = `Backend returned ${response.status}: ${response.statusText}`
-      
+
       if (contentType && contentType.includes('application/json')) {
         try {
           const errjson = await response.json()
@@ -50,13 +48,16 @@ export const runN8nFlowBackend = async (
         // It's probably HTML - get first 200 chars for debugging
         try {
           const errorText = await response.text()
-          console.error('Backend returned HTML error:', errorText.substring(0, 200))
+          console.error(
+            'Backend returned HTML error:',
+            errorText.substring(0, 200),
+          )
           errorMessage = `Backend returned HTML instead of JSON. Status: ${response.status}`
         } catch (textError) {
           console.error('Failed to read error response as text:', textError)
         }
       }
-      
+
       throw new Error(errorMessage)
     }
 
@@ -64,21 +65,25 @@ export const runN8nFlowBackend = async (
     return n8nResponse
   } catch (error: any) {
     clearTimeout(timeoutId)
-    
+
     if (error.name === 'AbortError') {
-      throw new Error('Request timed out after 30 seconds, try "Regenerate Response" button')
+      throw new Error(
+        'Request timed out after 30 seconds, try "Regenerate Response" button',
+      )
     }
-    
+
     throw error
   }
 }
+
+export default withAuth(handler)
 
 // This function can run for a maximum of 5 minutes
 export const config = {
   maxDuration: 300, // 5 minutes
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
@@ -86,8 +91,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { api_key, name, data } = req.body
 
   if (!api_key || !name || !data) {
-    return res.status(400).json({ 
-      error: 'api_key, name, and data are required' 
+    return res.status(400).json({
+      error: 'api_key, name, and data are required',
     })
   }
 
@@ -97,13 +102,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json(n8nResponse)
   } catch (error: any) {
     console.error('Error in runN8nFlow API:', error)
-    
+
     if (error.message.includes('timed out')) {
       return res.status(408).json({ error: error.message })
     }
-    
-    return res.status(500).json({ 
-      error: error.message || 'Internal server error while running N8N flow' 
+
+    return res.status(500).json({
+      error: error.message || 'Internal server error while running N8N flow',
     })
   }
 }

@@ -1,5 +1,10 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { db, messages, conversations as conversationsTable } from '~/db/dbClient'
+import {
+  db,
+  messages,
+  conversations as conversationsTable,
+} from '~/db/dbClient'
+import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 import {
   type Conversation as ChatConversation,
   type Message as ChatMessage,
@@ -9,7 +14,7 @@ import {
   type UIUCTool,
 } from '@/types/chat'
 import { Database, Json } from 'database.types'
-import { v4 as uuidv4, validate as isUUID  } from 'uuid'
+import { v4 as uuidv4, validate as isUUID } from 'uuid'
 import {
   AllSupportedModels,
   type GenericSupportedModel,
@@ -17,7 +22,6 @@ import {
 import { sanitizeText } from '@/utils/sanitization'
 import { inArray, eq, and, isNull, desc, sql, asc, gt } from 'drizzle-orm'
 import { NewConversations, NewMessages } from '~/db/schema'
-
 
 export const config = {
   api: {
@@ -259,17 +263,12 @@ export function convertChatToDBMessage(
   }
 }
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const { method } = req
 
   switch (method) {
     case 'POST':
-      const {
-        conversation,
-      }: { conversation: ChatConversation } = req.body
+      const { conversation }: { conversation: ChatConversation } = req.body
       try {
         // Convert conversation to DB type
         const dbConversation = convertChatToDBConversation(conversation)
@@ -278,7 +277,7 @@ export default async function handler(
           // Return success without saving - no need to throw an error
           return res.status(200).json({ message: 'No messages to save' })
         }
-        
+
         // Create a correctly typed conversation object for DrizzleORM
         const conversationData: NewConversations = {
           id: dbConversation.id,
@@ -288,14 +287,22 @@ export default async function handler(
           temperature: dbConversation.temperature,
           user_email: dbConversation.user_email,
           project_name: dbConversation.project_name,
-          folder_id: isUUID(dbConversation.folder_id ?? '') ? dbConversation.folder_id : null,
-          created_at: dbConversation.created_at ? new Date(dbConversation.created_at) : new Date(),
-          updated_at: dbConversation.updated_at ? new Date(dbConversation.updated_at) : new Date()
-        };
+          folder_id: isUUID(dbConversation.folder_id ?? '')
+            ? dbConversation.folder_id
+            : null,
+          created_at: dbConversation.created_at
+            ? new Date(dbConversation.created_at)
+            : new Date(),
+          updated_at: dbConversation.updated_at
+            ? new Date(dbConversation.updated_at)
+            : new Date(),
+        }
 
         // Save conversation to DB using DrizzleORM
         try {
-          await db.insert(conversationsTable).values(conversationData)
+          await db
+            .insert(conversationsTable)
+            .values(conversationData)
             .onConflictDoUpdate({
               target: conversationsTable.id,
               set: {
@@ -307,11 +314,11 @@ export default async function handler(
                 project_name: dbConversation.project_name,
                 folder_id: dbConversation.folder_id,
                 updated_at: new Date(),
-              }
-            });
+              },
+            })
         } catch (error) {
-          console.error('Error insert conversation to db:', error);
-          throw error;
+          console.error('Error insert conversation to db:', error)
+          throw error
         }
 
         // Check for edited messages and get their existing versions
@@ -324,18 +331,18 @@ export default async function handler(
           .where(
             and(
               inArray(messages.id, messageIds),
-              eq(messages.conversation_id, conversation.id)
-            )
-          );
+              eq(messages.conversation_id, conversation.id),
+            ),
+          )
 
         // Find any messages that were edited by comparing content
         const editedMessages = existingMessages?.filter((existingMsg) => {
           const newMsg = conversation.messages.find(
-            (m) => m.id === existingMsg.id.toString()
+            (m) => m.id === existingMsg.id.toString(),
           )
-          if (!newMsg) return false;
-          
-          const newDbMsg = convertChatToDBMessage(newMsg, conversation.id);
+          if (!newMsg) return false
+
+          const newDbMsg = convertChatToDBMessage(newMsg, conversation.id)
           return (
             existingMsg.content_text !== newDbMsg.content_text ||
             JSON.stringify(existingMsg.contexts) !==
@@ -347,8 +354,8 @@ export default async function handler(
         if (editedMessages && editedMessages.length > 0) {
           // Find the earliest edited message timestamp
           const earliestEditTime = Math.min(
-            ...editedMessages.map((m) => 
-              m.created_at ? new Date(m.created_at).getTime() : Date.now()
+            ...editedMessages.map((m) =>
+              m.created_at ? new Date(m.created_at).getTime() : Date.now(),
             ),
           )
 
@@ -360,9 +367,9 @@ export default async function handler(
               .where(
                 and(
                   eq(sql`${messages.conversation_id}::text`, conversation.id),
-                  gt(messages.created_at, new Date(earliestEditTime))
-                )
-              );
+                  gt(messages.created_at, new Date(earliestEditTime)),
+                ),
+              )
           } catch (error) {
             console.error('Error deleting subsequent messages:', error)
             throw error
@@ -374,9 +381,11 @@ export default async function handler(
         const dbMessages = conversation.messages.map((message, index) => {
           // If the message wasn't edited, preserve its original timestamp
           const existingMessage = existingMessages?.find(
-            (m) => m.id.toString() === message.id
+            (m) => m.id.toString() === message.id,
           )
-          const wasEdited = editedMessages?.some((m) => m.id.toString() === message.id)
+          const wasEdited = editedMessages?.some(
+            (m) => m.id.toString() === message.id,
+          )
 
           let created_at
           if (existingMessage && !wasEdited) {
@@ -393,37 +402,40 @@ export default async function handler(
         })
 
         // Sort messages by created_at before upserting to ensure consistent order
-        dbMessages.sort(
-          (a, b) => {
-            const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
-            const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
-            return aTime - bTime;
-          }
-        )
+        dbMessages.sort((a, b) => {
+          const aTime = a.created_at ? new Date(a.created_at).getTime() : 0
+          const bTime = b.created_at ? new Date(b.created_at).getTime() : 0
+          return aTime - bTime
+        })
 
         // Insert messages using DrizzleORM
         for (const message of dbMessages) {
-           if (!isUUID(message.id)) {
-              throw new Error(`Invalid UUID for message.id: ${message.id}`);
-            }
+          if (!isUUID(message.id)) {
+            throw new Error(`Invalid UUID for message.id: ${message.id}`)
+          }
 
           // Convert string dates to Date objects for DrizzleORM and ensure ID is a number
           const messageForInsert = {
             ...message,
             id: message.id,
-            created_at: message.created_at ? new Date(message.created_at) : new Date(),
-            updated_at: message.updated_at ? new Date(message.updated_at) : new Date(),
-          };
-          try{
-            await db.insert(messages).values(messageForInsert as any)
-            .onConflictDoUpdate({
-              target: messages.id,
-              set: messageForInsert as any
-            });
+            created_at: message.created_at
+              ? new Date(message.created_at)
+              : new Date(),
+            updated_at: message.updated_at
+              ? new Date(message.updated_at)
+              : new Date(),
           }
-          catch (error) {
-            console.error('Error inserting message to db:', error);
-            throw error;
+          try {
+            await db
+              .insert(messages)
+              .values(messageForInsert as any)
+              .onConflictDoUpdate({
+                target: messages.id,
+                set: messageForInsert as any,
+              })
+          } catch (error) {
+            console.error('Error inserting message to db:', error)
+            throw error
           }
         }
 
@@ -457,7 +469,9 @@ export default async function handler(
         const offset = pageParam * pageSize
 
         // Execute the SQL query directly using db.execute
-        const result = await db.execute<{search_conversations_v3: { conversations: any[], total_count: number }}>(sql`
+        const result = await db.execute<{
+          search_conversations_v3: { conversations: any[]; total_count: number }
+        }>(sql`
           SELECT * FROM search_conversations_v3(
             ${user_email},
             ${courseName},
@@ -465,31 +479,32 @@ export default async function handler(
             ${pageSize},
             ${offset}
           );
-        `);
-        
+        `)
+
         // Parse the result - handle potential different result structures
-        const sqlResult = result[0]?.search_conversations_v3;
-        
+        const sqlResult = result[0]?.search_conversations_v3
+
         // Need to properly parse the result which might be a string
-        let parsedData: { conversations: any[], total_count: number };
-        
+        let parsedData: { conversations: any[]; total_count: number }
+
         if (typeof sqlResult === 'string') {
           // If the result is a JSON string
-          parsedData = JSON.parse(sqlResult);
+          parsedData = JSON.parse(sqlResult)
         } else {
           // If the result is already an object
-          parsedData = sqlResult as { conversations: any[], total_count: number };
+          parsedData = sqlResult as {
+            conversations: any[]
+            total_count: number
+          }
         }
-        
-        const count = parsedData?.total_count || 0;
-        const conversations = parsedData?.conversations || [];
 
-        const fetchedConversations = conversations.map(
-          (conv: any) => {
-            const convMessages = conv.messages || []
-            return convertDBToChatConversation(conv, convMessages)
-          },
-        )
+        const count = parsedData?.total_count || 0
+        const conversations = parsedData?.conversations || []
+
+        const fetchedConversations = conversations.map((conv: any) => {
+          const convMessages = conv.messages || []
+          return convertDBToChatConversation(conv, convMessages)
+        })
 
         const nextCursor =
           count &&
@@ -531,7 +546,7 @@ export default async function handler(
           // Delete single conversation using DrizzleORM
           await db
             .delete(conversationsTable)
-            .where(eq(conversationsTable.id, id));
+            .where(eq(conversationsTable.id, id))
         } else if (userEmail && course_name) {
           // Delete all conversations that are not in folders
           await db
@@ -540,9 +555,9 @@ export default async function handler(
               and(
                 eq(conversationsTable.user_email, userEmail),
                 eq(conversationsTable.project_name, course_name),
-                isNull(conversationsTable.folder_id)
-              )
-            );
+                isNull(conversationsTable.folder_id),
+              ),
+            )
         } else {
           res.status(400).json({ error: 'Invalid request parameters' })
           return
@@ -560,3 +575,5 @@ export default async function handler(
       res.status(405).end(`Method ${method} Not Allowed`)
   }
 }
+
+export default withAuth(handler)

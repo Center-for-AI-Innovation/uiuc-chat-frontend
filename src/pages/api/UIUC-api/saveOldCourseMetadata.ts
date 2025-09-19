@@ -1,3 +1,5 @@
+import { type AuthenticatedRequest, type NextApiResponse } from 'next'
+import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 // src/pages/api/UIUC-api/backupOldCourseMetadata.ts
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { type NextRequest, NextResponse } from 'next/server'
@@ -5,7 +7,7 @@ import { promises as fs } from 'fs'
 import { join } from 'path'
 import { ensureRedisConnected } from '~/utils/redisClient'
 
-export default async function handler(req: NextRequest, res: NextResponse) {
+async function handler(req: NextRequest, res: NextResponse) {
   try {
     // Fetch all keys from the KV store
     // Filter out keys that end with '_metadata'
@@ -38,3 +40,5 @@ export default async function handler(req: NextRequest, res: NextResponse) {
     return NextResponse.json({ success: false })
   }
 }
+
+export default withAuth(handler)

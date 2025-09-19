@@ -3,13 +3,17 @@ import { type CoreMessage, generateText, streamText } from 'ai'
 import { NextResponse } from 'next/server'
 import { decrypt } from '~/utils/crypto'
 import { createOpenAI } from '@ai-sdk/openai'
+import {
+  withAppRouterAuth,
+  type AuthenticatedRequest,
+} from '~/utils/appRouterAuth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 export const revalidate = 0
 
-export async function POST(req: Request) {
+async function handler(req: AuthenticatedRequest) {
   try {
     const authHeader = req.headers.get('authorization')
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -123,3 +127,5 @@ export async function POST(req: Request) {
     }
   }
 }
+
+export const POST = withAppRouterAuth(handler)

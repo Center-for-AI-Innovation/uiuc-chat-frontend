@@ -10,7 +10,8 @@ import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { validateApiKeyAndRetrieveData } from './keys/validate'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import posthog from 'posthog-js'
-import { type NextApiRequest, type NextApiResponse } from 'next'
+import { type NextApiResponse } from 'next'
+import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import {
   attachContextsToLastMessage,
@@ -45,12 +46,12 @@ import { selectBestTemperature } from '~/components/Chat/Temperature'
  * This function orchestrates the validation of the request, user permissions,
  * fetching of necessary data, and the construction and handling of the chat response.
  *
- * @param {NextApiRequest} req - The incoming Next.js API request object.
+ * @param {AuthenticatedRequest} req - The incoming Next.js API request object.
  * @param {NextApiResponse} res - The Next.js API response object.
  * @returns {Promise<void>} A promise that resolves when the response is sent.
  */
 export default async function chat(
-  req: NextApiRequest,
+  req: AuthenticatedRequest,
   res: NextApiResponse,
 ): Promise<void> {
   // Validate the HTTP method
@@ -246,7 +247,7 @@ export default async function chat(
     searchQuery = newSearchQuery
     imgDesc = newImgDesc
   }
-  
+
   // Fetch Contexts
   console.log('Before context search:', {
     courseName: course_name,

@@ -1,5 +1,6 @@
 // ~/src/pages/api/UIUC-api/getAllCourseMetadata.ts
-import type { NextApiRequest, NextApiResponse } from 'next'
+import { type AuthenticatedRequest, type NextApiResponse } from 'next'
+import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 import type { CourseMetadata } from '~/types/courseMetadata'
 import { ensureRedisConnected } from '~/utils/redisClient'
 
@@ -48,6 +49,8 @@ export const getCoursesByOwnerOrAdmin = async (
   }
 }
 
+export default withAuth(handler)
+
 export const getAllCourseMetadata = async (): Promise<
   { [key: string]: CourseMetadata }[]
 > => {
@@ -91,10 +94,7 @@ export const getAllCourseMetadata = async (): Promise<
   }
 }
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   try {
     const currUserEmail = req.query.currUserEmail as string
     const all_course_metadata = await getCoursesByOwnerOrAdmin(currUserEmail)

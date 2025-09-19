@@ -1,3 +1,5 @@
+import { type AuthenticatedRequest, type NextApiResponse } from 'next'
+import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { type NextRequest, NextResponse } from 'next/server'
 import { ensureRedisConnected } from '~/utils/redisClient'
@@ -7,7 +9,7 @@ export const runtime = 'edge'
 // GREAT EXAMPLE OF A POST REQUEST ON EDGE
 // const { course_name, disabled_models } = await req.json()
 
-export default async function handler(req: NextRequest) {
+async function handler(req: NextRequest) {
   if (req.method === 'GET') {
   } else if (req.method == 'POST') {
     // Parse body
@@ -61,3 +63,5 @@ export default async function handler(req: NextRequest) {
     )
   }
 }
+
+export default withAuth(handler)
