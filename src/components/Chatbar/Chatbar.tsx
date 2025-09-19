@@ -131,7 +131,7 @@ export const Chatbar = ({
           conversation.userEmail = current_email
           conversation.projectName = courseName
           try {
-            const response = await saveConversationToServer(conversation)
+            const response = await saveConversationToServer(conversation, courseName)
             console.log('Response from saveConversationToServer: ', response)
           } catch (error: any) {
             if (error?.details?.includes('already exists')) {

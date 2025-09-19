@@ -54,7 +54,7 @@ export function useUpdateConversation(
   return useMutation({
     mutationKey: ['updateConversation', user_email],
     mutationFn: async (conversation: Conversation) =>
-      saveConversationToServer(conversation),
+      saveConversationToServer(conversation, course_name),
     onMutate: async (updatedConversation: Conversation) => {
       // console.log('Mutation from useUpdateConversation: ', updatedConversation)
       // A mutation is about to happen!

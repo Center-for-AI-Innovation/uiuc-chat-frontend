@@ -659,7 +659,7 @@ export const ChatMessage = memo(
             msg.id === message.id ? editedMessage : msg,
           ),
         }
-        saveConversationToServer(updatedConversation).catch(
+        saveConversationToServer(updatedConversation, courseName).catch(
           (error: Error) => {
             console.error('Error saving edited message to server:', error)
           },

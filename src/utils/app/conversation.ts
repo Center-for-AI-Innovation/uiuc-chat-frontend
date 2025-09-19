@@ -360,7 +360,7 @@ export const saveConversations = (conversations: Conversation[]) => {
 //   }
 // }
 
-export async function saveConversationToServer(conversation: Conversation) {
+export async function saveConversationToServer(conversation: Conversation, course_name: string) {
   const MAX_RETRIES = 3
   let retryCount = 0
 
@@ -372,7 +372,7 @@ export async function saveConversationToServer(conversation: Conversation) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ conversation }),
+        body: JSON.stringify({ conversation, course_name }),
       })
 
       if (!response.ok) {
