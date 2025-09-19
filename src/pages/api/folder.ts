@@ -1,11 +1,12 @@
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import { type NextApiResponse } from 'next'
+import { AuthenticatedRequest } from '~/utils/authMiddleware'
 import { db, folders } from '~/db/dbClient'
-import { FolderInterface, FolderWithConversation } from '@/types/folder'
+import { FolderWithConversation } from '@/types/folder'
 import { Database } from 'database.types'
 import { convertDBToChatConversation, DBConversation } from './conversation'
-import { NewFolders, Folders } from '~/db/schema'
+import { NewFolders } from '~/db/schema'
 import { eq, desc } from 'drizzle-orm'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
 type Folder = Database['public']['Tables']['folders']['Row']
 
@@ -26,7 +27,7 @@ export function convertDBFolderToChatFolder(
   }
 }
 
-export default withAuth(handler)
+export default withCourseAccessFromRequest({ GET: 'any', POST: 'admin', DELETE: 'owner'})(handler)
 
 export function convertChatFolderToDBFolder(
   folder: FolderWithConversation,

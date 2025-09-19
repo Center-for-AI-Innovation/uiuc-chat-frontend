@@ -190,7 +190,7 @@ export function useDeleteConversation(
   return useMutation({
     mutationKey: ['deleteConversation', user_email],
     mutationFn: async (deleteConversation: Conversation) =>
-      deleteConversationFromServer(deleteConversation.id),
+      deleteConversationFromServer(deleteConversation.id, course_name),
     onMutate: async (deletedConversation: Conversation) => {
       // Step 1: Cancel the query to prevent it from refetching
       await queryClient.cancelQueries({

@@ -1,15 +1,13 @@
-import { FolderInterface, type FolderWithConversation } from '@/types/folder'
+import { type FolderWithConversation } from '@/types/folder'
 
-// export const saveFoldersInLocalStorage = (folders: FolderInterface[]) => {
-//   localStorage.setItem('folders', JSON.stringify(folders))
-// }
 
 export async function fetchFolders(
   user_email: string,
+  course_name: string,
 ): Promise<FolderWithConversation[]> {
   let fetchedFolders = []
   try {
-    const foldersResonse = await fetch(`/api/folder?user_email=${user_email}`, {
+    const foldersResonse = await fetch(`/api/folder?user_email=${user_email}&courseName=${course_name}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -31,6 +29,7 @@ export async function fetchFolders(
 export const saveFolderToServer = async (
   folder: FolderWithConversation,
   user_email: string,
+  course_name: string,
 ) => {
   try {
     console.log('Saving conversation to server:', folder, user_email)
@@ -39,7 +38,7 @@ export const saveFolderToServer = async (
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ folder, email: user_email }),
+      body: JSON.stringify({ folder, email: user_email, courseName: course_name }),
     })
 
     if (!response.ok) {
@@ -52,6 +51,7 @@ export const saveFolderToServer = async (
 
 export const deleteFolderFromServer = async (
   folder: FolderWithConversation,
+  course_name: string,
 ) => {
   try {
     const response = await fetch('/api/folder', {
@@ -59,7 +59,7 @@ export const deleteFolderFromServer = async (
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ deletedFolderId: folder.id }),
+      body: JSON.stringify({ deletedFolderId: folder.id, courseName: course_name }),
     })
 
     if (!response.ok) {

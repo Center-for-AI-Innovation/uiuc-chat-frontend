@@ -16,10 +16,10 @@ import {
 
 // const queryClient = useQueryClient();
 
-export function useFetchFolders(user_email: string) {
+export function useFetchFolders(user_email: string, course_name: string) {
   return useQuery({
     queryKey: ['folders', user_email],
-    queryFn: async () => (user_email ? fetchFolders(user_email) : []),
+    queryFn: async () => (user_email ? fetchFolders(user_email, course_name) : []),
     enabled: !!user_email,
     refetchInterval: 20_000,
   })
@@ -33,7 +33,7 @@ export function useCreateFolder(
   return useMutation({
     mutationKey: ['createFolder', user_email],
     mutationFn: async (newFolder: FolderWithConversation) =>
-      saveFolderToServer(newFolder, user_email),
+      saveFolderToServer(newFolder, user_email, course_name),
     onMutate: async (newFolder: FolderWithConversation) => {
       await queryClient.cancelQueries({ queryKey: ['folders', user_email] })
 
@@ -69,7 +69,7 @@ export function useUpdateFolder(
   return useMutation({
     mutationKey: ['updateFolder', user_email],
     mutationFn: async (folder: FolderWithConversation) =>
-      saveFolderToServer(folder, user_email),
+      saveFolderToServer(folder, user_email, course_name),
     onMutate: async (updatedFolder: FolderWithConversation) => {
       await queryClient.cancelQueries({ queryKey: ['folders', user_email] })
 
@@ -113,7 +113,7 @@ export function useDeleteFolder(
   return useMutation({
     mutationKey: ['deleteFolder', user_email],
     mutationFn: async (deletedFolder: FolderWithConversation) =>
-      deleteFolderFromServer(deletedFolder),
+      deleteFolderFromServer(deletedFolder, course_name),
     onMutate: async (deletedFolder: FolderWithConversation) => {
       await queryClient.cancelQueries({ queryKey: ['folders', user_email] })
 

@@ -1,7 +1,8 @@
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import { type NextApiResponse } from 'next'
+import { AuthenticatedRequest } from '~/utils/authMiddleware'
 import { db, messages } from '~/db/dbClient'
 import { inArray } from 'drizzle-orm'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   console.log('In deleteMessages handler')
   const { method } = req
@@ -52,4 +53,4 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   }
 }
 
-export default withAuth(handler)
+export default withCourseAccessFromRequest('admin')(handler)

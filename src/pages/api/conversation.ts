@@ -1,10 +1,10 @@
-import { NextApiRequest, NextApiResponse } from 'next'
+import { NextApiResponse } from 'next'
 import {
   db,
   messages,
   conversations as conversationsTable,
 } from '~/db/dbClient'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import { AuthenticatedRequest } from '~/utils/authMiddleware'
 import {
   type Conversation as ChatConversation,
   type Message as ChatMessage,
@@ -13,15 +13,15 @@ import {
   type Role,
   type UIUCTool,
 } from '@/types/chat'
-import { Database, Json } from 'database.types'
+import { Database } from 'database.types'
 import { v4 as uuidv4, validate as isUUID } from 'uuid'
 import {
   AllSupportedModels,
   type GenericSupportedModel,
 } from '~/utils/modelProviders/LLMProvider'
 import { sanitizeText } from '@/utils/sanitization'
-import { inArray, eq, and, isNull, desc, sql, asc, gt } from 'drizzle-orm'
-import { NewConversations, NewMessages } from '~/db/schema'
+import { inArray, eq, and, isNull, sql, gt } from 'drizzle-orm'
+import { NewConversations } from '~/db/schema'
 import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
 export const config = {

@@ -69,14 +69,14 @@ export async function fetchConversationHistory(
   return finalResponse
 }
 
-export const deleteConversationFromServer = async (id: string) => {
+export const deleteConversationFromServer = async (id: string, course_name: string) => {
   try {
     const response = await fetch('/api/conversation', {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ id }),
+      body: JSON.stringify({ id, course_name }),
     })
 
     if (!response.ok) {
