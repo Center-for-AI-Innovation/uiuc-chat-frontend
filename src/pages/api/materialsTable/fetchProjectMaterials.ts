@@ -1,11 +1,12 @@
 import { db } from '~/db/dbClient'
 import posthog from 'posthog-js'
 import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import { AuthenticatedRequest } from '~/utils/authMiddleware'
 import { CourseDocument } from '~/types/courseMaterials'
 import { and, eq, like, asc, desc, sql } from 'drizzle-orm'
 import { documents, documentsDocGroups, docGroups } from '~/db/schema'
 import { PgColumn } from 'drizzle-orm/pg-core'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
 type FetchDocumentsResponse = {
   final_docs?: CourseDocument[]
@@ -20,7 +21,7 @@ type FetchDocumentsResponse = {
  * @param {NextApiResponse} res - The outgoing HTTP response.
  * @returns A JSON response indicating the result of the delete operation.
  */
-export default async function fetchDocuments(
+async function fetchDocuments(
   req: AuthenticatedRequest,
   res: NextApiResponse<FetchDocumentsResponse>,
 ) {
@@ -210,3 +211,5 @@ export default async function fetchDocuments(
     return res.status(500).json({ error: (error as any).message })
   }
 }
+
+export default withCourseOwnerOrAdminAccess()(fetchDocuments)

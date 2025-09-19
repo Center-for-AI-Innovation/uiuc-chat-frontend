@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm'
 import { type AuthenticatedRequest, type NextApiResponse } from 'next'
 import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 import { db, documentsInProgress } from '~/db/dbClient'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
 // This is for "Documents in Progress" table, docs that are still being ingested.
 
@@ -11,7 +12,7 @@ type DocsInProgressResponse = {
   error?: string
 }
 
-export default async function docsInProgress(
+async function docsInProgress(
   req: AuthenticatedRequest,
   res: NextApiResponse<DocsInProgressResponse>,
 ) {
@@ -48,3 +49,5 @@ export default async function docsInProgress(
     })
   }
 }
+
+export default withCourseOwnerOrAdminAccess()(docsInProgress)
