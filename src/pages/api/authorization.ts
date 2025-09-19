@@ -1,7 +1,7 @@
 import { CourseMetadata } from '~/types/courseMetadata'
 import { AuthenticatedUser, AuthenticatedRequest } from '~/utils/authMiddleware'
 import { NextApiResponse } from 'next'
-import { withAuth } from 'react-oidc-context'
+import { withAuth } from '~/utils/authMiddleware'
 import { ensureRedisConnected } from '~/utils/redisClient'
 
 // Helper function to get course metadata from Redis
