@@ -53,4 +53,4 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   }
 }
 
-export default withCourseAccessFromRequest('admin')(handler)
+export default withCourseAccessFromRequest('any')(handler)
