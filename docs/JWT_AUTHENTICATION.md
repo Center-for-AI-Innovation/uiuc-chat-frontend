@@ -71,19 +71,19 @@ import {
 } from '~/utils/keycloakClient'
 
 // Check Keycloak connectivity
-const health = await checkKeycloakHealth()
+const health = await checkKeycloakHealth(keycloakBaseUrl)
 
 // Get OpenID Connect configuration
-const config = await getOpenIdConfig()
+const config = await getOpenIdConfig(keycloakBaseUrl)
 
 // Fetch realm public key directly
-const publicKey = await fetchRealmPublicKey()
+const publicKey = await fetchRealmPublicKey(keycloakBaseUrl)
 
 // Get user information
-const user = await getUserInfo(userId)
+const user = await getUserInfo(keycloakBaseUrl, userId)
 
 // Check user roles
-const hasAdminRole = await userHasRole(userId, 'admin')
+const hasAdminRole = await userHasRole(keycloakBaseUrl, userId, 'admin')
 ```
 
 ## Usage
