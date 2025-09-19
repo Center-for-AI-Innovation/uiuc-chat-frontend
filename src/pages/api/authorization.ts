@@ -186,6 +186,7 @@ export function withCourseOwnerAccess(courseName: string) {
   }
 }
 
+// Middleware for course owner or admin access only
 export function withCourseOwnerOrAdminAccess() {
   return function (
     handler: (
