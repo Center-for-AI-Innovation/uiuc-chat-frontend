@@ -5,6 +5,10 @@ import type {
 } from 'openai/resources/chat/completions'
 import { type Conversation } from '~/types/chat'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
+import {
+  withAppRouterAuth,
+  type AuthenticatedRequest,
+} from '~/utils/appRouterAuth'
 
 // Change runtime to edge
 export const runtime = 'edge'
@@ -30,7 +34,7 @@ const conversationToMessages = (
   return transformedData
 }
 
-export async function POST(req: Request) {
+async function handler(req: AuthenticatedRequest) {
   const {
     conversation,
     tools,
@@ -177,3 +181,5 @@ export async function POST(req: Request) {
     )
   }
 }
+
+export const POST = withAppRouterAuth(handler)

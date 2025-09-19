@@ -3,6 +3,10 @@ import { generateText, smoothStream, streamText, type CoreMessage } from 'ai'
 import { type ChatBody, type Conversation } from '~/types/chat'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 import { type AnthropicModel } from '~/utils/modelProviders/types/anthropic'
+import {
+  withAppRouterAuth,
+  type AuthenticatedRequest,
+} from '~/utils/appRouterAuth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -42,7 +46,7 @@ function getAnthropicRequestConfig(conversation: Conversation) {
   return { isThinking, modelId, providerOptions, experimentalTransform }
 }
 
-export async function POST(req: Request) {
+async function handler(req: AuthenticatedRequest) {
   try {
     const {
       chatBody,
@@ -131,6 +135,8 @@ export async function POST(req: Request) {
   }
 }
 
+export const POST = withAppRouterAuth(handler)
+
 function convertConversationToVercelAISDKv3(
   conversation: Conversation,
 ): CoreMessage[] {
@@ -155,17 +161,19 @@ function convertConversationToVercelAISDKv3(
     } else if (Array.isArray(message.content)) {
       // Handle both text and file content
       const textParts: string[] = []
-      
+
       message.content.forEach((c) => {
         if (c.type === 'text') {
           textParts.push(c.text || '')
         } else if (c.type === 'file') {
           // Convert file content to text representation for Anthropic
-          textParts.push(`[File: ${c.fileName || 'unknown'} (${c.fileType || 'unknown type'}, ${c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'})]`)
+          textParts.push(
+            `[File: ${c.fileName || 'unknown'} (${c.fileType || 'unknown type'}, ${c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'})]`,
+          )
         }
         // Note: image_url content is handled differently by Anthropic and may need special processing
       })
-      
+
       content = textParts.join('\n')
     } else {
       content = message.content as string

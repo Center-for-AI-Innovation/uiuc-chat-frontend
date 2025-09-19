@@ -1,15 +1,18 @@
 // src/app/api/queryRewrite/route.ts
 
-
 import { routeModelRequest } from '~/utils/streamProcessing'
 import { type ChatBody } from '@/types/chat'
+import {
+  withAppRouterAuth,
+  type AuthenticatedRequest,
+} from '~/utils/appRouterAuth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 export const revalidate = 0
 
-export async function POST(req: Request) {
+async function handler(req: AuthenticatedRequest) {
   try {
     const body = await req.json()
     const response = await routeModelRequest(body as ChatBody)
@@ -26,7 +29,9 @@ export async function POST(req: Request) {
         headers: {
           'Content-Type': 'application/json',
         },
-      }
+      },
     )
   }
 }
+
+export const POST = withAppRouterAuth(handler)
