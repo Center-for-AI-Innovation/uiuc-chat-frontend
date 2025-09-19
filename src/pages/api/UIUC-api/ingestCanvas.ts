@@ -1,6 +1,7 @@
 import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import { AuthenticatedRequest } from '~/utils/authMiddleware'
 import { getBackendUrl } from '~/utils/apiUtils'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
 const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
   try {
@@ -97,4 +98,4 @@ Please review and approve at https://canvas.illinois.edu/ using account uiuc.cha
   }
 }
 
-export default handler
+export default withCourseOwnerOrAdminAccess()(handler)

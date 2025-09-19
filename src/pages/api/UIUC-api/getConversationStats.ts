@@ -1,10 +1,10 @@
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 // src/pages/api/UIUC-api/getConversationStats.ts
-
+import { type AuthenticatedRequest, type NextApiResponse } from 'next'
+import { AuthenticatedRequest } from '~/utils/authMiddleware'
 import { getBackendUrl } from '~/utils/apiUtils'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
-async function handler(req: any, res: any) {
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const { course_name, from_date, to_date } = req.query
 
   if (!course_name) {
@@ -34,7 +34,7 @@ async function handler(req: any, res: any) {
   }
 }
 
-export default withAuth(handler)
+export default withCourseOwnerOrAdminAccess()(handler)
 
 export async function getConversationStats(
   course_name: string,
