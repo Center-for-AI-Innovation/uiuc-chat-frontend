@@ -1,7 +1,9 @@
+import { type AuthenticatedRequest, type NextApiResponse } from 'next'
+import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 import axios, { type AxiosResponse } from 'axios'
 import { type ContextWithMetadata } from '~/types/chat'
 
-export default async function handler(req: any, res: any) {
+async function handler(req: any, res: any) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
@@ -52,6 +54,8 @@ export default async function handler(req: any, res: any) {
   }
 }
 
+export default withAuth(handler)
+
 // Helper function for backward compatibility
 export const fetchMQRContexts = async (
   course_name: string,
@@ -71,7 +75,7 @@ export const fetchMQRContexts = async (
     doc_groups.forEach((group) => params.append('doc_groups', group))
 
     params.append('conversation_id', conversation_id)
-    
+
     const response = await fetch(`/api/getContextsMQR?${params.toString()}`)
 
     if (!response.ok) {

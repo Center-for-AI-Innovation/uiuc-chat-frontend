@@ -1,4 +1,5 @@
-import { NextApiRequest, NextApiResponse } from 'next'
+import { type AuthenticatedRequest, type NextApiResponse } from 'next'
+import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 import { db } from '~/db/dbClient'
 import posthog from 'posthog-js'
 import { documentsInProgress } from '~/db/schema'
@@ -9,7 +10,7 @@ type IngestResponse = {
 }
 
 const handler = async (
-  req: NextApiRequest,
+  req: AuthenticatedRequest,
   res: NextApiResponse<IngestResponse>,
 ) => {
   try {

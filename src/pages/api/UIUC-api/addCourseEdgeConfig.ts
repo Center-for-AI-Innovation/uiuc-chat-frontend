@@ -2,7 +2,7 @@
 //   runtime: 'edge',
 // };
 
-// const handler = async (req: NextApiRequest, res: NextApiResponse) => {
+// const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
 
 export async function addEdgeConfigItem(course_name: string): Promise<void> {
   // Docs: https://vercel.com/docs/storage/edge-config/vercel-api#update-your-edge-config-items
@@ -35,7 +35,8 @@ export async function addEdgeConfigItem(course_name: string): Promise<void> {
   }
 }
 
-// import { NextApiRequest, NextApiResponse } from 'next'
+// import { type AuthenticatedRequest, type NextApiResponse } from 'next'
+import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 import axios, { type AxiosResponse } from 'axios'
 
 export const addConfigV2 = async (course_name: string) => {
