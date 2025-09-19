@@ -1,11 +1,12 @@
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import { type NextApiResponse } from 'next'
+import { AuthenticatedRequest } from '~/utils/authMiddleware'
 import { db } from '~/db/dbClient'
 import { Content, Conversation } from '~/types/chat'
 import { RunTree } from 'langsmith'
 import { sanitizeForLogging } from '@/utils/sanitization'
 import { llmConvoMonitor } from '~/db/schema'
 import { getBackendUrl } from '~/utils/apiUtils'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
 export const config = {
   api: {
@@ -15,7 +16,7 @@ export const config = {
   },
 }
 
-const logConversation = async (req: any, res: any) => {
+const logConversation = async (req: AuthenticatedRequest, res: NextApiResponse) => {
   const { course_name, conversation } = req.body as {
     course_name: string
     conversation: Conversation
@@ -146,4 +147,4 @@ const logConversation = async (req: any, res: any) => {
   return res.status(200).json({ success: true })
 }
 
-export default logConversation
+export default withCourseAccessFromRequest("any")(logConversation)
