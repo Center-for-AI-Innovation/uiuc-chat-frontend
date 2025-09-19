@@ -1,6 +1,7 @@
 import { type AuthenticatedRequest, type NextApiResponse } from 'next'
 import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 import { getBackendUrl } from '~/utils/apiUtils'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
 async function handler(req: any, res: any) {
   if (req.method !== 'GET') {
@@ -35,4 +36,4 @@ async function handler(req: any, res: any) {
   }
 }
 
-export default withAuth(handler)
+export default withCourseAccessFromRequest('any')(handler)
