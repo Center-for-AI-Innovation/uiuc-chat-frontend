@@ -1,6 +1,7 @@
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import { NextApiResponse } from 'next'
+import { AuthenticatedRequest } from '~/utils/authMiddleware'
 import { ensureRedisConnected } from '~/utils/redisClient'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const course_name = req.query.course_name as string
@@ -18,4 +19,4 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   }
 }
 
-export default withAuth(handler)
+export default withCourseAccessFromRequest('any')(handler)
