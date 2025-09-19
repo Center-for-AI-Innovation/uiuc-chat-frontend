@@ -10,6 +10,10 @@ import {
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
+import {
+  withAppRouterAuth,
+  type AuthenticatedRequest,
+} from '~/utils/appRouterAuth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -33,7 +37,9 @@ export async function runBedrockChat(
       !bedrockProvider.secretAccessKey ||
       !bedrockProvider.region
     ) {
-      throw new Error('AWS credentials are missing - please refresh the page, or add credentials in the Admin Dashboard')
+      throw new Error(
+        'AWS credentials are missing - please refresh the page, or add credentials in the Admin Dashboard',
+      )
     }
 
     const bedrock = createAmazonBedrock({
@@ -121,7 +127,7 @@ function convertConversationToBedrockFormat(
   return messages as CoreMessage[]
 }
 
-export async function GET(req: Request) {
+async function getHandler(req: AuthenticatedRequest) {
   const accessKeyId = process.env.AWS_ACCESS_KEY_ID
   const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY
   const region = process.env.AWS_REGION
@@ -140,3 +146,5 @@ export async function GET(req: Request) {
     models: models,
   })
 }
+
+export const GET = withAppRouterAuth(getHandler)

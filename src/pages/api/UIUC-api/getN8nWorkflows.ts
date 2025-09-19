@@ -1,7 +1,8 @@
-import { type NextApiRequest, type NextApiResponse } from 'next'
+import { type AuthenticatedRequest, type NextApiResponse } from 'next'
+import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 import { getBackendUrl } from '~/utils/apiUtils'
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
@@ -18,8 +19,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     )
 
     if (!response.ok) {
-      return res.status(response.status).json({ 
-        error: `Unable to fetch n8n tools: ${response.statusText}` 
+      return res.status(response.status).json({
+        error: `Unable to fetch n8n tools: ${response.statusText}`,
       })
     }
 
@@ -27,8 +28,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json(workflows)
   } catch (error) {
     console.error('Error fetching N8N workflows:', error)
-    return res.status(500).json({ 
-      error: 'Internal server error while fetching N8N workflows' 
+    return res.status(500).json({
+      error: 'Internal server error while fetching N8N workflows',
     })
   }
 }
+
+export default withAuth(handler)

@@ -1,3 +1,5 @@
+import { type AuthenticatedRequest, type NextApiResponse } from 'next'
+import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 import { type NextRequest, NextResponse } from 'next/server'
 import { getAllCourseMetadata } from './getAllCourseMetadata'
 import { type CourseMetadata } from '~/types/courseMetadata'
@@ -12,7 +14,7 @@ import { ensureRedisConnected } from '~/utils/redisClient'
 
 export const runtime = 'edge'
 
-export default async function handler(
+async function handler(
   req: NextRequest,
   res: NextResponse,
 ): Promise<NextResponse> {
@@ -32,6 +34,8 @@ export default async function handler(
     )
   }
 }
+
+export default withAuth(handler)
 
 // WARNING
 // Some disabled models are no longer supported. Keep in mind...

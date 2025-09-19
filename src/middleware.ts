@@ -76,12 +76,7 @@ export default async function middleware(request: NextRequest) {
       request.headers.get('host') ??
       'localhost';
 
-    const protocol =
-      request.headers.get('x-forwarded-proto') ??
-      request.nextUrl.protocol.replace(':', '') ??
-      'http';
-
-    const keycloakBaseUrl = getKeycloakBaseFromHost(hostname, protocol);
+    const keycloakBaseUrl = getKeycloakBaseFromHost(hostname);
     const keycloakUrl = `${keycloakBaseUrl}realms/${process.env.NEXT_PUBLIC_KEYCLOAK_REALM}/protocol/openid-connect/auth`
     const authUrl = new URL(keycloakUrl)
     authUrl.searchParams.set(

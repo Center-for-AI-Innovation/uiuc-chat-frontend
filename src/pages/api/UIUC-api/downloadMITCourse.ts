@@ -1,6 +1,8 @@
+import { type AuthenticatedRequest, type NextApiResponse } from 'next'
+import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 import { getBackendUrl } from '~/utils/apiUtils'
 
-export default async function handler(req: any, res: any) {
+async function handler(req: any, res: any) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
@@ -8,8 +10,8 @@ export default async function handler(req: any, res: any) {
   const { url, course_name, local_dir } = req.query
 
   if (!url || !course_name || !local_dir) {
-    return res.status(400).json({ 
-      error: 'url, course_name, and local_dir parameters are required' 
+    return res.status(400).json({
+      error: 'url, course_name, and local_dir parameters are required',
     })
   }
 
@@ -19,9 +21,12 @@ export default async function handler(req: any, res: any) {
     )
 
     if (!response.ok) {
-      console.error('Failed to download MIT course. Err status:', response.status)
-      return res.status(response.status).json({ 
-        error: `Failed to download MIT course. Status: ${response.status}` 
+      console.error(
+        'Failed to download MIT course. Err status:',
+        response.status,
+      )
+      return res.status(response.status).json({
+        error: `Failed to download MIT course. Status: ${response.status}`,
       })
     }
 
@@ -29,8 +34,10 @@ export default async function handler(req: any, res: any) {
     return res.status(200).json(data)
   } catch (error) {
     console.error('Error downloading MIT course:', error)
-    return res.status(500).json({ 
-      error: 'Internal server error while downloading MIT course' 
+    return res.status(500).json({
+      error: 'Internal server error while downloading MIT course',
     })
   }
 }
+
+export default withAuth(handler)
