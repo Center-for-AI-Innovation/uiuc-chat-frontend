@@ -450,7 +450,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       break
 
     case 'GET':
-      const user_email = req.query.user_email as string
+      const user_email = req.user?.email as string
       const searchTerm = req.query.searchTerm as string
       const courseName = req.query.courseName as string
       const pageParam = parseInt(req.query.pageParam as string, 0)
@@ -577,8 +577,4 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   }
 }
 
-export default withCourseAccessFromRequest({
-  GET: 'any',
-  POST: 'any',
-  DELETE: 'owner',
-})(handler)
+export default withCourseAccessFromRequest('any')(handler)

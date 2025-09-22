@@ -1,4 +1,4 @@
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
+import { type NextApiResponse } from 'next'
 import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 import { db, messages } from '~/db/dbClient'
 import { NewMessages } from '~/db/schema'

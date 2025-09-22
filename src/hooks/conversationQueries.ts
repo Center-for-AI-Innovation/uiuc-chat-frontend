@@ -27,13 +27,13 @@ export function useFetchConversationHistory(
   const isEnabled = isValidEmail && isValidCourse
 
   return useInfiniteQuery({
-    queryKey: ['conversationHistory', user_email, courseName, normalizedSearchTerm],
+    queryKey: ['conversationHistory', courseName, normalizedSearchTerm],
     queryFn: ({ pageParam = 0 }) => {
       // Additional runtime check to prevent invalid calls
       if (!isValidEmail || !isValidCourse) {
         throw new Error('Invalid email or course name');
       }
-      return fetchConversationHistory(user_email!, normalizedSearchTerm, courseName!, pageParam);
+      return fetchConversationHistory(normalizedSearchTerm, courseName!, pageParam);
     },
     initialPageParam: 0,
     enabled: isEnabled,
@@ -259,9 +259,9 @@ export function useDeleteAllConversations(
   course_name: string,
 ) {
   return useMutation({
-    mutationKey: ['deleteAllConversations', user_email, course_name],
+    mutationKey: ['deleteAllConversations', course_name],
     mutationFn: async () =>
-      deleteAllConversationsFromServer(user_email, course_name),
+      deleteAllConversationsFromServer(course_name),
     onMutate: async () => {
       // Step 1: Cancel the query to prevent it from refetching
       await queryClient.cancelQueries({
