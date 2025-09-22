@@ -308,20 +308,21 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
       setCourseStatsLoading(true)
       setCourseStatsError(null)
       try {
-        const response = await getProjectStats(course_name)
-
+        const response = await fetch('/api/UIUC-api/getProjectStats', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ course_name, project_name: course_name }),
+        })
         if (response.status === 200) {
+          const data = await response.json()
           const mappedData = {
-            total_conversations: response.data.total_conversations,
-            total_messages: response.data.total_messages,
-            total_users: response.data.unique_users,
-            avg_conversations_per_user:
-              response.data.avg_conversations_per_user,
-            avg_messages_per_user: response.data.avg_messages_per_user,
-            avg_messages_per_conversation:
-              response.data.avg_messages_per_conversation,
+            total_conversations: data.total_conversations,
+            total_messages: data.total_messages,
+            total_users: data.unique_users,
+            avg_conversations_per_user: data.avg_conversations_per_user,
+            avg_messages_per_user: data.avg_messages_per_user,
+            avg_messages_per_conversation: data.avg_messages_per_conversation,
           }
-
           setCourseStats(mappedData)
         } else {
           throw new Error('Failed to fetch course stats')

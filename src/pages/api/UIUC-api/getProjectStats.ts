@@ -2,9 +2,10 @@ import { type AuthenticatedRequest, type NextApiResponse } from 'next'
 import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 // src/pages/api/UIUC-api/getProjectStats.ts
 import { getBackendUrl } from '~/utils/apiUtils'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
-async function handler(req: any, res: any) {
-  const { project_name } = req.query
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
+  const { project_name } = req.body
 
   if (!project_name) {
     return res
@@ -34,7 +35,7 @@ async function handler(req: any, res: any) {
   }
 }
 
-export default withAuth(handler)
+export default withCourseOwnerOrAdminAccess()(handler)
 
 export async function getProjectStats(project_name: string) {
   try {
