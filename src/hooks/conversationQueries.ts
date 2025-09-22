@@ -2,7 +2,6 @@ import {
   type QueryClient,
   useInfiniteQuery,
   useMutation,
-  useQuery,
 } from '@tanstack/react-query'
 import { type Conversation, type ConversationPage } from '~/types/chat'
 import { type FolderWithConversation } from '~/types/folder'
@@ -27,7 +26,7 @@ export function useFetchConversationHistory(
   const isEnabled = isValidEmail && isValidCourse
 
   return useInfiniteQuery({
-    queryKey: ['conversationHistory', courseName, normalizedSearchTerm],
+    queryKey: ['conversationHistory', user_email, courseName, normalizedSearchTerm],
     queryFn: ({ pageParam = 0 }) => {
       // Additional runtime check to prevent invalid calls
       if (!isValidEmail || !isValidCourse) {
@@ -52,7 +51,7 @@ export function useUpdateConversation(
 ) {
   // console.log('useUpdateConversation with user_email: ', user_email)
   return useMutation({
-    mutationKey: ['updateConversation', user_email],
+    mutationKey: ['updateConversation', user_email, course_name],
     mutationFn: async (conversation: Conversation) =>
       saveConversationToServer(conversation, course_name),
     onMutate: async (updatedConversation: Conversation) => {
@@ -188,7 +187,7 @@ export function useDeleteConversation(
   search_term: string,
 ) {
   return useMutation({
-    mutationKey: ['deleteConversation', user_email],
+    mutationKey: ['deleteConversation', user_email, course_name],
     mutationFn: async (deleteConversation: Conversation) =>
       deleteConversationFromServer(deleteConversation.id, course_name),
     onMutate: async (deletedConversation: Conversation) => {
@@ -259,7 +258,7 @@ export function useDeleteAllConversations(
   course_name: string,
 ) {
   return useMutation({
-    mutationKey: ['deleteAllConversations', course_name],
+    mutationKey: ['deleteAllConversations', user_email, course_name],
     mutationFn: async () =>
       deleteAllConversationsFromServer(course_name),
     onMutate: async () => {

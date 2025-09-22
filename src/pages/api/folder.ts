@@ -27,7 +27,7 @@ export function convertDBFolderToChatFolder(
   }
 }
 
-export default withCourseAccessFromRequest({ GET: 'any', POST: 'any', DELETE: 'owner'})(handler)
+export default withCourseAccessFromRequest('any')(handler)
 
 export function convertChatFolderToDBFolder(
   folder: FolderWithConversation,
@@ -50,8 +50,8 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     case 'POST':
       const {
         folder,
-        email,
-      }: { folder: FolderWithConversation; email: string } = req.body
+      }: { folder: FolderWithConversation; } = req.body
+      const email = req.user?.email as string
       //   Convert folder to DB type
       const dbFolder = convertChatFolderToDBFolder(folder, email)
 
@@ -80,7 +80,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       break
 
     case 'GET':
-      const { user_email } = req.query
+      const user_email = req.user?.email
       try {
         if (!user_email || typeof user_email !== 'string') {
           res.status(400).json({ error: 'No valid email address provided' })

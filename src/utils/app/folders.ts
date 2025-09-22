@@ -2,12 +2,11 @@ import { type FolderWithConversation } from '@/types/folder'
 
 
 export async function fetchFolders(
-  user_email: string,
   course_name: string,
 ): Promise<FolderWithConversation[]> {
   let fetchedFolders = []
   try {
-    const foldersResonse = await fetch(`/api/folder?user_email=${user_email}&courseName=${course_name}`, {
+    const foldersResonse = await fetch(`/api/folder?courseName=${course_name}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -28,17 +27,16 @@ export async function fetchFolders(
 
 export const saveFolderToServer = async (
   folder: FolderWithConversation,
-  user_email: string,
   course_name: string,
 ) => {
   try {
-    console.log('Saving conversation to server:', folder, user_email)
+    console.log('Saving conversation to server:', folder)
     const response = await fetch('/api/folder', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ folder, email: user_email, courseName: course_name }),
+      body: JSON.stringify({ folder, courseName: course_name }),
     })
 
     if (!response.ok) {
