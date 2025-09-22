@@ -5,7 +5,7 @@ import { getBackendUrl } from '~/utils/apiUtils'
 import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
-  const { course_name, from_date, to_date } = req.query
+  const { course_name, from_date, to_date } = req.body
 
   if (!course_name) {
     return res
