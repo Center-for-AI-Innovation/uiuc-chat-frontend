@@ -1,7 +1,7 @@
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import { type NextApiResponse } from 'next'
+import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { db, messages } from '~/db/dbClient'
-import { NewMessages } from '~/db/schema'
+import { type NewMessages } from '~/db/schema'
 import { convertChatToDBMessage } from '@/pages/api/conversation'
 import { eq, desc, gt, asc, and, inArray } from 'drizzle-orm'
 

@@ -1,11 +1,8 @@
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
-import { kv } from '@vercel/kv'
 import { NextResponse } from 'next/server'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { ensureRedisConnected } from '~/utils/redisClient'
 
-export const runtime = 'edge'
+// export const runtime = 'edge'
 
 const removeUserFromCourse = async (req: any, res: any) => {
   // const { course_name, email_to_remove } = req.query

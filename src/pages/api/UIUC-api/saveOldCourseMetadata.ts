@@ -1,5 +1,4 @@
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import { withAuth } from '~/utils/authMiddleware'
 // src/pages/api/UIUC-api/backupOldCourseMetadata.ts
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { type NextRequest, NextResponse } from 'next/server'
@@ -41,4 +40,4 @@ async function handler(req: NextRequest, res: NextResponse) {
   }
 }
 
-export default withAuth(handler)
+export default handler

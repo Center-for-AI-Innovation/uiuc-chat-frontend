@@ -1,7 +1,7 @@
 // upsertCourseMetadata.ts
 import { type CourseMetadataOptionalForUpsert } from '~/types/courseMetadata'
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import { type NextApiResponse } from 'next'
+import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { encrypt, isEncrypted } from '~/utils/crypto'
 import { getCourseMetadata } from './getCourseMetadata'
 import { ensureRedisConnected } from '~/utils/redisClient'

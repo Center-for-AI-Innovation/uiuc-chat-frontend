@@ -1,5 +1,3 @@
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 // src/pages/api/UIUC-api/fetchImageDescription.ts
 
 import { type Content, type Conversation, type ImageBody } from '@/types/chat'

@@ -21,10 +21,15 @@ export class CookieStorage implements Storage {
 
     // Build an index of keys (best-effort)
     const all = document.cookie.split(';').map((c) => c.trim())
+    const prefix = this.getPrefix()
     this.keys = all
-      .map((c) => decodeURIComponent(c.split('=')[0]))
-      .filter((k) => k.startsWith(this.opts.prefix!))
-      .map((k) => k.slice(this.opts.prefix!.length))
+      .map((c) => decodeURIComponent(c.split('=')[0] ?? ''))
+      .filter((k) => k.startsWith(prefix))
+      .map((k) => k.slice(prefix.length))
+  }
+
+  private getPrefix(): string {
+    return this.opts.prefix ?? ''
   }
 
   get length() {
@@ -36,12 +41,12 @@ export class CookieStorage implements Storage {
   }
 
   getItem(key: string) {
-    const v = Cookies.get(this.opts.prefix! + key)
+    const v = Cookies.get(this.getPrefix() + key)
     return v === undefined ? null : v
   }
 
   setItem(key: string, value: string) {
-    Cookies.set(this.opts.prefix! + key, value, {
+    Cookies.set(this.getPrefix() + key, value, {
       expires: this.opts.expiresDays,
       path: this.opts.path,
       domain: this.opts.domain,
@@ -52,7 +57,7 @@ export class CookieStorage implements Storage {
   }
 
   removeItem(key: string) {
-    Cookies.remove(this.opts.prefix! + key, {
+    Cookies.remove(this.getPrefix() + key, {
       path: this.opts.path,
       domain: this.opts.domain,
     })
