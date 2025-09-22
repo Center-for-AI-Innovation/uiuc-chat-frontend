@@ -82,7 +82,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     case 'GET':
       const user_email = req.user?.email
       try {
-        if (!user_email || typeof user_email !== 'string') {
+        if (!user_email) {
           res.status(400).json({ error: 'No valid email address provided' })
           return
         }

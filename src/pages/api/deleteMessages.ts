@@ -3,6 +3,8 @@ import { AuthenticatedRequest } from '~/utils/authMiddleware'
 import { db, messages } from '~/db/dbClient'
 import { inArray } from 'drizzle-orm'
 import { withCourseAccessFromRequest } from '~/pages/api/authorization'
+
+
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   console.log('In deleteMessages handler')
   const { method } = req
@@ -13,24 +15,23 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   }
   const {
     messageIds,
-    user_email: userEmail,
     course_name: courseName,
   } = req.body as {
     messageIds: string[]
-    user_email: string
     course_name: string
   }
+  const userEmail = req.user?.email
   console.log('Deleting messages: ', messageIds)
 
   if (!messageIds || !Array.isArray(messageIds) || !messageIds.length) {
     res.status(400).json({ error: 'No valid message ids provided' })
     return
   }
-  if (!userEmail || typeof userEmail !== 'string') {
+  if (!userEmail) {
     res.status(400).json({ error: 'No valid user email provided' })
     return
   }
-  if (!courseName || typeof courseName !== 'string') {
+  if (!courseName) {
     res.status(400).json({ error: 'No valid course name provided' })
     return
   }

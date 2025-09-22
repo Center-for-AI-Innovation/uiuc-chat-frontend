@@ -24,17 +24,19 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { userEmail, projectName } = req.query
+  const { projectName } = req.query
+
+  const userEmail = req.user?.email
 
   // Input validation
   if (!userEmail || !projectName) {
     return res.status(400).json({ error: 'Missing userEmail or projectName' })
   }
 
-  if (typeof userEmail !== 'string' || typeof projectName !== 'string') {
+  if (typeof projectName !== 'string') {
     return res
       .status(400)
-      .json({ error: 'userEmail and projectName must be strings' })
+      .json({ error: 'projectName must be strings' })
   }
 
   if (!isValidEmail(userEmail)) {

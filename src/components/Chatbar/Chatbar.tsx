@@ -161,7 +161,7 @@ export const Chatbar = ({
 
     try {
       const response = await fetch(
-        `/api/UIUC-api/downloadConvoHistoryUser?userEmail=${encodeURIComponent(userEmail)}&projectName=${encodeURIComponent(projectName)}`,
+        `/api/UIUC-api/downloadConvoHistoryUser?projectName=${encodeURIComponent(projectName)}`,
         {
           method: 'GET',
           headers: {

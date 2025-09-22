@@ -10,7 +10,7 @@ export function useDeleteMessages(
   course_name: string,
 ) {
   return useMutation({
-    mutationKey: ['deleteMessages', user_email],
+    mutationKey: ['deleteMessages', user_email, course_name],
     mutationFn: async ({
       convoId,
       deletedMessages,
@@ -20,7 +20,6 @@ export function useDeleteMessages(
     }) =>
       deleteMessagesFromServer(
         deletedMessages.map((message) => message.id) || [],
-        user_email,
         course_name,
       ),
     onMutate: async ({
