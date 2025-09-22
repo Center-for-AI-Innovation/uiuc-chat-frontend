@@ -95,8 +95,7 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
         prefix: '',
         expiresDays: 1,
         sameSite: 'lax', // if your IdP is on another domain AND you use iframe silent renew, use "none"
-        secure: true,
-        domain: '.illinois.edu',
+        secure: window.location.protocol === 'https:',
       })
 
       setOidcConfig((prev) => ({
