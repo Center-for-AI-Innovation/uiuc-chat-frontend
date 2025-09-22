@@ -39,10 +39,7 @@ import SettingsLayout, {
 } from '~/components/Layout/SettingsLayout'
 import { GRID_CONFIGS, useResponsiveGrid } from '~/utils/responsiveGrid'
 import { downloadConversationHistory } from '../../pages/api/UIUC-api/downloadConvoHistory'
-import { getConversationStats } from '../../pages/api/UIUC-api/getConversationStats'
-import { getModelUsageCounts } from '../../pages/api/UIUC-api/getModelUsageCounts'
 import { getProjectStats } from '../../pages/api/UIUC-api/getProjectStats'
-import { getWeeklyTrends } from '../../pages/api/UIUC-api/getWeeklyTrends'
 import ConversationsHeatmapByHourChart from './ConversationsHeatmapByHourChart'
 import ConversationsPerDayChart from './ConversationsPerDayChart'
 import ConversationsPerDayOfWeekChart from './ConversationsPerDayOfWeekChart'
@@ -347,7 +344,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
         const response = await fetch('/api/UIUC-api/getWeeklyTrends', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ course_name }),
+          body: JSON.stringify({ course_name, project_name: course_name }),
         })
         if (response.status === 200) {
           const data = await response.json()
@@ -373,7 +370,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
         const response = await fetch('/api/UIUC-api/getModelUsageCounts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ course_name }),
+          body: JSON.stringify({ course_name, project_name: course_name }),
         })
         if (response.status === 200) {
           const data = await response.json()

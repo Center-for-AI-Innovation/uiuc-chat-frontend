@@ -4,7 +4,7 @@ import { getBackendUrl } from '~/utils/apiUtils'
 import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
 async function handler(req: any, res: any) {
-  const { project_name } = req.query
+  const { project_name } = req.body
 
   if (!project_name) {
     return res

@@ -12,7 +12,7 @@ interface ModelUsage {
 export default withCourseOwnerOrAdminAccess()(handler)
 
 async function handler(req: any, res: any) {
-  const { project_name } = req.query
+  const { project_name } = req.body
 
   if (!project_name) {
     return res
