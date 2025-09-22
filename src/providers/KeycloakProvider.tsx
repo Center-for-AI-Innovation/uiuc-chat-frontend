@@ -91,12 +91,13 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
       setIsAuthCallback(searchParams.has('code') && searchParams.has('state'))
       setIsMounted(true)
 
-      const cookieStore = new CookieStorage({
-        prefix: '',
-        expiresDays: 1,
-        sameSite: 'lax', // if your IdP is on another domain AND you use iframe silent renew, use "none"
-        secure: window.location.protocol === 'https:',
-      })
+      // const cookieStore = new CookieStorage({
+      //   prefix: '',
+      //   expiresDays: 1,
+      //   sameSite: 'lax', // if your IdP is on another domain AND you use iframe silent renew, use "none"
+      //   secure: window.location.protocol === 'https:',
+      // })
+      const cookieStore = new CookieStorage()
 
       setOidcConfig((prev) => ({
         ...prev,
