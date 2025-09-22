@@ -1,7 +1,7 @@
 import { type AuthenticatedRequest, type NextApiResponse } from 'next'
 import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 import { db } from '~/db/dbClient'
-import { Content, Conversation } from '~/types/chat'
+import { type Content, type Conversation } from '~/types/chat'
 import { RunTree } from 'langsmith'
 import { sanitizeForLogging } from '@/utils/sanitization'
 import { llmConvoMonitor } from '~/db/schema'

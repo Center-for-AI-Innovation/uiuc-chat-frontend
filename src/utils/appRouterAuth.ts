@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
-import { verifyTokenAsync } from './keycloakClient'
-import { AuthenticatedUser } from '~/middleware'
+import { type AuthenticatedUser } from '~/middleware'
+import { type NextRequest, NextResponse } from 'next/server'
 import { getKeycloakBaseFromHost } from '~/utils/authHelpers'
+import { verifyTokenAsync } from './keycloakClient'
 
 function getTokenFromCookies(req: NextRequest): string | null {
   // Find oidc.user* cookie

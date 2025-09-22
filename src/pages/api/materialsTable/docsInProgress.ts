@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import { type NextApiResponse } from 'next'
+import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { db, documentsInProgress } from '~/db/dbClient'
 
 // This is for "Documents in Progress" table, docs that are still being ingested.
