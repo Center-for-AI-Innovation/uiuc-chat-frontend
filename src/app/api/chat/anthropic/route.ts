@@ -1,12 +1,12 @@
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { generateText, smoothStream, streamText, type CoreMessage } from 'ai'
 import { type ChatBody, type Conversation } from '~/types/chat'
-import { decryptKeyIfNeeded } from '~/utils/crypto'
-import { type AnthropicModel } from '~/utils/modelProviders/types/anthropic'
 import {
   withAppRouterAuth,
   type AuthenticatedRequest,
 } from '~/utils/appRouterAuth'
+import { decryptKeyIfNeeded } from '~/utils/crypto'
+import { type AnthropicModel } from '~/utils/modelProviders/types/anthropic'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -46,7 +46,7 @@ function getAnthropicRequestConfig(conversation: Conversation) {
   return { isThinking, modelId, providerOptions, experimentalTransform }
 }
 
-async function handler(req: AuthenticatedRequest) {
+async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
   try {
     const {
       chatBody,
@@ -88,14 +88,22 @@ async function handler(req: AuthenticatedRequest) {
 
       if (isThinking) {
         console.log('Using Claude with reasoning enabled')
-        return result.toDataStreamResponse({
+        const response = result.toDataStreamResponse({
           sendReasoning: true,
           getErrorMessage: () => {
             return `An error occurred while streaming the response.`
           },
         })
+        return new NextResponse(response.body, {
+          status: response.status,
+          headers: response.headers,
+        })
       } else {
-        return result.toTextStreamResponse()
+        const response = result.toTextStreamResponse()
+        return new NextResponse(response.body, {
+          status: response.status,
+          headers: response.headers,
+        })
       }
     } else {
       const result = await generateText({
@@ -117,18 +125,22 @@ async function handler(req: AuthenticatedRequest) {
       'error' in error.data
     ) {
       console.error('error.data.error', error.data.error)
-      return new Response(JSON.stringify({ error: error.data.error }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      })
-    } else {
-      return new Response(
-        JSON.stringify({
-          error: 'An error occurred while processing the chat request',
-        }),
+      const errValue: unknown = (error as { data: { error: unknown } }).data
+        .error
+      const message = typeof errValue === 'string' ? errValue : 'Unknown error'
+      return NextResponse.json(
+        { error: message },
         {
           status: 500,
-          headers: { 'Content-Type': 'application/json' },
+        },
+      )
+    } else {
+      return NextResponse.json(
+        {
+          error: 'An error occurred while processing the chat request',
+        },
+        {
+          status: 500,
         },
       )
     }
