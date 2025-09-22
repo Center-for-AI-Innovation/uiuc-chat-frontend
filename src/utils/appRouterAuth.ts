@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 import { verifyTokenAsync } from './keycloakClient'
-import { AuthenticatedUser } from './authMiddleware'
+import { AuthenticatedUser } from '~/middleware'
 import { getKeycloakBaseFromHost } from '~/utils/authHelpers'
 
 function getTokenFromCookies(req: NextRequest): string | null {
@@ -12,7 +12,7 @@ function getTokenFromCookies(req: NextRequest): string | null {
   const cookies = cookieHeader.split(';').reduce(
     (acc, cookie) => {
       const [name, value] = cookie.trim().split('=')
-      acc[name] = value
+      if (name) acc[name] = value ?? ''
       return acc
     },
     {} as Record<string, string>,
@@ -32,13 +32,6 @@ function getTokenFromCookies(req: NextRequest): string | null {
   } catch {
     return null
   }
-}
-
-function peekIssuer(token: string): string {
-  const [, p] = token.split('.')
-  if (!p) return ''
-  const payload = JSON.parse(Buffer.from(p, 'base64url').toString('utf8'))
-  return String(payload.iss || '').replace(/\/$/, '')
 }
 
 export interface AuthenticatedRequest extends NextRequest {

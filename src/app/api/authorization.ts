@@ -1,9 +1,9 @@
 import { CourseMetadata } from '~/types/courseMetadata'
-import { AuthenticatedRequest } from '~/utils/authMiddleware'
-import { AuthenticatedUser } from '~/middleware'
-import { NextApiRequest, NextApiResponse } from 'next'
-import { withAuth } from '~/utils/authMiddleware'
+import { AuthenticatedRequest } from '~/utils/appRouterAuth'
+import { NextRequest, NextResponse } from 'next/server'
+import { withAppRouterAuth } from '~/utils/appRouterAuth'
 import { ensureRedisConnected } from '~/utils/redisClient'
+import { AuthenticatedUser } from '~/middleware'
 
 // Helper function to get course metadata from Redis
 export async function getCourseMetadata(
@@ -72,62 +72,66 @@ export function isCourseRegularUser(
 
 // Middleware for course-based access control
 export function withCourseAccess(courseName: string) {
-  return function (
+  return function(
     handler: (
       req: AuthenticatedRequest,
-      res: NextApiResponse,
-    ) => Promise<void> | void,
+    ) => Promise<NextResponse> | NextResponse,
   ) {
-    return withAuth(async (req: AuthenticatedRequest, res: NextApiResponse) => {
+    return withAppRouterAuth(async (req: AuthenticatedRequest) => {
       if (!req.user) {
-        return res.status(401).json({ error: 'User not authenticated' })
+        return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
       }
-
       // Get course metadata
       const courseMetadata = await getCourseMetadata(courseName)
       if (!courseMetadata) {
-        return res.status(404).json({
-          error: 'Course not found',
-          message: `Course '${courseName}' does not exist`,
-        })
+        return NextResponse.json(
+          {
+            error: 'Course not found',
+            message: `Course '${courseName}' does not exist`,
+          },
+          { status: 404 },
+        )
       }
 
-      // Check if user has access to the course
       if (!hasCourseAccess(req.user, courseMetadata)) {
-        return res.status(403).json({
-          error: 'Access denied',
-          message: `You don't have access to course '${courseName}'`,
-        })
+        return NextResponse.json(
+          {
+            error: 'Access denied',
+            message: `You don't have access to course '${courseName}'`,
+          },
+          { status: 403 },
+        )
       }
 
-      // Add course context to request
-      req.courseName = courseName
+      // Attach course context for downstream handler
+      ;(req as any).courseName = courseName
 
-      return handler(req, res)
+      return handler(req)
     })
   }
 }
 
 // Middleware for course admin access only
 export function withCourseAdminAccess(courseName: string) {
-  return function (
+  return function(
     handler: (
       req: AuthenticatedRequest,
-      res: NextApiResponse,
-    ) => Promise<void> | void,
+    ) => Promise<NextResponse> | NextResponse,
   ) {
-    return withAuth(async (req: AuthenticatedRequest, res: NextApiResponse) => {
+    return withAppRouterAuth(async (req: AuthenticatedRequest) => {
       if (!req.user) {
-        return res.status(401).json({ error: 'User not authenticated' })
+        return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
       }
-
       // Get course metadata
       const courseMetadata = await getCourseMetadata(courseName)
       if (!courseMetadata) {
-        return res.status(404).json({
-          error: 'Course not found',
-          message: `Course '${courseName}' does not exist`,
-        })
+        return NextResponse.json(
+          {
+            error: 'Course not found',
+            message: `Course '${courseName}' does not exist`,
+          },
+          { status: 404 },
+        )
       }
 
       // Check if user is course admin or owner
@@ -135,109 +139,132 @@ export function withCourseAdminAccess(courseName: string) {
         !isCourseOwner(req.user, courseMetadata) &&
         !isCourseAdmin(req.user, courseMetadata)
       ) {
-        return res.status(403).json({
-          error: 'Insufficient permissions',
-          message: `This action requires admin access to course '${courseName}'`,
-        })
+        return NextResponse.json(
+          {
+            error: 'Insufficient permissions',
+            message: `This action requires admin access to course '${courseName}'`,
+          },
+          { status: 403 },
+        )
       }
 
-      // Add course context to request
-      req.courseName = courseName
+      // Attach course context for downstream handler
+      ;(req as any).courseName = courseName
 
-      return handler(req, res)
+      return handler(req)
     })
   }
 }
 
 // Middleware for course owner access only
 export function withCourseOwnerAccess(courseName: string) {
-  return function (
+  return function(
     handler: (
       req: AuthenticatedRequest,
-      res: NextApiResponse,
-    ) => Promise<void> | void,
+    ) => Promise<NextResponse> | NextResponse,
   ) {
-    return withAuth(async (req: AuthenticatedRequest, res: NextApiResponse) => {
+    return withAppRouterAuth(async (req: AuthenticatedRequest) => {
       if (!req.user) {
-        return res.status(401).json({ error: 'User not authenticated' })
+        return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
       }
 
       // Get course metadata
       const courseMetadata = await getCourseMetadata(courseName)
       if (!courseMetadata) {
-        return res.status(404).json({
-          error: 'Course not found',
-          message: `Course '${courseName}' does not exist`,
-        })
+        return NextResponse.json(
+          {
+            error: 'Course not found',
+            message: `Course '${courseName}' does not exist`,
+          },
+          { status: 404 },
+        )
       }
 
       // Check if user is course owner
       if (!isCourseOwner(req.user, courseMetadata)) {
-        return res.status(403).json({
-          error: 'Insufficient permissions',
-          message: `This action requires owner access to course '${courseName}'`,
-        })
+        return NextResponse.json(
+          {
+            error: 'Insufficient permissions',
+            message: `This action requires admin access to course '${courseName}'`,
+          },
+          { status: 403 },
+        )
       }
 
-      // Add course context to request
-      req.courseName = courseName
+      // Attach course context for downstream handler
+      ;(req as any).courseName = courseName
 
-      return handler(req, res)
+      return handler(req)
     })
   }
 }
 
 // Utility function to extract course name from request (query params, body, or headers)
-export function extractCourseName(req: NextApiRequest): string | null {
-  // Try to get course name from various sources
-  const courseName =
-    (req.query.courseName as string) ||
-    (req.query.course_name as string) ||
-    req.body?.courseName ||
-    req.body?.course_name ||
-    (req.body?.projectName as string) ||
-    (req.body?.project_name as string) ||
-    req.body?.projectName ||
-    req.body?.project_name ||
-    (req.headers['x-course-name'] as string) ||
-    (req.headers['x-project_name'] as string)
-    null
+export async function extractCourseName(req: NextRequest): Promise<string | null> {
+  // 1) From query params
+  const fromQuery =
+    req.nextUrl.searchParams.get('courseName') ??
+    req.nextUrl.searchParams.get('course_name') ??
+    req.nextUrl.searchParams.get('projectName') ??
+    req.nextUrl.searchParams.get('project_name')
+  if (fromQuery) return fromQuery
 
-  return courseName
+  // 2) From headers
+  const fromHeader = req.headers.get('x-course-name') || req.headers.get('x-project-name')
+  if (fromHeader) return fromHeader
+
+  // 3) From body (only if method can have a body)
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+    try {
+      const body = await req.json().catch(() => null)
+      if (body?.courseName) return body.courseName
+      if (body?.course_name) return body.course_name
+      if (body?.projectName) return body.projectName
+      if (body?.project_name) return body.project_name
+    } catch {
+      /* ignore bad JSON */
+    }
+  }
+
+  return null
 }
 
 // Middleware that automatically extracts course name and applies access control
 export function withCourseAccessFromRequest(
   accessLevel: 'any' | 'admin' | 'owner' = 'any',
 ) {
-  return function (
+  return function(
     handler: (
       req: AuthenticatedRequest,
-      res: NextApiResponse,
-    ) => Promise<void> | void,
+    ) => Promise<NextResponse> | NextResponse,
   ) {
-    return withAuth(async (req: AuthenticatedRequest, res: NextApiResponse) => {
+    return withAppRouterAuth(async (req: AuthenticatedRequest) => {
       if (!req.user) {
-        return res.status(401).json({ error: 'User not authenticated' })
+        return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
       }
 
       // Extract course name from request
       const courseName = extractCourseName(req)
       if (!courseName) {
-        return res.status(400).json({
-          error: 'Course name required',
-          message:
-            'Course name must be provided in query params, body, or headers',
-        })
+        return NextResponse.json(
+          {
+            error: 'Course name required', message:
+              'Course name must be provided in query params, body, or headers',
+          },
+          { status: 400 },
+        )
       }
 
       // Get course metadata
       const courseMetadata = await getCourseMetadata(courseName)
       if (!courseMetadata) {
-        return res.status(404).json({
-          error: 'Course not found',
-          message: `Course '${courseName}' does not exist`,
-        })
+        return NextResponse.json(
+          {
+            error: 'Course not found',
+            message: `Course '${courseName}' does not exist`,
+          },
+          { status: 404 },
+        )
       }
 
       // Check access based on level
@@ -264,16 +291,19 @@ export function withCourseAccessFromRequest(
             : accessLevel === 'admin'
               ? 'admin'
               : 'user'
-        return res.status(403).json({
-          error: 'Access denied',
-          message: `This action requires ${accessLevelText} access to course '${courseName}'`,
-        })
+        return NextResponse.json(
+          {
+            error: 'Access denied',
+            message: `This action requires ${accessLevelText} access to course '${courseName}'`,
+          },
+          { status: 403 },
+        )
       }
 
-      // Add course context to request
-      req.courseName = courseName
+      // Attach course context for downstream handler
+      ;(req as any).courseName = courseName
 
-      return handler(req, res)
+      return handler(req)
     })
   }
 }

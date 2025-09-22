@@ -141,3 +141,20 @@ export const config = {
     '/((?!_next/static|_next/image|favicon.ico|.*\\..*|api/auth).*)',
   ],
 }
+
+// common interface for authenticated user
+export interface AuthenticatedUser {
+  sub: string
+  email: string
+  preferred_username: string
+  given_name?: string
+  family_name?: string
+  realm_access?: {
+    roles: string[]
+  }
+  resource_access?: {
+    [key: string]: {
+      roles: string[]
+    }
+  }
+}
