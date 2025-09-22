@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
-import { verifyTokenAsync } from './keycloakClient'
-import { AuthenticatedUser } from './authMiddleware'
+import { type NextRequest, NextResponse } from 'next/server'
 import { getKeycloakBaseFromHost } from '~/utils/authHelpers'
+import { type AuthenticatedUser } from './authMiddleware'
+import { verifyTokenAsync } from './keycloakClient'
 
 function getTokenFromCookies(req: NextRequest): string | null {
   // Find oidc.user* cookie
@@ -11,8 +11,9 @@ function getTokenFromCookies(req: NextRequest): string | null {
 
   const cookies = cookieHeader.split(';').reduce(
     (acc, cookie) => {
-      const [name, value] = cookie.trim().split('=')
-      acc[name] = value
+      const [name, ...rest] = cookie.trim().split('=')
+      if (!name) return acc
+      acc[name] = rest.join('=')
       return acc
     },
     {} as Record<string, string>,
@@ -34,6 +35,7 @@ function getTokenFromCookies(req: NextRequest): string | null {
   }
 }
 
+// Do we need this? It's not used anywhere.
 function peekIssuer(token: string): string {
   const [, p] = token.split('.')
   if (!p) return ''

@@ -1,10 +1,9 @@
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import { withAuth } from '~/utils/authMiddleware'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { type NextRequest, NextResponse } from 'next/server'
 import { ensureRedisConnected } from '~/utils/redisClient'
 
-export const runtime = 'edge'
+// export const runtime = 'edge'
 
 // GREAT EXAMPLE OF A POST REQUEST ON EDGE
 // const { course_name, disabled_models } = await req.json()
@@ -64,4 +63,4 @@ async function handler(req: NextRequest) {
   }
 }
 
-export default withAuth(handler)
+export default handler

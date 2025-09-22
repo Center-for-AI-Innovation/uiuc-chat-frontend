@@ -1,9 +1,6 @@
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 import { type NextRequest, NextResponse } from 'next/server'
 import { getAllCourseMetadata } from './getAllCourseMetadata'
 import { type CourseMetadata } from '~/types/courseMetadata'
-import OpenAI from 'openai'
 import {
   OpenAIModelID,
   OpenAIModels,
@@ -12,7 +9,7 @@ import { ProviderNames } from '~/utils/modelProviders/LLMProvider'
 import { encryptKeyIfNeeded } from '~/utils/crypto'
 import { ensureRedisConnected } from '~/utils/redisClient'
 
-export const runtime = 'edge'
+// export const runtime = 'edge'
 
 async function handler(
   req: NextRequest,
@@ -35,7 +32,7 @@ async function handler(
   }
 }
 
-export default withAuth(handler)
+export default handler
 
 // WARNING
 // Some disabled models are no longer supported. Keep in mind...
