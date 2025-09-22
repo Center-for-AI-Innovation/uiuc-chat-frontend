@@ -1,4 +1,4 @@
-import { type QueryClient, useMutation } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { type Message } from '~/types/chat'
 import { deleteMessagesFromServer } from '~/utils/app/message'
 
@@ -6,16 +6,13 @@ import { deleteMessagesFromServer } from '~/utils/app/message'
 //
 export function useDeleteMessages(
   user_email: string,
-  queryClient: QueryClient,
   course_name: string,
 ) {
   return useMutation({
     mutationKey: ['deleteMessages', user_email, course_name],
     mutationFn: async ({
-      convoId,
       deletedMessages,
     }: {
-      convoId: string
       deletedMessages: Message[]
     }) =>
       deleteMessagesFromServer(

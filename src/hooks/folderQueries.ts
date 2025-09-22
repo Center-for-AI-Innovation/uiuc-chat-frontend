@@ -2,7 +2,6 @@ import {
   type QueryClient,
   useMutation,
   useQuery,
-  useQueryClient,
 } from '@tanstack/react-query'
 import {
   type FolderInterface,
@@ -35,28 +34,28 @@ export function useCreateFolder(
     mutationFn: async (newFolder: FolderWithConversation) =>
       saveFolderToServer(newFolder, course_name),
     onMutate: async (newFolder: FolderWithConversation) => {
-      await queryClient.cancelQueries({ queryKey: ['folders', user_email] })
+      await queryClient.cancelQueries({ queryKey: ['folders', course_name] })
 
       queryClient.setQueryData(
-        ['folders', user_email],
+        ['folders', course_name],
         (oldData: FolderInterface[]) => {
           return [newFolder, ...oldData]
         },
       )
 
-      const oldFolders = queryClient.getQueryData(['folders', user_email])
+      const oldFolders = queryClient.getQueryData(['folders', course_name])
 
       return { newFolder, oldFolders }
     },
     onError: (error, variables, context) => {
-      queryClient.setQueryData(['folders', user_email], context?.oldFolders)
+      queryClient.setQueryData(['folders', course_name], context?.oldFolders)
       console.error('Error saving updated folder to server:', error, context)
     },
     onSuccess: (data, variables, context) => {
       // No need to do anything here because the folders query will be invalidated
     },
     onSettled: (data, error, variables, context) => {
-      queryClient.invalidateQueries({ queryKey: ['folders', user_email] })
+      queryClient.invalidateQueries({ queryKey: ['folders', course_name] })
     },
   })
 }
@@ -71,10 +70,10 @@ export function useUpdateFolder(
     mutationFn: async (folder: FolderWithConversation) =>
       saveFolderToServer(folder, course_name),
     onMutate: async (updatedFolder: FolderWithConversation) => {
-      await queryClient.cancelQueries({ queryKey: ['folders', user_email] })
+      await queryClient.cancelQueries({ queryKey: ['folders', course_name] })
 
       queryClient.setQueryData(
-        ['folders', user_email],
+        ['folders', course_name],
         (oldData: FolderWithConversation[]) => {
           return oldData.map((f: FolderWithConversation) => {
             if (f.id === updatedFolder.id) {
@@ -85,21 +84,21 @@ export function useUpdateFolder(
         },
       )
 
-      const oldFolder = queryClient.getQueryData(['folders', user_email])
+      const oldFolder = queryClient.getQueryData(['folders', course_name])
 
       return { oldFolder, updatedFolder }
     },
     onError: (error, variables, context) => {
-      queryClient.setQueryData(['folders', user_email], context?.oldFolder)
+      queryClient.setQueryData(['folders', course_name], context?.oldFolder)
       console.error('Error saving updated folder to server:', error, context)
     },
     onSuccess: (data, variables, context) => {
       // No need to do anything here because the folders query will be invalidated
     },
     onSettled: (data, error, variables, context) => {
-      queryClient.invalidateQueries({ queryKey: ['folders', user_email] })
+      queryClient.invalidateQueries({ queryKey: ['folders', course_name] })
       queryClient.invalidateQueries({
-        queryKey: ['conversationHistory', user_email, course_name],
+        queryKey: ['conversationHistory', course_name],
       })
     },
   })
@@ -115,10 +114,10 @@ export function useDeleteFolder(
     mutationFn: async (deletedFolder: FolderWithConversation) =>
       deleteFolderFromServer(deletedFolder, course_name),
     onMutate: async (deletedFolder: FolderWithConversation) => {
-      await queryClient.cancelQueries({ queryKey: ['folders', user_email] })
+      await queryClient.cancelQueries({ queryKey: ['folders', course_name] })
 
       queryClient.setQueryData(
-        ['folders', user_email],
+        ['folders', course_name],
         (oldData: FolderWithConversation[]) => {
           return oldData.filter(
             (f: FolderWithConversation) => f.id !== deletedFolder.id,
@@ -126,21 +125,21 @@ export function useDeleteFolder(
         },
       )
 
-      const oldFolder = queryClient.getQueryData(['folders', user_email])
+      const oldFolder = queryClient.getQueryData(['folders', course_name])
 
       return { oldFolder, deletedFolder }
     },
     onError: (error, variables, context) => {
-      queryClient.setQueryData(['folders', user_email], context?.oldFolder)
+      queryClient.setQueryData(['folders', course_name], context?.oldFolder)
       console.error('Error deleting folder from server:', error, context)
     },
     onSuccess: (data, variables, context) => {
       // No need to do anything here because the folders query will be invalidated
     },
     onSettled: (data, error, variables, context) => {
-      queryClient.invalidateQueries({ queryKey: ['folders', user_email] })
+      queryClient.invalidateQueries({ queryKey: ['folders', course_name] })
       queryClient.invalidateQueries({
-        queryKey: ['conversationHistory', user_email, course_name],
+        queryKey: ['conversationHistory', course_name],
       })
     },
   })
