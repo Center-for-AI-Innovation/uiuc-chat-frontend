@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import jwt from 'jsonwebtoken'
 import { verifyTokenAsync } from './keycloakClient'
+import { getKeycloakBaseFromHost } from '~/utils/authHelpers'
 
 function getTokenFromCookies(req: NextApiRequest): string | null {
   // Find oidc.user* cookie
@@ -63,8 +64,15 @@ export function withAuth(
         return res.status(401).json({ error: 'Missing token' })
       }
 
+      const rawHost = req.headers['x-forwarded-host'] ?? req.headers['host'];
+      const hostValue = Array.isArray(rawHost) ? rawHost[0] : rawHost;
+
+      // Fallback to 'localhost' if undefined
+      const hostname = (hostValue ?? 'localhost').split(':')[0];
+      const keycloakBaseUrl = getKeycloakBaseFromHost(hostname);
+
       // Verify JWT token using Keycloak's JWKS endpoint
-      const decoded = (await verifyTokenAsync(token)) as AuthenticatedUser
+      const decoded = (await verifyTokenAsync(token, keycloakBaseUrl)) as AuthenticatedUser
 
       // Add user to request object
       req.user = decoded
