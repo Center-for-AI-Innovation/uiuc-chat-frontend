@@ -265,8 +265,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ course_name, from_date, to_date }),
         })
-        const data = await response.json()
         if (response.status === 200) {
+          const data = await response.json()
           setFilteredConversationStats(data)
           setTotalCount(data.total_count || 0)
           setHasConversationData(Object.keys(data.per_day).length > 0)
@@ -291,8 +291,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ course_name }),
         })
-        const data = await response.json()
-        console.log(data)
+        if (response.status === 200) {
+          const data = await response.json()
+          setConversationStats(data)
+        }
       } catch (error) {
         console.error('Error fetching all-time conversation stats:', error)
         setStatsError('Failed to fetch conversation statistics')
@@ -342,9 +344,14 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
       setTrendsLoading(true)
       setTrendsError(null)
       try {
-        const response = await getWeeklyTrends(course_name)
+        const response = await fetch('/api/UIUC-api/getWeeklyTrends', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ course_name }),
+        })
         if (response.status === 200) {
-          setWeeklyTrends(response.data)
+          const data = await response.json()
+          setWeeklyTrends(data)
         } else {
           throw new Error('Failed to fetch weekly trends')
         }
@@ -363,9 +370,14 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
       setModelUsageLoading(true)
       setModelUsageError(null)
       try {
-        const response = await getModelUsageCounts(course_name)
+        const response = await fetch('/api/UIUC-api/getModelUsageCounts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ course_name }),
+        })
         if (response.status === 200) {
-          setModelUsageData(response.data)
+          const data = await response.json()
+          setModelUsageData(data)
         } else {
           throw new Error('Failed to fetch model usage data')
         }
