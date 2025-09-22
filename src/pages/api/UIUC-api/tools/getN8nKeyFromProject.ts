@@ -4,6 +4,7 @@ import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 import { db } from '~/db/dbClient'
 import { projects } from '~/db/schema'
 import { eq } from 'drizzle-orm'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
 const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
   const { course_name } = req.query as { course_name: string }
@@ -25,4 +26,4 @@ const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
   }
 }
 
-export default handler
+export default withCourseOwnerOrAdminAccess()(handler)
