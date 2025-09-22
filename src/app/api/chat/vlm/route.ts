@@ -1,6 +1,6 @@
+import { createOpenAI } from '@ai-sdk/openai'
 import { generateText, streamText } from 'ai'
 import { NextResponse } from 'next/server'
-import { createOpenAI } from '@ai-sdk/openai'
 import { convertConversationToCoreMessagesWithoutSystem } from '~/utils/apiUtils'
 import {
   withAppRouterAuth,
@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 export const revalidate = 0
 
-async function handler(req: AuthenticatedRequest) {
+async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
   try {
     const { conversation, stream } = await req.json()
 
@@ -35,7 +35,11 @@ async function handler(req: AuthenticatedRequest) {
         temperature: conversation.temperature,
         messages,
       })
-      return result.toTextStreamResponse()
+      const response = result.toTextStreamResponse()
+      return new NextResponse(response.body, {
+        status: response.status,
+        headers: response.headers,
+      })
     } else {
       const result = await generateText({
         model: openai(conversation.model.id) as any,

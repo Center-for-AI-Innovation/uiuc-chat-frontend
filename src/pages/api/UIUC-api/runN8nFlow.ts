@@ -1,6 +1,6 @@
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
 import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 import { getBackendUrl } from '~/utils/apiUtils'
+import { NextApiResponse } from 'next'
 
 // Common function to run N8N flow - can be used anywhere
 export const runN8nFlowBackend = async (

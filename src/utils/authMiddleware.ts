@@ -46,7 +46,6 @@ export interface AuthenticatedUser {
 
 export interface AuthenticatedRequest extends NextApiRequest {
   user?: AuthenticatedUser
-  courseName?: string
 }
 
 // Middleware to verify JWT token
