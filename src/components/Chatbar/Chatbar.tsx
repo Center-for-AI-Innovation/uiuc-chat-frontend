@@ -200,7 +200,7 @@ export const Chatbar = ({
           )
           return {
             message:
-              'We are gathering your large conversation history, you\'ll receive an email with a download link shortly.',
+              "We are gathering your large conversation history, you'll receive an email with a download link shortly.",
           }
         } else if (jsonData.error) {
           return { message: `Error: ${jsonData.error}` }
