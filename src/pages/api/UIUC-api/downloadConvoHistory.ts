@@ -2,12 +2,13 @@ import axios from 'axios'
 import { type NextApiResponse } from 'next'
 import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { getBackendUrl } from '~/utils/apiUtils'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
 interface DownloadResult {
   message: string
 }
 
-export default withAuth(handler)
+export default withCourseOwnerOrAdminAccess()(handler)
 
 // Server-side API route handler
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
