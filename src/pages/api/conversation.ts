@@ -372,8 +372,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
               .delete(messages)
               .where(
                 and(
-                  eq(sql`${messages.conversation_id}
-                  ::text`, conversation.id),
+                  eq(sql`${messages.conversation_id}::text`, conversation.id),
                   gt(messages.created_at, new Date(earliestEditTime)),
                 ),
               )
