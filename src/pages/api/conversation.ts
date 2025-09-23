@@ -565,7 +565,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
                 eq(conversationsTable.project_name, course_name),
                 isNull(conversationsTable.folder_id),
               ),
-            ).returning ({ id: conversationsTable.id })
+            ).returning({ id: conversationsTable.id })
           if (deleted.length === 0) {
             return res.status(403).json({ error: 'Not allowed to delete all conversations' })
           }
