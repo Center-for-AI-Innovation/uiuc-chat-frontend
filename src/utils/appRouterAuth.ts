@@ -19,20 +19,9 @@ function getTokenFromCookies(req: NextRequest): string | null {
     {} as Record<string, string>,
   )
 
-  const names = Object.keys(cookies)
-  const name = names.find((n) => n.startsWith('oidc.user'))
-  if (!name) return null
-
-  const raw = cookies[name]
+  const raw = cookies['access_token']
   if (!raw) return null
-
-  try {
-    const decoded = decodeURIComponent(raw)
-    const parsed = JSON.parse(decoded)
-    return parsed.access_token || parsed.id_token || null
-  } catch {
-    return null
-  }
+  return raw
 }
 
 // Do we need this? It's not used anywhere.
