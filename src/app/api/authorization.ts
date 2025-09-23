@@ -200,7 +200,7 @@ export function withCourseOwnerAccess(courseName: string) {
 }
 
 // Utility function to extract course name from request (query params, body, or headers)
-export async function extractCourseName(req: NextRequest): Promise<string | null> {
+export async function extractCourseName(req: NextRequest, parsedBody?: any): Promise<string | null> {
   // 1) From query params
   const fromQuery =
     req.nextUrl.searchParams.get('courseName') ??
@@ -213,17 +213,15 @@ export async function extractCourseName(req: NextRequest): Promise<string | null
   const fromHeader = req.headers.get('x-course-name') || req.headers.get('x-project-name')
   if (fromHeader) return fromHeader
 
-  // 3) From body (only if method can have a body)
-  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
-    try {
-      const body = await req.json().catch(() => null)
-      if (body?.courseName) return body.courseName
-      if (body?.course_name) return body.course_name
-      if (body?.projectName) return body.projectName
-      if (body?.project_name) return body.project_name
-    } catch {
-      /* ignore bad JSON */
-    }
+  // 3) body only if we were given it
+  if (parsedBody && typeof parsedBody === 'object') {
+    return (
+      parsedBody.courseName ??
+      parsedBody.course_name ??
+      parsedBody.projectName ??
+      parsedBody.project_name ??
+      null
+    );
   }
 
   return null
@@ -243,8 +241,18 @@ export function withCourseAccessFromRequest(
         return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
       }
 
+      // Parse once (if JSON) and stash for downstream
+      let parsedForAuth: any | undefined;
+      const ct = req.headers.get('content-type') ?? '';
+      if (ct.includes('application/json')) {
+        parsedForAuth = await req.clone().json();
+        (req as any).__parsedBody = parsedForAuth;
+      }
+
       // Extract course name from request
-      const courseName = extractCourseName(req)
+      const courseName = await extractCourseName(req, parsedForAuth)
+      console.log('Extracted course name:', courseName)
+
       if (!courseName) {
         return NextResponse.json(
           {
