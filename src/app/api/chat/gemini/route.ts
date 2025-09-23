@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { runGeminiChat } from '~/utils/modelProviders/routes/gemini'
 import {
   GeminiModels,
   type GeminiModel,
@@ -12,8 +11,6 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 export const revalidate = 0
-
-export { runGeminiChat }
 
 async function getHandler(req: AuthenticatedRequest) {
   const apiKey = process.env.GEMINI_API_KEY
