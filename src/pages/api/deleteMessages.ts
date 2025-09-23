@@ -1,9 +1,8 @@
 import { type NextApiResponse } from 'next'
-import { AuthenticatedRequest } from '~/utils/authMiddleware'
+import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { conversations as conversationsTable, db, messages } from '~/db/dbClient'
 import { and, inArray, sql } from 'drizzle-orm'
 import { withCourseAccessFromRequest } from '~/pages/api/authorization'
-
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   console.log('In deleteMessages handler')

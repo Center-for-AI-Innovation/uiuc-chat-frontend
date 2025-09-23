@@ -1,12 +1,13 @@
 import { type NextApiResponse } from 'next'
-import { AuthenticatedRequest } from '~/utils/authMiddleware'
+import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { db, folders } from '~/db/dbClient'
-import { FolderWithConversation } from '@/types/folder'
-import { Database } from 'database.types'
-import { convertDBToChatConversation, DBConversation } from './conversation'
-import { NewFolders } from '~/db/schema'
+import { type FolderWithConversation } from '@/types/folder'
+import { type Database } from 'database.types'
+import { convertDBToChatConversation } from './conversation'
+import { type NewFolders } from '~/db/schema'
 import { eq, desc, and } from 'drizzle-orm'
 import { withCourseAccessFromRequest } from '~/pages/api/authorization'
+
 
 type Folder = Database['public']['Tables']['folders']['Row']
 

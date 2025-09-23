@@ -1,5 +1,5 @@
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import { type NextApiResponse } from 'next'
+import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { type ContextWithMetadata } from '~/types/chat'
 import { getBackendUrl } from '~/utils/apiUtils'
 

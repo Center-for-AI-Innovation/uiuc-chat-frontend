@@ -1,6 +1,6 @@
 // upload.ts
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import { type NextApiResponse } from 'next'
+import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post'
 import { s3Client, vyriadMinioClient } from '~/utils/s3Client'
 

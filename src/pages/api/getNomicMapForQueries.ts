@@ -1,5 +1,4 @@
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import { withAuth } from '~/utils/authMiddleware'
 import { getBackendUrl } from '~/utils/apiUtils'
 
 interface NomicMapData {

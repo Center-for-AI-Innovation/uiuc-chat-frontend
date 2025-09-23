@@ -1,6 +1,6 @@
 import { getBackendUrl } from '~/utils/apiUtils'
 import { type NextApiResponse } from 'next'
-import { AuthenticatedRequest} from '~/utils/authMiddleware'
+import { type AuthenticatedRequest} from '~/utils/authMiddleware'
 import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
 
