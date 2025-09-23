@@ -3,11 +3,12 @@ import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 import { NextResponse } from 'next/server'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { ensureRedisConnected } from '~/utils/redisClient'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
-const setCourseMetadata = async (req: any, res: any) => {
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     res.status(405).json({ success: false, message: 'Method not allowed' })
-    return NextResponse.json({
+    return res.status(500).json({
       success: false,
       message: 'Method not allowed, only POST requests.',
     })
@@ -82,11 +83,11 @@ const setCourseMetadata = async (req: any, res: any) => {
       [course_name]: JSON.stringify(course_metadata),
     })
 
-    return NextResponse.json({ success: true })
+    return res.status(200).json({ success: true })
   } catch (error) {
     console.log(error)
-    return NextResponse.json({ success: false })
+    return res.status(500).json({ success: false })
   }
 }
 
-export default setCourseMetadata
+export default withCourseOwnerOrAdminAccess()(handler)
