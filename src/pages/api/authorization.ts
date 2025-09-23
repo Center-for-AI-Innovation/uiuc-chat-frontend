@@ -100,9 +100,6 @@ export function withCourseAccess(courseName: string) {
         })
       }
 
-      // Add course context to request
-      req.courseName = courseName
-
       return handler(req, res)
     })
   }
@@ -141,9 +138,6 @@ export function withCourseAdminAccess(courseName: string) {
         })
       }
 
-      // Add course context to request
-      req.courseName = courseName
-
       return handler(req, res)
     })
   }
@@ -179,9 +173,6 @@ export function withCourseOwnerAccess(courseName: string) {
         })
       }
 
-      // Add course context to request
-      req.courseName = courseName
-
       return handler(req, res)
     })
   }
@@ -206,15 +197,36 @@ export function extractCourseName(req: NextApiRequest): string | null {
   return courseName
 }
 
+
 // Middleware that automatically extracts course name and applies access control
 export function withCourseAccessFromRequest(
-  accessLevel: 'any' | 'admin' | 'owner' = 'any',
+  access:
+    | 'any'
+    | 'admin'
+    | 'owner'
+    | Partial<Record<'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS', 'any' | 'admin' | 'owner'>> = 'any',
 ) {
+  type AccessLevel = 'any' | 'admin' | 'owner'
+  type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS'
+
+  const hasAccessForLevel = (
+    level: AccessLevel,
+    user: NonNullable<AuthenticatedRequest['user']>,
+    meta: CourseMetadata,
+  ): boolean => {
+    switch (level) {
+      case 'owner':
+        return isCourseOwner(user, meta)
+      case 'admin':
+        return isCourseOwner(user, meta) || isCourseAdmin(user, meta)
+      case 'any':
+      default:
+        return hasCourseAccess(user, meta)
+    }
+  }
+
   return function (
-    handler: (
-      req: AuthenticatedRequest,
-      res: NextApiResponse,
-    ) => Promise<void> | void,
+    handler: (req: AuthenticatedRequest, res: NextApiResponse) => Promise<void> | void,
   ) {
     return withAuth(async (req: AuthenticatedRequest, res: NextApiResponse) => {
       if (!req.user) {
@@ -226,8 +238,7 @@ export function withCourseAccessFromRequest(
       if (!courseName) {
         return res.status(400).json({
           error: 'Course name required',
-          message:
-            'Course name must be provided in query params, body, or headers',
+          message: 'Course name must be provided in query params, body, or headers',
         })
       }
 
@@ -240,38 +251,19 @@ export function withCourseAccessFromRequest(
         })
       }
 
-      // Check access based on level
-      let hasAccess = false
-      switch (accessLevel) {
-        case 'owner':
-          hasAccess = isCourseOwner(req.user, courseMetadata)
-          break
-        case 'admin':
-          hasAccess =
-            isCourseOwner(req.user, courseMetadata) ||
-            isCourseAdmin(req.user, courseMetadata)
-          break
-        case 'any':
-        default:
-          hasAccess = hasCourseAccess(req.user, courseMetadata)
-          break
-      }
+      // Determine required access for this HTTP method
+      const method = (req.method || 'GET').toUpperCase() as Method
+      const requiredLevel: AccessLevel =
+        typeof access === 'string' ? access : (access[method] ?? 'any')
 
-      if (!hasAccess) {
-        const accessLevelText =
-          accessLevel === 'owner'
-            ? 'owner'
-            : accessLevel === 'admin'
-              ? 'admin'
-              : 'user'
+      // Check access
+      if (!hasAccessForLevel(requiredLevel, req.user, courseMetadata)) {
+        const label = requiredLevel
         return res.status(403).json({
           error: 'Access denied',
-          message: `This action requires ${accessLevelText} access to course '${courseName}'`,
+          message: `This ${method} action requires ${label} access to course '${courseName}'`,
         })
       }
-
-      // Add course context to request
-      req.courseName = courseName
 
       return handler(req, res)
     })

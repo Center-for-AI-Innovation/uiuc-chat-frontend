@@ -4,7 +4,6 @@ import posthog from 'posthog-js'
 import { cleanConversationHistory } from './clean'
 
 export async function fetchConversationHistory(
-  user_email: string,
   searchTerm: string,
   courseName: string,
   pageParam: number,
@@ -15,7 +14,7 @@ export async function fetchConversationHistory(
   }
   try {
     const response = await fetch(
-      `/api/conversation?user_email=${user_email}&searchTerm=${searchTerm}&courseName=${courseName}&pageParam=${pageParam}`,
+      `/api/conversation?searchTerm=${searchTerm}&courseName=${courseName}&pageParam=${pageParam}`,
       {
         method: 'GET',
         headers: {
@@ -69,14 +68,14 @@ export async function fetchConversationHistory(
   return finalResponse
 }
 
-export const deleteConversationFromServer = async (id: string) => {
+export const deleteConversationFromServer = async (id: string, course_name: string) => {
   try {
     const response = await fetch('/api/conversation', {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ id }),
+      body: JSON.stringify({ id, course_name }),
     })
 
     if (!response.ok) {
@@ -88,7 +87,6 @@ export const deleteConversationFromServer = async (id: string) => {
 }
 
 export const deleteAllConversationsFromServer = async (
-  user_email: string,
   course_name: string,
 ) => {
   try {
@@ -97,7 +95,7 @@ export const deleteAllConversationsFromServer = async (
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ user_email, course_name }),
+      body: JSON.stringify({ course_name }),
     })
 
     if (!response.ok) {
@@ -360,7 +358,7 @@ export const saveConversations = (conversations: Conversation[]) => {
 //   }
 // }
 
-export async function saveConversationToServer(conversation: Conversation) {
+export async function saveConversationToServer(conversation: Conversation, course_name: string) {
   const MAX_RETRIES = 3
   let retryCount = 0
 
@@ -372,7 +370,7 @@ export async function saveConversationToServer(conversation: Conversation) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ conversation }),
+        body: JSON.stringify({ conversation, course_name }),
       })
 
       if (!response.ok) {
