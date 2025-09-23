@@ -1,6 +1,7 @@
 import { CourseMetadata } from '~/types/courseMetadata'
-import { AuthenticatedUser, AuthenticatedRequest } from '~/utils/authMiddleware'
-import { NextApiResponse } from 'next'
+import { AuthenticatedRequest } from '~/utils/authMiddleware'
+import { AuthenticatedUser } from '~/middleware'
+import { NextApiRequest, NextApiResponse } from 'next'
 import { withAuth } from '~/utils/authMiddleware'
 import { ensureRedisConnected } from '~/utils/redisClient'
 
@@ -102,7 +103,7 @@ export function withCourseAccess(courseName: string) {
       // Add course context to request
       req.courseName = courseName
 
-      return await handler(req, res)
+      return handler(req, res)
     })
   }
 }
@@ -143,7 +144,7 @@ export function withCourseAdminAccess(courseName: string) {
       // Add course context to request
       req.courseName = courseName
 
-      return await handler(req, res)
+      return handler(req, res)
     })
   }
 }
@@ -181,7 +182,7 @@ export function withCourseOwnerAccess(courseName: string) {
       // Add course context to request
       req.courseName = courseName
 
-      return await handler(req, res)
+      return handler(req, res)
     })
   }
 }
@@ -244,7 +245,12 @@ export function extractCourseName(req: NextApiRequest): string | null {
     (req.query.course_name as string) ||
     req.body?.courseName ||
     req.body?.course_name ||
+    (req.body?.projectName as string) ||
+    (req.body?.project_name as string) ||
+    req.body?.projectName ||
+    req.body?.project_name ||
     (req.headers['x-course-name'] as string) ||
+    (req.headers['x-project_name'] as string)
     null
 
   return courseName
@@ -317,7 +323,7 @@ export function withCourseAccessFromRequest(
       // Add course context to request
       req.courseName = courseName
 
-      return await handler(req, res)
+      return handler(req, res)
     })
   }
 }

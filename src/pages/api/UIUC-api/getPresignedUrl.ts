@@ -1,8 +1,8 @@
 // pages/api/getPresignedUrl.ts
 import { GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import { type NextApiResponse } from 'next'
+import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { s3Client, vyriadMinioClient } from '~/utils/s3Client'
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {

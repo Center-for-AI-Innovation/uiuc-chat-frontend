@@ -1,5 +1,4 @@
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import { withAuth } from '~/utils/authMiddleware'
 // src/pages/api/UIUC-api/getProjectStats.ts
 import { getBackendUrl } from '~/utils/apiUtils'
 import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'

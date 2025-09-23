@@ -1,5 +1,4 @@
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import { withAuth } from '~/utils/authMiddleware'
 import axios, { type AxiosResponse } from 'axios'
 import { type ContextWithMetadata } from '~/types/chat'
 

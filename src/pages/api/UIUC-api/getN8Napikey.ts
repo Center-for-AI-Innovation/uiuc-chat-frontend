@@ -1,6 +1,6 @@
 import { db } from '~/db/dbClient'
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import { type NextApiResponse } from 'next'
+import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { projects } from '~/db/schema'
 import { eq } from 'drizzle-orm'
 import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'

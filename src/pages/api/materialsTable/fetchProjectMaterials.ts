@@ -1,12 +1,12 @@
 import { db } from '~/db/dbClient'
 import posthog from 'posthog-js'
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { AuthenticatedRequest } from '~/utils/authMiddleware'
-import { CourseDocument } from '~/types/courseMaterials'
-import { and, eq, like, asc, desc, sql } from 'drizzle-orm'
+import { type NextApiResponse } from 'next'
+import { type AuthenticatedRequest } from '~/utils/authMiddleware'
+import { type CourseDocument } from '~/types/courseMaterials'
+import { and, eq, asc, desc, sql } from 'drizzle-orm'
 import { documents, documentsDocGroups, docGroups } from '~/db/schema'
-import { PgColumn } from 'drizzle-orm/pg-core'
-import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
+import { type PgColumn } from 'drizzle-orm/pg-core'
+
 
 type FetchDocumentsResponse = {
   final_docs?: CourseDocument[]

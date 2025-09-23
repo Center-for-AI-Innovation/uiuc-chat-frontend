@@ -1,13 +1,21 @@
+import { NextResponse } from 'next/server'
 import type {
   ChatCompletionMessageParam,
-  ChatCompletionMessageToolCall,
   ChatCompletionTool,
 } from 'openai/resources/chat/completions'
 import { type Conversation } from '~/types/chat'
+import {
+  withAppRouterAuth,
+  type AuthenticatedRequest,
+} from '~/utils/appRouterAuth'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
+import {
+  withAppRouterAuth,
+  type AuthenticatedRequest,
+} from '~/utils/appRouterAuth'
 
 // Change runtime to edge
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 export const revalidate = 0
@@ -30,7 +38,7 @@ const conversationToMessages = (
   return transformedData
 }
 
-export async function POST(req: Request) {
+async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
   const {
     conversation,
     tools,
@@ -101,12 +109,9 @@ export async function POST(req: Request) {
 
     if (!response.ok) {
       console.log('OpenAI API error:', response.status, response.statusText)
-      return new Response(
-        JSON.stringify({ error: `OpenAI API error: ${response.status}` }),
-        {
-          status: response.status,
-          headers: { 'Content-Type': 'application/json' },
-        },
+      return NextResponse.json(
+        { error: `OpenAI API error: ${response.status}` },
+        { status: response.status },
       )
     }
 
@@ -114,66 +119,50 @@ export async function POST(req: Request) {
 
     if (!data.choices) {
       console.log('No response from OpenAI')
-      return new Response(
-        JSON.stringify({ error: 'No response from OpenAI' }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        },
+      return NextResponse.json(
+        { error: 'No response from OpenAI' },
+        { status: 500 },
       )
     }
 
     if (!data.choices[0]?.message.tool_calls) {
       console.log('No tool calls from OpenAI')
-      return new Response(
-        JSON.stringify({
-          choices: [
-            {
-              message: {
-                content: 'No tools invoked by OpenAI',
-                role: 'assistant',
-              },
+      return NextResponse.json({
+        choices: [
+          {
+            message: {
+              content: 'No tools invoked by OpenAI',
+              role: 'assistant',
             },
-          ],
-        }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        },
-      )
+          },
+        ],
+      })
     }
 
     const toolCalls = data.choices[0].message.tool_calls
 
-    return new Response(
-      JSON.stringify({
-        choices: [
-          {
-            message: {
-              content: JSON.stringify(toolCalls),
-              role: 'assistant',
-              tool_calls: toolCalls,
-            },
+    return NextResponse.json({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify(toolCalls),
+            role: 'assistant',
+            tool_calls: toolCalls,
           },
-        ],
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      },
-    )
+        },
+      ],
+    })
   } catch (error) {
-    return new Response(
-      JSON.stringify({
+    return NextResponse.json(
+      {
         error:
           error instanceof Error
             ? error.message
             : 'An unexpected error occurred',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
       },
+      { status: 500 },
     )
   }
 }
+
+export const POST = withAppRouterAuth(handler)

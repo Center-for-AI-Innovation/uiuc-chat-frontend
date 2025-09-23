@@ -1,5 +1,5 @@
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { AuthenticatedRequest } from '~/utils/authMiddleware'
+import { type NextApiResponse } from 'next'
+import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
 type IngestResponse = {

@@ -1,6 +1,6 @@
 // src/pages/api/UIUC-api/getConversationStats.ts
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { AuthenticatedRequest } from '~/utils/authMiddleware'
+import { type NextApiResponse } from 'next'
+import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { getBackendUrl } from '~/utils/apiUtils'
 import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 

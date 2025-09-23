@@ -1,6 +1,6 @@
 // upsertCourseMetadata.ts
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import { type NextApiResponse } from 'next'
+import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { type ProjectWideLLMProviders } from '~/types/courseMetadata'
 import { encryptKeyIfNeeded } from '~/utils/crypto'
 import {
