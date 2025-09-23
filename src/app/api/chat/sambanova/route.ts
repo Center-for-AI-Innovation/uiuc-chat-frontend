@@ -11,10 +11,8 @@ import {
   SambaNovaModels,
   type SambaNovaModel,
 } from '~/utils/modelProviders/types/SambaNova'
-import {
-  withAppRouterAuth,
-  type AuthenticatedRequest,
-} from '~/utils/appRouterAuth'
+import { type AuthenticatedRequest } from '~/utils/appRouterAuth'
+import { withCourseAccessFromRequest } from '~/app/api/authorization'
 
 // Configure runtime
 export const runtime = 'nodejs'
@@ -169,4 +167,4 @@ async function getHandler(req: AuthenticatedRequest) {
   })
 }
 
-export const GET = withAppRouterAuth(getHandler)
+export const GET = withCourseAccessFromRequest('any')(getHandler)

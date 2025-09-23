@@ -10,10 +10,7 @@ import {
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
-import {
-  withAppRouterAuth,
-  type AuthenticatedRequest,
-} from '~/utils/appRouterAuth'
+import { type AuthenticatedRequest } from '~/utils/appRouterAuth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -21,6 +18,7 @@ export const fetchCache = 'force-no-store'
 export const revalidate = 0
 
 import { NextResponse } from 'next/server'
+import { withCourseAccessFromRequest } from '~/app/api/authorization'
 
 export async function runBedrockChat(
   conversation: Conversation,
@@ -147,4 +145,4 @@ async function getHandler(req: AuthenticatedRequest) {
   })
 }
 
-export const GET = withAppRouterAuth(getHandler)
+export const GET = withCourseAccessFromRequest('any')(getHandler)

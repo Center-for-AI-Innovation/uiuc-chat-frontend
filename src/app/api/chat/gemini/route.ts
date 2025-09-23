@@ -5,10 +5,8 @@ import {
   type GeminiModel,
 } from '~/utils/modelProviders/types/gemini'
 import { ProviderNames } from '~/utils/modelProviders/LLMProvider'
-import {
-  withAppRouterAuth,
-  type AuthenticatedRequest,
-} from '~/utils/appRouterAuth'
+import { type AuthenticatedRequest } from '~/utils/appRouterAuth'
+import { withCourseAccessFromRequest } from '~/app/api/authorization'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -35,4 +33,4 @@ async function getHandler(req: AuthenticatedRequest) {
   })
 }
 
-export const GET = withAppRouterAuth(getHandler)
+export const GET = withCourseAccessFromRequest('any')(getHandler)
