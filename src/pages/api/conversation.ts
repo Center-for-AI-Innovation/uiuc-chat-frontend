@@ -473,8 +473,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
         const result = await db.execute<{
           search_conversations_v3: { conversations: any[]; total_count: number }
         }>(sql`
-          SELECT *
-          FROM search_conversations_v3(
+          SELECT * FROM search_conversations_v3(
             ${user_email},
             ${courseName},
             ${searchTerm || null},
