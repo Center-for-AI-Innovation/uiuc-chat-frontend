@@ -54,6 +54,8 @@ export function withAuth(
       const rawHost = req.headers['x-forwarded-host'] ?? req.headers['host']
       const hostValue = Array.isArray(rawHost) ? rawHost[0] : rawHost
 
+      console.log('Host value:', hostValue)
+
       // Fallback to 'localhost' if undefined
       const hostname = (hostValue ?? 'localhost').split(':')[0]
       const keycloakBaseUrl = getKeycloakBaseFromHost(hostname)
