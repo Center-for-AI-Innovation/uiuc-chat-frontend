@@ -5,7 +5,7 @@ import { FolderWithConversation } from '@/types/folder'
 import { Database } from 'database.types'
 import { convertDBToChatConversation, DBConversation } from './conversation'
 import { NewFolders } from '~/db/schema'
-import { eq, desc } from 'drizzle-orm'
+import { eq, desc, and } from 'drizzle-orm'
 import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
 type Folder = Database['public']['Tables']['folders']['Row']
@@ -45,15 +45,19 @@ export function convertChatFolderToDBFolder(
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const { method } = req
+  const user_email = req.user?.email as string | undefined
+  if (!user_email) {
+    res.status(400).json({ error: 'No valid email address in token' })
+    return
+  }
 
   switch (method) {
     case 'POST':
       const {
         folder,
       }: { folder: FolderWithConversation; } = req.body
-      const email = req.user?.email as string
       //   Convert folder to DB type
-      const dbFolder = convertChatFolderToDBFolder(folder, email)
+      const dbFolder = convertChatFolderToDBFolder(folder, user_email)
 
       try {
         // Insert or update folder using DrizzleORM
@@ -80,13 +84,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       break
 
     case 'GET':
-      const user_email = req.user?.email
       try {
-        if (!user_email) {
-          res.status(400).json({ error: 'No valid email address provided' })
-          return
-        }
-
         // Query folders and their related conversations and messages using DrizzleORM
         const fetchedFolders = await db.query.folders.findMany({
           where: eq(folders.user_email, user_email),
@@ -151,9 +149,25 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       }
       try {
         // Delete folder
-        await db.delete(folders).where(eq(folders.id, deletedFolderId))
+        if (deletedFolderId && user_email) {
+          const deleted = await db.delete(folders).where(
+            and(
+              eq(folders.id, deletedFolderId),
+              eq(folders.user_email, user_email),
+            ),
+          )
+          .returning({ id: folders.id });
 
-        res.status(200).json({ message: 'Folder deleted successfully' })
+          if (deleted.length === 0) {
+            return res.status(403).json({ error: 'Not allowed to delete this folder' });
+          }
+          res.status(200).json({ message: 'Folder deleted successfully' })
+        } else {
+          res
+            .status(400)
+            .json({ error: 'Invalid user email or invalid request parameters' })
+          return
+        }
       } catch (error) {
         res.status(500).json({ error: 'Error deleting folder' })
         console.error('Error deleting folder:', error)

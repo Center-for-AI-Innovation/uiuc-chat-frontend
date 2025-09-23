@@ -121,10 +121,10 @@ export function convertDBToChatConversation(
 
       const feedbackObj = msg.feedback
         ? {
-            isPositive: msg.feedback.feedback_is_positive,
-            category: msg.feedback.feedback_category,
-            details: msg.feedback.feedback_details,
-          }
+          isPositive: msg.feedback.feedback_is_positive,
+          category: msg.feedback.feedback_category,
+          details: msg.feedback.feedback_details,
+        }
         : undefined
 
       // Process contexts to ensure both page number fields are preserved
@@ -217,10 +217,10 @@ export function convertChatToDBMessage(
           // Sanitize and truncate text to 100 characters and add ellipsis if needed
           text: context.text
             ? sanitizeText(
-                context.text.length > 100
-                  ? context.text.slice(0, 100) + '...'
-                  : context.text,
-              )
+              context.text.length > 100
+                ? context.text.slice(0, 100) + '...'
+                : context.text,
+            )
             : '',
         }
 
@@ -266,6 +266,11 @@ export function convertChatToDBMessage(
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const { method } = req
+  const user_email = req.user?.email as string | undefined
+  if (!user_email) {
+    res.status(400).json({ error: 'No valid email address in token' })
+    return
+  }
 
   switch (method) {
     case 'POST':
@@ -286,7 +291,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
           model: dbConversation.model,
           prompt: dbConversation.prompt,
           temperature: dbConversation.temperature,
-          user_email: dbConversation.user_email,
+          user_email: req.user?.email || null,
           project_name: dbConversation.project_name,
           folder_id: isUUID(dbConversation.folder_id ?? '')
             ? dbConversation.folder_id
@@ -311,7 +316,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
                 model: dbConversation.model,
                 prompt: dbConversation.prompt,
                 temperature: dbConversation.temperature,
-                user_email: dbConversation.user_email,
+                user_email: req.user?.email || null,
                 project_name: dbConversation.project_name,
                 folder_id: dbConversation.folder_id,
                 updated_at: new Date(),
@@ -347,7 +352,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
           return (
             existingMsg.content_text !== newDbMsg.content_text ||
             JSON.stringify(existingMsg.contexts) !==
-              JSON.stringify(newDbMsg.contexts)
+            JSON.stringify(newDbMsg.contexts)
           )
         })
 
@@ -367,7 +372,8 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
               .delete(messages)
               .where(
                 and(
-                  eq(sql`${messages.conversation_id}::text`, conversation.id),
+                  eq(sql`${messages.conversation_id}
+                  ::text`, conversation.id),
                   gt(messages.created_at, new Date(earliestEditTime)),
                 ),
               )
@@ -450,17 +456,12 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       break
 
     case 'GET':
-      const user_email = req.user?.email as string
       const searchTerm = req.query.searchTerm as string
       const courseName = req.query.courseName as string
       const pageParam = parseInt(req.query.pageParam as string, 0)
       // Search term is optional
       if (!user_email || !courseName || isNaN(pageParam)) {
-        console.log('first boolean:', !user_email)
-        console.log('second boolean:', !searchTerm)
-        console.log('third boolean:', !courseName)
-        console.log('fourth boolean:', isNaN(pageParam))
-        console.log('Invalid query parameters:', req.query)
+        console.error('Invalid query parameters:', req.query)
         res.status(400).json({ error: 'Invalid query parameters' })
         return
       }
@@ -473,13 +474,14 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
         const result = await db.execute<{
           search_conversations_v3: { conversations: any[]; total_count: number }
         }>(sql`
-          SELECT * FROM search_conversations_v3(
+          SELECT *
+          FROM search_conversations_v3(
             ${user_email},
             ${courseName},
             ${searchTerm || null},
             ${pageSize},
             ${offset}
-          );
+               );
         `)
 
         // Parse the result - handle potential different result structures
@@ -530,44 +532,54 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     case 'DELETE':
       const {
         id,
-        user_email: userEmail,
         course_name,
       }: {
         id?: string
-        user_email?: string
         course_name?: string
       } = req.body as {
         id?: string
-        user_email?: string
         course_name?: string
       }
 
       try {
-        if (id) {
-          // Delete single conversation using DrizzleORM
-          await db
-            .delete(conversationsTable)
-            .where(eq(conversationsTable.id, id))
-        } else if (userEmail && course_name) {
-          // Delete all conversations that are not in folders
-          await db
+        if (id && user_email) {
+          // Delete single conversation, but only if it belongs to the current user
+          const deleted = await db
             .delete(conversationsTable)
             .where(
               and(
-                eq(conversationsTable.user_email, userEmail),
+                eq(conversationsTable.id, id),
+                eq(conversationsTable.user_email, user_email),
+              ),
+            )
+            .returning({ id: conversationsTable.id })
+          if (deleted.length === 0) {
+            return res.status(403).json({ error: 'Not allowed to delete this conversation' })
+          }
+        } else if (user_email && course_name) {
+          // Delete all conversations for this user/course that are not in folders
+          const deleted = await db
+            .delete(conversationsTable)
+            .where(
+              and(
+                eq(conversationsTable.user_email, user_email),
                 eq(conversationsTable.project_name, course_name),
                 isNull(conversationsTable.folder_id),
               ),
-            )
+            ).returning ({ id: conversationsTable.id })
+          if (deleted.length === 0) {
+            return res.status(403).json({ error: 'Not allowed to delete all conversations' })
+          }
         } else {
-          res.status(400).json({ error: 'Invalid request parameters' })
+          res
+            .status(400)
+            .json({ error: 'Invalid user email or invalid request parameters' })
           return
         }
-
-        res.status(200).json({ message: 'Conversation deleted successfully' })
-      } catch (error) {
-        res.status(500).json({ error: 'Error deleting conversation' })
-        console.error('Error deleting conversation:', error)
+        res.status(200).json({ success: true })
+      } catch (err) {
+        console.error('Error deleting conversations:', err)
+        res.status(500).json({ error: 'Internal server error' })
       }
       break
 
