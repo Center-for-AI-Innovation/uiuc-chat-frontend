@@ -1,5 +1,5 @@
-import { type AuthenticatedRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import { type NextApiResponse } from 'next'
+import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { NextResponse } from 'next/server'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { ensureRedisConnected } from '~/utils/redisClient'
@@ -14,48 +14,42 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     })
   }
 
-  const course_name = req.nextUrl.searchParams.get('course_name')
-  const course_owner = req.nextUrl.searchParams.get('course_owner')
-  const course_intro_message = req.nextUrl.searchParams.get(
-    'course_intro_message',
-  )
-  const banner_image_s3 = req.nextUrl.searchParams.get('banner_image_s3')
-  const is_private = JSON.parse(
-    req.nextUrl.searchParams.get('is_private') || 'false',
-  )
+  const course_name = req.query.course_name as string
+  const course_owner = req.query.course_owner as string
+  const course_intro_message = req.query.course_intro_message as string
+  const banner_image_s3 = req.query.banner_image_s3 as string
+  const is_private = JSON.parse((req.query.is_private as string) || 'false')
   const course_admins = JSON.parse(
-    req.nextUrl.searchParams.get('course_admins') || '["rohan13@illinois.edu"]',
+    (req.query.course_admins as string) || '["rohan13@illinois.edu"]',
   )
   const approved_emails_list = JSON.parse(
-    req.nextUrl.searchParams.get('approved_emails_list') || '[]',
+    (req.query.approved_emails_list as string) || '[]',
   )
-  const openai_api_key = req.nextUrl.searchParams.get('openai_api_key') || ''
+  const openai_api_key = (req.query.openai_api_key as string) || ''
   const example_questions = JSON.parse(
-    req.nextUrl.searchParams.get('example_questions') || '[]',
+    (req.query.example_questions as string) || '[]',
   )
-  const system_prompt = JSON.parse(
-    req.nextUrl.searchParams.get('system_prompt') || '[]',
-  )
+  const system_prompt = JSON.parse((req.query.system_prompt as string) || '[]')
   const disabled_models = JSON.parse(
-    req.nextUrl.searchParams.get('disabled_models') || '[]',
+    (req.query.disabled_models as string) || '[]',
   )
   const project_description = JSON.parse(
-    req.nextUrl.searchParams.get('project_description') || '[]',
+    (req.query.project_description as string) || '[]',
   )
   const documentsOnly = JSON.parse(
-    req.nextUrl.searchParams.get('documentsOnly') || 'false',
+    (req.query.documentsOnly as string) || 'false',
   )
   const guidedLearning = JSON.parse(
-    req.nextUrl.searchParams.get('guidedLearning') || 'false',
+    (req.query.guidedLearning as string) || 'false',
   )
   const systemPromptOnly = JSON.parse(
-    req.nextUrl.searchParams.get('systemPromptOnly') || 'false',
+    (req.query.systemPromptOnly as string) || 'false',
   )
   const vector_search_rewrite_disabled = JSON.parse(
-    req.nextUrl.searchParams.get('vector_search_rewrite_disabled') || 'false',
+    (req.query.vector_search_rewrite_disabled as string) || 'false',
   )
   const allow_logged_in_users = JSON.parse(
-    req.nextUrl.searchParams.get('allow_logged_in_users') || 'false',
+    (req.query.allow_logged_in_users as string) || 'false',
   )
 
   try {

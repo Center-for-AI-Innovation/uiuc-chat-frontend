@@ -72,14 +72,17 @@ export function isCourseRegularUser(
 
 // Middleware for course-based access control
 export function withCourseAccess(courseName: string) {
-  return function(
+  return function (
     handler: (
       req: AuthenticatedRequest,
     ) => Promise<NextResponse> | NextResponse,
   ) {
     return withAppRouterAuth(async (req: AuthenticatedRequest) => {
       if (!req.user) {
-        return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
+        return NextResponse.json(
+          { error: 'User not authenticated' },
+          { status: 401 },
+        )
       }
       // Get course metadata
       const courseMetadata = await getCourseMetadata(courseName)
@@ -113,14 +116,17 @@ export function withCourseAccess(courseName: string) {
 
 // Middleware for course admin access only
 export function withCourseAdminAccess(courseName: string) {
-  return function(
+  return function (
     handler: (
       req: AuthenticatedRequest,
     ) => Promise<NextResponse> | NextResponse,
   ) {
     return withAppRouterAuth(async (req: AuthenticatedRequest) => {
       if (!req.user) {
-        return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
+        return NextResponse.json(
+          { error: 'User not authenticated' },
+          { status: 401 },
+        )
       }
       // Get course metadata
       const courseMetadata = await getCourseMetadata(courseName)
@@ -158,14 +164,17 @@ export function withCourseAdminAccess(courseName: string) {
 
 // Middleware for course owner access only
 export function withCourseOwnerAccess(courseName: string) {
-  return function(
+  return function (
     handler: (
       req: AuthenticatedRequest,
     ) => Promise<NextResponse> | NextResponse,
   ) {
     return withAppRouterAuth(async (req: AuthenticatedRequest) => {
       if (!req.user) {
-        return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
+        return NextResponse.json(
+          { error: 'User not authenticated' },
+          { status: 401 },
+        )
       }
 
       // Get course metadata
@@ -210,7 +219,8 @@ export async function extractCourseName(req: NextRequest, parsedBody?: any): Pro
   if (fromQuery) return fromQuery
 
   // 2) From headers
-  const fromHeader = req.headers.get('x-course-name') || req.headers.get('x-project-name')
+  const fromHeader =
+    req.headers.get('x-course-name') || req.headers.get('x-project-name')
   if (fromHeader) return fromHeader
 
   // 3) body only if we were given it
@@ -231,14 +241,17 @@ export async function extractCourseName(req: NextRequest, parsedBody?: any): Pro
 export function withCourseAccessFromRequest(
   accessLevel: 'any' | 'admin' | 'owner' = 'any',
 ) {
-  return function(
+  return function (
     handler: (
       req: AuthenticatedRequest,
     ) => Promise<NextResponse> | NextResponse,
   ) {
     return withAppRouterAuth(async (req: AuthenticatedRequest) => {
       if (!req.user) {
-        return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
+        return NextResponse.json(
+          { error: 'User not authenticated' },
+          { status: 401 },
+        )
       }
 
       // Parse once (if JSON) and stash for downstream
@@ -251,12 +264,11 @@ export function withCourseAccessFromRequest(
 
       // Extract course name from request
       const courseName = await extractCourseName(req, parsedForAuth)
-      console.log('Extracted course name:', courseName)
-
       if (!courseName) {
         return NextResponse.json(
           {
-            error: 'Course name required', message:
+            error: 'Course name required',
+            message:
               'Course name must be provided in query params, body, or headers',
           },
           { status: 400 },
