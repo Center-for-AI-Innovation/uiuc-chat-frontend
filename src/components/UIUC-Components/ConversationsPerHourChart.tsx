@@ -12,6 +12,7 @@ import axios from 'axios'
 import { Text, Title } from '@mantine/core'
 import { LoadingSpinner } from './LoadingSpinner'
 import { montserrat_paragraph } from 'fonts'
+import { useTranslation } from 'next-i18next'
 
 interface ChartProps {
   data?: { [hour: string]: number }
@@ -24,6 +25,7 @@ const ConversationsPerHourChart: React.FC<ChartProps> = ({
   isLoading,
   error,
 }) => {
+  const { t } = useTranslation('common')
   const ensureAllHours = (hourData: { [hour: string]: number } | undefined) => {
     const fullHours = Array.from({ length: 24 }, (_, i) => ({
       hour: i.toString(),
@@ -41,7 +43,7 @@ const ConversationsPerHourChart: React.FC<ChartProps> = ({
   if (isLoading) {
     return (
       <Text>
-        Loading chart <LoadingSpinner size="xs" />
+        {t('analysis.loadingChart')} <LoadingSpinner size="xs" />
       </Text>
     )
   }
@@ -51,7 +53,7 @@ const ConversationsPerHourChart: React.FC<ChartProps> = ({
   }
 
   if (!data) {
-    return <Text>No data available</Text>
+    return <Text>{t('analysis.noDataAvailable')}</Text>
   }
 
   const chartData = ensureAllHours(data)
@@ -71,7 +73,7 @@ const ConversationsPerHourChart: React.FC<ChartProps> = ({
               fontSize: '.75rem',
             }}
             label={{
-              value: 'Hour',
+              value: t('analysis.hour') as unknown as string,
               position: 'insideBottom',
               offset: -5,
               fill: 'var(--foreground)',
@@ -86,7 +88,7 @@ const ConversationsPerHourChart: React.FC<ChartProps> = ({
               fontSize: '.75rem',
             }}
             label={{
-              value: 'Number of Conversations',
+              value: t('analysis.numberOfConversations') as unknown as string,
               angle: -90,
               position: 'center',
               fill: 'var(--foreground)',
@@ -101,13 +103,21 @@ const ConversationsPerHourChart: React.FC<ChartProps> = ({
               color: '#fff',
               fontFamily: montserrat_paragraph.style.fontFamily,
             }}
-            formatter={(value) => [`Conversations: ${value}`]}
-            labelFormatter={(label) => `Hour: ${label}`}
+            formatter={(value) => {
+              const numeric = typeof value === 'number' ? value : Number(value)
+              return [
+                t('analysis.conversationsCount', { count: numeric }) as unknown as string,
+                t('analysis.numberOfConversations') as unknown as string,
+              ]
+            }}
+            labelFormatter={(label) =>
+              t('analysis.hourLabel', { hour: label }) as unknown as string
+            }
           />
           <Bar
             dataKey="count"
             fill="var(--dashboard-stat)"
-            name="Number of Conversations"
+            name={t('analysis.numberOfConversations') as unknown as string}
           />
         </BarChart>
       </ResponsiveContainer>

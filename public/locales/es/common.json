@@ -643,6 +643,7 @@
     "allTimeUniqueParticipants": "Participantes únicos de todos los tiempos",
     "messages": "Mensajes",
     "totalExchanges": "Intercambios totales",
+    "vsLastWeek": "vs la semana pasada",
     "userEngagementMetrics": "Métricas de Participación de Usuarios",
     "userEngagementDesc": "Desglose detallado de patrones de interacción de usuarios",
     "conversationsPerUser": "Conversaciones por Usuario",
@@ -656,6 +657,7 @@
     "messagesPerConversationUnit": "mensajes / conversación",
     "conversationVisualizations": "Visualizaciones de Conversaciones",
     "selectTimeRange": "Selecciona un rango de tiempo para filtrar las visualizaciones a continuación",
+    "pickDateRange": "Selecciona un rango de fechas",
     "allTime": "Todo el Tiempo",
     "lastWeek": "Última Semana",
     "lastMonth": "Último Mes", 
@@ -702,11 +704,17 @@
     "conceptMapTitle": "Mapa Conceptual de Consultas de Usuario",
     "conceptMapOfUserQueries": "Mapa Conceptual de Consultas de Usuario",
     "conceptMapDescription": "El Mapa Conceptual visualiza todas las consultas realizadas en este proyecto:",
-    "conceptMapBullets": {
-      "similar": "Los temas similares se agrupan",
-      "different": "Los temas diferentes están posicionados más separados",
-      "themes": "Los temas comunes y las brechas de conocimiento se hacen visibles"
-    },
+    "similarTopics": "Temas similares",
+    "clusterTogether": "se agrupan",
+    "differentTopics": "Temas diferentes",
+    "positionedFurtherApart": "se posicionan más separados",
+    "commonThemes": "Temas comunes",
+    "knowledgeGapsVisible": "y se hacen visibles lagunas de conocimiento",
+    "learnMoreSemantic": "Aprende más sobre",
+    "semanticSimilarityVisualizations": "visualizaciones de similitud semántica",
+    "visualizationNote": "Ten en cuenta que no puedes iniciar sesión ni editar este mapa. Es solo para tu visualización. Por favor",
+    "contactUs": "contáctanos",
+    "withQuestions": "con preguntas.",
     "learnMoreSemantic": "Aprende más sobre visualizaciones de similitud semántica",
     "visualizationNotAvailable": "Visualización no disponible",
     "visualizationNotAvailableBody": "La visualización no está disponible en este momento. Por favor, inténtalo de nuevo más tarde.",
@@ -730,6 +738,13 @@
     "check_docs": "Consulta",
     "our_docs": "nuestra documentación",
     "process_data": "para ver ejemplos de código para procesar estos datos.",
+    "exportDocuments": {
+      "started_gathering": "Hemos comenzado a recopilar tus documentos, recibirás un correo electrónico en breve.",
+      "ready_for_download": "Tus documentos están listos para descargar.",
+      "unexpected_response_format": "Formato de respuesta inesperado del servidor.",
+      "error_exporting": "Error al exportar documentos.",
+      "course_name_required": "El nombre del curso es obligatorio."
+    },
     "llm_providers": {
       "update_success": {
         "title": "Proveedores LLM actualizados",

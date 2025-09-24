@@ -49,6 +49,7 @@ import ConversationsPerDayOfWeekChart from './ConversationsPerDayOfWeekChart'
 import ConversationsPerHourChart from './ConversationsPerHourChart'
 import { LoadingSpinner } from './LoadingSpinner'
 import ModelUsageChart from './ModelUsageChart'
+import { useTranslation } from 'next-i18next'
 
 const useStyles = createStyles((theme: MantineTheme) => ({
   downloadButton: {
@@ -128,6 +129,7 @@ const formatPercentageChange = (value: number | null | undefined) => {
 
 const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   const { classes, theme } = useStyles()
+  const { t, i18n } = useTranslation('common')
   const auth = useAuth()
   const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
     null,
@@ -416,7 +418,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
           <title>{course_name}</title>
           <meta
             name="description"
-            content="The AI teaching assistant built for students at UIUC."
+            content={t('analysis.metaDescription') as unknown as string}
           />
           <link rel="icon" href="/favicon.ico" />
           {/* <Header /> */}
@@ -450,7 +452,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     className={`px-4 text-[--dashboard-foreground] ${montserrat_heading.variable} font-montserratHeading`}
                     style={{ flexGrow: 2 }}
                   >
-                    Usage Overview
+                    {t('analysis.usageOverview')}
                   </Title>
                   <Button
                     className={`${montserrat_paragraph.variable} font-montserratParagraph ${classes.downloadButton} w-full bg-[--dashboard-button] px-2 text-sm hover:bg-[--dashboard-button-hover] sm:w-auto sm:px-4 sm:text-base`}
@@ -463,10 +465,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     }
                     onClick={() => handleDownload(course_name)}
                   >
-                    <span className="hidden sm:inline">
-                      Download Conversation History
-                    </span>
-                    <span className="sm:hidden">Download History</span>
+                    <span className="hidden sm:inline">{t('analysis.downloadConversationHistory')}</span>
+                    <span className="sm:hidden">{t('analysis.downloadHistory')}</span>
                   </Button>
                 </div>
 
@@ -477,14 +477,14 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                       order={4}
                       className={`${montserrat_heading.variable} font-montserratHeading`}
                     >
-                      Project Analytics
+                      {t('analysis.projectAnalytics')}
                     </Title>
                     <Text
                       size="sm"
                       color="var(--dashboard-foreground-faded)"
                       mt={2}
                     >
-                      Overview of project engagement and usage statistics
+                      {t('analysis.projectAnalyticsDesc')}
                     </Text>
                   </div>
 
@@ -494,12 +494,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] transition-all duration-200">
                       <div className="mb-3 flex items-center justify-between">
                         <div>
-                          <Text size="sm" weight={500} mb={1}>
-                            Total Conversations
-                          </Text>
-                          <Text size="xs" opacity={0.7}>
-                            All-time chat sessions
-                          </Text>
+                          <Text size="sm" weight={500} mb={1}>{t('analysis.totalConversations')}</Text>
+                          <Text size="xs" opacity={0.7}>{t('analysis.allTimeChatSessions')}</Text>
                         </div>
                         <div className="rounded-full bg-[--dashboard-background-dark] p-2">
                           <IconMessageCircle2
@@ -566,7 +562,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                                   {formatPercentageChange(
                                     trend.percentage_change,
                                   )}
-                                  % vs last week
+                                  % {t('analysis.vsLastWeek')}
                                 </Text>
                               </div>
                             )
@@ -579,12 +575,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] transition-all duration-200">
                       <div className="mb-3 flex items-center justify-between">
                         <div>
-                          <Text size="sm" weight={500} mb={1}>
-                            Total Users
-                          </Text>
-                          <Text size="xs" opacity={0.7}>
-                            All-time unique participants
-                          </Text>
+                          <Text size="sm" weight={500} mb={1}>{t('analysis.totalUsers')}</Text>
+                          <Text size="xs" opacity={0.7}>{t('analysis.allTimeUniqueParticipants')}</Text>
                         </div>
                         <div className="rounded-full bg-[--dashboard-background-dark] p-2">
                           <IconUsers
@@ -649,7 +641,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                                   {formatPercentageChange(
                                     trend.percentage_change,
                                   )}
-                                  % vs last week
+                                  % {t('analysis.vsLastWeek')}
                                 </Text>
                               </div>
                             )
@@ -662,12 +654,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                     <div className="rounded-lg bg-[--dashboard-background] p-4 text-[--dashboard-foreground] transition-all duration-200">
                       <div className="mb-3 flex items-center justify-between">
                         <div>
-                          <Text size="sm" weight={500} mb={1}>
-                            Messages
-                          </Text>
-                          <Text size="xs" opacity={0.7}>
-                            Total exchanges
-                          </Text>
+                          <Text size="sm" weight={500} mb={1}>{t('analysis.messages')}</Text>
+                          <Text size="xs" opacity={0.7}>{t('analysis.totalExchanges')}</Text>
                         </div>
                         <div className="rounded-full bg-[--dashboard-background-dark] p-2">
                           <IconMessage2
@@ -734,7 +722,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                                   {formatPercentageChange(
                                     trend.percentage_change,
                                   )}
-                                  % vs last week
+                                  % {t('analysis.vsLastWeek')}
                                 </Text>
                               </div>
                             )
@@ -794,9 +782,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                               1,
                             ) || '0'}
                           </Text>
-                          <Text size="sm" color="dimmed">
-                            conversations / user
-                          </Text>
+                          <Text size="sm" color="dimmed">{t('analysis.conversationsPerUserUnit')}</Text>
                         </div>
                       </div>
 
@@ -827,9 +813,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                             {courseStats?.avg_messages_per_user?.toFixed(1) ||
                               '0'}
                           </Text>
-                          <Text size="sm" color="dimmed">
-                            messages / user
-                          </Text>
+                          <Text size="sm" color="dimmed">{t('analysis.messagesPerUserUnit')}</Text>
                         </div>
                       </div>
 
@@ -861,9 +845,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                               1,
                             ) || '0'}
                           </Text>
-                          <Text size="sm" color="dimmed">
-                            messages / conversation
-                          </Text>
+                          <Text size="sm" color="dimmed">{t('analysis.messagesPerConversationUnit')}</Text>
                         </div>
                       </div>
                     </div>
@@ -878,12 +860,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                   <div className="rounded-xl bg-[--dashboard-background-faded] p-6 lg:col-span-2">
                     <div className="flex items-center justify-between">
                       <div>
-                        <Title order={4} className="text-[--foreground]">
-                          Conversation Visualizations
-                        </Title>
-                        <Text size="sm" color="dimmed" mt={1}>
-                          Select a time range to filter the visualizations below
-                        </Text>
+                        <Title order={4} className="text-[--foreground]">{t('analysis.conversationVisualizations')}</Title>
+                        <Text size="sm" color="dimmed" mt={1}>{t('analysis.selectTimeRange')}</Text>
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         <Select
@@ -897,11 +875,11 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                             }
                           }}
                           data={[
-                            { value: 'all', label: 'All Time' },
-                            { value: 'last_week', label: 'Last Week' },
-                            { value: 'last_month', label: 'Last Month' },
-                            { value: 'last_year', label: 'Last Year' },
-                            { value: 'custom', label: 'Custom Range' },
+                            { value: 'all', label: t('analysis.allTime') as unknown as string },
+                            { value: 'last_week', label: t('analysis.lastWeek') as unknown as string },
+                            { value: 'last_month', label: t('analysis.lastMonth') as unknown as string },
+                            { value: 'last_year', label: t('analysis.lastYear') as unknown as string },
+                            { value: 'custom', label: t('analysis.customRange') as unknown as string },
                           ]}
                           styles={(theme: MantineTheme) => ({
                             input: {
@@ -936,7 +914,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                             w={200}
                             value={dateRange}
                             onChange={setDateRange}
-                            placeholder="Pick date range"
+                            placeholder={t('analysis.pickDateRange') as unknown as string}
+                            valueFormat={(i18n as any)?.language === 'es' ? 'DD/MM/YYYY' : 'MM/DD/YYYY'}
                             styles={(theme: MantineTheme) => ({
                               input: {
                                 backgroundColor: 'var(--button)',
@@ -986,9 +965,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           />
                         )}
                         {totalCount > 0 && (
-                          <Text size="sm" color="dimmed">
-                            {totalCount} conversations in selected range
-                          </Text>
+                          <Text size="sm" color="dimmed">{t('analysis.conversationsInSelectedRange', { count: totalCount })}</Text>
                         )}
                       </div>
                     </div>
@@ -1000,24 +977,18 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         order={4}
                         className={`${montserrat_heading.variable} font-montserratHeading`}
                       >
-                        No conversation data available for selected time range
+                        {t('analysis.noConversationData')}
                       </Title>
                       <Text size="lg" mt="md">
-                        Try selecting a different time range to view the
-                        visualizations
+                        {t('analysis.tryDifferentTimeRange')}
                       </Text>
                     </div>
                   ) : (
                     <>
                       {/* Model Usage Chart */}
                       <div className="rounded-xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-200">
-                        <Title order={4} mb="md" align="left">
-                          Model Usage Distribution
-                        </Title>
-                        <Text size="sm" mb="xl">
-                          Distribution of AI models used across all
-                          conversations
-                        </Text>
+                        <Title order={4} mb="md" align="left">{t('analysis.modelUsageDistribution')}</Title>
+                        <Text size="sm" mb="xl">{t('analysis.aiModelsUsed')}</Text>
                         <ModelUsageChart
                           data={modelUsageData}
                           isLoading={modelUsageLoading}
@@ -1027,13 +998,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
                       {/* Conversations Per Day Chart */}
                       <div className="rounded-xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-200">
-                        <Title order={4} mb="md" align="left">
-                          Conversations Per Day
-                        </Title>
-                        <Text size="sm" mb="xl">
-                          Shows the total number of conversations that occurred
-                          on each calendar day
-                        </Text>
+                        <Title order={4} mb="md" align="left">{t('analysis.conversationsPerDay')}</Title>
+                        <Text size="sm" mb="xl">{t('analysis.showsTotalConversations')}</Text>
                         <ConversationsPerDayChart
                           data={filteredConversationStats?.per_day}
                           isLoading={filteredStatsLoading}
@@ -1045,20 +1011,15 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                       <div className="rounded-xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-200">
                         <div className="mb-4 flex items-center justify-between">
                           <div>
-                            <Title order={4}>
-                              Aggregated Conversation Breakdown
-                            </Title>
-                            <Text size="sm" mt={1}>
-                              View conversation patterns by hour of day or day
-                              of week
-                            </Text>
+                            <Title order={4}>{t('analysis.aggregatedConversationBreakdown')}</Title>
+                            <Text size="sm" mt={1}>{t('analysis.viewConversationPatterns')}</Text>
                           </div>
                           <Select
                             value={view}
                             onChange={(value) => setView(value || 'hour')}
                             data={[
-                              { value: 'hour', label: 'By Hour' },
-                              { value: 'weekday', label: 'By Day of Week' },
+                              { value: 'hour', label: t('analysis.byHour') as unknown as string },
+                              { value: 'weekday', label: t('analysis.byDayOfWeek') as unknown as string },
                             ]}
                             className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                             styles={(theme) => ({
@@ -1116,13 +1077,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
                       {/* Heatmap Chart */}
                       <div className="rounded-xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-200">
-                        <Title order={4} mb="md" align="left">
-                          Conversations Per Day and Hour
-                        </Title>
-                        <Text size="sm" mb="xl">
-                          A heatmap showing conversation density across both
-                          days and hours
-                        </Text>
+                        <Title order={4} mb="md" align="left">{t('analysis.conversationsPerDayAndHour')}</Title>
+                        <Text size="sm" mb="xl">{t('analysis.heatmapConversationDensity')}</Text>
                         <ConversationsHeatmapByHourChart
                           data={filteredConversationStats?.heatmap}
                           isLoading={filteredStatsLoading}
