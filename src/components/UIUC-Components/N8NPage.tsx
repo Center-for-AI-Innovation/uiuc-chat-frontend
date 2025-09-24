@@ -335,7 +335,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
         <title>{t('tools_section.metaDescription')} - {course_name}</title>
         <meta
           name="description"
-          content={t('tools_section.metaDescription')}
+          content={t('tools_section.metaDescription') || undefined}
         />
         <link rel="icon" href="/favicon.ico" />
         {/* <Header /> */}
@@ -597,7 +597,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                           // label="n8n API Key"
                           type="password"
                           description={t('tools_section.apiKeyDescription')}
-                          placeholder={t('tools_section.apiKeyPlaceholder')}
+                          placeholder={t('tools_section.apiKeyPlaceholder') || undefined}
                           value={n8nApiKeyTextbox}
                           onChange={(event) =>
                             setN8nApiKeyTextbox(event.target.value)

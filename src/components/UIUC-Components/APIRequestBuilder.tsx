@@ -64,13 +64,13 @@ export default function APIRequestBuilder({
     if (courseMetadata?.system_prompt) {
       setSystemPrompt(courseMetadata.system_prompt)
     } else {
-      setSystemPrompt(t('api.default_system_prompt'))
+      setSystemPrompt(t('api.default_system_prompt') || '')
     }
   }, [courseMetadata?.system_prompt, t])
 
   useEffect(() => {
     if (!userQuery) {
-      setUserQuery(t('api.default_user_query'))
+      setUserQuery(t('api.default_user_query') || '')
     }
   }, [userQuery, t])
 
