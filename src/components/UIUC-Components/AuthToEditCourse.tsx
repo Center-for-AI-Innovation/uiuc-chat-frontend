@@ -21,11 +21,15 @@ export const AuthComponent = ({ course_name }: { course_name: string }) => {
       <main className="justify-center; course-page-main flex min-h-screen flex-col items-center">
         <div className="container flex flex-col items-center justify-center gap-8 px-4 py-8 ">
           <Link href="/">
-            <h2 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
+            <h2
+              className={`text-5xl font-extrabold tracking-tight text-white sm:text-[5rem] ${montserrat_heading.variable} font-montserratHeading`}
+            >
               {' '}
-              UIUC.
-              <span className="${inter.style.fontFamily} text-[hsl(280,100%,70%)]">
-                chat
+              <span className="${inter.style.fontFamily} mr-2 text-[--illinois-orange]">
+                Illinois
+              </span>
+              <span className="${inter.style.fontFamily} text-[--foreground]">
+                Chat
               </span>{' '}
             </h2>
           </Link>
@@ -33,9 +37,7 @@ export const AuthComponent = ({ course_name }: { course_name: string }) => {
         <div className="items-left container flex flex-col justify-center gap-2 py-0">
           <Flex direction="column" align="center" justify="center">
             <Title
-              className={`${montserrat_heading.variable} font-montserratHeading`}
-              variant="gradient"
-              gradient={{ from: 'gold', to: 'white', deg: 50 }}
+              className={`${montserrat_heading.variable} font-montserratHeading text-[--foreground]`}
               order={2}
               p="xl"
             >
@@ -43,7 +45,7 @@ export const AuthComponent = ({ course_name }: { course_name: string }) => {
             </Title>
             <Link href="/sign-in">
               <Button
-                className="kas-gradient-text btn"
+                className=" btn bg-[--button] text-white hover:bg-[--button-hover]"
                 style={{ fontSize: '24px' }}
                 onClick={handleSignIn}
               >

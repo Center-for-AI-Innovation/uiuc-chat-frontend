@@ -4,54 +4,52 @@ import {
   ActionIcon,
   Box,
   Button,
-  Modal,
-  Group,
-  MultiSelect,
-  Text,
-  Paper,
-  Center,
-  Stack,
-  Image,
-  createStyles,
-  MantineTheme,
-  TextInput,
   Code,
   CopyButton,
-  Tooltip,
+  Group,
+  Image,
   Indicator,
+  Modal,
+  MultiSelect,
+  Paper,
+  Stack,
+  Text,
+  TextInput,
+  Tooltip,
+  createStyles,
+  type MantineTheme,
 } from '@mantine/core'
+import { notifications, showNotification } from '@mantine/notifications'
 import {
   IconAlertTriangle,
   IconCheck,
   IconCopy,
   IconEye,
-  IconFileExport,
   IconTrash,
   IconX,
 } from '@tabler/icons-react'
-import Link from 'next/link'
-import { DataTable, DataTableSortStatus } from 'mantine-datatable'
-import { createRef, useEffect, useRef, useState } from 'react'
 import axios from 'axios'
-import { notifications, showNotification } from '@mantine/notifications'
-import styled, { createGlobalStyle } from 'styled-components'
+import { DataTable, type DataTableSortStatus } from 'mantine-datatable'
+import { createRef, useEffect, useRef, useState } from 'react'
+import { createGlobalStyle } from 'styled-components'
 
-import { CourseDocument, DocumentGroup } from 'src/types/courseMaterials'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { fetchPresignedUrl } from '~/utils/apiUtils'
+import { useMediaQuery } from '@mantine/hooks'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import { useRouter } from 'next/router'
+import {
+  type CourseDocument,
+  type DocumentGroup,
+} from 'src/types/courseMaterials'
 import {
   useAppendToDocGroup,
   useGetDocumentGroups,
   useRemoveFromDocGroup,
 } from '~/hooks/docGroupsQueries'
-import { LoadingSpinner } from './LoadingSpinner'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { useMediaQuery } from '@mantine/hooks'
-import { IconInfoCircleFilled } from '@tabler/icons-react'
 import { handleExport } from '~/pages/api/UIUC-api/exportAllDocuments'
-import { useRouter } from 'next/router'
-import { tabWidth } from 'prettier.config.cjs'
-import { useTranslation } from 'next-i18next';
+import { fetchPresignedUrl } from '~/utils/apiUtils'
+import { LoadingSpinner } from './LoadingSpinner'
+import { showToastOnUpdate } from './MakeQueryAnalysisPage'
 
 // export const getCurrentPageName = () => {
 //   const router = useRouter()
@@ -62,12 +60,16 @@ const useStyles = createStyles((theme) => ({}))
 
 const GlobalStyle = createGlobalStyle`
   .mantine-Pagination-control[data-active="true"] {
-    background-color: blueviolet;
+    background-color: var(--illinois-orange);
     color: white;
   }
 `
 
 const PAGE_SIZE = 100
+
+const dataTableTitleStyles = {
+  color: 'var(--table-header)',
+}
 
 export function ProjectFilesTable({
   course_name,
@@ -103,7 +105,6 @@ export function ProjectFilesTable({
   const [showDeleteButton, setShowDeleteButton] = useState(false)
   const [selectedCount, setSelectedCount] = useState(0)
   const router = useRouter()
-  const { t } = useTranslation('common');
 
   const getCurrentPageName = () => {
     return router.asPath.slice(1).split('/')[0] as string
@@ -368,45 +369,10 @@ export function ProjectFilesTable({
         )
       }
 
-      showNotification({
-        title: 'Error',
-        message: 'Failed to delete documents',
-        color: 'red',
-        icon: <IconTrash size={24} />,
-      })
+      showToastOnFileDeleted(theme, true)
     },
     onSettled: async () => {
-      showNotification({
-        id: 'file-deleted-from-materials',
-        withCloseButton: true,
-        autoClose: 5000,
-        title: t('alerts.deleting_file'),
-        message: t('alerts.file_deleting_bg'),
-        icon: <IconCheck />,
-        styles: {
-          root: {
-            backgroundColor: theme.colors.nearlyWhite,
-            borderColor: theme.colors.aiPurple,
-          },
-          title: {
-            color: theme.colors.nearlyBlack,
-          },
-          description: {
-            color: theme.colors.nearlyBlack,
-          },
-          closeButton: {
-            color: theme.colors.nearlyBlack,
-            '&:hover': {
-              backgroundColor: theme.colors.dark[1],
-            },
-          },
-          icon: {
-            backgroundColor: theme.colors.successBackground,
-            padding: '4px',
-          },
-        },
-        loading: false,
-      })
+      showToastOnFileDeleted(theme)
       setShowDeleteButton(false)
       setSelectedCount(0)
       const sleep = (ms: number) =>
@@ -429,7 +395,7 @@ export function ProjectFilesTable({
       icon: <IconTrash size={24} />,
     })
 
-    return <ErrorStateForProjectFilesTable />
+    return errorStateForProjectFilesTable()
   }
 
   const showToastOnFileDeleted = (theme: MantineTheme, was_error = false) => {
@@ -442,17 +408,17 @@ export function ProjectFilesTable({
         // onOpen: () => console.debug('mounted'),
         autoClose: 5000,
         // position="top-center",
-        title: was_error ? t('alerts.error_deleting_file') : t('alerts.deleting_file'),
+        title: was_error ? 'Error deleting file' : 'Deleting file...',
         message: was_error
-          ? t('alerts.error_deleting_file_message')
-          : t('alerts.file_deleting_bg'),
+          ? "An error occurred while deleting the file. Please try again and I'd be so grateful if you email rohan13@illinois.edu to report this bug."
+          : 'The file is being deleted in the background.',
         icon: was_error ? <IconAlertTriangle /> : <IconCheck />,
         styles: {
           root: {
             backgroundColor: theme.colors.nearlyWhite,
             borderColor: was_error
               ? theme.colors.errorBorder
-              : theme.colors.aiPurple,
+              : 'var(--dashboard-background-dark)',
           },
           title: {
             color: theme.colors.nearlyBlack,
@@ -496,7 +462,7 @@ export function ProjectFilesTable({
           backgroundColor: theme.colors.nearlyWhite,
           borderColor: was_error
             ? theme.colors.errorBorder
-            : theme.colors.aiPurple,
+            : 'var(--dashboard-background-dark)',
         },
         title: {
           color: theme.colors.nearlyBlack,
@@ -547,57 +513,62 @@ export function ProjectFilesTable({
       <GlobalStyle />
       {/* Fixed Header Section */}
       <div className="flex-none">
-        <div className="mb-2 flex items-center justify-between border-b border-gray-700 px-4 pt-4 sm:px-6 md:px-8 ">
+        <div className="flex items-center justify-between px-4 pt-4 sm:px-6 md:px-8 ">
           <div className="flex items-center md:space-x-4">
             <button
               onClick={() => onTabChange('success')}
               className={`rounded-t-lg px-4 py-3 font-medium transition-colors duration-200 ${
                 tabValue === 'success'
-                  ? 'border-b-2 border-purple-500 bg-purple-600/20 text-white'
-                  : 'text-gray-400 hover:bg-purple-600/10 hover:text-white'
+                  ? 'border-b-2 border-[--table-header-background] bg-[--table-header-background] text-[--dashboard-foreground]'
+                  : 'bg-[--dashboard-background] text-[--foreground] hover:bg-[--dashboard-background-faded] hover:text-[--foreground]'
               } ${montserrat_heading.variable} font-montserratHeading`}
             >
-              {t('project_files.success')}
+              Success
             </button>
+
             <Indicator
               inline
               disabled={!failedCount}
               label={failedCount}
-              color="grape"
+              color="var(--dashboard-button)"
               offset={6}
               size={16}
             >
               <button
                 onClick={() => onTabChange('failed')}
-                className={`rounded-t-lg px-4 py-3 font-medium transition-colors duration-200 ${
+                className={`rounded-t-lg px-4 py-3 font-medium duration-200 ${
                   tabValue === 'failed'
-                    ? 'border-b-2 border-purple-500 bg-purple-600/20 text-white'
-                    : 'text-gray-400 hover:bg-purple-600/10 hover:text-white'
+                    ? 'border-b-2 border-[--table-header-background] bg-[--table-header-background] text-[--dashboard-foreground]'
+                    : 'bg-[--dashboard-background] text-[--foreground] hover:bg-[--dashboard-background-faded] hover:text-[--foreground]'
                 } ${montserrat_heading.variable} font-montserratHeading`}
               >
-                {t('project_files.failed')}
+                Failed
               </button>
             </Indicator>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 px-2 md:gap-4">
+          <div className="flex flex-wrap items-center gap-2">
             {tabValue !== 'failed' && selectedRecords.length > 0 && (
               <Paper className="w-full bg-transparent sm:w-auto">
-                <div className="relative flex w-full flex-col items-start sm:flex-row sm:items-center">
+                <div className="relative mb-2 flex w-full flex-col items-start gap-4 sm:flex-row sm:items-center">
                   <Tooltip
-                    label={t('project_files.all_selected_docs_added') || ''}
+                    label="All selected documents will be added to the group"
                     position="top"
                     withArrow
+                    style={{
+                      color: 'var(--tooltip)',
+                      backgroundColor: 'var(--tooltip-background)',
+                    }}
                   >
                     <Button
                       onClick={() => {
                         setShowMultiSelect(true)
                       }}
-                      className={`mb-2 w-full bg-purple-600/50 px-4 py-2 text-sm transition-colors duration-300 hover:bg-purple-600 sm:mb-0 sm:mr-4 sm:w-auto sm:px-6 sm:py-3 sm:text-base ${montserrat_paragraph.variable} border-0 font-montserratParagraph focus:outline-none focus:ring-0`}
+                      className={`mb-2 w-full bg-[--dashboard-button] px-4 py-2 text-xs transition-colors duration-300 hover:bg-[--dashboard-button-hover] sm:mb-0 sm:w-auto sm:px-6 sm:py-3 ${montserrat_paragraph.variable} border-0 font-montserratParagraph focus:outline-none focus:ring-0`}
                     >
-                      <span className="block sm:hidden">{t('project_files.add_to_groups')}</span>
+                      <span className="block sm:hidden">Add to Groups</span>
                       <span className="hidden sm:block">
-                        {t('project_files.add_document_to_groups')}
+                        Add Document to Groups
                       </span>
                     </Button>
                   </Tooltip>
@@ -619,100 +590,187 @@ export function ProjectFilesTable({
                         value={selectedDocGroups}
                         placeholder={
                           isLoadingDocumentGroups
-                            ? t('project_files.loading') as string
-                            : t('project_files.select_group') as string
+                            ? 'Loading...'
+                            : 'Select Group'
                         }
                         searchable={!isLoadingDocumentGroups}
                         nothingFound={
                           isLoadingDocumentGroups
-                            ? t('project_files.loading')
-                            : t('project_files.no_groups_create')
+                            ? 'Loading...'
+                            : 'No groups... Start typing to create a new one ✨'
                         }
                         creatable
-                        getCreateLabel={(query) => t('project_files.create_group', { name: query })}
+                        getCreateLabel={(query) => `+ Create "${query}"`}
                         onCreate={(doc_group_name) => ({
                           value: doc_group_name,
                           label: doc_group_name,
                         })}
                         onChange={async (newSelectedGroupsFromDropdown) => {
-                          const currentDocumentsQueryKey = ['documents', course_name, page, filterKey, filterValue, sortStatus.columnAccessor, sortStatus.direction];
-                          const documentGroupsQueryKey = ['documentGroups', course_name];
+                          const currentDocumentsQueryKey = [
+                            'documents',
+                            course_name,
+                            page,
+                            filterKey,
+                            filterValue,
+                            sortStatus.columnAccessor,
+                            sortStatus.direction,
+                          ]
+                          const documentGroupsQueryKey = [
+                            'documentGroups',
+                            course_name,
+                          ]
 
-                          await queryClient.cancelQueries({ queryKey: currentDocumentsQueryKey });
-                          await queryClient.cancelQueries({ queryKey: documentGroupsQueryKey });
+                          await queryClient.cancelQueries({
+                            queryKey: currentDocumentsQueryKey,
+                          })
+                          await queryClient.cancelQueries({
+                            queryKey: documentGroupsQueryKey,
+                          })
 
-                          const previousDocuments = queryClient.getQueryData(currentDocumentsQueryKey);
-                          const previousDocGroups = queryClient.getQueryData(documentGroupsQueryKey);
+                          const previousDocuments = queryClient.getQueryData(
+                            currentDocumentsQueryKey,
+                          )
+                          const previousDocGroups = queryClient.getQueryData(
+                            documentGroupsQueryKey,
+                          )
 
                           // Optimistically update the document list
-                          queryClient.setQueryData(currentDocumentsQueryKey, (oldData: any) => {
-                            if (!oldData || !oldData.final_docs) return oldData;
-                            return {
-                              ...oldData,
-                              final_docs: oldData.final_docs.map((doc: CourseDocument) => {
-                                if (selectedRecords.some(sr => sr.id === doc.id)) {
-                                  let updatedDocGroups = [...(doc.doc_groups || [])];
-                                  
-                                  // Add groups selected in the dropdown if not already present
-                                  newSelectedGroupsFromDropdown.forEach(groupToAdd => {
-                                    if (!updatedDocGroups.includes(groupToAdd)) {
-                                      updatedDocGroups.push(groupToAdd);
-                                    }
-                                  });
+                          queryClient.setQueryData(
+                            currentDocumentsQueryKey,
+                            (oldData: any) => {
+                              if (!oldData || !oldData.final_docs)
+                                return oldData
+                              return {
+                                ...oldData,
+                                final_docs: oldData.final_docs.map(
+                                  (doc: CourseDocument) => {
+                                    if (
+                                      selectedRecords.some(
+                                        (sr) => sr.id === doc.id,
+                                      )
+                                    ) {
+                                      let updatedDocGroups = [
+                                        ...(doc.doc_groups || []),
+                                      ]
 
-                                  // Remove groups that were part of the initial common selection but are now deselected
-                                  const commonGroupsDeselected = selectedDocGroups.filter(
-                                    (commonGroup) => !newSelectedGroupsFromDropdown.includes(commonGroup)
-                                  );
-                                  updatedDocGroups = updatedDocGroups.filter(
-                                    (group) => !commonGroupsDeselected.includes(group)
-                                  );
-                                  
-                                  return { ...doc, doc_groups: updatedDocGroups.sort() };
-                                }
-                                return doc;
-                              }),
-                            };
-                          });
-                          
-                          // Optimistically update document groups list: add new group names if created
-                          queryClient.setQueryData(documentGroupsQueryKey, (oldGroups: DocumentGroup[] = []) => {
-                            const newGroupsData = JSON.parse(JSON.stringify(oldGroups));
-                            newSelectedGroupsFromDropdown.forEach(groupName => {
-                              if (!newGroupsData.some((g: DocumentGroup) => g.name === groupName)) {
-                                // This is a newly created group by the user via 'creatable'
-                                newGroupsData.push({ name: groupName, doc_count: 0, id: Date.now(), enabled: true }); // Mock ID and temp count 0, refetch will get real count
+                                      // Add groups selected in the dropdown if not already present
+                                      newSelectedGroupsFromDropdown.forEach(
+                                        (groupToAdd) => {
+                                          if (
+                                            !updatedDocGroups.includes(
+                                              groupToAdd,
+                                            )
+                                          ) {
+                                            updatedDocGroups.push(groupToAdd)
+                                          }
+                                        },
+                                      )
+
+                                      // Remove groups that were part of the initial common selection but are now deselected
+                                      const commonGroupsDeselected =
+                                        selectedDocGroups.filter(
+                                          (commonGroup) =>
+                                            !newSelectedGroupsFromDropdown.includes(
+                                              commonGroup,
+                                            ),
+                                        )
+                                      updatedDocGroups =
+                                        updatedDocGroups.filter(
+                                          (group) =>
+                                            !commonGroupsDeselected.includes(
+                                              group,
+                                            ),
+                                        )
+
+                                      return {
+                                        ...doc,
+                                        doc_groups: updatedDocGroups.sort(),
+                                      }
+                                    }
+                                    return doc
+                                  },
+                                ),
                               }
-                            });
-                            return newGroupsData;
-                          });
+                            },
+                          )
+
+                          // Optimistically update document groups list: add new group names if created
+                          queryClient.setQueryData(
+                            documentGroupsQueryKey,
+                            (oldGroups: DocumentGroup[] = []) => {
+                              const newGroupsData = JSON.parse(
+                                JSON.stringify(oldGroups),
+                              )
+                              newSelectedGroupsFromDropdown.forEach(
+                                (groupName) => {
+                                  if (
+                                    !newGroupsData.some(
+                                      (g: DocumentGroup) =>
+                                        g.name === groupName,
+                                    )
+                                  ) {
+                                    // This is a newly created group by the user via 'creatable'
+                                    newGroupsData.push({
+                                      name: groupName,
+                                      doc_count: 0,
+                                      id: Date.now(),
+                                      enabled: true,
+                                    }) // Mock ID and temp count 0, refetch will get real count
+                                  }
+                                },
+                              )
+                              return newGroupsData
+                            },
+                          )
 
                           try {
-                            await addDocumentsToDocGroups(selectedRecords, newSelectedGroupsFromDropdown);
-                          
-                            const unselectedCommonGroups: string[] = selectedDocGroups.filter(
-                              (group) => !newSelectedGroupsFromDropdown.includes(group),
-                            );
+                            await addDocumentsToDocGroups(
+                              selectedRecords,
+                              newSelectedGroupsFromDropdown,
+                            )
+
+                            const unselectedCommonGroups: string[] =
+                              selectedDocGroups.filter(
+                                (group) =>
+                                  !newSelectedGroupsFromDropdown.includes(
+                                    group,
+                                  ),
+                              )
 
                             for (const record of selectedRecords) {
                               for (const unselectedGroup of unselectedCommonGroups) {
                                 await removeFromDocGroup.mutate({
                                   record,
                                   removedGroup: unselectedGroup,
-                                });
+                                })
                               }
                             }
                           } catch (error) {
-                            console.error("Error updating document groups:", error);
-                            if (previousDocuments) queryClient.setQueryData(currentDocumentsQueryKey, previousDocuments);
-                            if (previousDocGroups) queryClient.setQueryData(documentGroupsQueryKey, previousDocGroups);
+                            console.error(
+                              'Error updating document groups:',
+                              error,
+                            )
+                            if (previousDocuments)
+                              queryClient.setQueryData(
+                                currentDocumentsQueryKey,
+                                previousDocuments,
+                              )
+                            if (previousDocGroups)
+                              queryClient.setQueryData(
+                                documentGroupsQueryKey,
+                                previousDocGroups,
+                              )
                           } finally {
-                            queryClient.invalidateQueries({ queryKey: currentDocumentsQueryKey });
-                            queryClient.invalidateQueries({ queryKey: documentGroupsQueryKey });
-                            
-                            setSelectedDocGroups(newSelectedGroupsFromDropdown);
-                            setShowMultiSelect(false);
-                            setSelectedRecords([]);
+                            queryClient.invalidateQueries({
+                              queryKey: currentDocumentsQueryKey,
+                            })
+                            queryClient.invalidateQueries({
+                              queryKey: documentGroupsQueryKey,
+                            })
+
+                            setSelectedDocGroups(newSelectedGroupsFromDropdown)
+                            setShowMultiSelect(false)
+                            setSelectedRecords([])
                           }
                         }}
                         disabled={isLoadingDocumentGroups}
@@ -746,57 +804,34 @@ export function ProjectFilesTable({
                       disabled={!selectedCount}
                       onClick={() => {
                         if (selectedCount > 100) {
-                          notifications.show({
-                            id: 'selection-limit-exceeded',
-                            withCloseButton: true,
-                            autoClose: 12000,
-                            title: t('project_files.selection_limit_title'),
-                            message: t('project_files.selection_limit_message'),
-                            icon: <IconAlertTriangle />,
-                            styles: {
-                              root: {
-                                backgroundColor: theme.colors.nearlyWhite,
-                                borderColor: theme.colors.errorBorder,
-                              },
-                              title: {
-                                color: theme.colors.nearlyBlack,
-                              },
-                              description: {
-                                color: theme.colors.nearlyBlack,
-                              },
-                              closeButton: {
-                                color: theme.colors.nearlyBlack,
-                                '&:hover': {
-                                  backgroundColor: theme.colors.dark[1],
-                                },
-                              },
-                              icon: {
-                                backgroundColor: theme.colors.errorBackground,
-                                padding: '4px',
-                              },
-                            },
-                            loading: false,
-                          })
+                          showToast(
+                            theme,
+                            'Selection Limit Exceeded',
+                            'You have selected more than 100 documents. Please select less than or equal to 100 documents.',
+                            true,
+                          )
                         } else {
                           setRecordsToDelete(selectedRecords)
                           setModalOpened(true)
                         }
                       }}
-                      className={`mb-2 w-full border-0 px-4 py-2 text-sm focus:outline-none focus:ring-0 sm:mb-0 sm:w-auto sm:px-6 sm:py-3 sm:text-base ${
+                      className={`mb-2 w-full border-0 px-4 py-2 text-xs focus:outline-none focus:ring-0 sm:mb-0 sm:w-auto sm:px-6 sm:py-3 ${
                         selectedCount
                           ? 'bg-red-900 hover:bg-red-800'
                           : 'bg-transparent'
                       } transition-colors duration-300 ${montserrat_paragraph.variable} font-montserratParagraph`}
                     >
                       <span className="block sm:hidden">
-                        {t('project_files.delete_short', { count: selectedCount })}
+                        Delete {selectedCount}
                       </span>
                       <span className="hidden sm:block">
                         {selectedCount
-                          ? selectedCount === 1
-                            ? t('project_files.delete_one')
-                            : t('project_files.delete_selected', { count: selectedCount })
-                          : t('project_files.select_to_delete')}
+                          ? `Delete ${
+                              selectedCount === 1
+                                ? '1 selected record'
+                                : `${selectedCount} selected records`
+                            }`
+                          : 'Select records to delete'}
                       </span>
                     </Button>
                   )}
@@ -809,7 +844,7 @@ export function ProjectFilesTable({
 
       {/* Main Table Container */}
       {/* <div className="flex-1 flex flex-col overflow-hidden h-[90%]"> */}
-      <div className="flex h-[90%] flex-1 flex-col overflow-hidden px-4 py-4 sm:px-6 sm:py-6 md:px-8">
+      <div className="project_files_table flex h-[90%] flex-1 flex-col overflow-hidden pb-4">
         <DataTable
           records={
             tabValue === 'failed'
@@ -834,30 +869,32 @@ export function ProjectFilesTable({
           }
           recordsPerPage={PAGE_SIZE}
           customLoader={<LoadingSpinner />}
-          borderRadius="lg"
           withColumnBorders
+          borderColor="var(--table-border)"
+          rowBorderColor="var(--table-border)"
           withBorder={false}
-          paginationColor="blueviolet"
+          paginationColor="var(--dashboard-button)"
           // c={{pagintation: {backgroundColor: '#1e1f3a'}}}
           striped
           highlightOnHover
           rowStyle={(row, index) => {
             if (selectedRecords.includes(row)) {
-              return { backgroundColor: 'hsla(280, 100%, 70%, 0.5)' }
+              return { backgroundColor: 'var(--dashboard-table-selected)' }
             }
             return index % 2 === 0
-              ? { backgroundColor: '#1e1f3a' }
-              : { backgroundColor: '#15162c' }
+              ? { backgroundColor: 'var(--background)' }
+              : { backgroundColor: 'var(--background-faded)' }
           }}
           styles={{
             pagination: {
-              backgroundColor: '#15162c',
+              backgroundColor: 'var(--background)',
             },
           }}
           columns={[
             {
+              titleStyle: dataTableTitleStyles,
               accessor: 'readable_filename',
-              title: t('dashboard.file_name') || '',
+              title: 'File Name',
               // render: ({ readable_filename }) =>
               //   readable_filename ? `${readable_filename}` : '',
               render: ({ readable_filename }) =>
@@ -869,13 +906,13 @@ export function ProjectFilesTable({
                   ''
                 ),
               // width: '14vw',
-              width: isSmallScreen ? '35vw' : '14vw',
+              width: isSmallScreen ? '35vw' : '20vw',
               sortable: true,
               filter: (
                 <TextInput
-                  label={t('dashboard.file_name') || ''}
-                  description={t('project_files.search_files_description') as string}
-                  placeholder={t('project_files.search_files') as string}
+                  label="File Name"
+                  description="Show uploaded files that include the specified text"
+                  placeholder="Search files..."
                   rightSection={
                     <ActionIcon
                       size="sm"
@@ -899,8 +936,9 @@ export function ProjectFilesTable({
               filtering: filterKey !== null,
             },
             {
+              titleStyle: dataTableTitleStyles,
               accessor: 'url',
-              title: t('dashboard.url') || '',
+              title: 'URL',
               render: ({ url }) =>
                 url ? (
                   <div style={{ wordWrap: 'break-word', maxWidth: '14vw' }}>
@@ -913,9 +951,9 @@ export function ProjectFilesTable({
               width: isBetweenSmallAndMediumScreen ? '12vw' : '14vw',
               filter: (
                 <TextInput
-                  label={t('dashboard.url') || ''}
-                  description={t('project_files.search_urls_description') as string}
-                  placeholder={t('project_files.search_urls') as string}
+                  label="URL"
+                  description="Show all urls that include the specified text"
+                  placeholder="Search urls..."
                   rightSection={
                     <ActionIcon
                       size="sm"
@@ -939,8 +977,9 @@ export function ProjectFilesTable({
               filtering: filterKey !== null,
             },
             {
+              titleStyle: dataTableTitleStyles,
               accessor: 'base_url',
-              title: t('dashboard.starting_url_web_scraping') || '',
+              title: 'The Starting URL of Web Scraping',
               render: ({ base_url }) =>
                 base_url ? (
                   <div style={{ wordWrap: 'break-word' }}>{base_url}</div>
@@ -952,7 +991,7 @@ export function ProjectFilesTable({
               width: isBetweenSmallAndMediumScreen ? '11vw' : '14vw',
               filter: (
                 <TextInput
-                  label={t('dashboard.starting_url_web_scraping') || ''}
+                  label="The Starting URL of Web Scraping"
                   description="Show all urls that include the specified text"
                   placeholder="Search urls..."
                   rightSection={
@@ -978,8 +1017,9 @@ export function ProjectFilesTable({
               filtering: filterKey !== null,
             },
             {
+              titleStyle: dataTableTitleStyles,
               accessor: 'created_at',
-              title: t('dashboard.date_created'),
+              title: 'Date created',
               render: ({ created_at }) =>
                 created_at ? (
                   <div style={{ wordWrap: 'break-word' }}>
@@ -1026,6 +1066,7 @@ export function ProjectFilesTable({
             ...(tabValue === 'failed'
               ? [
                   {
+                    titleStyle: dataTableTitleStyles,
                     accessor: 'error',
                     title: 'Error',
                     width: 200,
@@ -1053,7 +1094,7 @@ export function ProjectFilesTable({
                           {overflowStates[index] && (
                             <Text
                               size="sm"
-                              color="grape"
+                              color="var(--link)"
                               onClick={() => openModel(true, error)}
                               className="rounded-md hover:underline"
                               style={{
@@ -1072,9 +1113,9 @@ export function ProjectFilesTable({
                 ]
               : [
                   {
+                    titleStyle: dataTableTitleStyles,
                     accessor: 'doc_group',
                     title: 'Document Groups',
-                    width: 200, // Increase this value to make the column wider
                     render: (record: CourseDocument) => (
                       <Group position="apart" spacing="xs">
                         <MultiSelect
@@ -1119,9 +1160,25 @@ export function ProjectFilesTable({
                             value: 'tag-item self-center',
                           }}
                           styles={{
+                            item: {
+                              color: 'var(--foreground)',
+                              backgroundColor: 'var(--background)',
+                              '&:hover': {},
+                              '&[data-hovered]': {
+                                color: 'var(--dashboard-button-foreground)',
+                                backgroundColor: 'var(--dashboard-button)',
+                              },
+                            },
                             input: {
-                              paddingTop: '12px',
-                              paddingBottom: '12px',
+                              color: 'var(--foreground)',
+                              backgroundColor: 'var(--background)',
+                            },
+                            dropdown: {
+                              '.mantine-MultiSelect-nothingFound': {
+                                color: 'var(--foreground)',
+                                textAlign: 'left',
+                                padding: '.5rem',
+                              },
                             },
                             value: {
                               marginTop: '2px',
@@ -1136,8 +1193,9 @@ export function ProjectFilesTable({
               ? []
               : [
                   {
+                    titleStyle: dataTableTitleStyles,
                     accessor: 'actions',
-                    title: <Box mr={6}>{t('dashboard.actions')}</Box>,
+                    title: <Box mr={6}>Actions</Box>,
                     width: 75,
                     render: (materials: any, index: number) => {
                       const openModal = async (action: string) => {
@@ -1216,10 +1274,24 @@ export function ProjectFilesTable({
         <Modal
           opened={modalOpened}
           onClose={() => setModalOpened(false)}
-          title={t('project_files.confirm_delete_title') || ''}
+          title="Please confirm your action"
+          centered
+          styles={{
+            header: {
+              backgroundColor: 'var(--modal)',
+            },
+            title: {
+              color: 'var(--modal-text)',
+              fontWeight: 'bold',
+            },
+            content: {
+              color: 'var(--modal-text)',
+              backgroundColor: 'var(--modal)',
+            },
+          }}
         >
-          <Text size="sm" style={{ color: 'white' }}>
-            {t('project_files.confirm_delete_message')}
+          <Text size="sm" style={{ color: 'var(--modal-text)' }}>
+            {`Are you sure you want to delete the selected records?`}
           </Text>
           <div
             style={{
@@ -1229,19 +1301,18 @@ export function ProjectFilesTable({
             }}
           >
             <Button
-              className="min-w-[3rem] -translate-x-1 transform rounded-s-md bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none"
+              className="min-w-[3rem] -translate-x-1 transform rounded-s-md bg-[--background-faded] text-[--foreground] hover:bg-[--dashboard-button-hover] hover:text-[--dashboard-button-foreground] focus:shadow-none focus:outline-none"
               onClick={() => {
                 setModalOpened(false)
               }}
               style={{
-                backgroundColor: 'transparent',
                 marginRight: '7px',
               }}
             >
-              {t('project_files.cancel')}
+              Cancel
             </Button>
             <Button
-              className="min-w-[3rem] -translate-x-1 transform rounded-s-md bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none"
+              className="btext-[--dashboard-button-foreground] min-w-[3rem] -translate-x-1 transform rounded-s-md bg-[--dashboard-button] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none"
               onClick={async () => {
                 setModalOpened(false)
                 setIsDeletingDocuments(true)
@@ -1260,14 +1331,14 @@ export function ProjectFilesTable({
                 setIsDeletingDocuments(false)
               }}
             >
-              {t('project_files.delete')}
+              Delete
             </Button>
           </div>
         </Modal>
         <Modal
           opened={errorModalOpened}
           onClose={() => setErrorModalOpened(false)}
-          title={t('project_files.error_details') || ''}
+          title="Error Details"
           size={'xl'}
           closeOnEscape={true}
           transitionProps={{ transition: 'fade', duration: 200 }}
@@ -1276,16 +1347,19 @@ export function ProjectFilesTable({
           overlayProps={{ blur: 3, opacity: 0.55 }}
           styles={{
             header: {
-              backgroundColor: '#15162c',
-              borderBottom: '2px solid',
-              borderColor: theme.colors.dark[3],
+              backgroundColor: 'var(--modal)',
+              borderBottom: '1px solid',
+              borderColor: 'var(--modal-border)',
             },
             body: {
-              backgroundColor: '#15162c',
+              color: 'var(--modal-text)',
+              backgroundColor: 'var(--modal)',
+            },
+            close: {
+              color: 'var(--foreground-faded)',
             },
             title: {
-              color: 'white',
-              fontFamily: montserrat_heading.variable,
+              color: 'var(--modal-text)',
               fontWeight: 'bold',
             },
           }}
@@ -1296,10 +1370,13 @@ export function ProjectFilesTable({
               justifyContent: 'center',
               alignItems: 'center',
               height: '100%',
-              paddingTop: '20px',
+              padding: '1rem',
             }}
           >
-            <Code style={{ whiteSpace: 'pre-wrap' }}>
+            <Code
+              className="bg-[--modal] p-0 text-[--modal-text]"
+              style={{ whiteSpace: 'pre-wrap', lineHeight: '165%' }}
+            >
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <CopyButton value={currentError} timeout={2000}>
                   {({ copied, copy }) => (
@@ -1313,9 +1390,15 @@ export function ProjectFilesTable({
                         onClick={copy}
                       >
                         {copied ? (
-                          <IconCheck size="1rem" />
+                          <IconCheck
+                            size="1rem"
+                            className="text-[--foreground]"
+                          />
                         ) : (
-                          <IconCopy size="1rem" />
+                          <IconCopy
+                            size="1rem"
+                            className="text-[--foreground-faded]"
+                          />
                         )}
                       </ActionIcon>
                     </Tooltip>
@@ -1329,10 +1412,11 @@ export function ProjectFilesTable({
         <Modal
           opened={exportModalOpened}
           onClose={() => setExportModalOpened(false)}
-          title={t('project_files.export_confirm_title') || ''}
+          title="Please confirm your action"
+          centered
         >
           <Text size="sm" style={{ color: 'white' }}>
-            {t('project_files.export_confirm_message')}
+            {`Are you sure you want to export all the documents and embeddings?`}
           </Text>
           <div
             style={{
@@ -1342,7 +1426,7 @@ export function ProjectFilesTable({
             }}
           >
             <Button
-              className="min-w-[3rem] -translate-x-1 transform rounded-s-md bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none"
+              className="min-w-[3rem] -translate-x-1 transform rounded-s-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none"
               onClick={() => {
                 setExportModalOpened(false)
               }}
@@ -1351,49 +1435,19 @@ export function ProjectFilesTable({
                 marginRight: '7px',
               }}
             >
-              {t('project_files.cancel')}
+              Cancel
             </Button>
             <Button
-              className="min-w-[3rem] -translate-x-1 transform rounded-s-md bg-purple-800 text-white hover:border-indigo-600 hover:bg-indigo-600 hover:text-white focus:shadow-none focus:outline-none"
+              className="min-w-[3rem] -translate-x-1 transform rounded-s-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none"
               onClick={async () => {
                 setExportModalOpened(false)
                 const result = await handleExport(getCurrentPageName())
                 if (result && result.message) {
-                  notifications.show({
-                    id: 'export-result',
-                    withCloseButton: true,
-                    autoClose: 12000,
-                    title: t('project_files.export_result'),
-                    message: result.message,
-                    icon: <IconCheck />,
-                    styles: {
-                      root: {
-                        backgroundColor: theme.colors.nearlyWhite,
-                        borderColor: theme.colors.aiPurple,
-                      },
-                      title: {
-                        color: theme.colors.nearlyBlack,
-                      },
-                      description: {
-                        color: theme.colors.nearlyBlack,
-                      },
-                      closeButton: {
-                        color: theme.colors.nearlyBlack,
-                        '&:hover': {
-                          backgroundColor: theme.colors.dark[1],
-                        },
-                      },
-                      icon: {
-                        backgroundColor: theme.colors.successBackground,
-                        padding: '4px',
-                      },
-                    },
-                    loading: false,
-                  })
+                  showToastOnUpdate(theme, false, false, result.message)
                 }
               }}
             >
-              {t('project_files.export')}
+              Export
             </Button>
           </div>
         </Modal>
@@ -1402,8 +1456,7 @@ export function ProjectFilesTable({
   )
 }
 
-function ErrorStateForProjectFilesTable() {
-  const { t } = useTranslation('common')
+function errorStateForProjectFilesTable() {
   return (
     <DataTable
       records={[]}
@@ -1413,19 +1466,23 @@ function ErrorStateForProjectFilesTable() {
       striped
       highlightOnHover
       height="80vh"
+      // Error state:
       noRecordsIcon={
         <Stack align="center" p={30}>
           <Text c="dimmed" size="md">
-            {t('project_files.error_message')}
+            Ah! We hit a wall when fetching your documents. The database must be
+            on fire 🔥
           </Text>
           <Image
+            // width={"20vw"}
             style={{ minWidth: 300, maxWidth: '30vw' }}
             radius="lg"
             src="https://assets.kastan.ai/this-is-fine.jpg"
             alt="No data found"
+            // style={{ filter: 'grayscale(1)' }}
           />
           <Text c="dimmed" size="md">
-            {t('project_files.try_again')}
+            So.. please try again later.
           </Text>
         </Stack>
       }
@@ -1434,18 +1491,23 @@ function ErrorStateForProjectFilesTable() {
       }}
       columns={[
         {
+          titleStyle: dataTableTitleStyles,
           accessor: 'Name',
         },
         {
+          titleStyle: dataTableTitleStyles,
           accessor: 'URL',
         },
         {
+          titleStyle: dataTableTitleStyles,
           accessor: 'The Starting URL of Web Scraping',
         },
         {
+          titleStyle: dataTableTitleStyles,
           accessor: 'doc_group',
         },
         {
+          titleStyle: dataTableTitleStyles,
           accessor: 'actions',
         },
       ]}

@@ -1,6 +1,4 @@
-import {
-  createStyles,
-} from '@mantine/core'
+import { createStyles } from '@mantine/core'
 
 import React from 'react'
 import {
@@ -13,7 +11,7 @@ import {
   IconMusic,
   IconCode,
   IconFileTypeTxt,
-  TablerIconsProps
+  type TablerIconsProps,
 } from '@tabler/icons-react'
 import {
   Tooltip,
@@ -22,12 +20,11 @@ import {
   TooltipTrigger,
 } from '../Tooltip'
 import { motion } from 'framer-motion'
-import { useTranslation } from 'next-i18next';
 
 interface FileType {
-  icon: (props: TablerIconsProps) => JSX.Element,
+  icon: (props: TablerIconsProps) => JSX.Element
   // icon: React.FC<TablerIconsProps>,
-  label: string,
+  label: string
   color: string
 }
 const useStyles = createStyles((theme) => ({
@@ -111,29 +108,29 @@ const useStyles = createStyles((theme) => ({
 
 const SupportedFileUploadTypes = () => {
   const { classes, theme } = useStyles()
-  const { t } = useTranslation('common')
+  // className={classes.wrapper}
   const fileTypes: FileType[] = [
-    { icon: IconFileTypePdf, label: t('file_types.pdf'), color: 'text-red-500' },
-    { icon: IconFileTypeDocx, label: t('file_types.word'), color: 'text-blue-500' },
-    { icon: IconFileTypePpt, label: t('file_types.ppt'), color: 'text-orange-500' },
-    { icon: IconFileTypeXls, label: t('file_types.excel'), color: 'text-green-500' },
-    { icon: IconVideo, label: t('file_types.video'), color: 'text-purple-500' },
-    { icon: IconPhoto, label: t('file_types.image'), color: 'text-pink-500' },
-    { icon: IconMusic, label: t('file_types.audio'), color: 'text-yellow-500' },
-    { icon: IconCode, label: t('file_types.code'), color: 'text-cyan-500' },
-    { icon: IconFileTypeTxt, label: t('file_types.text'), color: 'text-white' }
+    { icon: IconFileTypePdf, label: 'PDF', color: 'text-red-500' },
+    { icon: IconFileTypeDocx, label: 'Word', color: 'text-blue-500' },
+    { icon: IconFileTypePpt, label: 'PPT', color: 'text-orange-500' },
+    { icon: IconFileTypeXls, label: 'Excel', color: 'text-green-500' },
+    { icon: IconVideo, label: 'Video', color: 'text-purple-500' },
+    { icon: IconPhoto, label: 'Image', color: 'text-pink-500' },
+    { icon: IconMusic, label: 'Audio', color: 'text-yellow-500' },
+    { icon: IconCode, label: 'Code', color: 'text-cyan-500' },
+    { icon: IconFileTypeTxt, label: 'Text', color: 'text-white' },
   ]
 
   return (
     <>
       <TooltipProvider>
-        <div className="flex flex-wrap justify-center gap-4 mb-6 mt-8">
+        <div className="mb-6 mt-8 flex flex-wrap justify-center gap-4">
           {fileTypes.map((type, index) => {
             if (!type.icon) {
-              console.error(`Missing icon for type: ${type.label}`);
-              return null; // Skip rendering this item if icon is missing
+              console.error(`Missing icon for type: ${type.label}`)
+              return null // Skip rendering this item if icon is missing
             }
-            const IconComponent = type.icon;
+            const IconComponent = type.icon
 
             return (
               <Tooltip key={index}>
@@ -142,15 +139,21 @@ const SupportedFileUploadTypes = () => {
                     whileHover={{ scale: 1.1 }}
                     className="flex flex-col items-center"
                   >
-                    <IconComponent className={`w-6 h-6 ${type.color}`} size={24} stroke={1.5} />
-                    <span className="text-xs text-gray-400 mt-1">{type.label}</span>
+                    <IconComponent
+                      className={`h-6 w-6 ${type.color}`}
+                      size={24}
+                      stroke={1.5}
+                    />
+                    <span className="mt-1 text-xs text-gray-400">
+                      {type.label}
+                    </span>
                   </motion.div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{t('file_types.files_supported', { type: type.label })}</p>
+                  <p>{type.label} files supported</p>
                 </TooltipContent>
               </Tooltip>
-            );
+            )
           })}
         </div>
       </TooltipProvider>

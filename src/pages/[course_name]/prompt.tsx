@@ -1,88 +1,88 @@
 // src/pages/[course_name]/prompt.tsx
 'use client'
 import { type NextPage } from 'next'
-import MakeNewCoursePage from '~/components/UIUC-Components/MakeNewCoursePage'
-import React, { useEffect, useState, useRef } from 'react'
 import { Montserrat } from 'next/font/google'
 import { useRouter } from 'next/router'
+import React, { useEffect, useRef, useState } from 'react'
+import MakeNewCoursePage from '~/components/UIUC-Components/MakeNewCoursePage'
 
+import {
+  Button,
+  Card,
+  Collapse,
+  Divider,
+  Flex,
+  Group,
+  Image,
+  Indicator,
+  List,
+  Modal,
+  Paper,
+  Select,
+  Text,
+  Textarea,
+  Title,
+  Tooltip,
+  useMantineTheme,
+  type MantineTheme,
+} from '@mantine/core'
 import { useAuth } from 'react-oidc-context'
+import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import {
   LoadingPlaceholderForAdminPages,
   MainPageBackground,
 } from '~/components/UIUC-Components/MainPageBackground'
-import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
-import {
-  Button,
-  Card,
-  Collapse,
-  Flex,
-  Group,
-  Indicator,
-  List,
-  type MantineTheme,
-  Modal,
-  Paper,
-  Text,
-  Textarea,
-  Title,
-  Tooltip,
-  useMantineTheme,
-  Divider,
-  Select,
-  Image,
-} from '@mantine/core'
 
-import {
-  DEFAULT_SYSTEM_PROMPT,
-  GUIDED_LEARNING_PROMPT,
-  DOCUMENT_FOCUS_PROMPT,
-} from '~/utils/app/const'
-import { type CourseMetadata } from '~/types/courseMetadata'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { callSetCourseMetadata } from '~/utils/apiUtils'
-import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 import { useDisclosure, useMediaQuery } from '@mantine/hooks'
-import { LinkGeneratorModal } from '~/components/Modals/LinkGeneratorModal'
+import { notifications } from '@mantine/notifications'
 import {
   IconAlertTriangle,
+  IconAlertTriangleFilled,
+  IconBook,
   IconCheck,
+  IconChevronDown,
   IconExternalLink,
+  IconInfoCircle,
   IconLayoutSidebarRight,
   IconLayoutSidebarRightExpand,
-  IconSparkles,
-  IconInfoCircle,
-  IconChevronDown,
-  IconBook,
   IconLink,
-  IconAlertTriangleFilled,
+  IconSparkles,
 } from '@tabler/icons-react'
-import { notifications } from '@mantine/notifications'
-import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
-import CustomSwitch from '~/components/Switches/CustomSwitch'
-import CustomCopyButton from '~/components/Buttons/CustomCopyButton'
+import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useDebouncedCallback } from 'use-debounce'
-import { findDefaultModel } from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
-import {
-  ReasoningCapableModels,
-  type AllLLMProviders,
-  ProviderNames,
-  LLM_PROVIDER_ORDER,
-  type AnySupportedModel,
-} from '~/utils/modelProviders/LLMProvider'
-import { type AnthropicModel } from '~/utils/modelProviders/types/anthropic'
 import { v4 as uuidv4 } from 'uuid'
-import { type ChatBody } from '~/types/chat'
+import CustomCopyButton from '~/components/Buttons/CustomCopyButton'
 import { getModelLogo } from '~/components/Chat/ModelSelect'
+import SettingsLayout, {
+  getInitialCollapsedState,
+} from '~/components/Layout/SettingsLayout'
+import { LinkGeneratorModal } from '~/components/Modals/LinkGeneratorModal'
+import CustomSwitch from '~/components/Switches/CustomSwitch'
+import { findDefaultModel } from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
+import { type ChatBody } from '~/types/chat'
+import { type CourseMetadata } from '~/types/courseMetadata'
+import { callSetCourseMetadata } from '~/utils/apiUtils'
+import {
+  DEFAULT_SYSTEM_PROMPT,
+  DOCUMENT_FOCUS_PROMPT,
+  GUIDED_LEARNING_PROMPT,
+} from '~/utils/app/const'
 import {
   recommendedModelIds,
   warningLargeModelIds,
 } from '~/utils/modelProviders/ConfigWebLLM'
-import { useTranslation } from 'next-i18next'
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { GetServerSidePropsContext } from 'next'
+import {
+  LLM_PROVIDER_ORDER,
+  ProviderNames,
+  ReasoningCapableModels,
+  type AllLLMProviders,
+  type AnySupportedModel,
+} from '~/utils/modelProviders/LLMProvider'
+import { type AnthropicModel } from '~/utils/modelProviders/types/anthropic'
+import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
+import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
 
 const montserrat = Montserrat({
   weight: '700',
@@ -137,7 +137,6 @@ const isApiKeyRequired = (provider: ProviderNames): boolean => {
 }
 
 const CourseMain: NextPage = () => {
-  const { t } = useTranslation(['common', 'prompt'])
   const theme = useMantineTheme()
   const router = useRouter()
 
@@ -173,6 +172,12 @@ const CourseMain: NextPage = () => {
   >([])
   const [input, setInput] = useState(baseSystemPrompt)
   const [isOptimizing, setIsOptimizing] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    getInitialCollapsedState(),
+  )
+
+  // Get responsive card width classes based on sidebar state
+  const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed)
 
   const removeThinkSections = (text: string): string => {
     const cleanedText = text.replace(/<think>[\s\S]*?<\/think>/g, '')
@@ -563,7 +568,7 @@ CRITICAL: The optimized prompt must:
     }
   }
 
-  const updateSystemPrompt = (updatedFields: PartialCourseMetadata) => {
+  const updateSystemPrompt = (updatedFields: Partial<CourseMetadata>) => {
     let newPrompt = baseSystemPrompt
 
     // Handle Guided Learning prompt
@@ -804,7 +809,8 @@ CRITICAL: The optimized prompt must:
           p="xl"
           style={{ marginTop: '4rem' }}
         >
-          {t('account_bug_message')}
+          You&apos;ve encountered a software bug!<br></br>Your account has no
+          email address. Please shoot me an email so I can fix it for you:{' '}
           <a className="goldUnderline" href="mailto:rohan13@illinois.edu">
             rohan13@illinois.edu
           </a>
@@ -840,16 +846,23 @@ CRITICAL: The optimized prompt must:
   }
 
   return (
-    <>
-      <Navbar course_name={router.query.course_name as string} />
+    <SettingsLayout
+      course_name={course_name}
+      sidebarCollapsed={sidebarCollapsed}
+      setSidebarCollapsed={setSidebarCollapsed}
+    >
       <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
         <div className="items-left flex w-full flex-col justify-center py-0">
           <Flex direction="column" align="center" w="100%">
             <Card
-              shadow="xs"
+              withBorder
               padding="none"
               radius="xl"
-              className="mt-[2%] w-[96%] md:w-[90%] 2xl:w-[90%]"
+              className={`mt-[2%] ${cardWidthClasses}`}
+              style={{
+                backgroundColor: 'var(--background)',
+                borderColor: 'var(--dashboard-border)',
+              }}
             >
               <Flex direction={isSmallScreen ? 'column' : 'row'}>
                 <div
@@ -858,23 +871,21 @@ CRITICAL: The optimized prompt must:
                     border: 'None',
                     color: 'white',
                   }}
-                  className="min-h-full bg-gradient-to-r from-purple-900 via-indigo-800 to-blue-800"
+                  className="min-h-full bg-[--background]"
                 >
-                  <div className="w-full border-b border-white/10 bg-black/20 px-4 py-3 sm:px-6 sm:py-4 md:px-8">
+                  <div className="w-full px-4 py-3 sm:px-6 sm:py-4 md:px-8">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex min-w-0 flex-wrap items-center gap-2">
                         <Title
                           order={2}
-                          className={`${montserrat_heading.variable} font-montserratHeading text-lg text-white/90 sm:text-2xl`}
+                          className={`${montserrat_heading.variable} font-montserratHeading text-lg text-[--foreground] sm:text-2xl`}
                         >
-                          {t('common:prompting')}
+                          Prompting
                         </Title>
-                        <Text className="text-white/60">/</Text>
+                        <Text className="text-[--foreground]">/</Text>
                         <Title
                           order={3}
-                          variant="gradient"
-                          gradient={{ from: 'gold', to: 'white', deg: 50 }}
-                          className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base sm:text-xl ${
+                          className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base text-[--illinois-orange] sm:text-xl ${
                             course_name.length > 40
                               ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
                               : ''
@@ -896,10 +907,10 @@ CRITICAL: The optimized prompt must:
                   >
                     <div className="card flex h-full flex-col">
                       <Group
-                        m="2rem"
+                        m="0rem"
                         align="center"
                         variant="column"
-                        className="w-[100%] md:w-[95%] lg:w-[95%]"
+                        className={cardWidthClasses}
                         style={{
                           justifyContent: 'center',
                           alignSelf: 'center',
@@ -908,19 +919,11 @@ CRITICAL: The optimized prompt must:
                       >
                         {/* Prompt Engineering Guide */}
                         <Paper
-                          className="w-full rounded-xl px-4 sm:px-6 md:px-8"
-                          shadow="xs"
+                          className="w-full rounded-xl bg-[--dashboard-background-faded] px-4 sm:px-6 md:px-8"
                           p="md"
                           sx={{
-                            backgroundColor: '#15162c',
-                            border: '1px solid rgba(147, 51, 234, 0.3)',
                             cursor: 'pointer',
                             transition: 'all 0.2s ease',
-                            '&:hover': {
-                              backgroundColor: '#1a1b34',
-                              borderColor: 'rgba(147, 51, 234, 0.5)',
-                              transform: 'translateY(-1px)',
-                            },
                           }}
                           onClick={() => setInsightsOpen(!insightsOpen)}
                         >
@@ -936,21 +939,15 @@ CRITICAL: The optimized prompt must:
                               <IconBook
                                 size={24}
                                 style={{
-                                  color: 'hsl(280,100%,70%)',
+                                  color: 'var(--dashboard-button)',
                                 }}
                               />
                               <Text
                                 size="md"
                                 weight={600}
-                                className={`${montserrat_paragraph.variable} select-text font-montserratParagraph`}
-                                variant="gradient"
-                                gradient={{
-                                  from: 'gold',
-                                  to: 'white',
-                                  deg: 50,
-                                }}
+                                className={`${montserrat_paragraph.variable} select-text font-montserratParagraph text-[--dashboard-foreground]`}
                               >
-                                {t('prompt.engineering.guide')}
+                                Prompt Engineering Guide
                               </Text>
                             </Flex>
                             <div
@@ -959,7 +956,7 @@ CRITICAL: The optimized prompt must:
                                 transform: insightsOpen
                                   ? 'rotate(180deg)'
                                   : 'rotate(0deg)',
-                                color: 'hsl(280,100%,70%)',
+                                color: 'var(--dashboard-foreground)',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -970,12 +967,13 @@ CRITICAL: The optimized prompt must:
                           </Flex>
 
                           <Collapse in={insightsOpen} transitionDuration={200}>
-                            <div className="mt-4 px-2">
+                            <div className="mt-4 px-2 text-[--dashboard-foreground]">
                               <Text
                                 size="md"
                                 className={`${montserrat_paragraph.variable} select-text font-montserratParagraph`}
                               >
-                                {t('prompt.engineering.insights')}
+                                For additional insights and best practices on
+                                prompt creation, please review:
                                 <List
                                   withPadding
                                   className="mt-2"
@@ -986,7 +984,8 @@ CRITICAL: The optimized prompt must:
                                         width: '6px',
                                         height: '6px',
                                         borderRadius: '50%',
-                                        backgroundColor: 'hsl(280,100%,70%)',
+                                        backgroundColor:
+                                          'var(--dashboard-foreground)',
                                         marginTop: '8px',
                                       }}
                                     />
@@ -994,14 +993,14 @@ CRITICAL: The optimized prompt must:
                                 >
                                   <List.Item>
                                     <a
-                                      className={`text-sm transition-colors duration-200 hover:text-purple-400 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                      style={{ color: 'hsl(280,100%,70%)' }}
+                                      className={`text-sm text-[--dashboard-button] transition-colors duration-200 hover:text-[--dashboard-button-hover] ${montserrat_paragraph.variable} font-montserratParagraph`}
                                       href="https://platform.openai.com/docs/guides/prompt-engineering"
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       onClick={(e) => e.stopPropagation()}
                                     >
-                                      {t('prompt.engineering.openai_guide')}
+                                      The Official OpenAI Prompt Engineering
+                                      Guide
                                       <IconExternalLink
                                         size={18}
                                         className="inline-block pl-1"
@@ -1014,14 +1013,13 @@ CRITICAL: The optimized prompt must:
                                   </List.Item>
                                   <List.Item>
                                     <a
-                                      className={`text-sm transition-colors duration-200 hover:text-purple-400 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                      style={{ color: 'hsl(280,100%,70%)' }}
+                                      className={`text-sm text-[--dashboard-button] transition-colors duration-200 hover:text-[--dashboard-button-hover] ${montserrat_paragraph.variable} font-montserratParagraph`}
                                       href="https://docs.anthropic.com/claude/prompt-library"
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       onClick={(e) => e.stopPropagation()}
                                     >
-                                      {t('prompt.engineering.anthropic_library')}
+                                      The Official Anthropic Prompt Library
                                       <IconExternalLink
                                         size={18}
                                         className="inline-block pl-1"
@@ -1038,10 +1036,13 @@ CRITICAL: The optimized prompt must:
                                   size="md"
                                   style={{ marginTop: '1.5rem' }}
                                 >
-                                  {t('prompt.system.description')}
+                                  The System Prompt provides the foundation for
+                                  every conversation in this project. It defines
+                                  the model&apos;s role, tone, and behavior.
+                                  Consider including:
                                   <List
                                     withPadding
-                                    className="mt-2"
+                                    className="mt-2 text-[--dashboard-foreground]"
                                     spacing="xs"
                                     icon={
                                       <div
@@ -1049,15 +1050,22 @@ CRITICAL: The optimized prompt must:
                                           width: '6px',
                                           height: '6px',
                                           borderRadius: '50%',
-                                          backgroundColor: 'hsl(280,100%,70%)',
+                                          backgroundColor:
+                                            'var(--dashboard-foreground)',
                                           marginTop: '8px',
                                         }}
                                       />
                                     }
                                   >
-                                    <List.Item>{t('prompt.system.key_instructions')}</List.Item>
-                                    <List.Item>{t('prompt.system.welcome_message')}</List.Item>
-                                    <List.Item>{t('prompt.system.helpful_links')}</List.Item>
+                                    <List.Item>
+                                      Key instructions or examples
+                                    </List.Item>
+                                    <List.Item>
+                                      A warm welcome message
+                                    </List.Item>
+                                    <List.Item>
+                                      Helpful links for further learning
+                                    </List.Item>
                                   </List>
                                 </Text>
                               </Text>
@@ -1072,7 +1080,7 @@ CRITICAL: The optimized prompt must:
                             display: 'flex',
                             flexDirection: 'column',
                             alignItems: 'center',
-                            background: '#15162c',
+                            background: 'var(--dashboard-background-faded)',
                           }}
                           className="rounded-xl px-4 py-6 sm:px-6 sm:py-6 md:px-8"
                         >
@@ -1081,7 +1089,6 @@ CRITICAL: The optimized prompt must:
                               width: '100%',
                               justifyContent: 'space-between',
                               alignItems: 'center',
-                              background: '#15162c',
                             }}
                           >
                             <Flex
@@ -1089,21 +1096,15 @@ CRITICAL: The optimized prompt must:
                               align="center"
                               mb="md"
                             >
-                              <Flex align="center" className="gap-2">
+                              <Flex align="center" className="gap-4">
                                 <Title
-                                  className={`label ${montserrat_heading.variable} pl-1 pr-0 font-montserratHeading md:pl-0 md:pr-2`}
-                                  variant="gradient"
-                                  gradient={{
-                                    from: 'gold',
-                                    to: 'white',
-                                    deg: 170,
-                                  }}
+                                  className={`label ${montserrat_heading.variable} pl-1 pr-0 font-montserratHeading text-[--dashboard-foreground] md:pl-0 md:pr-2`}
                                   order={4}
                                 >
-                                  {t('prompt.system.title')}
+                                  System Prompt
                                 </Title>
                                 <Select
-                                  placeholder={t('prompt.system.model_select') || 'Select model'}
+                                  placeholder="Select model"
                                   data={modelOptions}
                                   value={selectedModel}
                                   onChange={(value) =>
@@ -1235,9 +1236,9 @@ CRITICAL: The optimized prompt must:
                                       },
                                     },
                                     input: {
-                                      backgroundColor: 'rgb(107, 33, 168)',
+                                      color: 'var(--foreground)',
+                                      backgroundColor: 'var(--background)',
                                       border: 'none',
-                                      color: theme.white,
                                       '&:focus': {
                                         borderColor: '#6e56cf',
                                       },
@@ -1260,8 +1261,9 @@ CRITICAL: The optimized prompt must:
                                       },
                                     },
                                     dropdown: {
-                                      backgroundColor: '#1d1f33',
-                                      border: '1px solid rgba(42,42,120,1)',
+                                      backgroundColor: 'var(--background)',
+                                      border:
+                                        '1px solid var(--background-dark)',
                                       borderRadius: theme.radius.md,
                                       marginTop: '2px',
                                       boxShadow: theme.shadows.xs,
@@ -1276,20 +1278,24 @@ CRITICAL: The optimized prompt must:
                                       },
                                     },
                                     item: {
-                                      backgroundColor: '#1d1f33',
+                                      color: 'var(--foreground)',
+                                      backgroundColor: 'var(--background)',
                                       borderRadius: theme.radius.md,
                                       margin: '2px',
                                       overflow: 'visible',
                                       '&[data-selected]': {
+                                        color: 'var(--foreground)',
                                         backgroundColor: 'transparent',
                                         '&:hover': {
-                                          backgroundColor: 'rgb(107, 33, 168)',
-                                          color: theme.white,
+                                          color: 'var(--foreground)',
+                                          backgroundColor:
+                                            'var(--foreground-faded)',
                                         },
                                       },
                                       '&[data-hovered]': {
-                                        backgroundColor: 'rgb(107, 33, 168)',
-                                        color: theme.white,
+                                        color: 'var(--foreground)',
+                                        backgroundColor:
+                                          'var(--foreground-faded)',
                                       },
                                       fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
                                       cursor: 'pointer',
@@ -1345,7 +1351,7 @@ CRITICAL: The optimized prompt must:
                                   }
                                 />
                                 <Tooltip
-                                  label={t('prompt.system.model_tooltip')}
+                                  label="The selected model will be used when Optimizing System Prompt"
                                   position="top"
                                   multiline
                                   withArrow
@@ -1369,7 +1375,7 @@ CRITICAL: The optimized prompt must:
                                   <div>
                                     <IconInfoCircle
                                       size={18}
-                                      className="text-white/60 transition-colors duration-200 hover:text-white/80"
+                                      className="text-[--foreground-faded] transition-colors duration-200 hover:text-[--foreground]"
                                       style={{ cursor: 'pointer' }}
                                     />
                                   </div>
@@ -1381,11 +1387,12 @@ CRITICAL: The optimized prompt must:
                                   key="close"
                                 >
                                   <div
-                                    className="cursor-pointer p-0"
+                                    className="cursor-pointer p-0 pl-2"
                                     data-right-sidebar-icon
                                   >
                                     <IconLayoutSidebarRight
                                       stroke={2}
+                                      className="text-[--foreground-faded] transition-colors duration-200 hover:text-[--foreground]"
                                       onClick={() =>
                                         setIsRightSideVisible(false)
                                       }
@@ -1400,6 +1407,7 @@ CRITICAL: The optimized prompt must:
                                   >
                                     <IconLayoutSidebarRightExpand
                                       stroke={2}
+                                      className="text-[--foreground-faded] transition-colors duration-200 hover:text-[--foreground]"
                                       onClick={() =>
                                         setIsRightSideVisible(true)
                                       }
@@ -1418,7 +1426,7 @@ CRITICAL: The optimized prompt must:
                                 autosize
                                 minRows={3}
                                 maxRows={20}
-                                placeholder={t('prompt.system.enter') || 'Enter the system prompt...'}
+                                placeholder="Enter the system prompt..."
                                 className="px-1 pt-3 md:px-0"
                                 value={baseSystemPrompt}
                                 onChange={(e) => {
@@ -1427,11 +1435,12 @@ CRITICAL: The optimized prompt must:
                                 style={{ width: '100%' }}
                                 styles={{
                                   input: {
+                                    color: 'var(--foreground)',
+                                    backgroundColor: 'var(--background)',
                                     fontFamily:
                                       'var(--font-montserratParagraph)',
                                     '&:focus': {
-                                      borderColor: '#8441ba',
-                                      boxShadow: '0 0 0 1px #8441ba',
+                                      borderColor: 'var(--dashboard-button)',
                                     },
                                   },
                                 }}
@@ -1446,7 +1455,7 @@ CRITICAL: The optimized prompt must:
                                     handleSystemPromptSubmit(baseSystemPrompt)
                                   }}
                                   sx={(theme) => ({
-                                    backgroundColor: `${theme.colors?.purple?.[8] || '#6d28d9'} !important`,
+                                    backgroundColor: `var(--dashboard-button) !important`,
                                     border: 'none',
                                     color: '#fff',
                                     padding: '10px 20px',
@@ -1454,64 +1463,68 @@ CRITICAL: The optimized prompt must:
                                     boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
                                     transition: 'all 0.2s ease',
                                     '&:hover': {
-                                      backgroundColor: `${theme.colors?.purple?.[9] || '#5b21b6'} !important`,
-                                      transform: 'translateY(-1px)',
+                                      backgroundColor: `var(--dashboard-button-hover) !important`,
                                       boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
                                     },
                                     '&:active': {
-                                      transform: 'translateY(0)',
                                       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
                                     },
                                   })}
                                   style={{ minWidth: 'fit-content' }}
                                 >
-                                  {t('prompt.system.update')}
+                                  Update System Prompt
                                 </Button>
-                                <Button
-                                  onClick={handleSubmitPromptOptimization}
-                                  disabled={!llmProviders || isOptimizing}
-                                  variant="filled"
-                                  radius="md"
-                                  leftIcon={
-                                    isOptimizing ? (
-                                      <LoadingSpinner size="sm" />
-                                    ) : (
-                                      <IconSparkles stroke={1} />
-                                    )
+
+                                <span
+                                  style={
+                                    {
+                                      '--spinner': 'var(--dashboard-button)',
+                                    } as React.CSSProperties
                                   }
-                                  className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                                  sx={(theme) => ({
-                                    background:
-                                      'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%) !important',
-                                    border: 'none',
-                                    color: '#fff',
-                                    padding: '10px 20px',
-                                    fontWeight: 600,
-                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-                                    transition: 'all 0.2s ease',
-                                    '&:hover': {
-                                      background:
-                                        'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%) !important',
-                                      transform: 'translateY(-1px)',
-                                      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
-                                    },
-                                    '&:active': {
-                                      transform: 'translateY(0)',
-                                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-                                    },
-                                    '&:disabled': {
-                                      opacity: 0.7,
-                                      cursor: 'not-allowed',
-                                      transform: 'none',
-                                      boxShadow: 'none',
-                                    },
-                                  })}
-                                  style={{ minWidth: 'fit-content' }}
                                 >
-                                  {isOptimizing
-                                    ? t('prompt.system.optimizing')
-                                    : t('prompt.system.optimize')}
-                                </Button>
+                                  <Button
+                                    onClick={handleSubmitPromptOptimization}
+                                    disabled={!llmProviders || isOptimizing}
+                                    variant="filled"
+                                    radius="md"
+                                    leftIcon={
+                                      isOptimizing ? (
+                                        <LoadingSpinner size="sm" />
+                                      ) : (
+                                        <IconSparkles
+                                          stroke={1}
+                                          color="var(--dashboard-button-foreground)"
+                                        />
+                                      )
+                                    }
+                                    className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                                    sx={(theme) => ({
+                                      background:
+                                        'var(--dashboard-button) !important',
+                                      border: 'none',
+                                      color:
+                                        'var(--dashboard-button-foreground) !important',
+                                      padding: '10px 20px',
+                                      fontWeight: 600,
+                                      transition: 'all 0.2s ease',
+                                      '&:hover': {
+                                        background:
+                                          'var(--dashboard-button-hover) !important',
+                                      },
+                                      '&:active': {},
+                                      '&:disabled': {
+                                        opacity: 0.7,
+                                        cursor: 'not-allowed',
+                                        transform: 'none',
+                                      },
+                                    })}
+                                    style={{ minWidth: 'fit-content' }}
+                                  >
+                                    {isOptimizing
+                                      ? 'Optimizing...'
+                                      : 'Optimize System Prompt'}
+                                  </Button>
+                                </span>
                               </Group>
 
                               <Modal
@@ -1523,14 +1536,8 @@ CRITICAL: The optimized prompt must:
                                     className={`${montserrat_heading.variable} font-montserratHeading`}
                                     size="lg"
                                     weight={700}
-                                    gradient={{
-                                      from: 'gold',
-                                      to: 'white',
-                                      deg: 45,
-                                    }}
-                                    variant="gradient"
                                   >
-                                    {t('prompt.system.optimized')}
+                                    Optimized System Prompt
                                   </Text>
                                 }
                                 className={`${montserrat_heading.variable} rounded-xl font-montserratHeading`}
@@ -1539,12 +1546,14 @@ CRITICAL: The optimized prompt must:
                                 styles={{
                                   title: { marginBottom: '0' },
                                   header: {
-                                    backgroundColor: '#15162c',
-                                    borderBottom: '1px solid #2D2F48',
+                                    backgroundColor: 'var(--modal)',
+                                    borderBottom:
+                                      '1px solid var(--modal-border)',
                                     padding: '20px 24px',
                                   },
                                   content: {
-                                    backgroundColor: '#15162c',
+                                    color: 'var(--modal-text)',
+                                    backgroundColor: 'var(--modal)',
                                     border: '1px solid #2D2F48',
                                   },
                                   body: {
@@ -1556,10 +1565,13 @@ CRITICAL: The optimized prompt must:
                                     flexDirection: 'column',
                                   },
                                   close: {
-                                    color: '#D1D1D1',
+                                    color: 'var(--modal-text)',
+                                    border: '0px',
+
                                     '&:hover': {
+                                      color: 'var(--modal)',
                                       backgroundColor:
-                                        'rgba(255, 255, 255, 0.1)',
+                                        'var(--dashboard-button)',
                                     },
                                   },
                                 }}
@@ -1577,9 +1589,8 @@ CRITICAL: The optimized prompt must:
                                     p="md"
                                     radius="md"
                                     style={{
-                                      backgroundColor: '#1a1b34',
-                                      border:
-                                        '1px solid rgba(147, 51, 234, 0.3)',
+                                      backgroundColor:
+                                        'var(--background-faded)',
                                       flex: 1,
                                       overflow: 'auto',
                                       minHeight: '200px',
@@ -1599,7 +1610,7 @@ CRITICAL: The optimized prompt must:
                                               padding: '16px',
                                               borderRadius: '8px',
                                               whiteSpace: 'pre-wrap',
-                                              color: '#D1D1D1',
+                                              color: 'var(--modal-text)',
                                               lineHeight: '1.6',
                                               fontSize: '0.95rem',
                                             }}
@@ -1620,16 +1631,17 @@ CRITICAL: The optimized prompt must:
                                       className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                                       styles={(theme) => ({
                                         root: {
-                                          borderColor: theme.colors.gray[6],
-                                          color: '#fff',
+                                          color: 'var(--foreground)',
+                                          borderColor:
+                                            'var(--background-faded)',
                                           '&:hover': {
                                             backgroundColor:
-                                              theme.colors.gray[8],
+                                              'var(--background-faded)',
                                           },
                                         },
                                       })}
                                     >
-                                      {t('common:cancel')}
+                                      Cancel
                                     </Button>
                                     <Button
                                       radius="md"
@@ -1654,29 +1666,24 @@ CRITICAL: The optimized prompt must:
                                         close()
                                       }}
                                       sx={(theme) => ({
+                                        color:
+                                          'var(--dashboard-button-foreground)',
                                         background:
-                                          'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%) !important',
+                                          'var(--dashboard-button) !important',
                                         border: 'none',
-                                        color: '#fff',
                                         padding: '10px 20px',
                                         fontWeight: 600,
-                                        boxShadow:
-                                          '0 2px 4px rgba(0, 0, 0, 0.2)',
                                         transition: 'all 0.2s ease',
                                         '&:hover': {
                                           background:
-                                            'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%) !important',
-                                          transform: 'translateY(-1px)',
-                                          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
+                                            'var(--dashboard-button-hover) !important',
                                         },
                                         '&:active': {
                                           transform: 'translateY(0)',
-                                          boxShadow:
-                                            '0 2px 4px rgba(0, 0, 0, 0.2)',
                                         },
                                       })}
                                     >
-                                      {t('prompt.system.update')}
+                                      Update System Prompt
                                     </Button>
                                   </Group>
                                 </div>
@@ -1698,40 +1705,38 @@ CRITICAL: The optimized prompt must:
                       style={{
                         flex: isSmallScreen ? '1 1 100%' : '1 1 40%',
                         padding: '1rem',
-                        backgroundColor: '#15162c',
-                        color: 'white',
+                        color: 'var(--dashboard-foreground)',
+                        backgroundColor: 'var(--dashboard-sidebar-background)',
+                        borderLeft: '1px solid var(--dashboard-border)',
                       }}
                     >
                       <div className="card flex h-full flex-col">
-                        <Flex direction="column" m="3rem" gap="md">
-                          <Flex align="center">
+                        <Flex direction="column" m="1rem" gap="md">
+                          <Flex align="flex-start">
                             <Title
                               className={`${montserrat_heading.variable} font-montserratHeading`}
-                              variant="gradient"
-                              gradient={{ from: 'gold', to: 'white', deg: 170 }}
                               order={3}
                               pl={'md'}
                               pr={'md'}
-                              pt={'sm'}
                               pb={'xs'}
                               style={{ alignSelf: 'left', marginLeft: '-11px' }}
                             >
-                              {t('prompt.search.optimization')}
+                              Document Search Optimization
                             </Title>
                             <Indicator
                               label={
                                 <Text
                                   className={`${montserrat_heading.variable} font-montserratHeading`}
                                 >
-                                  {t('common.new')}
+                                  New
                                 </Text>
                               }
-                              color="hsl(280,100%,70%)"
+                              color="var(--dashboard-button)"
                               size={13}
                               styles={{
                                 indicator: {
-                                  top: '-17px !important',
-                                  right: '7px !important',
+                                  top: '-1.1rem !important',
+                                  right: '.25rem !important',
                                 },
                               }}
                             >
@@ -1742,11 +1747,11 @@ CRITICAL: The optimized prompt must:
                           </Flex>
 
                           <CustomSwitch
-                            label={t('prompt.search.smart')}
-                            tooltip={t('prompt.search.smart_tooltip')}
+                            label="Smart Document Search"
+                            tooltip="When enabled, UIUC.chat optimizes your queries to better search through course materials and find relevant content. Note: This only affects how documents are searched - your chat messages remain exactly as you write them."
                             checked={vectorSearchRewrite}
                             onChange={(value: boolean) => {
-                              handleCheckboxChange({
+                              handleSettingChange({
                                 vector_search_rewrite_disabled: !value,
                               })
                             }}
@@ -1757,21 +1762,19 @@ CRITICAL: The optimized prompt must:
                           <Flex align="center" style={{ paddingTop: '15px' }}>
                             <Title
                               className={`label ${montserrat_heading.variable} mr-[8px] font-montserratHeading`}
-                              variant="gradient"
-                              gradient={{ from: 'gold', to: 'white', deg: 170 }}
                               order={3}
                             >
-                              {t('prompt.behavior.settings')}
+                              AI Behavior Settings
                             </Title>
                             <Indicator
                               label={
                                 <Text
                                   className={`${montserrat_heading.variable} font-montserratHeading`}
                                 >
-                                  {t('common.new')}
+                                  New
                                 </Text>
                               }
-                              color="hsl(280,100%,70%)"
+                              color="var(--dashboard-button)"
                               size={13}
                               // styles={{ indicator: { top: '-10px !important', right: '265px !important' } }}
                               styles={{
@@ -1792,8 +1795,8 @@ CRITICAL: The optimized prompt must:
                           <Flex direction="column" gap="md">
                             <div className="flex flex-col gap-1">
                               <CustomSwitch
-                                label={t('prompt.behavior.guided_learning')}
-                                tooltip={t('prompt.behavior.guided_learning_tooltip')}
+                                label="Guided Learning"
+                                tooltip="When enabled course-wide, this setting applies to all students and cannot be disabled by them. The AI will encourage independent problem-solving by providing hints and questions instead of direct answers, while still finding and citing relevant course materials. This promotes critical thinking while ensuring students have access to proper resources."
                                 checked={guidedLearning}
                                 onChange={(value: boolean) =>
                                   handleCheckboxChange({
@@ -1803,8 +1806,8 @@ CRITICAL: The optimized prompt must:
                               />
 
                               <CustomSwitch
-                                label={t('prompt.behavior.document_based_only')}
-                                tooltip={t('prompt.behavior.document_based_only_tooltip')}
+                                label="Document-Based References Only"
+                                tooltip="Restricts the AI to use only information from the provided documents. Useful for maintaining accuracy in fields like legal research where external knowledge could be problematic."
                                 checked={documentsOnly}
                                 onChange={(value: boolean) =>
                                   handleCheckboxChange({ documentsOnly: value })
@@ -1812,8 +1815,8 @@ CRITICAL: The optimized prompt must:
                               />
 
                               <CustomSwitch
-                                label={t('prompt.behavior.bypass_internal')}
-                                tooltip={t('prompt.behavior.bypass_internal_tooltip')}
+                                label="Bypass UIUC.chat's internal prompting"
+                                tooltip="Internally, we prompt the model to (1) add citations and (2) always be as helpful as possible. You can bypass this for full un-modified control over your bot."
                                 checked={systemPromptOnly}
                                 onChange={(value: boolean) =>
                                   handleCheckboxChange({
@@ -1831,8 +1834,8 @@ CRITICAL: The optimized prompt must:
                                   className="mt-[-4px] pl-[82px]"
                                 >
                                   <CustomCopyButton
-                                    label={t('prompt.behavior.copy_internal')}
-                                    tooltip={t('prompt.behavior.copy_internal_tooltip')}
+                                    label="Copy UIUC.chat's internal prompt"
+                                    tooltip="You can use and customize our default internal prompting to suit your needs. Note, only the specific citation formatting described will work with our citation 'find and replace' system. This provides a solid starting point for defining AI behavior in raw prompt mode."
                                     onClick={handleCopyDefaultPrompt}
                                   />
                                 </Flex>
@@ -1854,7 +1857,7 @@ CRITICAL: The optimized prompt must:
                                     }}
                                     variant="gradient"
                                   >
-                                    {t('prompt.reset.settings')}
+                                    Reset Prompting Settings
                                   </Text>
                                 }
                                 centered
@@ -1902,7 +1905,9 @@ CRITICAL: The optimized prompt must:
                                         lineHeight: 1.5,
                                       }}
                                     >
-                                      {t('prompt.reset.confirm')}
+                                      Are you sure you want to reset your system
+                                      prompt and all behavior settings to their
+                                      default values?
                                     </Text>
                                   </Flex>
 
@@ -1922,7 +1927,7 @@ CRITICAL: The optimized prompt must:
                                         marginBottom: '12px',
                                       }}
                                     >
-                                      {t('prompt.reset.action_will')}
+                                      This action will:
                                     </Text>
                                     <List
                                       size="sm"
@@ -1940,8 +1945,14 @@ CRITICAL: The optimized prompt must:
                                         />
                                       }
                                     >
-                                      <List.Item>{t('prompt.reset.restore_default')}</List.Item>
-                                      <List.Item>{t('prompt.reset.disable_settings')}</List.Item>
+                                      <List.Item>
+                                        Restore the system prompt to the default
+                                        template
+                                      </List.Item>
+                                      <List.Item>
+                                        Disable Guided Learning, Document-Only
+                                        mode, and other custom settings
+                                      </List.Item>
                                     </List>
                                   </div>
 
@@ -1950,7 +1961,8 @@ CRITICAL: The optimized prompt must:
                                     style={{ color: '#D1D1D1' }}
                                     className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                                   >
-                                    {t('prompt.reset.cannot_undo')}
+                                    This cannot be undone. Please confirm you
+                                    wish to proceed.
                                   </Text>
 
                                   <Group position="right" mt="md">
@@ -1971,7 +1983,7 @@ CRITICAL: The optimized prompt must:
                                         },
                                       })}
                                     >
-                                      {t('common:cancel')}
+                                      Cancel
                                     </Button>
                                     <Button
                                       variant="filled"
@@ -2004,7 +2016,7 @@ CRITICAL: The optimized prompt must:
                                         closeResetModal()
                                       }}
                                     >
-                                      {t('prompt.reset.confirm')}
+                                      Confirm
                                     </Button>
                                   </Group>
                                 </Flex>
@@ -2012,9 +2024,9 @@ CRITICAL: The optimized prompt must:
 
                               {/* Reset and Share Link buttons */}
                               <Flex
+                                direction="column"
                                 mt="md"
                                 justify="flex-start"
-                                align="center"
                                 gap="md"
                               >
                                 <Button
@@ -2029,21 +2041,15 @@ CRITICAL: The optimized prompt must:
                                     color: '#fff',
                                     padding: '10px 20px',
                                     fontWeight: 600,
-                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
                                     transition: 'all 0.2s ease',
                                     '&:hover': {
                                       backgroundColor: `${theme.colors.red[9]} !important`,
-                                      transform: 'translateY(-1px)',
-                                      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
                                     },
-                                    '&:active': {
-                                      transform: 'translateY(0)',
-                                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-                                    },
+                                    '&:active': {},
                                   })}
                                   onClick={openResetModal}
                                 >
-                                  {t('prompt.reset.settings')}
+                                  Reset Prompting Settings
                                 </Button>
 
                                 <Button
@@ -2054,26 +2060,20 @@ CRITICAL: The optimized prompt must:
                                   className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                                   sx={(theme) => ({
                                     background:
-                                      'linear-gradient(90deg, #6d28d9 0%, #4f46e5 50%, #2563eb 100%) !important',
+                                      'var(--dashboard-button) !important',
                                     border: 'none',
                                     color: '#fff',
                                     padding: '10px 20px',
                                     fontWeight: 600,
-                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
                                     transition: 'all 0.2s ease',
                                     '&:hover': {
                                       background:
-                                        'linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #6d28d9 100%) !important',
-                                      transform: 'translateY(-1px)',
-                                      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
+                                        'var(--dashboard-button-hover) !important',
                                     },
-                                    '&:active': {
-                                      transform: 'translateY(0)',
-                                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-                                    },
+                                    '&:active': {},
                                   })}
                                 >
-                                  {t('prompt.share.generate_link')}
+                                  Generate Share Link
                                 </Button>
                               </Flex>
 
@@ -2103,7 +2103,7 @@ CRITICAL: The optimized prompt must:
         </div>
         <GlobalFooter />
       </main>
-    </>
+    </SettingsLayout>
   )
 }
 
@@ -2130,21 +2130,21 @@ export const showToastNotification = (
     icon: icon || (isError ? <IconAlertTriangle /> : <IconCheck />),
     styles: {
       root: {
-        backgroundColor: '#1A1B1E', // Dark background to match the page
-        borderColor: isError ? '#E53935' : '#6D28D9', // Red for errors, purple for success
+        backgroundColor: 'var(--notification)', // Dark background to match the page
+        borderColor: isError ? '#E53935' : 'var(--notification-border)', // Red for errors,  for success
         borderWidth: '1px',
         borderStyle: 'solid',
         borderRadius: '8px', // Added rounded corners
       },
       title: {
-        color: '#FFFFFF', // White text for the title
+        color: 'var(--notification-title)', // White text for the title
         fontWeight: 600,
       },
       description: {
-        color: '#D1D1D1', // Light gray text for the message
+        color: 'var(--notification-message)', // Light gray text for the message
       },
       closeButton: {
-        color: '#FFFFFF', // White color for the close button
+        color: 'var(--notification-title)', // White color for the close button
         borderRadius: '4px', // Added rounded corners to close button
         '&:hover': {
           backgroundColor: 'rgba(255, 255, 255, 0.1)', // Subtle hover effect
@@ -2152,7 +2152,7 @@ export const showToastNotification = (
       },
       icon: {
         backgroundColor: 'transparent', // Transparent background for the icon
-        color: isError ? '#E53935' : '#6D28D9', // Icon color matches the border
+        color: isError ? '#E53935' : 'var(--notification-title)', // Icon color matches the border
       },
     },
   })
@@ -2179,9 +2179,3 @@ export const showToastOnPromptUpdate = (
 }
 
 export default CourseMain
-
-export const getServerSideProps = async ({ locale }: GetServerSidePropsContext) => ({
-  props: {
-    ...(await serverSideTranslations(locale ?? 'en', ['common', 'prompt'])),
-  },
-});

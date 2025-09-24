@@ -1,4 +1,4 @@
-import { NextPage } from 'next'
+import { type NextPage } from 'next'
 import { useState } from 'react'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import ChatUI from '~/utils/modelProviders/WebLLM'

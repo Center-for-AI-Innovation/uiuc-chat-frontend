@@ -1,4 +1,4 @@
-import { MouseEventHandler, ReactElement } from 'react'
+import { type MouseEventHandler, type ReactElement } from 'react'
 
 interface Props {
   handleClick: MouseEventHandler<HTMLButtonElement>

@@ -4,15 +4,12 @@ import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useContext, useEffect, useMemo, useState } from 'react'
 import HomeContext from '~/pages/api/home/home.context'
 import { useMediaQuery } from '@mantine/hooks'
-import { useTranslation } from 'next-i18next'
 
 export const DocumentGroupsItem = ({}) => {
   const {
     state: { documentGroups },
     dispatch: homeDispatch,
   } = useContext(HomeContext)
-
-  const { t } = useTranslation('common')
 
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const [documentGroupSearch, setDocumentGroupSearch] = useState('')
@@ -57,22 +54,21 @@ export const DocumentGroupsItem = ({}) => {
   return (
     <>
       <div
-        className="flex h-full w-[100%] flex-col space-y-4 rounded-lg bg-[#1d1f33] p-4 dark:bg-[#1d1f33]"
+        className="flex h-full w-[100%] flex-col space-y-4 rounded-lg p-3"
         style={{ position: 'relative', zIndex: 100 }}
       >
         <div>
           <div className="flex flex-col"></div>
           <Title
-            className={`px-4 pt-4 ${montserrat_heading.variable} rounded-lg bg-[#15162c] p-4 font-montserratHeading md:rounded-lg`}
-            color="white"
+            className={`px-4 pt-4 ${montserrat_heading.variable} rounded-lg bg-[--modal-dark] p-4 font-montserratHeading md:rounded-lg`}
             order={isSmallScreen ? 5 : 3}
           >
-            {t('settings.sections.document_groups.title')}
+            Document Groups
           </Title>
           <div className="flex flex-col items-center justify-center rounded-lg">
             <TextInput
               type="search"
-              placeholder={String(t('settings.sections.document_groups.search'))}
+              placeholder="Search by Document Group"
               my="sm"
               radius="md"
               icon={<IconSearch size={isSmallScreen ? 15 : 20} />}
@@ -80,31 +76,49 @@ export const DocumentGroupsItem = ({}) => {
               onChange={handleDocumentGroupSearchChange}
               w={'90%'}
               size={isSmallScreen ? 'xs' : 'sm'}
+              styles={{
+                input: {
+                  color: 'var(--foreground)',
+                  backgroundColor: 'var(--background-faded)',
+                  borderColor: 'var(--background-dark)',
+                  '&:focus': {
+                    borderColor: 'var(--background-darker)',
+                  },
+                },
+              }}
             />
 
+            {/* unable to use this until v7 of mantine since we can't control the hover color              highlightOnHover */}
             <Table
               variant="striped"
+              className="text-[--modal-text]"
               style={{
                 width: '90%',
               }}
-              highlightOnHover
             >
               <thead>
                 <tr
                   className={`${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`}
                 >
-                  <th style={{ width: '60%', wordWrap: 'break-word' }}>
-                    {t('settings.sections.document_groups.table.name')}
+                  <th
+                    style={{
+                      width: '60%',
+                      wordWrap: 'break-word',
+                      color: 'var(--foreground)',
+                    }}
+                  >
+                    Document Group
                   </th>
                   <th
                     style={{
                       width: '40%',
                       wordWrap: 'break-word',
                       textAlign: 'center',
+                      color: 'var(--foreground)',
                     }}
                   >
                     <span className="flex flex-col items-center justify-center">
-                      <span className="self-center">{t('settings.sections.document_groups.table.enabled')}</span>
+                      <span className="self-center">Enabled</span>
                     </span>
                   </th>
                 </tr>
@@ -129,8 +143,17 @@ export const DocumentGroupsItem = ({}) => {
                       <Switch
                         checked={doc_group_obj.checked}
                         onChange={() => handleToggleChecked(doc_group_obj.id)}
-                        color="grape"
-                        size={isSmallScreen ? 'sm' : 'lg'}
+                        className="cursor-pointer"
+                        styles={{
+                          track: {
+                            backgroundColor: doc_group_obj.checked
+                              ? 'var(--dashboard-button) !important'
+                              : 'var(--dashboard-background-dark)',
+                            borderColor: doc_group_obj.checked
+                              ? 'var(--dashboard-button) !important'
+                              : 'var(--dashboard-background-dark)',
+                          },
+                        }}
                       />
                     </td>
                   </tr>
@@ -138,7 +161,7 @@ export const DocumentGroupsItem = ({}) => {
                 {filteredDocumentGroups.length === 0 && (
                   <tr>
                     <td colSpan={4}>
-                      <Text align="center">{t('settings.sections.document_groups.table.no_groups')}</Text>
+                      <Text align="center">No document groups found</Text>
                     </td>
                   </tr>
                 )}

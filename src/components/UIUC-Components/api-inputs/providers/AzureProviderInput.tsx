@@ -4,11 +4,10 @@ import { IconCheck, IconExternalLink, IconX } from '@tabler/icons-react'
 import { APIKeyInput } from '../LLMsApiKeyInputForm'
 import { ModelToggles } from '../ModelToggles'
 import {
-  AzureProvider,
+  type AzureProvider,
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useTranslation } from 'next-i18next'
 
 export default function AzureProviderInput({
   provider,
@@ -19,19 +18,15 @@ export default function AzureProviderInput({
   form: any
   isLoading: boolean
 }) {
-  const { t } = useTranslation('common')
-  
   if (isLoading) {
     return <Skeleton height={200} width={330} radius={'lg'} />
   }
-  
   return (
     <motion.div layout>
       <Card
-        shadow="sm"
         p="lg"
         radius="lg"
-        className="max-w-[330px] bg-[#15162c] md:w-[330px]"
+        className="max-w-[330px] bg-[--dashboard-background-faded] text-[--dashboard-foreground] md:w-[330px]"
       >
         <div
           style={{
@@ -75,7 +70,11 @@ export default function AzureProviderInput({
                 }}
                 thumbIcon={
                   field.state.value ? (
-                    <IconCheck size="0.8rem" color="purple" stroke={3} />
+                    <IconCheck
+                      size="0.8rem"
+                      color="var(--dashboard-button)"
+                      stroke={3}
+                    />
                   ) : (
                     <IconX size="0.8rem" color="grey" stroke={3} />
                   )
@@ -83,18 +82,22 @@ export default function AzureProviderInput({
                 styles={{
                   track: {
                     backgroundColor: field.state.value
-                      ? '#6a29a4 !important'
-                      : '#25262b',
+                      ? 'var(--dashboard-button) !important'
+                      : 'var(--dashboard-background-faded)',
                     borderColor: field.state.value
-                      ? '#6a29a4 !important'
-                      : '#25262b',
+                      ? 'var(--dashboard-button) !important'
+                      : 'var(--dashboard-background-faded)',
                   },
                 }}
               />
             )}
           </form.Field>
         </div>
-        
+        {/* <Text size="sm" color="dimmed" mb="md">
+          Azure OpenAI Service provides REST API access to OpenAI&apos;s
+          powerful language models with the security and enterprise promise of
+          Azure.
+        </Text> */}
         {provider?.error &&
           (form.state.values?.providers?.Azure?.enabled ||
             provider.enabled) && (
@@ -112,7 +115,6 @@ export default function AzureProviderInput({
               {provider.error}
             </Text>
           )}
-          
         <form.Field name={`providers.${ProviderNames.Azure}.enabled`}>
           {(field: any) => (
             <AnimatePresence>
@@ -125,10 +127,7 @@ export default function AzureProviderInput({
                 >
                   <form.Field name={`providers.${ProviderNames.Azure}.apiKey`}>
                     {(field: any) => (
-                      <APIKeyInput
-                        field={field}
-                        placeholder={t('models.azure.title')}
-                      />
+                      <APIKeyInput field={field} placeholder="Azure API Key" />
                     )}
                   </form.Field>
                   <form.Field
@@ -136,8 +135,15 @@ export default function AzureProviderInput({
                   >
                     {(field: any) => (
                       <TextInput
-                        label={t('models.fields.azure_endpoint') || ''}
-                        placeholder={t('models.fields.azure_endpoint_placeholder') || ''}
+                        label="Azure Endpoint"
+                        placeholder="https://your-resource-name.openai.azure.com/"
+                        styles={{
+                          label: { color: 'var(--dashboard-foreground-faded)' },
+                          input: {
+                            color: 'var(--foreground)',
+                            backgroundColor: 'var(--background)',
+                          },
+                        }}
                         value={field.state.value}
                         onChange={(event) =>
                           field.handleChange(event.currentTarget.value)
@@ -145,6 +151,21 @@ export default function AzureProviderInput({
                       />
                     )}
                   </form.Field>
+                  {/* <form.Field
+                    name={`providers.${ProviderNames.Azure}.AzureDeployment`}
+                  >
+                    {(field: any) => (
+                      <TextInput
+                        label="Azure Deployment"
+                        placeholder="your-deployment-name"
+                        value={field.state.value}
+                        onChange={(event) =>
+                          field.handleChange(event.currentTarget.value)
+                        }
+                      />
+                    )}
+                  </form.Field> */}
+                  <ModelToggles form={form} provider={provider} />
                 </motion.div>
               )}
             </AnimatePresence>

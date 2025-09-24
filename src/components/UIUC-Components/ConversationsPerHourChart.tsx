@@ -12,7 +12,6 @@ import axios from 'axios'
 import { Text, Title } from '@mantine/core'
 import { LoadingSpinner } from './LoadingSpinner'
 import { montserrat_paragraph } from 'fonts'
-import { useTranslation } from 'next-i18next'
 
 interface ChartProps {
   data?: { [hour: string]: number }
@@ -25,7 +24,6 @@ const ConversationsPerHourChart: React.FC<ChartProps> = ({
   isLoading,
   error,
 }) => {
-  const { t } = useTranslation('common')
   const ensureAllHours = (hourData: { [hour: string]: number } | undefined) => {
     const fullHours = Array.from({ length: 24 }, (_, i) => ({
       hour: i.toString(),
@@ -43,7 +41,7 @@ const ConversationsPerHourChart: React.FC<ChartProps> = ({
   if (isLoading) {
     return (
       <Text>
-        {t('analysis.loadingChart', 'Loading chart')} <LoadingSpinner size="xs" />
+        Loading chart <LoadingSpinner size="xs" />
       </Text>
     )
   }
@@ -53,7 +51,7 @@ const ConversationsPerHourChart: React.FC<ChartProps> = ({
   }
 
   if (!data) {
-    return <Text>{t('analysis.noDataAvailable', 'No data available')}</Text>
+    return <Text>No data available</Text>
   }
 
   const chartData = ensureAllHours(data)
@@ -69,14 +67,14 @@ const ConversationsPerHourChart: React.FC<ChartProps> = ({
           <XAxis
             dataKey="hour"
             tick={{
-              fill: '#fff',
               fontFamily: montserrat_paragraph.style.fontFamily,
+              fontSize: '.75rem',
             }}
             label={{
-              value: t('analysis.hour', 'Hour'),
+              value: 'Hour',
               position: 'insideBottom',
               offset: -5,
-              fill: '#fff',
+              fill: 'var(--foreground)',
               fontFamily: montserrat_paragraph.style.fontFamily,
               dy: 5,
             }}
@@ -84,14 +82,14 @@ const ConversationsPerHourChart: React.FC<ChartProps> = ({
           <YAxis
             allowDecimals={false}
             tick={{
-              fill: '#fff',
               fontFamily: montserrat_paragraph.style.fontFamily,
+              fontSize: '.75rem',
             }}
             label={{
-              value: t('analysis.numberOfConversations', 'Number of Conversations'),
+              value: 'Number of Conversations',
               angle: -90,
               position: 'center',
-              fill: '#fff',
+              fill: 'var(--foreground)',
               fontFamily: montserrat_paragraph.style.fontFamily,
               dx: getYAxisLabelPadding(chartData),
             }}
@@ -103,13 +101,14 @@ const ConversationsPerHourChart: React.FC<ChartProps> = ({
               color: '#fff',
               fontFamily: montserrat_paragraph.style.fontFamily,
             }}
-            formatter={(value) => {
-              const num = typeof value === 'number' ? value : Number(value);
-              return String(t('analysis.conversationsCount', { count: num, defaultValue: `Conversations: ${num}` }));
-            }}
-            labelFormatter={(label) => t('analysis.hourLabel', { hour: label, defaultValue: 'Hour: {{hour}}' })}
+            formatter={(value) => [`Conversations: ${value}`]}
+            labelFormatter={(label) => `Hour: ${label}`}
           />
-          <Bar dataKey="count" fill="#7e57c2" name={t('analysis.numberOfConversations', 'Number of Conversations') || 'Number of Conversations'} />
+          <Bar
+            dataKey="count"
+            fill="var(--dashboard-stat)"
+            name="Number of Conversations"
+          />
         </BarChart>
       </ResponsiveContainer>
     </div>

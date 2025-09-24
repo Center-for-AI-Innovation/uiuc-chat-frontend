@@ -4,7 +4,7 @@ import { ModelParams } from './ModelParams'
 import { IconExternalLink } from '@tabler/icons-react'
 import { useContext, useEffect, useState } from 'react'
 import HomeContext from '~/pages/api/home/home.context'
-import { useTranslation } from 'next-i18next'
+import { useTranslation } from 'react-i18next'
 import Link from 'next/link'
 import { useMediaQuery } from '@mantine/hooks'
 
@@ -17,12 +17,14 @@ export const FancyRetrieval = () => {
     state: {
       selectedConversation,
       defaultModelId,
+      // showModelSettings,
       prompts,
     },
     handleUpdateConversation,
+    // dispatch: homeDispatch,
   } = useContext(HomeContext)
 
-  const { t } = useTranslation('common')
+  const { t } = useTranslation('chat')
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
 
   // Update localStorage whenever useMQRetrieval changes
@@ -33,46 +35,56 @@ export const FancyRetrieval = () => {
   return (
     <>
       <div
-        className="flex h-full w-[100%] flex-col space-y-4 rounded-lg bg-[#1d1f33] p-4 dark:bg-[#1d1f33]"
+        className="flex h-full w-[100%] flex-col space-y-4 rounded-lg p-3"
         style={{ position: 'relative' }}
       >
         <Tooltip
           multiline
-          color="grape"
+          // color="#15162b"
+          color=""
           arrowPosition="side"
           position="top-start"
           arrowSize={8}
           withArrow
-          label={t('chat.retrieval.multi_query.disabled') || ''}
+          label="Multi-Query Retrieval is disabled for performance reasons, I'm working to bring it back ASAP."
           classNames={{
-            tooltip: `${isSmallScreen ? 'text-xs' : 'text-sm'} ${montserrat_paragraph.variable} font-montserratParagraph`,
+            tooltip: `${isSmallScreen ? 'text-xs' : 'text-sm'} text-[--tooltip] bg-[--tooltip-background] ${montserrat_paragraph.variable} font-montserratParagraph`,
           }}
         >
           <div>
             <Title
-              className={`px-4 pt-4 ${montserrat_heading.variable} rounded-lg bg-[#15162c] p-4 font-montserratHeading md:rounded-lg`}
+              className={`${montserrat_heading.variable} rounded-lg bg-[--modal-dark] p-4 font-montserratHeading text-[--modal-text]`}
               color="white"
               order={isSmallScreen ? 5 : 4}
             >
-              {t('chat.retrieval.fancy')}
+              Fancy Retrieval
             </Title>
             <Switch
               disabled={true}
+              // checked={useMQRetrieval}
               checked={false}
+              color="orange"
               className="mx-4 pl-2 pt-2"
               classNames={{
                 label: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : ''}`,
                 description: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : ''}`,
               }}
-              label={t('chat.retrieval.multi_query.label') || ''}
+              label={t('Multi Query Retrieval (slow 30 second response time)')}
               onChange={(event) =>
                 setUseMQRetrieval(event.currentTarget.checked)
               }
-              description={t('chat.retrieval.multi_query.description') || ''}
-              color="violet.7"
+              description={t(
+                'A LLM generates multiple queries based on your original for improved semantic search. Then every retrieved context is filtered by a smaller LLM (Mistral 7b) so that only high quality and relevant documents are included in the final GPT-4 call.',
+              )}
             />
           </div>
         </Tooltip>
+        {/* <ModelParams
+          selectedConversation={selectedConversation}
+          prompts={prompts}
+          handleUpdateConversation={handleUpdateConversation}
+          t={t}
+        /> */}
         <div className="flex h-full flex-col space-y-4 rounded-lg p-2">
           <Input.Description
             className={`text-right ${isSmallScreen ? 'text-xs' : 'text-sm'} ${montserrat_paragraph.variable} font-montserratParagraph`}
@@ -82,7 +94,7 @@ export const FancyRetrieval = () => {
               target="_blank"
               className="hover:underline"
             >
-              {t('models.openai.usage_link')}
+              View account usage on OpenAI{' '}
               <IconExternalLink
                 size={15}
                 style={{ position: 'relative', top: '2px' }}

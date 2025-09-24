@@ -1,15 +1,15 @@
 import {
-  MLCEngineInterface,
-  ChatCompletionMessageParam,
-  CompletionUsage,
+  type MLCEngineInterface,
+  type ChatCompletionMessageParam,
+  type CompletionUsage,
 } from '@mlc-ai/web-llm'
-import { ChatBody, Conversation, Message } from '~/types/chat'
-import { ModelRecord, prebuiltAppConfig } from './ConfigWebLLM'
+import { type ChatBody, Conversation, Message } from '~/types/chat'
+import { type ModelRecord, prebuiltAppConfig } from './ConfigWebLLM'
 import {
   ProviderNames,
-  WebLLMProvider,
+  type WebLLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
-import { CourseMetadata } from '~/types/courseMetadata'
+import { type CourseMetadata } from '~/types/courseMetadata'
 import buildPrompt from '~/pages/api/buildPrompt'
 
 // TODO: finish this message interface. Write a converter between `Message` and `WebLLMMessage`

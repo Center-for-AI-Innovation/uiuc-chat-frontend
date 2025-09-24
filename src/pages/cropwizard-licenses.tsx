@@ -1,17 +1,14 @@
 import { Group, List, Title, Text, Flex } from '@mantine/core'
 import { IconExternalLink } from '@tabler/icons-react'
-import { NextPage } from 'next'
+import { type NextPage } from 'next'
 import Link from 'next/link'
 import { MainPageBackground } from '../components/UIUC-Components/MainPageBackground'
 import GlobalFooter from '../components/UIUC-Components/GlobalFooter'
-import { useTranslation } from 'next-i18next'
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 
 const CropwizardLicenses: NextPage = () => {
-  const { t } = useTranslation('common')
   return (
     <MainPageBackground>
-      <Title order={2}>{t('cropwizard_licenses_title')}</Title>
+      <Title order={2}>CropWizard Document Licenses</Title>
       <Flex
         mih={50}
         // bg="rgba(0, 0, 0, .3)"
@@ -22,13 +19,16 @@ const CropwizardLicenses: NextPage = () => {
         wrap="wrap"
       >
         <Text className="max-w-[600px]">
-          {t('cropwizard_licenses_body')}
+          The documents in CropWizard are collected from many different sources,
+          and each document is subject to its respective license, including the
+          following. Any downstream use of CropWizard&apos;s results must
+          respect the license of the documents that were used.
         </Text>
         <List className="pl-10">
           <List.Item>
             <Link
               href="https://creativecommons.org/licenses/by/4.0/"
-              className="text-purple-600 hover:text-purple-800 active:text-purple-500"
+              className="hover:[--dashboard-button-hover] text-[--dashboard-button] active:text-[--dashboard-button]"
               style={{ transition: 'color 0.2s' }}
             >
               CC BY
@@ -37,7 +37,7 @@ const CropwizardLicenses: NextPage = () => {
           <List.Item>
             <Link
               href="http://creativecommons.org/licenses/by-nc/4.0/"
-              className="text-purple-600 hover:text-purple-800 active:text-purple-500"
+              className="hover:[--dashboard-button-hover] text-[--dashboard-button] active:text-[--dashboard-button]"
               style={{ transition: 'color 0.2s' }}
             >
               CC BY-NC
@@ -46,7 +46,7 @@ const CropwizardLicenses: NextPage = () => {
           <List.Item>
             <Link
               href="http://creativecommons.org/licenses/by-nc-nd/4.0/"
-              className="text-purple-600 hover:text-purple-800 active:text-purple-500"
+              className="hover:[--dashboard-button-hover] text-[--dashboard-button] active:text-[--dashboard-button]"
               style={{ transition: 'color 0.2s' }}
             >
               CC BY-NC-ND
@@ -55,7 +55,7 @@ const CropwizardLicenses: NextPage = () => {
           <List.Item>
             <Link
               href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
-              className="text-purple-600 hover:text-purple-800 active:text-purple-500"
+              className="hover:[--dashboard-button-hover] text-[--dashboard-button] active:text-[--dashboard-button]"
               style={{ transition: 'color 0.2s' }}
             >
               CC BY-NC-SA
@@ -64,7 +64,7 @@ const CropwizardLicenses: NextPage = () => {
           <List.Item>
             <Link
               href="https://creativecommons.org/licenses/by-nd/4.0/"
-              className="text-purple-600 hover:text-purple-800 active:text-purple-500"
+              className="hover:[--dashboard-button-hover] text-[--dashboard-button] active:text-[--dashboard-button]"
               style={{ transition: 'color 0.2s' }}
             >
               CC BY-ND
@@ -73,7 +73,7 @@ const CropwizardLicenses: NextPage = () => {
           <List.Item>
             <Link
               href="https://creativecommons.org/licenses/by-sa/4.0/"
-              className="text-purple-600 hover:text-purple-800 active:text-purple-500"
+              className="hover:[--dashboard-button-hover] text-[--dashboard-button] active:text-[--dashboard-button]"
               style={{ transition: 'color 0.2s' }}
             >
               CC BY-SA
@@ -82,7 +82,7 @@ const CropwizardLicenses: NextPage = () => {
           <List.Item>
             <Link
               href="https://creativecommons.org/public-domain/cc0/"
-              className="text-purple-600 hover:text-purple-800 active:text-purple-500"
+              className="hover:[--dashboard-button-hover] text-[--dashboard-button] active:text-[--dashboard-button]"
               style={{ transition: 'color 0.2s' }}
             >
               CC0
@@ -91,7 +91,7 @@ const CropwizardLicenses: NextPage = () => {
           <List.Item>
             <Link
               href="https://www.springeropen.com/get-published/copyright"
-              className="text-purple-600 hover:text-purple-800 active:text-purple-500"
+              className="hover:[--dashboard-button-hover] text-[--dashboard-button] active:text-[--dashboard-button]"
               style={{ transition: 'color 0.2s' }}
             >
               Springer Open Access License
@@ -104,28 +104,56 @@ const CropwizardLicenses: NextPage = () => {
   )
 }
 
-export const getStaticProps = async ({ locale }: { locale: string }) => {
-  return {
-    props: {
-      ...(await serverSideTranslations(locale, ['common'])),
-    },
-  };
-};
-
 export const CropwizardLicenseDisclaimer = () => {
-  const { t } = useTranslation('common')
   return (
-    <span>
-      <p>
-        {t('cropwizard_license_disclaimer', {
-          licenses: <Link className="text-purple-600 hover:text-purple-800 active:text-purple-500" href="/cropwizard-licenses" target="_blank" rel="noopener noreferrer">{t('licenses')}</Link>,
-          terms: <Link className="text-purple-600 hover:text-purple-800 active:text-purple-500" href="https://www.vpaa.uillinois.edu/resources/terms_of_use" target="_blank" rel="noopener noreferrer">{t('terms')}</Link>,
-          privacy_policy: <Link className="text-purple-600 hover:text-purple-800 active:text-purple-500" href="https://www.vpaa.uillinois.edu/resources/web_privacy" target="_blank" rel="noopener noreferrer">{t('privacy_policy')}</Link>,
-          ai_policy: <Link className="text-purple-600 hover:text-purple-800 active:text-purple-500" href="https://www.vpaa.uillinois.edu/digital_risk_management/generative_ai/" target="_blank" rel="noopener noreferrer">{t('ai_policy')}</Link>,
-        })}
-      </p>
-      <br />
-    </span>
+    <>
+      <span>
+        <p>
+          CropWizard&apos;s document corpus is subject to{' '}
+          <Link
+            className="hover:[--dashboard-button-hover] text-[--dashboard-button] active:text-[--dashboard-button]"
+            href="/cropwizard-licenses"
+            style={{ transition: 'color 0.2s' }}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            licenses
+          </Link>
+          . Usage is subject to{' '}
+          <Link
+            className="hover:[--dashboard-button-hover] text-[--dashboard-button] active:text-[--dashboard-button]"
+            href="https://www.vpaa.uillinois.edu/resources/terms_of_use"
+            style={{ transition: 'color 0.2s' }}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            terms
+          </Link>
+          , a{' '}
+          <Link
+            className="hover:[--dashboard-button-hover] text-[--dashboard-button] active:text-[--dashboard-button]"
+            href="https://www.vpaa.uillinois.edu/resources/web_privacy"
+            style={{ transition: 'color 0.2s' }}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            privacy policy
+          </Link>
+          , and{' '}
+          <Link
+            className="hover:[--dashboard-button-hover] text-[--dashboard-button] active:text-[--dashboard-button]"
+            href="https://www.vpaa.uillinois.edu/digital_risk_management/generative_ai/"
+            style={{ transition: 'color 0.2s' }}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            generative AI policy
+          </Link>
+          . Sorry, the legal team made us say that.
+        </p>
+      </span>
+      <br></br>
+    </>
   )
 }
 

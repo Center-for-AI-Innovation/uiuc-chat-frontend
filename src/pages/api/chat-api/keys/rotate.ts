@@ -1,6 +1,6 @@
 // src/pages/api/chat-api/keys/rotate.ts
 
-import { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiRequest, type NextApiResponse } from 'next'
 import { supabase } from '@/utils/supabaseClient'
 import { v4 as uuidv4 } from 'uuid'
 

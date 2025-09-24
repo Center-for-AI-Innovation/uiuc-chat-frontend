@@ -1,5 +1,5 @@
 import { supabase } from '@/utils/supabaseClient'
-import { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiRequest, type NextApiResponse } from 'next'
 
 type ApiResponse = {
   success: boolean
@@ -9,7 +9,7 @@ type ApiResponse = {
 
 export default async function getApiKeyByCourseName(
   req: NextApiRequest,
-  res: NextApiResponse<ApiResponse>
+  res: NextApiResponse<ApiResponse>,
 ) {
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, error: 'Method not allowed' })

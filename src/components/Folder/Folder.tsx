@@ -7,14 +7,14 @@ import {
   IconX,
 } from '@tabler/icons-react'
 import {
-  KeyboardEvent,
-  ReactElement,
+  type KeyboardEvent,
+  type ReactElement,
   useContext,
   useEffect,
   useState,
 } from 'react'
 
-import { FolderInterface } from '@/types/folder'
+import { type FolderInterface } from '@/types/folder'
 
 import HomeContext from '~/pages/api/home/home.context'
 
@@ -115,7 +115,7 @@ const Folder = ({
           </div>
         ) : (
           <button
-            className={`flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 text-sm transition-colors duration-200 hover:bg-[#343541]/90`}
+            className={`flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 text-sm text-[--foreground] transition-colors duration-200 hover:bg-[--background-faded]`}
             onClick={() => setIsOpen(!isOpen)}
             onDrop={(e) => dropHandler(e)}
             onDragOver={allowDrop}
@@ -128,14 +128,14 @@ const Folder = ({
               <IconCaretRight size={18} />
             )}
 
-            <div className="relative max-h-5 flex-1 overflow-hidden text-ellipsis whitespace-nowrap break-all text-left text-[12.5px] leading-3">
+            <div className="relative max-h-5 flex-1 overflow-hidden text-ellipsis whitespace-nowrap break-all text-left text-sm leading-3">
               {currentFolder.name}
             </div>
           </button>
         )}
 
         {(isDeleting || isRenaming) && (
-          <div className="absolute right-1 z-10 flex text-gray-300">
+          <div className="absolute right-1 z-10 flex">
             <SidebarActionButton
               handleClick={(e) => {
                 e.stopPropagation()
@@ -151,7 +151,10 @@ const Folder = ({
               }}
               tooltip={(isRenaming ? t('sidebar.confirm') : t('sidebar.delete')) || ''}
             >
-              <IconCheck size={18} />
+              <IconCheck
+                size={18}
+                className="text-[--foreground-faded] hover:text-[--dashboard-button-foreground]"
+              />
             </SidebarActionButton>
             <SidebarActionButton
               handleClick={(e) => {
@@ -161,13 +164,16 @@ const Folder = ({
               }}
               tooltip={t('sidebar.cancel') || ''}
             >
-              <IconX size={18} />
+              <IconX
+                size={18}
+                className="text-[--foreground-faded] hover:text-[--dashboard-button-foreground]"
+              />
             </SidebarActionButton>
           </div>
         )}
 
         {!isDeleting && !isRenaming && (
-          <div className="absolute right-1 z-10 flex text-gray-300">
+          <div className="absolute right-1 z-10 flex">
             <SidebarActionButton
               handleClick={(e) => {
                 e.stopPropagation()

@@ -1,7 +1,6 @@
-import { FC, KeyboardEvent, useEffect, useRef, useState } from 'react'
+import { type FC, type KeyboardEvent, useEffect, useRef, useState } from 'react'
 
-import { Prompt } from '@/types/prompt'
-import { useTranslation } from 'react-i18next'
+import { type Prompt } from '@/types/prompt'
 
 interface Props {
   prompt?: Prompt
@@ -30,8 +29,6 @@ export const VariableModal: FC<Props> = ({
   const modalRef = useRef<HTMLDivElement>(null)
   const nameInputRef = useRef<HTMLTextAreaElement>(null)
 
-  const { t } = useTranslation()
-
   const handleChange = (index: number, value: string) => {
     setUpdatedVariables((prev) => {
       const updated = prev.map((item, i) => {
@@ -46,7 +43,7 @@ export const VariableModal: FC<Props> = ({
 
   const handleSubmit = () => {
     if (updatedVariables.some((variable) => variable.value === '')) {
-      alert(t('please_fill_out_all_variables'))
+      alert('Please fill out all variables')
       return
     }
 
@@ -115,7 +112,7 @@ export const VariableModal: FC<Props> = ({
               ref={index === 0 ? nameInputRef : undefined}
               className="mt-1 w-full rounded-lg border border-neutral-500 px-4 py-2 text-neutral-900 shadow focus:outline-none dark:border-neutral-800 dark:border-opacity-50 dark:bg-[#40414F] dark:text-neutral-100"
               style={{ resize: 'none' }}
-              placeholder={t('enter_value_for', { key: variable.key }) || ''}
+              placeholder={`Enter a value for ${variable.key}...`}
               value={variable.value}
               onChange={(e) => handleChange(index, e.target.value)}
               rows={3}
@@ -127,7 +124,7 @@ export const VariableModal: FC<Props> = ({
           className="mt-6 w-full rounded-lg border border-neutral-500 px-4 py-2 text-neutral-900 shadow hover:bg-neutral-100 focus:outline-none dark:border-neutral-800 dark:border-opacity-50 dark:bg-white dark:text-black dark:hover:bg-neutral-300"
           onClick={handleSubmit}
         >
-          {t('submit')}
+          Submit
         </button>
       </div>
     </div>

@@ -11,10 +11,8 @@ import {
 } from '../Dialog'
 import NextLink from 'next/link'
 import axios from 'axios'
-import { FileUpload } from './UploadNotification'
-import { QueryClient } from '@tanstack/react-query'
-import { useTranslation } from 'next-i18next'
-
+import { type FileUpload } from './UploadNotification'
+import { type QueryClient } from '@tanstack/react-query'
 export default function MITIngestForm({
   project_name,
   setUploadFiles,
@@ -23,7 +21,6 @@ export default function MITIngestForm({
   setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
   queryClient: QueryClient
 }): JSX.Element {
-  const { t } = useTranslation('common')
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
   const [url, setUrl] = useState('')
@@ -46,16 +43,13 @@ export default function MITIngestForm({
     try {
       if (!url || !courseName || !localDir) return null
       console.log('calling downloadMITCourse')
-      const response = await axios.get(
-        `/api/UIUC-api/downloadMITCourse`,
-        {
-          params: {
-            url: url,
-            course_name: courseName,
-            local_dir: localDir,
-          },
+      const response = await axios.get(`/api/UIUC-api/downloadMITCourse`, {
+        params: {
+          url: url,
+          course_name: courseName,
+          local_dir: localDir,
         },
-      )
+      })
       return response.data
     } catch (error) {
       console.error('Error during MIT course download:', error)
@@ -112,12 +106,12 @@ export default function MITIngestForm({
       >
         <DialogTrigger asChild>
           <Card
-            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-gradient-to-br from-[#1c1c2e] to-[#2a2a40] p-6 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
+            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
             style={{ height: '100%' }}
           >
             <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-900/30">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[--dashboard-background-darker]">
                   <Image
                     src="/media/mitocw_logo.jpg"
                     alt="MIT OCW Logo"
@@ -126,17 +120,16 @@ export default function MITIngestForm({
                     className="rounded-full object-contain"
                   />
                 </div>
-                <Text className="text-xl font-semibold text-gray-100">
-                  {t('upload_cards.mit_course')}
-                </Text>
+                <Text className="text-xl font-semibold">MIT Course</Text>
               </div>
             </div>
 
-            <Text className="mb-4 text-sm leading-relaxed text-gray-400">
-              {t('upload_cards.mit_course_description')}
+            <Text className="mb-4 text-sm leading-relaxed text-[--dashboard-foreground-faded]">
+              Import content from MIT OpenCourseWare, including lecture notes,
+              assignments, and course materials.
             </Text>
-            <div className="mt-auto flex items-center text-sm text-purple-400">
-              <span>{t('upload_cards.configure_import')}</span>
+            <div className="mt-auto flex items-center text-sm font-bold text-[--dashboard-button]">
+              <span>Configure import</span>
               <IconArrowRight
                 size={16}
                 className="ml-2 transition-transform group-hover:translate-x-1"
@@ -145,23 +138,24 @@ export default function MITIngestForm({
           </Card>
         </DialogTrigger>
 
-        <DialogContent className="mx-auto h-auto w-[95%] max-w-2xl !rounded-2xl border-0 bg-[#1c1c2e] px-4 py-6 text-white sm:px-6">
+        <DialogContent className="mx-auto h-auto max-h-[85vh] w-[95%] max-w-2xl overflow-y-auto !rounded-2xl border-0 bg-[--modal] px-4 py-6 text-[--modal-text] sm:px-6">
           <DialogHeader>
             <DialogTitle className="mb-4 text-left text-xl font-bold">
-              {t('upload_cards.ingest_website')}
+              Ingest MIT Course
             </DialogTitle>
           </DialogHeader>
-          <div className="border-t border-gray-800 pt-4">
-            <div className="space-y-4">
+          <div className="">
+            <div className="">
               <div>
                 <div className="break-words text-sm sm:text-base">
-                  <strong>{t('mit_ingest.for_mit_open_course_ware')}</strong>, just enter a URL
+                  <strong>For MIT Open Course Ware</strong>, just enter a URL
                   like{' '}
-                  <code className="inline-flex items-center rounded-md bg-[#020307] px-2 py-1 font-mono text-xs sm:text-sm">
+                  <code className="inline-flex items-center rounded-md bg-[--illinois-orange] px-2 py-1 font-mono text-xs text-[--illinois-white] sm:text-sm">
                     ocw.mit.edu/courses/ANY_COURSE
-                  </code>{' '}
-                  , for example:{' '}
-                  <span className="break-all text-purple-600">
+                  </code>
+                  ,<br />
+                  for example:{' '}
+                  <span className="break-all">
                     <NextLink
                       target="_blank"
                       rel="noreferrer"
@@ -169,13 +163,14 @@ export default function MITIngestForm({
                         'https://ocw.mit.edu/courses/8-321-quantum-theory-i-fall-2017'
                       }
                       onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                      className="text-[--dashboard-button]"
                     >
                       https://ocw.mit.edu/courses/8-321-quantum-theory-i-fall-2017
                     </NextLink>
                   </span>
                   .
                 </div>
-                <div className="py-3"></div>
+
                 <Input
                   icon={
                     <Image
@@ -186,23 +181,25 @@ export default function MITIngestForm({
                       className="object-contain"
                     />
                   }
-                  className="w-full rounded-full"
+                  className="mt-4 w-full rounded-full"
                   styles={{
                     input: {
-                      backgroundColor: '#1A1B1E',
+                      color: 'var(--foreground)',
+                      backgroundColor: 'var(--background-faded)',
+                      borderColor: 'var(--background-dark)',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       '&:focus': {
-                        borderColor: '#9370DB',
+                        borderColor: 'var(--illinois-orange)',
                       },
                     },
                     wrapper: {
                       width: '100%',
                     },
                   }}
-                  placeholder={t('mit_ingest.enter_url') || ''}
-                  radius="xl"
+                  placeholder="Enter URL..."
+                  radius="md"
                   type="url"
                   value={url}
                   size="lg"
@@ -213,11 +210,11 @@ export default function MITIngestForm({
               </div>
             </div>
           </div>
-          <div className="mt-4 border-t border-gray-800 pt-2">
+          <div className="mt-4">
             <Button
               onClick={handleIngest}
               disabled={!isUrlValid}
-              className="h-11 w-full rounded-xl bg-purple-600 text-white transition-colors hover:bg-purple-700"
+              className="h-11 w-full rounded-xl bg-[--dashboard-button] text-[--dashboard-button-foreground] transition-colors hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--background-dark]"
             >
               Ingest MIT Course
             </Button>

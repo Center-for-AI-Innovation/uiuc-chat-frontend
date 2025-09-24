@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'
 import {
   Modal,
   Button,
@@ -8,38 +8,37 @@ import {
   useMantineTheme,
   Text,
   Group,
-  MantineTheme,
-} from '@mantine/core';
-import { useTranslation } from 'next-i18next';
-import { useRouter } from 'next/router';
+  type MantineTheme,
+} from '@mantine/core'
 
 const useStyles = createStyles((theme: MantineTheme) => ({
   root: {
-    backgroundColor: theme.colors.dark[7],
+    backgroundColor: 'var(--modal)',
     padding: theme.spacing.xl,
     borderRadius: theme.radius.md,
   },
   title: {
-    color: theme.white,
+    color: 'var(--modal-text)',
     fontSize: theme.fontSizes.xl,
     fontWeight: 700,
     marginBottom: 0,
   },
   close: {
-    color: theme.white,
+    color: 'var(--modal-text)',
     '&:hover': {
-      backgroundColor: theme.colors.dark[6],
+      color: 'var(--modal-button-text-hover)',
+      backgroundColor: 'var(--modal-button-hover)',
     },
   },
   textarea: {
-    backgroundColor: theme.colors.dark[6],
-    borderColor: theme.colors.dark[4],
-    color: theme.white,
+    color: 'var(--modal-text)',
+    backgroundColor: 'var(--background-faded)',
+    borderColor: 'var(--modal-border)',
     '&::placeholder': {
-      color: theme.colors.dark[2],
+      color: 'var(--foreground-faded)',
     },
     '&:focus': {
-      borderColor: theme.colors.violet[4],
+      borderColor: 'var(--background-darker)',
     },
   },
   buttonGroup: {
@@ -48,15 +47,15 @@ const useStyles = createStyles((theme: MantineTheme) => ({
     gap: theme.spacing.sm,
   },
   label: {
-    color: theme.white,
+    color: 'var(--modal-text)',
     marginBottom: theme.spacing.xs,
   },
-}));
+}))
 
 interface FeedbackModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (feedback: string, category: string) => void;
+  isOpen: boolean
+  onClose: () => void
+  onSubmit: (feedback: string, category: string) => void
 }
 
 export const FeedbackModal: React.FC<FeedbackModalProps> = ({
@@ -64,57 +63,65 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
   onClose,
   onSubmit,
 }) => {
-  const { classes } = useStyles();
-  const theme = useMantineTheme();
-  const [feedback, setFeedback] = useState<string>('');
-  const [category, setCategory] = useState<string>('other');
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const { t, i18n } = useTranslation('common');
-  const router = useRouter();
-  const lang = i18n.language || router.locale || 'en';
+  const { classes } = useStyles()
+  const theme = useMantineTheme()
+  const [feedback, setFeedback] = useState<string>('')
+  const [category, setCategory] = useState<string>('other')
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 
   const handleSubmit = async () => {
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     try {
-      await onSubmit(feedback, category);
-      setFeedback('');
-      setCategory('other');
-      onClose();
+      await onSubmit(feedback, category)
+      setFeedback('')
+      setCategory('other')
+      onClose()
     } catch (error) {
-      console.error('Feedback submission failed:', error);
+      console.error('Feedback submission failed:', error)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <Modal
       opened={isOpen}
       onClose={onClose}
-      title={<Text className={classes.title}>{t('feedback') || ''}</Text>}
+      title={<Text className={classes.title}>Feedback</Text>}
       classNames={classes}
       centered
       withCloseButton={false}
       overlayProps={{
-        color: theme.colors.dark[9],
+        color: 'theme.colors.dark[9]',
         opacity: 0.75,
         blur: 3,
       }}
       styles={{
-        header: { zIndex: 1 },
+        header: {
+          zIndex: 1,
+          color: 'var(--modal-text)',
+          backgroundColor: 'var(--modal)',
+        },
+        body: {
+          color: 'var(--modal-text)',
+          backgroundColor: 'var(--modal)',
+        },
       }}
     >
       <Select
-        label={t('feedback_category') || ''}
-        placeholder={t('feedback_category_placeholder') || ''}
+        label="Feedback Category"
+        placeholder="Select a category"
         data={[
-          { value: 'inaccurate', label: t('feedback_inaccurate') || '' },
-          { value: 'inappropriate', label: t('feedback_inappropriate') || '' },
-          { value: 'unclear', label: t('feedback_unclear') || '' },
-          { value: 'ui_bug', label: t('feedback_ui_bug') || '' },
-          { value: 'overactive_refusal', label: t('feedback_overactive_refusal') || '' },
-          { value: 'incomplete_request', label: t('feedback_incomplete_request') || '' },
-          { value: 'other', label: t('feedback_other') || '' },
+          { value: 'inaccurate', label: 'Not factually correct' },
+          { value: 'inappropriate', label: 'Harmful content' },
+          { value: 'unclear', label: 'Unclear Response' },
+          { value: 'ui_bug', label: 'UI bug' },
+          { value: 'overactive_refusal', label: 'Overactive refusal' },
+          {
+            value: 'incomplete_request',
+            label: 'Did not fully follow my request',
+          },
+          { value: 'other', label: 'Other' },
         ]}
         value={category}
         onChange={(value) => setCategory(value || 'other')}
@@ -123,102 +130,108 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
         withinPortal
         styles={(theme) => ({
           input: {
-            backgroundColor: theme.colors.dark[6],
-            borderColor: theme.colors.dark[4],
-            color: theme.white,
+            color: 'var(--modal-text)',
+            backgroundColor: 'var(--modal-dark)',
+            borderColor: 'var(--modal-border)',
             '&::placeholder': {
-              color: theme.colors.dark[2],
+              color: 'var(--foreground-faded)',
             },
             '&:focus': {
-              borderColor: theme.colors.violet[4],
+              borderColor: 'var(--background-darker)',
             },
           },
           dropdown: {
-            backgroundColor: theme.colors.dark[6],
-            borderColor: theme.colors.dark[4],
+            backgroundColor: 'var(--modal-dark)',
+            borderColor: 'var(--modal-border)',
             maxHeight: '250px',
             overflowY: 'auto',
           },
           item: {
-            color: theme.white,
+            color: 'var(--modal-text)',
             '&[data-selected]': {
-              backgroundColor: theme.colors.violet[6],
-              color: theme.white,
+              color: 'var(--dashboard-button-foreground)',
+              backgroundColor: 'var(--dashboard-button)',
+              '&[data-hovered]': {
+                color: 'var(--dashboard-button-foreground)',
+                backgroundColor: 'var(--dashboard-button-hover)',
+              },
             },
             '&[data-hovered]': {
-              backgroundColor: theme.colors.violet[5],
+              color: 'var(--foreground)',
+              backgroundColor: 'var(--background-dark)',
             },
           },
           label: {
-            color: theme.white,
+            color: 'var(--modal-text)',
             marginBottom: theme.spacing.xs,
           },
         })}
-        aria-label={t('feedback_category') || ''}
+        aria-label="Feedback category select"
       />
       <Textarea
         label={
           <Group spacing={4}>
-            <Text>{t('feedback_details') || ''}</Text>
-            <Text size="sm" color="dimmed">
-              {t('optional') || ''}
+            <Text className="text-[--modal-text]">Feedback Details</Text>
+            <Text size="sm" className="text-[--foreground-faded]">
+              (Optional)
             </Text>
           </Group>
         }
-        placeholder={t('feedback_details_placeholder') || ''}
+        placeholder="Share any additional details about your feedback"
         value={feedback}
         onChange={(event) => setFeedback(event.currentTarget.value)}
         minRows={4}
         mb="md"
         classNames={{ input: classes.textarea }}
-        aria-label={t('feedback_details') || ''}
+        aria-label="Optional feedback details textarea"
       />
 
       <Group className={classes.buttonGroup}>
         <Button
           onClick={onClose}
           variant="outline"
-          aria-label={t('cancel') || ''}
+          aria-label="Cancel"
           sx={{
             backgroundColor: 'transparent',
-            color: theme.white,
-            border: `1px solid ${theme.colors.dark[3]}`,
+            color: 'var(--foreground-faded)',
+            border: `1px solid var(--background-faded)`,
             '&:hover': {
-              backgroundColor: theme.colors.dark[6],
+              color: 'var(--foreground)',
+              backgroundColor: 'var(--background-faded)',
             },
           }}
         >
-          {t('cancel') || ''}
+          Cancel
         </Button>
         <Button
           onClick={handleSubmit}
           disabled={isSubmitting}
           loading={isSubmitting}
-          aria-label={t('feedback.submit_aria') || ''}
+          aria-label="Submit Feedback"
           sx={{
-            backgroundColor: `${theme.colors.violet[5]} !important`,
-            color: theme.white,
+            backgroundColor: `var(--dashboard-button) !important`,
+            color: 'var(--dashboard-button-foreground)',
             border: 'none',
             transition: 'background-color 200ms ease',
             '&:not(:disabled)': {
-              backgroundColor: `${theme.colors.violet[5]} !important`,
+              backgroundColor: `var(--dashboard-button) !important`,
               '&:hover': {
-                backgroundColor: `${theme.colors.violet[6]} !important`,
+                backgroundColor: `var(--dashboard-button-hover) !important`,
               },
               '&:active': {
-                backgroundColor: `${theme.colors.violet[7]} !important`,
+                backgroundColor: `var(--dashboard-button) !important`,
               },
             },
             '&:disabled': {
-              backgroundColor: `${theme.colors.dark[5]} !important`,
-              color: theme.colors.dark[3],
+              backgroundColor: `var(--background-faded) !important`,
+              color: 'var(--foreground-faded)',
               opacity: 0.6,
             },
           }}
         >
-          {t('submit') || ''}
+          Submit
         </Button>
       </Group>
     </Modal>
-  );
-};
+  )
+}

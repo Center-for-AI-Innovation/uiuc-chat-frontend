@@ -17,16 +17,15 @@ import {
   useUpdateDocGroup,
 } from '~/hooks/docGroupsQueries'
 import { useQueryClient } from '@tanstack/react-query'
-import { useTranslation } from 'next-i18next'
 
 const GlobalStyle = createGlobalStyle`
   .mantine-Checkbox-input:checked {
-    background-color: purple;
-    border-color: hsl(280,100%,80%);
+    background-color: var(--illinois-orange);
+    border-color: var(--illinois-orange);
   } 
 
   .mantine-Table-root thead tr {
-    background-color: #1e1f3a;
+    background-color: var(--dashboard-background-dark);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 
@@ -36,25 +35,27 @@ const GlobalStyle = createGlobalStyle`
   }
 
   .mantine-Table-root tbody tr {
-    background-color: #15162c;
+    color: var(--foreground);
+    background-color: var(--background);
   }
 
   .mantine-Table-root tbody tr:nth-of-type(odd) {
-    background-color: #1e1f3a;
+    color: var(--foreground);
+    background-color: var(--background-faded);
   }
 
   .mantine-TextInput-input {
-    background-color: #1e1f3a;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: white;
+    color: var(--foreground);
+    background-color: var(--background);
+    border: 1px solid var(--foreground);
   }
 
   .mantine-TextInput-input:focus {
-    border-color: rgb(147, 51, 234);
+    border-color: var(--illinois-orange);
   }
 
   .mantine-ScrollArea-root {
-    background-color: #15162c;
+    background-color: var(--dashboard-background-dark);
     overflow: hidden;
     border-radius: 0.75rem;
   }
@@ -64,26 +65,25 @@ const GlobalStyle = createGlobalStyle`
   }
 
   .mantine-Table-root thead tr th {
-    background-color: #1e1f3a;
+    background-color: var(--dashboard-background-dark);
     position: sticky;
     top: 0;
     z-index: 10;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--dashboard-foreground);
   }
 
   .mantine-ScrollArea-scrollbar {
-    background-color: #1e1f3a;
+    background-color: var(--dashboard-background-dark);
   }
 
   .mantine-ScrollArea-thumb {
-    background-color: rgba(147, 51, 234, 0.4);
+    background-color: var(--dashboard-background);
   }
 `
 
 export function DocGroupsTable({ course_name }: { course_name: string }) {
   const queryClient = useQueryClient()
   const [documentGroupSearch, setDocumentGroupSearch] = useState('')
-  const { t } = useTranslation('common')
 
   const updateDocGroup = useUpdateDocGroup(course_name, queryClient)
 
@@ -119,7 +119,7 @@ export function DocGroupsTable({ course_name }: { course_name: string }) {
       <GlobalStyle />
       <div className="w-full px-0 py-4 md:px-2">
         <TextInput
-          placeholder={t('documents.search_by_document_group') || ''}
+          placeholder="Search by Document Group"
           mb="sm"
           radius="md"
           icon={<IconSearch />}
@@ -131,85 +131,102 @@ export function DocGroupsTable({ course_name }: { course_name: string }) {
           mah="calc(80vh - 16rem)"
           type="always"
           offsetScrollbars
-          className="overflow-hidden rounded-xl"
+          className="overflow-hidden"
+          styles={{
+            root: {
+              borderRadius: '0px !important',
+            },
+          }}
         >
-        <Table
-          style={{
+          <Table
+            className="document_groups_table"
+            style={{
               tableLayout: 'fixed',
               position: 'relative',
               borderCollapse: 'separate',
               borderSpacing: 0,
               overflow: 'hidden',
-          }}
+            }}
             // withBorder
             withColumnBorders
-          highlightOnHover
-        >
-          <thead>
+          >
+            <thead>
               <tr>
                 <th className="w-[50%] sm:w-[60%] md:w-[70%]">
-                {t('documents.document_group')}
-              </th>
+                  Document Group
+                </th>
                 <th className="w-[30%] sm:w-[25%] md:w-[15%]">
-                {t('documents.number_of_docs')}
-              </th>
+                  Number of Docs
+                </th>
                 <th className="w-[20%] text-center sm:w-[15%]">
-                <Tooltip
-                  multiline
-                    color="#CC65FF"
+                  <Tooltip
+                    multiline
+                    color="var(--illinois-orange)"
                     arrowPosition="center"
-                  arrowSize={8}
+                    arrowSize={8}
                     width={220}
-                  withArrow
-                  label={t('documents.enabled_tooltip') || ''}
-                >
+                    withArrow
+                    label="If a document is included in ANY enabled group, it will be included in chatbot results. Enabled groups take precedence over disabled groups."
+                  >
                     <span className="flex items-center justify-center whitespace-nowrap">
-                      <span className="hidden sm:inline">{t('documents.enabled')}</span>
+                      <span className="hidden sm:inline">Enabled</span>
                       <IconHelp size={16} className="ml-1" />
-                  </span>
-                </Tooltip>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredDocumentGroups.map((doc_group_obj, index) => (
-              <tr key={index}>
-                <td style={{ wordWrap: 'break-word' }}>
+                    </span>
+                  </Tooltip>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredDocumentGroups.map((doc_group_obj, index) => (
+                <tr key={index}>
+                  <td style={{ wordWrap: 'break-word' }}>
                     <Text>{doc_group_obj.name}</Text>
-                </td>
-                <td style={{ wordWrap: 'break-word' }}>
+                  </td>
+                  {/* <td style={{ wordWrap: 'break-word' }}>
+                      <Text>{doc_group_obj.description}</Text>
+                    </td> */}
+                  <td style={{ wordWrap: 'break-word' }}>
                     <Text>{doc_group_obj.doc_count}</Text>
-                </td>
-                <td
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    wordWrap: 'break-word',
-                  }}
-                >
-                  <Switch
-                    checked={doc_group_obj.enabled}
-                    onChange={(event) =>
+                  </td>
+                  <td
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      wordWrap: 'break-word',
+                    }}
+                  >
+                    <Switch
+                      checked={doc_group_obj.enabled}
+                      onChange={(event) =>
                         updateDocGroup.mutate({
                           doc_group_obj,
-                        enabled: event.currentTarget.checked,
-                      })
-                    }
-                    color="grape"
-                      size="lg"
-                  />
-                </td>
-              </tr>
-            ))}
-            {filteredDocumentGroups.length === 0 && (
-              <tr>
-                <td colSpan={4}>
-                  <Text align="center">{t('documents.no_document_groups_found')}</Text>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </Table>
+                          enabled: event.currentTarget.checked,
+                        })
+                      }
+                      className="cursor-pointer"
+                      styles={{
+                        track: {
+                          backgroundColor: doc_group_obj.enabled
+                            ? 'var(--dashboard-button) !important'
+                            : 'var(--dashboard-background-dark)',
+                          borderColor: doc_group_obj.enabled
+                            ? 'var(--dashboard-button) !important'
+                            : 'var(--dashboard-background-dark)',
+                        },
+                      }}
+                    />
+                  </td>
+                </tr>
+              ))}
+              {filteredDocumentGroups.length === 0 && (
+                <tr>
+                  <td colSpan={4}>
+                    <Text align="center">No document groups found</Text>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </Table>
         </ScrollArea.Autosize>
       </div>
     </>

@@ -19,7 +19,6 @@ import type ChatUI from '~/utils/modelProviders/WebLLM'
 import { modelCached } from './UserSettings'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useTranslation } from 'next-i18next'
 import {
   type AllLLMProviders,
   type AnySupportedModel,
@@ -108,11 +107,10 @@ export const ModelItem = forwardRef<
     },
     ref,
   ) => {
-    const { t } = useTranslation('common')
-    const { state } = useContext(HomeContext)
     const [isModelCached, setIsModelCached] = useState(false)
     const showSparkles = recommendedModelIds.includes(label)
     const showWarningLargeModel = warningLargeModelIds.includes(label)
+    const { state, dispatch: homeDispatch } = useContext(HomeContext)
     // const {
     //   state: {
     //     isLoadingWebLLMModelId,
@@ -178,6 +176,7 @@ export const ModelItem = forwardRef<
                   display: 'flex',
                   alignItems: 'center',
                   marginTop: '4px',
+                  paddingLeft: '36px', //line up with image and text better. needs to be a different layout in the future
                 }}
               >
                 <Text size="xs" opacity={0.65}>
@@ -196,9 +195,9 @@ export const ModelItem = forwardRef<
                     <Text
                       size="s"
                       style={{ marginLeft: '7px' }}
-                      className="text-purple-600"
+                      className="text-[--accent]"
                     >
-                      {t('settings.sections.model.model_item.loading') || 'Loading'}
+                      loading
                     </Text>
                   </div>
                 ) : (
@@ -210,7 +209,7 @@ export const ModelItem = forwardRef<
                         <IconCircleCheck
                           size="1rem"
                           style={{ marginLeft: '8px' }}
-                          className="text-purple-400"
+                          className=""
                         />
                         {/* {isLoading && setLoadingModelId(null)} */}
                       </>
@@ -220,20 +219,19 @@ export const ModelItem = forwardRef<
                     <Text
                       size="xs"
                       opacity={isModelCached ? 1 : 0.65}
-                      style={{ marginLeft: '4px' }}
                       className={
                         isModelCached ||
                         (state.webLLMModelIdLoading.id == modelId &&
                           !state.webLLMModelIdLoading.isLoading)
-                          ? 'text-purple-400'
-                          : ''
+                          ? 'ml-[3px] italic'
+                          : 'ml-1'
                       }
                     >
                       {isModelCached ||
                       (state.webLLMModelIdLoading.id == modelId &&
                         !state.webLLMModelIdLoading.isLoading)
-                        ? t('settings.sections.model.model_item.downloaded') || 'Downloaded'
-                        : t('settings.sections.model.model_item.download') || 'Download'}
+                        ? 'downloaded'
+                        : 'download'}
                     </Text>
                   </>
                 )}
@@ -245,7 +243,7 @@ export const ModelItem = forwardRef<
                       opacity={0.65}
                       style={{ marginLeft: '4px' }}
                     >
-                      {t('settings.sections.model.model_item.recommended') || 'Recommended'}
+                      recommended
                     </Text>
                   </div>
                 )}
@@ -260,7 +258,7 @@ export const ModelItem = forwardRef<
                       opacity={0.65}
                       style={{ marginLeft: '4px' }}
                     >
-                      {t('settings.sections.model.model_item.warning_large_model') || 'Warning, requires large vRAM GPU'}
+                      warning, requires large vRAM GPU
                     </Text>
                   </div>
                 )}
@@ -290,7 +288,6 @@ const ModelDropdown: React.FC<
   chat_ui,
 }) => {
   const { state, dispatch: homeDispatch } = useContext(HomeContext)
-  const { t } = useTranslation('common')
 
   // Filter out providers that are not enabled and their models which are disabled
   const { enabledProvidersAndModels, allModels } = Object.keys(
@@ -334,11 +331,11 @@ const ModelDropdown: React.FC<
   return (
     <>
       <Title
-        className={`px-4 pt-4 ${montserrat_heading.variable} rounded-lg bg-[#15162c] p-4 font-montserratHeading md:rounded-lg`}
+        className={`px-4 pt-4 ${montserrat_heading.variable} rounded-lg bg-[--modal-dark] p-4 font-montserratHeading text-[--modal-text] md:rounded-lg`}
         color="white"
         order={isSmallScreen ? 5 : 4}
       >
-        {t('settings.sections.model.title') || 'Model'}
+        Model
       </Title>
 
       <div
@@ -348,7 +345,7 @@ const ModelDropdown: React.FC<
         <Select
           className="menu z-[50] w-full"
           size="md"
-          placeholder={t('settings.sections.model.select_placeholder') || 'Select a model'}
+          placeholder="Select a model"
           searchable
           value={value}
           onChange={async (modelId) => {
@@ -413,7 +410,12 @@ const ModelDropdown: React.FC<
               />
             ) : null
           }
-          rightSection={<IconChevronDown size="1rem" className="mr-2" />}
+          rightSection={
+            <IconChevronDown
+              size="1rem"
+              className="mr-2 text-[--modal-button-text]"
+            />
+          }
           classNames={{
             root: 'w-full',
             wrapper: 'w-full',
@@ -423,7 +425,9 @@ const ModelDropdown: React.FC<
           }}
           styles={(theme) => ({
             input: {
-              backgroundColor: 'rgb(107, 33, 168)',
+              cursor: 'pointer',
+              color: 'var(--modal-button-text)',
+              backgroundColor: 'var(--modal-button)',
               border: 'none',
               // color: theme.white,
               // borderRadius: theme.radius.md,
@@ -431,167 +435,46 @@ const ModelDropdown: React.FC<
               // [`@media (max-width: 960px)`]: {
               //   width: '17rem', // Smaller width for small screens
               // },
+              '&:hover': {
+                color: 'var(--modal-button-text-hover)',
+                backgroundColor: 'var(--modal-button-hover)',
+              },
             },
             dropdown: {
-              backgroundColor: '#1d1f33',
-              border: '1px solid rgba(42,42,120,1)',
+              color: 'var(--background)',
+              backgroundColor: 'var(--foreground-light)',
+              border: '0px',
               borderRadius: theme.radius.md,
               marginTop: '2px',
-              boxShadow: theme.shadows.xs,
+              boxShadow: theme.shadows.lg,
               width: '100%',
               maxWidth: '100%',
               position: 'absolute',
             },
             item: {
-              backgroundColor: '#1d1f33',
+              color: 'var(--modal-button-text)',
+              backgroundColor: '',
               borderRadius: theme.radius.md,
               margin: '2px',
               '&[data-selected]': {
                 '&': {
+                  color: 'var(--primary)',
                   backgroundColor: 'transparent',
                 },
                 '&:hover': {
-                  backgroundColor: 'rgb(107, 33, 168)',
-                  color: theme.white,
+                  color: 'var(--modal-button-text-hover)',
+                  backgroundColor: 'var(--modal-button-hover)',
                 },
               },
               '&[data-hovered]': {
-                backgroundColor: 'rgb(107, 33, 168)',
-                color: theme.white,
+                color: 'var(--modal-button-text-hover)',
+                backgroundColor: 'var(--modal-button-hover)',
               },
             },
           })}
           dropdownPosition="bottom"
           withinPortal
         />
-      </div>
-
-      {/* Model details section */}
-      <div>
-        <Text
-          size={'sm'}
-          className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
-        >
-          {t('settings.sections.model.details.ncsa_hosted.title') || 'NCSA Hosted Models (100% free)'}
-        </Text>
-        <Text
-          size={'sm'}
-          className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
-        >
-          {t('settings.sections.model.details.ncsa_hosted.description') || 'The best free option is the Qwen 2 72B model, hosted by NCSA.'}
-        </Text>
-      </div>
-
-      {/* OpenAI Section */}
-      <div>
-        <Text
-          size={'sm'}
-          className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
-        >
-          {t('settings.sections.model.details.openai.title') || 'OpenAI'}
-        </Text>
-        <Text
-          size={'sm'}
-          className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
-        >
-          {t('settings.sections.model.details.openai.description') || 'OpenAI models are hosted by OpenAI and require an API key.'}
-        </Text>
-      </div>
-
-      {/* Azure OpenAI Section */}
-      <div>
-        <Text
-          size={'sm'}
-          className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
-        >
-          {t('settings.sections.model.details.azure.title') || 'Azure OpenAI'}
-        </Text>
-        <Text
-          size={'sm'}
-          className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
-        >
-          {t('settings.sections.model.details.azure.description') || 'Azure OpenAI models are hosted by Microsoft Azure and require an API key.'}
-        </Text>
-      </div>
-
-      {/* Anthropic Section */}
-      <div>
-        <Text
-          size={'sm'}
-          className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
-        >
-          {t('settings.sections.model.details.anthropic.title') || 'Anthropic'}
-        </Text>
-        <Text
-          size={'sm'}
-          className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
-        >
-          {t('settings.sections.model.details.anthropic.description') || 'Anthropic models are hosted by Anthropic and require an API key.'}
-        </Text>
-      </div>
-
-      {/* Ollama Section */}
-      <div>
-        <Text
-          size={'sm'}
-          className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
-        >
-          {t('settings.sections.model.details.ollama.title') || 'Ollama'}
-        </Text>
-        <Text
-          size={'sm'}
-          className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
-        >
-          {t('settings.sections.model.details.ollama.description') || 'Ollama models are hosted by Ollama and require an API key.'}
-        </Text>
-      </div>
-
-      {/* On-device LLMs Section */}
-      <div>
-        <Text
-          size={'sm'}
-          className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
-        >
-          {t('settings.sections.model.details.webllm.title') || 'On-device LLMs'}
-        </Text>
-        <Text
-          size={'sm'}
-          className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
-        >
-          {t('settings.sections.model.details.webllm.description') || 'On-device LLMs are models that run directly on your device, requiring no API key.'}
-          <br />
-          {t('settings.sections.model.details.webllm.working') || 'They are typically faster and more private.'}
-        </Text>
-      </div>
-
-      {/* Coming Soon Section */}
-      <div>
-        <Text
-          size={'sm'}
-          className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
-        >
-          {t('settings.sections.model.details.gemini.title') || 'Gemini'}
-        </Text>
-        <Text
-          size={'sm'}
-          className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
-        >
-          {t('settings.sections.model.details.gemini.description') || 'Gemini models are hosted by Google and require an API key.'}
-        </Text>
-      </div>
-      <div>
-        <Text
-          size={'sm'}
-          className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
-        >
-          {t('settings.sections.model.details.bedrock.title') || 'Bedrock'}
-        </Text>
-        <Text
-          size={'sm'}
-          className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
-        >
-          {t('settings.sections.model.details.bedrock.description') || 'Bedrock models are hosted by Amazon Web Services (AWS) and require an API key.'}
-        </Text>
       </div>
     </>
   )
@@ -608,7 +491,6 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
     const defaultModel = selectBestModel(llmProviders).id
     const [loadingModelId, setLoadingModelId] = useState<string | null>(null)
     const [isAccordionOpen, setIsAccordionOpen] = useState(false)
-    const { t } = useTranslation('common')
 
     // console.log('defaultModelId in chat page: ', defaultModelId)
 
@@ -633,13 +515,13 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
 
     return (
       <div
-        className="flex h-full w-[100%] flex-col space-y-4 rounded-lg bg-[#1d1f33] p-3 dark:bg-[#1d1f33]"
+        className="flex h-full w-[100%] flex-col space-y-4 rounded-lg p-3"
         style={{ position: 'relative', zIndex: 100 }}
       >
         <div>
           <div className="flex flex-col">
             <ModelDropdown
-              title={t('chat.model.select')}
+              title="Select Model"
               value={selectedConversation?.model.id || defaultModelId}
               onChange={async (modelId) => {
                 handleModelClick(modelId)
@@ -653,23 +535,15 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
             <div className="px-5">
               <button
                 onClick={() => setIsAccordionOpen(!isAccordionOpen)}
-                className="w-full transition-colors duration-200 hover:bg-white/5"
+                className="w-full opacity-60 transition-colors duration-200 hover:opacity-100"
               >
                 <div className="flex items-center justify-between rounded-md p-2">
-                  <Title
-                    className={`pb-1 pl-4 pt-2 ${montserrat_heading.variable} font-montserratHeading`}
-                    variant="gradient"
-                    gradient={{
-                      from: 'hsl(280,100%,70%)',
-                      to: 'white',
-                      deg: 185,
-                    }}
-                    order={5}
-                  >
-                                              {t('models.more_details_about_ai_models')}
+                  <Title className={`pb-1 pl-3 text-sm`} order={5}>
+                    More details about the AI models
                   </Title>
                   <IconChevronDown
-                    className={`text-white/60 transition-transform duration-200 ${
+                    size={'1em'}
+                    className={`transition-transform duration-200 ${
                       isAccordionOpen ? 'rotate-180' : ''
                     }`}
                   />
@@ -684,8 +558,8 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                     transition={{ duration: 0.2, ease: 'easeInOut' }}
                     className="mb-6 overflow-hidden"
                   >
-                    <div className="flex bg-[#1e1f3a]/80 backdrop-blur-sm">
-                      <div className="w-1 bg-violet-500/50" />
+                    <div className="flex">
+                      <div className="w-1" />
                       <div
                         className={`${montserrat_paragraph.variable} flex-1 p-4 font-montserratParagraph`}
                       >
@@ -694,15 +568,16 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                           <div>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold`}
                             >
-                              {t('settings.sections.model.details.ncsa_hosted.title') || 'NCSA Hosted Models (100% free)'}
+                              NCSA Hosted Models (100% free)
                             </Text>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                             >
-                              {t('settings.sections.model.details.ncsa_hosted.description') || 'The best free option is the Qwen 2 72B model, hosted by NCSA.'}
+                              The best free option is the Qwen 2 72B model,
+                              hosted by NCSA.
                             </Text>
                           </div>
 
@@ -710,15 +585,31 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                           <div>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold`}
                             >
-                              {t('settings.sections.model.details.openai.title') || 'OpenAI'}
+                              OpenAI
                             </Text>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                             >
-                              {t('settings.sections.model.details.openai.description') || 'OpenAI models are hosted by OpenAI and require an API key.'}
+                              OpenAI{' '}
+                              <Link
+                                href="https://platform.openai.com/docs/models"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[--link] hover:text-[--link-hover] hover:underline"
+                              >
+                                model details and pricing.{' '}
+                                <IconExternalLink
+                                  size={15}
+                                  style={{ position: 'relative', top: '2px' }}
+                                  className={'mb-2 inline'}
+                                />
+                              </Link>{' '}
+                              An OpenAI API key is required, and you may face
+                              rate-limit issues until you complete your first
+                              billing cycle.
                             </Text>
                           </div>
 
@@ -726,15 +617,30 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                           <div>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold`}
                             >
-                              {t('settings.sections.model.details.azure.title') || 'Azure OpenAI'}
+                              Azure OpenAI
                             </Text>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                             >
-                              {t('settings.sections.model.details.azure.description') || 'Azure OpenAI models are hosted by Microsoft Azure and require an API key.'}
+                              Azure OpenAI Service provides enterprise-grade
+                              security and regional availability. Check out{' '}
+                              <Link
+                                href="https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[--link] hover:text-[--link-hover] hover:underline"
+                              >
+                                Azure OpenAI models{' '}
+                                <IconExternalLink
+                                  size={15}
+                                  style={{ position: 'relative', top: '2px' }}
+                                  className={'mb-2 inline'}
+                                />
+                              </Link>{' '}
+                              for details on available models and features.
                             </Text>
                           </div>
 
@@ -742,15 +648,30 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                           <div>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold`}
                             >
-                              {t('settings.sections.model.details.anthropic.title') || 'Anthropic'}
+                              Anthropic
                             </Text>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                             >
-                              {t('settings.sections.model.details.anthropic.description') || 'Anthropic models are hosted by Anthropic and require an API key.'}
+                              Access Claude models through{' '}
+                              <Link
+                                href="https://www.anthropic.com/api"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[--link] hover:text-[--link-hover] hover:underline"
+                              >
+                                Anthropic&apos;s API{' '}
+                                <IconExternalLink
+                                  size={15}
+                                  style={{ position: 'relative', top: '2px' }}
+                                  className={'mb-2 inline'}
+                                />
+                              </Link>
+                              . Claude excels at complex reasoning and analysis
+                              tasks.
                             </Text>
                           </div>
 
@@ -758,15 +679,30 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                           <div>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold`}
                             >
-                              {t('settings.sections.model.details.ollama.title') || 'Ollama'}
+                              OpenAI Compatible via Ollama
                             </Text>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                             >
-                              {t('settings.sections.model.details.ollama.description') || 'Ollama models are hosted by Ollama and require an API key.'}
+                              Run various open-source models locally through{' '}
+                              <Link
+                                href="https://ollama.ai"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[--link] hover:text-[--link-hover] hover:underline"
+                              >
+                                Ollama{' '}
+                                <IconExternalLink
+                                  size={15}
+                                  style={{ position: 'relative', top: '2px' }}
+                                  className={'mb-2 inline'}
+                                />
+                              </Link>
+                              . Supports models like Llama 2, Mistral, and more
+                              with OpenAI-compatible API.
                             </Text>
                           </div>
 
@@ -774,17 +710,34 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                           <div>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold`}
                             >
-                              {t('settings.sections.model.details.webllm.title') || 'On-device LLMs'}
+                              On-device AI with WebLLM
                             </Text>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                             >
-                              {t('settings.sections.model.details.webllm.description') || 'On-device LLMs are models that run directly on your device, requiring no API key.'}
+                              We support running some models in your web browser
+                              on your device. That&apos;s 100% local, on-device
+                              AI. It even uses your GPU. For this, your browser{' '}
+                              <Link
+                                href={'https://webgpureport.org/'}
+                                className="text-[--link] hover:text-[--link-hover] hover:underline"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                must pass this compatability check for WebGPU.{' '}
+                                <IconExternalLink
+                                  size={15}
+                                  style={{ position: 'relative', top: '2px' }}
+                                  className={'mb-2 inline'}
+                                />
+                              </Link>
                               <br />
-                              {t('settings.sections.model.details.webllm.working') || 'They are typically faster and more private.'}
+                              If you see lots of text, it&apos;s working. If you
+                              see &quot;webgpu not available on this
+                              browser&quot;, it&apos;s not working.
                             </Text>
                           </div>
 
@@ -792,29 +745,57 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                           <div>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold`}
                             >
-                              {t('settings.sections.model.details.gemini.title') || 'Gemini'}
+                              Google Gemini
                             </Text>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                             >
-                              {t('settings.sections.model.details.gemini.description') || 'Gemini models are hosted by Google and require an API key.'}
+                              We support{' '}
+                              <Link
+                                href="https://ai.google.dev/gemini-api/docs/models/gemini"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[--link] hover:text-[--link-hover] hover:underline"
+                              >
+                                Gemini&apos;s full suite{' '}
+                                <IconExternalLink
+                                  size={15}
+                                  style={{ position: 'relative', top: '2px' }}
+                                  className={'mb-2 inline'}
+                                />
+                              </Link>
+                              .
                             </Text>
                           </div>
                           <div>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold text-white/80`}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold`}
                             >
-                              {t('settings.sections.model.details.bedrock.title') || 'Bedrock'}
+                              AWS Bedrock
                             </Text>
                             <Text
                               size={'sm'}
-                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-gray-400`}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                             >
-                              {t('settings.sections.model.details.bedrock.description') || 'Bedrock models are hosted by Amazon Web Services (AWS) and require an API key.'}
+                              We support{' '}
+                              <Link
+                                href="https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html"
+                                className="text-[--link] hover:text-[--link-hover] hover:underline"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                Bedrock&apos;s full suite{' '}
+                                <IconExternalLink
+                                  size={15}
+                                  style={{ position: 'relative', top: '2px' }}
+                                  className={'mb-2 inline'}
+                                />
+                              </Link>
+                              .
                             </Text>
                           </div>
                         </div>

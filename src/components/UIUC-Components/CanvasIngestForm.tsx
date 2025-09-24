@@ -15,7 +15,6 @@ import { useRouter } from 'next/router'
 import { type FileUpload } from './UploadNotification'
 import { type QueryClient } from '@tanstack/react-query'
 import Image from 'next/image'
-import { useTranslation } from 'next-i18next';
 
 export default function CanvasIngestForm({
   project_name,
@@ -48,7 +47,6 @@ export default function CanvasIngestForm({
     return regex.test(input)
   }
   const router = useRouter()
-  const { t } = useTranslation('common');
 
   const getCurrentPageName = () => {
     return router.query.course_name as string
@@ -140,12 +138,12 @@ export default function CanvasIngestForm({
       >
         <DialogTrigger asChild>
           <Card
-            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-gradient-to-br from-[#1c1c2e] to-[#2a2a40] p-6 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
+            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
             style={{ height: '100%' }}
           >
             <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-900/30">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[--dashboard-background-darker]">
                   <Image
                     src="/media/canvas_logo.png"
                     alt="Canvas logo"
@@ -154,17 +152,16 @@ export default function CanvasIngestForm({
                     className="object-contain"
                   />
                 </div>
-                <Text className="text-xl font-semibold text-gray-100">
-                  {t('canvas_ingest.title')}
-                </Text>
+                <Text className="text-xl font-semibold">Canvas</Text>
               </div>
             </div>
 
-            <Text className="mb-4 text-sm leading-relaxed text-gray-400">
-              {t('canvas_ingest.description')}
+            <Text className="mb-4 text-sm leading-relaxed text-[--dashboard-foreground-faded]">
+              Import content directly from your Canvas course, including
+              assignments, discussions, files, and more.
             </Text>
-            <div className="mt-auto flex items-center text-sm text-purple-400">
-              <span>{t('canvas_ingest.configure_import')}</span>
+            <div className="mt-auto flex items-center text-sm font-bold text-[--dashboard-button]">
+              <span>Configure import</span>
               <IconArrowRight
                 size={16}
                 className="ml-2 transition-transform group-hover:translate-x-1"
@@ -173,42 +170,49 @@ export default function CanvasIngestForm({
           </Card>
         </DialogTrigger>
 
-        <DialogContent className="mx-auto h-auto max-h-[85vh] w-[95%] max-w-2xl overflow-y-auto !rounded-2xl border-0 bg-[#1c1c2e] px-4 py-6 text-white sm:px-6">
+        <DialogContent className="mx-auto h-auto max-h-[85vh] w-[95%] max-w-2xl overflow-y-auto !rounded-2xl border-0 bg-[--modal] px-4 py-6 text-[--modal-text] sm:px-6">
           <DialogHeader>
             <DialogTitle className="mb-1 text-left text-xl font-bold">
-              {t('canvas_ingest.import_content')}
+              Import Canvas Content
             </DialogTitle>
           </DialogHeader>
 
           <Alert
             icon={<IconAlertTriangle size={18} />}
             color="red"
-            title={t('canvas_ingest.permission_required') || ''}
-            className="mb-4 border border-red-500/50 bg-red-900/20"
+            title="IMPORTANT: Canvas Permission Required"
+            className="mb-4 bg-[--background-faded] text-[--illinois-orange]"
+            styles={{
+              message: {
+                color: 'var(--modal-text)',
+              },
+            }}
           >
             <span className="font-semibold">
-              {t('canvas_ingest.permission_instructions')}{' '}
+              Before proceeding, you MUST add the UIUC Chatbot as a student to
+              your Canvas course at{' '}
               <NextLink
                 href="https://canvas.illinois.edu/"
                 target="_blank"
                 rel="noreferrer"
-                className="text-blue-400 hover:underline"
+                className="text-[--link] hover:underline"
               >
                 https://canvas.illinois.edu
               </NextLink>
             </span>
-            <div className="mt-1">
-              • {t('canvas_ingest.bot_email')}{' '}
-              <span className="font-mono text-yellow-300">
-                {t('canvas_ingest.bot_email_address')}
+            <div className="mt-2">
+              • Bot email:{' '}
+              <span className="font-mono text-[--illinois-orange]">
+                uiuc.chat@ad.uillinois.edu
               </span>
-              <br />• {t('canvas_ingest.bot_name')}{' '}
-              <span className="font-mono text-yellow-300">
-                {t('canvas_ingest.bot_name_value')}
+              <br />• Bot name:{' '}
+              <span className="font-mono text-[--illinois-orange]">
+                UIUC Course AI
               </span>
             </div>
-            <div className="mt-1 text-xs italic">
-              {t('canvas_ingest.permission_note')}
+            <div className="mt-2 text-xs italic">
+              This is required for access to any of your Canvas content. The AI
+              can only see what students/TAs have access to.
             </div>
           </Alert>
 
@@ -225,27 +229,30 @@ export default function CanvasIngestForm({
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="">
             <div>
               <div className="text-md break-words">
-                {t('canvas_ingest.enter_canvas_url')}
-                <code className="inline-flex items-center rounded-md bg-[#020307] px-2 py-1 font-mono text-xs sm:text-sm">
-                  {t('canvas_ingest.canvas_url_example')}
+                Enter your Canvas course URL, it should look like{' '}
+                <code className="inline-flex items-center rounded-md bg-[--illinois-orange] px-2 py-1 font-mono text-xs text-[--illinois-white] sm:text-sm">
+                  canvas.illinois.edu/courses/COURSE_CODE
                 </code>
-                , {t('canvas_ingest.for_example')}
-                <span className="break-all text-purple-600">
-                  <NextLink
-                    target="_blank"
-                    rel="noreferrer"
-                    href={t('canvas_ingest.canvas_url_sample') || '#'}
-                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                  >
-                    {t('canvas_ingest.canvas_url_sample') || ''}
-                  </NextLink>
-                </span>
-                .
+                ,
+                <div>
+                  for example:{' '}
+                  <span className="break-all text-[--link]">
+                    <NextLink
+                      target="_blank"
+                      rel="noreferrer"
+                      href={'https://canvas.illinois.edu/courses/37348'}
+                      onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                    >
+                      https://canvas.illinois.edu/courses/37348
+                    </NextLink>
+                  </span>
+                  .
+                </div>
               </div>
-              <div className="py-3"></div>
+
               <Input
                 id="canvas-url"
                 icon={
@@ -257,23 +264,25 @@ export default function CanvasIngestForm({
                     className="object-contain"
                   />
                 }
-                className="w-full rounded-full"
+                className="mt-4 w-full rounded-full"
                 styles={{
                   input: {
-                    backgroundColor: '#1A1B1E',
+                    color: 'var(--foreground)',
+                    backgroundColor: 'var(--background-faded)',
+                    borderColor: 'var(--background-dark)',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     '&:focus': {
-                      borderColor: '#9370DB',
+                      borderColor: 'var(--illinois-orange)',
                     },
                   },
                   wrapper: {
                     width: '100%',
                   },
                 }}
-                placeholder={t('canvas_ingest.canvas_url_placeholder') || ''}
-                radius="xl"
+                placeholder="https://canvas.illinois.edu/courses/12345"
+                radius="md"
                 type="url"
                 value={url}
                 size="lg"
@@ -282,37 +291,38 @@ export default function CanvasIngestForm({
                 }}
               />
             </div>
-            <div className="space-y-2">
-              <Label className="mb-2 block text-white">
-                {t('canvas_ingest.select_content_to_import')}
-              </Label>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+
+            <div className="mt-4">
+              <Label className="block ">Select Content to Import</Label>
+              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {[
-                  t('canvas_ingest.files'),
-                  t('canvas_ingest.pages'),
-                  t('canvas_ingest.modules'),
-                  t('canvas_ingest.syllabus'),
-                  t('canvas_ingest.assignments'),
-                  t('canvas_ingest.discussions'),
+                  'Files',
+                  'Pages',
+                  'Modules',
+                  'Syllabus',
+                  'Assignments',
+                  'Discussions',
                 ].map((option) => (
                   <div
                     key={option}
-                    className="flex items-center space-x-2 rounded-lg bg-[#1A1B1E] p-2"
+                    className="flex items-center space-x-2 rounded-lg bg-[--background-faded] p-2 text-[--foreground]"
                   >
                     <Checkbox
                       id={option.toLowerCase()}
-                      color="violet"
                       checked={selectedOptions.includes(option.toLowerCase())}
                       onChange={() => handleOptionChange(option.toLowerCase())}
                       label={option}
                       styles={{
                         input: {
-                          backgroundColor: '#1A1B1E',
-                          borderColor: '#9370DB',
+                          backgroundColor: 'var(--background-faded)',
+                          borderColor: 'var(--background-dark)',
                           '&:checked': {
-                            backgroundColor: '#9370DB',
-                            borderColor: '#9370DB',
+                            backgroundColor: 'var(--button)',
+                            borderColor: 'var(--button)',
                           },
+                        },
+                        label: {
+                          color: 'var(--foreground)',
                         },
                       }}
                     />
@@ -321,13 +331,15 @@ export default function CanvasIngestForm({
               </div>
             </div>
           </div>
-          <Button
-            onClick={handleIngest}
-            disabled={!isUrlValid}
-            className="h-11 w-full rounded-xl bg-purple-600 text-white transition-colors hover:bg-purple-700"
-          >
-            {t('canvas_ingest.import_content')}
-          </Button>
+          <div className="mt-4">
+            <Button
+              onClick={handleIngest}
+              disabled={!isUrlValid}
+              className="h-11 w-full rounded-xl bg-[--dashboard-button] text-[--dashboard-button-foreground] transition-colors hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--background-dark]"
+            >
+              Ingest Canvas Content
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </motion.div>

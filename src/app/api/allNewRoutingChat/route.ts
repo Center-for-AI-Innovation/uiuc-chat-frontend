@@ -1,8 +1,8 @@
 // src/app/api/allNewRoutingChat/route.ts
 
-import { ChatBody } from '@/types/chat'
+import { type ChatBody } from '@/types/chat'
 import { routeModelRequest } from '~/utils/streamProcessing'
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, type NextResponse } from 'next/server'
 import { buildPrompt } from '~/app/utils/buildPromptUtils'
 import { OpenAIError } from '~/utils/server'
 
@@ -35,16 +35,17 @@ export async function POST(req: NextRequest, res: NextResponse) {
     return new Response(
       JSON.stringify({
         title: 'LLM Error',
-        message: error instanceof Error
-          ? error.message
-          : 'An unexpected error occurred',
+        message:
+          error instanceof Error
+            ? error.message
+            : 'An unexpected error occurred',
       }),
       {
         status: 500,
         headers: {
           'Content-Type': 'application/json',
         },
-      }
+      },
     )
   }
 }

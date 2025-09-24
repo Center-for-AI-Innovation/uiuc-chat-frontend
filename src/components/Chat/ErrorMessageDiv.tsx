@@ -1,15 +1,13 @@
 import { IconCircleX } from '@tabler/icons-react'
-import { FC } from 'react'
+import { type FC } from 'react'
 
-import { ErrorMessage } from '@/types/error'
-import { useTranslation } from 'react-i18next'
+import { type ErrorMessage } from '@/types/error'
 
 interface Props {
   error: ErrorMessage
 }
 
 export const ErrorMessageDiv: FC<Props> = ({ error }) => {
-  const { t } = useTranslation()
   return (
     <div className="mx-6 flex h-full flex-col items-center justify-center text-red-500">
       <div className="mb-5">
@@ -23,7 +21,7 @@ export const ErrorMessageDiv: FC<Props> = ({ error }) => {
         </div>
       ))}
       <div className="mt-4 text-xs opacity-50 dark:text-red-400">
-        {error.code ? <i>{t('error_code', { code: error.code })}</i> : ''}
+        {error.code ? <i>Code: {error.code}</i> : ''}
       </div>
     </div>
   )

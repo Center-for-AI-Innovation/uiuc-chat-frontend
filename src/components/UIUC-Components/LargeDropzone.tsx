@@ -27,9 +27,8 @@ import SupportedFileUploadTypes from './SupportedFileUploadTypes'
 import { useMediaQuery } from '@mantine/hooks'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { v4 as uuidv4 } from 'uuid'
-import { FileUpload } from './UploadNotification'
-import { AuthContextProps } from 'react-oidc-context'
-import { useTranslation } from 'next-i18next'
+import { type FileUpload } from './UploadNotification'
+import { type AuthContextProps } from 'react-oidc-context'
 
 const useStyles = createStyles((theme) => ({
   wrapper: {
@@ -87,7 +86,6 @@ export function LargeDropzone({
   const { classes, theme } = useStyles()
   const openRef = useRef<() => void>(null)
   const [files, setFiles] = useState<File[]>([])
-  const { t } = useTranslation('common')
 
   const refreshOrRedirect = async (redirect_to_gpt_4: boolean) => {
     if (is_new_course) {
@@ -343,17 +341,20 @@ export function LargeDropzone({
               width: '100%',
               minHeight: rem(200),
               height: 'auto',
-              backgroundColor: isDisabled ? '#3a374a' : '#1c1c2e',
+              backgroundColor: isDisabled
+                ? 'var(--background-faded)'
+                : 'var(--background)',
               cursor: isDisabled ? 'not-allowed' : 'pointer',
               borderWidth: '2px',
               borderStyle: 'dashed',
-              borderColor: 'rgba(147, 51, 234, 0.3)',
+              borderColor: 'var(--foreground)',
               borderRadius: rem(12),
               padding: '1rem',
               margin: '0 auto',
               maxWidth: '100%',
               overflow: 'hidden',
-              background: 'linear-gradient(135deg, #1c1c2e 0%, #2a2a40 100%)',
+              background:
+                'linear-gradient(135deg, var(--dashboard-background-faded) 0%, var(--dashboard-background) 100%)',
               transition: 'all 0.3s ease, background-position 0.3s ease',
               backgroundSize: '200% 200%',
               // backgroundPosition: '0% 0%',
@@ -377,14 +378,14 @@ export function LargeDropzone({
                 <Dropzone.Accept>
                   <IconDownload
                     size={isSmallScreen ? rem(30) : rem(50)}
-                    color="#9333ea"
+                    color="var(--dashboard-foreground)"
                     stroke={1.5}
                   />
                 </Dropzone.Accept>
                 <Dropzone.Reject>
                   <IconX
                     size={isSmallScreen ? rem(30) : rem(50)}
-                    color="#ef4444"
+                    color="var(--error)"
                     stroke={1.5}
                   />
                 </Dropzone.Reject>
@@ -392,7 +393,7 @@ export function LargeDropzone({
                   <Dropzone.Idle>
                     <IconCloudUpload
                       size={isSmallScreen ? rem(30) : rem(50)}
-                      color="#9333ea"
+                      color="var(--illinois-orange)"
                       stroke={1.5}
                     />
                   </Dropzone.Idle>
@@ -404,14 +405,16 @@ export function LargeDropzone({
                 fw={700}
                 fz={isSmallScreen ? 'md' : 'lg'}
                 mt={isSmallScreen ? 'md' : 'xl'}
-                className="text-gray-200"
+                className="text-[--dashboard-foreground]"
               >
-                <Dropzone.Accept>{t('dropzone.accept')}</Dropzone.Accept>
-                <Dropzone.Reject>{t('dropzone.reject')}</Dropzone.Reject>
+                <Dropzone.Accept>Drop files here</Dropzone.Accept>
+                <Dropzone.Reject>
+                  Upload rejected, not proper file type or too large.
+                </Dropzone.Reject>
                 <Dropzone.Idle>
                   {isDisabled
-                    ? t('dropzone.idle_project_name')
-                    : t('dropzone.idle_upload_materials')}
+                    ? 'Enter an available project name above! 👀'
+                    : 'Upload materials'}
                 </Dropzone.Idle>
               </Text>
 
@@ -420,9 +423,9 @@ export function LargeDropzone({
                   ta="center"
                   fz={isSmallScreen ? 'xs' : 'sm'}
                   mt="xs"
-                  className="text-gray-400"
+                  className="text-[--foreground-faded]"
                 >
-                  {t('dropzone.drag_helper')}
+                  Drag&apos;n&apos;drop files or a whole folder here
                 </Text>
               )}
 
@@ -431,7 +434,7 @@ export function LargeDropzone({
               </div>
             </div>
           </Dropzone>
-          {uploadInProgress && (
+          {/* {uploadInProgress && (
             <div className="flex flex-col items-center justify-center px-4 text-center">
               <Title
                 order={4}
@@ -442,10 +445,12 @@ export function LargeDropzone({
                   lineHeight: '1.4',
                 }}
               >
-                {t('dropzone.remain_until_upload_complete')}
+                Remain on this page until upload is complete
+                <br />
+                or ingest will fail.
               </Title>
             </div>
-          )}
+          )} */}
         </div>
         <div
           style={{

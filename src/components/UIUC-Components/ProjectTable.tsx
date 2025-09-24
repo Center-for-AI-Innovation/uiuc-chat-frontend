@@ -9,7 +9,6 @@ import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import Link from 'next/link'
 import React from 'react'
 import { useMediaQuery } from '@mantine/hooks'
-import { useTranslation } from 'next-i18next'
 import {
   IconChevronUp,
   IconChevronDown,
@@ -18,16 +17,14 @@ import {
 
 const StyledRow = styled.tr`
   &:hover {
-    background-color: rgba(255, 95, 5, 0.6);
+    color: var(--foreground);
+    background-color: var(--background-faded);
   }
-  color: #c1c2c5;
 `
 
 const StyledTable = styled(Table)`
   table-layout: fixed;
   width: 100%;
-  background-color: white;
-  color: var(--illinois-blue);
 
   th,
   td {
@@ -35,14 +32,24 @@ const StyledTable = styled(Table)`
     overflow-wrap: break-word;
     hyphens: auto;
     padding: 8px;
+
+    color: var(--foreground) !important;
+  }
+
+  thead th {
+    border-bottom-color: var(--table-border) !important;
+  }
+
+  tbody td {
+    border-top-color: var(--table-border) !important;
   }
 `
 
 const ResponsiveTableWrapper = styled.div`
   overflow-x: auto;
   width: 100%;
-  background-color: white;
-  box-shadow: 0px 0px 10px 2px rgba(0, 0, 0, 0.1);
+  color: var(--foreground);
+  background-color: var(--background);
   border-radius: 15px;
   padding: 0;
 
@@ -81,7 +88,6 @@ const ListProjectTable: React.FC = () => {
   const [rawData, setRawData] = useState<{ [key: string]: CourseMetadata }[]>(
     [],
   )
-  const { t } = useTranslation('common')
 
   const handleSort = (column: SortableColumn) => {
     if (sortColumn === column) {
@@ -177,7 +183,7 @@ const ListProjectTable: React.FC = () => {
             style={{ cursor: 'pointer', color: 'var(--illinois-blue)' }}
           >
             <td>{courseName}</td>
-            <td>{courseMetadata.is_private ? t('homepage.private') : t('homepage.public')}</td>
+            <td>{courseMetadata.is_private ? 'Private' : 'Public'}</td>
             <td>{courseMetadata.course_owner}</td>
             <td>{filteredAdmins.join(', ')}</td>
           </StyledRow>
@@ -238,7 +244,7 @@ const ListProjectTable: React.FC = () => {
         <>
           {/* Todo: add enticing copy for new recruits */}
           {/* <Title order={3}>
-            <Link className="text-purple-500 underline" href="/new">Make your own project here</Link>
+            <Link className="text-[--dashboard-button] underline" href="/new">Make your own project here</Link>
           </Title> */}
         </>
       )
@@ -246,46 +252,23 @@ const ListProjectTable: React.FC = () => {
 
     return (
       <>
-        <div className="mx-auto w-full max-w-[950px] md:w-11/12 lg:w-5/6">
-          <Title
-            order={2}
-            ta="center"
-            className={`
-              text-2xl font-bold sm:pt-2 
-              ${montserrat_heading.variable} font-montserratHeading
-            `}
-            style={{ color: 'var(--illinois-blue)' }}
-          >
-            {t('homepage.your_chatbots')}
-          </Title>
+        <div className="mx-auto px-8 py-6">
           {rows.length > 0 ? (
             <>
-              <p
-                className={`
-                text-md pb-8 pt-2
-                ${montserrat_paragraph.variable} font-montserratParagraph
-              `}
-                style={{ color: 'var(--illinois-blue)' }}
-              >
-                {t('homepage.projects_description')}
-              </p>
               <div
                 style={{
                   overflowX: 'auto',
                   width: '100%',
-                  backgroundColor: 'white',
-                  boxShadow: '0px 0px 10px 2px rgba(0, 0, 0, 0.1)',
-                  borderRadius: '15px',
                 }}
               >
                 <StyledTable>
                   <thead>
                     <tr>
                       {[
-                        { label: t('homepage.chatbot_name'), key: 'name' },
-                        { label: t('homepage.privacy'), key: 'privacy' },
-                        { label: t('homepage.owner'), key: 'owner' },
-                        { label: t('homepage.admins'), key: 'admins' },
+                        { label: 'Chatbot Name', key: 'name' },
+                        { label: 'Privacy', key: 'privacy' },
+                        { label: 'Owner', key: 'owner' },
+                        { label: 'Admins', key: 'admins' },
                       ].map(({ label, key }) => (
                         <th
                           key={key}
@@ -296,12 +279,12 @@ const ListProjectTable: React.FC = () => {
                             style={{
                               display: 'flex',
                               alignItems: 'center',
-                              justifyContent: 'center',
+                              justifyContent: 'flex-start',
                               gap: '4px',
                             }}
                           >
                             <span
-                              className={`text-md text-[var(--illinois-blue)] ${montserrat_heading.variable} font-montserratHeading`}
+                              className={`text-md ${montserrat_heading.variable} font-montserratHeading`}
                             >
                               {label}
                             </span>
@@ -326,15 +309,15 @@ const ListProjectTable: React.FC = () => {
                 color: 'var(--illinois-blue)',
               }}
             >
-              {t('homepage.no_projects_yet')}{' '}
+              You haven&apos;t created any projects yet. Let&apos;s{' '}
               <Link
                 className="underline"
                 href="/new"
                 style={{ color: 'var(--illinois-orange)' }}
               >
-                {t('homepage.go_make_one_here')}
+                go make one here
               </Link>
-              {t('homepage.dont_worry_easy')}
+              , don&apos;t worry it&apos;s easy.
             </Text>
           )}
         </div>

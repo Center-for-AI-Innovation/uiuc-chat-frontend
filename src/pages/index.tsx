@@ -1,15 +1,14 @@
-import Image from 'next/image'
+import { Button, Card } from '@mantine/core'
 import { type NextPage } from 'next'
 import Head from 'next/head'
+import Image from 'next/image'
 import Link from 'next/link'
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { ArrowNarrowRight, ExternalLink } from 'tabler-icons-react'
-import ProjectTable from '~/components/UIUC-Components/ProjectTable'
-import { Card, Button } from '@mantine/core'
 
-import { LandingPageHeader } from '~/components/UIUC-Components/navbars/GlobalHeader'
+import { doto_font, montserrat_heading, montserrat_paragraph } from 'fonts'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
-import { montserrat_heading, montserrat_paragraph, doto_font } from 'fonts'
+import { LandingPageHeader } from '~/components/UIUC-Components/navbars/GlobalHeader'
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 
@@ -71,6 +70,7 @@ const TypingAnimation: React.FC = () => {
           position: 'relative',
           fontWeight: 'bold',
           fontSize: 'inherit',
+          lineHeight: 1,
           color: 'var(--illinois-white)',
           fontFamily: 'var(--font-doto)',
         }}
@@ -210,7 +210,7 @@ const Home: NextPage = () => {
           >
             <div className="sm:w-1/2 ">
               <div
-                style={{ color: 'var(--illinois-blue)', lineHeight: '110%' }}
+                style={{ color: 'var(--foreground)', lineHeight: '110%' }}
                 className={`
                   text-3xl font-bold sm:mt-4
                   sm:text-3xl
@@ -225,7 +225,7 @@ const Home: NextPage = () => {
                 </h2>
               </div>
 
-              <div className="mb-8 mt-4 text-sm text-neutral-400">
+              <div className="mb-8 mt-4 text-sm text-[--foreground-faded]">
                 {t('homepage.features.deep_search_docs')} <span className="whitespace-nowrap">{t('homepage.features.and_get_creative')}</span>
               </div>
 
@@ -257,18 +257,18 @@ const Home: NextPage = () => {
                   <div className="icons_scrolling">
                     <img
                       src="/media/banner_icons.png"
-                      className="max-w-full rounded-xl"
+                      className="max-w-full"
                     ></img>
                     <img
                       src="/media/banner_icons.png"
-                      className="max-w-full rounded-xl"
+                      className="max-w-full"
                     ></img>
                   </div>
                 </div>
               </div>
 
               <div
-                className="mr-8 mt-[2px] text-right text-xs sm:mr-4 sm:mt-[-8px]"
+                className="mr-8 mt-[2px] hidden text-right text-xs sm:mr-4 sm:mt-[-8px]"
                 style={{ color: 'var(--illinois-orange)' }}
               >
                 {t('homepage.features.upload_almost_anything')}
@@ -276,34 +276,33 @@ const Home: NextPage = () => {
             </div>
           </div>
 
-          <div className="mb-6 w-full pt-8 text-center">
-            <h2
-              className={`
-                pt-12
-                text-2xl font-bold sm:pt-2 
-                ${montserrat_heading.variable} font-montserratHeading
-              `}
-              style={{ color: 'var(--illinois-blue)' }}
-            >
-              {t('homepage.flagship.chatbots')}
-            </h2>
-            <p
-              className={`
-                text-md mt-2
-                ${montserrat_paragraph.variable} font-montserratParagraph
-              `}
-            >
-              {t('homepage.flagship.dive_right_into_bots')}
-            </p>
-          </div>
+          <div className="mt-12 w-[100vw] rounded-lg bg-[--dashboard-background-faded] p-8 pb-14">
+            <div className="mb-0 w-full text-center ">
+              <h2
+                className={`
+                  text-2xl font-bold sm:pt-2 
+                  ${montserrat_heading.variable} font-montserratHeading
+                `}
+                style={{ color: 'var(--foreground)' }}
+              >
+                {t('homepage.flagship.chatbots')}
+              </h2>
+              <p
+                className={`
+                  text-md mt-2
+                  ${montserrat_paragraph.variable} font-montserratParagraph
+                `}
+              >
+                {t('homepage.flagship.dive_right_into_bots')}
+              </p>
+            </div>
 
-          <div className="w-full max-w-5xl">
-            <FlagshipChatbots />
+            <div className="w-full">
+              <div className="ml-auto mr-auto max-w-5xl">
+                <FlagshipChatbots />
+              </div>
+            </div>
           </div>
-        </div>
-
-        <div className="mb-6 w-full px-2 pt-4 text-center sm:mt-[-24px] sm:px-4">
-          <ProjectTable />
         </div>
 
         {/* orange banner */}
@@ -628,20 +627,19 @@ const Home: NextPage = () => {
           </h4>
           <div className="mt-4 grid grid-cols-1 gap-14 sm:grid-cols-2 md:gap-8">
             <Link
-              className="bg-[var(--illinois-white)]/10 duration-600 flex max-w-xs flex-col gap-4 rounded-xl transition-transform hover:scale-[1.01] sm:p-4"
+              className="duration-600 flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6 transition-transform hover:scale-[1.01]"
               href="https://github.com/Center-for-AI-Innovation/uiuc-chat-frontend"
               target="_blank"
-              style={{ boxShadow: '4px 4px 10px rgba(0,0,0, .2)' }}
             >
               <h3
                 className={`
-                text-2xl font-bold
+                text-xl font-bold
                 ${montserrat_heading.variable} font-montserratHeading
               `}
               >
                 {t('homepage.about.read_the_code')}
               </h3>
-              <div className="text-lg">
+              <div className="text-md">
                 {t('homepage.about.code_free')}
                 <br></br>
                 {t('homepage.about.code_open_source')}
@@ -650,39 +648,37 @@ const Home: NextPage = () => {
               </div>
             </Link>
             <Link
-              className="bg-[var(--illinois-white)]/10 duration-600 flex max-w-xs flex-col gap-4 rounded-xl transition-transform hover:scale-[1.01] sm:p-4"
+              className="duration-600 flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6 transition-transform hover:scale-[1.01]"
               href="https://ai.ncsa.illinois.edu/"
               target="_blank"
-              style={{ boxShadow: '4px 4px 10px rgba(0,0,0, .2)' }}
             >
               <h3
                 className={`
-                text-2xl font-bold
+                text-xl font-bold
                 ${montserrat_heading.variable} font-montserratHeading
               `}
               >
                 {t('homepage.about.sponsored_by_center_of')}
                 <span className="whitespace-nowrap">{t('homepage.about.ai_innovation')}</span>
               </h3>
-              <div className="text-lg">
+              <div className="text-md">
                 {t('homepage.about.ncsa_part_of')}
               </div>
             </Link>
             <Link
-              className="bg-[var(--illinois-white)]/10 duration-600 flex max-w-xs flex-col gap-4 rounded-xl transition-transform hover:scale-[1.01] sm:p-4"
+              className="duration-600 flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6 transition-transform hover:scale-[1.01]"
               href="https://rohanmarwaha.com/"
               target="_blank"
-              style={{ boxShadow: '4px 4px 10px rgba(0,0,0, .2)' }}
             >
               <h3
                 className={`
-                text-2xl font-bold
+                text-xl font-bold
                 ${montserrat_heading.variable} font-montserratHeading
               `}
               >
                 {t('homepage.about.bio')}
               </h3>
-              <div className="text-lg">
+              <div className="text-md">
                 {t('homepage.about.started_by_rohan_marwaha')}
                 <a
                   href="https://github.com/Center-for-AI-Innovation/uiuc-chat-frontend/graphs/contributors"
@@ -700,14 +696,13 @@ const Home: NextPage = () => {
             </Link>
 
             <Link
-              className="bg-[var(--illinois-white)]/10 duration-600 flex max-w-xs flex-col gap-4 rounded-xl transition-transform hover:scale-[1.01] sm:p-4"
+              className="duration-600 flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6 transition-transform hover:scale-[1.01]"
               href="https://status.uiuc.chat/"
               target="_blank"
-              style={{ boxShadow: '4px 4px 10px rgba(0,0,0, .2)' }}
             >
               <h3
                 className={`
-                text-2xl font-bold
+                text-xl font-bold
                 ${montserrat_heading.variable} font-montserratHeading
               `}
               >
@@ -775,7 +770,7 @@ function FlagshipChatbots() {
   ]
 
   return (
-    <div className="grid w-full grid-cols-1 gap-6 sm:grid-cols-3">
+    <div className="ml-auto mr-auto grid grid-cols-1 gap-6 sm:grid-cols-3">
       {cards.map((card) => (
         <Card
           key={card.course_slug}
@@ -784,14 +779,14 @@ function FlagshipChatbots() {
           radius="md"
           className="flex h-56 flex-col"
           style={{
-            background: 'var(--background)',
-            boxShadow: '4px 4px 10px rgba(0,0,0, .2)',
+            color: 'var(--illinois-blue)',
+            background: 'var(--illinois-white)',
           }}
         >
           <Card.Section className="h-12">
             <div
               className={`
-                flex items-center px-3 text-sm font-semibold text-neutral-600
+                flex items-center px-3 text-sm font-semibold
                 ${montserrat_heading.variable} font-montserratHeading
               `}
               style={{ height: '100%' }}
@@ -814,7 +809,7 @@ function FlagshipChatbots() {
                     width: '100%',
                     height: '100%',
                     objectFit: 'contain',
-                    backgroundColor: 'var(--background)',
+                    backgroundColor: 'var(--illinois-white)',
                   }}
                 />
               </div>
@@ -826,7 +821,7 @@ function FlagshipChatbots() {
               <div
                 className="
                 line-clamp-2 max-w-full
-                text-xs text-neutral-600 sm:line-clamp-5
+                text-xs sm:line-clamp-5
                 "
               >
                 {card.tagline}

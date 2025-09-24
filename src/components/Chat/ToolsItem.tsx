@@ -4,8 +4,6 @@ import { IconSearch } from '@tabler/icons-react'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useContext, useMemo, useState } from 'react'
 import HomeContext from '~/pages/api/home/home.context'
-import { useTranslation } from 'next-i18next'
-import i18n from 'i18next'
 
 export const ToolsItem = ({}) => {
   const {
@@ -15,7 +13,6 @@ export const ToolsItem = ({}) => {
 
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const [toolSearch, setToolSearch] = useState('')
-  const { t } = useTranslation('common')
 
   // Logic to filter tools based on the search query
   const filteredTools = useMemo(() => {
@@ -44,60 +41,74 @@ export const ToolsItem = ({}) => {
       ),
     })
   }
-
-  const searchPlaceholder = t('common.search', { defaultValue: 'Search...' }) as string
-
   return (
     <>
-      <div className="flex flex-col items-center justify-center">
-        <div className="flex w-full flex-col items-center justify-center">
-          <div className="flex w-full flex-col">
-            <Title
-              className={`px-4 pt-4 ${montserrat_heading.variable} rounded-lg bg-[#15162c] p-4 font-montserratHeading`}
-              color="white"
-              order={isSmallScreen ? 5 : 3}
-            >
-              {t('settings.sections.tools.title')}
-            </Title>
-
+      <div
+        className="flex h-full w-[100%] flex-col space-y-4 rounded-lg p-3"
+        style={{ position: 'relative', zIndex: 100 }}
+      >
+        <div>
+          <div className="flex flex-col"></div>
+          <Title
+            className={`px-4 pt-4 ${montserrat_heading.variable} rounded-lg bg-[--modal-dark] p-4 font-montserratHeading text-[--modal-text]`}
+            order={isSmallScreen ? 5 : 3}
+          >
+            Tools
+          </Title>
+          <div className="flex flex-col items-center justify-center rounded-lg">
             <TextInput
               type="search"
-              placeholder={String(t('settings.sections.tools.search'))}
-              mb="sm"
+              placeholder="Search Tools"
+              my="sm"
               radius="md"
-              icon={<IconSearch />}
+              icon={<IconSearch size={isSmallScreen ? 15 : 20} />}
               value={toolSearch}
               onChange={handleToolSearchChange}
-              className="sticky top-0 z-10"
               w={'90%'}
               size={isSmallScreen ? 'xs' : 'sm'}
+              styles={{
+                input: {
+                  color: 'var(--foreground)',
+                  backgroundColor: 'var(--background-faded)',
+                  borderColor: 'var(--background-dark)',
+                  '&:focus': {
+                    borderColor: 'var(--background-darker)',
+                  },
+                },
+              }}
             />
 
+            {/* unable to use this until v7 of mantine since we can't control the hover color              highlightOnHover */}
             <Table
               variant="striped"
+              className="text-[--modal-text]"
               style={{
                 width: '90%',
               }}
-              highlightOnHover
             >
               <thead>
                 <tr
                   className={`${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`}
                 >
-                  <th style={{ width: '60%', wordWrap: 'break-word' }}>
-                    {t('settings.sections.tools.table.name')}
+                  <th
+                    style={{
+                      width: '60%',
+                      wordWrap: 'break-word',
+                      color: 'var(--foreground)',
+                    }}
+                  >
+                    Tool
                   </th>
                   <th
                     style={{
                       width: '40%',
                       wordWrap: 'break-word',
                       textAlign: 'center',
+                      color: 'var(--foreground)',
                     }}
                   >
                     <span className="flex flex-col items-center justify-center">
-                      <span className="self-center">
-                        {t('settings.sections.tools.table.enabled')}
-                      </span>
+                      <span className="self-center">Enabled</span>
                     </span>
                   </th>
                 </tr>
@@ -122,7 +133,7 @@ export const ToolsItem = ({}) => {
                       <Switch
                         checked={tool_obj.enabled}
                         onChange={() => handleToggleChecked(tool_obj.id)}
-                        color="grape"
+                        color="orange"
                         size={isSmallScreen ? 'sm' : 'lg'}
                       />
                     </td>
@@ -131,9 +142,7 @@ export const ToolsItem = ({}) => {
                 {filteredTools.length === 0 && (
                   <tr>
                     <td colSpan={4}>
-                      <Text align="center">
-                        {t('settings.sections.tools.table.no_tools')}
-                      </Text>
+                      <Text align="center">No tools found</Text>
                     </td>
                   </tr>
                 )}

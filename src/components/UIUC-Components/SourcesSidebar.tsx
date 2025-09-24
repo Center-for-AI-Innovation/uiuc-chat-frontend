@@ -1,11 +1,9 @@
-import { IconArrowBarRight } from '@tabler/icons-react'
-import { ContextWithMetadata } from '~/types/chat'
 import { Text } from '@mantine/core'
+import { IconArrowBarRight } from '@tabler/icons-react'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { useRouter } from 'next/router'
-import { useEffect, useContext } from 'react'
+import { useEffect } from 'react'
+import { type ContextWithMetadata } from '~/types/chat'
 import { CitationCard } from './CitationCard'
-import HomeContext from '~/pages/api/home/home.context'
 
 interface Props {
   isOpen: boolean
@@ -105,7 +103,7 @@ const SourcesSidebar = ({
   const renderContent = () => {
     if (!contexts?.length) {
       return (
-        <div className="mt-8 select-none text-center text-white opacity-50">
+        <div className="mt-8 select-none text-center opacity-50">
           <span
             className={`text-sm ${montserrat_paragraph.variable} font-montserratParagraph`}
           >
@@ -154,9 +152,9 @@ const SourcesSidebar = ({
       <div className="flex flex-col">
         {citedContexts.length > 0 && (
           <div>
-            <div className="sticky top-0 z-10 border-b border-white/10 bg-[#131426] px-4 py-3">
+            <div className="sticky top-0 z-10 border-b border-[--sources-border] bg-[--sources-header-background] px-4 py-3">
               <Text
-                className={`text-sm font-semibold uppercase tracking-wider text-white/60 ${montserrat_heading.variable} font-montserratHeading`}
+                className={`text-sm font-semibold ${montserrat_heading.variable} font-montserratHeading`}
               >
                 Citations{' '}
                 {citedContexts.length === contexts.length && '(All Sources)'}
@@ -184,9 +182,9 @@ const SourcesSidebar = ({
 
         {remainingContexts.length > 0 && (
           <div>
-            <div className="sticky top-0 z-10 border-b border-white/10 bg-[#131426] px-4 py-3">
+            <div className="sticky top-0 z-10 border-b border-[--sources-border] bg-[--sources-header-background] px-4 py-3">
               <Text
-                className={`text-sm font-semibold uppercase tracking-wider text-white/60 ${montserrat_heading.variable} font-montserratHeading`}
+                className={`text-sm font-semibold ${montserrat_heading.variable} font-montserratHeading`}
               >
                 {citedContexts.length === 0 ? 'All Sources' : 'More Sources'}
               </Text>
@@ -216,11 +214,14 @@ const SourcesSidebar = ({
 
   return isOpen ? (
     <>
-      <div className="fixed bottom-0 right-0 top-0 z-40 flex h-screen w-[260px] flex-col bg-[#131426] shadow-lg">
+      <div
+        className="fixed bottom-0 right-0 top-20 z-[1000] flex w-[260px] flex-col bg-[--sources-background] text-[--sources-foreground] shadow-lg"
+        style={{ height: 'calc(100vh - 80px)' }}
+      >
         <div className="flex-1 overflow-y-auto">{renderContent()}</div>
 
         <button
-          className={`fixed right-[270px] top-5 z-50 h-7 w-7 hover:text-gray-400 dark:text-white dark:hover:text-gray-300 sm:top-0.5 sm:h-8 sm:w-8 sm:text-neutral-700`}
+          className={`absolute right-[270px] top-5 z-50 h-7 w-7 text-[--foreground-faded] hover:text-[--foreground] sm:top-0.5 sm:h-8 sm:w-8`}
           onClick={handleClose}
         >
           <IconArrowBarRight />
@@ -229,11 +230,12 @@ const SourcesSidebar = ({
 
       <style jsx global>{`
         .overflow-wrap {
-          margin-right: ${isOpen ? '260px' : '0'};
+          //          margin-right: ${isOpen ? '260px' : '0'};
           transition: margin-right 0.2s ease-in-out;
         }
+
         .maintain-margin {
-          margin-right: 260px !important;
+          //          margin-right: 260px !important;
         }
       `}</style>
     </>
