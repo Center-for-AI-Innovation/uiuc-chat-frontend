@@ -1,5 +1,4 @@
 // src/pages/[course_name]/prompt.tsx
-'use client'
 import { type NextPage } from 'next'
 import { Montserrat } from 'next/font/google'
 import { useRouter } from 'next/router'
@@ -83,6 +82,9 @@ import {
 import { type AnthropicModel } from '~/utils/modelProviders/types/anthropic'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { GetServerSidePropsContext } from 'next'
+import { useTranslation } from 'next-i18next'
 
 const montserrat = Montserrat({
   weight: '700',
@@ -139,6 +141,7 @@ const isApiKeyRequired = (provider: ProviderNames): boolean => {
 const CourseMain: NextPage = () => {
   const theme = useMantineTheme()
   const router = useRouter()
+  const { t } = useTranslation('common')
 
   const GetCurrentPageName = () => {
     return router.query.course_name as string
@@ -880,7 +883,7 @@ CRITICAL: The optimized prompt must:
                           order={2}
                           className={`${montserrat_heading.variable} font-montserratHeading text-lg text-[--foreground] sm:text-2xl`}
                         >
-                          Prompting
+                          {t('prompt.title')}
                         </Title>
                         <Text className="text-[--foreground]">/</Text>
                         <Title
@@ -947,7 +950,7 @@ CRITICAL: The optimized prompt must:
                                 weight={600}
                                 className={`${montserrat_paragraph.variable} select-text font-montserratParagraph text-[--dashboard-foreground]`}
                               >
-                                Prompt Engineering Guide
+                                {t('prompt.engineering_guide')}
                               </Text>
                             </Flex>
                             <div
@@ -972,8 +975,7 @@ CRITICAL: The optimized prompt must:
                                 size="md"
                                 className={`${montserrat_paragraph.variable} select-text font-montserratParagraph`}
                               >
-                                For additional insights and best practices on
-                                prompt creation, please review:
+                                {t('prompt.engineering_guide_intro')}
                                 <List
                                   withPadding
                                   className="mt-2"
@@ -999,8 +1001,7 @@ CRITICAL: The optimized prompt must:
                                       rel="noopener noreferrer"
                                       onClick={(e) => e.stopPropagation()}
                                     >
-                                      The Official OpenAI Prompt Engineering
-                                      Guide
+                                      {t('prompt.openai_guide')}
                                       <IconExternalLink
                                         size={18}
                                         className="inline-block pl-1"
@@ -1019,7 +1020,7 @@ CRITICAL: The optimized prompt must:
                                       rel="noopener noreferrer"
                                       onClick={(e) => e.stopPropagation()}
                                     >
-                                      The Official Anthropic Prompt Library
+                                      {t('prompt.anthropic_library')}
                                       <IconExternalLink
                                         size={18}
                                         className="inline-block pl-1"
@@ -1036,10 +1037,7 @@ CRITICAL: The optimized prompt must:
                                   size="md"
                                   style={{ marginTop: '1.5rem' }}
                                 >
-                                  The System Prompt provides the foundation for
-                                  every conversation in this project. It defines
-                                  the model&apos;s role, tone, and behavior.
-                                  Consider including:
+                                  {t('prompt.system_prompt_intro')}
                                   <List
                                     withPadding
                                     className="mt-2 text-[--dashboard-foreground]"
@@ -1057,15 +1055,9 @@ CRITICAL: The optimized prompt must:
                                       />
                                     }
                                   >
-                                    <List.Item>
-                                      Key instructions or examples
-                                    </List.Item>
-                                    <List.Item>
-                                      A warm welcome message
-                                    </List.Item>
-                                    <List.Item>
-                                      Helpful links for further learning
-                                    </List.Item>
+                                    <List.Item>{t('prompt.key_instructions')}</List.Item>
+                                    <List.Item>{t('prompt.warm_welcome')}</List.Item>
+                                    <List.Item>{t('prompt.helpful_links')}</List.Item>
                                   </List>
                                 </Text>
                               </Text>
@@ -1101,10 +1093,10 @@ CRITICAL: The optimized prompt must:
                                   className={`label ${montserrat_heading.variable} pl-1 pr-0 font-montserratHeading text-[--dashboard-foreground] md:pl-0 md:pr-2`}
                                   order={4}
                                 >
-                                  System Prompt
+                                  {t('prompt.system_prompt')}
                                 </Title>
                                 <Select
-                                  placeholder="Select model"
+                                  placeholder={t('prompt.select_model') as unknown as string}
                                   data={modelOptions}
                                   value={selectedModel}
                                   onChange={(value) =>
@@ -1351,7 +1343,7 @@ CRITICAL: The optimized prompt must:
                                   }
                                 />
                                 <Tooltip
-                                  label="The selected model will be used when Optimizing System Prompt"
+                                  label={t('prompt.selected_model_tooltip') as unknown as string}
                                   position="top"
                                   multiline
                                   withArrow
@@ -1383,7 +1375,7 @@ CRITICAL: The optimized prompt must:
                               </Flex>
                               {isRightSideVisible ? (
                                 <Tooltip
-                                  label="Close Prompt Builder"
+                                  label={t('prompt.close_prompt_builder') as unknown as string}
                                   key="close"
                                 >
                                   <div
@@ -1400,7 +1392,7 @@ CRITICAL: The optimized prompt must:
                                   </div>
                                 </Tooltip>
                               ) : (
-                                <Tooltip label="Open Prompt Builder" key="open">
+                                <Tooltip label={t('prompt.open_prompt_builder') as unknown as string} key="open">
                                   <div
                                     className="mr-2 cursor-pointer p-0"
                                     data-right-sidebar-icon
@@ -1426,7 +1418,7 @@ CRITICAL: The optimized prompt must:
                                 autosize
                                 minRows={3}
                                 maxRows={20}
-                                placeholder="Enter the system prompt..."
+                                placeholder={t('prompt.enter_system_prompt') as unknown as string}
                                 className="px-1 pt-3 md:px-0"
                                 value={baseSystemPrompt}
                                 onChange={(e) => {
@@ -1472,7 +1464,7 @@ CRITICAL: The optimized prompt must:
                                   })}
                                   style={{ minWidth: 'fit-content' }}
                                 >
-                                  Update System Prompt
+                                  {t('prompt.update_system_prompt')}
                                 </Button>
 
                                 <span
@@ -1521,8 +1513,8 @@ CRITICAL: The optimized prompt must:
                                     style={{ minWidth: 'fit-content' }}
                                   >
                                     {isOptimizing
-                                      ? 'Optimizing...'
-                                      : 'Optimize System Prompt'}
+                                      ? (t('prompt.optimizing') as unknown as string)
+                                      : (t('prompt.optimize_system_prompt') as unknown as string)}
                                   </Button>
                                 </span>
                               </Group>
@@ -1537,7 +1529,7 @@ CRITICAL: The optimized prompt must:
                                     size="lg"
                                     weight={700}
                                   >
-                                    Optimized System Prompt
+                                    {t('prompt.optimized_system_prompt')}
                                   </Text>
                                 }
                                 className={`${montserrat_heading.variable} rounded-xl font-montserratHeading`}
@@ -1641,7 +1633,7 @@ CRITICAL: The optimized prompt must:
                                         },
                                       })}
                                     >
-                                      Cancel
+                                      {t('common.cancel')}
                                     </Button>
                                     <Button
                                       radius="md"
@@ -1683,7 +1675,7 @@ CRITICAL: The optimized prompt must:
                                         },
                                       })}
                                     >
-                                      Update System Prompt
+                                      {t('prompt.update_system_prompt')}
                                     </Button>
                                   </Group>
                                 </div>
@@ -1721,7 +1713,7 @@ CRITICAL: The optimized prompt must:
                               pb={'xs'}
                               style={{ alignSelf: 'left', marginLeft: '-11px' }}
                             >
-                              Document Search Optimization
+                              {t('prompt.doc_search_optimization')}
                             </Title>
                             <Indicator
                               label={
@@ -1747,8 +1739,8 @@ CRITICAL: The optimized prompt must:
                           </Flex>
 
                           <CustomSwitch
-                            label="Smart Document Search"
-                            tooltip="When enabled, UIUC.chat optimizes your queries to better search through course materials and find relevant content. Note: This only affects how documents are searched - your chat messages remain exactly as you write them."
+                            label={t('prompt.smart_doc_search') as unknown as string}
+                            tooltip={t('prompt.smart_doc_search_tooltip') as unknown as string}
                             checked={vectorSearchRewrite}
                             onChange={(value: boolean) => {
                               handleSettingChange({
@@ -1764,7 +1756,7 @@ CRITICAL: The optimized prompt must:
                               className={`label ${montserrat_heading.variable} mr-[8px] font-montserratHeading`}
                               order={3}
                             >
-                              AI Behavior Settings
+                              {t('prompt.ai_behavior_settings')}
                             </Title>
                             <Indicator
                               label={
@@ -1795,8 +1787,8 @@ CRITICAL: The optimized prompt must:
                           <Flex direction="column" gap="md">
                             <div className="flex flex-col gap-1">
                               <CustomSwitch
-                                label="Guided Learning"
-                                tooltip="When enabled course-wide, this setting applies to all students and cannot be disabled by them. The AI will encourage independent problem-solving by providing hints and questions instead of direct answers, while still finding and citing relevant course materials. This promotes critical thinking while ensuring students have access to proper resources."
+                                label={t('prompt.guided_learning') as unknown as string}
+                                tooltip={t('prompt.guided_learning_tooltip') as unknown as string}
                                 checked={guidedLearning}
                                 onChange={(value: boolean) =>
                                   handleCheckboxChange({
@@ -1806,8 +1798,8 @@ CRITICAL: The optimized prompt must:
                               />
 
                               <CustomSwitch
-                                label="Document-Based References Only"
-                                tooltip="Restricts the AI to use only information from the provided documents. Useful for maintaining accuracy in fields like legal research where external knowledge could be problematic."
+                                label={t('prompt.document_only') as unknown as string}
+                                tooltip={t('prompt.document_only_tooltip') as unknown as string}
                                 checked={documentsOnly}
                                 onChange={(value: boolean) =>
                                   handleCheckboxChange({ documentsOnly: value })
@@ -1815,8 +1807,8 @@ CRITICAL: The optimized prompt must:
                               />
 
                               <CustomSwitch
-                                label="Bypass UIUC.chat's internal prompting"
-                                tooltip="Internally, we prompt the model to (1) add citations and (2) always be as helpful as possible. You can bypass this for full un-modified control over your bot."
+                                label={t('prompt.bypass_internal_prompting') as unknown as string}
+                                tooltip={t('prompt.bypass_internal_prompting_tooltip') as unknown as string}
                                 checked={systemPromptOnly}
                                 onChange={(value: boolean) =>
                                   handleCheckboxChange({
@@ -1834,8 +1826,8 @@ CRITICAL: The optimized prompt must:
                                   className="mt-[-4px] pl-[82px]"
                                 >
                                   <CustomCopyButton
-                                    label="Copy UIUC.chat's internal prompt"
-                                    tooltip="You can use and customize our default internal prompting to suit your needs. Note, only the specific citation formatting described will work with our citation 'find and replace' system. This provides a solid starting point for defining AI behavior in raw prompt mode."
+                                    label={t('prompt.copy_internal_prompt') as unknown as string}
+                                    tooltip={t('prompt.copy_internal_prompt_tooltip') as unknown as string}
                                     onClick={handleCopyDefaultPrompt}
                                   />
                                 </Flex>
@@ -1857,7 +1849,7 @@ CRITICAL: The optimized prompt must:
                                     }}
                                     variant="gradient"
                                   >
-                                    Reset Prompting Settings
+                                    {t('prompt.reset_settings')}
                                   </Text>
                                 }
                                 centered
@@ -1905,9 +1897,7 @@ CRITICAL: The optimized prompt must:
                                         lineHeight: 1.5,
                                       }}
                                     >
-                                      Are you sure you want to reset your system
-                                      prompt and all behavior settings to their
-                                      default values?
+                                      {t('prompt.reset_confirm')}
                                     </Text>
                                   </Flex>
 
@@ -1927,7 +1917,7 @@ CRITICAL: The optimized prompt must:
                                         marginBottom: '12px',
                                       }}
                                     >
-                                      This action will:
+                                      {t('prompt.this_action_will')}
                                     </Text>
                                     <List
                                       size="sm"
@@ -1945,14 +1935,8 @@ CRITICAL: The optimized prompt must:
                                         />
                                       }
                                     >
-                                      <List.Item>
-                                        Restore the system prompt to the default
-                                        template
-                                      </List.Item>
-                                      <List.Item>
-                                        Disable Guided Learning, Document-Only
-                                        mode, and other custom settings
-                                      </List.Item>
+                                      <List.Item>{t('prompt.restore_default_template')}</List.Item>
+                                      <List.Item>{t('prompt.disable_settings')}</List.Item>
                                     </List>
                                   </div>
 
@@ -1961,8 +1945,7 @@ CRITICAL: The optimized prompt must:
                                     style={{ color: '#D1D1D1' }}
                                     className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                                   >
-                                    This cannot be undone. Please confirm you
-                                    wish to proceed.
+                                    {t('prompt.cannot_undo')}
                                   </Text>
 
                                   <Group position="right" mt="md">
@@ -1983,7 +1966,7 @@ CRITICAL: The optimized prompt must:
                                         },
                                       })}
                                     >
-                                      Cancel
+                                      {t('common.cancel')}
                                     </Button>
                                     <Button
                                       variant="filled"
@@ -2016,7 +1999,7 @@ CRITICAL: The optimized prompt must:
                                         closeResetModal()
                                       }}
                                     >
-                                      Confirm
+                                      {t('common.confirm')}
                                     </Button>
                                   </Group>
                                 </Flex>
@@ -2049,7 +2032,7 @@ CRITICAL: The optimized prompt must:
                                   })}
                                   onClick={openResetModal}
                                 >
-                                  Reset Prompting Settings
+                                  {t('prompt.reset_settings')}
                                 </Button>
 
                                 <Button
@@ -2073,7 +2056,7 @@ CRITICAL: The optimized prompt must:
                                     '&:active': {},
                                   })}
                                 >
-                                  Generate Share Link
+                                  {t('prompt.generate_share_link')}
                                 </Button>
                               </Flex>
 
@@ -2179,3 +2162,9 @@ export const showToastOnPromptUpdate = (
 }
 
 export default CourseMain
+
+export const getServerSideProps = async ({ locale }: GetServerSidePropsContext) => ({
+  props: {
+    ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+  },
+})
