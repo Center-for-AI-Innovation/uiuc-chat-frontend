@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { ThemeToggle } from './ThemeToggle'
+import { useTranslation } from 'next-i18next'
 
 export default function Footer({ isNavbar = false }: { isNavbar?: boolean }) {
   const { t } = useTranslation('common')

@@ -20,6 +20,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import GlobalHeader from '~/components/UIUC-Components/navbars/GlobalHeader'
+import { useTranslation } from 'next-i18next'
 
 interface NavbarProps {
   course_name?: string
@@ -192,6 +193,7 @@ const styles = {
 } as const
 
 function Logo() {
+  const { t } = useTranslation('common')
   return (
     <div className="flex-1">
       <Link href="/">
@@ -203,7 +205,7 @@ function Logo() {
               src="/media/logo_illinois.png"
               width="auto"
               height="100%"
-              alt="Illinois Logo"
+              alt={t('navbar.illinois_logo_alt') as unknown as string}
             />
           </div>
           <div className="text-2xl font-extrabold tracking-tight text-[--illinois-orange] sm:ml-2 sm:text-[1.8rem]">
@@ -220,6 +222,7 @@ function Logo() {
 }
 
 function BannerImage({ url }: { url: string }) {
+  const { t } = useTranslation('common')
   return (
     <div style={styles.logoContainerBox}>
       <Image
@@ -227,8 +230,8 @@ function BannerImage({ url }: { url: string }) {
         style={styles.thumbnailImage}
         width={2000}
         height={2000}
-        alt="Course chatbot logo"
-        aria-label="The course creator uploaded a logo for this chatbot."
+        alt={t('navbar.course_logo_alt') as unknown as string}
+        aria-label={t('navbar.course_logo_aria') as unknown as string}
         onError={(e) => (e.currentTarget.style.display = 'none')}
       />
     </div>
@@ -357,7 +360,7 @@ export default function Navbar({
 
   const navItems: NavItem[] = [
     {
-      name: <NavText>My Chatbots</NavText>,
+      name: <NavText>{t('navigation.my_chatbots')}</NavText>,
       icon: <DashboardIcon />,
       link: '/chatbots', // Add conditional course_name ? `/${course_name}/dashboard` :
     },
@@ -367,7 +370,7 @@ export default function Navbar({
     //   link: '/explore',
     // },
     {
-      name: <NavText>Create Your Own Bot</NavText>,
+      name: <NavText>{t('navigation.create_your_own_bot')}</NavText>,
       icon: <IconSparkles />,
       link: '/new',
     },

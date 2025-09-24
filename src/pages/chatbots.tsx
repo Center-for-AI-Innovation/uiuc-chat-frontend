@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router'
 import React, { useEffect } from 'react'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 import Dashboard from '~/components/UIUC-Components/Dashboard'
 
 import { useAuth } from 'react-oidc-context'
@@ -46,3 +47,11 @@ const DashboardPage = () => {
 }
 
 export default DashboardPage
+
+export const getStaticProps = async ({ locale }: { locale: string }) => {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale, ['common'])),
+    },
+  }
+}

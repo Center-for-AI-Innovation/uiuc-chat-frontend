@@ -78,6 +78,7 @@ type SortableColumn = 'name' | 'privacy' | 'owner' | 'admins'
 
 const ListProjectTable: React.FC = () => {
   const auth = useAuth()
+  const { t } = useTranslation('common')
   const [courses, setProjects] = useState<
     { [key: string]: CourseMetadata }[] | null
   >(null)

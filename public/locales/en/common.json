@@ -39,7 +39,9 @@
     "tools": "Tools",
     "api": "API",
     "share_chatbot": "Share Chatbot",
-    "settings": "Settings"
+    "settings": "Settings",
+    "my_chatbots": "My Chatbots",
+    "create_your_own_bot": "Create Your Own Bot"
   },
 
   "auth": {
@@ -953,5 +955,16 @@
         }
       }
     }
+  }
+  ,
+  "dashboard_page": {
+    "title": "My Chatbots",
+    "description": "These are chatbots you've created, or where you are an admin.",
+    "meta_description": "My projects on UIUC.chat."
+  },
+  "navbar": {
+    "illinois_logo_alt": "Illinois Logo",
+    "course_logo_alt": "Course chatbot logo",
+    "course_logo_aria": "The course creator uploaded a logo for this chatbot."
   }
 }
