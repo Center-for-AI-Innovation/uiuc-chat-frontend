@@ -71,6 +71,57 @@
     "copy_link": "Copy link"
   },
 
+  "tools_section": {
+    "metaDescription": "Tools",
+    "tools": "Tools",
+    "useN8n": "Use",
+    "visualEditor": "n8n.io's",
+    "createEditWorkflows": "beautiful visual workflow editor to create custom functions for your project.",
+    "setupInstructions": "Setup Instructions",
+    "inviteOnly": "Tool use via LLMs is invite-only to prevent abuse. Please shoot our admin an email for access:",
+    "onceAccess": "Once you have access, please",
+    "loginWithLink": "login with this link",
+    "createApiKey": "Inside n8n, create an n8n API key and save it here.",
+    "usageInstructions": "Usage Instructions",
+    "startWorkflow": "Start by creating your first workflow on",
+    "ensureTrigger": "Ensure you have the correct trigger node for your workflow, check docs for details",
+    "addNodes": "Add the necessary nodes for your workflow",
+    "saveWorkflow": "Save your workflow",
+    "makeActive": "Make sure your workflow is active",
+    "testWorkflow": "Test your workflow to complete usage onboarding",
+    "workflowCongrats": "If your workflow is working as expected, Congrats!",
+    "usersCanUse": "Your users can now start using it on the",
+    "chatPage": "Chat Page",
+    "yourN8nApiKey": "Your n8n API Key",
+    "apiKeyDescription": "We use this to run your workflows. You can find your n8n API Key in your n8n account settings.",
+    "apiKeyPlaceholder": "Enter your n8n API Key here",
+    "saving": "Saving...",
+    "save": "Save",
+    "yourN8nTools": "Your n8n tools",
+    "loading": "Loading...",
+    "noRecords": "No records found",
+    "toolsDescription": "These tools can be automatically invoked by the LLM to fetch additional data to answer user questions on the",
+    "errorActivation": "Error with activation",
+    "tableName": "Name",
+    "tableEnabled": "Enabled",
+    "tableTags": "Tags",
+    "tableCreatedAt": "Created at",
+    "tableUpdatedAt": "Updated at"
+  },
+
+  "api": {
+    "key_management": "API Key Management",
+    "documentation": "API Documentation",
+    "stateless_info": "This API is stateless, meaning each request is independent of others. For multi-turn conversations, simply append new messages to the 'messages' array in the next call.",
+    "openai_docs": "OpenAI API documentation",
+    "uiuc_docs": "UIUC.chat API documentation",
+    "notes": "Notes",
+    "note_ncsa_models": "NCSA hosted models like Qwen and Llama are hosted by NCSA and they are free!",
+    "note_gpt4o_mini": "GPT-4o-mini offers the best price/performance ratio",
+    "note_llm_keys": "UIUC.chat automatically manages LLM provider keys - just add them in the LLMs page.",
+    "note_rag_results": "For getting only RAG results, set retrieval_only to true. This will not invoke the LLM."
+  },
+
   "navigation": {
     "docs": "Docs",
     "news": "News",
@@ -95,7 +146,7 @@
     "sign_out": "Sign Out",
     "must_sign_in": "You must sign in to create or edit content.",
     "sign_in_arrow": "Sign in →",
-    "account_bug_message": "You've encountered a software bug! Your account has no email address. Please shoot me an email so I can fix it for you: rohan13@illinois.edu"
+    "account_bug_message": "You've encountered a software bug! Your account has no email address. Please shoot me an email so I can fix it for you:"
   },
 
   "chat": {

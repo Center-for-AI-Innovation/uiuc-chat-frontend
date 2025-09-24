@@ -26,6 +26,7 @@ import { type AuthContextProps } from 'react-oidc-context'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import APIRequestBuilder from './APIRequestBuilder'
+import { useTranslation } from 'next-i18next'
 
 const ApiKeyManagement = ({
   course_name,
@@ -39,6 +40,7 @@ const ApiKeyManagement = ({
   const theme = useMantineTheme()
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const { copy } = useClipboard()
+  const { t } = useTranslation('common')
 
   // Get responsive card width classes based on sidebar state
   const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed || false)
@@ -419,10 +421,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                         size="md"
                         className={`${montserrat_paragraph.variable} select-text font-montserratParagraph`}
                       >
-                        This API is <i>stateless</i>, meaning each request is
-                        independent of others. For multi-turn conversations,
-                        simply append new messages to the &apos;messages&apos;
-                        array in the next call.
+                        {t('api.stateless_info')}
                         <List
                           withPadding
                           className="mt-2"
@@ -447,7 +446,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              OpenAI API documentation
+                              {t('api.openai_docs')}
                               <IconExternalLink
                                 size={18}
                                 className="inline-block pl-1"
@@ -463,7 +462,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              UIUC.chat API documentation
+                              {t('api.uiuc_docs')}
                               <IconExternalLink
                                 size={18}
                                 className="inline-block pl-1"
@@ -478,7 +477,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                           order={5}
                           style={{ marginTop: '1.5rem' }}
                         >
-                          Notes:
+                          {t('api.notes')}:
                         </Title>
                         <List
                           withPadding
@@ -486,19 +485,16 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                           spacing="xs"
                         >
                           <List.Item>
-                            NCSA hosted models like Qwen and Llama are hosted by
-                            NCSA and they are free!
+                            {t('api.note_ncsa_models')}
                           </List.Item>
                           <List.Item>
-                            GPT-4o-mini offers the best price/performance ratio
+                            {t('api.note_gpt4o_mini')}
                           </List.Item>
                           <List.Item>
-                            UIUC.chat automatically manages LLM provider keys -
-                            just add them in the LLMs page.
+                            {t('api.note_llm_keys')}
                           </List.Item>
                           <List.Item>
-                            For getting only RAG results, set retrieval_only to
-                            true. This will not invoke the LLM.
+                            {t('api.note_rag_results')}
                           </List.Item>
                         </List>
                       </Text>

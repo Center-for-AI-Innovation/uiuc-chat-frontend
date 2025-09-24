@@ -13,6 +13,7 @@ import { Montserrat } from 'next/font/google'
 import { type UIUCTool } from '~/types/chat'
 import { useFetchAllWorkflows } from '~/utils/functionCalling/handleFunctionCalling'
 import { LoadingSpinner } from './LoadingSpinner'
+import { useTranslation } from 'next-i18next'
 
 const PAGE_SIZE = 25
 
@@ -76,6 +77,7 @@ export const N8nWorkflowsTable = ({
   isEmptyWorkflowTable,
   sidebarCollapsed = false,
 }: N8nWorkflowsTableProps) => {
+  const { t } = useTranslation('common')
   const [page, setPage] = useState(1)
   const queryClient = useQueryClient()
   const { t } = useTranslation('common')
@@ -251,8 +253,7 @@ export const N8nWorkflowsTable = ({
         // w={isWideScreen ? '85%' : '92%'}
         className={`pb-2 text-[--dashboard-foreground] ${widthClasses}`}
       >
-        These tools can be automatically invoked by the LLM to fetch additional
-        data to answer user questions on the{' '}
+        {t('tools_section.toolsDescription')}{' '}
         <a
           href={`/${course_name}/chat`}
           rel="noopener noreferrer"
@@ -304,11 +305,13 @@ export const N8nWorkflowsTable = ({
           columns={[
             // { titleStyle: dataTableTitleStyles, accessor: 'id', width: 175 },
             {
+              title: t('tools_section.tableName'),
               titleStyle: dataTableTitleStyles,
               cellsStyle: dataTableCellsStyles,
               accessor: 'name',
             },
             {
+              title: t('tools_section.tableEnabled'),
               titleStyle: dataTableTitleStyles,
               cellsStyle: dataTableCellsStyles,
               accessor: 'enabled',
@@ -343,6 +346,7 @@ export const N8nWorkflowsTable = ({
               ),
             },
             {
+              title: t('tools_section.tableTags'),
               titleStyle: dataTableTitleStyles,
               cellsStyle: dataTableCellsStyles,
               accessor: 'tags',
@@ -353,6 +357,7 @@ export const N8nWorkflowsTable = ({
               },
             },
             {
+              title: t('tools_section.tableCreatedAt'),
               titleStyle: dataTableTitleStyles,
               cellsStyle: dataTableCellsStyles,
               accessor: 'createdAt',
@@ -363,6 +368,7 @@ export const N8nWorkflowsTable = ({
               },
             },
             {
+              title: t('tools_section.tableUpdatedAt'),
               titleStyle: dataTableTitleStyles,
               cellsStyle: dataTableCellsStyles,
               accessor: 'updatedAt',
@@ -381,9 +387,9 @@ export const N8nWorkflowsTable = ({
           // 👇 uncomment the next line to use a custom pagination size
           // paginationSize="md"
           // 👇 uncomment the next line to use a custom loading text
-          loadingText="Loading..."
+          loadingText={t('tools_section.loading') as string}
           // 👇 uncomment the next line to display a custom text when no records were found
-          noRecordsText="No records found"
+          noRecordsText={t('tools_section.noRecords') as string}
           // 👇 uncomment the next line to use a custom pagination text
           // paginationText={({ from, to, totalRecords }) => `Records ${from} - ${to} of ${totalRecords}`}
           // 👇 uncomment the next lines to use custom pagination colors

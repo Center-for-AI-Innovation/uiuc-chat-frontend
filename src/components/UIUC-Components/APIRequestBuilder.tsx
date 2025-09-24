@@ -38,10 +38,9 @@ export default function APIRequestBuilder({
     'curl' | 'python' | 'node'
   >('curl')
   const [copiedCodeSnippet, setCopiedCodeSnippet] = useState(false)
-  const [userQuery, setUserQuery] = useState('What is in these documents?')
+  const [userQuery, setUserQuery] = useState('')
   const [systemPrompt, setSystemPrompt] = useState(
-    courseMetadata?.system_prompt ||
-      'You are a helpful AI assistant. Follow instructions carefully. Respond using markdown.',
+    courseMetadata?.system_prompt || '',
   )
   const [selectedModel, setSelectedModel] = useState<string>('')
   const [retrievalOnly, setRetrievalOnly] = useState(false)
@@ -64,8 +63,16 @@ export default function APIRequestBuilder({
   useEffect(() => {
     if (courseMetadata?.system_prompt) {
       setSystemPrompt(courseMetadata.system_prompt)
+    } else {
+      setSystemPrompt(t('api.default_system_prompt'))
     }
-  }, [courseMetadata?.system_prompt])
+  }, [courseMetadata?.system_prompt, t])
+
+  useEffect(() => {
+    if (!userQuery) {
+      setUserQuery(t('api.default_user_query'))
+    }
+  }, [userQuery, t])
 
   const languageOptions = [
     { value: 'curl', label: 'cURL' },

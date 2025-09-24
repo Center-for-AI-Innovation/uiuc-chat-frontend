@@ -46,8 +46,8 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
         checked={checked}
         onClick={handleToggle}
         size="lg"
-        onLabel="ON"
-        offLabel="OFF"
+        onLabel={t('models.on')}
+        offLabel={t('models.off')}
         disabled={disabled}
         classNames={{
           root: `flex items-center ${disabled ? '' : 'cursor-pointer'}`,

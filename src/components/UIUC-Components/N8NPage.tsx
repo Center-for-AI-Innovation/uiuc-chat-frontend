@@ -40,6 +40,7 @@ import { useAuth } from 'react-oidc-context'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { useFetchAllWorkflows } from '~/utils/functionCalling/handleFunctionCalling'
 import { IntermediateStateAccordion } from './IntermediateStateAccordion'
+import { useTranslation } from 'next-i18next'
 
 // Utility function for responsive card widths based on sidebar state
 
@@ -351,7 +352,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
       setSidebarCollapsed={setSidebarCollapsed}
     >
       <Head>
-        <title>{course_name}</title>
+        <title>{t('tools_section.metaDescription')} - {course_name}</title>
         <meta
           name="description"
           content={t('tools_section.metaDescription', 'The AI teaching assistant built for students at UIUC.') || 'The AI teaching assistant built for students at UIUC.'}
@@ -435,7 +436,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                             rel="noopener noreferrer"
                             className={`text-[--dashboard-button] hover:text-[--dashboard-button-hover] ${montserrat_heading.variable} font-montserratHeading`}
                           >
-                            n8n.io&apos;s{' '}
+                            {t('tools_section.visualEditor')}{' '}
                             <IconExternalLink
                               className="mr-2 inline-block"
                               style={{ position: 'relative', top: '-3px' }}

@@ -2,6 +2,7 @@ import React from 'react'
 import { IconCheck, IconX } from '@tabler/icons-react'
 import { Switch, Stack } from '@mantine/core'
 import { type LLMProvider } from '~/utils/modelProviders/LLMProvider'
+import { useTranslation } from 'next-i18next'
 
 export function ModelToggles({
   form,

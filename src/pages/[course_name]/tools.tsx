@@ -17,7 +17,7 @@ import posthog from 'posthog-js'
 import { useAuth } from 'react-oidc-context'
 import { ProtectedRoute } from '~/components/ProtectedRoute'
 import { useTranslation } from 'next-i18next'
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 import { GetServerSidePropsContext } from 'next'
 
 const montserrat = Montserrat({
@@ -29,7 +29,7 @@ export const getServerSideProps = async ({ locale }: GetServerSidePropsContext) 
   props: {
     ...(await serverSideTranslations(locale ?? 'en', ['common'])),
   },
-});
+})
 
 const ToolsPage: NextPage = () => {
   const router = useRouter()
@@ -115,7 +115,7 @@ const ToolsPage: NextPage = () => {
           p="xl"
           style={{ marginTop: '4rem' }}
         >
-          {t('account_bug_message')}
+          {t('auth.account_bug_message')}
           <a className="goldUnderline" href="mailto:rohan13@illinois.edu">
             rohan13@illinois.edu
           </a>
