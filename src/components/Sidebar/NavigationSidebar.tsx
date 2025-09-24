@@ -21,6 +21,7 @@ import {
 } from 'tabler-icons-react'
 import { useTheme } from '~/contexts/ThemeContext'
 import { ThemeToggle } from '../UIUC-Components/ThemeToggle'
+import { useTranslation } from 'next-i18next'
 
 interface NavItem {
   name: React.ReactNode
@@ -413,35 +414,36 @@ export default function NavigationSidebar({
 }: NavigationSidebarProps) {
   const { classes } = useStyles()
   const router = useRouter()
+  const { t } = useTranslation('common')
 
   const navItems: NavItem[] = [
     {
-      name: <NavText>Dashboard</NavText>,
+      name: <NavText>{t('navigation.dashboard')}</NavText>,
       icon: <DashboardIcon />,
       link: course_name ? `/${course_name}/dashboard` : '/dashboard',
     },
     {
-      name: <NavText>LLMs</NavText>,
+      name: <NavText>{t('navigation.llms')}</NavText>,
       icon: <LLMIcon />,
       link: course_name ? `/${course_name}/llms` : '/llms',
     },
     {
-      name: <NavText>Analysis</NavText>,
+      name: <NavText>{t('navigation.analysis')}</NavText>,
       icon: <ReportIcon />,
       link: course_name ? `/${course_name}/analysis` : '/analysis',
     },
     {
-      name: <NavText>Prompting</NavText>,
+      name: <NavText>{t('navigation.prompting')}</NavText>,
       icon: <MessageCodeIcon />,
       link: course_name ? `/${course_name}/prompt` : '/prompt',
     },
     {
-      name: <NavText>Tools</NavText>,
+      name: <NavText>{t('navigation.tools')}</NavText>,
       icon: <ChartDots3Icon />,
       link: course_name ? `/${course_name}/tools` : '/tools',
     },
     {
-      name: <NavText>API</NavText>,
+      name: <NavText>{t('navigation.api')}</NavText>,
       icon: <ApiIcon />,
       link: course_name ? `/${course_name}/api` : '/api',
     },
@@ -501,7 +503,7 @@ export default function NavigationSidebar({
               <div
                 className={`flex items-center gap-2 ${montserrat_heading.variable} font-montserratHeading`}
               >
-                <span>Chatbot</span>
+                <span>{t('navigation.chat')}</span>
                 <span>/</span>
                 <span className="font-semibold text-[--foreground]">
                   {course_name}
@@ -538,7 +540,7 @@ export default function NavigationSidebar({
             <span
               className={`md:${isCollapsed ? 'hidden' : 'inline'} ${montserrat_paragraph.variable} font-montserratParagraph font-bold`}
             >
-              Back to Chat
+              {t('navigation.chat')}
             </span>
           </button>
 
