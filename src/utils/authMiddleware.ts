@@ -5,25 +5,14 @@ import { getKeycloakBaseFromHost } from '~/utils/authHelpers'
 import { AuthenticatedUser } from '~/middleware'
 
 function getTokenFromCookies(req: NextApiRequest): string | null {
-  // Find oidc.user* cookie
-  const names = Object.keys(req.cookies || {})
-  const name = names.find((n) => n.startsWith('oidc.user'))
-  if (!name) return null
-
-  const raw = req.cookies[name]
+  const raw = req.cookies['access_token']
   if (!raw) return null
-
-  try {
-    const decoded = decodeURIComponent(raw)
-    const parsed = JSON.parse(decoded)
-    return parsed.access_token || parsed.id_token || null
-  } catch {
-    return null
-  }
+  return raw
 }
 
 export interface AuthenticatedRequest extends NextApiRequest {
   user?: AuthenticatedUser
+  courseName?: string
 }
 
 // Middleware to verify JWT token
@@ -41,15 +30,18 @@ export function withAuth(
         return res.status(401).json({ error: 'Missing token' })
       }
 
-      const rawHost = req.headers['x-forwarded-host'] ?? req.headers['host'];
-      const hostValue = Array.isArray(rawHost) ? rawHost[0] : rawHost;
+      const rawHost = req.headers['x-forwarded-host'] ?? req.headers['host']
+      const hostValue = Array.isArray(rawHost) ? rawHost[0] : rawHost
 
       // Fallback to 'localhost' if undefined
-      const hostname = (hostValue ?? 'localhost').split(':')[0];
-      const keycloakBaseUrl = getKeycloakBaseFromHost(hostname);
+      const hostname = (hostValue ?? 'localhost').split(':')[0]
+      const keycloakBaseUrl = getKeycloakBaseFromHost(hostname)
 
       // Verify JWT token using Keycloak's JWKS endpoint
-      const decoded = (await verifyTokenAsync(token, keycloakBaseUrl)) as AuthenticatedUser
+      const decoded = (await verifyTokenAsync(
+        token,
+        keycloakBaseUrl,
+      )) as AuthenticatedUser
 
       // Add user to request object
       req.user = decoded

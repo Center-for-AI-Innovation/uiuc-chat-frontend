@@ -1,11 +1,11 @@
-import { AuthProvider } from 'react-oidc-context'
+import { AuthProvider, useAuth } from 'react-oidc-context'
 import React, { type ReactNode, useEffect, useState } from 'react'
 import { WebStorageStateStore } from 'oidc-client-ts'
 import { getKeycloakBaseUrl } from '~/utils/authHelpers'
 import Link from 'next/link'
 import { montserrat_heading } from '../../fonts'
 import { Flex, Title } from '@mantine/core'
-import { CookieStorage } from './CookieStorage'
+import { AuthCookie } from '~/providers/AuthCookie'
 
 interface AuthProviderProps {
   children: ReactNode
@@ -91,12 +91,13 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
       setIsAuthCallback(searchParams.has('code') && searchParams.has('state'))
       setIsMounted(true)
 
-      const cookieStore = new CookieStorage({
-        prefix: '',
-        expiresDays: 1,
-        sameSite: 'lax', // if your IdP is on another domain AND you use iframe silent renew, use "none"
-        secure: true,
-      })
+      // const cookieStore = new CookieStorage({
+      //   prefix: '',
+      //   expiresDays: 1,
+      //   sameSite: 'lax', // if your IdP is on another domain AND you use iframe silent renew, use "none"
+      //   secure: window.location.protocol === 'https:',
+      // })
+      // const cookieStore = new CookieStorage()
 
       setOidcConfig((prev) => ({
         ...prev,
@@ -104,7 +105,7 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
         silent_redirect_uri: `${baseUrl}/silent-renew`,
         post_logout_redirect_uri: baseUrl,
         userStore: new WebStorageStateStore({
-          store: cookieStore,
+          store: window.localStorage,
         }),
         automaticSilentRenew: true,
       }))
@@ -191,42 +192,44 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
 
   return (
     <AuthProvider {...oidcConfig}>
-      {/*If we’re on the callback URL, render a handoff screen instead of the app.*/}
-      {isAuthCallback ? (
-        <>
-          <main className="justify-center; course-page-main flex min-h-screen flex-col items-center">
-            <div className="container flex flex-col items-center justify-center gap-8 px-4 py-8 ">
-              <Link href="/">
-                <h2
-                  className={`text-5xl font-extrabold tracking-tight text-white sm:text-[5rem] ${montserrat_heading.variable} font-montserratHeading`}
-                >
-                  {' '}
-                  <span className="${inter.style.fontFamily} mr-2 text-[--illinois-orange]">
-                    Illinois
-                  </span>
-                  <span className="${inter.style.fontFamily} text-[--foreground]">
-                    Chat
-                  </span>{' '}
-                </h2>
-              </Link>
-            </div>
-            <div className="items-left container flex flex-col justify-center gap-2 py-0">
-              <Flex direction="column" align="center" justify="center">
-                <Title
-                  className={`${montserrat_heading.variable} font-montserratHeading text-[--foreground]`}
-                  order={2}
-                  p="xl"
-                >
-                  {' '}
-                  Signing you in, please wait...
-                </Title>
-              </Flex>
-            </div>
-          </main>
-        </>
-      ) : (
-        children
-      )}
+      <AuthCookie>
+        {/*If we’re on the callback URL, render a handoff screen instead of the app.*/}
+        {isAuthCallback ? (
+          <>
+            <main className="justify-center; course-page-main flex min-h-screen flex-col items-center">
+              <div className="container flex flex-col items-center justify-center gap-8 px-4 py-8 ">
+                <Link href="/">
+                  <h2
+                    className={`text-5xl font-extrabold tracking-tight text-white sm:text-[5rem] ${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    {' '}
+                    <span className="${inter.style.fontFamily} mr-2 text-[--illinois-orange]">
+                      Illinois
+                    </span>
+                    <span className="${inter.style.fontFamily} text-[--foreground]">
+                      Chat
+                    </span>{' '}
+                  </h2>
+                </Link>
+              </div>
+              <div className="items-left container flex flex-col justify-center gap-2 py-0">
+                <Flex direction="column" align="center" justify="center">
+                  <Title
+                    className={`${montserrat_heading.variable} font-montserratHeading text-[--foreground]`}
+                    order={2}
+                    p="xl"
+                  >
+                    {' '}
+                    Signing you in, please wait...
+                  </Title>
+                </Flex>
+              </div>
+            </main>
+          </>
+        ) : (
+          children
+        )}
+      </AuthCookie>
     </AuthProvider>
   )
 }

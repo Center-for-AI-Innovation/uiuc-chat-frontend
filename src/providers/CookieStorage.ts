@@ -17,7 +17,10 @@ export class CookieStorage implements Storage {
     this.opts.expiresDays ??= 1 // keep short
     this.opts.path ??= '/'
     this.opts.sameSite ??= 'lax'
-    this.opts.secure ??= true
+    // Don't set default for secure - let it be undefined if not provided
+    // this.opts.secure ??= true
+    // Don't set default for domain - let it be undefined if not provided
+    // this.opts.domain ??= undefined
 
     // Build an index of keys (best-effort)
     const all = document.cookie.split(';').map((c) => c.trim())
@@ -46,21 +49,66 @@ export class CookieStorage implements Storage {
   }
 
   setItem(key: string, value: string) {
-    Cookies.set(this.getPrefix() + key, value, {
-      expires: this.opts.expiresDays,
-      path: this.opts.path,
-      domain: this.opts.domain,
-      sameSite: this.opts.sameSite,
-      secure: this.opts.secure,
-    })
+    const cookieOptions: any = {}
+
+    // Only set sameSite if it's explicitly provided
+    if (this.opts.sameSite !== undefined) {
+      cookieOptions.sameSite = this.opts.sameSite
+    }
+
+    // Only set path if it's explicitly provided
+    if (this.opts.path !== undefined) {
+      cookieOptions.path = this.opts.path
+    }
+
+    // Only set expires if it's explicitly provided
+    if (this.opts.expiresDays !== undefined) {
+      cookieOptions.expires = this.opts.expiresDays
+    }
+
+    // Only set domain if it's explicitly provided
+    if (this.opts.domain !== undefined) {
+      cookieOptions.domain = this.opts.domain
+    }
+
+    // Only set secure if it's explicitly provided
+    if (this.opts.secure !== undefined) {
+      cookieOptions.secure = this.opts.secure
+    }
+
+    Cookies.set(this.getPrefix() + key, value, cookieOptions)
     if (!this.keys.includes(key)) this.keys.push(key)
   }
 
   removeItem(key: string) {
-    Cookies.remove(this.getPrefix() + key, {
-      path: this.opts.path,
-      domain: this.opts.domain,
-    })
+    const removeOptions: any = {}
+
+    // Only set sameSite if it's explicitly provided
+    if (this.opts.sameSite !== undefined) {
+      removeOptions.sameSite = this.opts.sameSite
+    }
+
+    // Only set path if it's explicitly provided
+    if (this.opts.path !== undefined) {
+      removeOptions.path = this.opts.path
+    }
+
+    // Only set expires if it's explicitly provided
+    if (this.opts.expiresDays !== undefined) {
+      removeOptions.expires = this.opts.expiresDays
+    }
+
+    // Only set domain if it's explicitly provided
+    if (this.opts.domain !== undefined) {
+      removeOptions.domain = this.opts.domain
+    }
+
+    // Only set secure if it's explicitly provided
+    if (this.opts.secure !== undefined) {
+      removeOptions.secure = this.opts.secure
+    }
+
+    Cookies.remove(this.getPrefix() + key, removeOptions)
     this.keys = this.keys.filter((k) => k !== key)
   }
 

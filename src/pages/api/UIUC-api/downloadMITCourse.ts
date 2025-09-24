@@ -16,9 +16,20 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     })
   }
 
+  // Ensure parameters are strings
+  const urlParam = Array.isArray(url) ? url[0] : url
+  const courseName = Array.isArray(course_name) ? course_name[0] : course_name
+  const localDir = Array.isArray(local_dir) ? local_dir[0] : local_dir
+
+  if (!urlParam || !courseName || !localDir) {
+    return res.status(400).json({
+      error: 'url, course_name, and local_dir parameters are required',
+    })
+  }
+
   try {
     const response = await fetch(
-      `${getBackendUrl()}/mit-download?url=${encodeURIComponent(url)}&course_name=${encodeURIComponent(course_name)}&local_dir=${encodeURIComponent(local_dir)}`,
+      `${getBackendUrl()}/mit-download?url=${encodeURIComponent(urlParam)}&course_name=${encodeURIComponent(courseName)}&local_dir=${encodeURIComponent(localDir)}`,
     )
 
     if (!response.ok) {
