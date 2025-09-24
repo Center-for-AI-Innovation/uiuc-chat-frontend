@@ -627,6 +627,7 @@
     "allTimeUniqueParticipants": "All-time unique participants",
     "messages": "Messages",
     "totalExchanges": "Total exchanges",
+    "vsLastWeek": "vs last week",
     "userEngagementMetrics": "User Engagement Metrics",
     "userEngagementDesc": "Detailed breakdown of user interaction patterns",
     "conversationsPerUser": "Conversations per User",
@@ -640,6 +641,7 @@
     "messagesPerConversationUnit": "messages / conversation",
     "conversationVisualizations": "Conversation Visualizations",
     "selectTimeRange": "Select a time range to filter the visualizations below",
+    "pickDateRange": "Pick date range",
     "allTime": "All Time",
     "lastWeek": "Last Week",
     "lastMonth": "Last Month",
@@ -691,7 +693,7 @@
       "different": "Different topics are positioned further apart",
       "themes": "Common themes and knowledge gaps become visible"
     },
-    "learnMoreSemantic": "Learn more about semantic similarity visualizations",
+    "learnMoreSemantic": "Learn more about",
     "visualizationNotAvailable": "Visualization not available",
     "visualizationNotAvailableBody": "The visualization is not available at this time. Please try again later.",
     "moreInfoConceptMap": "More info on concept map",
@@ -702,6 +704,9 @@
     "positionedFurtherApart": "are positioned further apart",
     "knowledgeGapsVisible": "and knowledge gaps become visible",
     "semanticSimilarityVisualizations": "semantic similarity visualizations",
+    "visualizationNote": "Note you are unable to login or edit this map. It's for your visualization only. Please",
+    "contactUs": "contact us",
+    "withQuestions": "with questions.",
     "notEnoughDataTitle": "Visualization Not Available Yet",
     "notEnoughDataBody": "We need at least 20 questions to generate a meaningful visualization of how topics relate to each other. Please ask more questions and check back later!",
     "learnMoreSemanticLink": "Learn more about semantic similarity visualizations"
@@ -714,6 +719,13 @@
     "check_docs": "Check",
     "our_docs": "our docs",
     "process_data": "for example code to process this data.",
+    "exportDocuments": {
+      "started_gathering": "We have started gathering your documents, you will receive an email shortly.",
+      "ready_for_download": "Your documents are ready for download.",
+      "unexpected_response_format": "Unexpected response format from backend.",
+      "error_exporting": "Error exporting documents.",
+      "course_name_required": "The course name is required."
+    },
     "llm_providers": {
       "update_success": {
         "title": "Updated LLM providers",

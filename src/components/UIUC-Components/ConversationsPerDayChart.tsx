@@ -137,14 +137,14 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
   return (
     <div>
       <div className="mb-4 flex items-center justify-end gap-2">
-        <Text size="sm">Linear</Text>
+        <Text size="sm">{t('analysis.linear')}</Text>
         <Switch
           checked={useLogScale}
           onChange={(event) => setUseLogScale(event.currentTarget.checked)}
           size="sm"
           color="var(--dashboard-button)"
-          aria-label="Toggle between linear and logarithmic scale"
-          title="Switch between linear and logarithmic scale visualization"
+          aria-label={t('analysis.toggleLinearLog') as unknown as string}
+          title={t('analysis.switchLinearLog') as unknown as string}
           styles={{
             track: {
               cursor: 'pointer',
@@ -162,7 +162,7 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
             },
           }}
         />
-        <Text size="sm">Logarithmic</Text>
+        <Text size="sm">{t('analysis.logarithmic')}</Text>
       </div>
 
       <div
@@ -237,7 +237,7 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
             <Bar
               dataKey="count"
               fill="var(--dashboard-stat)"
-              name="Number of Conversations"
+              name={t('analysis.numberOfConversations') as unknown as string}
             />
           </BarChart>
         </ResponsiveContainer>
