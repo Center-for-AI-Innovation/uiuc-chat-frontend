@@ -397,7 +397,7 @@ export function ProjectFilesTable({
       icon: <IconTrash size={24} />,
     })
 
-    return errorStateForProjectFilesTable()
+    return errorStateForProjectFilesTable(t)
   }
 
   const showToastOnFileDeleted = (theme: MantineTheme, was_error = false) => {
@@ -1097,7 +1097,7 @@ export function ProjectFilesTable({
                                 textAlign: 'right',
                               }}
                             >
-                              Read more
+                              {t('project_files.error_details')}
                             </Text>
                           )}
                         </div>
@@ -1124,17 +1124,17 @@ export function ProjectFilesTable({
                           value={record.doc_groups ? record.doc_groups : []}
                           placeholder={
                             isLoadingDocumentGroups
-                              ? 'Loading...'
-                              : 'Select Group'
+                              ? (t('project_files.loading') as unknown as string)
+                              : (t('project_files.select_group') as unknown as string)
                           }
                           searchable={!isLoadingDocumentGroups}
                           nothingFound={
                             isLoadingDocumentGroups
-                              ? 'Loading...'
-                              : 'No groups... Start typing to create a new one ✨'
+                              ? (t('project_files.loading') as unknown as string)
+                              : (t('project_files.no_groups_create') as unknown as string)
                           }
                           creatable
-                          getCreateLabel={(query) => `+ Create "${query}"`}
+                          getCreateLabel={(query) => t('project_files.create_group', { name: query }) as unknown as string}
                           onCreate={(doc_group_name) => {
                             // createDocumentGroup.mutate({ record, doc_group_name })
                             return {
@@ -1450,7 +1450,7 @@ export function ProjectFilesTable({
   )
 }
 
-function errorStateForProjectFilesTable() {
+function errorStateForProjectFilesTable(t: any) {
   return (
     <DataTable
       records={[]}
@@ -1464,8 +1464,7 @@ function errorStateForProjectFilesTable() {
       noRecordsIcon={
         <Stack align="center" p={30}>
           <Text c="dimmed" size="md">
-            Ah! We hit a wall when fetching your documents. The database must be
-            on fire 🔥
+            {t('project_files.error_message')}
           </Text>
           <Image
             // width={"20vw"}
@@ -1476,7 +1475,7 @@ function errorStateForProjectFilesTable() {
             // style={{ filter: 'grayscale(1)' }}
           />
           <Text c="dimmed" size="md">
-            So.. please try again later.
+            {t('project_files.try_again')}
           </Text>
         </Stack>
       }
@@ -1486,23 +1485,23 @@ function errorStateForProjectFilesTable() {
       columns={[
         {
           titleStyle: dataTableTitleStyles,
-          accessor: 'Name',
+          accessor: t('dashboard.file_name') as unknown as string,
         },
         {
           titleStyle: dataTableTitleStyles,
-          accessor: 'URL',
+          accessor: t('dashboard.url') as unknown as string,
         },
         {
           titleStyle: dataTableTitleStyles,
-          accessor: 'The Starting URL of Web Scraping',
+          accessor: t('dashboard.starting_url_web_scraping') as unknown as string,
         },
         {
           titleStyle: dataTableTitleStyles,
-          accessor: 'doc_group',
+          accessor: t('dashboard.document_groups') as unknown as string,
         },
         {
           titleStyle: dataTableTitleStyles,
-          accessor: 'actions',
+          accessor: t('dashboard.actions') as unknown as string,
         },
       ]}
     />
