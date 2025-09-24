@@ -8,6 +8,7 @@ import {
 import { v4 as uuidv4 } from 'uuid'
 import { getBackendUrl } from '~/utils/apiUtils'
 import { eq } from 'drizzle-orm'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
 type ChatFileUploadResponse = {
   success?: boolean
@@ -116,28 +117,21 @@ const handler = async (
     const backendUrl = getBackendUrl()
     //const backendUrl = 'http://localhost:8000';
 
-    const response = await fetch(
-      //'https://flask-production-751b.up.railway.app/process-chat-file',
-      //'http://localhost:8000/process-chat-file',
-      //'https://flask-pr-316.up.railway.app/process-chat-file',
-      //`${process.env.RAILWAY_URL}/process-chat-file`,
-      `${backendUrl}/process-chat-file`,
-      {
-        method: 'POST',
-        headers: {
-          Accept: '*/*',
-          'Accept-Encoding': 'gzip, deflate',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          conversation_id: conversationId,
-          s3_path: s3_filepath,
-          readable_filename: fileName,
-          user_id: userEmail,
-          course_name: courseName,
-        }),
+    const response = await fetch(`${backendUrl}/process-chat-file`, {
+      method: 'POST',
+      headers: {
+        Accept: '*/*',
+        'Accept-Encoding': 'gzip, deflate',
+        'Content-Type': 'application/json',
       },
-    )
+      body: JSON.stringify({
+        conversation_id: conversationId,
+        s3_path: s3_filepath,
+        readable_filename: fileName,
+        user_id: userEmail,
+        course_name: courseName,
+      }),
+    })
 
     if (!response.ok) {
       console.error(
@@ -201,4 +195,4 @@ const handler = async (
   }
 }
 
-export default handler
+export default withCourseAccessFromRequest('any')(handler)
