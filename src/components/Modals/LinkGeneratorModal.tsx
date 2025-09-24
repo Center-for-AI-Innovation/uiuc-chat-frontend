@@ -13,6 +13,7 @@ import {
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { IconCheck, IconCopy } from '@tabler/icons-react'
 import CustomSwitch from '~/components/Switches/CustomSwitch'
+import { useTranslation } from 'next-i18next'
 
 interface LinkGeneratorModalProps {
   opened: boolean
@@ -31,6 +32,7 @@ export const LinkGeneratorModal = ({
   course_name,
   currentSettings,
 }: LinkGeneratorModalProps) => {
+  const { t } = useTranslation('common')
   const [linkSettings, setLinkSettings] = useState({
     guidedLearning: false,
     documentsOnly: false,
@@ -83,7 +85,7 @@ export const LinkGeneratorModal = ({
           size="lg"
           weight={700}
         >
-          Generate Shareable Link
+          {t('prompt.generate_shareable_link')}
         </Text>
       }
       centered
@@ -120,20 +122,16 @@ export const LinkGeneratorModal = ({
           size="sm"
           style={{ lineHeight: 1.5 }}
         >
-          Configure AI behavior settings for your shareable link. These settings
-          will enable specific behaviors when users access the chat through this
-          link. Note: If a setting is enabled course-wide, enabling it here will
-          ensure it stays active even if course-wide settings change in the
-          future.
+          {t('prompt.link_settings_intro')}
         </Text>
 
         <Flex direction="column" gap="md">
           <CustomSwitch
-            label="Guided Learning"
+            label={t('prompt.guided_learning') as unknown as string}
             tooltip={
               currentSettings.guidedLearning
-                ? 'This setting is currently enabled course-wide. Enabling it here will ensure it stays active even if course settings change.'
-                : 'Enable guided learning mode for this link. The AI will encourage independent problem-solving by providing hints and questions instead of direct answers.'
+                ? (t('prompt.guided_learning_locked_tooltip') as unknown as string)
+                : (t('prompt.guided_learning_link_tooltip') as unknown as string)
             }
             checked={linkSettings.guidedLearning}
             onChange={(checked) =>
@@ -142,11 +140,11 @@ export const LinkGeneratorModal = ({
           />
 
           <CustomSwitch
-            label="Document-Based References Only"
+            label={t('prompt.document_only') as unknown as string}
             tooltip={
               currentSettings.documentsOnly
-                ? 'This setting is currently enabled course-wide. Enabling it here will ensure it stays active even if course settings change.'
-                : "Restrict AI to only use information from provided documents. The AI will not use external knowledge or make assumptions beyond the documents' content."
+                ? (t('prompt.document_only_locked_tooltip') as unknown as string)
+                : (t('prompt.document_only_link_tooltip') as unknown as string)
             }
             checked={linkSettings.documentsOnly}
             onChange={(checked) =>
@@ -155,11 +153,11 @@ export const LinkGeneratorModal = ({
           />
 
           <CustomSwitch
-            label="Bypass UIUC.chat's internal prompting"
+            label={t('prompt.bypass_internal_prompting') as unknown as string}
             tooltip={
               currentSettings.systemPromptOnly
-                ? 'This setting is currently enabled course-wide. Enabling it here will ensure it stays active even if course settings change.'
-                : "Use raw system prompt without additional internal prompting. This bypasses UIUC.chat's built-in prompts for citations and helpfulness."
+                ? (t('prompt.bypass_internal_prompting_locked_tooltip') as unknown as string)
+                : (t('prompt.bypass_internal_prompting_link_tooltip') as unknown as string)
             }
             checked={linkSettings.systemPromptOnly}
             onChange={(checked) =>
@@ -174,7 +172,7 @@ export const LinkGeneratorModal = ({
             weight={600}
             className={`${montserrat_paragraph.variable} font-montserratParagraph`}
           >
-            Generated Link
+            {t('prompt.generated_link')}
           </Text>
 
           <Paper
@@ -232,7 +230,9 @@ export const LinkGeneratorModal = ({
                     },
                   })}
                 >
-                  {copied ? 'Copied!' : 'Copy Link'}
+                  {copied
+                    ? (t('common.copied') as unknown as string)
+                    : (t('common.copy_link') as unknown as string)}
                 </Button>
               )}
             </CopyButton>

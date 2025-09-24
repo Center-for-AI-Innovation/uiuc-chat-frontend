@@ -71,11 +71,11 @@ const CustomCopyButton: React.FC<CustomCopyButtonProps> = ({
           isHovered ? 'text-white' : 'text-gray-200'
         }`}
       >
-        {t(label) || ''}
+        {label}
         <Tooltip
           label={
             <Text size="sm" color="gray.1">
-              {t(tooltip) || ''}
+              {tooltip}
             </Text>
           }
           position="bottom"

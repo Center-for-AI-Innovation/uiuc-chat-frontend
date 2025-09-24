@@ -1,5 +1,4 @@
 // src/pages/[course_name]/prompt.tsx
-'use client'
 import { type NextPage } from 'next'
 import { Montserrat } from 'next/font/google'
 import { useRouter } from 'next/router'
@@ -141,6 +140,7 @@ const CourseMain: NextPage = () => {
   const { t } = useTranslation(['common', 'prompt'])
   const theme = useMantineTheme()
   const router = useRouter()
+  const { t } = useTranslation('common')
 
   const GetCurrentPageName = () => {
     return router.query.course_name as string
@@ -1373,7 +1373,7 @@ CRITICAL: The optimized prompt must:
                               </Flex>
                               {isRightSideVisible ? (
                                 <Tooltip
-                                  label="Close Prompt Builder"
+                                  label={t('prompt.close_prompt_builder') as unknown as string}
                                   key="close"
                                 >
                                   <div
@@ -1390,7 +1390,7 @@ CRITICAL: The optimized prompt must:
                                   </div>
                                 </Tooltip>
                               ) : (
-                                <Tooltip label="Open Prompt Builder" key="open">
+                                <Tooltip label={t('prompt.open_prompt_builder') as unknown as string} key="open">
                                   <div
                                     className="mr-2 cursor-pointer p-0"
                                     data-right-sidebar-icon
@@ -1511,8 +1511,8 @@ CRITICAL: The optimized prompt must:
                                     style={{ minWidth: 'fit-content' }}
                                   >
                                     {isOptimizing
-                                      ? 'Optimizing...'
-                                      : 'Optimize System Prompt'}
+                                      ? (t('prompt.optimizing') as unknown as string)
+                                      : (t('prompt.optimize_system_prompt') as unknown as string)}
                                   </Button>
                                 </span>
                               </Group>
