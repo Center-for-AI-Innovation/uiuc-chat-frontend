@@ -8,6 +8,7 @@ import { documents, documentsDocGroups, docGroups } from '~/db/schema'
 import { type PgColumn } from 'drizzle-orm/pg-core'
 import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
+
 type FetchDocumentsResponse = {
   final_docs?: CourseDocument[]
   total_count?: number

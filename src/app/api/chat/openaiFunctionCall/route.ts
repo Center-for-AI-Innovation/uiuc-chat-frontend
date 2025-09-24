@@ -4,11 +4,9 @@ import type {
   ChatCompletionTool,
 } from 'openai/resources/chat/completions'
 import { type Conversation } from '~/types/chat'
+import { type AuthenticatedRequest } from '~/utils/appRouterAuth'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
-import {
-  withAppRouterAuth,
-  type AuthenticatedRequest,
-} from '~/utils/appRouterAuth'
+import { withCourseAccessFromRequest } from '~/app/api/authorization'
 
 // Change runtime to edge
 export const runtime = 'nodejs'
@@ -161,4 +159,4 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
   }
 }
 
-export const POST = withAppRouterAuth(handler)
+export const POST = withCourseAccessFromRequest('any')(handler)
