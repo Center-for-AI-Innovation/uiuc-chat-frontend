@@ -5,21 +5,9 @@ import { getKeycloakBaseFromHost } from '~/utils/authHelpers'
 import { AuthenticatedUser } from '~/middleware'
 
 function getTokenFromCookies(req: NextApiRequest): string | null {
-  // Find oidc.user* cookie
-  const names = Object.keys(req.cookies || {})
-  const name = names.find((n) => n.startsWith('oidc.user'))
-  if (!name) return null
-
-  const raw = req.cookies[name]
+  const raw = req.cookies['access_token']
   if (!raw) return null
-
-  try {
-    const decoded = decodeURIComponent(raw)
-    const parsed = JSON.parse(decoded)
-    return parsed.access_token || parsed.id_token || null
-  } catch {
-    return null
-  }
+  return raw
 }
 
 export interface AuthenticatedRequest extends NextApiRequest {

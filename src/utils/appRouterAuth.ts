@@ -18,20 +18,9 @@ function getTokenFromCookies(req: NextRequest): string | null {
     {} as Record<string, string>,
   )
 
-  const names = Object.keys(cookies)
-  const name = names.find((n) => n.startsWith('oidc.user'))
-  if (!name) return null
-
-  const raw = cookies[name]
+  const raw = cookies['access_token']
   if (!raw) return null
-
-  try {
-    const decoded = decodeURIComponent(raw)
-    const parsed = JSON.parse(decoded)
-    return parsed.access_token || parsed.id_token || null
-  } catch {
-    return null
-  }
+  return raw
 }
 
 export interface AuthenticatedRequest extends NextRequest {
@@ -53,6 +42,8 @@ export function withAppRouterAuth(
       const rawHost =
         req.headers.get('x-forwarded-host') ?? req.headers.get('host')
       const hostValue = Array.isArray(rawHost) ? rawHost[0] : rawHost
+
+      console.log('Host value:', hostValue)
 
       // Fallback to 'localhost' if undefined
       const hostname = (hostValue ?? 'localhost').split(':')[0]
