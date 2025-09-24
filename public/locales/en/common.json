@@ -305,7 +305,8 @@
     "frontend": "frontend",
     "and": "and",
     "backend": "backend",
-    "code": "code."
+    "code": "code.",
+    "service_uptime_badge": "Service Uptime Badge"
   },
 
   "homepage": {

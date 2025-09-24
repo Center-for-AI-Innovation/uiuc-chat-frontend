@@ -13,6 +13,7 @@ import NextLink from 'next/link'
 import axios from 'axios'
 import { type FileUpload } from './UploadNotification'
 import { type QueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'next-i18next'
 export default function MITIngestForm({
   project_name,
   setUploadFiles,
@@ -121,16 +122,15 @@ export default function MITIngestForm({
                     className="rounded-full object-contain"
                   />
                 </div>
-                <Text className="text-xl font-semibold">MIT Course</Text>
+                <Text className="text-xl font-semibold">{t('upload_cards.mit_course')}</Text>
               </div>
             </div>
 
             <Text className="mb-4 text-sm leading-relaxed text-[--dashboard-foreground-faded]">
-              Import content from MIT OpenCourseWare, including lecture notes,
-              assignments, and course materials.
+              {t('upload_cards.mit_course_description')}
             </Text>
             <div className="mt-auto flex items-center text-sm font-bold text-[--dashboard-button]">
-              <span>Configure import</span>
+              <span>{t('upload_cards.configure_import')}</span>
               <IconArrowRight
                 size={16}
                 className="ml-2 transition-transform group-hover:translate-x-1"
@@ -155,7 +155,7 @@ export default function MITIngestForm({
                     ocw.mit.edu/courses/ANY_COURSE
                   </code>
                   ,<br />
-                  for example:{' '}
+                  {t('github_ingest.for_example')}{' '}
                   <span className="break-all">
                     <NextLink
                       target="_blank"
@@ -199,7 +199,7 @@ export default function MITIngestForm({
                       width: '100%',
                     },
                   }}
-                  placeholder="Enter URL..."
+                  placeholder={t('mit_ingest.enter_url') as unknown as string}
                   radius="md"
                   type="url"
                   value={url}
@@ -217,7 +217,7 @@ export default function MITIngestForm({
               disabled={!isUrlValid}
               className="h-11 w-full rounded-xl bg-[--dashboard-button] text-[--dashboard-button-foreground] transition-colors hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--background-dark]"
             >
-              Ingest MIT Course
+              {t('coursera_ingest.button')}
             </Button>
           </div>
         </DialogContent>

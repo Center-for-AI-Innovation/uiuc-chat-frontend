@@ -85,15 +85,14 @@ export default function CourseraIngestForm(): JSX.Element {
                     className="h-8 w-8 object-contain"
                   />
                 </div>
-                <Text className="text-xl font-semibold">Coursera</Text>
+                <Text className="text-xl font-semibold">{t('upload_cards.coursera')}</Text>
               </div>
             </div>
             <Text className="mb-4 text-sm leading-relaxed text-[--dashboard-foreground-faded]">
-              Import content from Coursera courses, including lectures,
-              assignments, and course materials.
+              {t('upload_cards.coursera_description')}
             </Text>
             <div className="mt-auto flex items-center text-sm font-bold text-[--dashboard-button]">
-              <span>Configure import</span>
+              <span>{t('upload_cards.configure_import')}</span>
               <IconArrowRight
                 size={16}
                 className="ml-2 transition-transform group-hover:translate-x-1"
@@ -112,12 +111,12 @@ export default function CourseraIngestForm(): JSX.Element {
             <div className="">
               <div>
                 <div className="break-words text-sm sm:text-base">
-                  <strong>For Coursera</strong>, just enter a URL like{' '}
+                  <strong>{t('upload_cards.coursera')}</strong>, {t('coursera_ingest.instructions_1')}{' '}
                   <code className="inline-flex items-center rounded-md bg-[--illinois-orange] px-2 py-1 font-mono text-xs text-[--illinois-white] sm:text-sm">
                     coursera.org/learn/COURSE_NAME
                   </code>
                   ,<br />
-                  for example:{' '}
+                  {t('coursera_ingest.instructions_2')}{' '}
                   <span className="break-all text-[--dashboard-button]">
                     <NextLink
                       target="_blank"
@@ -158,7 +157,7 @@ export default function CourseraIngestForm(): JSX.Element {
                       width: '100%',
                     },
                   }}
-                  placeholder="Enter URL..."
+                  placeholder={t('github_ingest.enter_url') as unknown as string}
                   radius="md"
                   type="url"
                   value={url}

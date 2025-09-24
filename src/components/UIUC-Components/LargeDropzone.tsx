@@ -29,6 +29,7 @@ import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { v4 as uuidv4 } from 'uuid'
 import { type FileUpload } from './UploadNotification'
 import { type AuthContextProps } from 'react-oidc-context'
+import { useTranslation } from 'next-i18next'
 
 const useStyles = createStyles((theme) => ({
   wrapper: {
@@ -81,6 +82,7 @@ export function LargeDropzone({
   const [uploadInProgress, setUploadInProgress] = useState(false)
   const [uploadComplete, setUploadComplete] = useState(false)
   const [successfulUploads, setSuccessfulUploads] = useState(0)
+  const { t } = useTranslation('common')
   const router = useRouter()
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const { classes, theme } = useStyles()

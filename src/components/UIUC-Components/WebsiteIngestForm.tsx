@@ -382,18 +382,17 @@ export default function WebsiteIngestForm({
                   <IconWorldDownload className="h-8 w-8" />
                 </div>
                 <Text className="text-xl font-semibold text-[--dashboard-foreground]">
-                  Website
+                  {t('upload_cards.website')}
                 </Text>
               </div>
             </div>
 
             <Text className="mb-4 text-sm leading-relaxed text-[--dashboard-foreground-faded]">
-              Import content from any website by providing the URL. Supports
-              recursive crawling with customizable depth.
+              {t('upload_cards.website_description')}
             </Text>
 
             <div className="mt-auto flex items-center text-sm font-bold text-[--dashboard-button]">
-              <span>Configure import</span>
+              <span>{t('upload_cards.configure_import')}</span>
               <IconArrowRight
                 size={16}
                 className="ml-2 transition-transform group-hover:translate-x-1"
@@ -405,7 +404,7 @@ export default function WebsiteIngestForm({
         <DialogContent className="mx-auto h-auto max-h-[85vh] w-[95%] max-w-2xl overflow-y-auto !rounded-2xl border-0 bg-[--modal] px-4 py-6 text-[--modal-text] sm:px-6">
           <DialogHeader>
             <DialogTitle className="mb-2 text-left text-xl font-bold">
-              Ingest Website
+              {t('upload_cards.ingest_website')}
             </DialogTitle>
           </DialogHeader>
           <div className="">
@@ -443,7 +442,7 @@ export default function WebsiteIngestForm({
                         width: '100%',
                       },
                     }}
-                    placeholder="Enter URL..."
+                    placeholder={t('website_ingest.enter_url_placeholder') as unknown as string}
                     radius="md"
                     type="url"
                     value={url}
@@ -462,7 +461,7 @@ export default function WebsiteIngestForm({
                       arrowSize={8}
                       withArrow
                       position="bottom-start"
-                      label="We will attempt to visit this number of pages, but not all will be scraped if they're duplicates, broken or otherwise inaccessible."
+                      label={`${t('website_ingest.max_urls_tooltip')}`}
                       styles={{
                         tooltip: {
                           color: 'var(--tooltip)',
@@ -542,10 +541,9 @@ export default function WebsiteIngestForm({
                       </List.Item>
                       <List.Item>
                         <span>
-                          <strong>All:</strong> Start on the given URL and
-                          wander the web...{' '}
+                          <strong>{t('website_ingest.all')}:</strong> {t('website_ingest.all_desc')}{' '}
                           <Text>
-                            For more detail{' '}
+                            {t('website_ingest.for_more_detail')}{' '}
                             <a
                               className={'font-bold text-[--link]'}
                               href="https://docs.uiuc.chat/features/web-crawling-details"
@@ -562,8 +560,9 @@ export default function WebsiteIngestForm({
                   </div>
 
                   <Text className="mt-4">
-                    <strong>I suggest starting with Equal and Below</strong>,
-                    then just re-run this if you need more later.
+                    <strong>{t('website_ingest.suggest_equal_and_below')}</strong>,
+                    {` `}
+                    {t('website_ingest.rerun_if_needed')}
                   </Text>
 
                   <SegmentedControl

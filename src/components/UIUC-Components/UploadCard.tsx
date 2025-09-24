@@ -8,6 +8,7 @@ import {
   Textarea,
   Title,
 } from '@mantine/core'
+import { useTranslation } from 'next-i18next'
 import { useMediaQuery } from '@mantine/hooks'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import {
@@ -95,6 +96,7 @@ export const UploadCard = memo(function UploadCard({
 }) {
   const auth = useAuth()
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
+  const { t } = useTranslation('common')
 
   // Get responsive card width classes based on sidebar state
   const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed || false)
@@ -332,7 +334,7 @@ export const UploadCard = memo(function UploadCard({
                   className={`label ${montserrat_heading.variable} font-montserratHeading`}
                 >
                   <span className="label-text-unused text-lg">
-                    Set a greeting
+                    {t('upload.set_greeting')}
                   </span>
                 </label>
                 <Text
@@ -392,7 +394,7 @@ export const UploadCard = memo(function UploadCard({
                 className={`label !mt-8 ${montserrat_heading.variable} pt-0 font-montserratHeading`}
               >
                 <span className="label-text-unused text-lg">
-                  Set example questions
+                  {t('upload.set_example_questions')}
                 </span>
               </label>
               <Text
@@ -411,7 +413,7 @@ export const UploadCard = memo(function UploadCard({
                   className={`label ${montserrat_heading.variable} font-montserratHeading`}
                 >
                   <span className="label-text-unused text-lg">
-                    Upload your logo
+                    {t('upload.upload_logo')}
                   </span>
                 </label>
                 <Text

@@ -401,11 +401,10 @@ export default function GitHubIngestForm({
               </div>
             </div>
             <Text className="mb-4 text-sm leading-relaxed text-[--dashboard-foreground-faded]">
-              Import content from GitHub repositories, including documentation,
-              code, and README files.
+              {t('upload_cards.github_description')}
             </Text>
             <div className="mt-auto flex items-center text-sm font-bold text-[--dashboard-button]">
-              <span>Configure import</span>
+              <span>{t('upload_cards.configure_import')}</span>
               <IconArrowRight
                 size={16}
                 className="ml-2 transition-transform group-hover:translate-x-1"
@@ -428,7 +427,7 @@ export default function GitHubIngestForm({
                   <code className={classes.codeStyledText}>
                     github.com/USER/REPO
                   </code>
-                  , for example:{' '}
+                  , {t('github_ingest.for_example')}{' '}
                   <span>
                     <Link
                       target="_blank"
@@ -462,7 +461,7 @@ export default function GitHubIngestForm({
                       width: '100%',
                     },
                   }}
-                  placeholder="Enter URL..."
+                  placeholder={t('github_ingest.enter_url') as unknown as string}
                   radius="md"
                   type="url"
                   value={url}

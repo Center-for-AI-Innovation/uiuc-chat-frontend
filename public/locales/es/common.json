@@ -306,7 +306,8 @@
     "frontend": "frontend",
     "and": "y",
     "backend": "backend",
-    "code": "código."
+    "code": "código.",
+    "service_uptime_badge": "Insignia de tiempo de actividad del servicio"
   },
 
   "homepage": {

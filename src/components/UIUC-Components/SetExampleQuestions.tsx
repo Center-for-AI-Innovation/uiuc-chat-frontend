@@ -77,7 +77,7 @@ export default function SetExampleQuestions({
               key={i}
               label={t('example_questions.example_question_label')}
               name="question"
-              placeholder="Contrast Shakespeare against Kierkegaard..."
+              placeholder={t('example_questions.example_question_placeholder') as unknown as string}
               styles={{
                 label: {
                   color: 'var(--foreground-faded)',
