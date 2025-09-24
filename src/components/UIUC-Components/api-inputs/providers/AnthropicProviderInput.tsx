@@ -62,8 +62,8 @@ export default function AnthropicProviderInput({
               <Switch
                 size="md"
                 labelPosition="left"
-                onLabel="ON"
-                offLabel="OFF"
+                onLabel={t('models.on')}
+                offLabel={t('models.off')}
                 aria-label="Enable Anthropic provider"
                 checked={field.state.value}
                 onChange={(event) => {

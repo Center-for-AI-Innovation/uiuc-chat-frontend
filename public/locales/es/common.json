@@ -49,7 +49,21 @@
     "sign_out": "Cerrar sesión",
     "must_sign_in": "Debes iniciar sesión para crear o editar contenido.",
     "sign_in_arrow": "Iniciar sesión →",
-    "account_bug_message": "¡Has encontrado un error de software! Tu cuenta no tiene dirección de correo electrónico. Por favor, envíame un correo electrónico para que pueda solucionarlo por ti: rohan13@illinois.edu"
+    "account_bug_message": "¡Has encontrado un error de software! Tu cuenta no tiene dirección de correo electrónico. Por favor, envíame un correo electrónico para que pueda solucionarlo por ti:"
+  },
+
+
+  "api": {
+    "key_management": "Gestión de Claves API",
+    "documentation": "Documentación de API",
+    "stateless_info": "Esta API es sin estado, lo que significa que cada solicitud es independiente de las demás. Para conversaciones de múltiples turnos, simplemente agrega nuevos mensajes al array 'messages' en la siguiente llamada.",
+    "openai_docs": "Documentación de API de OpenAI",
+    "uiuc_docs": "Documentación de API de UIUC.chat",
+    "notes": "Notas",
+    "note_ncsa_models": "Los modelos alojados por NCSA como Qwen y Llama están alojados por NCSA y ¡son gratuitos!",
+    "note_gpt4o_mini": "GPT-4o-mini ofrece la mejor relación precio/rendimiento",
+    "note_llm_keys": "UIUC.chat gestiona automáticamente las claves de proveedores LLM - solo agrégalas en la página de LLMs.",
+    "note_rag_results": "Para obtener solo resultados RAG, establece retrieval_only en true. Esto no invocará el LLM."
   },
 
   "chat": {
@@ -230,6 +244,15 @@
     "enabled_text": "Habilitado",
     "tool": "Herramienta",
     "description": "Estas herramientas pueden ser invocadas automáticamente por el LLM para obtener datos adicionales para responder preguntas de usuarios en la página de chat.",
+    "toolsDescription": "Estas herramientas pueden ser invocadas automáticamente por el LLM para obtener datos adicionales para responder preguntas de los usuarios en la",
+    "tableName": "Nombre",
+    "tableEnabled": "Habilitado",
+    "tableTags": "Etiquetas",
+    "tableCreatedAt": "Creado en",
+    "tableUpdatedAt": "Actualizado en",
+    "loading": "Cargando...",
+    "noRecords": "No se encontraron registros",
+    "errorActivation": "Error con la activación",
     "table": {
       "name": "Nombre",
       "enabled": "Habilitado",
@@ -277,6 +300,8 @@
     "note_gpt4o_mini": "GPT-4o-mini ofrece la mejor relación precio/rendimiento",
     "note_llm_keys": "UIUC.chat gestiona automáticamente las claves de proveedores LLM - solo agrégalas en la página de LLMs.",
     "note_rag_results": "Para obtener solo resultados RAG, establece retrieval_only en true. Esto no invocará el LLM.",
+    "default_user_query": "¿Qué hay en estos documentos?",
+    "default_system_prompt": "Eres un asistente de IA útil. Sigue las instrucciones cuidadosamente. Responde usando markdown.",
     "success": {
       "title": "Éxito",
       "key_generated": "Clave API generada exitosamente.",
