@@ -430,6 +430,12 @@
   },
 
   "models": {
+    "configure_llm_providers_title": "Configurar proveedores de LLM para tu chatbot",
+    "configure_llm_providers_subtitle": "Elige qué LLMs estarán disponibles para tus usuarios. Habilita o deshabilita modelos para equilibrar precio y rendimiento.",
+    "closed_source_title": "LLMs de código cerrado",
+    "closed_source_description": "Los de mejor rendimiento, pero debes pagar sus precios y seguir sus reglas.",
+    "open_source_title": "LLMs de código abierto",
+    "open_source_description": "Tus pesos, tus reglas.",
     "more_details_about_ai_models": "Más detalles sobre los modelos de IA",
     "default_model": "Modelo Predeterminado",
     "default_model_helper": "Este modelo se utilizará por defecto para todas las conversaciones nuevas. Puedes cambiar el modelo para conversaciones individuales en la interfaz de chat.",

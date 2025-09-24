@@ -429,6 +429,12 @@
   },
 
   "models": {
+    "configure_llm_providers_title": "Configure LLM Providers for your Chatbot",
+    "configure_llm_providers_subtitle": "Choose which LLMs are available to your users. Enable or disable models to balance price and performance.",
+    "closed_source_title": "Closed source LLMs",
+    "closed_source_description": "The best performers, but you have to pay their prices and follow their rules.",
+    "open_source_title": "Open source LLMs",
+    "open_source_description": "Your weights, your rules.",
     "more_details_about_ai_models": "More details about the AI models",
     "default_model": "Default Model",
     "default_model_helper": "This model will be used by default for all new conversations. You can change the model for individual conversations in the chat interface.",
