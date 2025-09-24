@@ -57,10 +57,12 @@ import OllamaProviderInput from './providers/OllamaProviderInput'
 import OpenAIProviderInput from './providers/OpenAIProviderInput'
 import SambaNovaProviderInput from './providers/SambaNovaProviderInput'
 import WebLLMProviderInput from './providers/WebLLMProviderInput'
+import { useTranslation } from 'next-i18next'
 
 const isSmallScreen = false
 
 function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
+  const { t } = useTranslation('common')
   return (
     <>
       {field.state.meta.isTouched && field.state.meta.errors.length ? (
@@ -69,7 +71,7 @@ function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
         </Text>
       ) : null}
       {field.state.meta.isValidating ? (
-        <Text size="xs">Validating...</Text>
+        <Text size="xs">{t('common.validating')}</Text>
       ) : null}
     </>
   )
@@ -82,6 +84,7 @@ export const APIKeyInput = ({
   field: FieldApi<any, any, any, any>
   placeholder: string
 }) => {
+  const { t } = useTranslation('common')
   const [error, setError] = useState<string | null>(null)
   const { t } = useTranslation('common')
 
@@ -161,7 +164,7 @@ export const APIKeyInput = ({
               field.form.handleSubmit()
             }}
           >
-            Save
+            {t('common.save')}
           </Button>
         </div>
       </div>
@@ -175,6 +178,7 @@ const NewModelDropdown: React.FC<{
   llmProviders: AllLLMProviders
   isSmallScreen: boolean
 }> = ({ value, onChange, llmProviders, isSmallScreen }) => {
+  const { t } = useTranslation('common')
   // Filter out providers that are not enabled and their models which are disabled
   const { enabledProvidersAndModels, allModels } = Object.keys(
     llmProviders,
@@ -220,7 +224,7 @@ const NewModelDropdown: React.FC<{
       <Select
         className="menu z-[50] w-full"
         size="md"
-        placeholder="Select a model"
+        placeholder={t('settings.sections.model.select_placeholder') as unknown as string}
         // searchable
         value={value?.id || ''}
         onChange={async (modelId) => {
@@ -651,8 +655,7 @@ export default function APIKeyInputForm() {
                       ml={'md'}
                       style={{ textAlign: 'left' }}
                     >
-                      Configure which LLMs are available to your users. Enable
-                      or disable models to balance price and performance.
+                      {t('models.configure_llm_providers_subtitle')}
                     </Title>
                     <Stack align="center" justify="start">
                       <form
