@@ -29,6 +29,7 @@ import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { v4 as uuidv4 } from 'uuid'
 import { type FileUpload } from './UploadNotification'
 import { type AuthContextProps } from 'react-oidc-context'
+import { useTranslation } from 'next-i18next'
 
 const useStyles = createStyles((theme) => ({
   wrapper: {
@@ -81,6 +82,7 @@ export function LargeDropzone({
   const [uploadInProgress, setUploadInProgress] = useState(false)
   const [uploadComplete, setUploadComplete] = useState(false)
   const [successfulUploads, setSuccessfulUploads] = useState(0)
+  const { t } = useTranslation('common')
   const router = useRouter()
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const { classes, theme } = useStyles()
@@ -407,14 +409,14 @@ export function LargeDropzone({
                 mt={isSmallScreen ? 'md' : 'xl'}
                 className="text-[--dashboard-foreground]"
               >
-                <Dropzone.Accept>Drop files here</Dropzone.Accept>
+                <Dropzone.Accept>{t('dropzone.accept')}</Dropzone.Accept>
                 <Dropzone.Reject>
-                  Upload rejected, not proper file type or too large.
+                  {t('dropzone.reject')}
                 </Dropzone.Reject>
                 <Dropzone.Idle>
                   {isDisabled
-                    ? 'Enter an available project name above! 👀'
-                    : 'Upload materials'}
+                    ? t('dropzone.idle_project_name')
+                    : t('dropzone.idle_upload_materials')}
                 </Dropzone.Idle>
               </Text>
 
@@ -425,7 +427,7 @@ export function LargeDropzone({
                   mt="xs"
                   className="text-[--foreground-faded]"
                 >
-                  Drag&apos;n&apos;drop files or a whole folder here
+                  {t('dropzone.drag_helper')}
                 </Text>
               )}
 

@@ -37,6 +37,7 @@ import axios from 'axios'
 import { Montserrat } from 'next/font/google'
 import { type FileUpload } from './UploadNotification'
 import { type QueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'next-i18next'
 const montserrat_med = Montserrat({
   weight: '500',
   subsets: ['latin'],
@@ -50,6 +51,7 @@ export default function WebsiteIngestForm({
   setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
   queryClient: QueryClient
 }): JSX.Element {
+  const { t } = useTranslation('common')
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
   const [url, setUrl] = useState('')
@@ -375,18 +377,17 @@ export default function WebsiteIngestForm({
                   <IconWorldDownload className="h-8 w-8" />
                 </div>
                 <Text className="text-xl font-semibold text-[--dashboard-foreground]">
-                  Website
+                  {t('upload_cards.website')}
                 </Text>
               </div>
             </div>
 
             <Text className="mb-4 text-sm leading-relaxed text-[--dashboard-foreground-faded]">
-              Import content from any website by providing the URL. Supports
-              recursive crawling with customizable depth.
+              {t('upload_cards.website_description')}
             </Text>
 
             <div className="mt-auto flex items-center text-sm font-bold text-[--dashboard-button]">
-              <span>Configure import</span>
+              <span>{t('upload_cards.configure_import')}</span>
               <IconArrowRight
                 size={16}
                 className="ml-2 transition-transform group-hover:translate-x-1"
@@ -398,7 +399,7 @@ export default function WebsiteIngestForm({
         <DialogContent className="mx-auto h-auto max-h-[85vh] w-[95%] max-w-2xl overflow-y-auto !rounded-2xl border-0 bg-[--modal] px-4 py-6 text-[--modal-text] sm:px-6">
           <DialogHeader>
             <DialogTitle className="mb-2 text-left text-xl font-bold">
-              Ingest Website
+              {t('upload_cards.ingest_website')}
             </DialogTitle>
           </DialogHeader>
           <div className="">
@@ -429,7 +430,7 @@ export default function WebsiteIngestForm({
                         width: '100%',
                       },
                     }}
-                    placeholder="Enter URL..."
+                    placeholder={t('website_ingest.enter_url_placeholder') as unknown as string}
                     radius="md"
                     type="url"
                     value={url}
@@ -447,7 +448,7 @@ export default function WebsiteIngestForm({
                       arrowSize={8}
                       withArrow
                       position="bottom-start"
-                      label="We will attempt to visit this number of pages, but not all will be scraped if they're duplicates, broken or otherwise inaccessible."
+                      label={`${t('website_ingest.max_urls_tooltip')}`}
                       styles={{
                         tooltip: {
                           color: 'var(--tooltip)',
@@ -460,13 +461,13 @@ export default function WebsiteIngestForm({
                           style={{ fontSize: '16px' }}
                           className={`${montserrat_heading.variable} font-montserratHeading`}
                         >
-                          Max URLs (1 to 500)
+                          {t('website_ingest.max_urls_label')}
                         </Text>
 
                         <TextInput
                           name="maximumUrls"
                           radius="md"
-                          placeholder="Default 50"
+                          placeholder={t('website_ingest.default_50') as unknown as string}
                           value={maxUrls}
                           onChange={(e) => {
                             handleInputChange(e, 'maxUrls')
@@ -511,39 +512,31 @@ export default function WebsiteIngestForm({
                     style={{ fontSize: '16px' }}
                     className={`${montserrat_heading.variable} mt-4 font-montserratHeading`}
                   >
-                    Limit web crawl
+                    {t('website_ingest.limit_web_crawl')}
                   </Text>
                   <div className="mt-2 pl-3">
                     <List className="text-[--modal-text]">
                       <List.Item>
-                        <strong>Equal and Below:</strong> Only scrape content
-                        that starts will the given URL. E.g. nasa.gov/blogs will
-                        scrape all blogs like nasa.gov/blogs/new-rocket but
-                        never go to nasa.gov/events.
+                        <strong>{t('website_ingest.equal_and_below')}:</strong> {t('website_ingest.equal_and_below_desc')}
                       </List.Item>
                       <List.Item>
-                        <strong>Same subdomain:</strong> Crawl the entire
-                        subdomain. E.g. docs.nasa.gov will grab that entire
-                        subdomain, but not nasa.gov or api.nasa.gov.
+                        <strong>{t('website_ingest.same_subdomain')}:</strong> {t('website_ingest.same_subdomain_desc')}
                       </List.Item>
                       <List.Item>
-                        <strong>Entire domain:</strong> Crawl as much of this
-                        entire website as possible. E.g. nasa.gov also includes
-                        docs.nasa.gov
+                        <strong>{t('website_ingest.entire_domain')}:</strong> {t('website_ingest.entire_domain_desc')}
                       </List.Item>
                       <List.Item>
                         <span>
-                          <strong>All:</strong> Start on the given URL and
-                          wander the web...{' '}
+                          <strong>{t('website_ingest.all')}:</strong> {t('website_ingest.all_desc')}{' '}
                           <Text>
-                            For more detail{' '}
+                            {t('website_ingest.for_more_detail')}{' '}
                             <a
                               className={'font-bold text-[--link]'}
                               href="https://docs.uiuc.chat/features/web-crawling-details"
                               target="_blank"
                               rel="noopener noreferrer"
                             >
-                              read the docs
+                              {t('website_ingest.read_the_docs')}
                             </a>
                             .
                           </Text>
@@ -553,8 +546,9 @@ export default function WebsiteIngestForm({
                   </div>
 
                   <Text className="mt-4">
-                    <strong>I suggest starting with Equal and Below</strong>,
-                    then just re-run this if you need more later.
+                    <strong>{t('website_ingest.suggest_equal_and_below')}</strong>,
+                    {` `}
+                    {t('website_ingest.rerun_if_needed')}
                   </Text>
 
                   <SegmentedControl
@@ -586,7 +580,7 @@ export default function WebsiteIngestForm({
                             <IconSitemap
                               style={{ width: rem(16), height: rem(16) }}
                             />
-                            <span>Equal and Below</span>
+                            <span>{t('website_ingest.equal_and_below')}</span>
                           </Center>
                         ),
                       },
@@ -597,7 +591,7 @@ export default function WebsiteIngestForm({
                             <IconSubtask
                               style={{ width: rem(16), height: rem(16) }}
                             />
-                            <span>Subdomain</span>
+                            <span>{t('website_ingest.same_subdomain')}</span>
                           </Center>
                         ),
                       },
@@ -608,7 +602,7 @@ export default function WebsiteIngestForm({
                             <IconHome
                               style={{ width: rem(16), height: rem(16) }}
                             />
-                            <span>Entire domain</span>
+                            <span>{t('website_ingest.entire_domain')}</span>
                           </Center>
                         ),
                       },
@@ -619,7 +613,7 @@ export default function WebsiteIngestForm({
                             <IconWorld
                               style={{ width: rem(16), height: rem(16) }}
                             />
-                            <span>All</span>
+                            <span>{t('website_ingest.all')}</span>
                           </Center>
                         ),
                       },
@@ -635,7 +629,7 @@ export default function WebsiteIngestForm({
               disabled={!isUrlValid}
               className="h-11 w-full rounded-xl bg-[--dashboard-button] text-[--dashboard-button-foreground] transition-colors hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--background-dark]"
             >
-              Ingest the Website
+              {t('upload_cards.ingest_website')}
             </Button>
           </div>
         </DialogContent>
