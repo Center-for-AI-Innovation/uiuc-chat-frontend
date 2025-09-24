@@ -9,6 +9,7 @@ import { type CourseMetadata } from '~/types/courseMetadata'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import { showToastOnUpdate } from './MakeQueryAnalysisPage'
 import { ProjectFilesTable } from './ProjectFilesTable'
+import { useTranslation } from 'next-i18next'
 
 const useStyles = createStyles(() => ({
   tabsList: {
@@ -58,6 +59,7 @@ function DocumentsCard({
   metadata: CourseMetadata
   sidebarCollapsed?: boolean
 }) {
+  const { t } = useTranslation('common')
   const [tabValue, setTabValue] = useState<string | null>('success')
   const [failedCount, setFailedCount] = useState<number>(0)
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
@@ -89,7 +91,7 @@ function DocumentsCard({
         <Modal
           opened={exportModalOpened}
           onClose={() => setExportModalOpened(false)}
-          title="Please confirm your action"
+          title={t('project_files.export_confirm_title')}
           centered
         >
           <Text size="sm" style={{ color: 'white' }}>

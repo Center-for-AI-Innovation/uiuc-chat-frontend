@@ -50,6 +50,7 @@ import handleExport from '~/pages/util/handleExport'
 import { fetchPresignedUrl } from '~/utils/apiUtils'
 import { LoadingSpinner } from './LoadingSpinner'
 import { showToastOnUpdate } from './MakeQueryAnalysisPage'
+import { useTranslation } from 'next-i18next'
 
 // export const getCurrentPageName = () => {
 //   const router = useRouter()
@@ -84,6 +85,7 @@ export function ProjectFilesTable({
   onTabChange: (value: string) => void
   failedCount?: number
 }) {
+  const { t } = useTranslation('common')
   const queryClient = useQueryClient()
   const [selectedRecords, setSelectedRecords] = useState<CourseDocument[]>([])
   const [filterKey, setFilterKey] = useState<string>('')
@@ -425,8 +427,8 @@ export function ProjectFilesTable({
 
   if (isErrorDocuments) {
     showNotification({
-      title: 'Error',
-      message: 'Failed to fetch documents',
+      title: t('alerts.llm_providers.fetch_error.title'),
+      message: t('project_files.error_message'),
       color: 'red',
       icon: <IconTrash size={24} />,
     })
@@ -1127,7 +1129,7 @@ export function ProjectFilesTable({
                   {
                     titleStyle: dataTableTitleStyles,
                     accessor: 'error',
-                    title: 'Error',
+                    title: t('common.error') as unknown as string,
                     width: 200,
                     render: ({ error }: { error: string }, index: number) => {
                       // Ensure a ref exists for this row
@@ -1174,7 +1176,7 @@ export function ProjectFilesTable({
                   {
                     titleStyle: dataTableTitleStyles,
                     accessor: 'doc_group',
-                    title: 'Document Groups',
+                    title: t('dashboard.document_groups') as unknown as string,
                     render: (record: CourseDocument) => (
                       <Group position="apart" spacing="xs">
                         <MultiSelect
@@ -1333,7 +1335,7 @@ export function ProjectFilesTable({
         <Modal
           opened={modalOpened}
           onClose={() => setModalOpened(false)}
-          title="Please confirm your action"
+          title={t('project_files.confirm_delete_title')}
           centered
           styles={{
             header: {
@@ -1350,7 +1352,7 @@ export function ProjectFilesTable({
           }}
         >
           <Text size="sm" style={{ color: 'var(--modal-text)' }}>
-            {`Are you sure you want to delete the selected records?`}
+            {t('project_files.confirm_delete_message')}
           </Text>
           <div
             style={{
@@ -1440,7 +1442,7 @@ export function ProjectFilesTable({
                 <CopyButton value={currentError} timeout={2000}>
                   {({ copied, copy }) => (
                     <Tooltip
-                      label={copied ? 'Copied' : 'Copy'}
+                      label={copied ? (t('tooltips.copied') as unknown as string) : (t('tooltips.copy_code') as unknown as string)}
                       withArrow
                       position="right"
                     >
@@ -1471,7 +1473,7 @@ export function ProjectFilesTable({
         <Modal
           opened={exportModalOpened}
           onClose={() => setExportModalOpened(false)}
-          title="Please confirm your action"
+          title={t('project_files.export_confirm_title')}
           centered
         >
           <Text size="sm" style={{ color: 'white' }}>
