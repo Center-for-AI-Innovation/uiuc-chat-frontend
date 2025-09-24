@@ -4,10 +4,6 @@ import type {
   ChatCompletionTool,
 } from 'openai/resources/chat/completions'
 import { type Conversation } from '~/types/chat'
-import {
-  withAppRouterAuth,
-  type AuthenticatedRequest,
-} from '~/utils/appRouterAuth'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 import {
   withAppRouterAuth,
