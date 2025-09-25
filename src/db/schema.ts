@@ -12,7 +12,8 @@ import {
   bigint,
   date,
   doublePrecision,
-  bigserial
+  bigserial,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
 
@@ -81,6 +82,19 @@ export const documentsInProgress = pgTable('documents_in_progress', {
   beam_task_id: text('beam_task_id'),
 })
 
+// File uploads table - dedicated table for tracking file uploads
+export const fileUploads = pgTable('file_uploads', {
+  id: uuid('id').defaultRandom().notNull().primaryKey(),
+  conversation_id: uuid('conversation_id').notNull(),
+  base_url: text('base_url'),
+  contexts: jsonb('contexts'),
+  course_name: text('course_name'),
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  readable_filename: text('readable_filename'),
+  s3_path: text('s3_path'),
+  url: text('url'),
+})
+
 // n8n_workflows table
 export const n8nWorkflows = pgTable('n8n_workflows', {
   latest_workflow_id: serial('latest_workflow_id').notNull(),
@@ -144,7 +158,7 @@ export const conversations = pgTable('conversations', {
   folder_id: uuid('folder_id'),
 })
 
-// Documents table
+// Documents table 
 export const documents = pgTable('documents', {
   id: serial('id').primaryKey(),
   s3_path: text('s3_path'),
@@ -206,23 +220,44 @@ export const courseNames = pgTable('course_names', {
 })
 
 // DocGroups table
-export const docGroups = pgTable('doc_groups', {
-  id: serial('id').primaryKey(),
-  name: text('name').notNull(),
-  course_name: text('course_name').notNull(),
-  created_at: timestamp('created_at').defaultNow(),
-  enabled: boolean('enabled').default(true),
-  private: boolean('private').default(true),
-  doc_count: integer('doc_count').default(0),
-})
+export const docGroups = pgTable(
+  'doc_groups',
+  {
+    id: serial('id').primaryKey(),
+    name: text('name').notNull(),
+    course_name: text('course_name').notNull(),
+    created_at: timestamp('created_at').defaultNow(),
+    enabled: boolean('enabled').default(true),
+    private: boolean('private').default(true),
+    doc_count: integer('doc_count').default(0),
+  },
+  (table) => {
+    return {
+      nameCourseUnique: uniqueIndex('doc_groups_name_course_unique').on(
+        table.name,
+        table.course_name,
+      ),
+    }
+  },
+)
 
 // Define the junction table for documents and doc_groups many-to-many relationship
-export const documentsDocGroups = pgTable('documents_doc_groups', {
-  id: serial('id').primaryKey(),
-  document_id: integer('document_id').notNull(),
-  doc_group_id: integer('doc_group_id').notNull(),
-  created_at: timestamp('created_at').defaultNow(),
-})
+export const documentsDocGroups = pgTable(
+  'documents_doc_groups',
+  {
+    id: serial('id').primaryKey(),
+    document_id: integer('document_id').notNull(),
+    doc_group_id: integer('doc_group_id').notNull(),
+    created_at: timestamp('created_at').defaultNow(),
+  },
+  (table) => {
+    return {
+      docIDsUnique: uniqueIndex(
+        'documents_doc_groups_document_group_id_unique',
+      ).on(table.document_id, table.doc_group_id),
+    }
+  },
+)
 
 // Doc Groups Sharing table (from schema.sql)
 export const docGroupsSharing = pgTable('doc_groups_sharing', {
@@ -368,7 +403,7 @@ export const projectStats = pgTable('project_stats', {
   unique_users: integer('unique_users').default(0),
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().notNull(),
-  model_usage_counts: jsonb('model_usage_counts')
+  model_usage_counts: jsonb('model_usage_counts'),
 })
 
 // PubMed Daily Update (from schema.sql)
@@ -437,6 +472,7 @@ export const conversationsRelations = relations(
       fields: [conversations.folder_id],
       references: [folders.id],
     }),
+    fileUploads: many(fileUploads),
   }),
 )
 
@@ -481,6 +517,13 @@ export const documentsDocGroupsRelations = relations(
 
 export const foldersRelations = relations(folders, ({ many }) => ({
   conversations: many(conversations),
+}))
+
+export const fileUploadsRelations = relations(fileUploads, ({ one }) => ({
+  conversation: one(conversations, {
+    fields: [fileUploads.conversation_id],
+    references: [conversations.id],
+  }),
 }))
 
 // Export types
@@ -561,3 +604,7 @@ export type NewPubmedDailyUpdate = typeof pubmedDailyUpdate.$inferInsert
 // export types for keycloak users
 export type KeycloakUsers = typeof keycloakUsers.$inferSelect
 export type NewKeycloakUsers = typeof keycloakUsers.$inferInsert
+
+// export types for file uploads
+export type FileUploads = typeof fileUploads.$inferSelect
+export type NewFileUploads = typeof fileUploads.$inferInsert

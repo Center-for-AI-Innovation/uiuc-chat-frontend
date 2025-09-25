@@ -132,7 +132,7 @@ export const AuthMenu = ({ size = 34 }: AuthMenuProps) => {
 
   return (
     <button
-      className={classes.link}
+      className={`${classes.link} login-btn`}
       onClick={() => void initiateSignIn(auth, window.location.pathname)}
     >
       <div

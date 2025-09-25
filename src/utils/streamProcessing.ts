@@ -9,7 +9,7 @@ import { runAnthropicChat } from '~/app/utils/anthropic'
 import { runOllamaChat } from '~/app/utils/ollama'
 import { runVLLM } from '~/app/utils/vllm'
 import { fetchContexts } from '~/pages/api/getContexts'
-import fetchMQRContexts from '~/pages/api/getContextsMQR'
+import { fetchMQRContexts }from '~/pages/api/getContextsMQR'
 import { fetchImageDescription } from '~/pages/api/UIUC-api/fetchImageDescription'
 import {
   type ChatApiBody,
@@ -422,6 +422,10 @@ export const handleContextSearch = async (
   searchQuery: string,
   documentGroups: string[],
 ): Promise<ContextWithMetadata[]> => {
+  // Check if this message already has contexts (from file upload)
+  if (message.contexts && Array.isArray(message.contexts) && message.contexts.length > 0) {
+    return message.contexts
+  }
   if (courseName !== 'gpt4') {
     const token_limit = selectedConversation.model.tokenLimit
     const useMQRetrieval = false
@@ -432,6 +436,7 @@ export const handleContextSearch = async (
       searchQuery,
       token_limit,
       documentGroups,
+      '',
     )
 
     message.contexts = curr_contexts as ContextWithMetadata[]
@@ -756,10 +761,20 @@ function convertMessagesToVercelAISDKv3(
     if (index === conversation.messages.length - 1 && message.role === 'user') {
       content = message.finalPromtEngineeredMessage || ''
     } else if (Array.isArray(message.content)) {
-      content = message.content
-        .filter((c) => c.type === 'text')
-        .map((c) => c.text)
-        .join('\n')
+      // Handle both text and file content
+      const textParts: string[] = []
+      
+      message.content.forEach((c) => {
+        if (c.type === 'text') {
+          textParts.push(c.text || '')
+        } else if (c.type === 'file') {
+          // Convert file content to text representation for commercial models
+          textParts.push(`[File: ${c.fileName || 'unknown'} (${c.fileType || 'unknown type'}, ${c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'})]`)
+        }
+        // Note: image_url and other content types may need special handling
+      })
+      
+      content = textParts.join('\n')
     } else {
       content = message.content as string
     }

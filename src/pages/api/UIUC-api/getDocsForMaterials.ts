@@ -1,12 +1,13 @@
 import { eq } from 'drizzle-orm'
-import { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiResponse } from 'next'
+import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { db } from '~/db/dbClient'
 import { documents } from '~/db/schema'
 
-export const runtime = 'edge'
+// export const runtime = 'edge'
 
 const getCourseDocumentsHandler = async (
-  req: NextApiRequest,
+  req: AuthenticatedRequest,
   res: NextApiResponse,
 ) => {
   const { fileName, courseNameFromBody } = req.body as {
@@ -47,7 +48,13 @@ export const getCourseDocuments = async (
   }
   try {
     const data = await db
-      .select({ readable_filename: documents.readable_filename, url: documents.url, s3_path: documents.s3_path, created_at: documents.created_at, base_url: documents.base_url })
+      .select({
+        readable_filename: documents.readable_filename,
+        url: documents.url,
+        s3_path: documents.s3_path,
+        created_at: documents.created_at,
+        base_url: documents.base_url,
+      })
       .from(documents)
       .where(eq(documents.course_name, course_name))
 

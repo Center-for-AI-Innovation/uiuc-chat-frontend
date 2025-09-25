@@ -1,8 +1,9 @@
 // ingest.ts
-import { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiResponse } from 'next'
+import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { getBackendUrl } from '~/utils/apiUtils'
 
-const handler = async (req: NextApiRequest, res: NextApiResponse) => {
+const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
   try {
     const { api_key, id, activate } = req.query as {
       api_key: string

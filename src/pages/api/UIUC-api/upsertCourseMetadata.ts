@@ -1,15 +1,13 @@
 // upsertCourseMetadata.ts
 import { type CourseMetadataOptionalForUpsert } from '~/types/courseMetadata'
-import type { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiResponse } from 'next'
+import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { encrypt, isEncrypted } from '~/utils/crypto'
 import { getCourseMetadata } from './getCourseMetadata'
-import { redisClient } from '~/utils/redisClient'
+import { ensureRedisConnected } from '~/utils/redisClient'
 import { superAdmins } from '~/utils/superAdmins'
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const { courseName, courseMetadata } = req.body as {
     courseName: string
     courseMetadata: CourseMetadataOptionalForUpsert
@@ -63,6 +61,7 @@ export default async function handler(
     }
 
     // Save the combined metadata
+    const redisClient = await ensureRedisConnected()
     await redisClient.hSet('course_metadatas', {
       [courseName]: JSON.stringify(combined_metadata),
     })
@@ -72,3 +71,5 @@ export default async function handler(
     return res.status(500).json({ success: false, error: error })
   }
 }
+
+export default withAuth(handler)

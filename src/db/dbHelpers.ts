@@ -1,28 +1,28 @@
 // File copy-pasted from dbUtils. This has modifications from supabase.rpc to psql functions.
-import { eq, and, sql, asc } from 'drizzle-orm';
-import { db } from './dbClient';
-import { docGroups } from './schema';
-import { CourseDocument } from '~/types/courseMaterials';
-
+import { eq, and, sql, asc } from 'drizzle-orm'
+import { db } from './dbClient'
+import { docGroups } from './schema'
+import { CourseDocument } from '~/types/courseMaterials'
 
 // Db queries
 
 export async function fetchEnabledDocGroups(courseName: string) {
   try {
-      const documentGroups = await db.query.docGroups.findMany({
-        where: eq(docGroups.course_name, courseName),
-        with: {
-          documentsJunction: true,
-        },
-      })
+    const documentGroups = await db.query.docGroups.findMany({
+      where: eq(docGroups.course_name, courseName),
+      with: {
+        documentsJunction: true,
+      },
+    })
 
-      return documentGroups
+    return documentGroups
   } catch (error) {
     console.error('Error in fetchEnabledDocGroups:', error)
-    throw new Error(`Failed to fetch enabled document groups: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `Failed to fetch enabled document groups: ${error instanceof Error ? error.message : String(error)}`,
+    )
   }
 }
-
 
 export async function fetchDocumentGroups(courseName: string) {
   try {
@@ -33,16 +33,15 @@ export async function fetchDocumentGroups(courseName: string) {
         id: true,
         name: true,
         enabled: true,
-        doc_count: true
-      }
-    });
-    return documentGroups;
+        doc_count: true,
+      },
+    })
+    return documentGroups
   } catch (error) {
     console.error('Error in fetchDocumentGroups:', error)
     throw error
   }
 }
-
 
 export async function addDocumentsToDocGroup(
   courseName: string,
@@ -50,6 +49,7 @@ export async function addDocumentsToDocGroup(
 ) {
   try {
     // Call the Postgres function directly using db.execute and sql
+    const groupArray = `{${doc.doc_groups.map((v) => `"${v.replace(/"/g, '\\"')}"`).join(',')}}`
     if (doc.url) {
       const result = await db.execute(sql`
         select add_document_to_group(
@@ -57,16 +57,19 @@ export async function addDocumentsToDocGroup(
           ${doc.s3_path},
           ${doc.url},
           ${doc.readable_filename},
-          ${doc.doc_groups}
+          ${groupArray}
         ) as success;
-      `);
+      `)
       // Ensure result is an array and not undefined
-      const rows = Array.isArray(result) ? result : [];
-      const success = rows.length > 0 && rows[0] && typeof rows[0].success !== 'undefined' ? rows[0].success : false;
+      const rows = Array.isArray(result) ? result : []
+      const success =
+        rows.length > 0 && rows[0] && typeof rows[0].success !== 'undefined'
+          ? rows[0].success
+          : false
       if (!success) {
-        throw new Error('Failed to add documents to doc group');
+        throw new Error('Failed to add documents to doc group')
       }
-      return success;
+      return success
     } else {
       const result = await db.execute(sql`
         select add_document_to_group_url(
@@ -74,20 +77,23 @@ export async function addDocumentsToDocGroup(
           ${doc.s3_path},
           ${doc.url},
           ${doc.readable_filename},
-          ${doc.doc_groups}
+          ${groupArray}
         ) as success;
-      `);
+      `)
       // Ensure result is an array and not undefined
-      const rows = Array.isArray(result) ? result : [];
-      const success = rows.length > 0 && rows[0] && typeof rows[0].success !== 'undefined' ? rows[0].success : false;
+      const rows = Array.isArray(result) ? result : []
+      const success =
+        rows.length > 0 && rows[0] && typeof rows[0].success !== 'undefined'
+          ? rows[0].success
+          : false
       if (!success) {
-        throw new Error('Failed to add documents to doc group');
+        throw new Error('Failed to add documents to doc group')
       }
-      return success;
+      return success
     }
   } catch (error) {
-    console.error('Error in addDocumentsToDocGroup:', error);
-    throw error;
+    console.error('Error in addDocumentsToDocGroup:', error)
+    throw error
   }
 }
 
@@ -104,13 +110,12 @@ export async function removeDocGroup(
         ${doc.url},
         ${docGroup}
       );
-    `);
+    `)
   } catch (error) {
-    console.error('Error in removeDocGroup:', error);
-    throw error;
+    console.error('Error in removeDocGroup:', error)
+    throw error
   }
 }
-
 
 export async function updateDocGroupStatus(
   courseName: string,
@@ -124,9 +129,9 @@ export async function updateDocGroupStatus(
       .where(
         and(
           eq(docGroups.name, docGroup),
-          eq(docGroups.course_name, courseName)
-        )
-      );
+          eq(docGroups.course_name, courseName),
+        ),
+      )
   } catch (error) {
     console.error('Error in updateDocGroupStatus:', error)
     throw error
@@ -202,7 +207,7 @@ export async function updateDocGroupStatus(
 // // Update a document status
 // export async function updateDocumentStatus(documentId: number, status: string, failedReason?: string) {
 //   return db.update(documents)
-//     .set({ 
+//     .set({
 //       status,
 //       failed_reason: failedReason,
 //       updated_at: new Date()
@@ -221,7 +226,7 @@ export async function updateDocGroupStatus(
 //       eq(documentsDocGroups.doc_group_id, docGroupId)
 //     ))
 //     .limit(1);
-  
+
 //   // If it doesn't exist, create it
 //   if (existing.length === 0) {
 //     await db.insert(documentsDocGroups)
@@ -229,19 +234,19 @@ export async function updateDocGroupStatus(
 //         document_id: documentId,
 //         doc_group_id: docGroupId
 //       });
-    
+
 //     // Update doc_count in doc_groups
 //     await db.execute(sql`
-//       UPDATE doc_groups 
+//       UPDATE doc_groups
 //       SET doc_count = (
-//         SELECT COUNT(*) 
-//         FROM documents_doc_groups 
+//         SELECT COUNT(*)
+//         FROM documents_doc_groups
 //         WHERE doc_group_id = ${docGroupId}
 //       )
 //       WHERE id = ${docGroupId}
 //     `);
 //   }
-  
+
 //   return true;
 // }
 
@@ -252,17 +257,17 @@ export async function updateDocGroupStatus(
 //       eq(documentsDocGroups.document_id, documentId),
 //       eq(documentsDocGroups.doc_group_id, docGroupId)
 //     ));
-  
+
 //   // Update doc_count in doc_groups
 //   await db.execute(sql`
-//     UPDATE doc_groups 
+//     UPDATE doc_groups
 //     SET doc_count = (
-//       SELECT COUNT(*) 
-//       FROM documents_doc_groups 
+//       SELECT COUNT(*)
+//       FROM documents_doc_groups
 //       WHERE doc_group_id = ${docGroupId}
 //     )
 //     WHERE id = ${docGroupId}
 //   `);
-  
+
 //   return true;
-// } 
+// }

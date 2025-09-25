@@ -18,16 +18,17 @@ import { getAzureModels } from '~/utils/modelProviders/azure'
 import { getAnthropicModels } from '~/utils/modelProviders/routes/anthropic'
 import { getWebLLMModels } from '~/utils/modelProviders/WebLLM'
 import { type NextApiRequest, type NextApiResponse } from 'next'
+import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 import { getNCSAHostedModels } from '~/utils/modelProviders/NCSAHosted'
 import { getOpenAIModels } from '~/utils/modelProviders/routes/openai'
-import { redisClient } from '~/utils/redisClient'
+import { ensureRedisConnected } from '~/utils/redisClient'
 import { getNCSAHostedVLMModels } from '~/utils/modelProviders/types/NCSAHostedVLM'
 import { getBedrockModels } from '~/utils/modelProviders/routes/bedrock'
 import { getGeminiModels } from '~/utils/modelProviders/routes/gemini'
 import { getSambaNovaModels } from '~/utils/modelProviders/routes/sambanova'
 
-export default async function handler(
-  req: NextApiRequest,
+async function handler(
+  req: AuthenticatedRequest,
   res: NextApiResponse<AllLLMProviders | { error: string }>,
 ) {
   try {
@@ -41,6 +42,7 @@ export default async function handler(
 
     // Fetch the project's API keys
     let llmProviders: AllLLMProviders
+    const redisClient = await ensureRedisConnected()
     const redisValue = await redisClient.get(`${projectName}-llms`)
     if (!redisValue) {
       llmProviders = {} as AllLLMProviders
@@ -135,3 +137,5 @@ export default async function handler(
     return res.status(500).json({ error: JSON.stringify(error) })
   }
 }
+
+export default withAuth(handler)

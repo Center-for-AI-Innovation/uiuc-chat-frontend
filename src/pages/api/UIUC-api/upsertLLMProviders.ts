@@ -1,17 +1,15 @@
 // upsertCourseMetadata.ts
-import type { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiResponse } from 'next'
+import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { type ProjectWideLLMProviders } from '~/types/courseMetadata'
 import { encryptKeyIfNeeded } from '~/utils/crypto'
 import {
   type AllLLMProviders,
   type LLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
-import { redisClient } from '~/utils/redisClient'
+import { ensureRedisConnected } from '~/utils/redisClient'
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   // Ensure it's a POST request
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -19,6 +17,7 @@ export default async function handler(
 
   let courseName: string
   let llmProviders: AllLLMProviders
+  const redisClient = await ensureRedisConnected()
 
   try {
     courseName = req.body.projectName as string
@@ -85,3 +84,5 @@ export default async function handler(
     return res.status(500).json({ success: false })
   }
 }
+
+export default withAuth(handler)

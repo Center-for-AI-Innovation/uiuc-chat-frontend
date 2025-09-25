@@ -1,15 +1,14 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiResponse } from 'next'
+import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { type CourseMetadata } from '~/types/courseMetadata'
-import { redisClient } from '~/utils/redisClient'
+import { ensureRedisConnected } from '~/utils/redisClient'
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const course_name = req.query.course_name as string
   const is_private = req.query.is_private === 'true'
 
   try {
+    const redisClient = await ensureRedisConnected()
     const course_metadata_string = await redisClient.hGet(
       'course_metadatas',
       course_name,
@@ -37,3 +36,5 @@ export default async function handler(
     return res.status(500).json({ success: false })
   }
 }
+
+export default withAuth(handler)
