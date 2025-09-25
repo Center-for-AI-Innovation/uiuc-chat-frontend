@@ -3,6 +3,7 @@ import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { type ImageBody, type OpenAIChatMessage } from '~/types/chat'
 
 import { OpenAIError, OpenAIStream } from '@/utils/server'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
 const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
   if (req.method !== 'POST') {
@@ -53,7 +54,7 @@ const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
   }
 }
 
-export default handler
+export default withCourseAccessFromRequest('any')(handler)
 
 export function getImageDescriptionSystemPrompt() {
   return `"Analyze and describe the given image with relevance to the user query, focusing solely on visible elements. Detail the image by:
