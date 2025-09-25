@@ -4,9 +4,7 @@ import { db, keycloakDB, apiKeys } from '~/db/dbClient'
 import { keycloakUsers } from '~/db/schema'
 import { eq, and, sql } from 'drizzle-orm'
 import posthog from 'posthog-js'
-import { NextResponse } from 'next/server'
-import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
-import type { AuthenticatedRequest } from '~/utils/authMiddleware'
+import { NextRequest, NextResponse } from 'next/server'
 
 /**
  * Validates the provided API key and retrieves the associated user data.
@@ -95,9 +93,9 @@ export async function validateApiKeyAndRetrieveData(apiKey: string) {
 /**
  * API route handler to validate an API key and return the associated user object.
  *
- * @param {NextApiRequest} req - The incoming HTTP request.
+ * @param {NextRequest} req - The incoming HTTP request.
  */
-export default async function handler(req: AuthenticatedRequest) {
+export default async function handler(req: NextRequest) {
   try {
     console.log('req: ', req)
     // Extract the API key and course name from the request body.
@@ -125,5 +123,3 @@ export default async function handler(req: AuthenticatedRequest) {
     )
   }
 }
-
-export default withCourseOwnerOrAdminAccess()(handler)

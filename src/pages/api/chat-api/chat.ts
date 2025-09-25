@@ -6,12 +6,11 @@ import {
   type Conversation,
   type Message,
 } from '~/types/chat'
-import { fetchCourseMetadata } from '~/utils/apiUtils'
+import { fetchCourseMetadataServer } from '~/pages/api/chat-api/util/fetchCourseMetadataServer'
 import { validateApiKeyAndRetrieveData } from './keys/validate'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import posthog from 'posthog-js'
-import { type NextApiResponse } from 'next'
-import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
+import { NextApiRequest, type NextApiResponse } from 'next'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import {
   attachContextsToLastMessage,
@@ -51,7 +50,7 @@ import { selectBestTemperature } from '~/components/Chat/Temperature'
  * @returns {Promise<void>} A promise that resolves when the response is sent.
  */
 export default async function chat(
-  req: AuthenticatedRequest,
+  req: NextApiRequest,
   res: NextApiResponse,
 ): Promise<void> {
   // Validate the HTTP method
@@ -127,7 +126,8 @@ export default async function chat(
   }
 
   // Retrieve course metadata
-  const courseMetadata: CourseMetadata = await fetchCourseMetadata(course_name)
+  const courseMetadata: CourseMetadata =
+    await fetchCourseMetadataServer(course_name)
   if (!courseMetadata) {
     res.status(404).json({ error: 'Course metadata not found' })
     return
