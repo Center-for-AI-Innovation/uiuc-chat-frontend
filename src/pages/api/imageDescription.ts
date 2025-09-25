@@ -36,6 +36,12 @@ const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
       messages,
       false,
     )
+    console.log('Response from OpenAIStream:', response)
+
+    // Guard: ensure it's an object or string you can safely return
+    if (!response || typeof response !== "object") {
+      return res.status(500).json({ error: "Invalid response from OpenAIStream" })
+    }
 
     return res.status(200).json(response)
   } catch (error) {
