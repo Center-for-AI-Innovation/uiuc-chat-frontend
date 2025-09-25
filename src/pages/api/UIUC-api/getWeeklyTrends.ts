@@ -1,10 +1,13 @@
+import { withAuth } from '~/utils/authMiddleware'
 import { getBackendUrl } from '~/utils/apiUtils'
 
-export default async function handler(req: any, res: any) {
+async function handler(req: any, res: any) {
   const { project_name } = req.query
 
   if (!project_name) {
-    return res.status(400).json({ error: 'Missing required project_name parameter' })
+    return res
+      .status(400)
+      .json({ error: 'Missing required project_name parameter' })
   }
 
   try {
@@ -13,8 +16,8 @@ export default async function handler(req: any, res: any) {
     )
 
     if (!response.ok) {
-      return res.status(response.status).json({ 
-        error: `Failed to fetch data: ${response.statusText}` 
+      return res.status(response.status).json({
+        error: `Failed to fetch data: ${response.statusText}`,
       })
     }
 
@@ -28,6 +31,8 @@ export default async function handler(req: any, res: any) {
     })
   }
 }
+
+export default withAuth(handler)
 
 interface WeeklyTrend {
   current_week_value: number

@@ -1,7 +1,11 @@
-import { type NextApiRequest, type NextApiResponse } from 'next'
+import { type NextApiResponse } from 'next'
+import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { getDefaultPostPrompt } from '~/app/utils/buildPromptUtils'
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default function handler(
+  req: AuthenticatedRequest,
+  res: NextApiResponse,
+) {
   if (req.method === 'GET') {
     const defaultPrompt = getDefaultPostPrompt()
     console.log('defaultPrompt:', defaultPrompt)

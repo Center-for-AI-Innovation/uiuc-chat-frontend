@@ -1,13 +1,15 @@
 // ~/src/pages/api/UIUC-api/getAllCourseMetadata.ts
-import type { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiResponse } from 'next'
+import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import type { CourseMetadata } from '~/types/courseMetadata'
-import { redisClient } from '~/utils/redisClient'
+import { ensureRedisConnected } from '~/utils/redisClient'
 
 export const getCoursesByOwnerOrAdmin = async (
   currUserEmail: string,
 ): Promise<{ [key: string]: CourseMetadata }[]> => {
   let all_course_metadata_raw: { [key: string]: string } | null = null
   try {
+    const redisClient = await ensureRedisConnected()
     all_course_metadata_raw = await redisClient.hGetAll('course_metadatas')
     if (!all_course_metadata_raw) {
       console.error('No course metadata found for ANY course!')
@@ -47,11 +49,14 @@ export const getCoursesByOwnerOrAdmin = async (
   }
 }
 
+export default withAuth(handler)
+
 export const getAllCourseMetadata = async (): Promise<
   { [key: string]: CourseMetadata }[]
 > => {
   let all_course_metadata_raw: { [key: string]: string } | null = null
   try {
+    const redisClient = await ensureRedisConnected()
     all_course_metadata_raw = await redisClient.hGetAll('course_metadatas')
     if (!all_course_metadata_raw) {
       console.error('No course metadata found for ANY course!')
@@ -89,10 +94,7 @@ export const getAllCourseMetadata = async (): Promise<
   }
 }
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   try {
     const currUserEmail = req.query.currUserEmail as string
     const all_course_metadata = await getCoursesByOwnerOrAdmin(currUserEmail)

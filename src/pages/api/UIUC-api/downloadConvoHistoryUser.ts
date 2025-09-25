@@ -1,9 +1,12 @@
 import { getBackendUrl } from '~/utils/apiUtils'
-import { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiResponse } from 'next'
+import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 
 interface DownloadResult {
   message: string
 }
+
+export default withAuth(handler)
 
 // Input validation helpers
 const isValidEmail = (email: string): boolean => {
@@ -18,10 +21,7 @@ const isValidProjectName = (projectName: string): boolean => {
 }
 
 // Server-side API handler - can access environment variables
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
@@ -34,7 +34,9 @@ export default async function handler(
   }
 
   if (typeof userEmail !== 'string' || typeof projectName !== 'string') {
-    return res.status(400).json({ error: 'userEmail and projectName must be strings' })
+    return res
+      .status(400)
+      .json({ error: 'userEmail and projectName must be strings' })
   }
 
   if (!isValidEmail(userEmail)) {
@@ -52,30 +54,35 @@ export default async function handler(
   try {
     const backendUrl = getBackendUrl()
     const url = `${backendUrl}/export-convo-history-user?user_email=${encodeURIComponent(userEmail)}&project_name=${encodeURIComponent(projectName)}`
-    
+
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Accept': 'application/zip, application/json, */*',
+        Accept: 'application/zip, application/json, */*',
       },
       // Add timeout of 5 minutes for large downloads
       signal: AbortSignal.timeout(300000),
     })
-    
+
     if (!response.ok) {
       console.error(`Backend responded with status: ${response.status}`)
-      return res.status(response.status).json({ 
-        error: `Backend error: ${response.status} ${response.statusText}` 
+      return res.status(response.status).json({
+        error: `Backend error: ${response.status} ${response.statusText}`,
       })
     }
 
-    console.log('Received response:', response.status, response.headers.get('content-type'))
+    console.log(
+      'Received response:',
+      response.status,
+      response.headers.get('content-type'),
+    )
 
-    const contentType = response.headers.get('content-type') || 'application/octet-stream'
-    
+    const contentType =
+      response.headers.get('content-type') || 'application/octet-stream'
+
     // Set appropriate headers for the response
     res.setHeader('Content-Type', contentType)
-    
+
     const contentDisposition = response.headers.get('content-disposition')
     if (contentDisposition) {
       res.setHeader('Content-Disposition', contentDisposition)
@@ -84,7 +91,7 @@ export default async function handler(
     // Stream the response to avoid memory issues with large files
     if (response.body) {
       const reader = response.body.getReader()
-      
+
       try {
         while (true) {
           const { done, value } = await reader.read()
@@ -98,20 +105,23 @@ export default async function handler(
     } else {
       res.status(500).json({ error: 'No response body received' })
     }
-    
   } catch (error) {
     console.error('Error exporting documents:', error)
-    
+
     if (error instanceof Error) {
       if (error.name === 'TimeoutError') {
-        return res.status(504).json({ error: 'Request timeout - the export is taking too long' })
+        return res
+          .status(504)
+          .json({ error: 'Request timeout - the export is taking too long' })
       }
       if (error.name === 'AbortError') {
         return res.status(408).json({ error: 'Request was aborted' })
       }
     }
-    
-    res.status(500).json({ error: 'Internal server error while exporting documents' })
+
+    res
+      .status(500)
+      .json({ error: 'Internal server error while exporting documents' })
   }
 }
 
@@ -128,18 +138,18 @@ export const downloadConversationHistoryUser = async (
   console.log(
     `Starting download for user: ${userEmail}, project: ${projectName}`,
   )
-  
+
   try {
     const response = await fetch(
       `/api/UIUC-api/downloadConvoHistoryUser?userEmail=${encodeURIComponent(userEmail)}&projectName=${encodeURIComponent(projectName)}`,
-      { 
+      {
         method: 'GET',
         headers: {
-          'Accept': 'application/zip, application/json, */*',
+          Accept: 'application/zip, application/json, */*',
         },
-      }
+      },
     )
-    
+
     console.log('Received response:', response.status, response.statusText)
 
     if (!response.ok) {
@@ -152,18 +162,18 @@ export const downloadConversationHistoryUser = async (
         // If response isn't JSON, use status text
         errorMessage = response.statusText || errorMessage
       }
-      
+
       console.error('Server error:', errorMessage)
       return { message: `Error: ${errorMessage}` }
     }
 
     const contentType = response.headers.get('content-type') || ''
-    
+
     if (contentType.includes('application/json')) {
       console.log('Response is JSON')
       const jsonData = await response.json()
       console.log('Parsed JSON data:', jsonData)
-      
+
       if (jsonData.response === 'Download from S3') {
         console.log(
           'Large conversation history, sending email with download link',
@@ -183,25 +193,27 @@ export const downloadConversationHistoryUser = async (
     } else if (contentType.includes('application/zip')) {
       console.log('Response is a ZIP file')
       const blob = await response.blob()
-      
+
       // Validate blob size (basic sanity check)
       if (blob.size === 0) {
         return { message: 'Error: Received empty file.' }
       }
-      
+
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      
+
       // Sanitize filename for security
-      const sanitizedProjectName = projectName.replace(/[^a-zA-Z0-9\-_]/g, '_').substring(0, 10)
+      const sanitizedProjectName = projectName
+        .replace(/[^a-zA-Z0-9\-_]/g, '_')
+        .substring(0, 10)
       link.setAttribute('download', `${sanitizedProjectName}-convos.zip`)
-      
+
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
-      
+
       console.log('Download started, check your downloads')
       return { message: 'Downloading now, check your downloads.' }
     } else {
@@ -210,11 +222,13 @@ export const downloadConversationHistoryUser = async (
     }
   } catch (error) {
     console.error('Error exporting documents:', error)
-    
+
     if (error instanceof TypeError && error.message.includes('fetch')) {
-      return { message: 'Network error. Please check your connection and try again.' }
+      return {
+        message: 'Network error. Please check your connection and try again.',
+      }
     }
-    
+
     return { message: 'Error exporting documents. Please try again.' }
   }
 }

@@ -1,12 +1,11 @@
 // ~/src/pages/api/UIUC-api/getAllCourseNames.ts
-import type { NextApiRequest, NextApiResponse } from 'next'
-import { redisClient } from '~/utils/redisClient'
+import { type NextApiResponse } from 'next'
+import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
+import { ensureRedisConnected } from '~/utils/redisClient'
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   try {
+    const redisClient = await ensureRedisConnected()
     const all_course_names = await redisClient.hKeys('course_metadatas')
     return res.status(200).json({ all_course_names })
   } catch (error) {
@@ -14,3 +13,5 @@ export default async function handler(
     return res.status(500).json({ success: false })
   }
 }
+
+export default withAuth(handler)

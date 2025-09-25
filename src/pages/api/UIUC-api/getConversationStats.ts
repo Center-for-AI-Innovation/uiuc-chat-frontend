@@ -1,12 +1,16 @@
+import { type NextApiResponse } from 'next'
+import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 // src/pages/api/UIUC-api/getConversationStats.ts
 
 import { getBackendUrl } from '~/utils/apiUtils'
 
-export default async function handler(req: any, res: any) {
+async function handler(req: any, res: any) {
   const { course_name, from_date, to_date } = req.query
 
   if (!course_name) {
-    return res.status(400).json({ error: 'Missing required course_name parameter' })
+    return res
+      .status(400)
+      .json({ error: 'Missing required course_name parameter' })
   }
 
   try {
@@ -29,6 +33,8 @@ export default async function handler(req: any, res: any) {
     return res.status(500).json({ error: 'Failed to fetch questions per day' })
   }
 }
+
+export default withAuth(handler)
 
 export async function getConversationStats(
   course_name: string,

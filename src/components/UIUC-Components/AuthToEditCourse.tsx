@@ -44,7 +44,7 @@ export const AuthComponent = ({ course_name }: { course_name: string }) => {
             </Title>
             <Link href="/sign-in">
               <Button
-                className=" btn bg-[--button] text-white hover:bg-[--button-hover]"
+                className=" btn bg-[--button] text-white hover:bg-[--button-hover] login-btn"
                 style={{ fontSize: '24px' }}
                 onClick={handleSignIn}
               >

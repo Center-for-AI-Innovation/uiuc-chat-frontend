@@ -209,177 +209,165 @@ const MakeNewCoursePage = ({
                       </Title>
                     </Flex>
 
-                    <Flex
-                      direction="column"
-                      gap="sm"
-                      w={isSmallScreen ? '100%' : '70%'}
-                    >
-                      <TextInput
-                        autoComplete="off"
-                        data-lpignore="true"
-                        data-form-type="other"
-                        styles={{
-                          input: {
-                            color: 'var(--foreground)',
-                            backgroundColor: 'var(--background)',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            fontSize: '1rem',
-                            marginTop: '.5rem',
-                            borderWidth: '2px',
-
+                  <Flex
+                    direction="column"
+                    gap="md"
+                    w={isSmallScreen ? '80%' : '60%'}
+                  >
+                    <TextInput
+                      autoComplete="off"
+                      data-lpignore="true"
+                      data-form-type="other"
+                      styles={{
+                        input: {
+                          backgroundColor: 'var(--background)',
+                          paddingRight: '6rem',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          color:
+                            isCourseAvailable && projectName != ''
+                              ? 'var(--foreground)'
+                              : 'red',
+                          '&:focus-within': {
                             borderColor:
                               isCourseAvailable && projectName !== ''
-                                ? '#0c0'
-                                : 'var(--background-dark)',
+                                ? 'green'
+                                : 'red',
+                          },
+                          fontSize: isSmallScreen ? '12px' : '16px', // Added text styling
+                          font: `${montserrat_paragraph.variable} font-montserratParagraph`,
+                        },
+                        label: {
+                          fontWeight: 'bold',
+                          fontSize: '1rem',
+                          color: 'var(--foreground)',
+                          marginBottom: '1rem',
+                        },
+                      }}
+                      placeholder="Project name"
+                      radius={'md'}
+                      type="text"
+                      value={projectName}
+                      label="What is the project name?"
+                      size={'lg'}
+                      disabled={!is_new_course}
+                      onChange={(e) =>
+                        setProjectName(e.target.value.replaceAll(' ', '-'))
+                      }
+                      autoFocus
+                      withAsterisk
+                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                      rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
+                    />
 
-                            '&:focus': {
-                              borderColor:
-                                isCourseAvailable && projectName !== ''
-                                  ? '#0c0'
-                                  : 'red',
-                            },
-                          },
-                          label: {
-                            fontWeight: 'bold',
-                            color: 'var(--foreground)',
-                            fontSize: '1rem',
-                          },
-                        }}
-                        placeholder="Project name"
-                        radius={'md'}
-                        type="text"
-                        value={projectName}
-                        label="What is the project name?"
-                        size={'lg'}
-                        disabled={!is_new_course}
-                        onChange={(e) =>
-                          setProjectName(e.target.value.replaceAll(' ', '-'))
-                        }
-                        autoFocus
-                        withAsterisk
-                        className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                        rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
-                      />
-                      <Flex
-                        direction="row"
-                        align="flex-end"
-                        gap="xs"
-                        className="text-[--foreground]"
+                    <div className="text-sm text-[--foreground-faded]">
+                      The project name will be used as part of the unique url
+                      across the entire campus.
+                    </div>
+
+                    <Flex direction="row" align="flex-end">
+                      <label
+                        className={`${montserrat_paragraph.variable} mt-4 font-montserratParagraph font-bold text-[--foreground]`}
                       >
-                        <label
-                          className={`${montserrat_paragraph.variable} mt-4 font-montserratParagraph font-bold`}
-                        >
-                          What do you want to achieve?
-                        </label>
-                        <label
-                          className={`${montserrat_paragraph.variable} font-montserratParagraph text-[--foreground-faded]`}
-                        >
-                          (optional)
-                        </label>
-                      </Flex>
-                      <Textarea
-                        placeholder="Describe your project, goals, expected impact etc..."
-                        radius={'md'}
-                        value={projectDescription}
-                        onChange={(e) => setProjectDescription(e.target.value)}
-                        size={'lg'}
-                        minRows={4}
+                        What do you want to achieve?
+                      </label>
+                      <label
+                        className={`${montserrat_paragraph.variable} mt-5 pl-2 font-montserratParagraph text-[--foreground-faded]`}
+                      >
+                        (optional)
+                      </label>
+                    </Flex>
+                    <Textarea
+                      placeholder="Describe your project, goals, expected impact etc..."
+                      radius={'md'}
+                      value={projectDescription}
+                      onChange={(e) => setProjectDescription(e.target.value)}
+                      size={'lg'}
+                      minRows={4}
+                      styles={{
+                        input: {
+                          color: 'var(--foreground)',
+                          backgroundColor: 'var(--background)',
+                          fontSize: isSmallScreen ? '12px' : '16px', // Added text styling
+                          font: `${montserrat_paragraph.variable} font-montserratParagraph`,
+                          // borderColor: '#8e44ad', // Grape color
+                          '&:focus': {
+                            borderColor: 'var(--illinois-orange)', // Grape color when focused/selected
+                          },
+                        },
+                        label: {
+                          fontWeight: 'bold',
+                          color: 'var(--foreground)',
+                        },
+                      }}
+                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                    />
+                    <Flex direction={'row'}>
+                      <Title
+                        order={isSmallScreen ? 5 : 4}
+                        className={`w-full pr-2 pr-7 ${montserrat_paragraph.variable} mt-2 font-montserratParagraph text-sm text-[--foreground]`}
+                      >
+                        Next: let&apos;s upload some documents
+                      </Title>
+                      <Tooltip
+                        label={
+                          projectName === ''
+                            ? 'Add a project name above :)'
+                            : !isCourseAvailable
+                              ? 'This project name is already taken!'
+                              : ''
+                        }
+                        withArrow
+                        disabled={projectName !== '' && isCourseAvailable}
                         styles={{
-                          input: {
-                            color: 'var(--foreground)',
-                            backgroundColor: 'var(--background)',
-                            borderColor: 'var(--background-dark)',
-
-                            font: `${montserrat_paragraph.variable} font-montserratParagraph`,
-                            fontSize: '1rem',
-                            // borderColor: '#8e44ad', // Grape color
-                            '&:focus': {
-                              borderColor: 'var(--background-dark)', // Grape color when focused/selected
-                            },
-                          },
-                          label: {
-                            fontWeight: 'bold',
-                            color: 'var(--foreground)',
-                          },
-                        }}
-                        className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                      />
-                      <Flex direction={'row'} align={'center'}>
-                        <Title
-                          order={isSmallScreen ? 5 : 4}
-                          className={`w-full pr-4 text-right ${montserrat_paragraph.variable} mt-2 font-montserratParagraph text-sm`}
-                        >
-                          Next: let&apos;s upload some documents
-                        </Title>
-                        <Tooltip
-                          label={
-                            projectName === ''
-                              ? 'Add a project name above :)'
-                              : !isCourseAvailable
-                                ? 'This project name is already taken!'
-                                : ''
-                          }
-                          withArrow
-                          disabled={projectName !== '' && isCourseAvailable}
-                          style={{
+                          tooltip: {
                             color: 'var(--tooltip)',
                             backgroundColor: 'var(--tooltip-background)',
-                          }}
-                        >
-                          <span>
-                            <Button
-                              onClick={async (e) => {
-                                await handleSubmit(
-                                  projectName,
-                                  projectDescription,
-                                  current_user_email,
-                                  useIllinoisChatConfig, // isPrivate: illinois chat project default to private
-                                )
-                              }}
-                              size="md"
-                              radius={'md'}
-                              className={`${isCourseAvailable && projectName !== '' ? 'pointer bg-[--dashboard-button]' : 'border-[--dashboard-button]'}
-                        overflow-ellipsis text-ellipsis p-2 ${isCourseAvailable && projectName !== '' ? 'text-[--dashboard-button-foreground]' : 'text-[--foreground-faded]'}
-                        mt-2 min-w-[5-rem] transform hover:border-[--dashboard-button-hover] hover:bg-[--dashboard-button-hover] hover:text-[--dashboard-button-foreground] focus:shadow-none focus:outline-none disabled:cursor-not-allowed
-                        disabled:bg-[--background-faded] disabled:text-[--foreground-faded] lg:min-w-[8rem]`}
-                              // w={`${isSmallScreen ? '5rem' : '50%'}`}
-                              style={{
-                                alignSelf: 'flex-end',
-                              }}
-                              disabled={
-                                projectName === '' ||
-                                isLoading ||
-                                !isCourseAvailable
-                              }
-                              leftIcon={
-                                isLoading ? (
-                                  <Loader size="xs" color="white" />
-                                ) : null
-                              }
-                            >
-                              {isLoading ? 'Creating...' : 'Create'}
-                            </Button>
-                          </span>
-                        </Tooltip>
-                      </Flex>
+                          },
+                        }}
+                      >
+                        <span>
+                          <Button
+                            onClick={async (e) => {
+                              await handleSubmit(
+                                projectName,
+                                projectDescription,
+                                current_user_email,
+                                useIllinoisChatConfig, // isPrivate: illinois chat project default to private
+                              )
+                            }}
+                            size="sm"
+                            radius={'sm'}
+                            className={`${isCourseAvailable && projectName !== '' ? 'bg-[--illinois-orange] text-white hover:bg-[--illinois-orange] hover:text-white' : 'disabled:bg-[--button-disabled] disabled:text-[--button-disabled-text-color]'}
+                        mt-2 min-w-[5-rem] transform overflow-ellipsis text-ellipsis p-2 focus:shadow-none focus:outline-none lg:min-w-[8rem]`}
+                            // w={`${isSmallScreen ? '5rem' : '50%'}`}
+                            style={{
+                              alignSelf: 'flex-end',
+                            }}
+                            disabled={
+                              projectName === '' ||
+                              isLoading ||
+                              !isCourseAvailable
+                            }
+                            leftIcon={
+                              isLoading ? (
+                                <Loader size="xs" color="white" />
+                              ) : null
+                            }
+                          >
+                            {isLoading ? 'Creating...' : 'Create'}
+                          </Button>
+                        </span>
+                      </Tooltip>
                     </Flex>
-                  </Group>
-                </div>
-              </Flex>
-            </Card>
-          </div>
+                  </Flex>
+                </Group>
+              </div>
+            </Flex>
+          </Card>
         </div>
-
-        <NewCourseNavigation
-          currentStep={currentStep}
-          allSteps={allSteps}
-          project_name={projectName}
-          canCreateProject={canCreateProject}
-          onSetCreated={canCreateProject}
-          onSetStep={setStep}
-        ></NewCourseNavigation>
+        <GlobalFooter />
       </main>
     </>
   )

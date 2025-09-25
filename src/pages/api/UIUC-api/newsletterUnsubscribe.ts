@@ -4,16 +4,19 @@ import { emailNewsletter } from '~/db/schema'
 const newsletterUnsubscribe = async (req: any, res: any) => {
   const { email } = req.body
 
-  try{
-    const result = await db.insert(emailNewsletter).values({
-      email: email,
-      unsubscribedFromNewsletter: true,
-  }).onConflictDoUpdate({
-    target: [emailNewsletter.email],
-    set: {
-      unsubscribedFromNewsletter: true,
-    },
-  })
+  try {
+    const result = await db
+      .insert(emailNewsletter)
+      .values({
+        email: email,
+        unsubscribedFromNewsletter: true,
+      })
+      .onConflictDoUpdate({
+        target: [emailNewsletter.email],
+        set: {
+          unsubscribedFromNewsletter: true,
+        },
+      })
   } catch (error: any) {
     console.error('error:', error)
     return res.status(500).json({ success: false, error: error })

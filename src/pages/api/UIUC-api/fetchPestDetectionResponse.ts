@@ -1,6 +1,5 @@
 // src/pages/api/UIUC-api/callPestDetection.ts
 
-
 /**
  * Fetches the pest detection response from the pest detection API.
  * @param imageUrls The image urls to send to the API

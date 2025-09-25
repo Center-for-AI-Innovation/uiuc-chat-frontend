@@ -369,9 +369,19 @@ export const Chat = memo(
 
           let updatedConversation: Conversation
           if (deleteCount) {
+            // FIXED: Don't clear contexts if they come from a file upload
+            const isFileUploadMessage =
+              Array.isArray(message.content) &&
+              message.content.some(
+                (c) => typeof c === 'object' && c.type === 'file',
+              )
+
+            if (!isFileUploadMessage) {
+              message.contexts = []
+            }
+
             // Remove tools from message to clear old tools
             message.tools = []
-            message.contexts = []
             tools.forEach((tool) => {
               tool.aiGeneratedArgumentValues = undefined
               tool.output = undefined
@@ -404,9 +414,12 @@ export const Chat = memo(
             // Update the name of the conversation if it's the first message
             if (updatedConversation.messages?.length === 1) {
               const { content } = message
-              // Use only texts instead of content itself
+              // Use only text content, exclude file content
               const contentText = Array.isArray(content)
-                ? content.map((content) => content.text).join(' ')
+                ? content
+                    .filter((content) => content.type === 'text')
+                    .map((content) => content.text)
+                    .join(' ')
                 : content
 
               // This is where we can customize the name of the conversation
@@ -426,7 +439,6 @@ export const Chat = memo(
             value: updatedConversation.messages,
           })
           updateConversationMutation.mutate(updatedConversation)
-
           homeDispatch({ field: 'loading', value: true })
           homeDispatch({ field: 'messageIsStreaming', value: true })
           const controller = new AbortController()
@@ -468,18 +480,49 @@ export const Chat = memo(
             }
           }
 
-          // Skip vector search entirely if there are no documents
-          if (documentCount === 0) {
-            // console.log('Vector search skipped: no documents available')
+          const hasConversationFiles = (
+            conversation: Conversation | undefined,
+          ): boolean => {
+            if (!conversation?.messages) return false
+
+            return conversation.messages.some((message) => {
+              if (Array.isArray(message.content)) {
+                return message.content.some(
+                  (content) => content.type === 'file',
+                )
+              }
+              return false
+            })
+          }
+
+          // FIXED: Check if this is a file upload message with contexts
+          const isFileUploadMessageWithContexts =
+            Array.isArray(message.content) &&
+            message.content.some(
+              (c) => typeof c === 'object' && c.type === 'file',
+            ) &&
+            message.contexts &&
+            Array.isArray(message.contexts) &&
+            message.contexts.length > 0
+          // Updated condition to include conversation files AND current file upload message with contexts
+          const hasAnyDocuments =
+            (documentCount || 0) > 0 ||
+            hasConversationFiles(selectedConversation) ||
+            isFileUploadMessageWithContexts
+
+          // Skip vector search entirely if there are no documents AND no conversation files AND no file upload contexts
+          if (!hasAnyDocuments) {
             homeDispatch({ field: 'wasQueryRewritten', value: false })
             homeDispatch({ field: 'queryRewriteText', value: null })
             message.wasQueryRewritten = undefined
             message.queryRewriteText = undefined
-            message.contexts = []
+            // FIXED: Don't clear contexts if this is a file upload message with contexts
+            if (!isFileUploadMessageWithContexts) {
+              message.contexts = []
+            }
           } else {
             // Action 2: Context Retrieval: Vector Search
             let rewrittenQuery = searchQuery // Default to original query
-
             // Skip query rewrite if disabled in course metadata, if it's the first message, or if there are no documents
             if (
               courseMetadata?.vector_search_rewrite_disabled ||
@@ -913,6 +956,7 @@ export const Chat = memo(
             try {
               // CALL OUR NEW ENDPOINT... /api/allNewRoutingChat
               startOfCallToLLM = performance.now()
+
               try {
                 response = await fetch('/api/allNewRoutingChat', {
                   method: 'POST',
@@ -1718,7 +1762,7 @@ export const Chat = memo(
       )
     }
 
-    const onImageUrlsUpdate = useCallback(
+    /**const onImageUrlsUpdate = useCallback(
       (updatedMessage: Message, messageIndex: number) => {
         if (!selectedConversation) {
           throw new Error('No selected conversation found')
@@ -1748,7 +1792,7 @@ export const Chat = memo(
         // saveConversations(updatedConversations)
       },
       [selectedConversation, conversations],
-    )
+    )**/
 
     const handleFeedback = useCallback(
       async (
@@ -1914,16 +1958,12 @@ export const Chat = memo(
             {permission == 'edit' ? (
               <div className="group absolute right-4 top-4 z-20">
                 <button
-                  className="rounded-md bg-[--dashboard-button] p-2 text-[--dashboard-button-foreground] transition-opacity hover:opacity-80"
+                  className="rounded-md border border-[--dashboard-border] bg-transparent p-[.35rem] text-[--foreground] hover:border-[--dashboard-button] hover:bg-transparent hover:text-[--dashboard-button]"
                   onClick={() => {
                     if (courseName) router.push(`/${courseName}/dashboard`)
                   }}
                 >
-                  <IconSettings
-                    stroke={2}
-                    size={20}
-                    color="var(--dashboard-button-foreground)"
-                  />
+                  <IconSettings stroke={1.5} size={20} />
                 </button>
                 <div className="pointer-events-none absolute right-0 top-full z-50 mt-2 whitespace-nowrap rounded bg-[--background-faded] px-2 py-1 text-sm text-[--foreground] opacity-0 transition-opacity group-hover:opacity-100">
                   Admin Dashboard
@@ -1975,7 +2015,6 @@ export const Chat = memo(
                               }}
                               onRegenerate={() => handleRegenerate(index)}
                               onFeedback={handleFeedback}
-                              onImageUrlsUpdate={onImageUrlsUpdate}
                               courseName={courseName}
                             />
                           ),
@@ -2015,7 +2054,11 @@ export const Chat = memo(
                 onRegenerate={() => handleRegenerate()}
                 inputContent={inputContent}
                 setInputContent={setInputContent}
-                courseName={getCurrentPageName()}
+                user_id={(() => {
+                  const userId = auth.user?.profile.sub || currentEmail
+                  return userId
+                })()}
+                courseName={courseName}
                 chat_ui={chat_ui}
               />
             </div>

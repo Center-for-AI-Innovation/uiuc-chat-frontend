@@ -11,6 +11,10 @@ import {
   SambaNovaModels,
   type SambaNovaModel,
 } from '~/utils/modelProviders/types/SambaNova'
+import {
+  withAppRouterAuth,
+  type AuthenticatedRequest,
+} from '~/utils/appRouterAuth'
 
 // Configure runtime
 export const runtime = 'nodejs'
@@ -156,7 +160,7 @@ function convertConversationToVercelAISDKv3(
   return coreMessages
 }
 
-export async function GET() {
+async function getHandler(req: AuthenticatedRequest) {
   const models = Object.values(SambaNovaModels) as SambaNovaModel[]
 
   return NextResponse.json({
@@ -164,3 +168,5 @@ export async function GET() {
     models: models,
   })
 }
+
+export const GET = withAppRouterAuth(getHandler)

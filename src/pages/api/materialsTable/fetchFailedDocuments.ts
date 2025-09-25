@@ -1,20 +1,20 @@
 import { db, documentsFailed } from '~/db/dbClient'
 import { eq, sql, and, gte, InferSelectModel } from 'drizzle-orm'
 import type { NextApiResponse, NextApiRequest } from 'next'
+import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 
 // export const runtime = 'edge'
 
 type FetchFailedDocumentsResponse =
   | {
-  final_docs: InferSelectModel<typeof documentsFailed>[] | null;
-  total_count: number;
-  recent_fail_count: number;
-}
-  | { error: string };
+      final_docs: InferSelectModel<typeof documentsFailed>[] | null
+      total_count: number
+      recent_fail_count: number
+    }
+  | { error: string }
 
-
-export default async function fetchFailedDocuments(
-  req: NextApiRequest,
+async function fetchFailedDocuments(
+  req: AuthenticatedRequest,
   res: NextApiResponse<FetchFailedDocumentsResponse>,
 ) {
   if (req.method !== 'GET') {
@@ -70,8 +70,10 @@ export default async function fetchFailedDocuments(
               ${`%${search_value}%`}`,
             ),
           )
-          .orderBy(sql`${sql.identifier(sort_column as string)}
-          ${sort_direction ? sql`ASC` : sql`DESC`}`)
+          .orderBy(
+            sql`${sql.identifier(sort_column as string)}
+          ${sort_direction ? sql`ASC` : sql`DESC`}`,
+          )
           .limit(to - from + 1)
           .offset(from)
 
@@ -87,8 +89,10 @@ export default async function fetchFailedDocuments(
           .select()
           .from(documentsFailed)
           .where(eq(documentsFailed.course_name, course_name as string))
-          .orderBy(sql`${sql.identifier(sort_column as string)}
-          ${sort_direction ? sql`ASC` : sql`DESC`}`)
+          .orderBy(
+            sql`${sql.identifier(sort_column as string)}
+          ${sort_direction ? sql`ASC` : sql`DESC`}`,
+          )
           .limit(to - from + 1)
           .offset(from)
 
@@ -171,8 +175,9 @@ export default async function fetchFailedDocuments(
       total_count: count,
       recent_fail_count: recentFailCount,
     })
-
   } catch (error) {
     return res.status(500).json({ error: (error as Error).message })
   }
 }
+
+export default withAuth(fetchFailedDocuments)

@@ -1,7 +1,8 @@
+import { withAuth } from '~/utils/authMiddleware'
 import axios, { type AxiosResponse } from 'axios'
 import { type ContextWithMetadata } from '~/types/chat'
 
-export default async function handler(req: any, res: any) {
+async function handler(req: any, res: any) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
@@ -11,11 +12,12 @@ export default async function handler(req: any, res: any) {
     search_query,
     token_limit = 6000,
     doc_groups = [],
+    conversation_id,
   } = req.query
 
-  if (!course_name || !search_query) {
+  if (!course_name || !search_query || !conversation_id) {
     return res.status(400).json({
-      error: 'course_name and search_query are required',
+      error: 'course_name, search_query, and conversation_id are required',
     })
   }
 
@@ -37,6 +39,7 @@ export default async function handler(req: any, res: any) {
           doc_groups: Array.isArray(doc_groups)
             ? doc_groups
             : [doc_groups].filter(Boolean),
+          conversation_id: conversation_id,
         },
       },
     )
@@ -50,12 +53,15 @@ export default async function handler(req: any, res: any) {
   }
 }
 
+export default withAuth(handler)
+
 // Helper function for backward compatibility
 export const fetchMQRContexts = async (
   course_name: string,
   search_query: string,
   token_limit = 6000,
   doc_groups: string[] = [],
+  conversation_id: string,
 ): Promise<ContextWithMetadata[]> => {
   try {
     const params = new URLSearchParams({
@@ -66,6 +72,8 @@ export const fetchMQRContexts = async (
 
     // Handle doc_groups array
     doc_groups.forEach((group) => params.append('doc_groups', group))
+
+    params.append('conversation_id', conversation_id)
 
     const response = await fetch(`/api/getContextsMQR?${params.toString()}`)
 

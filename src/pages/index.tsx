@@ -2,9 +2,8 @@ import { Button, Card } from '@mantine/core'
 import { type NextPage } from 'next'
 import Head from 'next/head'
 import Image from 'next/image'
-import Link from 'next/link'
 import React, { useState, useEffect, useMemo } from 'react'
-import { ArrowNarrowRight, ExternalLink } from 'tabler-icons-react'
+import { ArrowNarrowRight, ExternalLink, Link } from 'tabler-icons-react'
 
 import { doto_font, montserrat_heading, montserrat_paragraph } from 'fonts'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
@@ -176,50 +175,45 @@ const Home: NextPage = () => {
           className={`inline-block ${montserrat_heading.variable} font-montserratHeading`}
         >
           <div className="relative inline-block cursor-help">
-                <span
-                  className="text-lg font-bold"
-                  onMouseEnter={() => setIsTooltipVisible(true)}
-                  onMouseLeave={() => setIsTooltipVisible(false)}
-                >
-                  {/*1. If useIllinoisChatConfig && IllinoisChatBannerContent → render HTML from IllinoisChatBannerContent*/}
-                  {/*2. If !useIllinoisChatConfig → render default "Heads up" banner*/}
-                  {/*3. Otherwise → render nothing*/}
-                  {
-                    useIllinoisChatConfig && IllinoisChatBannerContent ? (
-                      <div dangerouslySetInnerHTML={{ __html: IllinoisChatBannerContent }} />
-                    ) : !useIllinoisChatConfig ? (
-                      <>
-                        Heads up: we’ve rebranded to Illinois Chat — please visit{' '}
-                        <a
-                          href="https://chat.illinois.edu"
-                          className="underline"
-                        >
-                          chat.illinois.edu
-                        </a>
-                      </>
-                    ) : null
-                  }
-              </span>
-
-            <div
-              className={`absolute left-1/2 top-full z-50 mt-2 w-72 -translate-x-1/2 transform rounded p-2 text-sm transition duration-300 ${isTooltipVisible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
-              style={{
-                background: '#333',
-                border: '1px solid #444',
-                boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-              }}
+            <span
+              className="text-lg font-bold"
+              onMouseEnter={() => setIsTooltipVisible(true)}
+              onMouseLeave={() => setIsTooltipVisible(false)}
             >
-              We&apos;re on our way to becoming a production service for all U
-              of I campuses.
+              {/*1. If useIllinoisChatConfig && IllinoisChatBannerContent → render HTML from IllinoisChatBannerContent*/}
+              {/*2. If !useIllinoisChatConfig → render default "Heads up" banner*/}
+              {/*3. Otherwise → render nothing*/}
+              {useIllinoisChatConfig && IllinoisChatBannerContent ? (
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: IllinoisChatBannerContent,
+                  }}
+                />
+              ) : !useIllinoisChatConfig ? (
+                <>
+                  Heads up: we’ve rebranded to Illinois Chat — please visit{' '}
+                  <a href="https://chat.illinois.edu" className="underline">
+                    chat.illinois.edu
+                  </a>
+                </>
+              ) : null}
+            </span>
+
+            {/*1. If useIllinoisChatConfig && IllinoisChatBannerContent → render HTML from IllinoisChatBannerContent*/}
+            {/*2. If !useIllinoisChatConfig → render default "Heads up" banner*/}
+            {/*3. Otherwise → render nothing*/}
+            {useIllinoisChatConfig && IllinoisChatBannerContent ? (
               <div
-                className="absolute bottom-full left-1/2 h-0 w-0 -translate-x-1/2 transform"
-                style={{
-                  borderLeft: '8px solid transparent',
-                  borderRight: '8px solid transparent',
-                  borderBottom: '8px solid #333',
-                }}
-              ></div>
-            </div>
+                dangerouslySetInnerHTML={{ __html: IllinoisChatBannerContent }}
+              />
+            ) : !useIllinoisChatConfig ? (
+              <>
+                Heads up: we’ve rebranded to Illinois Chat — please visit{' '}
+                <a href="https://chat.illinois.edu" className="underline">
+                  chat.illinois.edu
+                </a>
+              </>
+            ) : null}
           </div>
         </div>
       </div>
@@ -230,8 +224,7 @@ const Home: NextPage = () => {
         className={`illinois-blue-gradient-bg flex min-h-screen flex-col items-center justify-center overflow-hidden
           ${montserrat_paragraph.variable} font-montserratParagraph`}
       >
-        <div
-          className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 px-4 py-8 sm:px-8 sm:py-20">
+        <div className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 px-4 py-8 sm:px-8 sm:py-20">
           <div
             className="
             flex w-full
@@ -312,9 +305,7 @@ const Home: NextPage = () => {
             </div>
           </div>
 
-          {
-            !useIllinoisChatConfig &&
-
+          {!useIllinoisChatConfig && (
             <div className="mt-12 w-[100vw] rounded-lg bg-[--dashboard-background-faded] p-8 pb-14">
               <div className="mb-6 w-full pt-8 text-center">
                 <h2
@@ -341,8 +332,7 @@ const Home: NextPage = () => {
                 <FlagshipChatbots />
               </div>
             </div>
-
-          }
+          )}
         </div>
 
         {/* orange banner */}
@@ -383,8 +373,7 @@ const Home: NextPage = () => {
         </div>
 
         {/* second section below the orange banner */}
-        <div
-          className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 overflow-hidden px-4 py-8 sm:px-8 sm:py-20">
+        <div className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 overflow-hidden px-4 py-8 sm:px-8 sm:py-20">
           <h2
             className={`
               max-w-lg
@@ -721,7 +710,7 @@ const Home: NextPage = () => {
 
             <div
               className="
-              mt-0 
+              mt-0
               sm:mt-0 sm:w-2/3
             "
             >
@@ -806,7 +795,7 @@ const Home: NextPage = () => {
               gap-16 sm:flex-row
             "
           >
-            <div className="mt-16 sm:w-1/2">
+            <div className="mt-16">
               <h2
                 className={`
                 text-xl font-bold
@@ -817,16 +806,23 @@ const Home: NextPage = () => {
               </h2>
 
               <div className="mt-4">
-                We build features for industry partners to bring GenAI to their
-                org. Reach out at <a href="mailto:hi@uiuc.chat">hi@uiuc.chat</a>
+                We collaborate with researchers and industry partners to develop
+                custom features on this platform. For inquiries, please contact
+                us at{' '}
+                <a
+                  style={{ color: 'var(--illinois-orange)' }}
+                  href="mailto:caii_ai@lists.illinois.edu"
+                >
+                  contact us
+                </a>
+                .
               </div>
             </div>
           </div>
         </div>
 
         {/* second section below the blue banner */}
-        <div
-          className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 overflow-hidden px-4 py-8 sm:px-8 sm:py-20">
+        <div className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 overflow-hidden px-4 py-8 sm:px-8 sm:py-20">
           <h4
             className={`
             text-4xl font-extrabold tracking-tight
@@ -835,105 +831,77 @@ const Home: NextPage = () => {
           >
             About Us
           </h4>
-          <div className="mt-4 grid grid-cols-1 gap-14 sm:grid-cols-2 md:gap-8">
-            <Link
-              className="duration-600 flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6 transition-transform hover:scale-[1.01]"
-              href="https://github.com/Center-for-AI-Innovation/uiuc-chat-frontend"
-              target="_blank"
-            >
+          <div className="mt-4 grid grid-cols-1 gap-14 sm:grid-cols-3 md:gap-8">
+            <div className="flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6">
               <h3
                 className={`
                 text-xl font-bold
                 ${montserrat_heading.variable} font-montserratHeading
               `}
               >
-                Read the code
+                Support
               </h3>
               <div className="text-md">
-                100% free<br></br>100% open source &#40;MIT License&#41;
-                <br></br>100% awesome
-              </div>
-            </Link>
-            <Link
-              className="duration-600 flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6 transition-transform hover:scale-[1.01]"
-              href="https://ai.ncsa.illinois.edu/"
-              target="_blank"
-            >
-              <h3
-                className={`
-                text-xl font-bold
-                ${montserrat_heading.variable} font-montserratHeading
-              `}
-              >
-                Sponsored by the Center of{' '}
-                <span className="whitespace-nowrap">AI Innovation</span>
-              </h3>
-              <div className="text-md">
-                Part of the National Center for Supercomputing Applications.
-              </div>
-            </Link>
-            <Link
-              className="duration-600 flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6 transition-transform hover:scale-[1.01]"
-              href="https://rohanmarwaha.com/"
-              target="_blank"
-            >
-              <h3
-                className={`
-                text-xl font-bold
-                ${montserrat_heading.variable} font-montserratHeading
-              `}
-              >
-                Bio
-              </h3>
-              <div className="text-md">
-                Started by Rohan Marwaha at the University of Illinois. But it{' '}
+                If you have any questions or would like to submit a bug please{' '}
                 <a
-                  href="https://github.com/Center-for-AI-Innovation/uiuc-chat-frontend/graphs/contributors"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    textDecoration: 'underline',
-                    textDecorationColor: 'var(--illinois-blue)',
-                  }}
+                  style={{ color: 'var(--illinois-orange)' }}
+                  href="mailto:genaisupport@mx.uillinois.edu"
                 >
-                  takes a village
+                  email us
                 </a>
                 .
               </div>
               {/* <div className="text-lg">Sponsored by the </div> */}
-            </Link>
-
-            <Link
-              className="duration-600 flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6 transition-transform hover:scale-[1.01]"
-              href="https://status.uiuc.chat/"
-              target="_blank"
-            >
-              {/* text-[var(--illinois-white)] hover:bg-[var(--illinois-white)]/20 */}
+            </div>
+            <div className="flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6">
               <h3
                 className={`
                 text-xl font-bold
                 ${montserrat_heading.variable} font-montserratHeading
               `}
               >
-                Status page
+                Open source
               </h3>
-              {/* <div className="text-lg">Check service uptime.</div> */}
-              <Image
-                src="https://status.uiuc.chat/api/badge/1/uptime/24?label=Uptime%2024%20hours"
-                alt="Service Uptime Badge"
-                width={150}
-                height={50}
-              />
-              <Image
-                src="https://status.uiuc.chat/api/badge/1/uptime/720?label=Uptime%2030%20days"
-                alt="Service Uptime Badge"
-                width={150}
-                height={50}
-              />
-            </Link>
+              <div className="text-md">
+                All code is open source. Join us on{' '}
+                <a
+                  style={{ color: 'var(--illinois-orange)' }}
+                  href="https://github.com/Center-for-AI-Innovation"
+                >
+                  GitHub
+                </a>
+                .
+              </div>
+            </div>
+            <div className="flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6">
+              <h3
+                className={`
+                text-xl font-bold
+                ${montserrat_heading.variable} font-montserratHeading
+              `}
+              >
+                Developed at Illinois
+              </h3>
+              <div className="text-md">
+                Developed by the{' '}
+                <a
+                  style={{ color: 'var(--illinois-orange)' }}
+                  href="https://ai.ncsa.illinois.edu/"
+                >
+                  Center of AI Innovation
+                </a>{' '}
+                at{' '}
+                <a
+                  style={{ color: 'var(--illinois-orange)' }}
+                  href="https://ncsa.illinois.edu/"
+                >
+                  National Center for Supercomputing Applications
+                </a>
+                .
+              </div>
+            </div>
           </div>
         </div>
-
         <GlobalFooter />
       </main>
     </>
@@ -960,7 +928,7 @@ function FlagshipChatbots() {
       badge: 'Illinois',
       tagline: 'Find professors based on your research interests',
       description:
-        'Using all of Illinois\'s documentation, get detailed examples, advice and information about the conference.',
+        "Using all of Illinois's documentation, get detailed examples, advice and information about the conference.",
     },
     {
       course_slug: 'NeurIPS-2024',
@@ -970,7 +938,7 @@ function FlagshipChatbots() {
       tagline:
         'Trained on all 4,000+ papers from the largest AI conference in the world',
       description:
-        'Using all of NeurIPS 2024\'s documentation, get detailed examples, advice and information about the conference.',
+        "Using all of NeurIPS 2024's documentation, get detailed examples, advice and information about the conference.",
     },
     {
       course_slug: 'NCSADelta',
@@ -978,9 +946,9 @@ function FlagshipChatbots() {
       title: 'NCSA Delta Supercomputer',
       badge: 'NCSA Docs',
       tagline:
-        'Quickstart on our Delta supercomputer, it\'ll write SLRUM scripts for you 😁',
+        "Quickstart on our Delta supercomputer, it'll write SLRUM scripts for you 😁",
       description:
-        'Using all of Delta\'s documentation, get detailed examples, advice and information about how to use the Delta supercomputer.',
+        "Using all of Delta's documentation, get detailed examples, advice and information about how to use the Delta supercomputer.",
     },
     /*
     {
