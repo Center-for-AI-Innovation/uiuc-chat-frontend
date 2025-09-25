@@ -4,6 +4,8 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { db, apiKeys } from '~/db/dbClient'
 import { v4 as uuidv4 } from 'uuid'
 import { and, eq } from 'drizzle-orm'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
+import type { AuthenticatedRequest } from '~/utils/authMiddleware'
 
 type ApiResponse = {
   message?: string
@@ -18,31 +20,16 @@ type ApiResponse = {
  * @param {NextApiResponse} res - The outgoing HTTP response.
  * @returns A JSON response indicating the result of the key rotation operation.
  */
-export default async function rotateKey(
-  req: NextApiRequest,
+async function handler(
+  req: AuthenticatedRequest,
   res: NextApiResponse<ApiResponse>,
 ) {
   if (req.method !== 'PUT') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const authHeader = req.headers.authorization
-  if (!authHeader?.startsWith('Bearer ')) {
-    return res
-      .status(401)
-      .json({ error: 'Missing or invalid authorization header' })
-  }
-
   try {
-    // Get user email from token
-    const token = authHeader.replace('Bearer ', '')
-    const [, payload = ''] = token.split('.')
-    const decodedPayload = JSON.parse(Buffer.from(payload, 'base64').toString())
-    const email = decodedPayload.email
-
-    if (!email) {
-      return res.status(400).json({ error: 'No email found in token' })
-    }
+    const email = req.user?.email
 
     console.log('Rotating API key for email:', email)
 
@@ -51,7 +38,6 @@ export default async function rotateKey(
       .select({ key: apiKeys.key })
       .from(apiKeys)
       .where(and(eq(apiKeys.email, email), eq(apiKeys.is_active, true)))
-
 
     if (existingKey.length === 0) {
       return res.status(404).json({
@@ -69,19 +55,17 @@ export default async function rotateKey(
         .update(apiKeys)
         .set({ key: newApiKey, is_active: true, modified_at: new Date() })
         .where(eq(apiKeys.email, email))
-      
+
       console.log('Successfully updated API key for user:', email)
-      
+
       return res.status(200).json({
         message: 'API key rotated successfully',
         newApiKey,
       })
-
     } catch (error) {
       console.error('Error updating API key:', error)
       return res.status(500).json({ error: 'Error updating API key' })
     }
-
   } catch (error) {
     console.error('Failed to rotate API key:', error)
     return res.status(500).json({
@@ -89,3 +73,5 @@ export default async function rotateKey(
     })
   }
 }
+
+export default withCourseOwnerOrAdminAccess()(handler)

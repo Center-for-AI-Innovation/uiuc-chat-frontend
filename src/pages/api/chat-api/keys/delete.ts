@@ -2,6 +2,8 @@ import posthog from 'posthog-js'
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { db, apiKeys } from '~/db/dbClient'
 import { eq } from 'drizzle-orm'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
+import type { AuthenticatedRequest } from '~/utils/authMiddleware'
 
 type ApiResponse = {
   message?: string
@@ -16,27 +18,16 @@ type ApiResponse = {
  * @param {NextApiResponse} res - The outgoing HTTP response.
  * @returns A JSON response indicating the result of the delete operation.
  */
-export default async function deleteKey(
-  req: NextApiRequest,
+async function handler(
+  req: AuthenticatedRequest,
   res: NextApiResponse<ApiResponse>,
 ) {
   if (req.method !== 'DELETE') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const authHeader = req.headers.authorization
-  if (!authHeader?.startsWith('Bearer ')) {
-    return res
-      .status(401)
-      .json({ error: 'Missing or invalid authorization header' })
-  }
-
   try {
-    // Get user ID from Keycloak token
-    const token = authHeader.replace('Bearer ', '')
-    const [, payload = ''] = token.split('.')
-    const decodedPayload = JSON.parse(Buffer.from(payload, 'base64').toString())
-    const userEmail = decodedPayload.email
+    const userEmail = req.user?.email
 
     console.log('Deleting api key for:', userEmail)
 
@@ -44,7 +35,7 @@ export default async function deleteKey(
       .update(apiKeys)
       .set({ is_active: false })
       .where(eq(apiKeys.email, userEmail))
-      .returning();
+      .returning()
 
     if (data.length === 0) {
       console.error('No API key found for user email:', userEmail)
@@ -71,3 +62,5 @@ export default async function deleteKey(
     })
   }
 }
+
+export default withCourseOwnerOrAdminAccess()(handler)

@@ -4,8 +4,9 @@ import { db, keycloakDB, apiKeys } from '~/db/dbClient'
 import { keycloakUsers } from '~/db/schema'
 import { eq, and, sql } from 'drizzle-orm'
 import posthog from 'posthog-js'
-import { NextRequest, NextResponse } from 'next/server'
-
+import { NextResponse } from 'next/server'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
+import type { AuthenticatedRequest } from '~/utils/authMiddleware'
 
 /**
  * Validates the provided API key and retrieves the associated user data.
@@ -14,9 +15,7 @@ import { NextRequest, NextResponse } from 'next/server'
  * @returns An object containing a boolean indicating if the API key is valid,
  *          and the user object if the key is valid.
  */
-export async function validateApiKeyAndRetrieveData(
-  apiKey: string,
-) {
+export async function validateApiKeyAndRetrieveData(apiKey: string) {
   let authContext: AuthContextProps = {
     isAuthenticated: false,
     user: null,
@@ -45,7 +44,11 @@ export async function validateApiKeyAndRetrieveData(
     }
 
     // Get user data from email from keycloak
-    const userData = await keycloakDB.select().from(keycloakUsers).where(eq(keycloakUsers.email, email)).limit(1)
+    const userData = await keycloakDB
+      .select()
+      .from(keycloakUsers)
+      .where(eq(keycloakUsers.email, email))
+      .limit(1)
 
     if (!userData || userData.length === 0) {
       throw new Error('User not found')
@@ -94,7 +97,7 @@ export async function validateApiKeyAndRetrieveData(
  *
  * @param {NextApiRequest} req - The incoming HTTP request.
  */
-export default async function handler(req: NextRequest) {
+export default async function handler(req: AuthenticatedRequest) {
   try {
     console.log('req: ', req)
     // Extract the API key and course name from the request body.
@@ -103,9 +106,8 @@ export default async function handler(req: NextRequest) {
       course_name: string
     }
 
-    const { isValidApiKey, authContext } = await validateApiKeyAndRetrieveData(
-      api_key,
-    )
+    const { isValidApiKey, authContext } =
+      await validateApiKeyAndRetrieveData(api_key)
 
     if (!isValidApiKey) {
       // Respond with a 403 Forbidden status if the API key is invalid.
@@ -123,3 +125,5 @@ export default async function handler(req: NextRequest) {
     )
   }
 }
+
+export default withCourseOwnerOrAdminAccess()(handler)
