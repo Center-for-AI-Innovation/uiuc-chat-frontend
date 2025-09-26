@@ -139,6 +139,7 @@ export interface ImageBody {
   contentArray: Content[]
   llmProviders: AllLLMProviders
   model: AnySupportedModel
+  course_name?: string
 }
 
 export interface ChatApiBody {

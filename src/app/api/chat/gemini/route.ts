@@ -1,21 +1,16 @@
 import { NextResponse } from 'next/server'
-import { runGeminiChat } from '~/utils/modelProviders/routes/gemini'
 import {
   GeminiModels,
   type GeminiModel,
 } from '~/utils/modelProviders/types/gemini'
 import { ProviderNames } from '~/utils/modelProviders/LLMProvider'
-import {
-  withAppRouterAuth,
-  type AuthenticatedRequest,
-} from '~/utils/appRouterAuth'
+import { type AuthenticatedRequest } from '~/utils/appRouterAuth'
+import { withCourseAccessFromRequest } from '~/app/api/authorization'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 export const revalidate = 0
-
-export { runGeminiChat }
 
 async function getHandler(req: AuthenticatedRequest) {
   const apiKey = process.env.GEMINI_API_KEY
@@ -35,4 +30,4 @@ async function getHandler(req: AuthenticatedRequest) {
   })
 }
 
-export const GET = withAppRouterAuth(getHandler)
+export const GET = withCourseAccessFromRequest('any')(getHandler)

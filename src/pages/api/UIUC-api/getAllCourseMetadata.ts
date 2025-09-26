@@ -63,19 +63,6 @@ export const getAllCourseMetadata = async (): Promise<
       return []
     }
 
-    // const all_course_metadata = Object.entries(all_course_metadata_raw).reduce(
-    //   (acc, [key, value]) => {
-    //     try {
-    //       console.log('Parsing course metadata for key:', key, 'value:', value)
-    //       const courseMetadata = JSON.parse(value) as CourseMetadata
-    //       acc.push({ [key]: courseMetadata })
-    //     } catch (parseError) {
-    //       console.error('Invalid course metadata:', value, parseError)
-    //     }
-    //     return acc
-    //   },
-    //   [] as { [key: string]: CourseMetadata }[],
-    // )
     const all_course_metadata = Object.entries(all_course_metadata_raw).map(
       ([key, value]) => {
         return { [key]: JSON.parse(value) as CourseMetadata }
@@ -96,7 +83,11 @@ export const getAllCourseMetadata = async (): Promise<
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   try {
-    const currUserEmail = req.query.currUserEmail as string
+    const currUserEmail = req.user?.email
+    if (!currUserEmail) {
+      console.error('No email found in token')
+      return res.status(400).json({ error: 'No email found in token' })
+    }
     const all_course_metadata = await getCoursesByOwnerOrAdmin(currUserEmail)
     return res.status(200).json(all_course_metadata)
   } catch (error) {
