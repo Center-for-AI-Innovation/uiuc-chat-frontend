@@ -3,6 +3,7 @@ import { type NextApiResponse } from 'next'
 import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { ensureRedisConnected } from '~/utils/redisClient'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
 export const getCourseMetadata = async (
   course_name: string,
@@ -20,7 +21,7 @@ export const getCourseMetadata = async (
   }
 }
 
-export default withAuth(handler)
+export default withCourseAccessFromRequest('any')(handler)
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const course_name = req.query.course_name as string

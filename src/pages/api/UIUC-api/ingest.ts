@@ -1,5 +1,6 @@
 import { type NextApiResponse } from 'next'
 import { type AuthenticatedRequest } from '~/utils/authMiddleware'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
 type IngestResponse = {
   task_id?: string
@@ -63,4 +64,4 @@ const handler = async (
   }
 }
 
-export default handler
+export default withCourseOwnerOrAdminAccess()(handler)
