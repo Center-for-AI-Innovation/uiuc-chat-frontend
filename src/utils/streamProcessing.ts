@@ -8,7 +8,7 @@ import { runSambaNovaChat } from '~/app/utils/sambanova'
 import { runAnthropicChat } from '~/app/utils/anthropic'
 import { runOllamaChat } from '~/app/utils/ollama'
 import { runVLLM } from '~/app/utils/vllm'
-import { fetchContexts, fetchMQRContexts } from '~/pages/util/fetchContexts'
+import { fetchContexts, fetchMQRContexts } from '~/utils/fetchContexts'
 import { fetchImageDescription } from '~/pages/api/UIUC-api/fetchImageDescription'
 import {
   type ChatApiBody,
