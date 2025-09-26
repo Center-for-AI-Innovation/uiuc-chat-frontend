@@ -3,9 +3,9 @@ interface DownloadResult {
 }
 
 // Client-side function for downloading conversation history
-export const downloadConversationHistory = async (
+export default async function downloadConversationHistory(
   courseName: string,
-): Promise<DownloadResult> => {
+): Promise<DownloadResult> {
   try {
     const response = await fetch(
       `/api/UIUC-api/downloadConvoHistory?course_name=${courseName}`,

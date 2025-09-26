@@ -1,9 +1,9 @@
 // src/pages/api/chat-api/keys/rotate.ts
 
-import { NextApiRequest, NextApiResponse } from 'next'
-import { db, apiKeys } from '~/db/dbClient'
-import { v4 as uuidv4 } from 'uuid'
 import { and, eq } from 'drizzle-orm'
+import type { NextApiResponse } from 'next'
+import { v4 as uuidv4 } from 'uuid'
+import { apiKeys, db } from '~/db/dbClient'
 import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 import type { AuthenticatedRequest } from '~/utils/authMiddleware'
 
@@ -30,6 +30,9 @@ async function handler(
 
   try {
     const email = req.user?.email
+    if (!email) {
+      return res.status(400).json({ error: 'User email missing' })
+    }
 
     console.log('Rotating API key for email:', email)
 

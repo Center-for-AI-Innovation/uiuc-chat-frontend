@@ -8,8 +8,10 @@ export function useDeleteMessages(user_email: string, course_name: string) {
   return useMutation({
     mutationKey: ['deleteMessages', user_email, course_name],
     mutationFn: async ({
+      convoId: _convoId,
       deletedMessages,
     }: {
+      convoId: string
       deletedMessages: Message[]
     }) =>
       deleteMessagesFromServer(
@@ -46,10 +48,10 @@ export function useDeleteMessages(user_email: string, course_name: string) {
     // const oldMessages = queryClient.getQueryData([
     //   'MessagesHistory',
     //   user_email,
-    onError: (error, variables, context) => {
-      console.error('Error saving updated Messages to server:', error, context)
+    onError: (error, _variables, _context) => {
+      console.error('Error saving updated Messages to server:', error, _context)
     },
-    onSuccess: (data, variables, context) => {},
-    onSettled: (data, error, variables, context) => {},
+    onSuccess: (_data, _variables, _context) => {},
+    onSettled: (_data, _error, _variables, _context) => {},
   })
 }

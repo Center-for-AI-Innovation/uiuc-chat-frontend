@@ -6,7 +6,7 @@ import {
   type Conversation,
   type Message,
 } from '~/types/chat'
-import { fetchCourseMetadataServer } from '~/pages/api/chat-api/util/fetchCourseMetadataServer'
+import fetchCourseMetadataServer from '~/pages/api/chat-api/util/fetchCourseMetadataServer'
 import { determineAndValidateModelServer } from '~/pages/api/chat-api/util/determineAndValidateModelServer'
 import { validateApiKeyAndRetrieveData } from './keys/validate'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
@@ -126,9 +126,9 @@ export default async function chat(
   }
 
   // Retrieve course metadata
-  const courseMetadata: CourseMetadata =
+  const courseMetadata: CourseMetadata | null =
     await fetchCourseMetadataServer(course_name)
-  if (!courseMetadata) {
+  if (!courseMetadata || null === courseMetadata) {
     res.status(404).json({ error: 'Course metadata not found' })
     return
   }
