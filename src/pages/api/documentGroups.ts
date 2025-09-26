@@ -1,6 +1,6 @@
 // src/pages/api/documentGroups.ts
 import { type NextApiRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import { AuthenticatedRequest } from '~/utils/authMiddleware'
 import posthog from 'posthog-js'
 import { type CourseDocument } from 'src/types/courseMaterials'
 import {
@@ -12,6 +12,7 @@ import {
 } from '~/db/dbHelpers'
 
 import { addDocumentsToDocGroupQdrant } from '~/utils/qdrantUtils'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
 interface RequestBody {
   action:
@@ -178,4 +179,4 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   }
 }
 
-export default withAuth(handler)
+export default withCourseOwnerOrAdminAccess()(handler)

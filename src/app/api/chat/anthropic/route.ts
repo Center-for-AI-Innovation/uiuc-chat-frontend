@@ -1,10 +1,7 @@
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { generateText, smoothStream, streamText, type CoreMessage } from 'ai'
 import { type ChatBody, type Conversation } from '~/types/chat'
-import {
-  withAppRouterAuth,
-  type AuthenticatedRequest,
-} from '~/utils/appRouterAuth'
+import { type AuthenticatedRequest } from '~/utils/appRouterAuth'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 import { type AnthropicModel } from '~/utils/modelProviders/types/anthropic'
 
@@ -14,6 +11,7 @@ export const fetchCache = 'force-no-store'
 export const revalidate = 0
 
 import { NextResponse } from 'next/server'
+import { withCourseAccessFromRequest } from '~/app/api/authorization'
 
 function getAnthropicRequestConfig(conversation: Conversation) {
   const isThinking =
@@ -147,7 +145,7 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
   }
 }
 
-export const POST = withAppRouterAuth(handler)
+export const POST = withCourseAccessFromRequest('any')(handler)
 
 function convertConversationToVercelAISDKv3(
   conversation: Conversation,

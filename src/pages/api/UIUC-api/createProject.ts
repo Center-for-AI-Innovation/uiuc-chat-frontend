@@ -1,7 +1,8 @@
-import { withAuth } from '~/utils/authMiddleware'
+import { type NextApiResponse } from 'next'
+import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { getBackendUrl } from '~/utils/apiUtils'
 
-async function handler(req: any, res: any) {
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }

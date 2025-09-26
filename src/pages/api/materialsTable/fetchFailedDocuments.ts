@@ -1,7 +1,8 @@
 import { db, documentsFailed } from '~/db/dbClient'
 import { eq, sql, and, gte, InferSelectModel } from 'drizzle-orm'
 import type { NextApiResponse, NextApiRequest } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import { AuthenticatedRequest } from '~/utils/authMiddleware'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
 // export const runtime = 'edge'
 
@@ -180,4 +181,4 @@ async function fetchFailedDocuments(
   }
 }
 
-export default withAuth(fetchFailedDocuments)
+export default withCourseOwnerOrAdminAccess()(fetchFailedDocuments)

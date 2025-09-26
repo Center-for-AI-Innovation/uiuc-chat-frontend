@@ -109,7 +109,7 @@ const Home = ({
     isLoading: isLoadingFolders,
     error: errorFolders,
     refetch: refetchFolders,
-  } = useFetchFolders(current_email as string)
+  } = useFetchFolders(current_email as string, course_name as string)
 
   const stopConversationRef = useRef<boolean>(false)
   const getModels = useCallback(
