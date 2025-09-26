@@ -1,7 +1,7 @@
 import { type NextApiResponse } from 'next'
 import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { withCourseAccessFromRequest } from '~/pages/api/authorization'
-import { fetchContextsFromBackend } from '~/pages/util/fetchContexts'
+import { fetchContextsFromBackend } from '~/utils/fetchContexts'
 
 export default withCourseAccessFromRequest('any')(handler)
 
