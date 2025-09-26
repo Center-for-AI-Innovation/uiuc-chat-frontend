@@ -6,7 +6,6 @@ import { eq, and, sql } from 'drizzle-orm'
 import posthog from 'posthog-js'
 import { NextRequest, NextResponse } from 'next/server'
 
-
 /**
  * Validates the provided API key and retrieves the associated user data.
  *
@@ -14,9 +13,7 @@ import { NextRequest, NextResponse } from 'next/server'
  * @returns An object containing a boolean indicating if the API key is valid,
  *          and the user object if the key is valid.
  */
-export async function validateApiKeyAndRetrieveData(
-  apiKey: string,
-) {
+export async function validateApiKeyAndRetrieveData(apiKey: string) {
   let authContext: AuthContextProps = {
     isAuthenticated: false,
     user: null,
@@ -45,7 +42,11 @@ export async function validateApiKeyAndRetrieveData(
     }
 
     // Get user data from email from keycloak
-    const userData = await keycloakDB.select().from(keycloakUsers).where(eq(keycloakUsers.email, email)).limit(1)
+    const userData = await keycloakDB
+      .select()
+      .from(keycloakUsers)
+      .where(eq(keycloakUsers.email, email))
+      .limit(1)
 
     if (!userData || userData.length === 0) {
       throw new Error('User not found')
@@ -92,7 +93,7 @@ export async function validateApiKeyAndRetrieveData(
 /**
  * API route handler to validate an API key and return the associated user object.
  *
- * @param {NextApiRequest} req - The incoming HTTP request.
+ * @param {NextRequest} req - The incoming HTTP request.
  */
 export default async function handler(req: NextRequest) {
   try {
@@ -103,9 +104,8 @@ export default async function handler(req: NextRequest) {
       course_name: string
     }
 
-    const { isValidApiKey, authContext } = await validateApiKeyAndRetrieveData(
-      api_key,
-    )
+    const { isValidApiKey, authContext } =
+      await validateApiKeyAndRetrieveData(api_key)
 
     if (!isValidApiKey) {
       // Respond with a 403 Forbidden status if the API key is invalid.
