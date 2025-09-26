@@ -4,15 +4,14 @@ import { deleteMessagesFromServer } from '~/utils/app/message'
 
 // this will only be used for Regenerate Response or Edit a previous message when x number of messages should be deleted
 //
-export function useDeleteMessages(
-  user_email: string,
-  course_name: string,
-) {
+export function useDeleteMessages(user_email: string, course_name: string) {
   return useMutation({
     mutationKey: ['deleteMessages', user_email, course_name],
     mutationFn: async ({
+      convoId,
       deletedMessages,
     }: {
+      convoId: string
       deletedMessages: Message[]
     }) =>
       deleteMessagesFromServer(
