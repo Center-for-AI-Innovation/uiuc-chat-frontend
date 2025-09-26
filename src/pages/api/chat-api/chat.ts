@@ -7,6 +7,7 @@ import {
   type Message,
 } from '~/types/chat'
 import { fetchCourseMetadataServer } from '~/pages/api/chat-api/util/fetchCourseMetadataServer'
+import { determineAndValidateModelServer } from '~/pages/api/chat-api/util/determineAndValidateModelServer'
 import { validateApiKeyAndRetrieveData } from './keys/validate'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import posthog from 'posthog-js'
@@ -15,7 +16,6 @@ import { type CourseMetadata } from '~/types/courseMetadata'
 import {
   attachContextsToLastMessage,
   constructSearchQuery,
-  determineAndValidateModel,
   handleContextSearch,
   handleImageContent,
   handleNonStreamingResponse,
@@ -138,7 +138,7 @@ export default async function chat(
   let llmProviders: AllLLMProviders
   try {
     const { activeModel, modelsWithProviders } =
-      await determineAndValidateModel(model, course_name)
+      await determineAndValidateModelServer(model, course_name)
     selectedModel = activeModel
     llmProviders = modelsWithProviders
   } catch (error) {

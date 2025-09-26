@@ -29,17 +29,10 @@ import { getSambaNovaModels } from '~/utils/modelProviders/routes/sambanova'
 
 async function handler(
   req: AuthenticatedRequest,
-  res: NextApiResponse<AllLLMProviders | { error: string }>,
-) {
-  try {
-    const { projectName } = req.body as {
-      projectName: string
-    }
 
-    if (!projectName) {
-      return res.status(400).json({ error: 'Missing project name' })
-    }
-
+export async function getModels (
+  projectName: string,
+): Promise<AllLLMProviders | null> {
     // Fetch the project's API keys
     let llmProviders: AllLLMProviders
     const redisClient = await ensureRedisConnected()
@@ -130,6 +123,23 @@ async function handler(
           console.warn(`Unhandled provider: ${providerName}`)
       }
     }
+
+    return allLLMProviders as AllLLMProviders
+}
+
+async function handler(
+  req: AuthenticatedRequest,
+  res: NextApiResponse<AllLLMProviders | { error: string }>,
+) {
+  try {
+    const { projectName } = req.body as {
+      projectName: string
+    }
+    if (!projectName) {
+      return res.status(400).json({ error: 'Missing project name' })
+    }
+
+    const allLLMProviders = await getModels(projectName)
 
     return res.status(200).json(allLLMProviders as AllLLMProviders)
   } catch (error) {
