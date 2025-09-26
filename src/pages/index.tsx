@@ -198,22 +198,6 @@ const Home: NextPage = () => {
                 </>
               ) : null}
             </span>
-
-            {/*1. If useIllinoisChatConfig && IllinoisChatBannerContent → render HTML from IllinoisChatBannerContent*/}
-            {/*2. If !useIllinoisChatConfig → render default "Heads up" banner*/}
-            {/*3. Otherwise → render nothing*/}
-            {useIllinoisChatConfig && IllinoisChatBannerContent ? (
-              <div
-                dangerouslySetInnerHTML={{ __html: IllinoisChatBannerContent }}
-              />
-            ) : !useIllinoisChatConfig ? (
-              <>
-                Heads up: we’ve rebranded to Illinois Chat — please visit{' '}
-                <a href="https://chat.illinois.edu" className="underline">
-                  chat.illinois.edu
-                </a>
-              </>
-            ) : null}
           </div>
         </div>
       </div>
