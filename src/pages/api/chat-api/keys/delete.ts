@@ -1,13 +1,14 @@
-import posthog from 'posthog-js'
-import type { NextApiRequest, NextApiResponse } from 'next'
-import { db, apiKeys } from '~/db/dbClient'
 import { eq } from 'drizzle-orm'
+import type { NextApiResponse } from 'next'
+import posthog from 'posthog-js'
+import type { ApiKeys } from '~/db/dbClient'
+import { apiKeys, db } from '~/db/dbClient'
 import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 import type { AuthenticatedRequest } from '~/utils/authMiddleware'
 
 type ApiResponse = {
   message?: string
-  data?: any
+  data?: ApiKeys[]
   error?: string
 }
 
@@ -28,6 +29,9 @@ async function handler(
 
   try {
     const userEmail = req.user?.email
+    if (!userEmail) {
+      return res.status(400).json({ error: 'User email missing' })
+    }
 
     console.log('Deleting api key for:', userEmail)
 

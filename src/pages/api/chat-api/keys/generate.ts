@@ -1,10 +1,10 @@
 // src/pages/api/chat-api/keys/generate.ts
 
-import { NextApiRequest, NextApiResponse } from 'next'
-import { db, apiKeys } from '~/db/dbClient'
-import { v4 as uuidv4 } from 'uuid'
-import posthog from 'posthog-js'
 import { and, eq } from 'drizzle-orm'
+import type { NextApiResponse } from 'next'
+import posthog from 'posthog-js'
+import { v4 as uuidv4 } from 'uuid'
+import { apiKeys, db } from '~/db/dbClient'
 import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 import type { AuthenticatedRequest } from '~/utils/authMiddleware'
 type ApiResponse = {
@@ -35,6 +35,13 @@ async function handler(
 
   try {
     const email = req.user?.email
+    if (!email) {
+      return res.status(400).json({ error: 'User email missing' })
+    }
+    const userId = req.user?.sub
+    if (!userId) {
+      return res.status(400).json({ error: 'User id missing' })
+    }
 
     console.log('Generating API key for user email:', email)
 
@@ -66,7 +73,7 @@ async function handler(
       try {
         const result = await db.insert(apiKeys).values({
           email: email,
-          user_id: req.user?.sub,
+          user_id: userId,
           key: apiKey,
           is_active: true,
         })
@@ -84,7 +91,7 @@ async function handler(
           .set({
             key: apiKey,
             is_active: true,
-            user_id: decodedPayload.sub,
+            user_id: req.user?.sub,
           })
           .where(eq(apiKeys.email, email))
 

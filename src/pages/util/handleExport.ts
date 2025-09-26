@@ -4,9 +4,9 @@ interface ExportResult {
 }
 
 // Client-side function for exporting documents
-export const handleExport = async (
+export default async function handleExport(
   course_name: string,
-): Promise<ExportResult> => {
+): Promise<ExportResult> {
   try {
     const response = await fetch(
       `/api/UIUC-api/exportAllDocuments?course_name=${course_name}`,

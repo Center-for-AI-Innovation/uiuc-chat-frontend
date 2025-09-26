@@ -2,13 +2,13 @@ import { type ContextWithMetadata } from '~/types/chat'
 import { getBackendUrl } from '~/utils/apiUtils'
 
 // Common function to fetch contexts from backend - can be used anywhere
-export const fetchContextsFromBackend = async (
+export default async function fetchContextsFromBackend(
   course_name: string,
   search_query: string,
   token_limit = 4000,
   doc_groups: string[] = [],
   conversation_id?: string,
-): Promise<ContextWithMetadata[]> => {
+): Promise<ContextWithMetadata[]> {
   const backendUrl = getBackendUrl()
 
   const requestBody = {
