@@ -38,7 +38,7 @@ import SettingsLayout, {
   getInitialCollapsedState,
 } from '~/components/Layout/SettingsLayout'
 import { GRID_CONFIGS, useResponsiveGrid } from '~/utils/responsiveGrid'
-import { downloadConversationHistory } from '../../pages/util/downloadConversationHistory'
+import { downloadConversationHistory } from '~/utils/downloadConversationHistory'
 import { getProjectStats } from '../../pages/api/UIUC-api/getProjectStats'
 import ConversationsHeatmapByHourChart from './ConversationsHeatmapByHourChart'
 import ConversationsPerDayChart from './ConversationsPerDayChart'
