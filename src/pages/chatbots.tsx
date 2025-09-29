@@ -13,10 +13,6 @@ const DashboardPage = () => {
   const auth = useAuth()
   const { course_name } = router.query
 
-  useEffect(() => {
-    // You can add any additional logic you need here, such as fetching data based on the course_name
-  }, [course_name])
-
   if (auth.isLoading) {
     return (
       <MainPageBackground>
