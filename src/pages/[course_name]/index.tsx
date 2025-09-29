@@ -29,7 +29,7 @@ const IfCourseExists: NextPage = () => {
 
   // Move all useEffect hooks before any conditional logic
   useEffect(() => {
-    if (!router.isReady) return
+    if (!router.isReady && auth.isLoading) return
 
     const fetchMetadata = async () => {
       const course_name = getCurrentPageName()
@@ -53,9 +53,7 @@ const IfCourseExists: NextPage = () => {
     if (typeof course_name === 'string' && !AUTH_ROUTES.includes(course_name)) {
       fetchMetadata()
     }
-  }, [router.isReady, router, course_name])
 
-  useEffect(() => {
     const checkAuth = async () => {
       // AUTH
       if (courseMetadata && !auth.isLoading) {
@@ -77,10 +75,14 @@ const IfCourseExists: NextPage = () => {
     }
     checkAuth()
   }, [
+    router.isReady,
+    router,
+    course_name,
+    getCurrentPageName,
     auth.isLoading,
-    auth.isAuthenticated,
+    auth,
     courseMetadata,
-    courseMetadataIsLoaded,
+    courseName,
   ])
 
   return (

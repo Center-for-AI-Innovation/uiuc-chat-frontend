@@ -2,6 +2,7 @@ import { type NextApiResponse } from 'next'
 import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { db, documents } from '~/db/dbClient'
 import { eq } from 'drizzle-orm'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 // This is for "Documents" table, completed docs.
 
 type SuccessDocsResponse = {
@@ -10,7 +11,7 @@ type SuccessDocsResponse = {
   error?: string
 }
 
-export default async function successDocs(
+async function successDocs(
   req: AuthenticatedRequest,
   res: NextApiResponse<SuccessDocsResponse>,
 ) {
@@ -50,3 +51,5 @@ export default async function successDocs(
     })
   }
 }
+
+export default withCourseOwnerOrAdminAccess()(successDocs)

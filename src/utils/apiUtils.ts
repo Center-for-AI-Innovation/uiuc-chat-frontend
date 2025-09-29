@@ -6,7 +6,6 @@ import {
   type CourseMetadata,
   type CourseMetadataOptionalForUpsert,
 } from '~/types/courseMetadata'
-
 // Configuration for runtime environment
 
 export const getBaseUrl = () => {
@@ -24,13 +23,13 @@ export const getBaseUrl = () => {
  */
 export const getBackendUrl = (): string => {
   const backendUrl = process.env.RAILWAY_URL
-  
+
   if (!backendUrl) {
     throw new Error(
-      'Backend URL is not configured. Please set the RAILWAY_URL environment variable.'
+      'Backend URL is not configured. Please set the RAILWAY_URL environment variable.',
     )
   }
-  
+
   // Remove trailing slash if present for consistency
   return backendUrl.endsWith('/') ? backendUrl.slice(0, -1) : backendUrl
 }
@@ -225,16 +224,18 @@ export function convertConversatonToVercelAISDKv3(
     } else if (Array.isArray(message.content)) {
       // Handle both text and file content
       const textParts: string[] = []
-      
+
       message.content.forEach((c) => {
         if (c.type === 'text') {
           textParts.push(c.text || '')
         } else if (c.type === 'file') {
           // Convert file content to text representation
-          textParts.push(`[File: ${c.fileName || 'unknown'} (${c.fileType || 'unknown type'}, ${c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'})]`)
+          textParts.push(
+            `[File: ${c.fileName || 'unknown'} (${c.fileType || 'unknown type'}, ${c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'})]`,
+          )
         }
       })
-      
+
       content = textParts.join('\n')
     } else {
       content = message.content as string
@@ -265,9 +266,9 @@ export function convertConversationToCoreMessagesWithoutSystem(
           return { type: 'image', image: c.image_url!.url }
         } else if (c.type === 'file') {
           // Convert file content to text representation
-          return { 
-            type: 'text', 
-            text: `[File: ${c.fileName || 'unknown'} (${c.fileType || 'unknown type'}, ${c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'})]`
+          return {
+            type: 'text',
+            text: `[File: ${c.fileName || 'unknown'} (${c.fileType || 'unknown type'}, ${c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'})]`,
           }
         }
         return c

@@ -1,5 +1,6 @@
 import { withAuth } from '~/utils/authMiddleware'
 import { getBackendUrl } from '~/utils/apiUtils'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
 async function handler(req: any, res: any) {
   if (req.method !== 'GET') {
@@ -34,4 +35,4 @@ async function handler(req: any, res: any) {
   }
 }
 
-export default withAuth(handler)
+export default withCourseOwnerOrAdminAccess()(handler)

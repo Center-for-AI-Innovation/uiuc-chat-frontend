@@ -189,13 +189,9 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
         setLoading(false)
         return
       }
-      const response = await fetch(`/api/chat-api/keys/fetch`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${auth.user?.access_token}`,
-          'Content-Type': 'application/json',
-        },
-      })
+      const response = await fetch(
+        `/api/chat-api/keys/fetch?course_name=${course_name}`,
+      )
 
       if (response.ok) {
         const data = await response.json()
@@ -214,13 +210,15 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
   }, [auth.isAuthenticated])
 
   const handleGenerate = async () => {
-    const response = await fetch(`/api/chat-api/keys/generate`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${auth.user?.access_token}`,
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `/api/chat-api/keys/generate?course_name=${course_name}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       },
-    })
+    )
 
     if (response.ok) {
       const data = await response.json()
@@ -239,13 +237,12 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
   }
 
   const handleRotate = async () => {
-    const response = await fetch(`/api/chat-api/keys/rotate`, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${auth.user?.access_token}`,
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `/api/chat-api/keys/rotate?course_name=${course_name}`,
+      {
+        method: 'PUT',
       },
-    })
+    )
 
     if (response.ok) {
       const data = await response.json()
@@ -264,13 +261,12 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
   }
 
   const handleDelete = async () => {
-    const response = await fetch(`/api/chat-api/keys/delete`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${auth.user?.access_token}`,
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `/api/chat-api/keys/delete?course_name=${course_name}`,
+      {
+        method: 'DELETE',
       },
-    })
+    )
 
     if (response.ok) {
       setApiKey(null)

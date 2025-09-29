@@ -1,7 +1,12 @@
+import { type NextApiResponse } from 'next'
+import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
 import { db } from '~/db/dbClient'
 import { emailNewsletter } from '~/db/schema'
 
-const newsletterUnsubscribe = async (req: any, res: any) => {
+const newsletterUnsubscribe = async (
+  req: AuthenticatedRequest,
+  res: NextApiResponse,
+) => {
   const { email } = req.body
 
   try {
@@ -24,4 +29,4 @@ const newsletterUnsubscribe = async (req: any, res: any) => {
   return res.status(200).json({ success: true })
 }
 
-export default newsletterUnsubscribe
+export default withAuth(newsletterUnsubscribe)

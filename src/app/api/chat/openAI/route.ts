@@ -2,11 +2,9 @@ import { createOpenAI } from '@ai-sdk/openai'
 import { generateText, streamText, type CoreMessage } from 'ai'
 import { NextResponse } from 'next/server'
 import OpenAI from 'openai'
-import {
-  withAppRouterAuth,
-  type AuthenticatedRequest,
-} from '~/utils/appRouterAuth'
+import { type AuthenticatedRequest } from '~/utils/appRouterAuth'
 import { decrypt } from '~/utils/crypto'
+import { withCourseAccessFromRequest } from '~/app/api/authorization'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -119,4 +117,4 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
   }
 }
 
-export const POST = withAppRouterAuth(handler)
+export const POST = withCourseAccessFromRequest('any')(handler)
