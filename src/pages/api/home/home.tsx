@@ -26,7 +26,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { selectBestTemperature } from '~/components/Chat/Temperature'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
-import { useUpdateConversation } from '~/hooks/conversationQueries'
+import { useFetchConversationHistory, useUpdateConversation } from '~/hooks/conversationQueries'
 import {
   useCreateFolder,
   useDeleteFolder,
@@ -72,6 +72,8 @@ const Home = ({
   const [isQueryRewriting, setIsQueryRewriting] = useState<boolean>(false)
   const [queryRewriteResult, setQueryRewriteResult] = useState<string>('')
 
+  const [conversationHistoryLoadedIntoContextValue, setConversationHistoryLoadedIntoContextValue] = useState(false);
+
   // Hooks
   const { t } = useTranslation('chat')
   const { getModelsError } = useErrorService()
@@ -95,13 +97,13 @@ const Home = ({
     course_name,
   )
 
-  // const {
-  //   data: conversationHistory,
-  //   isFetched: isConversationHistoryFetched,
-  //   isLoading: isLoadingConversationHistory,
-  //   error: errorConversationHistory,
-  //   refetch: refetchConversationHistory,
-  // } = useFetchConversationHistory(current_email as string)
+  const {
+    data: conversationHistory,
+    isFetched: isConversationHistoryFetched,
+    isLoading: isLoadingConversationHistory,
+    error: errorConversationHistory,
+    refetch: refetchConversationHistory,
+  } = useFetchConversationHistory(current_email as string, "", course_name)
 
   const {
     data: foldersData,
@@ -251,18 +253,18 @@ const Home = ({
   //   // }
   // }, [selectedConversation, conversations])
 
-  // useEffect(() => {
-  //   if (isConversationHistoryFetched && !isLoadingConversationHistory) {
-  //     // fetchData()
-  //     console.log(
-  //       'conversationHistory storing in react context: ',
-  //       conversationHistory,
-  //     )
-  //     dispatch({ field: 'conversations', value: conversationHistory })
-  //     // Should we save the conversation history to local storage? This usually exceeds the limit.
-  //     // localStorage.setItem('conversationHistory', JSON.stringify(conversationHistory))
-  //   }
-  // }, [conversationHistory])
+  useEffect(() => {
+    if (isConversationHistoryFetched && !isLoadingConversationHistory) {
+      console.log(
+        'conversationHistory storing in react context: ',
+        conversationHistory,
+      )
+      const tmpConversations = conversationHistory?.pages[0] as unknown as Conversation[]
+      tmpConversations.sort((a, b) => {return a.createdAt! < b.createdAt! ? -1 : 1})
+      dispatch({ field: 'conversations', value: tmpConversations })
+      setConversationHistoryLoadedIntoContextValue(true);
+    }
+  }, [conversationHistory])
 
   useEffect(() => {
     if (isFoldersFetched && !isLoadingFolders) {
@@ -399,7 +401,7 @@ const Home = ({
       messages: [],
       model: model,
       prompt: DEFAULT_SYSTEM_PROMPT,
-      temperature: selectBestTemperature(lastConversation, model, llmProviders),
+      temperature: selectBestTemperature(lastConversation, selectedConversation, llmProviders),
       folderId: null,
       userEmail: current_email,
       projectName: course_name,
@@ -673,6 +675,7 @@ const Home = ({
 
   useEffect(() => {
     const initialSetup = async () => {
+      if (!conversationHistoryLoadedIntoContextValue) return
       if (isInitialSetupDone) return
 
       if (window.innerWidth < 640) {
@@ -684,10 +687,10 @@ const Home = ({
         dispatch({ field: 'showChatbar', value: showChatbar === 'true' })
       }
 
-      const selectedConversation = localStorage.getItem('selectedConversation')
-      if (selectedConversation) {
+      const selectedConversationString = localStorage.getItem('selectedConversation')
+      if (selectedConversationString) {
         const parsedSelectedConversation: Conversation =
-          JSON.parse(selectedConversation)
+          JSON.parse(selectedConversationString)
         if (parsedSelectedConversation.projectName === course_name) {
           const cleanedSelectedConversation = cleanSelectedConversation(
             parsedSelectedConversation,
@@ -720,7 +723,7 @@ const Home = ({
     if (!isInitialSetupDone) {
       initialSetup()
     }
-  }, [dispatch, llmProviders, current_email]) // ! serverSidePluginKeysSet, removed
+  }, [dispatch, llmProviders, current_email, conversationHistoryLoadedIntoContextValue]) // ! serverSidePluginKeysSet, removed
   // }, [defaultModelId, dispatch, serverSidePluginKeysSet, models, conversations]) // original!
 
   if (isLoading || !isInitialSetupDone) {
