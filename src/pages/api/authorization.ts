@@ -131,8 +131,7 @@ export function withCourseAdminAccess(courseName: string) {
       // Check if user is course admin or owner or if course allows logged in users
       if (
         !isCourseOwner(req.user, courseMetadata) &&
-        !isCourseAdmin(req.user, courseMetadata) &&
-        !courseMetadata.allow_logged_in_users
+        !isCourseAdmin(req.user, courseMetadata)
       ) {
         return res.status(403).json({
           error: 'Insufficient permissions',
