@@ -119,7 +119,7 @@ export default function WebsiteIngestForm({
     setOpen(false)
 
     if (inputErrors.maxUrls.error) {
-      alert('Invalid max URLs input (1 to 500)')
+      alert(t('website_ingest.range_error') as unknown as string)
       return
     }
 
@@ -150,7 +150,7 @@ export default function WebsiteIngestForm({
         // Remove the timeout since we're handling errors properly now
       }
     } else {
-      alert('Invalid URL (please include https://)')
+      alert(t('website_ingest.invalid_url_error') as unknown as string)
     }
 
     await new Promise((resolve) => setTimeout(resolve, 8000))

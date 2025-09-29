@@ -24,52 +24,8 @@
     "hi": "Hi",
     "new": "New"
   },
-  "prompt": {
-    "title": "Prompting",
-    "engineering_guide": "Prompt Engineering Guide",
-    "engineering_guide_intro": "For additional insights and best practices on prompt creation, please review:",
-    "openai_guide": "The Official OpenAI Prompt Engineering Guide",
-    "anthropic_library": "The Official Anthropic Prompt Library",
-    "system_prompt_intro": "The System Prompt provides the foundation for every conversation in this project. It defines the model's role, tone, and behavior. Consider including:",
-    "key_instructions": "Key instructions or examples",
-    "warm_welcome": "A warm welcome message",
-    "helpful_links": "Helpful links for further learning",
-    "system_prompt": "System Prompt",
-    "select_model": "Select model",
-    "selected_model_tooltip": "The selected model will be used when Optimizing System Prompt",
-    "close_prompt_builder": "Close Prompt Builder",
-    "open_prompt_builder": "Open Prompt Builder",
-    "enter_system_prompt": "Enter the system prompt...",
-    "update_system_prompt": "Update System Prompt",
-    "optimizing": "Optimizing...",
-    "optimize_system_prompt": "Optimize System Prompt",
-    "optimized_system_prompt": "Optimized System Prompt",
-    "doc_search_optimization": "Document Search Optimization",
-    "smart_doc_search": "Smart Document Search",
-    "smart_doc_search_tooltip": "When enabled, UIUC.chat optimizes your queries to better search through course materials and find relevant content. Note: This only affects how documents are searched - your chat messages remain exactly as you write them.",
-    "ai_behavior_settings": "AI Behavior Settings",
-    "guided_learning": "Guided Learning",
-    "guided_learning_tooltip": "When enabled course-wide, this setting applies to all students and cannot be disabled by them. The AI will encourage independent problem-solving by providing hints and questions instead of direct answers, while still finding and citing relevant course materials. This promotes critical thinking while ensuring students have access to proper resources.",
-    "document_only": "Document-Based References Only",
-    "document_only_tooltip": "Restricts the AI to use only information from the provided documents. Useful for maintaining accuracy in fields like legal research where external knowledge could be problematic.",
-    "bypass_internal_prompting": "Bypass UIUC.chat's internal prompting",
-    "bypass_internal_prompting_tooltip": "Internally, we prompt the model to (1) add citations and (2) always be as helpful as possible. You can bypass this for full un-modified control over your bot.",
-    "copy_internal_prompt": "Copy UIUC.chat's internal prompt",
-    "copy_internal_prompt_tooltip": "You can use and customize our default internal prompting to suit your needs. Note, only the specific citation formatting described will work with our citation 'find and replace' system. This provides a solid starting point for defining AI behavior in raw prompt mode.",
-    "reset_settings": "Reset Prompting Settings",
-    "reset_confirm": "Are you sure you want to reset your system prompt and all behavior settings to their default values?",
-    "this_action_will": "This action will:",
-    "restore_default_template": "Restore the system prompt to the default template",
-    "disable_settings": "Disable Guided Learning, Document-Only mode, and other custom settings",
-    "cannot_undo": "This cannot be undone. Please confirm you wish to proceed.",
-    "generate_share_link": "Generate Share Link"
-  },
-  "common": {
-    "cancel": "Cancel",
-    "confirm": "Confirm",
-    "copied": "Copied!",
-    "copy_link": "Copy link"
-  },
+  
+  
 
   "tools_section": {
     "metaDescription": "Tools",
@@ -250,8 +206,10 @@
   "feedback": {
     "title": "Feedback",
     "category": "Feedback Category",
+    "category_placeholder": "Select a category",
     "details": "Feedback Details",
     "details_placeholder": "Share any additional details about your feedback",
+    "submit": "Submit",
     "types": {
       "other": "Other",
       "inaccurate": "Not factually correct",
@@ -261,6 +219,12 @@
       "overactive_refusal": "Overactive refusal",
       "incomplete_request": "Did not fully follow my request"
     }
+  },
+
+  "variables": {
+    "fill_all": "Please fill out all variables",
+    "enter_value_for": "Enter a value for {{key}}...",
+    "submit": "Submit"
   },
 
   "tooltips": {
@@ -691,8 +655,31 @@
     "bypass_internal_prompting": "Bypass UIUC.chat's internal prompting",
     "bypass_internal_prompting_locked_tooltip": "This setting is currently enabled course-wide. Enabling it here will ensure it stays active even if course settings change.",
     "bypass_internal_prompting_link_tooltip": "Use raw system prompt without additional internal prompting. This bypasses UIUC.chat's built-in prompts for citations and helpfulness.",
-    "generated_link": "Generated Link"
+    "generated_link": "Generated Link",
+    "changes": {
+      "smart_doc_search": "Smart Document Search",
+      "guided_learning": "Guided Learning",
+      "document_only": "Document-Based References Only",
+      "bypass_internal_prompting": "Bypass UIUC.chat's internal prompting"
+    },
+    "alerts": {
+      "optimize_failed": "Failed to optimize prompt. Please try again.",
+      "update_settings_failed": "Failed to update settings",
+      "settings_saved": "Settings have been saved successfully",
+      "copy_default_success": "Default post-prompt system prompt copied to clipboard",
+      "copy_default_error": "Could not copy text to clipboard",
+      "fetch_default_error": "Could not fetch default prompt"
+    },
+    "toast": {
+      "error_updating_title": "Error Updating Prompt",
+      "error_updating_message": "An error occurred while updating the prompt. Please try again.",
+      "reset_title": "Prompt Reset to Default",
+      "reset_message": "The system prompt has been reset to default settings.",
+      "updated_title": "Prompt Updated Successfully",
+      "updated_message": "The system prompt has been updated."
+    }
   },
+  
 
   "flagship": {
     "research": {
@@ -823,7 +810,14 @@
     "withQuestions": "with questions.",
     "notEnoughDataTitle": "Visualization Not Available Yet",
     "notEnoughDataBody": "We need at least 20 questions to generate a meaningful visualization of how topics relate to each other. Please ask more questions and check back later!",
-    "learnMoreSemanticLink": "Learn more about semantic similarity visualizations"
+    "learnMoreSemanticLink": "Learn more about semantic similarity visualizations",
+    "downloadConversationHistoryError": "Error downloading conversation history.",
+    "loadingModelUsage": "Loading model usage data...",
+    "errorLoadingModelUsage": "Error loading model usage data: {{error}}",
+    "noModelUsageData": "No model usage data available",
+    "modelUsagePieAria": "Model usage distribution pie chart",
+    "modelUsageTooltipAria": "Model usage details",
+    "other": "Other"
   },
   "alerts": {
     "error_deleting_file": "Error Deleting File",
@@ -855,6 +849,16 @@
       }
     }
   },
+  "ingest": "Ingest",
+  "web_scrape_in_progress": "Web scrape in progress...",
+  "web_scrape_refresh_notice": "You can refresh the page after a minute to see the new content appear in your Documents table.",
+  "max_urls_tooltip": "The maximum number of URLs that will be crawled and processed. Higher numbers mean more content but longer processing time.",
+  "max_urls_label": "Maximum URLs to crawl",
+  "default_50": "Default: 50",
+  "limit_web_crawl": "Limit web crawl to:",
+  "alerts.web_scrape_started": "Web scraping started",
+  "alerts.web_scrape_message": "We have begun crawling your site. You will receive updates when content is ready.",
+  "alerts.web_scrape_error": "Error during web scraping",
   "example_questions": {
     "example_question_label": "Example Question",
     "example_question_placeholder": "Enter an example question that users can try...",

@@ -9,6 +9,7 @@ import {
 } from 'recharts'
 import { LoadingSpinner } from './LoadingSpinner'
 import { Text } from '@mantine/core'
+import { useTranslation } from 'next-i18next'
 import { IconAlertCircle } from '@tabler/icons-react'
 
 interface ModelUsage {
@@ -48,6 +49,7 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
   isLoading,
   error,
 }) => {
+  const { t } = useTranslation('common')
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== 'undefined' ? window.innerWidth : 1200,
   )
@@ -76,7 +78,7 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
       },
       {
         main: [] as ModelUsage[],
-        other: { model_name: 'Other', count: 0, percentage: 0 } as ModelUsage,
+        other: { model_name: (t('analysis.other') as unknown as string), count: 0, percentage: 0 } as ModelUsage,
       },
     )
 
@@ -102,7 +104,7 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
       <div className="rounded-lg bg-red-500/10 p-4" role="alert">
         <div className="flex items-center gap-2">
           <IconAlertCircle className="text-red-400" size={20} />
-          <Text color="red">Error loading model usage data: {error}</Text>
+          <Text color="red">{t('analysis.errorLoadingModelUsage', { error }) as unknown as string}</Text>
         </div>
       </div>
     )
@@ -112,7 +114,7 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
     return (
       <div className="flex items-center gap-2">
         <LoadingSpinner />
-        <Text>Loading model usage data...</Text>
+        <Text>{t('analysis.loadingModelUsage') as unknown as string}</Text>
       </div>
     )
   }
@@ -120,7 +122,7 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
   if (!data || data.length === 0 || chartData.length === 0) {
     return (
       <div className="rounded-lg bg-gray-800/50 p-4">
-        <Text align="center">No model usage data available</Text>
+        <Text align="center">{t('analysis.noModelUsageData') as unknown as string}</Text>
       </div>
     )
   }
@@ -190,7 +192,7 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
     <div
       style={{ width: '100%', height: windowWidth < 768 ? 300 : 400 }}
       role="figure"
-      aria-label="Model usage distribution pie chart"
+      aria-label={t('analysis.modelUsagePieAria') as unknown as string}
     >
       <ResponsiveContainer>
         <PieChart>
@@ -232,7 +234,7 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
             labelStyle={{ color: '#fff' }}
             wrapperStyle={{ outline: 'none' }}
             cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
-            aria-label="Model usage details"
+            aria-label={t('analysis.modelUsageTooltipAria') as unknown as string}
           />
           <Legend
             layout="vertical"

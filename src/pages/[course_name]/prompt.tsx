@@ -231,8 +231,8 @@ const CourseMain: NextPage = () => {
       if (!llmProviders) {
         showToastNotification(
           theme,
-          'Configuration Error',
-          'The Optimize System Prompt feature requires provider configuration to be loaded. Please refresh the page and try again.',
+          t('common.error') as unknown as string,
+          t('chat.model.error_fetching') as unknown as string,
           true,
         )
         return
@@ -242,8 +242,8 @@ const CourseMain: NextPage = () => {
       if (!llmProviders[provider]?.enabled) {
         showToastNotification(
           theme,
-          `${provider} Required`,
-          `The Optimize System Prompt feature requires ${provider} to be enabled. Please enable ${provider} on the LLM page in your course settings to use this feature.`,
+          t('common.error') as unknown as string,
+          t('chat.model.error_fetching') as unknown as string,
           true,
         )
         return
@@ -258,8 +258,8 @@ const CourseMain: NextPage = () => {
           ) {
             showToastNotification(
               theme,
-              `${provider} Credentials Required`,
-              `The Optimize System Prompt feature requires AWS credentials (Access Key ID, Secret Access Key, and Region). Please add your AWS credentials on the LLM page in your course settings to use this feature.`,
+              t('common.error') as unknown as string,
+              t('chat.model.error_fetching') as unknown as string,
               true,
             )
             return
@@ -267,8 +267,8 @@ const CourseMain: NextPage = () => {
         } else if (!llmProviders[provider]?.apiKey) {
           showToastNotification(
             theme,
-            `${provider} API Key Required`,
-            `The Optimize System Prompt feature requires a ${provider} API key. Please add your ${provider} API key on the LLM page in your course settings to use this feature.`,
+            t('common.error') as unknown as string,
+            t('chat.model.error_fetching') as unknown as string,
             true,
           )
           return
@@ -389,8 +389,8 @@ CRITICAL: The optimized prompt must:
         const errorData = await response.json()
         showToastNotification(
           theme,
-          'Error',
-          errorData.error || 'Failed to optimize prompt',
+          t('common.error') as unknown as string,
+          (errorData.error || t('chat.model.error_fetching')) as unknown as string,
           true,
         )
         return
@@ -432,8 +432,8 @@ CRITICAL: The optimized prompt must:
       console.error('Error optimizing prompt:', error)
       showToastNotification(
         theme,
-        'Error',
-        'Failed to optimize prompt. Please try again.',
+        t('common.error') as unknown as string,
+        t('prompt.alerts.optimize_failed') as unknown as string,
         true,
       )
       setIsOptimizing(false) // Keep this here for error cases
@@ -536,9 +536,9 @@ CRITICAL: The optimized prompt must:
     }
     if (!success) {
       console.log('Error updating course metadata')
-      showToastOnPromptUpdate(theme, true)
+      showToastOnPromptUpdate(theme, t as any, true)
     } else {
-      showToastOnPromptUpdate(theme)
+      showToastOnPromptUpdate(theme, t as any)
     }
   }
 
@@ -556,18 +556,18 @@ CRITICAL: The optimized prompt must:
         updatedCourseMetadata,
       )
       if (!success) {
-        alert('Error resetting system prompt')
-        showToastOnPromptUpdate(theme, true, true)
+        alert(t('common.error') as unknown as string)
+        showToastOnPromptUpdate(theme, t as any, true, true)
       } else {
         setBaseSystemPrompt(DEFAULT_SYSTEM_PROMPT ?? '')
         setCourseMetadata(updatedCourseMetadata)
         setGuidedLearning(false)
         setDocumentsOnly(false)
         setSystemPromptOnly(false)
-        showToastOnPromptUpdate(theme, false, true)
+        showToastOnPromptUpdate(theme, t as any, false, true)
       }
     } else {
-      alert('Error resetting system prompt')
+      alert(t('common.error') as unknown as string)
     }
   }
 
@@ -654,7 +654,12 @@ CRITICAL: The optimized prompt must:
     try {
       const success = await callSetCourseMetadata(course_name, updatedMetadata)
       if (!success) {
-        showToastNotification(theme, 'Error', 'Failed to update settings', true)
+        showToastNotification(
+          theme,
+          t('common.error') as unknown as string,
+          t('prompt.alerts.update_settings_failed') as unknown as string,
+          true,
+        )
         return
       }
 
@@ -667,21 +672,27 @@ CRITICAL: The optimized prompt must:
         currentSwitchState.vectorSearchRewrite
       ) {
         changes.push(
-          `Smart Document Search ${currentSwitchState.vectorSearchRewrite ? 'enabled' : 'disabled'}`,
+          `${t('prompt.changes.smart_doc_search')} ${t(
+            currentSwitchState.vectorSearchRewrite ? 'common.enabled' : 'common.disabled',
+          )}`,
         )
       }
       if (
         initialSwitchState.guidedLearning !== currentSwitchState.guidedLearning
       ) {
         changes.push(
-          `Guided Learning ${currentSwitchState.guidedLearning ? 'enabled' : 'disabled'}`,
+          `${t('prompt.changes.guided_learning')} ${t(
+            currentSwitchState.guidedLearning ? 'common.enabled' : 'common.disabled',
+          )}`,
         )
       }
       if (
         initialSwitchState.documentsOnly !== currentSwitchState.documentsOnly
       ) {
         changes.push(
-          `Document-Based References Only ${currentSwitchState.documentsOnly ? 'enabled' : 'disabled'}`,
+          `${t('prompt.changes.document_only')} ${t(
+            currentSwitchState.documentsOnly ? 'common.enabled' : 'common.disabled',
+          )}`,
         )
       }
       if (
@@ -689,21 +700,28 @@ CRITICAL: The optimized prompt must:
         currentSwitchState.systemPromptOnly
       ) {
         changes.push(
-          `Bypass UIUC.chat's internal prompting ${currentSwitchState.systemPromptOnly ? 'enabled' : 'disabled'}`,
+          `${t('prompt.changes.bypass_internal_prompting')} ${t(
+            currentSwitchState.systemPromptOnly ? 'common.enabled' : 'common.disabled',
+          )}`,
         )
       }
 
       if (changes.length > 0) {
         showToastNotification(
           theme,
-          changes.join(' & '),
-          'Settings have been saved successfully',
+          t('common.success') as unknown as string,
+          t('prompt.alerts.settings_saved') as unknown as string,
           false,
         )
       }
     } catch (error) {
       console.error('Error updating course settings:', error)
-      showToastNotification(theme, 'Error', 'Failed to update settings', true)
+      showToastNotification(
+        theme,
+        t('common.error') as unknown as string,
+        t('prompt.alerts.update_settings_failed') as unknown as string,
+        true,
+      )
     }
   }
 
@@ -726,7 +744,12 @@ CRITICAL: The optimized prompt must:
 
   const handleCheckboxChange = async (updatedFields: PartialCourseMetadata) => {
     if (!courseMetadata || !course_name) {
-      showToastNotification(theme, 'Error', 'Failed to update settings', true)
+      showToastNotification(
+        theme,
+        t('common.error') as unknown as string,
+        t('prompt.alerts.update_settings_failed') as unknown as string,
+        true,
+      )
       return
     }
 
@@ -765,16 +788,16 @@ CRITICAL: The optimized prompt must:
         .then(() => {
           showToastNotification(
             theme,
-            'Copied',
-            'Default post prompt system prompt copied to clipboard',
+            t('common.success') as unknown as string,
+            t('prompt.alerts.copy_default_success') as unknown as string,
           )
         })
         .catch((err) => {
           console.error('Could not copy text: ', err)
           showToastNotification(
             theme,
-            'Error Copying',
-            'Could not copy text to clipboard',
+            t('common.error') as unknown as string,
+            t('prompt.alerts.copy_default_error') as unknown as string,
             true,
           )
         })
@@ -782,8 +805,8 @@ CRITICAL: The optimized prompt must:
       console.error('Error fetching default prompt:', error)
       showToastNotification(
         theme,
-        'Error Fetching',
-        'Could not fetch default prompt',
+        t('common.error') as unknown as string,
+        t('prompt.alerts.fetch_default_error') as unknown as string,
         true,
       )
     }
@@ -1720,7 +1743,7 @@ CRITICAL: The optimized prompt must:
                                 <Text
                                   className={`${montserrat_heading.variable} font-montserratHeading`}
                                 >
-                                  New
+                                  {t('prompt.search.new')}
                                 </Text>
                               }
                               color="var(--dashboard-button)"
@@ -1763,7 +1786,7 @@ CRITICAL: The optimized prompt must:
                                 <Text
                                   className={`${montserrat_heading.variable} font-montserratHeading`}
                                 >
-                                  New
+                                  {t('prompt.behavior.new')}
                                 </Text>
                               }
                               color="var(--dashboard-button)"
@@ -2143,19 +2166,20 @@ export const showToastNotification = (
 
 export const showToastOnPromptUpdate = (
   theme: MantineTheme,
+  t: (key: string, options?: any) => string,
   was_error = false,
   isReset = false,
 ) => {
   const title = was_error
-    ? 'Error Updating Prompt'
+    ? (t('prompt.toast.error_updating_title') as unknown as string)
     : isReset
-      ? 'Prompt Reset to Default'
-      : 'Prompt Updated Successfully'
+      ? (t('prompt.toast.reset_title') as unknown as string)
+      : (t('prompt.toast.updated_title') as unknown as string)
   const message = was_error
-    ? 'An error occurred while updating the prompt. Please try again.'
+    ? (t('prompt.toast.error_updating_message') as unknown as string)
     : isReset
-      ? 'The system prompt has been reset to default settings.'
-      : 'The system prompt has been updated.'
+      ? (t('prompt.toast.reset_message') as unknown as string)
+      : (t('prompt.toast.updated_message') as unknown as string)
   const isError = was_error
 
   showToastNotification(theme, title, message, isError)

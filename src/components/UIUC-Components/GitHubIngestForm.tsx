@@ -175,7 +175,7 @@ export default function GitHubIngestForm({
         // Remove the timeout since we're handling errors properly now
       }
     } else {
-      alert('Invalid URL (please include https://)')
+      alert(t('website_ingest.invalid_url_error') as unknown as string)
     }
 
     // let ingest finalize things. It should be finished, but the DB is slow.

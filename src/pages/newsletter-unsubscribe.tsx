@@ -5,11 +5,13 @@ import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { IconSunset2, IconX } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'next-i18next'
 import { useRouter } from 'next/router'
 
 export default function Unsubscribe() {
   const [email, setEmail] = useState('')
   const router = useRouter()
+  const { t } = useTranslation('common')
 
   useEffect(() => {
     if (router.isReady) {
@@ -22,8 +24,8 @@ export default function Unsubscribe() {
     if (!email) {
       notifications.show({
         id: 'error-notification',
-        title: 'No email identified. 🤔',
-        message: 'Looked like the box was empty 👀',
+        title: t('alerts.error') as unknown as string,
+        message: t('newsletter.no_email') as unknown as string,
         autoClose: 20000,
         color: 'red',
         radius: 'lg',
@@ -47,9 +49,8 @@ export default function Unsubscribe() {
       if (!response.ok) {
         notifications.show({
           id: 'network-error-notification',
-          title: 'Our database is having a bad day. 😢',
-          message:
-            "Seems like we couldn't unsubscribe you. Please try again later. Email help@uiuc.chat for assistance.",
+          title: t('alerts.error') as unknown as string,
+          message: t('newsletter.unsubscribe_failed') as unknown as string,
           autoClose: 20000,
           color: 'red',
           radius: 'lg',
@@ -63,9 +64,8 @@ export default function Unsubscribe() {
 
       notifications.show({
         id: 'success-notification',
-        title: 'Successfully unsubscribed.',
-        message:
-          "See ya, wouldn't wanna be ya! 🌅 Redirecting to home page in 5 seconds...",
+        title: t('newsletter.success_title') as unknown as string,
+        message: t('newsletter.success_message') as unknown as string,
         autoClose: 5000,
         // color: 'green',
         radius: 'lg',
@@ -82,8 +82,8 @@ export default function Unsubscribe() {
       console.error('There was a problem with the fetch operation:', error)
       notifications.show({
         id: 'network-error-notification',
-        title: 'Our database is having a bad day. 😢',
-        message: `Seems like we couldn't unsubscribe you. Please try again later. Email help@uiuc.chat for assistance. Full error: ${error}`,
+        title: t('alerts.error') as unknown as string,
+        message: `${t('newsletter.unsubscribe_failed') as unknown as string} ${error}`,
         autoClose: 20000,
         color: 'red',
         radius: 'lg',

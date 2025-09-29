@@ -133,9 +133,8 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
       if (!keyTestResponse.ok) {
         notifications.show({
           id: 'error-notification-bad-key',
-          title: 'Key appears invalid',
-          message:
-            'This API key cannot fetch any workflows. Please check your key and try again.',
+          title: t('tools_section.alerts.error.title'),
+          message: t('tools_section.alerts.error.fetch_failed'),
           autoClose: 15000,
           color: 'red',
           radius: 'lg',
@@ -176,8 +175,8 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
     if (!flows_table) {
       notifications.show({
         id: 'error-notification',
-        title: 'Error',
-        message: 'Failed to fetch workflows. Please try again later.',
+        title: t('tools_section.alerts.error.title'),
+        message: t('tools_section.alerts.error.fetch_failed'),
         autoClose: 10000,
         color: 'red',
         radius: 'lg',
@@ -192,8 +191,8 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
     if (response.ok) {
       notifications.show({
         id: 'n8n-api-key-saved',
-        title: 'Success',
-        message: 'n8n API Key saved successfully!',
+        title: t('tools_section.alerts.success.title'),
+        message: t('tools_section.alerts.success.key_saved'),
         autoClose: 10000,
         color: 'green',
         radius: 'lg',
@@ -205,8 +204,8 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
     } else {
       notifications.show({
         id: 'error-notification',
-        title: 'Error',
-        message: 'Failed to save n8n API Key. Please try again later.',
+        title: t('tools_section.alerts.error.title'),
+        message: t('tools_section.alerts.error.save_failed'),
         autoClose: 10000,
         color: 'red',
         radius: 'lg',

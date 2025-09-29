@@ -50,7 +50,7 @@ export default function CourseraIngestForm(): JSX.Element {
     if (url.includes('coursera.org')) {
       // TODO: coursera ingest
       alert(
-        'Coursera ingest is not yet automated (auth is hard). Please email rohan13@illinois.edu to do it for you',
+        t('coursera_ingest.alert') as unknown as string,
       )
     }
   }

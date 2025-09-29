@@ -52,7 +52,7 @@ export default function SetExampleQuestions({
 
   const upsertCourseMetadata = async (example_questions: string[]) => {
     if (!course_name || course_name.toString().trim() === '') {
-      alert('Course name is required')
+      alert(t('example_questions.course_name_required') as unknown as string)
       return
     }
 
