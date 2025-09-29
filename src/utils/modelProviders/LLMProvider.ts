@@ -197,7 +197,6 @@ export interface GenericSupportedModel {
   enabled: boolean
   parameterSize?: string
   default?: boolean
-  temperature?: number
 }
 
 export interface BaseLLMProvider {
