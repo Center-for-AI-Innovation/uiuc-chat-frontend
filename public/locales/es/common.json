@@ -1,34 +1,18 @@
 {
-  "prompting": "Indicaciones",
   "common": {
-    "loading": "Cargando...",
     "error": "Error",
     "success": "Éxito",
     "cancel": "Cancelar",
-    "close": "Cerrar",
     "save": "Guardar",
     "confirm": "Confirmar",
-    "delete": "Eliminar",
-    "update": "Actualizar",
-    "search": "Buscar...",
-    "download": "Descargar",
-    "downloaded": "Descargado",
-    "copy": "Copiar",
     "copied": "¡Copiado!",
     "copy_link": "Copiar enlace",
-    "recommended": "Recomendado",
-    "enabled": "Habilitado",
-    "disabled": "Deshabilitado",
     "optional": "(Opcional)",
-    "validating": "Validando...",
-    "hi": "Hola",
-    "new": "Nuevo"
+    "validating": "Validando..."
   },
-
   "navigation": {
     "docs": "Documentos",
     "news": "Noticias",
-    "new_project": "Nuevo Proyecto",
     "new_chat": "Nuevo Chat",
     "admin_dashboard": "Panel de Administración",
     "chat": "Chat",
@@ -43,246 +27,11 @@
     "my_chatbots": "Mis Chatbots",
     "create_your_own_bot": "Crea tu propio bot"
   },
-
   "auth": {
     "manage_account": "Administrar cuenta",
     "sign_out": "Cerrar sesión",
-    "must_sign_in": "Debes iniciar sesión para crear o editar contenido.",
-    "sign_in_arrow": "Iniciar sesión →",
     "account_bug_message": "¡Has encontrado un error de software! Tu cuenta no tiene dirección de correo electrónico. Por favor, envíame un correo electrónico para que pueda solucionarlo por ti:"
   },
-
-
-  "api": {
-    "key_management": "Gestión de Claves API",
-    "documentation": "Documentación de API",
-    "stateless_info": "Esta API es sin estado, lo que significa que cada solicitud es independiente de las demás. Para conversaciones de múltiples turnos, simplemente agrega nuevos mensajes al array 'messages' en la siguiente llamada.",
-    "openai_docs": "Documentación de API de OpenAI",
-    "uiuc_docs": "Documentación de API de UIUC.chat",
-    "notes": "Notas",
-    "note_ncsa_models": "Los modelos alojados por NCSA como Qwen y Llama están alojados por NCSA y ¡son gratuitos!",
-    "note_gpt4o_mini": "GPT-4o-mini ofrece la mejor relación precio/rendimiento",
-    "note_llm_keys": "UIUC.chat gestiona automáticamente las claves de proveedores LLM - solo agrégalas en la página de LLMs.",
-    "note_rag_results": "Para obtener solo resultados RAG, establece retrieval_only en true. Esto no invocará el LLM."
-  },
-
-  "chat": {
-    "temperature": {
-      "label": "Temperatura",
-      "hint": "Valores más altos como 0.8 harán que la salida sea más aleatoria, mientras que valores más bajos como 0.2 la harán más enfocada y determinista."
-    },
-    "retrieval": {
-      "fancy": "Recuperación elegante",
-      "multi_query": {
-        "label": "Recuperación de Consulta Múltiple (tiempo de respuesta lento de 30 segundos)",
-        "description": "Un LLM genera múltiples consultas basadas en tu original para mejorar la búsqueda semántica. Luego, cada contexto recuperado es filtrado por un LLM más pequeño (Mistral 7b) para incluir solo documentos de alta calidad y relevantes en la llamada final de GPT-4.",
-        "disabled": "La recuperación de múltiples consultas está desactivada por razones de rendimiento, estoy trabajando para restablecerla lo antes posible."
-      },
-      "retrieving": "Recuperando documentos...",
-      "retrieved": "Documentos recuperados",
-      "found_chunks": "Se encontraron {{count}} fragmentos de documentos.",
-      "optimizing": "Optimizando la consulta de búsqueda",
-      "optimized": "Consulta de búsqueda optimizada",
-      "no_optimization_needed": "No es necesaria la optimización de la consulta",
-      "llm_no_optimization": "El LLM determinó que no era necesaria la optimización. Solo optimizamos cuando es necesario convertir un solo mensaje en una búsqueda independiente para recuperar los mejores documentos."
-    },
-    "response": {
-      "generating": "Generando respuesta final:",
-      "stop": "Detener Generación",
-      "regenerate": "Regenerar respuesta",
-      "good": "Buena respuesta",
-      "remove_good": "Quitar buena respuesta",
-      "bad": "Mala respuesta",
-      "remove_bad": "Quitar mala respuesta"
-    },
-    "system_prompt": {
-      "label": "Mensaje del sistema",
-      "default": "Eres un asistente de IA útil. Sigue las instrucciones cuidadosamente. Responde usando markdown."
-    },
-    "tools": {
-      "section": "Herramientas",
-      "routing": "Enrutando la solicitud a las herramientas relevantes",
-      "no_tools_found": "No se encontraron herramientas"
-    },
-    "document_groups": {
-      "section": "Grupos de documentos",
-      "no_groups": "No se encontraron grupos"
-    },
-    "file": {
-      "remove": "Eliminar archivo",
-      "uploading": "Subiendo a almacenamiento seguro",
-      "processing": "Procesando para chat",
-      "ready": "Listo para chatear",
-      "upload_failed": "La carga falló"
-    },
-    "loading": {
-      "knowledge_engines": "Calentando los motores de conocimiento...",
-      "authenticated_user_error": "El usuario autenticado no tiene correo electrónico"
-    },
-    "new_conversation": "Nueva Conversación",
-    "input": {
-      "message_placeholder": "Escribe un mensaje...",
-      "llm_input_limit": "El límite del mensaje es de {{maxLength}} caracteres. Has ingresado {{valueLength}} caracteres.",
-      "please_enter_message": "Por favor, ingresa un mensaje",
-      "please_enter_message_or_upload_image": "Por favor, ingresa un mensaje o sube una imagen",
-      "stop_generating": "Detener Generación",
-      "regenerate_response": "Regenerar Respuesta",
-      "remove_file": "Eliminar Archivo",
-      "message_uiuc_chat": "Mensaje a UIUC.chat",
-      "failed_to_send": "Error al enviar el mensaje. Por favor, inténtalo de nuevo."
-    },
-    "model": {
-      "tab": "Modelo",
-      "select_model": "Seleccionar modelo",
-      "invalid_image_file_type": "{{count}} tipo(s) de archivo inválido(s). Por favor, sube imágenes .jpg o .png.",
-      "warning_large_vram": "advertencia, requiere GPU con vRAM grande",
-      "loading": "cargando"
-    },
-    "message": {
-      "edit": "Editar Mensaje",
-      "save_submit": "Guardar y Enviar",
-      "cancel": "Cancelar",
-      "sources": "Fuentes",
-      "sources_count": "{{count}}",
-      "generating_final_response": "Generando respuesta final:",
-      "image_description": "Descripción de la Imagen",
-      "tool_output": "Salida de la herramienta",
-      "routing_request": "Enrutando la solicitud a",
-      "tool_arguments": "Argumentos",
-      "no_arguments": "No se proporcionaron argumentos"
-    }
-  },
-
-  "feedback": {
-    "title": "Retroalimentación",
-    "category": "Categoría de retroalimentación",
-    "category_placeholder": "Selecciona una categoría",
-    "details": "Detalles de la retroalimentación",
-    "details_placeholder": "Comparte cualquier detalle adicional sobre tu retroalimentación",
-    "submit": "Enviar",
-    "types": {
-      "other": "Otro",
-      "inaccurate": "No es correcto",
-      "inappropriate": "Contenido dañino",
-      "unclear": "Respuesta poco clara",
-      "ui_bug": "Error de interfaz",
-      "overactive_refusal": "Rechazo excesivo",
-      "incomplete_request": "No siguió completamente mi solicitud"
-    }
-  },
-
-  "variables": {
-    "fill_all": "Por favor, completa todas las variables",
-    "enter_value_for": "Ingresa un valor para {{key}}...",
-    "submit": "Enviar"
-  },
-
-  "tooltips": {
-    "copy_code": "Copiar código",
-    "copied": "¡Copiado!",
-    "download_file": "Descargar archivo",
-    "edit_message": "Editar mensaje",
-    "remove_file": "Eliminar archivo",
-    "sidebar_action": "Acción de la barra lateral"
-  },
-
-  "file_types": {
-    "pdf": "PDF",
-    "word": "Palabra",
-    "ppt": "PPT",
-    "excel": "Excel",
-    "video": "Video",
-    "image": "Imagen",
-    "audio": "Audio",
-    "code": "Código",
-    "text": "Texto",
-    "files_supported": "Archivos soportados: {{type}}"
-  },
-
-  "sidebar": {
-    "newFolder": "Nueva carpeta",
-    "newChat": "Nueva conversación",
-    "noConversations": "No hay conversaciones.",
-    "searchConversations": "Buscar conversaciones...",
-    "openaiApiKey": "Llave de API de OpenAI",
-    "importData": "Importar conversaciones",
-    "areYouSure": "¿Estás seguro?",
-    "clearConversations": "Borrar conversaciones",
-    "exportData": "Exportar conversaciones",
-    "search": "Buscar...",
-    "noData": "Sin datos.",
-    "exportHistory": "Historial de exportación",
-    "renameFolderPlaceholder": "Cambiar nombre de la carpeta...",
-    "rename": "Cambiar nombre",
-    "apiKey": "Clave de API",
-    "openaiApiKeyLabel": "Clave de API de OpenAI",
-    "importHistory": "Historial de importación"
-  },
-
-  "tools_section": {
-    "metaDescription": "El asistente de enseñanza de IA creado para estudiantes en UIUC.",
-    "llmToolUse": "Uso de herramientas LLM y llamadas a funciones",
-    "useN8n": "Usa",
-    "visualEditor": "el hermoso editor visual de flujos de trabajo para crear funciones personalizadas para tu proyecto.",
-    "createEditWorkflows": "Crear/Editar flujos de trabajo",
-    "setupInstructions": "Instrucciones de configuración 🤠",
-    "inviteOnly": "El uso de herramientas vía LLMs es solo por invitación para prevenir abusos. Por favor, envíame un correo para solicitar acceso: rohan13@illinois.edu",
-    "onceAccess": "Una vez que tengas acceso, por favor",
-    "loginWithLink": "inicia sesión con este enlace",
-    "createApiKey": "Dentro de n8n, crea una clave API de n8n y guárdala aquí.",
-    "usageInstructions": "Instrucciones de uso 🛠️",
-    "startWorkflow": "Comienza creando tu primer flujo de trabajo en",
-    "ensureTrigger": "Asegúrate de tener el nodo de disparo correcto para tu flujo de trabajo, revisa la documentación para más detalles",
-    "addNodes": "Agrega los nodos necesarios para tu flujo de trabajo",
-    "saveWorkflow": "Guarda tu flujo de trabajo",
-    "makeActive": "Asegúrate de que tu flujo de trabajo esté activo",
-    "testWorkflow": "Prueba tu flujo de trabajo para completar la incorporación de uso",
-    "workflowCongrats": "¡Si tu flujo de trabajo funciona como esperas, felicidades! 🚀",
-    "usersCanUse": "Tus usuarios ahora pueden empezar a usarlo en la",
-    "chatPage": "Página de Chat",
-    "yourN8nApiKey": "Tu clave API de n8n",
-    "apiKeyDescription": "Usamos esto para ejecutar tus flujos de trabajo. Puedes encontrar tu clave API de n8n en la configuración de tu cuenta de n8n.",
-    "apiKeyPlaceholder": "Introduce aquí tu clave API de n8n",
-    "saving": "Guardando...",
-    "save": "Guardar",
-    "yourN8nTools": "Tus herramientas n8n",
-    "section": "Herramientas",
-    "routing": "Enrutando la solicitud a las herramientas relevantes",
-    "no_tools_found": "No se encontraron herramientas",
-    "enabled_text": "Habilitado",
-    "tool": "Herramienta",
-    "description": "Estas herramientas pueden ser invocadas automáticamente por el LLM para obtener datos adicionales para responder preguntas de usuarios en la página de chat.",
-    "toolsDescription": "Estas herramientas pueden ser invocadas automáticamente por el LLM para obtener datos adicionales para responder preguntas de los usuarios en la",
-    "tableName": "Nombre",
-    "tableEnabled": "Habilitado",
-    "tableTags": "Etiquetas",
-    "tableCreatedAt": "Creado en",
-    "tableUpdatedAt": "Actualizado en",
-    "loading": "Cargando...",
-    "noRecords": "No se encontraron registros",
-    "errorActivation": "Error con la activación",
-    "table": {
-      "name": "Nombre",
-      "enabled": "Habilitado",
-      "tags": "Etiquetas",
-      "created_at": "Creado el",
-      "updated_at": "Actualizado el"
-    },
-    "alerts": {
-      "error": {
-        "title": "Error",
-        "save_failed": "Error al guardar la clave API de n8n. Por favor, inténtalo de nuevo más tarde.",
-        "activation_failed": "Error con la activación",
-        "fetch_failed": "Error al obtener los flujos de trabajo",
-        "no_records": "No se encontraron registros. Por favor, verifica tu clave API e inténtalo de nuevo."
-      },
-      "success": {
-        "title": "Éxito",
-        "key_saved": "¡Clave API de n8n guardada exitosamente!"
-      }
-    }
-  },
-
   "api": {
     "key_management": "Gestión de Claves API",
     "documentation": "Documentación de la API",
@@ -295,7 +44,6 @@
     "delete_key": "Eliminar Clave API",
     "request_builder": "Constructor de Solicitudes",
     "select_language": "Seleccionar idioma",
-    "select_model": "Seleccionar modelo",
     "temperature": "Temperatura",
     "retrieval_only": "Solo Recuperación",
     "retrieval_only_tooltip": "Solo Recuperación omite la llamada al LLM, lo que permite recuperar documentos relevantes que coinciden con tu consulta de forma gratuita.",
@@ -323,14 +71,109 @@
       "failed_to_delete": "Error al eliminar la clave API."
     }
   },
-
-  "examples": {
-    "takeaways": "Haz una lista de viñetas con los puntos clave a destacar de este proyecto.",
-    "best_practices": "¿Cuáles son las mejores prácticas para [Actividad o Proceso] en [Contexto o Campo]?",
-    "explain_concept": "¿Puedes explicar el concepto de [Concepto Específico] en términos sencillos?",
-    "start_conversation": "Inicia una conversación a continuación o prueba estos ejemplos"
+  "chat": {
+    "loading": {
+      "knowledge_engines": "Calentando los motores de conocimiento...",
+      "authenticated_user_error": "El usuario autenticado no tiene correo electrónico"
+    },
+    "new_conversation": "Nueva Conversación"
   },
-
+  "feedback": {
+    "title": "Retroalimentación",
+    "category": "Categoría de retroalimentación",
+    "category_placeholder": "Selecciona una categoría",
+    "details": "Detalles de la retroalimentación",
+    "details_placeholder": "Comparte cualquier detalle adicional sobre tu retroalimentación",
+    "submit": "Enviar",
+    "types": {
+      "other": "Otro",
+      "inaccurate": "No es correcto",
+      "inappropriate": "Contenido dañino",
+      "unclear": "Respuesta poco clara",
+      "ui_bug": "Error de interfaz",
+      "overactive_refusal": "Rechazo excesivo",
+      "incomplete_request": "No siguió completamente mi solicitud"
+    }
+  },
+  "variables": {
+    "fill_all": "Por favor, completa todas las variables",
+    "submit": "Enviar"
+  },
+  "tooltips": {
+    "copy_code": "Copiar código",
+    "copied": "¡Copiado!"
+  },
+  "file_types": {
+    "pdf": "PDF",
+    "word": "Palabra",
+    "ppt": "PPT",
+    "excel": "Excel",
+    "video": "Video",
+    "image": "Imagen",
+    "audio": "Audio",
+    "code": "Código",
+    "text": "Texto"
+  },
+  "sidebar": {
+    "newFolder": "Nueva carpeta",
+    "newChat": "Nueva conversación",
+    "areYouSure": "¿Estás seguro?",
+    "clearConversations": "Borrar conversaciones",
+    "search": "Buscar...",
+    "noData": "Sin datos.",
+    "exportHistory": "Historial de exportación",
+    "rename": "Cambiar nombre",
+    "apiKey": "Clave de API",
+    "openaiApiKeyLabel": "Clave de API de OpenAI",
+    "importHistory": "Historial de importación"
+  },
+  "tools_section": {
+    "metaDescription": "El asistente de enseñanza de IA creado para estudiantes en UIUC.",
+    "useN8n": "Usa",
+    "visualEditor": "el hermoso editor visual de flujos de trabajo para crear funciones personalizadas para tu proyecto.",
+    "createEditWorkflows": "Crear/Editar flujos de trabajo",
+    "setupInstructions": "Instrucciones de configuración 🤠",
+    "inviteOnly": "El uso de herramientas vía LLMs es solo por invitación para prevenir abusos. Por favor, envíame un correo para solicitar acceso: rohan13@illinois.edu",
+    "onceAccess": "Una vez que tengas acceso, por favor",
+    "loginWithLink": "inicia sesión con este enlace",
+    "createApiKey": "Dentro de n8n, crea una clave API de n8n y guárdala aquí.",
+    "usageInstructions": "Instrucciones de uso 🛠️",
+    "startWorkflow": "Comienza creando tu primer flujo de trabajo en",
+    "ensureTrigger": "Asegúrate de tener el nodo de disparo correcto para tu flujo de trabajo, revisa la documentación para más detalles",
+    "addNodes": "Agrega los nodos necesarios para tu flujo de trabajo",
+    "saveWorkflow": "Guarda tu flujo de trabajo",
+    "makeActive": "Asegúrate de que tu flujo de trabajo esté activo",
+    "testWorkflow": "Prueba tu flujo de trabajo para completar la incorporación de uso",
+    "workflowCongrats": "¡Si tu flujo de trabajo funciona como esperas, felicidades! 🚀",
+    "usersCanUse": "Tus usuarios ahora pueden empezar a usarlo en la",
+    "chatPage": "Página de Chat",
+    "yourN8nApiKey": "Tu clave API de n8n",
+    "apiKeyDescription": "Usamos esto para ejecutar tus flujos de trabajo. Puedes encontrar tu clave API de n8n en la configuración de tu cuenta de n8n.",
+    "apiKeyPlaceholder": "Introduce aquí tu clave API de n8n",
+    "saving": "Guardando...",
+    "save": "Guardar",
+    "yourN8nTools": "Tus herramientas n8n",
+    "toolsDescription": "Estas herramientas pueden ser invocadas automáticamente por el LLM para obtener datos adicionales para responder preguntas de los usuarios en la",
+    "tableName": "Nombre",
+    "tableEnabled": "Habilitado",
+    "tableTags": "Etiquetas",
+    "tableCreatedAt": "Creado en",
+    "tableUpdatedAt": "Actualizado en",
+    "loading": "Cargando...",
+    "noRecords": "No se encontraron registros",
+    "errorActivation": "Error con la activación",
+    "alerts": {
+      "error": {
+        "title": "Error",
+        "save_failed": "Error al guardar la clave API de n8n. Por favor, inténtalo de nuevo más tarde.",
+        "fetch_failed": "Error al obtener los flujos de trabajo"
+      },
+      "success": {
+        "title": "Éxito",
+        "key_saved": "¡Clave API de n8n guardada exitosamente!"
+      }
+    }
+  },
   "footer": {
     "disclaimer": "Descargo de Responsabilidad",
     "generative_ai_policy": "Política de IA Generativa",
@@ -343,10 +186,7 @@
     "code": "código.",
     "service_uptime_badge": "Insignia de tiempo de actividad del servicio"
   },
-
   "homepage": {
-    "your_chatbots": "Tus Chatbots",
-    "projects_description": "Estos son proyectos que has creado o donde eres administrador.",
     "no_projects_yet": "Aún no has creado ningún proyecto. Vamos a",
     "go_make_one_here": "crear uno aquí",
     "dont_worry_easy": ", no te preocupes, es fácil.",
@@ -356,13 +196,10 @@
     "admins": "Administradores",
     "private": "Privado",
     "public": "Público",
-    "easiest_way": "Es la forma más sencilla de crear tu propio Chatbot.",
     "step1": {
       "title": "1",
       "heading": "Trae tus documentos y herramientas.",
-      "desc1": "Simplemente arrastra y suelta tus archivos para el análisis.",
-      "desc2": "Conéctate a Canvas, GitHub, Notion y más.",
-      "desc3": "Explora la web en busca de tus artículos y blogs favoritos."
+      "desc1": "Simplemente arrastra y suelta tus archivos para el análisis."
     },
     "step2": {
       "title": "2",
@@ -427,21 +264,8 @@
     "rebrand": {
       "announcement": "Aviso: nos hemos cambiado el nombre a Illinois Chat",
       "tooltip": "Estamos en camino de convertirnos en un servicio de producción para todos los campus de la U de I."
-    },
-    "typing": {
-      "words": [
-        "portafolio personal",
-        "sitios web favoritos",
-        "investigación",
-        "revistas académicas",
-        "GitHub",
-        "negocio",
-        "blogs favoritos",
-        "clubes"
-      ]
     }
   },
-
   "documents": {
     "search_by_document_group": "Buscar por Grupo de Documentos",
     "document_group": "Grupo de Documentos",
@@ -450,19 +274,6 @@
     "enabled_tooltip": "Si un documento está incluido en CUALQUIER grupo habilitado, se incluirá en los resultados del chatbot. Los grupos habilitados tienen prioridad sobre los grupos deshabilitados.",
     "no_document_groups_found": "No se encontraron grupos de documentos"
   },
-
-  "email_list": {
-    "add_people": "Agregar personas por correo electrónico",
-    "can_manage": "Puede administrar",
-    "can_view": "Puede ver",
-    "administrators": "Administradores",
-    "admins_description": "Los administradores tienen permisos completos de edición",
-    "members": "Miembros",
-    "members_description": "Solo estas direcciones de correo electrónico pueden acceder al contenido",
-    "already_added": "{{email}} ya ha sido agregado.",
-    "invalid_email": "{{email}} no es una dirección de correo electrónico válida."
-  },
-
   "models": {
     "configure_llm_providers_title": "Configurar proveedores de LLM para tu chatbot",
     "configure_llm_providers_subtitle": "Elige qué LLMs estarán disponibles para tus usuarios. Habilita o deshabilita modelos para equilibrar precio y rendimiento.",
@@ -470,18 +281,13 @@
     "closed_source_description": "Los de mejor rendimiento, pero debes pagar sus precios y seguir sus reglas.",
     "open_source_title": "LLMs de código abierto",
     "open_source_description": "Tus pesos, tus reglas.",
-    "more_details_about_ai_models": "Más detalles sobre los modelos de IA",
     "default_model": "Modelo Predeterminado",
     "default_model_helper": "Este modelo se utilizará por defecto para todas las conversaciones nuevas. Puedes cambiar el modelo para conversaciones individuales en la interfaz de chat.",
     "on": "ACTIVADO",
     "off": "DESACTIVADO",
-    "enable_model": "Habilitar modelo {{model}}",
     "fields": {
-      "api_key": "Clave API",
       "base_url": "URL Base",
       "base_url_placeholder": "Ingresa la URL base de tu instancia de Ollama (ej., http://localhost:11434)",
-      "azure_endpoint": "Punto de Conexión de Azure",
-      "azure_endpoint_placeholder": "Ingresa tu punto de conexión de Azure OpenAI",
       "bedrock_access_key_id": "ID de Clave de Acceso de AWS",
       "bedrock_secret_access_key": "Clave de Acceso Secreta de AWS",
       "bedrock_region": "Región de AWS"
@@ -491,20 +297,13 @@
       "description": "La mejor opción gratuita es el modelo Qwen 2 72B, alojado por NCSA."
     },
     "ncsa_hosted_vlm": {
-      "title": "Modelos de Visión Alojados por NCSA (100% gratis)",
-      "description": "Accede a los modelos de visión y lenguaje de NCSA para tareas multimodales."
+      "title": "Modelos de Visión Alojados por NCSA (100% gratis)"
     },
     "openai": {
-      "title": "OpenAI",
-      "description": "Detalles y precios de modelos OpenAI. Se requiere una clave API de OpenAI, y puede enfrentar problemas de límite de velocidad hasta completar su primer ciclo de facturación."
-    },
-    "azure": {
-      "title": "Azure OpenAI",
-      "description": "Azure OpenAI Service proporciona seguridad de nivel empresarial y disponibilidad regional. Consulta los modelos de Azure OpenAI para obtener detalles sobre modelos y funciones disponibles."
+      "title": "OpenAI"
     },
     "anthropic": {
-      "title": "Anthropic",
-      "description": "Accede a los modelos Claude a través de la API de Anthropic. Claude sobresale en tareas de razonamiento complejo y análisis."
+      "title": "Anthropic"
     },
     "ollama": {
       "title": "Compatible con OpenAI vía Ollama",
@@ -512,8 +311,7 @@
     },
     "webllm": {
       "title": "IA en dispositivo con WebLLM",
-      "description": "Admitimos ejecutar algunos modelos en tu navegador web en tu dispositivo. Eso es 100% local, IA en dispositivo. Incluso usa tu GPU. Para esto, tu navegador debe pasar esta verificación de compatibilidad para WebGPU.",
-      "working": "Si ves mucho texto, está funcionando. Si ves \"webgpu no disponible en este navegador\", no está funcionando."
+      "description": "Admitimos ejecutar algunos modelos en tu navegador web en tu dispositivo. Eso es 100% local, IA en dispositivo. Incluso usa tu GPU. Para esto, tu navegador debe pasar esta verificación de compatibilidad para WebGPU."
     },
     "gemini": {
       "title": "Google Gemini",
@@ -527,7 +325,6 @@
       "title": "SambaNova"
     }
   },
-
   "dashboard": {
     "title": "Panel de Control",
     "document_groups": "Grupos de Documentos",
@@ -540,10 +337,8 @@
     "starting_url_web_scraping": "La URL de inicio del web scraping",
     "date_created": "Fecha de creación",
     "actions": "Acciones",
-    "loading": "Cargando...",
     "error_fetching_metadata": "Ocurrió un error al obtener los metadatos del curso. Por favor, inténtalo de nuevo más tarde."
   },
-
   "upload": {
     "project_description": "Descripción del Proyecto",
     "describe_project_placeholder": "Describe tu proyecto, objetivos, impacto esperado, etc...",
@@ -559,21 +354,6 @@
     "share": "Compartir",
     "update": "Actualizar"
   },
-  "file_upload": {
-    "browse_button": "Examinar...",
-    "no_file_selected": "Ningún archivo seleccionado"
-  },
-
-  "canvas": {
-    "permission_required": "IMPORTANTE: Permiso de Canvas Requerido",
-    "permission_instructions": "Antes de continuar, DEBES agregar el Chatbot de UIUC como estudiante a tu curso de Canvas en.",
-    "bot_email": "Correo electrónico del bot:",
-    "bot_email_address": "uiuc.chat@ad.uillinois.edu",
-    "bot_name": "Nombre del bot:",
-    "bot_name_value": "Curso de UIUC de Inteligencia Artificial",
-    "permission_note": "Esto es necesario para acceder a cualquier contenido de tu Canvas. El IA solo puede ver lo que los estudiantes/TA tienen acceso."
-  },
-
   "prompt": {
     "title": "Creación de Prompts",
     "engineering_guide": "Guía de Ingeniería de Prompts",
@@ -622,58 +402,11 @@
     "bypass_internal_prompting_locked_tooltip": "Esta configuración está habilitada a nivel de curso. Habilitarla aquí asegurará que siga activa incluso si cambian las configuraciones del curso.",
     "bypass_internal_prompting_link_tooltip": "Usa el prompt del sistema en bruto sin prompting interno adicional. Esto omite los prompts integrados de UIUC.chat para citas y ayuda.",
     "generated_link": "Enlace Generado",
-    "engineering": {
-      "guide": "Guía de Ingeniería de Prompts",
-      "insights": "Para obtener información adicional y mejores prácticas sobre la creación de prompts, consulte:",
-      "openai_guide": "Guía de Prompts de OpenAI",
-      "anthropic_library": "Biblioteca de Prompts de Anthropic"
-    },
-    "system": {
-      "title": "Prompt del Sistema",
-      "description": "El Prompt del Sistema proporciona la base para cada conversación en este proyecto. Define el rol, tono y comportamiento del modelo. Considere incluir:",
-      "key_instructions": "Instrucciones clave y ejemplos de uso",
-      "welcome_message": "Un mensaje de bienvenida cálido y claro",
-      "helpful_links": "Enlaces útiles y recursos de aprendizaje",
-      "enter": "Ingrese el prompt del sistema...",
-      "update": "Actualizar Prompt del Sistema",
-      "optimize": "Optimizar Prompt del Sistema",
-      "optimizing": "Optimizando...",
-      "optimized": "Prompt del Sistema Optimizado",
-      "model_select": "Seleccionar modelo",
-      "model_tooltip": "El modelo seleccionado se utilizará al optimizar el prompt del sistema"
-    },
     "search": {
-      "optimization": "Optimización de Búsqueda de Documentos",
-      "smart": "Búsqueda Inteligente de Documentos",
-      "smart_tooltip": "Cuando está habilitado, UIUC.chat optimiza sus consultas para buscar mejor en los materiales del curso y encontrar contenido relevante. Nota: Esto solo afecta cómo se buscan los documentos - sus mensajes de chat permanecen exactamente como los escribe.",
       "new": "Nuevo"
     },
     "behavior": {
-      "settings": "Configuración del Comportamiento de la IA",
-      "guided_learning": "Aprendizaje Guiado",
-      "guided_learning_tooltip": "Cuando está habilitado en todo el curso, esta configuración se aplica a todos los estudiantes y no puede ser deshabilitada por ellos. La IA fomentará la resolución independiente de problemas proporcionando pistas y preguntas en lugar de respuestas directas, mientras sigue encontrando y citando materiales relevantes del curso. Esto promueve el pensamiento crítico mientras asegura que los estudiantes tengan acceso a los recursos adecuados.",
-      "document_based_only": "Solo Referencias Basadas en Documentos",
-      "document_based_only_tooltip": "Restringe la IA a usar solo información de los documentos proporcionados. Útil para mantener la precisión en campos como la investigación legal donde el conocimiento externo podría ser problemático.",
-      "bypass_internal": "Omitir el Prompteo Interno de UIUC.chat",
-      "bypass_internal_tooltip": "Internamente, indicamos al modelo que (1) agregue citas y (2) siempre sea lo más útil posible. Puede omitir esto para tener control total sin modificaciones sobre su bot.",
-      "copy_internal": "Copiar Prompt Interno de UIUC.chat",
-      "copy_internal_tooltip": "Puede usar y personalizar nuestro prompteo interno predeterminado para adaptarlo a sus necesidades. Tenga en cuenta que solo el formato específico de citas descrito funcionará con nuestro sistema de 'buscar y reemplazar' de citas. Esto proporciona un buen punto de partida para definir el comportamiento de la IA en modo de prompt sin procesar.",
       "new": "Nuevo"
-    },
-    "reset": {
-      "settings": "Restablecer Configuración de Prompts",
-      "confirm": "¿Está seguro de que desea restablecer su prompt del sistema y todas las configuraciones de comportamiento a sus valores predeterminados?",
-      "action_will": "Esta acción:",
-      "restore_default": "Restaurará el prompt del sistema a la plantilla predeterminada",
-      "disable_settings": "Deshabilitará el Aprendizaje Guiado, el modo solo de documentos y otras configuraciones personalizadas",
-      "cannot_undo": "Esto no se puede deshacer. Por favor, confirme que desea continuar."
-    },
-    "share": {
-      "generate_link": "Generar Enlace para Compartir"
-    },
-    "states": {
-      "on": "ACTIVADO",
-      "off": "DESACTIVADO"
     },
     "changes": {
       "smart_doc_search": "Búsqueda Inteligente de Documentos",
@@ -698,7 +431,6 @@
       "updated_message": "El prompt del sistema ha sido actualizado."
     }
   },
-
   "flagship": {
     "research": {
       "title": "Buscador de Investigación de Illinois",
@@ -719,20 +451,6 @@
       "description": "Usando toda la documentación de Delta, obtén ejemplos detallados, consejos e información sobre cómo utilizar la supercomputadora Delta."
     }
   },
-
-  "new_project": {
-    "create_new_project": "Crear un nuevo proyecto",
-    "project_name_placeholder": "Nombre del proyecto",
-    "project_name_label": "¿Cuál es el nombre del proyecto?",
-    "what_do_you_want_to_achieve": "¿Qué quieres lograr?",
-    "describe_project_placeholder": "Describe tu proyecto, objetivos, impacto esperado, etc...",
-    "next_upload_documents": "Siguiente: vamos a subir algunos documentos",
-    "add_project_name_above": "¡Agrega un nombre de proyecto arriba! :)",
-    "project_name_taken": "¡Este nombre de proyecto ya está en uso!",
-    "creating": "Creando...",
-    "create": "Crear"
-  },
-
   "analysis": {
     "metaDescription": "El asistente de enseñanza de IA creado para estudiantes en UIUC.",
     "usageOverview": "Resumen de Uso",
@@ -747,26 +465,17 @@
     "messages": "Mensajes",
     "totalExchanges": "Intercambios totales",
     "vsLastWeek": "vs la semana pasada",
-    "userEngagementMetrics": "Métricas de Participación de Usuarios",
-    "userEngagementDesc": "Desglose detallado de patrones de interacción de usuarios",
-    "conversationsPerUser": "Conversaciones por Usuario",
-    "avgEngagementFrequency": "Frecuencia promedio de participación",
     "conversationsPerUserUnit": "conversaciones / usuario",
-    "messagesPerUser": "Mensajes por Usuario",
-    "avgInteractionDepth": "Profundidad promedio de interacción",
     "messagesPerUserUnit": "mensajes / usuario",
-    "messagesPerConversation": "Mensajes por Conversación",
-    "avgConversationLength": "Duración promedio de conversación",
     "messagesPerConversationUnit": "mensajes / conversación",
     "conversationVisualizations": "Visualizaciones de Conversaciones",
     "selectTimeRange": "Selecciona un rango de tiempo para filtrar las visualizaciones a continuación",
     "pickDateRange": "Selecciona un rango de fechas",
     "allTime": "Todo el Tiempo",
     "lastWeek": "Última Semana",
-    "lastMonth": "Último Mes", 
+    "lastMonth": "Último Mes",
     "lastYear": "Último Año",
     "customRange": "Rango Personalizado",
-    "conversationsInSelectedRange": "{{count}} conversaciones en el rango seleccionado",
     "noConversationData": "No hay datos de conversación disponibles para el rango de tiempo seleccionado",
     "tryDifferentTimeRange": "Intenta seleccionar un rango de tiempo diferente para ver las visualizaciones",
     "modelUsageDistribution": "Distribución de Uso de Modelos",
@@ -781,60 +490,32 @@
     "heatmapConversationDensity": "Un mapa de calor que muestra la densidad de conversaciones a través de días y horas",
     "linear": "Lineal",
     "logarithmic": "Logarítmico",
-    "sunday": "Domingo",
-    "monday": "Lunes",
-    "tuesday": "Martes",
-    "wednesday": "Miércoles",
-    "thursday": "Jueves",
-    "friday": "Viernes",
-    "saturday": "Sábado",
     "numberOfConversations": "Número de Conversaciones",
     "date": "Fecha",
     "hour": "Hora",
     "loadingChart": "Cargando gráfico",
-    "loadingHeatmap": "Cargando mapa de calor",
     "noDataAvailable": "No hay datos disponibles",
     "toggleLinearLog": "Alternar entre escala lineal y logarítmica",
     "switchLinearLog": "Cambiar entre visualización de escala lineal y logarítmica",
     "conversationsPerDayVisualization": "Visualización de conversaciones por día",
     "numberOfConversationsLog": "Número de Conversaciones (escala logarítmica)",
-    "conversationsCount": "Conversaciones: {{count}}",
-    "dateLabel": "Fecha: {{date}}",
-    "hourLabel": "Hora: {{hour}}",
-    "dayOfWeek": "Día de la Semana",
-    "dayOfWeekLabel": "Día de la Semana: {{day}}",
-    "hourShort": "{{hour}}",
-    "conceptMapTitle": "Mapa Conceptual de Consultas de Usuario",
     "conceptMapOfUserQueries": "Mapa Conceptual de Consultas de Usuario",
     "conceptMapDescription": "El Mapa Conceptual visualiza todas las consultas realizadas en este proyecto:",
     "similarTopics": "Temas similares",
     "clusterTogether": "se agrupan",
     "differentTopics": "Temas diferentes",
-    "positionedFurtherApart": "se posicionan más separados",
+    "positionedFurtherApart": "están posicionados más separados",
     "commonThemes": "Temas comunes",
-    "knowledgeGapsVisible": "y se hacen visibles lagunas de conocimiento",
-    "learnMoreSemantic": "Aprende más sobre",
+    "knowledgeGapsVisible": "y las brechas de conocimiento se hacen visibles",
+    "learnMoreSemantic": "Aprende más sobre visualizaciones de similitud semántica",
     "semanticSimilarityVisualizations": "visualizaciones de similitud semántica",
     "visualizationNote": "Ten en cuenta que no puedes iniciar sesión ni editar este mapa. Es solo para tu visualización. Por favor",
     "contactUs": "contáctanos",
     "withQuestions": "con preguntas.",
-    "learnMoreSemantic": "Aprende más sobre visualizaciones de similitud semántica",
-    "visualizationNotAvailable": "Visualización no disponible",
-    "visualizationNotAvailableBody": "La visualización no está disponible en este momento. Por favor, inténtalo de nuevo más tarde.",
     "moreInfoConceptMap": "Más información sobre el mapa conceptual",
-    "similarTopics": "Temas similares",
-    "differentTopics": "Temas diferentes",
-    "commonThemes": "Temas comunes",
-    "clusterTogether": "se agrupan",
-    "positionedFurtherApart": "están posicionados más separados",
-    "knowledgeGapsVisible": "y las brechas de conocimiento se hacen visibles",
-    "semanticSimilarityVisualizations": "visualizaciones de similitud semántica",
     "notEnoughDataTitle": "Visualización No Disponible Aún",
     "notEnoughDataBody": "Necesitamos al menos 20 preguntas para generar una visualización significativa de cómo se relacionan los temas entre sí. ¡Por favor, haz más preguntas y vuelve más tarde!",
-    "learnMoreSemanticLink": "Aprende más sobre visualizaciones de similitud semántica",
-    "downloadConversationHistoryError": "Error al descargar el historial de conversaciones.",
     "loadingModelUsage": "Cargando datos de uso de modelos...",
-    "errorLoadingModelUsage": "Error al cargar datos de uso de modelos: {{error}}",
     "noModelUsageData": "No hay datos de uso de modelos disponibles",
     "modelUsagePieAria": "Gráfico circular de distribución de uso de modelos",
     "modelUsageTooltipAria": "Detalles de uso de modelos",
@@ -845,16 +526,6 @@
     "deleting_file": "Eliminando archivo",
     "error_deleting_file_message": "Hubo un error al eliminar el archivo. Por favor, inténtalo de nuevo.",
     "file_deleting_bg": "El archivo se está eliminando en segundo plano.",
-    "check_docs": "Consulta",
-    "our_docs": "nuestra documentación",
-    "process_data": "para ver ejemplos de código para procesar estos datos.",
-    "exportDocuments": {
-      "started_gathering": "Hemos comenzado a recopilar tus documentos, recibirás un correo electrónico en breve.",
-      "ready_for_download": "Tus documentos están listos para descargar.",
-      "unexpected_response_format": "Formato de respuesta inesperado del servidor.",
-      "error_exporting": "Error al exportar documentos.",
-      "course_name_required": "El nombre del curso es obligatorio."
-    },
     "llm_providers": {
       "update_success": {
         "title": "Proveedores LLM actualizados",
@@ -868,7 +539,10 @@
         "title": "Error",
         "message": "Error al obtener tus claves API. Nuestra base de datos debe estar teniendo un mal día. Por favor, actualiza la página o inténtalo de nuevo más tarde."
       }
-    }
+    },
+    "web_scrape_started": "Rastreo web iniciado",
+    "web_scrape_message": "Hemos comenzado a rastrear tu sitio. Recibirás actualizaciones cuando el contenido esté listo.",
+    "web_scrape_error": "Error durante el rastreo web"
   },
   "ingest": "Ingerir",
   "web_scrape_in_progress": "Rastreo web en progreso...",
@@ -877,9 +551,6 @@
   "max_urls_label": "Máximo de URLs a rastrear",
   "default_50": "Predeterminado: 50",
   "limit_web_crawl": "Limitar rastreo web a:",
-  "alerts.web_scrape_started": "Rastreo web iniciado",
-  "alerts.web_scrape_message": "Hemos comenzado a rastrear tu sitio. Recibirás actualizaciones cuando el contenido esté listo.",
-  "alerts.web_scrape_error": "Error durante el rastreo web",
   "example_questions": {
     "example_question_label": "Pregunta de Ejemplo",
     "example_question_placeholder": "Ingresa una pregunta de ejemplo que los usuarios puedan probar...",
@@ -896,16 +567,11 @@
     "coursera": "Coursera",
     "coursera_description": "Importa contenido de los cursos de Coursera, incluyendo conferencias, tareas y materiales del curso.",
     "configure_import": "Configurar importación",
-    "ingest_website": "Ingerir Sitio Web",
-    "share_chatbot": "Compartir Chatbot",
-    "share": "Compartir"
+    "ingest_website": "Ingerir Sitio Web"
   },
   "website_ingest": {
-    "input_required": "Se requiere entrada",
-    "number_required": "Debe ser un número",
     "range_error": "Debe estar entre 1 y 500",
     "invalid_url_error": "URL inválida (por favor incluya https://)",
-    "scraping_error": "Error durante el rastreo web",
     "enter_url_placeholder": "Ingrese URL...",
     "max_urls_label": "Máximo de URLs a rastrear",
     "max_urls_tooltip": "El número máximo de URLs que serán rastreadas y procesadas. Números más altos significan más contenido pero mayor tiempo de procesamiento.",
@@ -938,7 +604,6 @@
   },
   "coursera_ingest": {
     "title": "Ingerir Curso de Coursera",
-    "helper": "Importa contenido de los cursos de Coursera, incluyendo conferencias, tareas y materiales del curso.",
     "instructions_1": "Para Coursera, solo ingresa una URL como",
     "instructions_2": ", por ejemplo",
     "alert": "¡Ingesta de Coursera próximamente!",
@@ -949,8 +614,7 @@
     "reject": "Tipo de archivo no soportado",
     "idle_project_name": "Por favor, ingresa primero un nombre de proyecto",
     "idle_upload_materials": "Sube tus materiales",
-    "drag_helper": "Arrastra y suelta archivos aquí o haz clic para seleccionar archivos",
-    "remain_until_upload_complete": "Por favor, permanece en esta página hasta que se complete la carga"
+    "drag_helper": "Arrastra y suelta archivos aquí o haz clic para seleccionar archivos"
   },
   "canvas_ingest": {
     "title": "Canvas",
@@ -962,7 +626,6 @@
     "bot_name": "Nombre del bot:",
     "bot_name_value": "IA del Curso UIUC",
     "permission_note": "Esto es necesario para acceder a cualquier contenido de tu Canvas. La IA solo puede ver lo que los estudiantes/TA tienen acceso.",
-    "configure_import": "Configurar importación",
     "import_content": "Importar Contenido de Canvas",
     "enter_canvas_url": "Ingresa la URL de tu curso de Canvas como",
     "canvas_url_example": "canvas.illinois.edu/courses/12345",
@@ -981,17 +644,7 @@
     "title": "Compartir tu chatbot",
     "subtitle": "Colabora con miembros en este proyecto",
     "chatbot_link": "Enlace del Chatbot",
-    "access_control": "Control de Acceso",
-    "private_project": "Proyecto Privado",
-    "public_project": "Proyecto Público",
-    "private_description": "Solo las personas especificadas pueden acceder",
-    "public_description": "Cualquiera con el enlace puede acceder",
-    "members": "Miembros",
-    "administrators": "Administradores",
-    "add_members": "Agregar miembros",
-    "add_admins": "Agregar administradores",
-    "members_description": "Estos usuarios pueden ver e interactuar con el chatbot",
-    "admins_description": "Estos usuarios pueden editar la configuración y el contenido del chatbot"
+    "access_control": "Control de Acceso"
   },
   "project_files": {
     "success": "Éxito",
@@ -1001,14 +654,11 @@
     "all_selected_docs_added": "Todos los documentos seleccionados se agregarán a los grupos elegidos",
     "selection_limit_title": "Límite de Selección Excedido",
     "selection_limit_message": "Has seleccionado más de 100 documentos. Por favor, selecciona menos o igual a 100 documentos.",
-    "delete_selected": "Eliminar {{count}} registros seleccionados",
     "delete_one": "Eliminar 1 registro seleccionado",
     "select_to_delete": "Selecciona registros para eliminar",
-    "delete_short": "Eliminar {{count}}",
     "loading": "Cargando...",
     "select_group": "Seleccionar Grupo",
     "no_groups_create": "No hay grupos... ¡Empieza a escribir para crear uno nuevo! ✨",
-    "create_group": "+ Crear \"{{name}}\"",
     "search_files": "Buscar archivos...",
     "search_files_description": "Mostrar archivos subidos que incluyan el texto especificado",
     "search_urls": "Buscar URLs...",
@@ -1022,8 +672,7 @@
     "try_again": "Por favor, inténtalo de nuevo más tarde.",
     "export_confirm_title": "Por favor confirma tu acción",
     "export_confirm_message": "¿Estás seguro de que quieres exportar todos los documentos y embeddings?",
-    "export": "Exportar",
-    "export_result": "Resultado de la Exportación"
+    "export": "Exportar"
   },
   "settings": {
     "title": "Configuración",
@@ -1113,8 +762,7 @@
         }
       }
     }
-  }
-  ,
+  },
   "dashboard_page": {
     "title": "Mis Chatbots",
     "description": "Estos son chatbots que has creado o donde eres administrador.",
