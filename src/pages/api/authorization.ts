@@ -54,7 +54,8 @@ export function hasCourseAccess(
   return (
     isCourseOwner(user, courseMetadata) ||
     isCourseAdmin(user, courseMetadata) ||
-    isApprovedUser(user, courseMetadata)
+    isApprovedUser(user, courseMetadata) ||
+    courseMetadata.allow_logged_in_users === true
   )
 }
 
@@ -127,10 +128,11 @@ export function withCourseAdminAccess(courseName: string) {
         })
       }
 
-      // Check if user is course admin or owner
+      // Check if user is course admin or owner or if course allows logged in users
       if (
         !isCourseOwner(req.user, courseMetadata) &&
-        !isCourseAdmin(req.user, courseMetadata)
+        !isCourseAdmin(req.user, courseMetadata) &&
+        !courseMetadata.allow_logged_in_users
       ) {
         return res.status(403).json({
           error: 'Insufficient permissions',
@@ -212,7 +214,8 @@ export function withCourseOwnerOrAdminAccess() {
       // Check if user has access to the course
       if (
         !isCourseAdmin(req.user, courseMetadata) &&
-        !isCourseOwner(req.user, courseMetadata)
+        !isCourseOwner(req.user, courseMetadata) &&
+        !courseMetadata.allow_logged_in_users
       ) {
         return res.status(403).json({
           error: 'Access denied',
@@ -242,11 +245,10 @@ export function extractCourseName(req: NextApiRequest): string | null {
     req.body?.project_name ||
     (req.headers['x-course-name'] as string) ||
     (req.headers['x-project_name'] as string)
-    null
+  null
 
   return courseName
 }
-
 
 // Middleware that automatically extracts course name and applies access control
 export function withCourseAccessFromRequest(
@@ -254,7 +256,12 @@ export function withCourseAccessFromRequest(
     | 'any'
     | 'admin'
     | 'owner'
-    | Partial<Record<'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS', 'any' | 'admin' | 'owner'>> = 'any',
+    | Partial<
+        Record<
+          'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS',
+          'any' | 'admin' | 'owner'
+        >
+      > = 'any',
 ) {
   type AccessLevel = 'any' | 'admin' | 'owner'
   type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS'
@@ -276,7 +283,10 @@ export function withCourseAccessFromRequest(
   }
 
   return function (
-    handler: (req: AuthenticatedRequest, res: NextApiResponse) => Promise<void> | void,
+    handler: (
+      req: AuthenticatedRequest,
+      res: NextApiResponse,
+    ) => Promise<void> | void,
   ) {
     return withAuth(async (req: AuthenticatedRequest, res: NextApiResponse) => {
       if (!req.user) {
@@ -288,7 +298,8 @@ export function withCourseAccessFromRequest(
       if (!courseName) {
         return res.status(400).json({
           error: 'Course name required',
-          message: 'Course name must be provided in query params, body, or headers',
+          message:
+            'Course name must be provided in query params, body, or headers',
         })
       }
 
