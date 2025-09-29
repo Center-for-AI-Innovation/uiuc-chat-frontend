@@ -6,6 +6,7 @@ import { encrypt, isEncrypted } from '~/utils/crypto'
 import { getCourseMetadata } from './getCourseMetadata'
 import { ensureRedisConnected } from '~/utils/redisClient'
 import { superAdmins } from '~/utils/superAdmins'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const { courseName, courseMetadata } = req.body as {
@@ -24,12 +25,6 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
 
     // Combine the existing metadata with the new metadata, prioritizing the new values (order matters!)
     const combined_metadata = { ...existing_metadata, ...courseMetadata }
-
-    console.log('-----------------------------------------')
-    console.log('EXISTING course metadata:', existing_metadata)
-    console.log('passed into upsert metadata:', courseMetadata)
-    console.log('FINAL COMBINED course metadata:', combined_metadata)
-    console.log('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
 
     // Check if combined_metadata doesn't have anything in the field course_admins
     if (
@@ -72,4 +67,4 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   }
 }
 
-export default withAuth(handler)
+export default withCourseOwnerOrAdminAccess()(handler)

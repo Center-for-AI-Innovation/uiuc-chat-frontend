@@ -51,7 +51,6 @@ export async function upsertMessageToServer(
 /** @deprecated Use upsertMessageToServer instead */
 export async function deleteMessagesFromServer(
   messageIds: string[],
-  user_email: string,
   course_name: string,
 ) {
   console.warn(
@@ -68,7 +67,7 @@ export async function deleteMessagesFromServer(
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ messageIds, user_email, course_name }),
+        body: JSON.stringify({ messageIds, course_name }),
       })
 
       if (!response.ok) {
