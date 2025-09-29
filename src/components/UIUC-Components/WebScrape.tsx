@@ -144,7 +144,7 @@ export const WebScrape = ({
       let data = null
       // Make API call based on URL
       if (url.includes('coursera.org')) {
-        alert(t('alerts.coursera_ingest'));
+        alert(t('coursera_ingest.alert') as unknown as string);
       } else if (url.includes('ocw.mit.edu')) {
         data = downloadMITCourse(url, courseName, 'local_dir') // no await -- do in background
 
@@ -186,7 +186,7 @@ export const WebScrape = ({
         await new Promise((resolve) => setTimeout(resolve, 8000))
       }
     } else {
-      alert(t('alerts.invalid_url'));
+      alert(t('website_ingest.invalid_url_error') as unknown as string);
     }
     setLoadingSpinner(false)
     setUrl('') // clear url

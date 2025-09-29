@@ -156,8 +156,10 @@
   "feedback": {
     "title": "Retroalimentación",
     "category": "Categoría de retroalimentación",
+    "category_placeholder": "Selecciona una categoría",
     "details": "Detalles de la retroalimentación",
     "details_placeholder": "Comparte cualquier detalle adicional sobre tu retroalimentación",
+    "submit": "Enviar",
     "types": {
       "other": "Otro",
       "inaccurate": "No es correcto",
@@ -167,6 +169,12 @@
       "overactive_refusal": "Rechazo excesivo",
       "incomplete_request": "No siguió completamente mi solicitud"
     }
+  },
+
+  "variables": {
+    "fill_all": "Por favor, completa todas las variables",
+    "enter_value_for": "Ingresa un valor para {{key}}...",
+    "submit": "Enviar"
   },
 
   "tooltips": {
@@ -666,6 +674,28 @@
     "states": {
       "on": "ACTIVADO",
       "off": "DESACTIVADO"
+    },
+    "changes": {
+      "smart_doc_search": "Búsqueda Inteligente de Documentos",
+      "guided_learning": "Aprendizaje Guiado",
+      "document_only": "Solo Referencias Basadas en Documentos",
+      "bypass_internal_prompting": "Omitir el prompting interno de UIUC.chat"
+    },
+    "alerts": {
+      "optimize_failed": "Error al optimizar el prompt. Por favor, inténtalo de nuevo.",
+      "update_settings_failed": "Error al actualizar la configuración",
+      "settings_saved": "La configuración se ha guardado correctamente",
+      "copy_default_success": "Prompt del sistema posterior por defecto copiado al portapapeles",
+      "copy_default_error": "No se pudo copiar el texto al portapapeles",
+      "fetch_default_error": "No se pudo obtener el prompt por defecto"
+    },
+    "toast": {
+      "error_updating_title": "Error al actualizar el prompt",
+      "error_updating_message": "Ocurrió un error al actualizar el prompt. Por favor, inténtalo de nuevo.",
+      "reset_title": "Prompt restablecido a los valores predeterminados",
+      "reset_message": "El prompt del sistema se ha restablecido a la configuración predeterminada.",
+      "updated_title": "Prompt actualizado correctamente",
+      "updated_message": "El prompt del sistema ha sido actualizado."
     }
   },
 
@@ -801,7 +831,14 @@
     "semanticSimilarityVisualizations": "visualizaciones de similitud semántica",
     "notEnoughDataTitle": "Visualización No Disponible Aún",
     "notEnoughDataBody": "Necesitamos al menos 20 preguntas para generar una visualización significativa de cómo se relacionan los temas entre sí. ¡Por favor, haz más preguntas y vuelve más tarde!",
-    "learnMoreSemanticLink": "Aprende más sobre visualizaciones de similitud semántica"
+    "learnMoreSemanticLink": "Aprende más sobre visualizaciones de similitud semántica",
+    "downloadConversationHistoryError": "Error al descargar el historial de conversaciones.",
+    "loadingModelUsage": "Cargando datos de uso de modelos...",
+    "errorLoadingModelUsage": "Error al cargar datos de uso de modelos: {{error}}",
+    "noModelUsageData": "No hay datos de uso de modelos disponibles",
+    "modelUsagePieAria": "Gráfico circular de distribución de uso de modelos",
+    "modelUsageTooltipAria": "Detalles de uso de modelos",
+    "other": "Otro"
   },
   "alerts": {
     "error_deleting_file": "Error al eliminar el archivo",
@@ -833,6 +870,16 @@
       }
     }
   },
+  "ingest": "Ingerir",
+  "web_scrape_in_progress": "Rastreo web en progreso...",
+  "web_scrape_refresh_notice": "Puedes actualizar la página después de un minuto para ver el nuevo contenido en tu tabla de Documentos.",
+  "max_urls_tooltip": "El número máximo de URLs que serán rastreadas y procesadas. Números más altos significan más contenido pero mayor tiempo de procesamiento.",
+  "max_urls_label": "Máximo de URLs a rastrear",
+  "default_50": "Predeterminado: 50",
+  "limit_web_crawl": "Limitar rastreo web a:",
+  "alerts.web_scrape_started": "Rastreo web iniciado",
+  "alerts.web_scrape_message": "Hemos comenzado a rastrear tu sitio. Recibirás actualizaciones cuando el contenido esté listo.",
+  "alerts.web_scrape_error": "Error durante el rastreo web",
   "example_questions": {
     "example_question_label": "Pregunta de Ejemplo",
     "example_question_placeholder": "Ingresa una pregunta de ejemplo que los usuarios puedan probar...",

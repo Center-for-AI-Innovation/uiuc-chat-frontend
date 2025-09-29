@@ -76,7 +76,7 @@ export default function MITIngestForm({
       let data = null
       data = downloadMITCourse(url, project_name, 'local_dir') // no await -- do in background
     } else {
-      alert('Invalid URL (please include https://)')
+      alert(t('website_ingest.invalid_url_error') as unknown as string)
     }
   }
   const [inputErrors, setInputErrors] = useState({

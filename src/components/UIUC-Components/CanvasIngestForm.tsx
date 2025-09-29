@@ -122,7 +122,7 @@ export default function CanvasIngestForm({
       console.log('Canvas content ingestion was successful!')
       console.log('Ingesting:', url, 'with options:', selectedOptions)
     } else {
-      alert('Invalid URL (please include https://)')
+      alert(t('website_ingest.invalid_url_error') as unknown as string)
     }
   }
 
@@ -206,7 +206,7 @@ export default function CanvasIngestForm({
               <span className="font-mono text-[--illinois-orange]">
                 {t('canvas_ingest.bot_email_address')}
               </span>
-              <br />• Bot name:{' '}
+              <br />• {t('canvas_ingest.bot_name')}{' '}
               <span className="font-mono text-[--illinois-orange]">
                 {t('canvas_ingest.bot_name_value')}
               </span>

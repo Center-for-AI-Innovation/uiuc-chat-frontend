@@ -1,4 +1,5 @@
 import { type FC, type KeyboardEvent, useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'next-i18next'
 
 import { type Prompt } from '@/types/prompt'
 
@@ -15,6 +16,7 @@ export const VariableModal: FC<Props> = ({
   onSubmit,
   onClose,
 }: Props) => {
+  const { t } = useTranslation('common')
   const [updatedVariables, setUpdatedVariables] = useState<
     { key: string; value: string }[]
   >(

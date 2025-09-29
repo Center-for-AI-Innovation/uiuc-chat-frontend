@@ -10,6 +10,7 @@ import {
   Group,
   type MantineTheme,
 } from '@mantine/core'
+import { useTranslation } from 'next-i18next'
 
 const useStyles = createStyles((theme: MantineTheme) => ({
   root: {
@@ -65,6 +66,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
 }) => {
   const { classes } = useStyles()
   const theme = useMantineTheme()
+  const { t } = useTranslation('common')
   const [feedback, setFeedback] = useState<string>('')
   const [category, setCategory] = useState<string>('other')
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
@@ -112,16 +114,16 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
         label={t('feedback_category') || ''}
         placeholder={t('feedback_category_placeholder') || ''}
         data={[
-          { value: 'inaccurate', label: 'Not factually correct' },
-          { value: 'inappropriate', label: 'Harmful content' },
-          { value: 'unclear', label: 'Unclear Response' },
-          { value: 'ui_bug', label: 'UI bug' },
-          { value: 'overactive_refusal', label: 'Overactive refusal' },
+          { value: 'inaccurate', label: t('feedback.types.inaccurate') as unknown as string },
+          { value: 'inappropriate', label: t('feedback.types.inappropriate') as unknown as string },
+          { value: 'unclear', label: t('feedback.types.unclear') as unknown as string },
+          { value: 'ui_bug', label: t('feedback.types.ui_bug') as unknown as string },
+          { value: 'overactive_refusal', label: t('feedback.types.overactive_refusal') as unknown as string },
           {
             value: 'incomplete_request',
-            label: 'Did not fully follow my request',
+            label: t('feedback.types.incomplete_request') as unknown as string,
           },
-          { value: 'other', label: 'Other' },
+          { value: 'other', label: t('feedback.types.other') as unknown as string },
         ]}
         value={category}
         onChange={(value) => setCategory(value || 'other')}
@@ -171,9 +173,9 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
       <Textarea
         label={
           <Group spacing={4}>
-            <Text className="text-[--modal-text]">Feedback Details</Text>
+            <Text className="text-[--modal-text]">{t('feedback.details')}</Text>
             <Text size="sm" className="text-[--foreground-faded]">
-              (Optional)
+              {t('common.optional')}
             </Text>
           </Group>
         }
