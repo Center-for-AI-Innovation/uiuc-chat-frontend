@@ -8,6 +8,7 @@ import {
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'next-i18next'
 
 export default function AzureProviderInput({
   provider,
@@ -18,6 +19,7 @@ export default function AzureProviderInput({
   form: any
   isLoading: boolean
 }) {
+  const { t } = useTranslation('common')
   if (isLoading) {
     return <Skeleton height={200} width={330} radius={'lg'} />
   }
@@ -60,8 +62,8 @@ export default function AzureProviderInput({
               <Switch
                 size="md"
                 labelPosition="left"
-                onLabel="ON"
-                offLabel="OFF"
+                onLabel={t('models.on')}
+                offLabel={t('models.off')}
                 aria-label="Enable Azure OpenAI provider"
                 checked={field.state.value}
                 onChange={(event) => {

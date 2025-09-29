@@ -1,6 +1,6 @@
 import { type DocumentProps, Head, Html, Main, NextScript } from 'next/document'
 import { useEffect, useState } from 'react'
-import i18nextConfig from '../../next-i18next.config.mjs'
+import i18nextConfig from '../../next-i18next.config.js'
 
 type Props = DocumentProps & {
   // add custom document props

@@ -192,7 +192,7 @@ export const ChatInput = ({
 
     if (maxLength && value.length > maxLength) {
       alert(
-        `This LLM can only handle ${maxLength} characters, but you entered ${value.length} characters. Please switch to a model with a bigger input limit (like Gemini, Claude or GPT) or shorten your message.`,
+        (t('input.llm_input_limit', { maxLength, valueLength: value.length }) as unknown as string),
       )
       return
     }
@@ -248,7 +248,7 @@ export const ChatInput = ({
     }
 
     if (!textContent && imageContent.length === 0) {
-      alert(t('Please enter a message or upload an image'))
+      alert(t('input.please_enter_message_or_upload_image') as unknown as string)
       return
     }
 
@@ -422,7 +422,7 @@ export const ChatInput = ({
           errorResponse.error ||
           'An error occurred while processing your request'
         notifications.show({
-          message: errorMessage,
+          message: errorMessage || (t('input.failed_to_send') as unknown as string),
           color: 'red',
         })
         return
@@ -435,7 +435,7 @@ export const ChatInput = ({
         message:
           error instanceof Error
             ? error.message
-            : 'Failed to send message. Please try again.',
+            : (t('input.failed_to_send') as unknown as string),
         color: 'red',
       })
     } finally {
@@ -458,8 +458,8 @@ export const ChatInput = ({
       onClose: () => console.log('error unmounted'),
       onOpen: () => console.log('error mounted'),
       autoClose: 8000,
-      title: 'Invalid Image Type',
-      message: 'Unsupported file type. Please upload .jpg or .png images.',
+      title: t('common.error') as unknown as string,
+      message: t('model.invalid_image_file_type', { count: 1 }) as unknown as string,
       color: 'red',
       radius: 'lg',
       icon: <IconAlertCircle />,
@@ -468,7 +468,7 @@ export const ChatInput = ({
       withBorder: true,
       loading: false,
     })
-  }, [])
+  }, [t])
 
   const handleImageUpload = useCallback(
     async (files: File[]) => {
@@ -491,7 +491,7 @@ export const ChatInput = ({
 
       if (invalidFilesCount > 0) {
         setImageError(
-          `${invalidFilesCount} invalid file type(s). Please upload .jpg or .png images.`,
+          (t('model.invalid_image_file_type', { count: invalidFilesCount }) as unknown as string),
         )
         showToastOnInvalidImage()
       }

@@ -45,7 +45,7 @@ const Sidebar = <T,>({
   handleDrop,
   onScroll,
 }: Props<T>) => {
-  const { t } = useTranslation('promptbar')
+  const { t } = useTranslation('common')
 
   const allowDrop = (e: any) => {
     e.preventDefault()
@@ -96,7 +96,7 @@ const Sidebar = <T,>({
           </button>
         </div>
         <Search
-          placeholder={t('Search...') || ''}
+          placeholder={t('sidebar.search') || ''}
           searchTerm={searchTerm}
           onSearch={handleSearchTerm}
         />
@@ -122,7 +122,7 @@ const Sidebar = <T,>({
             <div className="mt-8 select-none text-center text-[--foreground] opacity-50">
               <IconMistOff className="mx-auto mb-3" />
               <span className="text-[14px] leading-normal">
-                {t('No data.')}
+                {t('sidebar.noData')}
               </span>
             </div>
           )}

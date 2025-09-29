@@ -7,6 +7,7 @@ import {
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'next-i18next'
 
 export default function OllamaProviderInput({
   form,
@@ -17,6 +18,7 @@ export default function OllamaProviderInput({
   provider: OllamaProvider
   isLoading: boolean
 }) {
+  const { t } = useTranslation('common')
   if (isLoading) {
     return <Skeleton height={200} width={330} radius={'lg'} />
   }
@@ -48,7 +50,7 @@ export default function OllamaProviderInput({
                   mb="xs"
                   style={{ paddingRight: '8px' }}
                 >
-                  Ollama
+                  {t('models.ollama.title')}
                 </Text>
                 <IconExternalLink size={16} className="mb-3" />
               </div>
@@ -59,9 +61,9 @@ export default function OllamaProviderInput({
               <Switch
                 size="md"
                 labelPosition="left"
-                onLabel="ON"
-                offLabel="OFF"
-                aria-label="Enable Ollama provider"
+                onLabel={t('models.on') || ''}
+                offLabel={t('models.off') || ''}
+                aria-label={t('models.enable_model', { model: 'Ollama' }) || ''}
                 checked={field.state.value}
                 onChange={(event) => {
                   field.handleChange(event.currentTarget.checked)
@@ -94,11 +96,7 @@ export default function OllamaProviderInput({
           </form.Field>
         </div>
         <Text size="sm" color="dimmed" mb="md">
-          Ollama allows you easily self host LLMs. Set up Ollama on your machine
-          and provide the base URL. Note that only the following models are
-          supported, email us if you&apos;d like any others:{' '}
-          <code>llama3.1:8b</code>, <code>llama3.1:70b</code>,{' '}
-          <code>llama3.1:405b</code>.
+          {t('models.ollama.description')}
         </Text>
         {provider?.error &&
           (form.state.values?.providers?.Ollama?.enabled ||
@@ -139,8 +137,8 @@ export default function OllamaProviderInput({
                   >
                     {(field: any) => (
                       <TextInput
-                        label="Base URL"
-                        placeholder="http://your-domain.com"
+                        label={t('models.fields.base_url') || ''}
+                        placeholder={t('models.fields.base_url_placeholder') || ''}
                         value={field.state.value}
                         styles={{
                           input: {

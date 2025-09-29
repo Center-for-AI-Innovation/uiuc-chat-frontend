@@ -10,14 +10,15 @@ interface ExportResult {
 // Server-side API route handler
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' })
+    return res.status(405).json({ error: 'Method not allowed', message_key: 'errors.method_not_allowed' })
   }
 
   const { course_name } = req.query
 
   if (!course_name || typeof course_name !== 'string') {
     return res.status(400).json({ 
-      error: 'course_name parameter is required' 
+      error: 'course_name parameter is required',
+      message_key: 'alerts.exportDocuments.course_name_required'
     })
   }
 
@@ -40,11 +41,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (jsonData.response === 'Download from S3') {
         return res.status(200).json({
           message: 'We have started gathering your documents, you will receive an email shortly.',
+          message_key: 'alerts.exportDocuments.started_gathering',
           s3_path: jsonData.s3_path,
         })
       } else {
         return res.status(200).json({ 
-          message: 'Your documents are ready for download.' 
+          message: 'Your documents are ready for download.',
+          message_key: 'alerts.exportDocuments.ready_for_download'
         })
       }
     } else if (contentType === 'application/zip') {
@@ -55,11 +58,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } else {
       // Handle unexpected content types
       console.log('Unexpected content type:', contentType)
-      return res.status(500).json({ message: `Unexpected response format from backend: ${contentType}` })
+      return res.status(500).json({ message: `Unexpected response format from backend: ${contentType}` , message_key: 'alerts.exportDocuments.unexpected_response_format'})
     }
   } catch (error) {
     console.error('Error exporting documents:', error)
-    return res.status(500).json({ message: 'Error exporting documents.' })
+    return res.status(500).json({ message: 'Error exporting documents.', message_key: 'alerts.exportDocuments.error_exporting' })
   }
 }
 

@@ -9,6 +9,7 @@ import { type CourseMetadata } from '~/types/courseMetadata'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import { showToastOnUpdate } from './MakeQueryAnalysisPage'
 import { ProjectFilesTable } from './ProjectFilesTable'
+import { useTranslation } from 'next-i18next'
 
 const useStyles = createStyles(() => ({
   tabsList: {
@@ -58,6 +59,7 @@ function DocumentsCard({
   metadata: CourseMetadata
   sidebarCollapsed?: boolean
 }) {
+  const { t } = useTranslation('common')
   const [tabValue, setTabValue] = useState<string | null>('success')
   const [failedCount, setFailedCount] = useState<number>(0)
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
@@ -87,18 +89,18 @@ function DocumentsCard({
         <Modal
           opened={exportModalOpened}
           onClose={() => setExportModalOpened(false)}
-          title="Please confirm your action"
+          title={t('project_files.export_confirm_title')}
           centered
         >
           <Text size="sm" style={{ color: 'white' }}>
-            {`Are you sure you want to export all the documents and embeddings?`}
+            {t('project_files.export_confirm_message')}
           </Text>
           <div className="mt-5 flex justify-end gap-2">
             <Button
               className="rounded-md bg-transparent text-white hover:bg-[--dashboard-button-hover]"
               onClick={() => setExportModalOpened(false)}
             >
-              Cancel
+              {t('project_files.cancel')}
             </Button>
             <Button
               className="rounded-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover]"
@@ -110,7 +112,7 @@ function DocumentsCard({
                 }
               }}
             >
-              Export
+              {t('project_files.export')}
             </Button>
           </div>
         </Modal>
@@ -121,7 +123,7 @@ function DocumentsCard({
               order={3}
               className={`${montserrat_heading.variable} font-montserratHeading text-lg text-[--foreground] sm:text-2xl`}
             >
-              Project Files
+              {t('dashboard.project_files')}
             </Title>
 
             <Button
@@ -136,9 +138,9 @@ function DocumentsCard({
               `}
             >
               <span className="hidden sm:inline">
-                Export All Documents & Embeddings
+                {t('dashboard.export_all_documents')}
               </span>
-              <span className="inline sm:hidden">Export All</span>
+              <span className="inline sm:hidden">{t('project_files.export')}</span>
             </Button>
           </div>
         </div>

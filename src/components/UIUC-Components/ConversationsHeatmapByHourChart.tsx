@@ -5,6 +5,7 @@ import axios from 'axios'
 import { Text } from '@mantine/core'
 import { LoadingSpinner } from './LoadingSpinner'
 import { montserrat_paragraph } from 'fonts'
+import { useTranslation } from 'next-i18next'
 
 interface ChartProps {
   data?: { [day: string]: { [hour: string]: number } }
@@ -17,22 +18,20 @@ const ConversationsHeatmapByHourChart: React.FC<ChartProps> = ({
   isLoading,
   error,
 }) => {
+  const { t } = useTranslation('common')
   const [containerWidth, setContainerWidth] = useState<number>(0)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const daysOfWeek = useMemo(
-    () => [
-      'Sunday',
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday',
-    ],
-    [],
-  )
-  const hours = Array.from({ length: 24 }, (_, i) => i.toString())
+  const daysOfWeek = [
+    t('analysis.sunday', 'Sunday'),
+    t('analysis.monday', 'Monday'),
+    t('analysis.tuesday', 'Tuesday'),
+    t('analysis.wednesday', 'Wednesday'),
+    t('analysis.thursday', 'Thursday'),
+    t('analysis.friday', 'Friday'),
+    t('analysis.saturday', 'Saturday'),
+  ]
+  const hours = Array.from({ length: 24 }, (_, i) => t('analysis.hourShort', { hour: i, defaultValue: `${i}` }))
 
   useEffect(() => {
     const updateWidth = () => {
@@ -49,7 +48,7 @@ const ConversationsHeatmapByHourChart: React.FC<ChartProps> = ({
   if (isLoading) {
     return (
       <Text>
-        Loading heatmap <LoadingSpinner size="xs" />
+        {t('analysis.loadingHeatmap', 'Loading heatmap')} <LoadingSpinner size="xs" />
       </Text>
     )
   }
@@ -59,11 +58,15 @@ const ConversationsHeatmapByHourChart: React.FC<ChartProps> = ({
   }
 
   if (!data) {
-    return <Text>No data available</Text>
+    return <Text>{t('analysis.noDataAvailable', 'No data available')}</Text>
   }
 
-  const formattedData = daysOfWeek.map((day) =>
-    hours.map((hour) => data[day]?.[parseInt(hour)] || 0),
+  // Filter out any undefined or falsy values from daysOfWeek and hours
+  const filteredDaysOfWeek = daysOfWeek.filter(Boolean)
+  const filteredHours = hours.filter(Boolean)
+
+  const formattedData = filteredDaysOfWeek.map((day) =>
+    filteredHours.map((hour) => data[day]?.[hour] || 0),
   )
 
   const numColumns = hours.length
@@ -92,8 +95,8 @@ const ConversationsHeatmapByHourChart: React.FC<ChartProps> = ({
       <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
         <HeatMapGrid
           data={formattedData}
-          xLabels={hours}
-          yLabels={daysOfWeek}
+          xLabels={hours.map(String)}
+          yLabels={daysOfWeek.map(String)}
           cellRender={(x, y, value) => `${value}`}
           xLabelsStyle={() => ({
             fontFamily: montserrat_paragraph.style.fontFamily,

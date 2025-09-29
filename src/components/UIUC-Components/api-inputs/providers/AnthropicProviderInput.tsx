@@ -8,6 +8,7 @@ import {
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'next-i18next'
 
 export default function AnthropicProviderInput({
   provider,
@@ -18,6 +19,7 @@ export default function AnthropicProviderInput({
   form: any
   isLoading: boolean
 }) {
+  const { t } = useTranslation('common')
   if (isLoading) {
     return <Skeleton height={200} width={330} radius={'lg'} />
   }
@@ -60,8 +62,8 @@ export default function AnthropicProviderInput({
               <Switch
                 size="md"
                 labelPosition="left"
-                onLabel="ON"
-                offLabel="OFF"
+                onLabel={t('models.on')}
+                offLabel={t('models.off')}
                 aria-label="Enable Anthropic provider"
                 checked={field.state.value}
                 onChange={(event) => {
@@ -131,8 +133,7 @@ export default function AnthropicProviderInput({
                     {(field: any) => (
                       <APIKeyInput
                         field={field}
-                        placeholder="Anthropic API Key"
-                        // onValidate={validateApiKey}
+                        placeholder={t('models.anthropic.title')}
                       />
                     )}
                   </form.Field>

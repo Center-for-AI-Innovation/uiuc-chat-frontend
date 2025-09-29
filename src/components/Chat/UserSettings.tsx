@@ -113,7 +113,7 @@ export const UserSettings = () => {
           <Modal.Title
             className={`${classes.title} ${montserrat_heading.variable} font-montserratHeading`}
           >
-            Settings
+            {t('settings.title')}
           </Modal.Title>
           <Modal.CloseButton
             onClick={handleClose}
@@ -137,19 +137,19 @@ export const UserSettings = () => {
                 className={`${classes.tab} ${isSmallScreen ? 'px-2 text-xs' : 'text-md'} ${montserrat_paragraph.variable} font-montserratParagraph text-[--modal-text]`}
                 value="model"
               >
-                Model
+                {t('settings.tabs.model')}
               </Tabs.Tab>
               <Tabs.Tab
                 className={`${classes.tab} ${isSmallScreen ? 'px-2 text-xs' : 'text-md'} ${montserrat_paragraph.variable} font-montserratParagraph text-[--modal-text]`}
                 value="documentGroups"
               >
-                Document Groups
+                {t('settings.tabs.document_groups')}
               </Tabs.Tab>
               <Tabs.Tab
                 className={`${classes.tab} ${isSmallScreen ? 'px-2 text-xs' : 'text-md'} ${montserrat_paragraph.variable} font-montserratParagraph text-[--modal-text]`}
                 value="tools"
               >
-                Tools
+                {t('settings.tabs.tools')}
               </Tabs.Tab>
             </Tabs.List>
 

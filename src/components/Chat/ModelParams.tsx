@@ -2,6 +2,7 @@ import { useState } from 'react'
 // import { ModelSelect } from './ModelSelect'
 import { TemperatureSlider } from './Temperature'
 import { createStyles } from '@mantine/core'
+import { useTranslation } from 'next-i18next'
 
 const useStyles = createStyles((theme) => ({
   // For Accordion
@@ -57,6 +58,7 @@ export const ModelParams = ({
 }: ModelParamsProps) => {
   const [isChecked, setIsChecked] = useState(false)
   const { classes } = useStyles() // for Accordion
+  const { t: tCommon } = useTranslation('common')
 
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setIsChecked(event.target.checked)
@@ -66,7 +68,7 @@ export const ModelParams = ({
     <div className="backdrop-filter-[blur(10px)] w-full rounded-lg ">
       <div className="flex h-full flex-col space-y-4 rounded-lg p-4">
         <TemperatureSlider
-          label={t('Temperature')}
+          label={tCommon('temperature')}
           onChangeTemperature={(temperature) =>
             handleUpdateConversation(selectedConversation, {
               key: 'temperature',

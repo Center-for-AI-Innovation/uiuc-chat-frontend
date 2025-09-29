@@ -8,6 +8,7 @@ import {
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'next-i18next'
 
 export default function GeminiProviderInput({
   provider,
@@ -18,6 +19,7 @@ export default function GeminiProviderInput({
   form: any
   isLoading: boolean
 }) {
+  const { t } = useTranslation('common')
   if (isLoading) {
     return <Skeleton height={200} width={330} radius={'lg'} />
   }
@@ -50,7 +52,7 @@ export default function GeminiProviderInput({
                   mb="xs"
                   style={{ paddingRight: '8px' }}
                 >
-                  Google Gemini
+                  {t('models.gemini.title')}
                 </Text>
                 <IconExternalLink size={16} className="mb-3" />
               </div>
@@ -61,9 +63,9 @@ export default function GeminiProviderInput({
               <Switch
                 size="md"
                 labelPosition="left"
-                onLabel="ON"
-                offLabel="OFF"
-                aria-label="Enable Gemini provider"
+                onLabel={t('models.on') || ''}
+                offLabel={t('models.off') || ''}
+                aria-label={t('models.enable_model', { model: 'Gemini' }) || ''}
                 checked={field.state.value}
                 onChange={(event) => {
                   event.preventDefault()
@@ -114,6 +116,10 @@ export default function GeminiProviderInput({
             </Text>
           )}
 
+        <Text size="sm" color="dimmed" mb="md">
+          {t('models.gemini.description')}
+        </Text>
+
         <form.Field name={`providers.${ProviderNames.Gemini}.enabled`}>
           {(field: any) => (
             <AnimatePresence>
@@ -126,7 +132,10 @@ export default function GeminiProviderInput({
                 >
                   <form.Field name={`providers.${ProviderNames.Gemini}.apiKey`}>
                     {(field: any) => (
-                      <APIKeyInput field={field} placeholder="Google API Key" />
+                      <APIKeyInput
+                        field={field}
+                        placeholder={t('models.gemini.title')}
+                      />
                     )}
                   </form.Field>
 

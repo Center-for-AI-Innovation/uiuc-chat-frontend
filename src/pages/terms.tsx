@@ -5,14 +5,24 @@ import ChatUI from '~/utils/modelProviders/WebLLM'
 import { MLCEngine } from '@mlc-ai/web-llm'
 import { set } from 'zod'
 // import { Card, Image, Text, Title, Badge, Button, Group } from '@mantine/core'
+import { useTranslation } from 'react-i18next'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { GetStaticPropsContext } from 'next'
 
 const TermsAndConditionsPage: NextPage = () => {
+  const { t } = useTranslation('common')
   return (
     <MainPageBackground>
-      <p style={{ whiteSpace: 'pre-line' }}>{terms_string}</p>
+      <p style={{ whiteSpace: 'pre-line' }}>{t('these_are_terms_of_service')}</p>
     </MainPageBackground>
   )
 }
+
+export const getStaticProps = async ({ locale }: GetStaticPropsContext) => ({
+  props: {
+    ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+  },
+});
 
 export default TermsAndConditionsPage
 

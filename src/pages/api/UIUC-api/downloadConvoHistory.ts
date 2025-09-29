@@ -9,14 +9,14 @@ interface DownloadResult {
 // Server-side API route handler
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' })
+    return res.status(405).json({ messageKey: 'common.error' })
   }
 
   const { course_name } = req.query
 
   if (!course_name || typeof course_name !== 'string') {
     return res.status(400).json({ 
-      error: 'course_name parameter is required' 
+      messageKey: 'alerts.exportDocuments.course_name_required' 
     })
   }
 
@@ -37,11 +37,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       if (jsonData.response === 'Download from S3') {
         return res.status(200).json({
-          message: "We are gathering your large conversation history, you'll receive an email with a download link shortly.",
+          messageKey: 'alerts.exportDocuments.started_gathering',
         })
       } else {
         return res.status(200).json({
-          message: 'Your conversation history is ready for download.',
+          messageKey: 'alerts.exportDocuments.ready_for_download',
         })
       }
     } else if (contentType === 'application/zip') {
@@ -52,11 +52,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } else {
       // Handle unexpected content types
       console.log('Unexpected content type:', contentType)
-      return res.status(500).json({ message: `Unexpected response format from backend: ${contentType}` })
+      return res.status(500).json({ messageKey: 'alerts.exportDocuments.unexpected_response_format' })
     }
   } catch (error) {
     console.error('Error exporting conversation history:', error)
-    return res.status(500).json({ message: 'Error exporting conversation history.' })
+    return res.status(500).json({ messageKey: 'analysis.downloadConversationHistoryError' })
   }
 }
 
@@ -72,6 +72,9 @@ export const downloadConversationHistory = async (
 
     if (!response.ok) {
       const errorData = await response.json()
+      if (errorData.messageKey) {
+        return { message: (globalThis as any).i18next?.t?.(errorData.messageKey) || errorData.messageKey }
+      }
       return { message: errorData.message || 'Error downloading conversation history.' }
     }
 
@@ -81,6 +84,9 @@ export const downloadConversationHistory = async (
     if (contentType && contentType.includes('application/json')) {
       // Handle JSON response (S3 download case or error)
       const data = await response.json()
+      if (data.messageKey) {
+        return { message: (globalThis as any).i18next?.t?.(data.messageKey) || data.messageKey }
+      }
       return { message: data.message }
     } else if (contentType && contentType.includes('application/zip')) {
       // Handle ZIP file download
@@ -93,12 +99,12 @@ export const downloadConversationHistory = async (
       link.click()
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
-      return { message: 'Downloading now, check your downloads.' }
+      return { message: (globalThis as any).i18next?.t?.('alerts.exportDocuments.downloading_now') || 'Downloading now, check your downloads.' }
     } else {
-      return { message: 'Unexpected response format.' }
+      return { message: (globalThis as any).i18next?.t?.('alerts.exportDocuments.unexpected_response_format') || 'Unexpected response format.' }
     }
   } catch (error) {
     console.error('Error downloading conversation history:', error)
-    return { message: 'Error downloading conversation history.' }
+    return { message: (globalThis as any).i18next?.t?.('analysis.downloadConversationHistoryError') || 'Error downloading conversation history.' }
   }
 }
