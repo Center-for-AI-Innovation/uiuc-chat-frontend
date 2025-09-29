@@ -214,8 +214,7 @@ export function withCourseOwnerOrAdminAccess() {
       // Check if user has access to the course
       if (
         !isCourseAdmin(req.user, courseMetadata) &&
-        !isCourseOwner(req.user, courseMetadata) &&
-        !courseMetadata.allow_logged_in_users
+        !isCourseOwner(req.user, courseMetadata)
       ) {
         return res.status(403).json({
           error: 'Access denied',
