@@ -54,7 +54,8 @@ export function hasCourseAccess(
   return (
     isCourseOwner(user, courseMetadata) ||
     isCourseAdmin(user, courseMetadata) ||
-    isApprovedUser(user, courseMetadata)
+    isApprovedUser(user, courseMetadata) ||
+    courseMetadata.allow_logged_in_users === true
   )
 }
 
@@ -140,7 +141,7 @@ export function withCourseAdminAccess(courseName: string) {
         )
       }
 
-      // Check if user is course admin or owner
+      // Check if user is course admin or owner or if logged-in users are allowed
       if (
         !isCourseOwner(req.user, courseMetadata) &&
         !isCourseAdmin(req.user, courseMetadata)
@@ -209,7 +210,10 @@ export function withCourseOwnerAccess(courseName: string) {
 }
 
 // Utility function to extract course name from request (query params, body, or headers)
-export async function extractCourseName(req: NextRequest, parsedBody?: any): Promise<string | null> {
+export async function extractCourseName(
+  req: NextRequest,
+  parsedBody?: any,
+): Promise<string | null> {
   // 1) From query params
   const fromQuery =
     req.nextUrl.searchParams.get('courseName') ??
@@ -231,7 +235,7 @@ export async function extractCourseName(req: NextRequest, parsedBody?: any): Pro
       parsedBody.projectName ??
       parsedBody.project_name ??
       null
-    );
+    )
   }
 
   return null
@@ -255,11 +259,11 @@ export function withCourseAccessFromRequest(
       }
 
       // Parse once (if JSON) and stash for downstream
-      let parsedForAuth: any | undefined;
-      const ct = req.headers.get('content-type') ?? '';
+      let parsedForAuth: any | undefined
+      const ct = req.headers.get('content-type') ?? ''
       if (ct.includes('application/json')) {
-        parsedForAuth = await req.clone().json();
-        (req as any).__parsedBody = parsedForAuth;
+        parsedForAuth = await req.clone().json()
+        ;(req as any).__parsedBody = parsedForAuth
       }
 
       // Extract course name from request
