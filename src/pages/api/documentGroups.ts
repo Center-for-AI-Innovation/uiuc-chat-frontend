@@ -1,5 +1,5 @@
 // src/pages/api/documentGroups.ts
-import { type NextApiRequest, type NextApiResponse } from 'next'
+import { type NextApiResponse } from 'next'
 import { AuthenticatedRequest } from '~/utils/authMiddleware'
 import posthog from 'posthog-js'
 import { type CourseDocument } from 'src/types/courseMaterials'
@@ -12,7 +12,7 @@ import {
 } from '~/db/dbHelpers'
 
 import { addDocumentsToDocGroupQdrant } from '~/utils/qdrantUtils'
-import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
 interface RequestBody {
   action:
@@ -179,4 +179,4 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   }
 }
 
-export default withCourseOwnerOrAdminAccess()(handler)
+export default withCourseAccessFromRequest('any')(handler)

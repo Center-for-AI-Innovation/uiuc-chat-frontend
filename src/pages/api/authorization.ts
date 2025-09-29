@@ -235,6 +235,8 @@ export function extractCourseName(req: NextApiRequest): string | null {
   const courseName =
     (req.query.courseName as string) ||
     (req.query.course_name as string) ||
+    (req.query.projectName as string) ||
+    (req.query.project_name as string) ||
     req.body?.courseName ||
     req.body?.course_name ||
     (req.body?.projectName as string) ||
@@ -242,8 +244,7 @@ export function extractCourseName(req: NextApiRequest): string | null {
     req.body?.projectName ||
     req.body?.project_name ||
     (req.headers['x-course-name'] as string) ||
-    (req.headers['x-project_name'] as string)
-  null
+    (req.headers['x-project_name'] as string) || null
 
   return courseName
 }
