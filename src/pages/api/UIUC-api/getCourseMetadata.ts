@@ -1,7 +1,8 @@
 // ~/src/pages/api/UIUC-api/getCourseMetadata.ts
 import { type NextApiResponse } from 'next'
-import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 import { type CourseMetadata } from '~/types/courseMetadata'
+import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { ensureRedisConnected } from '~/utils/redisClient'
 
 export const getCourseMetadata = async (
@@ -10,9 +11,11 @@ export const getCourseMetadata = async (
   try {
     const redisClient = await ensureRedisConnected()
     const rawMetadata = await redisClient.hGet('course_metadatas', course_name)
-    const course_metadata: CourseMetadata = rawMetadata
+    const course_metadata: CourseMetadata | null = rawMetadata
       ? JSON.parse(rawMetadata)
       : null
+
+    // Use value as-is; Redis-stored JSON should already have correct boolean
     return course_metadata
   } catch (error) {
     console.error('Error occurred while fetching courseMetadata', error)
@@ -20,7 +23,7 @@ export const getCourseMetadata = async (
   }
 }
 
-export default withAuth(handler)
+export default withCourseAccessFromRequest('any')(handler)
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const course_name = req.query.course_name as string
@@ -29,12 +32,6 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   try {
     if (course_metadata == null) {
       return res.status(404).json({ success: false, error: 'Course not found' })
-    }
-
-    if (course_metadata.hasOwnProperty('is_private')) {
-      course_metadata.is_private = JSON.parse(
-        course_metadata.is_private as unknown as string,
-      )
     }
     res.status(200).json({ course_metadata: course_metadata })
   } catch (error) {

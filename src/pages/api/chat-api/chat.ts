@@ -6,17 +6,16 @@ import {
   type Conversation,
   type Message,
 } from '~/types/chat'
-import { fetchCourseMetadata } from '~/utils/apiUtils'
+import fetchCourseMetadataServer from '~/pages/api/chat-api/util/fetchCourseMetadataServer'
+import { determineAndValidateModelServer } from '~/pages/api/chat-api/util/determineAndValidateModelServer'
 import { validateApiKeyAndRetrieveData } from './keys/validate'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import posthog from 'posthog-js'
-import { type NextApiResponse } from 'next'
-import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
+import { NextApiRequest, type NextApiResponse } from 'next'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import {
   attachContextsToLastMessage,
   constructSearchQuery,
-  determineAndValidateModel,
   handleContextSearch,
   handleImageContent,
   handleNonStreamingResponse,
@@ -51,7 +50,7 @@ import { selectBestTemperature } from '~/components/Chat/Temperature'
  * @returns {Promise<void>} A promise that resolves when the response is sent.
  */
 export default async function chat(
-  req: AuthenticatedRequest,
+  req: NextApiRequest,
   res: NextApiResponse,
 ): Promise<void> {
   // Validate the HTTP method
@@ -127,8 +126,9 @@ export default async function chat(
   }
 
   // Retrieve course metadata
-  const courseMetadata: CourseMetadata = await fetchCourseMetadata(course_name)
-  if (!courseMetadata) {
+  const courseMetadata: CourseMetadata | null =
+    await fetchCourseMetadataServer(course_name)
+  if (!courseMetadata || null === courseMetadata) {
     res.status(404).json({ error: 'Course metadata not found' })
     return
   }
@@ -138,7 +138,7 @@ export default async function chat(
   let llmProviders: AllLLMProviders
   try {
     const { activeModel, modelsWithProviders } =
-      await determineAndValidateModel(model, course_name)
+      await determineAndValidateModelServer(model, course_name)
     selectedModel = activeModel
     llmProviders = modelsWithProviders
   } catch (error) {
@@ -202,6 +202,12 @@ export default async function chat(
   let searchQuery = constructSearchQuery(messages)
   let imgDesc = ''
 
+  const selectedConversationString = localStorage.getItem('selectedConversation')
+  let selectedConversation: Conversation | undefined = undefined
+  if (selectedConversationString) {
+      selectedConversation = JSON.parse(selectedConversationString)
+  }
+
   // Construct the conversation object
   const conversation: Conversation = {
     id: conversation_id || uuidv4(),
@@ -215,7 +221,7 @@ export default async function chat(
           (messages.filter((message) => message.role === 'system')[0]
             ?.content as string))
         : DEFAULT_SYSTEM_PROMPT,
-    temperature: selectBestTemperature(undefined, selectedModel, llmProviders),
+    temperature: selectBestTemperature(undefined, selectedConversation, llmProviders),
     folderId: null,
     userEmail: email,
   }

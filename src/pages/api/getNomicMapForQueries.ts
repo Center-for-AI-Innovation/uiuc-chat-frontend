@@ -1,4 +1,5 @@
-import { withAuth } from '~/utils/authMiddleware'
+import { type NextApiResponse } from 'next'
+import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { getBackendUrl } from '~/utils/apiUtils'
 
 interface NomicMapData {
@@ -8,7 +9,7 @@ interface NomicMapData {
 
 export default withAuth(handler)
 
-async function handler(req: any, res: any) {
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   try {
     const { course_name, map_type } = req.query
 

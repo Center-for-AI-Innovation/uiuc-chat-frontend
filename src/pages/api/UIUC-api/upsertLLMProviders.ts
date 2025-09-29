@@ -1,6 +1,6 @@
 // upsertCourseMetadata.ts
 import { type NextApiResponse } from 'next'
-import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
+import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { type ProjectWideLLMProviders } from '~/types/courseMetadata'
 import { encryptKeyIfNeeded } from '~/utils/crypto'
 import {
@@ -8,6 +8,7 @@ import {
   type LLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
 import { ensureRedisConnected } from '~/utils/redisClient'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   // Ensure it's a POST request
@@ -85,4 +86,4 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   }
 }
 
-export default withAuth(handler)
+export default withCourseOwnerOrAdminAccess()(handler)

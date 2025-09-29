@@ -1,5 +1,6 @@
 import { withAuth } from '~/utils/authMiddleware'
 import { getBackendUrl } from '~/utils/apiUtils'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
 interface ModelUsage {
   model_name: string
@@ -7,10 +8,10 @@ interface ModelUsage {
   percentage: number
 }
 
-export default withAuth(handler)
+export default withCourseOwnerOrAdminAccess()(handler)
 
 async function handler(req: any, res: any) {
-  const { project_name } = req.query
+  const { project_name } = req.body
 
   if (!project_name) {
     return res

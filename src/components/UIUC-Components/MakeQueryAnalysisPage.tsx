@@ -38,11 +38,8 @@ import SettingsLayout, {
   getInitialCollapsedState,
 } from '~/components/Layout/SettingsLayout'
 import { GRID_CONFIGS, useResponsiveGrid } from '~/utils/responsiveGrid'
-import { downloadConversationHistory } from '../../pages/api/UIUC-api/downloadConvoHistory'
-import { getConversationStats } from '../../pages/api/UIUC-api/getConversationStats'
-import { getModelUsageCounts } from '../../pages/api/UIUC-api/getModelUsageCounts'
+import downloadConversationHistory from '../../pages/util/downloadConversationHistory'
 import { getProjectStats } from '../../pages/api/UIUC-api/getProjectStats'
-import { getWeeklyTrends } from '../../pages/api/UIUC-api/getWeeklyTrends'
 import ConversationsHeatmapByHourChart from './ConversationsHeatmapByHourChart'
 import ConversationsPerDayChart from './ConversationsPerDayChart'
 import ConversationsPerDayOfWeekChart from './ConversationsPerDayOfWeekChart'
@@ -259,15 +256,17 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
           return
         }
 
-        const response = await getConversationStats(
-          course_name,
-          from_date,
-          to_date,
-        )
+        // TODO: Change this to a fetch request
+        const response = await fetch('/api/UIUC-api/getConversationStats', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ course_name, from_date, to_date }),
+        })
         if (response.status === 200) {
-          setFilteredConversationStats(response.data)
-          setTotalCount(response.data.total_count || 0)
-          setHasConversationData(Object.keys(response.data.per_day).length > 0)
+          const data = await response.json()
+          setFilteredConversationStats(data)
+          setTotalCount(data.total_count || 0)
+          setHasConversationData(Object.keys(data.per_day).length > 0)
         }
       } catch (error) {
         console.error('Error fetching filtered conversation stats:', error)
@@ -284,9 +283,14 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   useEffect(() => {
     const fetchAllTimeConversationStats = async () => {
       try {
-        const response = await getConversationStats(course_name)
+        const response = await fetch('/api/UIUC-api/getConversationStats', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ course_name }),
+        })
         if (response.status === 200) {
-          setConversationStats(response.data)
+          const data = await response.json()
+          setConversationStats(data)
         }
       } catch (error) {
         console.error('Error fetching all-time conversation stats:', error)
@@ -304,20 +308,21 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
       setCourseStatsLoading(true)
       setCourseStatsError(null)
       try {
-        const response = await getProjectStats(course_name)
-
+        const response = await fetch('/api/UIUC-api/getProjectStats', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ course_name, project_name: course_name }),
+        })
         if (response.status === 200) {
+          const data = await response.json()
           const mappedData = {
-            total_conversations: response.data.total_conversations,
-            total_messages: response.data.total_messages,
-            total_users: response.data.unique_users,
-            avg_conversations_per_user:
-              response.data.avg_conversations_per_user,
-            avg_messages_per_user: response.data.avg_messages_per_user,
-            avg_messages_per_conversation:
-              response.data.avg_messages_per_conversation,
+            total_conversations: data.total_conversations,
+            total_messages: data.total_messages,
+            total_users: data.unique_users,
+            avg_conversations_per_user: data.avg_conversations_per_user,
+            avg_messages_per_user: data.avg_messages_per_user,
+            avg_messages_per_conversation: data.avg_messages_per_conversation,
           }
-
           setCourseStats(mappedData)
         } else {
           throw new Error('Failed to fetch course stats')
@@ -337,9 +342,14 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
       setTrendsLoading(true)
       setTrendsError(null)
       try {
-        const response = await getWeeklyTrends(course_name)
+        const response = await fetch('/api/UIUC-api/getWeeklyTrends', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ course_name, project_name: course_name }),
+        })
         if (response.status === 200) {
-          setWeeklyTrends(response.data)
+          const data = await response.json()
+          setWeeklyTrends(data)
         } else {
           throw new Error('Failed to fetch weekly trends')
         }
@@ -358,9 +368,14 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
       setModelUsageLoading(true)
       setModelUsageError(null)
       try {
-        const response = await getModelUsageCounts(course_name)
+        const response = await fetch('/api/UIUC-api/getModelUsageCounts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ course_name, project_name: course_name }),
+        })
         if (response.status === 200) {
-          setModelUsageData(response.data)
+          const data = await response.json()
+          setModelUsageData(data)
         } else {
           throw new Error('Failed to fetch model usage data')
         }
@@ -870,37 +885,35 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                   </div>
                 </div>
 
-              {/* Charts Section - Using filtered stats */}
-              <div className="grid w-[95%] grid-cols-1 gap-6 pb-10 lg:grid-cols-2">
-                {/* Date Range Selector - Always visible */}
-                <div className="rounded-xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-200 lg:col-span-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Title order={4}>
-                        Conversation Visualizations
-                      </Title>
-                      <Text size="sm" mt={1}>
-                        Select a time range to filter the visualizations below
-                      </Text>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <Select
-                        size="sm"
-                        w={200}
-                        value={dateRangeType}
-                        onChange={(value) => {
-                          setDateRangeType(value || 'all')
-                          if (value !== 'custom') {
-                            setDateRange([null, null])
-                          }
-                        }}
-                        data={[
-                          { value: 'all', label: 'All Time' },
-                          { value: 'last_week', label: 'Last Week' },
-                          { value: 'last_month', label: 'Last Month' },
-                          { value: 'last_year', label: 'Last Year' },
-                          { value: 'custom', label: 'Custom Range' },
-                        ]}
+                {/* Charts Section - Using filtered stats */}
+                <div className="grid w-[95%] grid-cols-1 gap-6 pb-10 lg:grid-cols-2">
+                  {/* Date Range Selector - Always visible */}
+                  <div className="rounded-xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-200 lg:col-span-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Title order={4}>Conversation Visualizations</Title>
+                        <Text size="sm" mt={1}>
+                          Select a time range to filter the visualizations below
+                        </Text>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <Select
+                          size="sm"
+                          w={200}
+                          value={dateRangeType}
+                          onChange={(value) => {
+                            setDateRangeType(value || 'all')
+                            if (value !== 'custom') {
+                              setDateRange([null, null])
+                            }
+                          }}
+                          data={[
+                            { value: 'all', label: 'All Time' },
+                            { value: 'last_week', label: 'Last Week' },
+                            { value: 'last_month', label: 'Last Month' },
+                            { value: 'last_year', label: 'Last Year' },
+                            { value: 'custom', label: 'Custom Range' },
+                          ]}
                           className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                           styles={(theme) => ({
                             input: {
@@ -936,78 +949,78 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                               },
                             },
                           })}
-                      />
-                      {dateRangeType === 'custom' && (
-                        <DatePickerInput
-                          firstDayOfWeek={0}
-                          icon={<IconCalendar size="1.1rem" stroke={1.5} />}
-                          type="range"
-                          size="sm"
-                          w={200}
-                          value={dateRange}
-                          onChange={setDateRange}
-                          // TODO fix me type error complaining placeholder doesn't exist for mantine/date v6
-                          // placeholder="Pick date range"
-                          className="date_picker"
-                          styles={(theme: MantineTheme) => ({
-                            icon: {
-                              color: 'var(--foreground)',
-                            },
-                            input: {
-                              backgroundColor: 'var(--background)',
-                              borderColor: 'var(--foreground-faded)',
-                              color: 'var(--foreground)',
-                              '&:selected': {
-                                color: 'var(--button-text-color)',
-                                backgroundColor: 'var(--button)',
-                                borderColor: 'var(--button)',
+                        />
+                        {dateRangeType === 'custom' && (
+                          <DatePickerInput
+                            firstDayOfWeek={0}
+                            icon={<IconCalendar size="1.1rem" stroke={1.5} />}
+                            type="range"
+                            size="sm"
+                            w={200}
+                            value={dateRange}
+                            onChange={setDateRange}
+                            // TODO fix me type error complaining placeholder doesn't exist for mantine/date v6
+                            // placeholder="Pick date range"
+                            className="date_picker"
+                            styles={(theme: MantineTheme) => ({
+                              icon: {
+                                color: 'var(--foreground)',
                               },
-                              '&:hover': {
-                                borderColor: 'var(--dashboard-button)',
+                              input: {
+                                backgroundColor: 'var(--background)',
+                                borderColor: 'var(--foreground-faded)',
+                                color: 'var(--foreground)',
+                                '&:selected': {
+                                  color: 'var(--button-text-color)',
+                                  backgroundColor: 'var(--button)',
+                                  borderColor: 'var(--button)',
+                                },
+                                '&:hover': {
+                                  borderColor: 'var(--dashboard-button)',
+                                },
+                                '&:focus': {
+                                  borderColor: 'var(--button)',
+                                },
                               },
-                              '&:focus': {
+                              calendarHeader: {
                                 borderColor: 'var(--button)',
-                              }
-                            },
-                            calendarHeader: {
-                              borderColor: 'var(--button)',
-                              color: theme.white,
-                            },
-                            calendarHeaderControl: {
-                              color: theme.white,
-                              '&:hover': {
                                 color: theme.white,
                               },
-                            },
-                            monthPickerControl: {
-                              color: theme.white,
-                              '&:hover': {
-                                backgroundColor: 'var(--button-hover)',
+                              calendarHeaderControl: {
+                                color: theme.white,
+                                '&:hover': {
+                                  color: theme.white,
+                                },
                               },
-                            },
-                            yearPickerControl: {
-                              color: theme.white,
-                              '&:hover': {
-                                backgroundColor: 'var(--button-hover)',
+                              monthPickerControl: {
+                                color: theme.white,
+                                '&:hover': {
+                                  backgroundColor: 'var(--button-hover)',
+                                },
                               },
-                            },
-                            day: {
-                              color: theme.white,
-                              // '&:hover': {
-                              //   backgroundColor: theme.colors.grape[8],
-                              // },
-                            },
-                          })}
-                        />
-                      )}
-                      {totalCount > 0 && (
-                        <Text size="sm" color="dimmed">
-                          {totalCount} conversations in selected range
-                        </Text>
-                      )}
+                              yearPickerControl: {
+                                color: theme.white,
+                                '&:hover': {
+                                  backgroundColor: 'var(--button-hover)',
+                                },
+                              },
+                              day: {
+                                color: theme.white,
+                                // '&:hover': {
+                                //   backgroundColor: theme.colors.grape[8],
+                                // },
+                              },
+                            })}
+                          />
+                        )}
+                        {totalCount > 0 && (
+                          <Text size="sm" color="dimmed">
+                            {totalCount} conversations in selected range
+                          </Text>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
 
                   {!hasConversationData ? (
                     <div className="rounded-xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-200">
@@ -1129,36 +1142,31 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         )}
                       </div>
 
-                    {/* Heatmap Chart */}
-                    <div className="rounded-xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-200">
-                      <Title
-                        order={4}
-                        mb="md"
-                        align="left"
-                      >
-                        Conversations Per Day and Hour
-                      </Title>
-                      <Text size="sm" mb="xl">
-                        A heatmap showing conversation density across both days
-                        and hours
-                      </Text>
-                      <ConversationsHeatmapByHourChart
-                        data={filteredConversationStats?.heatmap}
-                        isLoading={filteredStatsLoading}
-                        error={filteredStatsError}
-                      />
-                    </div>
-                  </>
-                )}
+                      {/* Heatmap Chart */}
+                      <div className="rounded-xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-200">
+                        <Title order={4} mb="md" align="left">
+                          Conversations Per Day and Hour
+                        </Title>
+                        <Text size="sm" mb="xl">
+                          A heatmap showing conversation density across both
+                          days and hours
+                        </Text>
+                        <ConversationsHeatmapByHourChart
+                          data={filteredConversationStats?.heatmap}
+                          isLoading={filteredStatsLoading}
+                          error={filteredStatsError}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
-          </Flex>
-        </div>
+            </Flex>
+          </div>
 
-        {/*<NomicDocumentMap course_name={course_name as string} />*/}
-        <GlobalFooter />
-      </main>
-
+          {/*<NomicDocumentMap course_name={course_name as string} />*/}
+          <GlobalFooter />
+        </main>
       </SettingsLayout>
     </>
   )
