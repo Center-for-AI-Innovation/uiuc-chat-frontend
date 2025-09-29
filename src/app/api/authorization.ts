@@ -144,8 +144,7 @@ export function withCourseAdminAccess(courseName: string) {
       // Check if user is course admin or owner or if logged-in users are allowed
       if (
         !isCourseOwner(req.user, courseMetadata) &&
-        !isCourseAdmin(req.user, courseMetadata) &&
-        !courseMetadata.allow_logged_in_users
+        !isCourseAdmin(req.user, courseMetadata)
       ) {
         return NextResponse.json(
           {
