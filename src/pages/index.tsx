@@ -8,6 +8,7 @@ import { ArrowNarrowRight, ExternalLink, Link } from 'tabler-icons-react'
 import { doto_font, montserrat_heading, montserrat_paragraph } from 'fonts'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 import { LandingPageHeader } from '~/components/UIUC-Components/navbars/GlobalHeader'
+import router from 'next/router'
 
 // Typing animation component
 const TypingAnimation: React.FC = () => {
@@ -248,8 +249,10 @@ const Home: NextPage = () => {
                   color: 'var(--illinois-white)',
                 }}
                 radius="sm"
-                component="a"
-                href="/chat"
+                onClick={() => {
+                  // Use Next.js router to navigate
+                  router.push('/chat')
+                }}
               >
                 Try it out{' '}
                 <ArrowNarrowRight size={32} strokeWidth={1} color={'white'} />

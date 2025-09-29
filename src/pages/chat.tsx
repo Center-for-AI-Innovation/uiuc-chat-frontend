@@ -3,17 +3,15 @@
 import { montserrat_heading } from 'fonts'
 import { type NextPage } from 'next'
 import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
-import {
-  LoadingPlaceholderForAdminPages,
-  MainPageBackground,
-} from '~/components/UIUC-Components/MainPageBackground'
+import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import Home from '~/pages/api/home/home'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
+import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 
 const ChatPage: NextPage = () => {
   const [metadata, setMetadata] = useState<CourseMetadata | null>()
@@ -23,6 +21,8 @@ const ChatPage: NextPage = () => {
   const email = auth.user?.profile.email
   const [currentEmail, setCurrentEmail] = useState('')
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
+  const course_metadata = metadata
+  const { course_name } = router.query
 
   useEffect(() => {
     if (!router.isReady) return
@@ -125,23 +125,26 @@ const ChatPage: NextPage = () => {
     router,
   ])
 
-  if (isLoading) {
-    return <LoadingPlaceholderForAdminPages />
-  }
-
-  const course_metadata = metadata
-
-  // Loading spinner
-  if (!course_metadata) {
+  if (auth.isLoading) {
     return (
       <MainPageBackground>
-        <div
-          className={`flex items-center justify-center font-montserratHeading text-white ${montserrat_heading.variable}`}
-        >
-          <span className="mr-2">Warming up the knowledge engines...</span>
-          <LoadingSpinner size="sm" />
-        </div>
+        <LoadingSpinner />
       </MainPageBackground>
+    )
+  }
+
+  // redirect to login page if needed
+  if (!auth.isAuthenticated) {
+    console.log(
+      'User not logged in',
+      auth.isAuthenticated,
+      auth.isLoading,
+      'NewCoursePage',
+    )
+    return (
+      <AuthComponent
+        course_name={course_name ? (course_name as string) : 'new'}
+      />
     )
   }
 

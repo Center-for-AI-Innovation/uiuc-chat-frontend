@@ -79,6 +79,8 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
 
         sessionStorage.removeItem('auth_redirect_path')
         window.location.replace(redirectPath)
+        // TODO: This doesn't work even though it's recommended in the react-oidc-context docs
+        // window.history.replaceState({}, document.title, redirectPath)
       }
     },
   })
