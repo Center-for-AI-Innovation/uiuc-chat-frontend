@@ -112,7 +112,7 @@ const ListProjectTable: React.FC = () => {
 
   const sortData = () => {
     // Ensure rawData is always an array before proceeding
-    if (!Array.isArray(rawData) || rawData.length === 0) {
+    if ((!Array.isArray(rawData) || rawData.length === 0) && isFullyLoaded) {
       setRows([])
       console.log('No projects found')
       notifications.show({
