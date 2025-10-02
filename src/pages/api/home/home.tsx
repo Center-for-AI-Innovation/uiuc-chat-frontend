@@ -26,7 +26,10 @@ import { v4 as uuidv4 } from 'uuid'
 import { selectBestTemperature } from '~/components/Chat/Temperature'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
-import { useFetchConversationHistory, useUpdateConversation } from '~/hooks/conversationQueries'
+import {
+  useFetchConversationHistory,
+  useUpdateConversation,
+} from '~/hooks/conversationQueries'
 import {
   useCreateFolder,
   useDeleteFolder,
@@ -72,7 +75,10 @@ const Home = ({
   const [isQueryRewriting, setIsQueryRewriting] = useState<boolean>(false)
   const [queryRewriteResult, setQueryRewriteResult] = useState<string>('')
 
-  const [conversationHistoryLoadedIntoContextValue, setConversationHistoryLoadedIntoContextValue] = useState(false);
+  const [
+    conversationHistoryLoadedIntoContextValue,
+    setConversationHistoryLoadedIntoContextValue,
+  ] = useState(false)
 
   // Hooks
   const { t } = useTranslation('chat')
@@ -103,7 +109,7 @@ const Home = ({
     isLoading: isLoadingConversationHistory,
     error: errorConversationHistory,
     refetch: refetchConversationHistory,
-  } = useFetchConversationHistory(current_email as string, "", course_name)
+  } = useFetchConversationHistory(current_email as string, '', course_name)
 
   const {
     data: foldersData,
@@ -259,10 +265,13 @@ const Home = ({
         'conversationHistory storing in react context: ',
         conversationHistory,
       )
-      const tmpConversations = conversationHistory?.pages[0] as unknown as Conversation[]
-      tmpConversations.sort((a, b) => {return a.createdAt! < b.createdAt! ? -1 : 1})
-      dispatch({ field: 'conversations', value: tmpConversations })
-      setConversationHistoryLoadedIntoContextValue(true);
+      const tmpConversations = conversationHistory
+        ?.pages[0] as unknown as Conversation[]
+      tmpConversations.sort((a, b) => {
+        return a.createdAt! < b.createdAt! ? -1 : 1
+      })
+      // dispatch({ field: 'conversations', value: tmpConversations })
+      setConversationHistoryLoadedIntoContextValue(true)
     }
   }, [conversationHistory])
 
@@ -401,7 +410,11 @@ const Home = ({
       messages: [],
       model: model,
       prompt: DEFAULT_SYSTEM_PROMPT,
-      temperature: selectBestTemperature(lastConversation, selectedConversation, llmProviders),
+      temperature: selectBestTemperature(
+        lastConversation,
+        selectedConversation,
+        llmProviders,
+      ),
       folderId: null,
       userEmail: current_email,
       projectName: course_name,
@@ -687,10 +700,13 @@ const Home = ({
         dispatch({ field: 'showChatbar', value: showChatbar === 'true' })
       }
 
-      const selectedConversationString = localStorage.getItem('selectedConversation')
+      const selectedConversationString = localStorage.getItem(
+        'selectedConversation',
+      )
       if (selectedConversationString) {
-        const parsedSelectedConversation: Conversation =
-          JSON.parse(selectedConversationString)
+        const parsedSelectedConversation: Conversation = JSON.parse(
+          selectedConversationString,
+        )
         if (parsedSelectedConversation.projectName === course_name) {
           const cleanedSelectedConversation = cleanSelectedConversation(
             parsedSelectedConversation,
@@ -723,7 +739,12 @@ const Home = ({
     if (!isInitialSetupDone) {
       initialSetup()
     }
-  }, [dispatch, llmProviders, current_email, conversationHistoryLoadedIntoContextValue]) // ! serverSidePluginKeysSet, removed
+  }, [
+    dispatch,
+    llmProviders,
+    current_email,
+    conversationHistoryLoadedIntoContextValue,
+  ]) // ! serverSidePluginKeysSet, removed
   // }, [defaultModelId, dispatch, serverSidePluginKeysSet, models, conversations]) // original!
 
   if (isLoading || !isInitialSetupDone) {
