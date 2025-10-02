@@ -871,9 +871,7 @@ BEGIN
             AND m.content_text ILIKE '%' || v_search_term || '%'
         )
     )
-    ORDER BY
-        COALESCE(c.updated_at, c.created_at) DESC,
-        c.created_at DESC,
+    ORDER BY c.created_at DESC
     LIMIT v_limit OFFSET v_offset
 )
 SELECT 
