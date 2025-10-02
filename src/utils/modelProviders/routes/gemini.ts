@@ -147,21 +147,36 @@ function convertConversationToVercelAISDKv3(
   conversation.messages.forEach((message, index) => {
     if (message.role === 'system') return
 
-    let content: string
-    if (index === conversation.messages.length - 1 && message.role === 'user') {
-      content = message.finalPromtEngineeredMessage || ''
+    const isLastUserMessage =
+      index === conversation.messages.length - 1 && message.role === 'user'
+
+    let content: any
+    if (isLastUserMessage && message.finalPromtEngineeredMessage) {
+      content = [{ type: 'text', text: message.finalPromtEngineeredMessage }]
     } else if (Array.isArray(message.content)) {
       content = message.content
-        .filter((c) => c.type === 'text')
-        .map((c) => c.text)
-        .join('\n')
+        .map((c) => {
+          if (c.type === 'text') {
+            return { type: 'text', text: c.text }
+          } else if (c.type === 'image_url' && c.image_url?.url) {
+            return { type: 'image', image: c.image_url.url }
+          } else if (c.type === 'tool_image_url' && c.image_url?.url) {
+            return { type: 'image', image: c.image_url.url }
+          }
+          return undefined
+        })
+        .filter(Boolean)
+
+      if (content.length === 0) {
+        content = [{ type: 'text', text: '' }]
+      }
     } else {
-      content = message.content as string
+      content = [{ type: 'text', text: (message.content as string) || '' }]
     }
 
     coreMessages.push({
       role: message.role as 'user' | 'assistant',
-      content: content,
+      content,
     })
   })
 
