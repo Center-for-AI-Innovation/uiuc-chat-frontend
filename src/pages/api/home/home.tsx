@@ -26,7 +26,10 @@ import { v4 as uuidv4 } from 'uuid'
 import { selectBestTemperature } from '~/components/Chat/Temperature'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
-import { useFetchConversationHistory, useUpdateConversation } from '~/hooks/conversationQueries'
+import {
+  useFetchConversationHistory, useFetchLastConversation,
+  useUpdateConversation,
+} from '~/hooks/conversationQueries'
 import {
   useCreateFolder,
   useDeleteFolder,
@@ -44,12 +47,12 @@ import { type OpenAIModelID } from '~/utils/modelProviders/types/openai'
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 
 const Home = ({
-  current_email,
-  course_metadata,
-  course_name,
-  document_count,
-  link_parameters,
-}: {
+                current_email,
+                course_metadata,
+                course_name,
+                document_count,
+                link_parameters,
+              }: {
   current_email: string
   course_metadata: CourseMetadata | null
   course_name: string
@@ -65,14 +68,9 @@ const Home = ({
 
   const [isLoading, setIsLoading] = useState<boolean>(true)
 
-  // Make a new conversation if the current one isn't empty
-  const [hasMadeNewConvoAlready, setHasMadeNewConvoAlready] = useState(false)
-
   // Add these two new state setters
   const [isQueryRewriting, setIsQueryRewriting] = useState<boolean>(false)
   const [queryRewriteResult, setQueryRewriteResult] = useState<string>('')
-
-  const [conversationHistoryLoadedIntoContextValue, setConversationHistoryLoadedIntoContextValue] = useState(false);
 
   // Hooks
   const { t } = useTranslation('chat')
@@ -98,20 +96,17 @@ const Home = ({
   )
 
   const {
-    data: conversationHistory,
-    isFetched: isConversationHistoryFetched,
-    isLoading: isLoadingConversationHistory,
-    error: errorConversationHistory,
-    refetch: refetchConversationHistory,
-  } = useFetchConversationHistory(current_email as string, "", course_name)
-
-  const {
     data: foldersData,
     isFetched: isFoldersFetched,
     isLoading: isLoadingFolders,
-    error: errorFolders,
-    refetch: refetchFolders,
   } = useFetchFolders(current_email as string, course_name as string)
+
+  // fetch last conversation to get the temperature
+  const {
+    data: lastConversation,
+    isFetched: isLastConversationFetched,
+    isLoading: isLastConversationLoading,
+  } = useFetchLastConversation(course_name)
 
   const stopConversationRef = useRef<boolean>(false)
   const getModels = useCallback(
@@ -149,12 +144,9 @@ const Home = ({
       folders,
       conversations,
       selectedConversation,
-      prompts,
-      temperature,
       llmProviders,
       documentGroups,
       tools,
-      searchTerm,
     },
     dispatch,
   } = contextValue
@@ -215,7 +207,7 @@ const Home = ({
         dispatch({ field: 'apiKey', value: local_api_key })
       } else {
         console.error(
-          "you have entered an API key that does not start with 'sk-', which indicates it's invalid. Please enter just the key from OpenAI starting with 'sk-'. You entered",
+          'you have entered an API key that does not start with \'sk-\', which indicates it\'s invalid. Please enter just the key from OpenAI starting with \'sk-\'. You entered',
           apiKey,
         )
       }
@@ -239,32 +231,6 @@ const Home = ({
     setOpenaiModel()
     setIsLoading(false)
   }, [course_metadata, apiKey])
-
-  // ---- Set up conversations and folders ----
-  // useEffect(() => {
-  //   // console.log("In useEffect for selectedConversation, home.tsx, selectedConversation: ", selectedConversation)
-  //   // ALWAYS make a new convo if current one isn't empty
-  //   if (!selectedConversation) return
-  //   if (hasMadeNewConvoAlready) return
-  //   setHasMadeNewConvoAlready(true)
-
-  //   // if (selectedConversation?.messages.length > 0) {
-  //   handleNewConversation()
-  //   // }
-  // }, [selectedConversation, conversations])
-
-  useEffect(() => {
-    if (isConversationHistoryFetched && !isLoadingConversationHistory) {
-      console.log(
-        'conversationHistory storing in react context: ',
-        conversationHistory,
-      )
-      const tmpConversations = conversationHistory?.pages[0] as unknown as Conversation[]
-      tmpConversations.sort((a, b) => {return a.createdAt! < b.createdAt! ? -1 : 1})
-      dispatch({ field: 'conversations', value: tmpConversations })
-      setConversationHistoryLoadedIntoContextValue(true);
-    }
-  }, [conversationHistory])
 
   useEffect(() => {
     if (isFoldersFetched && !isLoadingFolders) {
@@ -383,8 +349,6 @@ const Home = ({
       return
     }
 
-    const lastConversation = conversations[conversations.length - 1]
-
     // Determine the model to use for the new conversation
     const model = selectBestModel(llmProviders)
 
@@ -401,7 +365,11 @@ const Home = ({
       messages: [],
       model: model,
       prompt: DEFAULT_SYSTEM_PROMPT,
-      temperature: selectBestTemperature(lastConversation, selectedConversation, llmProviders),
+      temperature: selectBestTemperature(
+        lastConversation,
+        selectedConversation,
+        llmProviders,
+      ),
       folderId: null,
       userEmail: current_email,
       projectName: course_name,
@@ -665,17 +633,18 @@ const Home = ({
     // defaultModelId &&
     //   dispatch({ field: 'defaultModelId', value: defaultModelId })
     serverSidePluginKeysSet &&
-      dispatch({
-        field: 'serverSidePluginKeysSet',
-        value: serverSidePluginKeysSet,
-      })
+    dispatch({
+      field: 'serverSidePluginKeysSet',
+      value: serverSidePluginKeysSet,
+    })
   }, [serverSidePluginKeysSet]) // defaultModelId,
 
   // ON LOAD --------------------------------------------
 
   useEffect(() => {
     const initialSetup = async () => {
-      if (!conversationHistoryLoadedIntoContextValue) return
+      // Don't run initial setup until conversation history is loaded into context
+      if (!isLastConversationFetched || isLastConversationLoading) return
       if (isInitialSetupDone) return
 
       if (window.innerWidth < 640) {
@@ -687,10 +656,13 @@ const Home = ({
         dispatch({ field: 'showChatbar', value: showChatbar === 'true' })
       }
 
-      const selectedConversationString = localStorage.getItem('selectedConversation')
+      const selectedConversationString = localStorage.getItem(
+        'selectedConversation',
+      )
       if (selectedConversationString) {
-        const parsedSelectedConversation: Conversation =
-          JSON.parse(selectedConversationString)
+        const parsedSelectedConversation: Conversation = JSON.parse(
+          selectedConversationString,
+        )
         if (parsedSelectedConversation.projectName === course_name) {
           const cleanedSelectedConversation = cleanSelectedConversation(
             parsedSelectedConversation,
@@ -723,7 +695,13 @@ const Home = ({
     if (!isInitialSetupDone) {
       initialSetup()
     }
-  }, [dispatch, llmProviders, current_email, conversationHistoryLoadedIntoContextValue]) // ! serverSidePluginKeysSet, removed
+  }, [
+    dispatch,
+    llmProviders,
+    current_email,
+    isLastConversationFetched,
+    isLastConversationLoading
+  ]) // ! serverSidePluginKeysSet, removed
   // }, [defaultModelId, dispatch, serverSidePluginKeysSet, models, conversations]) // original!
 
   if (isLoading || !isInitialSetupDone) {
@@ -784,7 +762,8 @@ const Home = ({
                 VisionCapableModels.has(
                   selectedConversation?.model.id as OpenAIModelID,
                 ) && (
-                  <div className="absolute inset-0 z-10 flex h-full w-full flex-col items-center justify-center bg-[--background-dark] opacity-90">
+                  <div
+                    className="absolute inset-0 z-10 flex h-full w-full flex-col items-center justify-center bg-[--background-dark] opacity-90">
                     <GradientIconPhoto />
                     <span className="text-3xl font-extrabold text-[--foreground]">
                       Drop your image here!
