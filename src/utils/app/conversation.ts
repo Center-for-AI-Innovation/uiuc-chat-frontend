@@ -68,6 +68,35 @@ export async function fetchConversationHistory(
   return finalResponse
 }
 
+export async function fetchLastConversation(
+  courseName: string,
+): Promise<Conversation | null> {
+  try {
+    // Grab the first page; server already orders by updated_at DESC in your SQL,
+    const res = await fetch(
+      `/api/conversation?searchTerm=&courseName=${encodeURIComponent(courseName)}&pageParam=0`,
+      {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      },
+    )
+
+    if (!res.ok) throw new Error('Error fetching last conversation')
+
+    const { conversations } = await res.json()
+
+    if (!Array.isArray(conversations) || conversations.length === 0) {
+      return null
+    }
+
+    // Pick the most recent conversation
+    return conversations[0] ?? null
+  } catch (err) {
+    console.error('Error fetching last conversation:', err)
+    return null
+  }
+}
+
 export const deleteConversationFromServer = async (id: string, course_name: string) => {
   try {
     const response = await fetch('/api/conversation', {
