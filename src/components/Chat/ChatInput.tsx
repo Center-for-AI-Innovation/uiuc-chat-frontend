@@ -1212,7 +1212,7 @@ export const ChatInput = ({
                   overflow: 'hidden',
                   pointerEvents: 'auto',
                 }}
-                placeholder={'Message Illinois.chat'}
+                placeholder={'Message Illinois Chat'}
                 value={content}
                 rows={1}
                 onCompositionStart={() => setIsTyping(true)}
