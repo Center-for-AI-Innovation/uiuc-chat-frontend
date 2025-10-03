@@ -11,7 +11,7 @@ import {
 import { type Conversation } from '~/types/chat'
 
 export const selectBestTemperature = (
-  lastConversation: Conversation | undefined,
+  lastConversation: Conversation | null | undefined,
   selectedConversation: Conversation | undefined,
   llmProviders: AllLLMProviders,
 ): number => {

@@ -1,7 +1,7 @@
 import {
   type QueryClient,
   useInfiniteQuery,
-  useMutation,
+  useMutation, useQuery,
 } from '@tanstack/react-query'
 import { type Conversation, type ConversationPage } from '~/types/chat'
 import { type FolderWithConversation } from '~/types/folder'
@@ -10,6 +10,7 @@ import {
   deleteConversationFromServer,
   fetchConversationHistory,
   saveConversationToServer,
+  fetchLastConversation
 } from '~/utils/app/conversation'
 
 export function useFetchConversationHistory(
@@ -41,6 +42,14 @@ export function useFetchConversationHistory(
       return lastPage.nextCursor ?? null;
     },
     refetchInterval: 20_000,
+  })
+}
+
+export function useFetchLastConversation(courseName: string) {
+  return useQuery<Conversation | null>({
+    queryKey: ['lastConversation', courseName],
+    queryFn: () => fetchLastConversation(courseName),
+    enabled: !!courseName, // don’t run until courseName is truthy
   })
 }
 
