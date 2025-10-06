@@ -1397,7 +1397,9 @@ export const ChatMessage = memo(
 
           try {
             // Preserve any hash (e.g., #page=12)
-            const [base, hash] = targetHref.split('#')
+            const parts = targetHref.split('#')
+            const base = parts[0] ?? targetHref
+            const hash = parts.length > 1 ? parts.slice(1).join('#') : undefined
             let finalUrl = targetHref
 
             // Attempt to refresh S3 URLs (handles expired or non-presigned S3 links)
