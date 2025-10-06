@@ -27,7 +27,6 @@ export async function getSambaNovaModels(
       {
         enabled: boolean
         default: boolean
-        temperature?: number
       }
     >()
 
@@ -36,7 +35,6 @@ export async function getSambaNovaModels(
         existingModelStates.set(model.id, {
           enabled: Boolean(model.enabled),
           default: Boolean(model.default),
-          temperature: model.temperature,
         })
       })
     }
@@ -54,10 +52,6 @@ export async function getSambaNovaModels(
         default: existingState
           ? Boolean(existingState.default)
           : Boolean(model.default || false),
-        temperature:
-          existingState?.temperature !== undefined
-            ? existingState.temperature
-            : model.temperature,
       }
 
       return updatedModel

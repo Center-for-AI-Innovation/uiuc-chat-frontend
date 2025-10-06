@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { getKeycloakBaseFromHost } from '~/utils/authHelpers'
 
 // // Private by default, public routes are defined below (regex)
 // const isPublicRoute = createRouteMatcher([
@@ -70,7 +71,13 @@ export default async function middleware(request: NextRequest) {
       .replace(/=+$/, '')
 
     // Redirect to Keycloak auth URL directly
-    const keycloakUrl = `${process.env.NEXT_PUBLIC_KEYCLOAK_URL}realms/${process.env.NEXT_PUBLIC_KEYCLOAK_REALM}/protocol/openid-connect/auth`
+ const hostname =
+      request.headers.get('x-forwarded-host') ??
+      request.headers.get('host') ??
+      'localhost';
+
+    const keycloakBaseUrl = getKeycloakBaseFromHost(hostname);
+    const keycloakUrl = `${keycloakBaseUrl}realms/${process.env.NEXT_PUBLIC_KEYCLOAK_REALM}/protocol/openid-connect/auth`
     const authUrl = new URL(keycloakUrl)
     authUrl.searchParams.set(
       'client_id',
@@ -133,4 +140,21 @@ export const config = {
      */
     '/((?!_next/static|_next/image|favicon.ico|.*\\..*|api/auth).*)',
   ],
+}
+
+// common interface for authenticated user
+export interface AuthenticatedUser {
+  sub: string
+  email: string
+  preferred_username: string
+  given_name?: string
+  family_name?: string
+  realm_access?: {
+    roles: string[]
+  }
+  resource_access?: {
+    [key: string]: {
+      roles: string[]
+    }
+  }
 }

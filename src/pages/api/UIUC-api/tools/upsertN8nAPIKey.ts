@@ -1,43 +1,35 @@
-import { supabase } from '@/utils/supabaseClient'
-import { NextApiRequest, NextApiResponse } from 'next'
+import { db } from '~/db/dbClient'
+import { type NextApiResponse } from 'next'
+import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
+import { projects } from '~/db/schema'
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, error: 'Method not allowed' })
-  }
-
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const { course_name, n8n_api_key } = req.body
-  // console.log('upsertN8nAPIKey course_name and n8n_api_key:', req.body)
-  
   if (!course_name) {
-    return res.status(400).json({
-      success: false,
-      error: 'course_name is required',
-    })
+    return res
+      .status(400)
+      .json({ success: false, error: 'course_name is required' })
   }
 
-  const { data, error } = await supabase
-    .from('projects')
-    .upsert(
-      {
+  try {
+    const result = await db
+      .insert(projects)
+      .values({
         n8n_api_key: n8n_api_key,
         course_name: course_name,
-      },
-      {
-        onConflict: 'course_name',
-      },
-    )
-    .eq('course_name', course_name)
-    .select()
-  // console.log('upsertN8nAPIKey data:', data)
-
-  if (error) {
-    console.error('Error upserting N8n key to Supabase:', error)
+      })
+      .onConflictDoUpdate({
+        target: [projects.id],
+        set: {
+          n8n_api_key: n8n_api_key,
+        },
+      })
+    console.log('upsertN8nAPIKey result:', result)
+    return res.status(200).json({ success: true })
+  } catch (error) {
+    console.error('Error upserting N8n key:', error)
     return res.status(500).json({ success: false, error: error })
   }
-  
-  return res.status(200).json({ success: true })
 }
+
+export default withAuth(handler)

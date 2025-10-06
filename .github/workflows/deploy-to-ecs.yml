@@ -1,0 +1,124 @@
+name: Deploy Frontend to AWS ECS Fargate
+
+on:
+  push:
+    branches: [ illinois-chat ]
+    paths:
+      - 'src/**'
+      - 'pages/**'
+      - 'components/**'
+      - 'lib/**'
+      - 'public/**'
+      - 'styles/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'next.config.mjs'
+      - 'next-i18next.config.mjs'
+      - 'tailwind.config.ts'
+      - 'tsconfig.json'
+      
+      - 'Dockerfile'
+      - '.github/workflows/deploy-to-ecs.yml'
+  workflow_dispatch: # Allows manual triggering
+
+# Environment variables. Edit to match the setup for this service.
+env:
+  AWS_REGION: us-east-2
+  ECR_REPOSITORY: uiuc-chat-frontend
+  ECS_SERVICE: frontend-service-olcwyy3s
+  ECS_CLUSTER: uiuc-chat-dev
+  ECS_TASK_DEFINITION: frontend
+  CONTAINER_NAME: frontend
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy Frontend to ECS
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Set image tag (adaptive short commit hash + branch)
+      id: set-tag
+      run: |
+        SHORT_SHA=$(git rev-parse --short HEAD)
+        BRANCH_TAG=$(echo "${GITHUB_REF##*/}" | tr '/' '-')
+        IMAGE_TAG="${BRANCH_TAG}-${SHORT_SHA}"
+        echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
+        echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
+        echo "branch_tag=${BRANCH_TAG}" >> $GITHUB_OUTPUT
+        echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        BRANCH_TAG: ${{ steps.set-tag.outputs.branch_tag }}
+        BANNER_CONTENT: ${{ vars.NEXT_PUBLIC_ILLINOIS_CHAT_BANNER_CONTENT }}
+      run: |
+        set -euo pipefail
+        echo "Building image with tag: $IMAGE_TAG"
+        echo "ECR Registry: $ECR_REGISTRY"
+        echo "ECR Repository: $ECR_REPOSITORY"
+        
+        docker build \
+          --build-arg NEXT_PUBLIC_KEYCLOAK_REALM="${{ vars.NEXT_PUBLIC_KEYCLOAK_REALM }}" \
+          --build-arg NEXT_PUBLIC_KEYCLOAK_CLIENT_ID="${{ vars.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID }}" \
+          --build-arg NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG="${{ vars.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG }}" \
+          --build-arg NEXT_PUBLIC_ILLINOIS_CHAT_BANNER_CONTENT="$BANNER_CONTENT" \
+          --build-arg NEXT_PUBLIC_POSTHOG_KEY="${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}" \
+          --build-arg NEXT_PUBLIC_POSTHOG_HOST="${{ vars.NEXT_PUBLIC_POSTHOG_HOST }}" \
+          -t "${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}" .
+          
+        docker push "${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+        
+        # Also tag with branch only (optional, for easy rollback by branch)
+        docker tag "${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}" "${ECR_REGISTRY}/${ECR_REPOSITORY}:${BRANCH_TAG}"
+        docker push "${ECR_REGISTRY}/${ECR_REPOSITORY}:${BRANCH_TAG}"
+        
+        # Maintain latest tag
+        docker tag "${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}" "${ECR_REGISTRY}/${ECR_REPOSITORY}:latest"
+        docker push "${ECR_REGISTRY}/${ECR_REPOSITORY}:latest"
+        
+        echo "image=${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}" >> $GITHUB_OUTPUT
+
+    - name: Download current task definition
+      run: |
+        aws ecs describe-task-definition \
+          --task-definition ${{ env.ECS_TASK_DEFINITION }} \
+          --query taskDefinition > task-definition-raw.json
+        
+        # Remove unsupported fields that cause compatibility issues
+        cat task-definition-raw.json | jq 'del(.registeredAt, .registeredBy, .taskDefinitionArn, .revision, .status, .requiresAttributes, .placementConstraints, .compatibilities, .enableFaultInjection)' > task-definition.json
+
+    - name: Fill in the new image ID in the Amazon ECS task definition
+      id: task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: task-definition.json
+        container-name: ${{ env.CONTAINER_NAME }}
+        image: ${{ steps.build-image.outputs.image }}
+
+    - name: Deploy Amazon ECS task definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+      with:
+        task-definition: ${{ steps.task-def.outputs.task-definition }}
+        service: ${{ env.ECS_SERVICE }}
+        cluster: ${{ env.ECS_CLUSTER }}
+        wait-for-service-stability: true

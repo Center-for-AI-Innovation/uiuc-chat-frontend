@@ -1,27 +1,42 @@
 // ChatMessage.tsx
-import { Badge, Text, Tooltip, createStyles } from '@mantine/core'
+import React, {
+  memo,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  createContext,
+  useContext as useReactContext,
+} from 'react'
+import {
+  Text,
+  createStyles,
+  Badge,
+  Tooltip,
+  Modal,
+  Button,
+} from '@mantine/core'
 import {
   IconCheck,
   IconEdit,
   IconRobot,
   IconUser,
   IconX,
+  IconFileTypePdf,
+  IconFileTypeDocx,
+  IconFileTypeTxt,
+  IconFileTypeXls,
+  IconFileTypePpt,
+  IconFile,
+  IconEye,
 } from '@tabler/icons-react'
-import React, {
-  createContext,
-  memo,
-  useCallback,
-  useContext,
-  useEffect,
-  useContext as useReactContext,
-  useRef,
-  useState,
-} from 'react'
 
 import {
   type Content,
   type ContextWithMetadata,
   type Message,
+  type MessageType,
 } from '@/types/chat'
 import { useTranslation } from 'next-i18next'
 import HomeContext from '~/pages/api/home/home.context'
@@ -89,6 +104,187 @@ const Timer: React.FC<{ timerVisible: boolean }> = ({ timerVisible }) => {
     <></>
   )
 }
+// File Card Component
+const FileCard: React.FC<{
+  fileName: string
+  fileType?: string
+  fileUrl?: string
+  onClick: () => void
+  isPreviewable?: boolean
+}> = ({ fileName, fileType, fileUrl, onClick, isPreviewable = true }) => {
+  const getFileIcon = (name: string, type?: string) => {
+    const extension = name.split('.').pop()?.toLowerCase()
+    const iconProps = { size: 20 }
+
+    if (type?.includes('pdf') || extension === 'pdf') {
+      return <IconFileTypePdf {...iconProps} style={{ color: 'var(--illinois-orange)' }} />
+    }
+    if (type?.includes('doc') || extension === 'docx' || extension === 'doc') {
+      return <IconFileTypeDocx {...iconProps} style={{ color: 'var(--illinois-orange)' }} />
+    }
+    if (type?.includes('text') || extension === 'txt') {
+      return <IconFileTypeTxt {...iconProps} style={{ color: 'var(--illinois-orange)' }} />
+    }
+    return <IconFile {...iconProps} style={{ color: 'var(--illinois-orange)' }} />
+  }
+
+  const truncateFileName = (name: string, maxLength = 30) => {
+    if (name.length <= maxLength) return name
+    const extension = name.split('.').pop()
+    const nameWithoutExt = name.substring(0, name.lastIndexOf('.'))
+    const truncated =
+      nameWithoutExt.substring(0, maxLength - (extension?.length || 0) - 4) +
+      '...'
+    return `${truncated}.${extension}`
+  }
+
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        display: 'inline-flex',
+        maxWidth: '320px',
+        cursor: 'pointer',
+        alignItems: 'center',
+        gap: '8px',
+        borderRadius: '8px',
+        border: '1px solid var(--border)',
+        backgroundColor: 'var(--background-faded)',
+        padding: '8px 12px',
+        transition: 'all 0.2s ease',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = 'var(--primary)'
+        e.currentTarget.style.backgroundColor = 'var(--background-dark)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = 'var(--border)'
+        e.currentTarget.style.backgroundColor = 'var(--background-faded)'
+      }}
+    >
+      {getFileIcon(fileName, fileType)}
+      <span 
+        style={{
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          fontSize: '14px',
+          fontWeight: '500',
+          color: 'var(--foreground)',
+        }}
+      >
+        {truncateFileName(fileName)}
+      </span>
+      {isPreviewable ? (
+        <IconEye size={16} style={{ color: 'var(--illinois-orange)' }} />
+      ) : (
+        <IconFile size={16} style={{ color: 'var(--illinois-orange)' }} />
+      )}
+    </div>
+  )
+}
+
+// File Preview Modal Component
+const FilePreviewModal: React.FC<{
+  isOpen: boolean
+  onClose: () => void
+  fileName: string
+  fileUrl?: string
+  fileType?: string
+  courseName: string
+}> = ({ isOpen, onClose, fileName, fileUrl, fileType, courseName }) => {
+  const { t } = useTranslation('chat')
+  const { activeSidebarMessageId, setActiveSidebarMessageId } = useReactContext(
+    SourcesSidebarContext,
+  )
+
+  const {
+    state: {
+      selectedConversation,
+      messageIsStreaming,
+      isImg2TextLoading,
+      isRouting,
+      isRunningTool,
+      isRetrievalLoading,
+      isQueryRewriting,
+      loading,
+    },
+    dispatch: homeDispatch,
+  } = useContext(HomeContext)
+
+  const [actualFileUrl, setActualFileUrl] = useState<string>('')
+  const [textContent, setTextContent] = useState<string>('')
+
+  // Handle PDFs and Office documents that can be displayed in iframes
+  const isPdf =
+    fileType?.includes('pdf') || 
+    fileName.toLowerCase().match(/\.(pdf|doc|docx|xls|xlsx|ppt|pptx)$/i)
+  const isTextFile =
+    fileType?.includes('text') ||
+    fileName.toLowerCase().match(/\.(txt|md|html|xml|csv|py|srt|vtt)$/i)
+
+  useEffect(() => {
+    if (fileUrl && isOpen) {
+      // Convert S3 key to presigned URL
+      fetchPresignedUrl(fileUrl, courseName).then((url) => {
+        setActualFileUrl(url || '')
+      })
+    }
+  }, [fileUrl, isOpen, courseName])
+
+  // Load text content for text files
+  useEffect(() => {
+    if (isTextFile && actualFileUrl && isOpen) {
+      fetch(actualFileUrl)
+        .then(response => response.text())
+        .then(text => setTextContent(text))
+        .catch(error => {
+          console.error('Failed to load text content:', error)
+          setTextContent('Failed to load file content')
+        })
+    }
+  }, [isTextFile, actualFileUrl, isOpen])
+
+  // Don't render modal for non-previewable files
+  if (isOpen && !isPdf && !isTextFile) {
+    return null
+  }
+
+  return (
+    <Modal.Root opened={isOpen} onClose={onClose} centered size="xl">
+      <Modal.Overlay className="modal-overlay-common" />
+      <Modal.Content className="modal-common">
+        <Modal.Header className="modal-header-common">
+          <Modal.Title className={`modal-title-common ${montserrat_heading.variable} font-montserratHeading`}>
+            {fileName}
+          </Modal.Title>
+          <Modal.CloseButton
+            onClick={onClose}
+            aria-label="Close file preview"
+            className="modal-close-button-common"
+          />
+        </Modal.Header>
+        <Modal.Body className="modal-body-common">
+          <div className="file-preview-container">
+            {isPdf && actualFileUrl ? (
+              <iframe
+                src={actualFileUrl}
+                className="file-preview-iframe"
+                title={fileName}
+              />
+            ) : isTextFile && actualFileUrl ? (
+              <div className="file-preview-text">
+                <pre>{textContent}</pre>
+              </div>
+            ) : null}
+          </div>
+        </Modal.Body>
+      </Modal.Content>
+    </Modal.Root>
+  )
+}
+
+
 
 // Add context for managing the active sources sidebar
 const SourcesSidebarContext = createContext<{
@@ -138,7 +334,7 @@ export interface Props {
   ) => void
   context?: ContextWithMetadata[]
   contentRenderer?: (message: Message) => JSX.Element
-  onImageUrlsUpdate?: (message: Message, messageIndex: number) => void
+      onImageUrlsUpdate?: (message: Message, messageIndex: number) => void
   courseName: string
 }
 
@@ -198,6 +394,25 @@ function getFileType(s3Path?: string, url?: string) {
   }
   if (url) return 'web'
   return 'other'
+}
+
+function isFilePreviewable(fileName: string, fileType?: string): boolean {
+  const extension = fileName.split('.').pop()?.toLowerCase()
+  
+  // PDFs can be previewed
+  if (fileType?.includes('pdf') || extension === 'pdf') {
+    return true
+  }
+  
+  // Text files can be previewed
+  if (fileType?.includes('text') || extension === 'txt' || extension === 'md' || 
+      extension === 'html' || extension === 'xml' || extension === 'csv' || 
+      extension === 'py' || extension === 'srt' || extension === 'vtt') {
+    return true
+  }
+  
+  // Office documents and other files cannot be previewed
+  return false
 }
 
 // Add this helper function at the top
@@ -354,10 +569,6 @@ export const ChatMessage = memo(
                   return content
                 } else {
                   const path = extractPathFromUrl(content.image_url.url)
-                  console.log(
-                    'Image url was invalid, fetching presigned url for: ',
-                    path,
-                  )
                   const presignedUrl = await getPresignedUrl(path, courseName)
                   setImageUrls(
                     (prevUrls) => new Set([...prevUrls, presignedUrl]),
@@ -370,23 +581,18 @@ export const ChatMessage = memo(
           )
           if (
             !isValid &&
-            onImageUrlsUpdate &&
+            // onImageUrlsUpdate && // Commented out image upload functionality
             !deepEqual(updatedContent, message.content)
           ) {
-            console.log(
-              'Updated content: ',
-              updatedContent,
-              'Previous content: ',
-              message.content,
-            )
-            onImageUrlsUpdate(
-              { ...message, content: updatedContent },
-              messageIndex,
-            )
+            // onImageUrlsUpdate( // Commented out image upload functionality
+            //   { ...message, content: updatedContent }, // Commented out image upload functionality
+            //   messageIndex, // Commented out image upload functionality
+            // ) // Commented out image upload functionality
           }
         }
       }
-      if (message.role === 'user') {
+      // Call fetchUrl for all messages that contain images
+      if (Array.isArray(message.content) && message.content.some(content => content.type === 'image_url')) {
         fetchUrl()
       }
     }, [message.content, messageIndex, isRunningTool])
@@ -430,24 +636,34 @@ export const ChatMessage = memo(
       const trimmedContent = messageContent.trim()
       if (trimmedContent.length === 0) return
 
-      if (message.content !== trimmedContent) {
-        if (selectedConversation && onEdit) {
-          const editedMessage = { ...message, content: trimmedContent }
-          onEdit(editedMessage)
-
-          // Save to server
-          const updatedConversation = {
-            ...selectedConversation,
-            messages: selectedConversation.messages.map((msg) =>
-              msg.id === message.id ? editedMessage : msg,
-            ),
-          }
-          saveConversationToServer(updatedConversation).catch(
-            (error: Error) => {
-              console.error('Error saving edited message to server:', error)
-            },
-          )
+      if (selectedConversation && onEdit) {
+        let editedContent: string | Content[]
+        
+        if (Array.isArray(message.content)) {
+          // Preserve file and image content, only update text content
+          const nonTextContent = message.content.filter(content => content.type !== 'text')
+          const newTextContent = trimmedContent ? [{ type: 'text' as MessageType, text: trimmedContent }] : []
+          editedContent = [...newTextContent, ...nonTextContent]
+        } else {
+          // If it's a simple string message, just use the edited text
+          editedContent = trimmedContent
         }
+
+        const editedMessage = { ...message, content: editedContent }
+        onEdit(editedMessage)
+
+        // Save to server
+        const updatedConversation = {
+          ...selectedConversation,
+          messages: selectedConversation.messages.map((msg) =>
+            msg.id === message.id ? editedMessage : msg,
+          ),
+        }
+        saveConversationToServer(updatedConversation, courseName).catch(
+          (error: Error) => {
+            console.error('Error saving edited message to server:', error)
+          },
+        )
       }
       setIsEditing(false)
     }
@@ -561,12 +777,33 @@ export const ChatMessage = memo(
     }
 
     function extractPathFromUrl(url: string): string {
-      const urlObject = new URL(url)
-      let path = urlObject.pathname
-      if (path.startsWith('/')) {
-        path = path.substring(1)
+      try {
+        // Check if it's already a path (doesn't start with http/https)
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+          // It's already a path, just clean it up
+          let path = url
+          if (path.startsWith('/')) {
+            path = path.substring(1)
+          }
+          return path
+        }
+        
+        // It's a URL, try to parse it
+        const urlObject = new URL(url)
+        let path = urlObject.pathname
+        if (path.startsWith('/')) {
+          path = path.substring(1)
+        }
+        return path
+      } catch (error) {
+        console.error('Failed to extract path from URL:', url, error)
+        // Fallback: try to extract path manually
+        if (url.includes('/')) {
+          const parts = url.split('/')
+          return parts.slice(-1)[0] || url // Return the last part or the original URL
+        }
+        return url
       }
-      return path
     }
 
     useEffect(() => {
@@ -593,7 +830,6 @@ export const ChatMessage = memo(
                     const isValid = await checkIfUrlIsValid(imageUrl)
                     if (!isValid) {
                       // This will only work for internal S3 URLs
-                      console.log('Image URL is expired')
                       const s3_path = extractPathFromUrl(imageUrl)
                       return getPresignedUrl(s3_path, courseName)
                     }
@@ -609,7 +845,6 @@ export const ChatMessage = memo(
                 tool.output.imageUrls.map(async (imageUrl) => {
                   const isValid = await checkIfUrlIsValid(imageUrl)
                   if (!isValid) {
-                    console.log('Image URL is expired')
                     const s3_path = extractPathFromUrl(imageUrl)
                     return getPresignedUrl(s3_path, courseName)
                   }
@@ -984,127 +1219,124 @@ export const ChatMessage = memo(
                     </code>
                   )
                 },
-                p({ node, children }) {
-                  return (
-                    <p
-                      className={`self-start text-base font-normal ${montserrat_paragraph.variable} pb-2 font-montserratParagraph`}
-                    >
-                      {children}
-                    </p>
-                  )
-                },
-                ul({ children }) {
-                  return (
-                    <ul
-                      className={`text-base font-normal ${montserrat_paragraph.variable} font-montserratParagraph`}
-                    >
-                      {children}
-                    </ul>
-                  )
-                },
-                ol({ children }) {
-                  return (
-                    <ol
-                      className={`text-base font-normal ${montserrat_paragraph.variable} ml-4 font-montserratParagraph lg:ml-6`}
-                    >
-                      {children}
-                    </ol>
-                  )
-                },
-                li({ children }) {
-                  return (
-                    <li
-                      className={`text-base font-normal ${montserrat_paragraph.variable} break-words font-montserratParagraph`}
-                    >
-                      {children}
-                    </li>
-                  )
-                },
-                table({ children }) {
-                  return (
-                    <table className="border-collapse border border-black px-3 py-1 dark:border-white">
-                      {children}
-                    </table>
-                  )
-                },
-                th({ children }) {
-                  return (
-                    <th className="break-words border border-black bg-gray-500 px-3 py-1 text-white dark:border-white">
-                      {children}
-                    </th>
-                  )
-                },
-                td({ children }) {
-                  return (
-                    <td className="break-words border border-black px-3 py-1 dark:border-white">
-                      {children}
-                    </td>
-                  )
-                },
-                h1({ node, children }) {
-                  return (
-                    <h1
-                      className={`text-4xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                    >
-                      {children}
-                    </h1>
-                  )
-                },
-                h2({ node, children }) {
-                  return (
-                    <h2
-                      className={`text-3xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                    >
-                      {children}
-                    </h2>
-                  )
-                },
-                h3({ node, children }) {
-                  return (
-                    <h3
-                      className={`text-2xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                    >
-                      {children}
-                    </h3>
-                  )
-                },
-                h4({ node, children }) {
-                  return (
-                    <h4
-                      className={`text-lg font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                    >
-                      {children}
-                    </h4>
-                  )
-                },
-                h5({ node, children }) {
-                  return (
-                    <h5
-                      className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                    >
-                      {children}
-                    </h5>
-                  )
-                },
-                h6({ node, children }) {
-                  return (
-                    <h6
-                      className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                    >
-                      {children}
-                    </h6>
-                  )
-                },
-                a({ node, className, children, ...props }) {
-                  return <MarkdownLink {...props}>{children}</MarkdownLink>
-                },
-              }}
-            >
-              {messageIsStreaming &&
-              messageIndex === (selectedConversation?.messages.length ?? 0) - 1
-                ? `${contentToRender} ▍`
-                : contentToRender}
-            </MemoizedReactMarkdown>
+              p({ node, children }) {
+                return (
+                  <p
+                    className={`self-start text-base font-normal ${montserrat_paragraph.variable} pb-2 font-montserratParagraph`}
+                  >
+                    {children}
+                  </p>
+                )
+              },
+              ul({ children }) {
+                return (
+                  <ul
+                    className={`text-base font-normal ${montserrat_paragraph.variable} font-montserratParagraph`}
+                  >
+                    {children}
+                  </ul>
+                )
+              },
+              ol({ children }) {
+                return (
+                  <ol
+                    className={`text-base font-normal ${montserrat_paragraph.variable} ml-4 font-montserratParagraph lg:ml-6`}
+                  >
+                    {children}
+                  </ol>
+                )
+              },
+              li({ children }) {
+                return (
+                  <li
+                    className={`text-base font-normal ${montserrat_paragraph.variable} break-words font-montserratParagraph`}
+                  >
+                    {children}
+                  </li>
+                )
+              },
+              table({ children }) {
+                return (
+                  <table className="border-collapse border border-black px-3 py-1 dark:border-white">
+                    {children}
+                  </table>
+                )
+              },
+              th({ children }) {
+                return (
+                  <th className="break-words border border-black bg-gray-500 px-3 py-1 text-white dark:border-white">
+                    {children}
+                  </th>
+                )
+              },
+              td({ children }) {
+                return (
+                  <td className="break-words border border-black px-3 py-1 dark:border-white">
+                    {children}
+                  </td>
+                )
+              },
+              h1({ node, children }) {
+                return (
+                  <h1
+                    className={`text-4xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    {children}
+                  </h1>
+                )
+              },
+              h2({ node, children }) {
+                return (
+                  <h2
+                    className={`text-3xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    {children}
+                  </h2>
+                )
+              },
+              h3({ node, children }) {
+                return (
+                  <h3
+                    className={`text-2xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    {children}
+                  </h3>
+                )
+              },
+              h4({ node, children }) {
+                return (
+                  <h4
+                    className={`text-lg font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    {children}
+                  </h4>
+                )
+              },
+              h5({ node, children }) {
+                return (
+                  <h5
+                    className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    {children}
+                  </h5>
+                )
+              },
+              h6({ node, children }) {
+                return (
+                  <h6
+                    className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    {children}
+                  </h6>
+                )
+              },
+              a({ node, className, children, ...props }) {
+                return <MarkdownLink {...props}>{children}</MarkdownLink>
+              },
+            }}
+          >
+            {contentToRender}
+          </MemoizedReactMarkdown>
           )}
         </>
       )
@@ -1265,6 +1497,64 @@ export const ChatMessage = memo(
       return Array.isArray(contexts) ? contexts.length : 0
     }
 
+    const [filePreviewModal, setFilePreviewModal] = useState<{
+      isOpen: boolean
+      fileName: string
+      fileUrl?: string
+      fileType?: string
+    }>({
+      isOpen: false,
+      fileName: '',
+    })
+
+    const handleFilePreview = (
+      fileName: string,
+      fileUrl?: string,
+      fileType?: string,
+    ) => {
+      setFilePreviewModal({
+        isOpen: true,
+        fileName,
+        fileUrl,
+        fileType,
+      })
+    }
+
+    const handleFileAction = async (
+      fileName: string,
+      fileUrl?: string,
+      fileType?: string,
+    ) => {
+      if (isFilePreviewable(fileName, fileType)) {
+        // For previewable files, open the modal
+        handleFilePreview(fileName, fileUrl, fileType)
+      } else {
+        // For non-previewable files, trigger direct download
+        if (fileUrl) {
+          try {
+            const presignedUrl = await fetchPresignedUrl(fileUrl, courseName, undefined, fileName)
+            if (presignedUrl) {
+              const link = document.createElement('a')
+              link.href = presignedUrl
+              link.download = fileName
+              document.body.appendChild(link)
+              link.click()
+              document.body.removeChild(link)
+            }
+          } catch (error) {
+            console.error('Failed to download file:', error)
+          }
+        }
+      }
+    }
+
+    const closeFilePreview = () => {
+      setFilePreviewModal({
+        isOpen: false,
+        fileName: '',
+      })
+    }
+
     return (
       <>
         <div
@@ -1337,6 +1627,7 @@ export const ChatMessage = memo(
                               {/* User message text for all messages */}
                               {message.content.map((content, index) => {
                                 if (content.type === 'text') {
+                                  // Regular text content
                                   if (
                                     !(content.text as string)
                                       .trim()
@@ -1353,28 +1644,59 @@ export const ChatMessage = memo(
                                   }
                                 }
                               })}
+                              {/* File cards for all messages */}
+                              <div className="-m-1 flex w-full flex-wrap justify-start">
+                                {message.content
+                                  .filter((item) => item.type === 'file')
+                                  .map((content, index) => {
+                                    const fileName = content.fileName || 'Unknown file'
+                                    const isPreviewable = isFilePreviewable(fileName, content.fileType)
+                                    return (
+                                      <div key={index} className="mb-2">
+                                        <FileCard
+                                          fileName={fileName}
+                                          fileType={content.fileType}
+                                          fileUrl={content.fileUrl}
+                                          isPreviewable={isPreviewable}
+                                          onClick={() =>
+                                            handleFileAction(
+                                              fileName,
+                                              content.fileUrl,
+                                              content.fileType,
+                                            )
+                                          }
+                                        />
+                                      </div>
+                                    )
+                                  })}
+                              </div>
+
                               {/* Image previews for all messages */}
                               <div className="-m-1 flex w-full flex-wrap justify-start">
                                 {message.content
                                   .filter((item) => item.type === 'image_url')
-                                  .map((content, index) => (
-                                    <div
-                                      key={index}
-                                      className={classes.imageContainerStyle}
-                                    >
-                                      <div className="overflow-hidden rounded-lg">
-                                        <ImagePreview
-                                          src={
-                                            Array.from(imageUrls)[
-                                              index
-                                            ] as string
-                                          }
-                                          alt="Chat message"
-                                          className={classes.imageStyle}
-                                        />
+                                  .map((content, index) => {
+                                    // Try to get the processed URL from imageUrls state first
+                                    const imageUrlsArray = Array.from(imageUrls)
+                                    const processedUrl = imageUrlsArray[index] || content.image_url?.url
+                                    
+
+                                    
+                                    return (
+                                      <div
+                                        key={index}
+                                        className={classes.imageContainerStyle}
+                                      >
+                                        <div className="overflow-hidden rounded-lg">
+                                          <ImagePreview
+                                            src={processedUrl as string}
+                                            alt="Chat message"
+                                            className={classes.imageStyle}
+                                          />
+                                        </div>
                                       </div>
-                                    </div>
-                                  ))}
+                                    )
+                                  })}
                               </div>
 
                               {/* Image description loading state for last message */}
@@ -1926,6 +2248,16 @@ export const ChatMessage = memo(
             onSubmit={handleFeedbackSubmit}
           />
         )}
+
+        {/* File Preview Modal */}
+        <FilePreviewModal
+          isOpen={filePreviewModal.isOpen}
+          onClose={closeFilePreview}
+          fileName={filePreviewModal.fileName}
+          fileUrl={filePreviewModal.fileUrl}
+          fileType={filePreviewModal.fileType}
+          courseName={courseName}
+        />
       </>
     )
   },

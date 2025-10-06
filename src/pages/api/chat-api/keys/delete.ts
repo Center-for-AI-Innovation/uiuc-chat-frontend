@@ -1,10 +1,14 @@
+import { eq } from 'drizzle-orm'
+import type { NextApiResponse } from 'next'
 import posthog from 'posthog-js'
-import type { NextApiRequest, NextApiResponse } from 'next'
-import { supabase } from '~/utils/supabaseClient'
+import type { ApiKeys } from '~/db/dbClient'
+import { apiKeys, db } from '~/db/dbClient'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
+import type { AuthenticatedRequest } from '~/utils/authMiddleware'
 
 type ApiResponse = {
   message?: string
-  data?: any
+  data?: ApiKeys[]
   error?: string
 }
 
@@ -15,38 +19,31 @@ type ApiResponse = {
  * @param {NextApiResponse} res - The outgoing HTTP response.
  * @returns A JSON response indicating the result of the delete operation.
  */
-export default async function deleteKey(
-  req: NextApiRequest,
+async function handler(
+  req: AuthenticatedRequest,
   res: NextApiResponse<ApiResponse>,
 ) {
   if (req.method !== 'DELETE') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const authHeader = req.headers.authorization
-  if (!authHeader?.startsWith('Bearer ')) {
-    return res
-      .status(401)
-      .json({ error: 'Missing or invalid authorization header' })
-  }
-
   try {
-    // Get user ID from Keycloak token
-    const token = authHeader.replace('Bearer ', '')
-    const [, payload = ''] = token.split('.')
-    const decodedPayload = JSON.parse(Buffer.from(payload, 'base64').toString())
-    const userEmail = decodedPayload.email
+    const userEmail = req.user?.email
+    if (!userEmail) {
+      return res.status(400).json({ error: 'User email missing' })
+    }
 
     console.log('Deleting api key for:', userEmail)
 
-    const { data, error } = await supabase
-      .from('api_keys')
-      .update({ is_active: false })
-      .match({ email: userEmail })
+    const data = await db
+      .update(apiKeys)
+      .set({ is_active: false })
+      .where(eq(apiKeys.email, userEmail))
+      .returning()
 
-    if (error) {
-      console.error('Error deleting API key:', error)
-      throw error
+    if (data.length === 0) {
+      console.error('No API key found for user email:', userEmail)
+      throw new Error('No API key found for user email')
     }
 
     posthog.capture('api_key_deleted', {
@@ -69,3 +66,5 @@ export default async function deleteKey(
     })
   }
 }
+
+export default withCourseOwnerOrAdminAccess()(handler)

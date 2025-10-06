@@ -1,24 +1,32 @@
-import { supabase } from '@/utils/supabaseClient'
+import { type NextApiResponse } from 'next'
+import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import { db } from '~/db/dbClient'
+import { emailNewsletter } from '~/db/schema'
 
-const newsletterUnsubscribe = async (req: any, res: any) => {
+const newsletterUnsubscribe = async (
+  req: AuthenticatedRequest,
+  res: NextApiResponse,
+) => {
   const { email } = req.body
 
-  const { data, error } = await supabase.from('email-newsletter').upsert(
-    [
-      {
+  try {
+    const result = await db
+      .insert(emailNewsletter)
+      .values({
         email: email,
-        'unsubscribed-from-newsletter': true,
-      },
-    ],
-    {
-      onConflict: 'email',
-    },
-  )
-  if (error) {
-    console.error('error form supabase:', error)
-    return res.status(500).json({ success: false, error })
+        unsubscribedFromNewsletter: true,
+      })
+      .onConflictDoUpdate({
+        target: [emailNewsletter.email],
+        set: {
+          unsubscribedFromNewsletter: true,
+        },
+      })
+  } catch (error: any) {
+    console.error('error:', error)
+    return res.status(500).json({ success: false, error: error })
   }
   return res.status(200).json({ success: true })
 }
 
-export default newsletterUnsubscribe
+export default withAuth(newsletterUnsubscribe)

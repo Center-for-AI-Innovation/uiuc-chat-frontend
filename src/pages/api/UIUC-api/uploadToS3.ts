@@ -1,49 +1,32 @@
 // upload.ts
-import { S3Client } from '@aws-sdk/client-s3'
-import { type NextApiRequest, type NextApiResponse } from 'next'
+import { type NextApiResponse } from 'next'
+import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post'
+import { s3Client, vyriadMinioClient } from '~/utils/s3Client'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
-const region = process.env.AWS_REGION
-
-// S3 Client configuration
-let s3Client: S3Client | null = null
-if (region && process.env.AWS_KEY && process.env.AWS_SECRET) {
-  s3Client = new S3Client({
-    region: region,
-    credentials: {
-      accessKeyId: process.env.AWS_KEY,
-      secretAccessKey: process.env.AWS_SECRET,
-    },
-  })
-}
-
-// MinIO Client configuration
-let vyriadMinioClient: S3Client | null = null
-if (
-  process.env.MINIO_KEY &&
-  process.env.MINIO_SECRET &&
-  process.env.MINIO_ENDPOINT
-) {
-  vyriadMinioClient = new S3Client({
-    region: process.env.MINIO_REGION || 'us-east-1', // MinIO requires a region, but it can be arbitrary
-    credentials: {
-      accessKeyId: process.env.MINIO_KEY,
-      secretAccessKey: process.env.MINIO_SECRET,
-    },
-    endpoint: process.env.MINIO_ENDPOINT,
-    forcePathStyle: true, // Required for MinIO
-  })
-}
-
-const handler = async (req: NextApiRequest, res: NextApiResponse) => {
+const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
   try {
-    const { uniqueFileName, courseName } = req.body as {
+    const { uniqueFileName, user_id, courseName, uploadType } = req.body as {
       uniqueFileName: string
+      user_id?: string
       courseName: string
+      uploadType?: 'chat' | 'document-group'
     }
 
-    const s3_filepath = `courses/${courseName}/${uniqueFileName}`
+    // Validate required parameters based on upload type
+    if (uploadType === 'chat' && !user_id) {
+      return res.status(400).json({
+        message: 'user_id is required for chat uploads',
+        error: 'Missing required parameter: user_id for chat upload',
+      })
+    }
 
+    // Use different path structures based on upload type
+    const s3_filepath =
+      uploadType === 'chat'
+        ? `users/${user_id}/${uniqueFileName}`
+        : `courses/${courseName}/${uniqueFileName}`
     let post
     if (courseName === 'vyriad') {
       if (!vyriadMinioClient) {
@@ -78,4 +61,4 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   }
 }
 
-export default handler
+export default withCourseOwnerOrAdminAccess()(handler)

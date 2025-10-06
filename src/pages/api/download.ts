@@ -1,44 +1,18 @@
-import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import type { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiResponse } from 'next'
+import { type AuthenticatedRequest, withAuth } from '~/utils/authMiddleware'
+import { s3Client, vyriadMinioClient } from '~/utils/s3Client'
+// import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
-const region = process.env.AWS_REGION
+export default withAuth(handler)
 
-// S3 Client configuration
-let s3Client: S3Client | null = null
-if (region && process.env.AWS_KEY && process.env.AWS_SECRET) {
-  s3Client = new S3Client({
-    region: region,
-    credentials: {
-      accessKeyId: process.env.AWS_KEY,
-      secretAccessKey: process.env.AWS_SECRET,
-    },
-  })
-}
-
-// MinIO Client configuration
-let vyriadMinioClient: S3Client | null = null
-if (
-  process.env.MINIO_KEY &&
-  process.env.MINIO_SECRET &&
-  process.env.MINIO_ENDPOINT
-) {
-  vyriadMinioClient = new S3Client({
-    region: process.env.MINIO_REGION || 'us-east-1', // MinIO requires a region, but it can be arbitrary
-    credentials: {
-      accessKeyId: process.env.MINIO_KEY,
-      secretAccessKey: process.env.MINIO_SECRET,
-    },
-    endpoint: process.env.MINIO_ENDPOINT,
-    forcePathStyle: true, // Required for MinIO
-  })
-}
-
-const handler = async (req: NextApiRequest, res: NextApiResponse) => {
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   try {
-    const { filePath, courseName } = req.body as {
+    const { filePath, courseName, fileName } = req.body as {
       filePath: string
       courseName: string
+      fileName?: string
     }
 
     let ResponseContentType = undefined
@@ -67,7 +41,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       const command = new GetObjectCommand({
         Bucket: bucketName,
         Key: actualKey,
-        ResponseContentDisposition: 'inline',
+        ResponseContentDisposition: fileName
+          ? `attachment; filename="${fileName}"`
+          : 'inline',
         ResponseContentType: ResponseContentType,
       })
 
@@ -84,7 +60,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       const command = new GetObjectCommand({
         Bucket: process.env.S3_BUCKET_NAME!,
         Key: filePath,
-        ResponseContentDisposition: 'inline',
+        ResponseContentDisposition: fileName
+          ? `attachment; filename="${fileName}"`
+          : 'inline',
         ResponseContentType: ResponseContentType,
       })
 
@@ -108,5 +86,3 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     }
   }
 }
-
-export default handler
