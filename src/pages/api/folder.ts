@@ -1,8 +1,13 @@
-import { type NextApiRequest, type NextApiResponse } from 'next'
-import { supabase } from '@/utils/supabaseClient'
-import { FolderInterface, type FolderWithConversation } from '@/types/folder'
+import { type NextApiResponse } from 'next'
+import { type AuthenticatedRequest } from '~/utils/authMiddleware'
+import { db, folders } from '~/db/dbClient'
+import { type FolderWithConversation } from '@/types/folder'
 import { type Database } from 'database.types'
-import { convertDBToChatConversation, DBConversation } from './conversation'
+import { convertDBToChatConversation } from './conversation'
+import { type NewFolders } from '~/db/schema'
+import { eq, desc, and } from 'drizzle-orm'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
+
 
 type Folder = Database['public']['Tables']['folders']['Row']
 
@@ -23,119 +28,117 @@ export function convertDBFolderToChatFolder(
   }
 }
 
+export default withCourseAccessFromRequest('any')(handler)
+
 export function convertChatFolderToDBFolder(
   folder: FolderWithConversation,
   email: string,
-): Folder {
+): NewFolders {
   return {
     id: folder.id,
     name: folder.name,
     type: folder.type.toString(),
     user_email: email,
-    created_at: folder.createdAt || new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    created_at: new Date(folder.createdAt || new Date()),
+    updated_at: new Date(),
   }
 }
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  // console.log(
-  //   'Received request for folders API:',
-  //   req.method,
-  //   req.body,
-  //   req.query,
-  // )
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const { method } = req
+  const user_email = req.user?.email as string | undefined
+  if (!user_email) {
+    res.status(400).json({ error: 'No valid email address in token' })
+    return
+  }
 
   switch (method) {
     case 'POST':
       const {
         folder,
-        email,
-      }: { folder: FolderWithConversation; email: string } = req.body
+      }: { folder: FolderWithConversation; } = req.body
       //   Convert folder to DB type
-      const dbFolder = convertChatFolderToDBFolder(folder, email)
+      const dbFolder = convertChatFolderToDBFolder(folder, user_email)
 
       try {
-        const { data, error } = await supabase
-          .from('folders')
-          .upsert([dbFolder], { onConflict: 'id' })
-
-        if (error) throw error
+        // Insert or update folder using DrizzleORM
+        await db
+          .insert(folders)
+          .values(dbFolder)
+          .onConflictDoUpdate({
+            target: folders.id,
+            set: {
+              name: dbFolder.name,
+              type: dbFolder.type,
+              user_email: dbFolder.user_email,
+              updated_at: new Date(),
+            },
+          })
 
         res.status(200).json({ message: 'Folder saved successfully' })
       } catch (error) {
-        res.status(500).json({ error: `Error saving folder: ` + error })
         console.error('Error saving folder:', error)
+        res.status(500).json({
+          error: `Failed to save folder: ${error instanceof Error ? error.message : String(error)}`,
+        })
       }
       break
 
     case 'GET':
-      const { user_email } = req.query
       try {
-        if (!user_email || typeof user_email !== 'string') {
-          res.status(400).json({ error: 'No valid email address provided' })
-          return
-        }
-
-        const { data, error } = await supabase
-          .from('folders')
-          .select(
-            `
-            *,
-            conversations (
-              id,
-              name,
-              model,
-              prompt,
-              temperature,
-              folder_id,
-              user_email,
-              project_name,
-              messages (
-                id,
-                role,
-                content_text,
-                content_image_url,
-                contexts,
-                tools,
-                latest_system_message,
-                final_prompt_engineered_message,
-                response_time_sec,
-                conversation_id,
-                created_at
-              )
-            )
-          `,
-          )
-          .eq('user_email', user_email)
-          .order('created_at', { ascending: false })
-
-        if (error) throw error
-        // console.log('Fetched conversations before conversion in /folder:', data)
-
-        const fetchedFolders = (data || []).map((folder) => {
-          const conversations = folder.conversations || []
-          return convertDBFolderToChatFolder(folder, conversations)
+        // Query folders and their related conversations and messages using DrizzleORM
+        const fetchedFolders = await db.query.folders.findMany({
+          where: eq(folders.user_email, user_email),
+          orderBy: desc(folders.created_at),
+          with: {
+            conversations: {
+              with: {
+                messages: {
+                  columns: {
+                    id: true,
+                    role: true,
+                    content_text: true,
+                    content_image_url: true,
+                    contexts: true,
+                    tools: true,
+                    latest_system_message: true,
+                    final_prompt_engineered_message: true,
+                    response_time_sec: true,
+                    conversation_id: true,
+                    created_at: true,
+                  },
+                },
+              },
+              columns: {
+                id: true,
+                name: true,
+                model: true,
+                prompt: true,
+                temperature: true,
+                folder_id: true,
+                user_email: true,
+                project_name: true,
+              },
+            },
+          },
         })
 
-        // const { data, error } = await supabase
-        //   .from('folders')
-        //   .select('*, conversations(*, messages(*))')
-        //   .eq('user_email', user_email)
+        // Convert the fetched data to match the expected format
+        const formattedFolders = fetchedFolders.map((folder) => {
+          const conversations = folder.conversations || []
+          // Convert Date objects to ISO strings before passing to convertDBFolderToChatFolder
+          const folderWithStringDates = {
+            ...folder,
+            created_at: folder.created_at.toISOString(),
+            updated_at: folder.updated_at?.toISOString() || null,
+          }
+          return convertDBFolderToChatFolder(
+            folderWithStringDates,
+            conversations,
+          )
+        })
 
-        if (error) throw error
-
-        // const folderResponse: FolderInterface[] = data.map(
-        //   (folder: Folder) => ({
-        //     id: folder.id,
-        //     name: folder.name,
-        //     type: folder.type as 'chat' | 'prompt',
-        //   }),
-        // )
-        res.status(200).json(fetchedFolders)
+        res.status(200).json(formattedFolders)
       } catch (error) {
         res.status(500).json({ error: 'Error fetching folders' })
         console.error('Error fetching folders:', error)
@@ -147,32 +150,25 @@ export default async function handler(
       }
       try {
         // Delete folder
-        const { data, error } = await supabase
-          .from('folders')
-          .delete()
-          .eq('id', deletedFolderId)
-        if (error) throw error
+        if (deletedFolderId && user_email) {
+          const deleted = await db.delete(folders).where(
+            and(
+              eq(folders.id, deletedFolderId),
+              eq(folders.user_email, user_email),
+            ),
+          )
+          .returning({ id: folders.id });
 
-        // if (type === 'chat') {
-        //   console.log('type is chat, removing folder_id from conversations')
-        //   // Remove folder_id from conversations
-        //   const { data: convData, error: convError } = await supabase
-        //     .from('conversations')
-        //     .update({ folder_id: null })
-        //     .eq('folder_id', deletedFolderId)
-
-        //   if (convError) throw convError
-        // } else if (type === 'prompt') {
-        //   // Remove folder_id from prompts
-        //   const { data: promptData, error: promptError } = await supabase
-        //     .from('prompts')
-        //     .update({ folder_id: null })
-        //     .eq('folder_id', deletedFolderId)
-
-        //   if (promptError) throw promptError
-        // }
-
-        res.status(200).json({ message: 'Folder deleted successfully' })
+          if (deleted.length === 0) {
+            return res.status(403).json({ error: 'Not allowed to delete this folder' });
+          }
+          res.status(200).json({ message: 'Folder deleted successfully' })
+        } else {
+          res
+            .status(400)
+            .json({ error: 'Invalid user email or invalid request parameters' })
+          return
+        }
       } catch (error) {
         res.status(500).json({ error: 'Error deleting folder' })
         console.error('Error deleting folder:', error)

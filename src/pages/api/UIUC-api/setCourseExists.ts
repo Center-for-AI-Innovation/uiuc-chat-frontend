@@ -1,14 +1,16 @@
-import { redisClient } from '~/utils/redisClient'
+import { type NextApiResponse } from 'next'
+import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
+import { ensureRedisConnected } from '~/utils/redisClient'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
 // export const runtime = "edge";
 // doesn't seem to work...
 
-const setCourseExists = async (req: any, res: any) => {
-  console.log('the req body:')
-  console.log(req.body)
+const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
   const { course_name } = req.body
 
   try {
+    const redisClient = await ensureRedisConnected()
     await redisClient.set(course_name, 'true')
     res.status(200).json({ success: true })
   } catch (error) {
@@ -17,4 +19,4 @@ const setCourseExists = async (req: any, res: any) => {
   }
 }
 
-export default setCourseExists
+export default withCourseOwnerOrAdminAccess()(handler)

@@ -1,8 +1,9 @@
+import { withAuth } from '~/utils/authMiddleware'
 import { getBackendUrl } from '~/utils/apiUtils'
 
 // export const runtime = 'edge'
 
-export default async function handler(req: any, res: any) {
+async function handler(req: any, res: any) {
   const { n8nApiKey } = req.body
   // console.log(`Testing API key: '${n8nApiKey}'`)
 
@@ -20,3 +21,5 @@ export default async function handler(req: any, res: any) {
   return res.status(200).json({ message: 'Success' })
   // console.log('Fetch was ok. ', await response.json())
 }
+
+export default withAuth(handler)

@@ -1,8 +1,12 @@
-import { sanitizeForLogging } from '@/utils/sanitization'
-import { supabase } from '@/utils/supabaseClient'
+import { type NextApiResponse } from 'next'
+import { AuthenticatedRequest } from '~/utils/authMiddleware'
+import { db } from '~/db/dbClient'
+import { type Content, type Conversation } from '~/types/chat'
 import { RunTree } from 'langsmith'
-import { Content, Conversation } from '~/types/chat'
+import { sanitizeForLogging } from '@/utils/sanitization'
+import { llmConvoMonitor } from '~/db/schema'
 import { getBackendUrl } from '~/utils/apiUtils'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
 export const config = {
   api: {
@@ -12,7 +16,7 @@ export const config = {
   },
 }
 
-const logConversationToSupabase = async (req: any, res: any) => {
+const logConversation = async (req: AuthenticatedRequest, res: NextApiResponse) => {
   const { course_name, conversation } = req.body as {
     course_name: string
     conversation: Conversation
@@ -21,41 +25,43 @@ const logConversationToSupabase = async (req: any, res: any) => {
   // Sanitize the entire conversation object
   const sanitizedConversation = sanitizeForLogging(conversation)
 
-  const { data, error } = await supabase.from('llm-convo-monitor').upsert(
-    [
-      {
+  try {
+    const result = await db
+      .insert(llmConvoMonitor)
+      .values({
         convo: sanitizedConversation,
         convo_id: await sanitizedConversation.id.toString(),
         course_name: course_name,
         user_email: sanitizedConversation.userEmail,
-      },
-    ],
-    {
-      onConflict: 'convo_id',
-    },
-  )
-  if (error) {
-    console.log('new error form supabase in logConversationToSupabase:', error)
+      })
+      .onConflictDoUpdate({
+        target: [llmConvoMonitor.convo_id],
+        set: {
+          convo: sanitizedConversation,
+          convo_id: await sanitizedConversation.id.toString(),
+          course_name: course_name,
+          user_email: sanitizedConversation.userEmail,
+        },
+      })
+  } catch (error: any) {
+    console.log('new error from database in logConversation:', error)
   }
 
   // Send to our custom monitor
   try {
-    const response = await fetch(
-      getBackendUrl() + '/llm-monitor-message',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          // messages: sanitizedConversation.messages, // we get these from Supabase on the backend.
-          course_name: course_name,
-          conversation_id: conversation.id,
-          model_name: conversation.model.name,
-          user_email: sanitizedConversation.userEmail,
-        }),
+    const response = await fetch(getBackendUrl() + '/llm-monitor-message', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    )
+      body: JSON.stringify({
+        // messages: sanitizedConversation.messages, // we get these from database on the backend.
+        course_name: course_name,
+        conversation_id: conversation.id,
+        model_name: conversation.model.name,
+        user_email: sanitizedConversation.userEmail,
+      }),
+    })
 
     if (!response.ok) {
       console.error('Error sending to AI TA backend:', response.statusText)
@@ -141,4 +147,4 @@ const logConversationToSupabase = async (req: any, res: any) => {
   return res.status(200).json({ success: true })
 }
 
-export default logConversationToSupabase
+export default withCourseAccessFromRequest("any")(logConversation)

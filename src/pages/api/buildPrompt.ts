@@ -1,11 +1,9 @@
-import { type NextApiRequest, type NextApiResponse } from 'next'
+import { type NextApiResponse } from 'next'
+import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { type ChatBody } from '@/types/chat'
 import { buildPrompt } from '~/app/utils/buildPromptUtils'
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   try {
     const chatBody = req.body as ChatBody
 
@@ -34,3 +32,5 @@ export default async function handler(
     })
   }
 }
+
+export default withAuth(handler)

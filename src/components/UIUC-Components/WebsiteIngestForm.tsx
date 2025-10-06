@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   Text,
   Card,
@@ -37,19 +37,24 @@ import axios from 'axios'
 import { Montserrat } from 'next/font/google'
 import { type FileUpload } from './UploadNotification'
 import { type QueryClient } from '@tanstack/react-query'
+
 const montserrat_med = Montserrat({
   weight: '500',
   subsets: ['latin'],
 })
 export default function WebsiteIngestForm({
-  project_name,
-  setUploadFiles,
-  queryClient,
-}: {
+                                            project_name,
+                                            setUploadFiles,
+                                            queryClient,
+                                          }: {
   project_name: string
   setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
   queryClient: QueryClient
 }): JSX.Element {
+  const useIllinoisChatConfig = useMemo(() => {
+    return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
+  }, [])
+
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
   const [url, setUrl] = useState('')
@@ -410,6 +415,13 @@ export default function WebsiteIngestForm({
                     event.preventDefault()
                   }}
                 >
+                  {useIllinoisChatConfig && <Text
+                    style={{ color: 'red', fontSize: '16px' }}
+                    className={`${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    Coming soon! Contact us if interested.
+                  </Text>}
+
                   <Input
                     icon={icon}
                     className="w-full rounded-full"
@@ -437,6 +449,7 @@ export default function WebsiteIngestForm({
                     onChange={(e) => {
                       handleUrlChange(e)
                     }}
+                    disabled={useIllinoisChatConfig} // Disable if using Illinois Chat config
                   />
                   <div className="pb-2 pt-2">
                     <Tooltip
@@ -492,6 +505,7 @@ export default function WebsiteIngestForm({
                               width: '100%',
                             },
                           }}
+                          disabled={useIllinoisChatConfig}
                         />
                       </div>
                     </Tooltip>

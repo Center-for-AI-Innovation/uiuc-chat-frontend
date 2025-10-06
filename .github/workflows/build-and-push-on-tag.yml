@@ -1,0 +1,109 @@
+name: Build and Push Frontend Images on Tag
+
+on:
+  push:
+    tags:
+      - '*'
+
+# Environment variables for ECR repository
+env:
+  AWS_REGION: us-east-2
+  ECR_REPOSITORY: uiuc-chat-frontend
+
+# Only build and push images, do not deploy
+jobs:
+  build-and-push-dev:
+    name: Build and Push DEV Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set DEV image tag
+        id: set-tag
+        run: |
+          GIT_TAG=${GITHUB_REF#refs/tags/}
+          DEV_IMAGE_TAG="dev-${GIT_TAG}"
+          echo "DEV_IMAGE_TAG=${DEV_IMAGE_TAG}" >> $GITHUB_ENV
+          echo "dev_image_tag=${DEV_IMAGE_TAG}" >> $GITHUB_OUTPUT
+
+      - name: Build, tag, and push DEV image to Amazon ECR
+        id: build-dev-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          BANNER_CONTENT: ${{ vars.NEXT_PUBLIC_ILLINOIS_CHAT_BANNER_CONTENT }}
+        run: |
+          set -euo pipefail
+          echo "Building DEV image with tag: $DEV_IMAGE_TAG"
+          docker build \
+            --build-arg NEXT_PUBLIC_KEYCLOAK_REALM=${{ vars.NEXT_PUBLIC_KEYCLOAK_REALM }} \
+            --build-arg NEXT_PUBLIC_KEYCLOAK_CLIENT_ID=${{ vars.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID }} \
+            --build-arg NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG=${{ vars.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG }} \
+            --build-arg NEXT_PUBLIC_ILLINOIS_CHAT_BANNER_CONTENT="$BANNER_CONTENT" \
+            --build-arg NEXT_PUBLIC_POSTHOG_KEY=${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }} \
+            --build-arg NEXT_PUBLIC_POSTHOG_HOST=${{ vars.NEXT_PUBLIC_POSTHOG_HOST }} \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$DEV_IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$DEV_IMAGE_TAG
+
+      - name: Output DEV image tag
+        run: |
+          echo "DEV image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.DEV_IMAGE_TAG }}"
+
+  build-and-push-prod:
+    name: Build and Push PROD Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set PROD image tag
+        id: set-tag
+        run: |
+          GIT_TAG=${GITHUB_REF#refs/tags/}
+          PROD_IMAGE_TAG="prod-${GIT_TAG}"
+          echo "PROD_IMAGE_TAG=${PROD_IMAGE_TAG}" >> $GITHUB_ENV
+          echo "prod_image_tag=${PROD_IMAGE_TAG}" >> $GITHUB_OUTPUT
+
+      - name: Build, tag, and push PROD image to Amazon ECR
+        id: build-prod-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          BANNER_CONTENT: ${{ vars.NEXT_PUBLIC_ILLINOIS_CHAT_BANNER_CONTENT }}
+        run: |
+          set -euo pipefail
+          echo "Building PROD image with tag: $PROD_IMAGE_TAG"
+          docker build \
+            --build-arg NEXT_PUBLIC_KEYCLOAK_REALM=${{ vars.NEXT_PUBLIC_KEYCLOAK_REALM }} \
+            --build-arg NEXT_PUBLIC_KEYCLOAK_CLIENT_ID=${{ vars.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID }} \
+            --build-arg NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG=${{ vars.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG }} \
+            --build-arg NEXT_PUBLIC_ILLINOIS_CHAT_BANNER_CONTENT="$BANNER_CONTENT" \
+            --build-arg NEXT_PUBLIC_POSTHOG_KEY=${{ secrets.PROD_NEXT_PUBLIC_POSTHOG_KEY }} \
+            --build-arg NEXT_PUBLIC_POSTHOG_HOST=${{ vars.PROD_NEXT_PUBLIC_POSTHOG_HOST }} \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$PROD_IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$PROD_IMAGE_TAG
+
+      - name: Output PROD image tag
+        run: |
+          echo "PROD image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.PROD_IMAGE_TAG }}"

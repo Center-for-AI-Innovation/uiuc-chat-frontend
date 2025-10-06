@@ -1,13 +1,12 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
-import { redisClient } from '~/utils/redisClient'
+import { type NextApiResponse } from 'next'
+import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
+import { ensureRedisConnected } from '~/utils/redisClient'
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const course_name = req.query.course_name as string
 
   try {
+    const redisClient = await ensureRedisConnected()
     const courseExists = await redisClient.hExists(
       'course_metadatas',
       course_name,
@@ -18,3 +17,5 @@ export default async function handler(
     return res.status(500).json(false)
   }
 }
+
+export default withAuth(handler)

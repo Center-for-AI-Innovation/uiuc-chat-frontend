@@ -20,12 +20,17 @@ export async function runOllamaChat(
 
     // Check if provider is properly configured
     if (!ollamaProvider.baseUrl) {
-      throw new Error('Ollama server URL is not configured. Set it up in the Admin Dashboard, or use a different LLM.')
+      throw new Error(
+        'Ollama server URL is not configured. Set it up in the Admin Dashboard, or use a different LLM.',
+      )
     }
 
     try {
       const ollama = createOllama({
         baseURL: `${(await decryptKeyIfNeeded(ollamaProvider.baseUrl!)) as string}/api`,
+        headers: {
+          Authorization: `Bearer ${process.env.NCSA_HOSTED_API_KEY || ''}`,
+        },
       })
 
       if (conversation.messages.length === 0) {
@@ -59,10 +64,21 @@ export async function runOllamaChat(
 
       // Handle specific API errors
       if (apiError instanceof Error) {
-        if (apiError.message.includes('timeout') || apiError.message.includes('ECONNREFUSED') || apiError.message.includes('ECONNRESET')) {
-          throw new Error(`Ollama server connection failed: ${apiError.message}. Please check if the Ollama server is running.`)
-        } else if (apiError.message.includes('not found') || apiError.message.includes('404')) {
-          throw new Error(`Ollama model '${conversation.model.id}' not found on server. Please check if the model is installed.`)
+        if (
+          apiError.message.includes('timeout') ||
+          apiError.message.includes('ECONNREFUSED') ||
+          apiError.message.includes('ECONNRESET')
+        ) {
+          throw new Error(
+            `Ollama server connection failed: ${apiError.message}. Please check if the Ollama server is running.`,
+          )
+        } else if (
+          apiError.message.includes('not found') ||
+          apiError.message.includes('404')
+        ) {
+          throw new Error(
+            `Ollama model '${conversation.model.id}' not found on server. Please check if the model is installed.`,
+          )
         } else {
           throw apiError // rethrow with original context
         }
@@ -75,12 +91,15 @@ export async function runOllamaChat(
     // return error
     return new Response(
       JSON.stringify({
-        error: error instanceof Error ? error.message : 'Unknown error occurred when running Ollama',
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Unknown error occurred when running Ollama',
       }),
       {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
-      }
+      },
     )
   }
 }

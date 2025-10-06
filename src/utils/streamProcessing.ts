@@ -2,14 +2,13 @@ import { type CoreMessage } from 'ai'
 import { type NextApiRequest, type NextApiResponse } from 'next'
 import posthog from 'posthog-js'
 import { v4 as uuidv4 } from 'uuid'
-import { runBedrockChat } from '~/app/api/chat/bedrock/route'
-import { runGeminiChat } from '~/app/api/chat/gemini/route'
-import { runSambaNovaChat } from '~/app/api/chat/sambanova/route'
+import { runBedrockChat } from '~/app/utils/bedrock'
+import { runGeminiChat } from '~/utils/modelProviders/routes/gemini'
+import { runSambaNovaChat } from '~/app/utils/sambanova'
 import { runAnthropicChat } from '~/app/utils/anthropic'
 import { runOllamaChat } from '~/app/utils/ollama'
 import { runVLLM } from '~/app/utils/vllm'
-import { fetchContexts } from '~/pages/api/getContexts'
-import fetchMQRContexts from '~/pages/api/getContextsMQR'
+import { fetchContexts, fetchMQRContexts } from '~/utils/fetchContexts'
 import { fetchImageDescription } from '~/pages/api/UIUC-api/fetchImageDescription'
 import {
   type ChatApiBody,
@@ -422,6 +421,14 @@ export const handleContextSearch = async (
   searchQuery: string,
   documentGroups: string[],
 ): Promise<ContextWithMetadata[]> => {
+  // Check if this message already has contexts (from file upload)
+  if (
+    message.contexts &&
+    Array.isArray(message.contexts) &&
+    message.contexts.length > 0
+  ) {
+    return message.contexts
+  }
   if (courseName !== 'gpt4') {
     const token_limit = selectedConversation.model.tokenLimit
     const useMQRetrieval = false
@@ -432,6 +439,7 @@ export const handleContextSearch = async (
       searchQuery,
       token_limit,
       documentGroups,
+      '',
     )
 
     message.contexts = curr_contexts as ContextWithMetadata[]
@@ -627,22 +635,19 @@ export async function updateConversationInDatabase(
   course_name: string,
   req: NextApiRequest,
 ) {
-  // Log conversation to Supabase
+  // Log conversation
   try {
     const baseUrl = await getBaseUrl()
-    const response = await fetch(
-      `${baseUrl}/api/UIUC-api/logConversationToSupabase`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          course_name: course_name,
-          conversation: conversation,
-        }),
+    const response = await fetch(`${baseUrl}/api/UIUC-api/logConversation`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    )
+      body: JSON.stringify({
+        course_name: course_name,
+        conversation: conversation,
+      }),
+    })
     // const data = await response.json()
   } catch (error) {
     console.error('Error setting course data:', error)
@@ -756,10 +761,22 @@ function convertMessagesToVercelAISDKv3(
     if (index === conversation.messages.length - 1 && message.role === 'user') {
       content = message.finalPromtEngineeredMessage || ''
     } else if (Array.isArray(message.content)) {
-      content = message.content
-        .filter((c) => c.type === 'text')
-        .map((c) => c.text)
-        .join('\n')
+      // Handle both text and file content
+      const textParts: string[] = []
+
+      message.content.forEach((c) => {
+        if (c.type === 'text') {
+          textParts.push(c.text || '')
+        } else if (c.type === 'file') {
+          // Convert file content to text representation for commercial models
+          textParts.push(
+            `[File: ${c.fileName || 'unknown'} (${c.fileType || 'unknown type'}, ${c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'})]`,
+          )
+        }
+        // Note: image_url and other content types may need special handling
+      })
+
+      content = textParts.join('\n')
     } else {
       content = message.content as string
     }

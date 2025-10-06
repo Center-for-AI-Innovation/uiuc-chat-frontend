@@ -288,7 +288,10 @@ export function LandingPageHeader({
 
   return (
     <header style={headerStyle} ref={headerRef}>
-      <div className="flex-end m-auto flex w-full max-w-5xl flex-wrap items-center gap-2 sm:flex-nowrap">
+      <div
+        className="flex-end m-auto flex w-full max-w-5xl flex-wrap items-center gap-2 sm:flex-nowrap"
+        style={{ paddingTop: '16px' }}
+      >
         <div
           className={`relative flex grow items-center gap-1 font-bold ${montserrat_heading.variable} font-montserratHeading`}
         >

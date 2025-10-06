@@ -1,5 +1,8 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
-import { supabase } from '@/utils/supabaseClient'
+import { eq } from 'drizzle-orm'
+import { type NextApiResponse } from 'next'
+import { type AuthenticatedRequest } from '~/utils/authMiddleware'
+import { db, documentsInProgress } from '~/db/dbClient'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
 // This is for "Documents in Progress" table, docs that are still being ingested.
 
@@ -9,8 +12,8 @@ type DocsInProgressResponse = {
   error?: string
 }
 
-export default async function docsInProgress(
-  req: NextApiRequest,
+async function docsInProgress(
+  req: AuthenticatedRequest,
   res: NextApiResponse<DocsInProgressResponse>,
 ) {
   if (req.method !== 'GET') {
@@ -20,21 +23,24 @@ export default async function docsInProgress(
   const course_name = req.query.course_name as string
 
   try {
-    const { data, error } = await supabase
-      .from('documents_in_progress')
-      .select('readable_filename, base_url, url')
-      .eq('course_name', course_name)
+    const data = await db
+      .select()
+      .from(documentsInProgress)
+      .where(eq(documentsInProgress.course_name, course_name))
 
-    if (error) {
-      throw error
-    }
+    // No need to check for error here as the query doesn't return an error object
+    // The try/catch block below will handle any errors that occur
 
     if (!data || data.length === 0) {
       return res.status(200).json({ documents: [] })
     }
 
     if (data && data.length > 0) {
-      return res.status(200).json({ documents: data })
+      return res.status(200).json({
+        documents: data.map((doc) => ({
+          readable_filename: doc.readable_filename || 'Untitled Document',
+        })),
+      })
     }
   } catch (error) {
     console.error('Failed to fetch documents:', error)
@@ -43,3 +49,5 @@ export default async function docsInProgress(
     })
   }
 }
+
+export default withCourseOwnerOrAdminAccess()(docsInProgress)

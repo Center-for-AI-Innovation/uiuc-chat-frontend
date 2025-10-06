@@ -1,10 +1,12 @@
 // src/pages/api/chat-api/keys/generate.ts
 
-import { type NextApiRequest, type NextApiResponse } from 'next'
-import { supabase } from '@/utils/supabaseClient'
-import { v4 as uuidv4 } from 'uuid'
+import { and, eq } from 'drizzle-orm'
+import type { NextApiResponse } from 'next'
 import posthog from 'posthog-js'
-
+import { v4 as uuidv4 } from 'uuid'
+import { apiKeys, db } from '~/db/dbClient'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
+import type { AuthenticatedRequest } from '~/utils/authMiddleware'
 type ApiResponse = {
   message?: string
   apiKey?: string
@@ -20,8 +22,8 @@ type ApiResponse = {
  * @param {NextApiResponse} res - The outgoing API response.
  * @returns {Promise<void>} The response with the API key or an error message.
  */
-export default async function generateKey(
-  req: NextApiRequest,
+async function handler(
+  req: AuthenticatedRequest,
   res: NextApiResponse<ApiResponse>,
 ) {
   console.log('Received request to generate API key')
@@ -31,37 +33,27 @@ export default async function generateKey(
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const authHeader = req.headers.authorization
-  if (!authHeader?.startsWith('Bearer ')) {
-    console.log('Missing or invalid authorization header')
-    return res
-      .status(401)
-      .json({ error: 'Missing or invalid authorization header' })
-  }
-
   try {
-    // Get user email from token
-    const token = authHeader.replace('Bearer ', '')
-    const [, payload = ''] = token.split('.')
-    const decodedPayload = JSON.parse(Buffer.from(payload, 'base64').toString())
-
-    const email = decodedPayload.email
+    const email = req.user?.email
     if (!email) {
-      throw new Error('No email found in token')
+      return res.status(400).json({ error: 'User email missing' })
+    }
+    const userId = req.user?.sub
+    if (!userId) {
+      return res.status(400).json({ error: 'User id missing' })
     }
 
     console.log('Generating API key for user email:', email)
 
     // Check if the user already has an API key
-    const { data: keys, error: existingKeyError } = await supabase
-      .from('api_keys')
-      .select('key, is_active')
-      .eq('email', email)
-      .eq('is_active', true)
+    const keys = await db
+      .select({ key: apiKeys.key, is_active: apiKeys.is_active })
+      .from(apiKeys)
+      .where(and(eq(apiKeys.email, email), eq(apiKeys.is_active, true)))
 
-    if (existingKeyError) {
-      console.error('Error retrieving existing API key:', existingKeyError)
-      throw existingKeyError
+    if (!keys) {
+      console.error('Error retrieving API keys from DB')
+      throw new Error('Failed to fetch API keys')
     }
 
     console.log('Existing keys found:', keys.length)
@@ -78,37 +70,42 @@ export default async function generateKey(
 
     if (keys.length === 0) {
       console.log('Inserting new API key record')
-      const { error: insertError } = await supabase.from('api_keys').insert([
-        {
+      try {
+        const result = await db.insert(apiKeys).values({
           email: email,
-          user_id: decodedPayload.sub,
+          user_id: userId,
           key: apiKey,
           is_active: true,
-        },
-      ])
+        })
 
-      if (insertError) throw insertError
+        console.log('Successfully inserted new API key record:', result)
+      } catch (error) {
+        console.error('Failed to insert API key record:', error)
+        throw error
+      }
     } else {
       console.log('Updating existing API key record')
-      const { error: updateError } = await supabase
-        .from('api_keys')
-        .update({
-          key: apiKey,
-          is_active: true,
-          user_id: decodedPayload.sub,
-        })
-        .eq('email', email)
+      try {
+        await db
+          .update(apiKeys)
+          .set({
+            key: apiKey,
+            is_active: true,
+            user_id: req.user?.sub,
+          })
+          .where(eq(apiKeys.email, email))
 
-      if (updateError) throw updateError
+        console.log('Successfully updated API key record')
+      } catch (error) {
+        console.error('Failed to update API key record:', error)
+        throw error
+      }
     }
-
-    console.log('Successfully stored API key in database')
 
     posthog.capture('api_key_generated', {
       email,
       apiKey,
     })
-
     console.log('API key generation successful')
     return res.status(200).json({
       message: 'API key generated successfully',
@@ -122,3 +119,5 @@ export default async function generateKey(
     return res.status(500).json({ error: 'Internal server error' })
   }
 }
+
+export default withCourseOwnerOrAdminAccess()(handler)

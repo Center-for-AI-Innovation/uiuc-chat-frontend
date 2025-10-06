@@ -6,16 +6,16 @@ import {
   type Conversation,
   type Message,
 } from '~/types/chat'
-import { fetchCourseMetadata } from '~/utils/apiUtils'
+import fetchCourseMetadataServer from '~/pages/api/chat-api/util/fetchCourseMetadataServer'
+import { determineAndValidateModelServer } from '~/pages/api/chat-api/util/determineAndValidateModelServer'
 import { validateApiKeyAndRetrieveData } from './keys/validate'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import posthog from 'posthog-js'
-import { type NextApiRequest, type NextApiResponse } from 'next'
+import { NextApiRequest, type NextApiResponse } from 'next'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import {
   attachContextsToLastMessage,
   constructSearchQuery,
-  determineAndValidateModel,
   handleContextSearch,
   handleImageContent,
   handleNonStreamingResponse,
@@ -45,7 +45,7 @@ import { selectBestTemperature } from '~/components/Chat/Temperature'
  * This function orchestrates the validation of the request, user permissions,
  * fetching of necessary data, and the construction and handling of the chat response.
  *
- * @param {NextApiRequest} req - The incoming Next.js API request object.
+ * @param {AuthenticatedRequest} req - The incoming Next.js API request object.
  * @param {NextApiResponse} res - The Next.js API response object.
  * @returns {Promise<void>} A promise that resolves when the response is sent.
  */
@@ -91,6 +91,7 @@ export default async function chat(
     stream,
     api_key,
     retrieval_only,
+    conversation_id,
   }: {
     model: string
     messages: Message[]
@@ -100,6 +101,7 @@ export default async function chat(
     stream: boolean
     api_key: string
     retrieval_only: boolean
+    conversation_id?: string
   } = body
 
   // Validate the API key and retrieve user data
@@ -107,7 +109,7 @@ export default async function chat(
     isValidApiKey,
     authContext,
   }: { isValidApiKey: boolean; authContext: AuthContextProps } =
-    await validateApiKeyAndRetrieveData(api_key, course_name)
+    await validateApiKeyAndRetrieveData(api_key)
 
   const email = authContext.user?.profile.email
 
@@ -124,8 +126,9 @@ export default async function chat(
   }
 
   // Retrieve course metadata
-  const courseMetadata: CourseMetadata = await fetchCourseMetadata(course_name)
-  if (!courseMetadata) {
+  const courseMetadata: CourseMetadata | null =
+    await fetchCourseMetadataServer(course_name)
+  if (!courseMetadata || null === courseMetadata) {
     res.status(404).json({ error: 'Course metadata not found' })
     return
   }
@@ -135,7 +138,7 @@ export default async function chat(
   let llmProviders: AllLLMProviders
   try {
     const { activeModel, modelsWithProviders } =
-      await determineAndValidateModel(model, course_name)
+      await determineAndValidateModelServer(model, course_name)
     selectedModel = activeModel
     llmProviders = modelsWithProviders
   } catch (error) {
@@ -199,9 +202,15 @@ export default async function chat(
   let searchQuery = constructSearchQuery(messages)
   let imgDesc = ''
 
+  const selectedConversationString = localStorage.getItem('selectedConversation')
+  let selectedConversation: Conversation | undefined = undefined
+  if (selectedConversationString) {
+      selectedConversation = JSON.parse(selectedConversationString)
+  }
+
   // Construct the conversation object
   const conversation: Conversation = {
-    id: uuidv4(),
+    id: conversation_id || uuidv4(),
     name: 'New Conversation',
     messages: messages,
     model: selectedModel,
@@ -212,7 +221,7 @@ export default async function chat(
           (messages.filter((message) => message.role === 'system')[0]
             ?.content as string))
         : DEFAULT_SYSTEM_PROMPT,
-    temperature: selectBestTemperature(undefined, selectedModel, llmProviders),
+    temperature: selectBestTemperature(undefined, selectedConversation, llmProviders),
     folderId: null,
     userEmail: email,
   }
