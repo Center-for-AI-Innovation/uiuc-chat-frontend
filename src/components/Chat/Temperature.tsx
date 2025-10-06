@@ -1,4 +1,4 @@
-import { type FC, useContext, useState } from 'react'
+import { type FC, useContext, useEffect, useState } from 'react'
 import { useTranslation } from 'next-i18next'
 import { DEFAULT_TEMPERATURE } from '@/utils/app/const'
 import HomeContext from '~/pages/api/home/home.context'
@@ -7,22 +7,23 @@ import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useMediaQuery } from '@mantine/hooks'
 import {
   type AllLLMProviders,
-  type GenericSupportedModel,
 } from '~/utils/modelProviders/LLMProvider'
+import { type Conversation } from '~/types/chat'
 
 export const selectBestTemperature = (
-  lastConversation: { temperature?: number } | undefined,
-  selectedModel: GenericSupportedModel | undefined,
+  lastConversation: Conversation | null | undefined,
+  selectedConversation: Conversation | undefined,
   llmProviders: AllLLMProviders,
 ): number => {
-  // First priority: Last conversation temperature
-  if (lastConversation?.temperature !== undefined) {
-    return lastConversation.temperature
+
+   // First priority: current select model temperature
+  if (selectedConversation?.temperature !== undefined) {
+    return selectedConversation.temperature
   }
 
-  // Second priority: Selected model temperature
-  if (selectedModel?.temperature !== undefined) {
-    return selectedModel.temperature
+  // Second priority: Selected last conversation's temperature
+   if (lastConversation?.temperature !== undefined) {
+    return lastConversation.temperature
   }
 
   // Third priority: Default model temperature from LLMProviders
@@ -53,10 +54,11 @@ export const TemperatureSlider: FC<Props> = ({
   } = useContext(HomeContext)
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const lastConversation = conversations[conversations.length - 1]
+
   const [temperature, setTemperature] = useState(
     selectBestTemperature(
       lastConversation,
-      selectedConversation?.model,
+      selectedConversation,
       llmProviders,
     ),
   )
@@ -65,8 +67,6 @@ export const TemperatureSlider: FC<Props> = ({
     setTemperature(value)
     onChangeTemperature(value)
   }
-
-  const sliderClasses = {}
 
   return (
     <div className="flex flex-col">

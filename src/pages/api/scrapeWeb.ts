@@ -1,5 +1,7 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiResponse } from 'next'
+import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import axios from 'axios'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
 interface ScrapeRequestBody {
   url: string | null
@@ -7,6 +9,8 @@ interface ScrapeRequestBody {
   maxUrls: number
   scrapeStrategy: string
 }
+
+export default withCourseOwnerOrAdminAccess()(handler)
 
 const formatUrl = (url: string) => {
   if (!/^https?:\/\//i.test(url)) {
@@ -37,16 +41,13 @@ const formatUrlAndMatchRegex = (url: string) => {
   }
 }
 
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { url, courseName, maxUrls, scrapeStrategy } = req.body as ScrapeRequestBody
+  const { url, courseName, maxUrls, scrapeStrategy } =
+    req.body as ScrapeRequestBody
 
   if (!url || !courseName) {
     return res.status(400).json({ error: 'Missing required parameters' })
@@ -63,14 +64,11 @@ export default async function handler(
       maxTokens: 2000000,
     }
 
-    const crawleeApiUrl = process.env.CRAWLEE_API_URL;
+    const crawleeApiUrl = process.env.CRAWLEE_API_URL
     if (!crawleeApiUrl) {
       return res.status(500).json({ error: 'CRAWLEE_API_URL is not set' })
     }
-    const response = await axios.post(
-      crawleeApiUrl,
-      { params: postParams }
-    )
+    const response = await axios.post(crawleeApiUrl, { params: postParams })
 
     return res.status(200).json(response.data)
   } catch (error: any) {

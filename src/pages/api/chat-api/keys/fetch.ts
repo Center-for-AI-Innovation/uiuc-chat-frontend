@@ -1,13 +1,16 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
-import { supabase } from '@/utils/supabaseClient'
+import { and, eq } from 'drizzle-orm'
+import type { NextApiResponse } from 'next'
+import { db, apiKeys } from '~/db/dbClient'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
+import type { AuthenticatedRequest } from '~/utils/authMiddleware'
 
 type ApiResponse = {
   apiKey?: string | null
   error?: string
 }
 
-export default async function fetchKey(
-  req: NextApiRequest,
+async function handler(
+  req: AuthenticatedRequest,
   res: NextApiResponse<ApiResponse>,
 ) {
   console.log('Fetching API key...')
@@ -18,31 +21,8 @@ export default async function fetchKey(
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const authHeader = req.headers.authorization
-  console.log('Auth header present:', !!authHeader)
-
-  if (!authHeader?.startsWith('Bearer ')) {
-    console.log('Missing or invalid auth header')
-    return res
-      .status(401)
-      .json({ error: 'Missing or invalid authorization header' })
-  }
-
   try {
-    const token = authHeader.replace('Bearer ', '')
-    const [, payload = ''] = token.split('.')
-    const decodedPayload = JSON.parse(Buffer.from(payload, 'base64').toString())
-
-    // console.log('Token payload:', {
-    //   sub: decodedPayload.sub,
-    //   userId: decodedPayload.user_id,
-    //   preferred_username: decodedPayload.preferred_username,
-    //   email: decodedPayload.email,
-    //   // Log all claims to see what's available
-    //   allClaims: decodedPayload,
-    // })
-
-    const email = decodedPayload.email
+    const email = req.user?.email
     if (!email) {
       console.error('No email found in token')
       return res.status(400).json({ error: 'No email found in token' })
@@ -50,34 +30,24 @@ export default async function fetchKey(
     console.log('User email:', email)
 
     // First delete any inactive keys for this user
-    const { error: deleteError } = await supabase
-      .from('api_keys')
-      .delete()
-      .eq('email', email)
-      .eq('is_active', false)
+    const deleteError = await db
+      .delete(apiKeys)
+      .where(and(eq(apiKeys.email, email), eq(apiKeys.is_active, false)))
 
     if (deleteError) {
       console.error('Error deleting inactive keys:', deleteError)
     }
 
     // Then fetch the remaining (active) key
-    const { data, error } = await supabase
-      .from('api_keys')
-      .select('key')
-      .eq('email', email)
-      .eq('is_active', true)
+    const data = await db
+      .select({ key: apiKeys.key })
+      .from(apiKeys)
+      .where(and(eq(apiKeys.email, email), eq(apiKeys.is_active, true)))
 
-    console.log('Supabase query result:', {
+    console.log('Db query result:', {
       data: data,
       recordCount: Array.isArray(data) ? data.length : 0,
-      hasError: !!error,
-      error,
     })
-
-    if (error) {
-      console.error('Supabase error:', error)
-      throw error
-    }
 
     if (!data || data.length === 0) {
       return res.status(200).json({ apiKey: null })
@@ -93,3 +63,5 @@ export default async function fetchKey(
     })
   }
 }
+
+export default withCourseOwnerOrAdminAccess()(handler)

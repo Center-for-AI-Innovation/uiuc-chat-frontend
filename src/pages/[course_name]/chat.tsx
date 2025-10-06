@@ -2,7 +2,7 @@
 
 import { useAuth } from 'react-oidc-context'
 import { type NextPage } from 'next'
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Home from '../api/home/home'
 import { useRouter } from 'next/router'
 
@@ -12,6 +12,7 @@ import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { montserrat_heading } from 'fonts'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
+import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 
 const ChatPage: NextPage = () => {
   const auth = useAuth()
@@ -31,6 +32,7 @@ const ChatPage: NextPage = () => {
   const [urlSystemPromptOnly, setUrlSystemPromptOnly] = useState(false)
   const [documentCount, setDocumentCount] = useState<number | null>(null)
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
+  const { course_name } = router.query
 
   // UseEffect to check URL parameters
   useEffect(() => {
@@ -178,6 +180,29 @@ const ChatPage: NextPage = () => {
 
     checkAuthorization()
   }, [auth.isLoading, auth.isAuthenticated, router.isReady, auth, router])
+
+  if (auth.isLoading) {
+    return (
+      <MainPageBackground>
+        <LoadingSpinner />
+      </MainPageBackground>
+    )
+  }
+
+  // redirect to login page if needed
+  if (!auth.isAuthenticated) {
+    console.log(
+      'User not logged in',
+      auth.isAuthenticated,
+      auth.isLoading,
+      'NewCoursePage',
+    )
+    return (
+      <AuthComponent
+        course_name={course_name ? (course_name as string) : 'new'}
+      />
+    )
+  }
 
   return (
     <>

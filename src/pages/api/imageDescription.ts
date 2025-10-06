@@ -1,9 +1,11 @@
-import { type NextApiRequest, type NextApiResponse } from 'next'
+import { type NextApiResponse } from 'next'
+import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { type ImageBody, type OpenAIChatMessage } from '~/types/chat'
 
 import { OpenAIError, OpenAIStream } from '@/utils/server'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
-const handler = async (req: NextApiRequest, res: NextApiResponse) => {
+const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' })
   }
@@ -34,6 +36,12 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       messages,
       false,
     )
+    console.log('Response from OpenAIStream:', response)
+
+    // Guard: ensure it's an object or string you can safely return
+    if (!response || typeof response !== "object") {
+      return res.status(500).json({ error: "Invalid response from OpenAIStream" })
+    }
 
     return res.status(200).json(response)
   } catch (error) {
@@ -52,7 +60,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   }
 }
 
-export default handler
+export default withCourseAccessFromRequest('any')(handler)
 
 export function getImageDescriptionSystemPrompt() {
   return `"Analyze and describe the given image with relevance to the user query, focusing solely on visible elements. Detail the image by:

@@ -1,25 +1,29 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
-import { supabase } from '~/utils/supabaseClient'
+import { eq } from 'drizzle-orm'
+import { type NextApiResponse } from 'next'
+import { type AuthenticatedRequest } from '~/utils/authMiddleware'
+import { db } from '~/db/dbClient'
+import { documents } from '~/db/schema'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
-export const runtime = 'edge'
+// export const runtime = 'edge'
 
 const getCourseDocumentsHandler = async (
-  req: NextApiRequest,
+  req: AuthenticatedRequest,
   res: NextApiResponse,
 ) => {
-  const { fileName, courseNameFromBody } = req.body as {
+  const { fileName, courseName } = req.body as {
     fileName: string
-    courseNameFromBody: string
+    courseName: string
   }
 
   // Ensure courseNameFromBody is provided
-  if (!courseNameFromBody) {
+  if (!courseName) {
     return res
       .status(400)
       .json({ error: 'Course name is missing in request body' })
   }
 
-  const documents = await getCourseDocuments(courseNameFromBody)
+  const documents = await getCourseDocuments(courseName)
 
   if (documents === null) {
     return res.status(500).json({ error: 'Error fetching course documents' })
@@ -44,17 +48,29 @@ export const getCourseDocuments = async (
     return null
   }
   try {
-    const { data: documents, error } = await supabase
-      .from('documents')
-      .select('readable_filename,url,s3_path,created_at,base_url')
-      .eq('course_name', course_name)
+    const data = await db
+      .select({
+        readable_filename: documents.readable_filename,
+        url: documents.url,
+        s3_path: documents.s3_path,
+        created_at: documents.created_at,
+        base_url: documents.base_url,
+      })
+      .from(documents)
+      .where(eq(documents.course_name, course_name))
 
-    if (error) {
-      console.error('Error fetching course documents:', error)
+    if (data.length === 0) {
+      console.error('No documents found for course:', course_name)
       return null
     }
 
-    return documents
+    return data.map((doc) => ({
+      readable_filename: doc.readable_filename || '',
+      url: doc.url || '',
+      s3_path: doc.s3_path || '',
+      created_at: doc.created_at?.toISOString() || '',
+      base_url: doc.base_url || '',
+    }))
   } catch (error) {
     console.error(
       'Unexpected error occurred while fetching course documents:',
@@ -64,4 +80,4 @@ export const getCourseDocuments = async (
   }
 }
 
-export default getCourseDocumentsHandler
+export default withCourseAccessFromRequest('any')(getCourseDocumentsHandler)

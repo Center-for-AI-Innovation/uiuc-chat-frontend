@@ -1,4 +1,6 @@
+import { withAuth } from '~/utils/authMiddleware'
 import { getBackendUrl } from '~/utils/apiUtils'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
 interface ModelUsage {
   model_name: string
@@ -6,11 +8,15 @@ interface ModelUsage {
   percentage: number
 }
 
-export default async function handler(req: any, res: any) {
-  const { project_name } = req.query
+export default withCourseOwnerOrAdminAccess()(handler)
+
+async function handler(req: any, res: any) {
+  const { project_name } = req.body
 
   if (!project_name) {
-    return res.status(400).json({ error: 'Missing required project_name parameter' })
+    return res
+      .status(400)
+      .json({ error: 'Missing required project_name parameter' })
   }
 
   try {
@@ -21,8 +27,8 @@ export default async function handler(req: any, res: any) {
     if (!response.ok) {
       const errorText = await response.text()
       console.error('Backend response not OK:', response.status, errorText)
-      return res.status(response.status).json({ 
-        error: `Failed to fetch data: ${response.status} - ${errorText}` 
+      return res.status(response.status).json({
+        error: `Failed to fetch data: ${response.status} - ${errorText}`,
       })
     }
 

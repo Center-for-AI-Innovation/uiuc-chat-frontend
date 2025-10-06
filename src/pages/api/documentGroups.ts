@@ -1,5 +1,6 @@
 // src/pages/api/documentGroups.ts
-import { type NextApiRequest, type NextApiResponse } from 'next'
+import { type NextApiResponse } from 'next'
+import { AuthenticatedRequest } from '~/utils/authMiddleware'
 import posthog from 'posthog-js'
 import { type CourseDocument } from 'src/types/courseMaterials'
 import {
@@ -8,9 +9,10 @@ import {
   fetchEnabledDocGroups,
   removeDocGroup,
   updateDocGroupStatus,
-} from '~/utils/dbUtils'
+} from '~/db/dbHelpers'
 
 import { addDocumentsToDocGroupQdrant } from '~/utils/qdrantUtils'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
 interface RequestBody {
   action:
@@ -27,10 +29,7 @@ interface RequestBody {
   userId?: string
 }
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     const { action, userId, courseName, doc, docGroup, enabled } =
       req.body as RequestBody
@@ -179,3 +178,5 @@ export default async function handler(
     res.status(405).json({ success: false, error: 'Method not allowed' })
   }
 }
+
+export default withCourseAccessFromRequest('any')(handler)

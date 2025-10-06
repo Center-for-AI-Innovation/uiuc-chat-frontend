@@ -1,7 +1,9 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiResponse } from 'next'
+import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { getBackendUrl } from '~/utils/apiUtils'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
-const handler = async (req: NextApiRequest, res: NextApiResponse) => {
+const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
   try {
     if (req.method !== 'POST') {
       console.error('Request method not allowed')
@@ -55,20 +57,15 @@ Please review and approve at https://canvas.illinois.edu/ using account uiuc.cha
     // console.debug("Sent email to Kastan to alert him of new Canvas ingest")
 
     const response = await fetch(
-      'https://app.beam.cloud/endpoint/canvas_ingest/latest',
+      `${process.env.INGEST_URL}`.replace('/ingest', '/canvas_ingest'),
       {
         method: 'POST',
         headers: {
           Accept: '*/*',
           'Accept-Encoding': 'gzip, deflate',
-          Authorization: `Bearer ${process.env.BEAM_API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          // course_name: courseName,
-          // readable_filename: readableFilename,
-          // s3_paths: s3_filepath,
-
           canvas_url: canvas_url,
           course_name: courseName,
           files: selectedCanvasOptions.includes('files') ? 'true' : 'false',
@@ -92,7 +89,7 @@ Please review and approve at https://canvas.illinois.edu/ using account uiuc.cha
       `📤 Submitted to ingest queue: ${canvas_url}. Response status: ${response.status}`,
       responseBody,
     )
-    return res.status(200).json(responseBody)
+    return res.status(response.status).json(responseBody)
   } catch (error) {
     console.error(error)
     return res.status(500).json({
@@ -101,4 +98,4 @@ Please review and approve at https://canvas.illinois.edu/ using account uiuc.cha
   }
 }
 
-export default handler
+export default withCourseOwnerOrAdminAccess()(handler)

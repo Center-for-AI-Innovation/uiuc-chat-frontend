@@ -1,6 +1,7 @@
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { generateText, smoothStream, streamText, type CoreMessage } from 'ai'
 import { type ChatBody, type Conversation } from '~/types/chat'
+import { type AuthenticatedRequest } from '~/utils/appRouterAuth'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 import { type AnthropicModel } from '~/utils/modelProviders/types/anthropic'
 
@@ -10,6 +11,7 @@ export const fetchCache = 'force-no-store'
 export const revalidate = 0
 
 import { NextResponse } from 'next/server'
+import { withCourseAccessFromRequest } from '~/app/api/authorization'
 
 function getAnthropicRequestConfig(conversation: Conversation) {
   const isThinking =
@@ -42,7 +44,7 @@ function getAnthropicRequestConfig(conversation: Conversation) {
   return { isThinking, modelId, providerOptions, experimentalTransform }
 }
 
-export async function POST(req: Request) {
+async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
   try {
     const {
       chatBody,
@@ -84,14 +86,22 @@ export async function POST(req: Request) {
 
       if (isThinking) {
         console.log('Using Claude with reasoning enabled')
-        return result.toDataStreamResponse({
+        const response = result.toDataStreamResponse({
           sendReasoning: true,
           getErrorMessage: () => {
             return `An error occurred while streaming the response.`
           },
         })
+        return new NextResponse(response.body, {
+          status: response.status,
+          headers: response.headers,
+        })
       } else {
-        return result.toTextStreamResponse()
+        const response = result.toTextStreamResponse()
+        return new NextResponse(response.body, {
+          status: response.status,
+          headers: response.headers,
+        })
       }
     } else {
       const result = await generateText({
@@ -113,23 +123,29 @@ export async function POST(req: Request) {
       'error' in error.data
     ) {
       console.error('error.data.error', error.data.error)
-      return new Response(JSON.stringify({ error: error.data.error }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      })
-    } else {
-      return new Response(
-        JSON.stringify({
-          error: 'An error occurred while processing the chat request',
-        }),
+      const errValue: unknown = (error as { data: { error: unknown } }).data
+        .error
+      const message = typeof errValue === 'string' ? errValue : 'Unknown error'
+      return NextResponse.json(
+        { error: message },
         {
           status: 500,
-          headers: { 'Content-Type': 'application/json' },
+        },
+      )
+    } else {
+      return NextResponse.json(
+        {
+          error: 'An error occurred while processing the chat request',
+        },
+        {
+          status: 500,
         },
       )
     }
   }
 }
+
+export const POST = withCourseAccessFromRequest('any')(handler)
 
 function convertConversationToVercelAISDKv3(
   conversation: Conversation,
@@ -153,10 +169,22 @@ function convertConversationToVercelAISDKv3(
     if (index === conversation.messages.length - 1 && message.role === 'user') {
       content = message.finalPromtEngineeredMessage || ''
     } else if (Array.isArray(message.content)) {
-      content = message.content
-        .filter((c) => c.type === 'text')
-        .map((c) => c.text)
-        .join('\n')
+      // Handle both text and file content
+      const textParts: string[] = []
+
+      message.content.forEach((c) => {
+        if (c.type === 'text') {
+          textParts.push(c.text || '')
+        } else if (c.type === 'file') {
+          // Convert file content to text representation for Anthropic
+          textParts.push(
+            `[File: ${c.fileName || 'unknown'} (${c.fileType || 'unknown type'}, ${c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'})]`,
+          )
+        }
+        // Note: image_url content is handled differently by Anthropic and may need special processing
+      })
+
+      content = textParts.join('\n')
     } else {
       content = message.content as string
     }

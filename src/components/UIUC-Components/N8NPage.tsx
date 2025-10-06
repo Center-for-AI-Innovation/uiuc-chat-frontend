@@ -35,7 +35,7 @@ import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { Montserrat } from 'next/font/google'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { useFetchAllWorkflows } from '~/utils/functionCalling/handleFunctionCalling'
@@ -57,6 +57,11 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
   const router = useRouter()
   const currentPageName = GetCurrentPageName()
   const auth = useAuth()
+
+  const useIllinoisChatConfig = useMemo(() => {
+    return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
+  }, [])
+
   const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
     null,
   )
@@ -218,28 +223,32 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
   }
 
   useEffect(() => {
-    const getApiFromSupabase = async () => {
+    const getApiKey = async () => {
       try {
-        const response = await fetch(`/api/UIUC-api/getN8NapiFromSupabase`, {
+        const response = await fetch('/api/UIUC-api/getN8Napikey', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            course_name: currentPageName,
-          }),
+          body: JSON.stringify({ course_name: currentPageName }),
         })
+
         const data = await response.json()
-        setN8nApiKeyTextbox(data.api_key[0].n8n_api_key)
-        setN8nApiKey(data.api_key[0].n8n_api_key)
-        // return data.success
+        const apiKey = data.api_key?.[0]?.n8n_api_key
+
+        if (apiKey) {
+          setN8nApiKeyTextbox(apiKey)
+          setN8nApiKey(apiKey)
+        } else {
+          console.warn('API key not found in response:', data)
+        }
       } catch (error) {
         console.error('Error getting course data:', error)
-        // return false
       }
     }
-    getApiFromSupabase()
-  }, [course_name])
+
+    getApiKey()
+  }, [currentPageName])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -341,6 +350,23 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
       <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
         <div className="items-left flex w-full flex-col justify-center py-0">
           <Flex direction="column" align="center" w="100%">
+            {useIllinoisChatConfig && (
+              <Card
+                padding="none"
+                style={{
+                  color: 'var(--foreground)',
+                  margin: '5%',
+                  backgroundColor: 'var(--background)',
+                }}
+              >
+                <Title
+                  className={`${montserrat_heading.variable} ml-4 font-montserratHeading`}
+                  order={2}
+                >
+                  Coming soon!
+                </Title>
+              </Card>
+            )}
             <Card
               withBorder
               padding="none"
@@ -383,7 +409,12 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                           order={5}
                           w={'100%'}
                           ml={'md'}
-                          style={{ textAlign: 'left' }}
+                          style={{
+                            textAlign: 'left',
+                            ...(useIllinoisChatConfig && {
+                              color: 'var(--illinois-storm-dark)',
+                            }),
+                          }}
                         >
                           Use{' '}
                           <a
@@ -415,71 +446,79 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                           {'Create/Edit Workflows'}
                         </Button>
                       </div>
-
-                      <IntermediateStateAccordion
-                        accordionKey="setup-instructions"
-                        chevron={
-                          n8nApiKey ? <IconCircleCheck /> : <IconCircleDashed />
-                        }
-                        disableChevronRotation
-                        title={
-                          <Title
-                            style={{ margin: '0 auto', textAlign: 'left' }}
-                            order={4}
-                            size={'xl'}
-                            className={`pb-3 pt-3 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                          >
-                            Setup Instructions 🤠
-                          </Title>
-                        }
-                        isLoading={false}
-                        error={false}
-                        defaultValue={
-                          !n8nApiKey ? 'setup-instructions' : undefined
-                        }
-                        content={
-                          <List
-                            type="ordered"
-                            withPadding
-                            className={`${montserrat_paragraph.variable} font-montserratParagraph text-[--foreground]`}
-                          >
-                            <List.Item>
-                              Tool use via LLMs is invite-only to prevent abuse.
-                              Please shoot our admin an email for access:{' '}
-                              <a
-                                href="mailto:rohan13@illinois.edu"
-                                style={{
-                                  color: 'var(--link)',
-                                  textDecoration: 'underline',
-                                }}
-                              >
-                                rohan13@illinois.edu
-                              </a>
-                            </List.Item>
-                            <List.Item>
-                              Once you have access, please{' '}
-                              <b>
+                      {useIllinoisChatConfig ? (
+                        <div />
+                      ) : (
+                        <IntermediateStateAccordion
+                          accordionKey="setup-instructions"
+                          chevron={
+                            n8nApiKey ? (
+                              <IconCircleCheck />
+                            ) : (
+                              <IconCircleDashed />
+                            )
+                          }
+                          disableChevronRotation
+                          title={
+                            <Title
+                              style={{ margin: '0 auto', textAlign: 'left' }}
+                              order={4}
+                              size={'xl'}
+                              className={`pb-3 pt-3 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                            >
+                              Setup Instructions 🤠
+                            </Title>
+                          }
+                          isLoading={false}
+                          error={false}
+                          defaultValue={
+                            !n8nApiKey ? 'setup-instructions' : undefined
+                          }
+                          content={
+                            <List
+                              type="ordered"
+                              withPadding
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-[--foreground]`}
+                            >
+                              <List.Item>
+                                Tool use via LLMs is invite-only to prevent
+                                abuse. Please shoot our admin an email for
+                                access:{' '}
                                 <a
-                                  href="https://tools.uiuc.chat/setup"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-[--dashboard-button] hover:text-[--dashboard-button-hover]"
+                                  href="mailto:rohan13@illinois.edu"
                                   style={{
+                                    color: 'var(--link)',
                                     textDecoration: 'underline',
                                   }}
                                 >
-                                  login with this link
+                                  rohan13@illinois.edu
                                 </a>
-                                .
-                              </b>
-                            </List.Item>
-                            <List.Item>
-                              Inside n8n,{' '}
-                              <b>create an n8n API key and save it here</b>.
-                            </List.Item>
-                          </List>
-                        }
-                      />
+                              </List.Item>
+                              <List.Item>
+                                Once you have access, please{' '}
+                                <b>
+                                  <a
+                                    href="https://tools.uiuc.chat/setup"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[--dashboard-button] hover:text-[--dashboard-button-hover]"
+                                    style={{
+                                      textDecoration: 'underline',
+                                    }}
+                                  >
+                                    login with this link
+                                  </a>
+                                  .
+                                </b>
+                              </List.Item>
+                              <List.Item>
+                                Inside n8n,{' '}
+                                <b>create an n8n API key and save it here</b>.
+                              </List.Item>
+                            </List>
+                          }
+                        />
+                      )}
                       {n8nApiKey && (
                         <IntermediateStateAccordion
                           accordionKey="usage-instructions"
