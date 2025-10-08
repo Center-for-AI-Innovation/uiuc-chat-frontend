@@ -208,10 +208,7 @@ export const Chat = memo(
       courseName,
     )
 
-    const deleteMessagesMutation = useDeleteMessages(
-      currentEmail,
-      courseName,
-    )
+    const deleteMessagesMutation = useDeleteMessages(currentEmail, courseName)
 
     // Document Groups
     useEffect(() => {
@@ -867,6 +864,7 @@ export const Chat = memo(
                 imgDesc,
                 updatedConversation,
                 getOpenAIKey(llmProviders, courseMetadata, apiKey),
+                courseName,
               )
               homeDispatch({ field: 'isRouting', value: false })
               if (uiucToolsToRun.length > 0) {
