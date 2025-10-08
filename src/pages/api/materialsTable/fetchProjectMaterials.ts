@@ -6,8 +6,7 @@ import { type CourseDocument } from '~/types/courseMaterials'
 import { and, eq, asc, desc, sql } from 'drizzle-orm'
 import { documents, documentsDocGroups, docGroups } from '~/db/schema'
 import { type PgColumn } from 'drizzle-orm/pg-core'
-import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
-
+import { withPublicCourseAccess } from '~/pages/api/authorization'
 
 type FetchDocumentsResponse = {
   final_docs?: CourseDocument[]
@@ -213,4 +212,4 @@ async function fetchDocuments(
   }
 }
 
-export default withCourseOwnerOrAdminAccess()(fetchDocuments)
+export default withPublicCourseAccess()(fetchDocuments)

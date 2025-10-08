@@ -1,11 +1,11 @@
 import { GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { type NextApiResponse } from 'next'
-import { type AuthenticatedRequest, withAuth } from '~/utils/authMiddleware'
+import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { s3Client, vyriadMinioClient } from '~/utils/s3Client'
-// import { withCourseAccessFromRequest } from '~/pages/api/authorization'
+import { withPublicCourseAccess } from '~/pages/api/authorization'
 
-export default withAuth(handler)
+export default withPublicCourseAccess()(handler)
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   try {

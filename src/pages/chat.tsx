@@ -64,9 +64,18 @@ const ChatPage: NextPage = () => {
       if (postHogUserObj) {
         const postHogUser = JSON.parse(postHogUserObj)
         setCurrentEmail(postHogUser.distinct_id)
+      } else if (!metadata?.is_private) {
+        // Generate a unique identifier for unauthenticated users on public courses
+        let anonymousId = localStorage.getItem('anonymous_user_id')
+        if (!anonymousId) {
+          anonymousId =
+            'anon_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now()
+          localStorage.setItem('anonymous_user_id', anonymousId)
+        }
+        setCurrentEmail(anonymousId)
       }
     }
-  }, [auth.isLoading, email])
+  }, [auth.isLoading, email, metadata?.is_private])
 
   // Enforce permissions similar to /[course_name]/chat
   useEffect(() => {
@@ -133,8 +142,8 @@ const ChatPage: NextPage = () => {
     )
   }
 
-  // redirect to login page if needed
-  if (!auth.isAuthenticated) {
+  // redirect to login page if needed (only for private courses)
+  if (!auth.isAuthenticated && metadata?.is_private) {
     console.log(
       'User not logged in',
       auth.isAuthenticated,
@@ -153,8 +162,7 @@ const ChatPage: NextPage = () => {
       {!isLoading &&
         !auth.isLoading &&
         router.isReady &&
-        ((currentEmail && currentEmail !== '') ||
-          !course_metadata?.is_private) &&
+        (currentEmail !== undefined || !course_metadata?.is_private) &&
         course_metadata &&
         isAuthorized && (
           <Home
@@ -170,17 +178,17 @@ const ChatPage: NextPage = () => {
           />
         )}
       {isLoading ||
-        !currentEmail ||
-        (currentEmail === '' && (
-          <MainPageBackground>
-            <div
-              className={`flex items-center justify-center font-montserratHeading text-white ${montserrat_heading.variable}`}
-            >
-              <span className="mr-2">Warming up the knowledge engines...</span>
-              <LoadingSpinner size="sm" />
-            </div>
-          </MainPageBackground>
-        ))}
+      (!currentEmail && metadata?.is_private) ||
+      (currentEmail === '' && metadata?.is_private) ? (
+        <MainPageBackground>
+          <div
+            className={`flex items-center justify-center font-montserratHeading text-white ${montserrat_heading.variable}`}
+          >
+            <span className="mr-2">Warming up the knowledge engines...</span>
+            <LoadingSpinner size="sm" />
+          </div>
+        </MainPageBackground>
+      ) : null}
     </>
   )
 }

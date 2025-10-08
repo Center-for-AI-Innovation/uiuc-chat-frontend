@@ -4,7 +4,7 @@ import { type ChatBody } from '@/types/chat'
 import { routeModelRequest } from '~/utils/streamProcessing'
 import { buildPrompt } from '~/app/utils/buildPromptUtils'
 import { type AuthenticatedRequest } from '~/utils/appRouterAuth'
-import { withCourseAccessFromRequest } from '~/app/api/authorization'
+import { withPublicCourseAccess } from '~/app/api/authorization'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -50,4 +50,4 @@ async function handler(req: AuthenticatedRequest) {
   }
 }
 
-export const POST = withCourseAccessFromRequest('any')(handler)
+export const POST = withPublicCourseAccess()(handler)
