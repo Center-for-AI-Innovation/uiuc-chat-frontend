@@ -1,8 +1,13 @@
 import { type NextApiResponse } from 'next'
 import { type AuthenticatedRequest } from '~/utils/authMiddleware'
-import { conversations as conversationsTable, db, messages } from '~/db/dbClient'
+import {
+  conversations as conversationsTable,
+  db,
+  messages,
+} from '~/db/dbClient'
 import { and, inArray, sql } from 'drizzle-orm'
-import { withCourseAccessFromRequest } from '~/pages/api/authorization'
+import { withPublicCourseAccess } from '~/pages/api/authorization'
+import { getUserIdentifier } from '~/pages/api/_utils/userIdentifier'
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   console.log('In deleteMessages handler')
@@ -12,26 +17,26 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     res.status(405).end(`Method ${method} Not Allowed`)
     return
   }
-  const {
-    messageIds,
-    course_name: courseName,
-  } = req.body as {
+  const { messageIds, course_name: courseName } = req.body as {
     messageIds: string[]
     course_name: string
   }
-  const userEmail = req.user?.email
+  const user_identifier = getUserIdentifier(req)
   console.log('Deleting messages: ', messageIds)
 
   if (!messageIds || !Array.isArray(messageIds) || !messageIds.length) {
     res.status(400).json({ error: 'No valid message ids provided' })
     return
   }
-  if (!userEmail) {
-    res.status(400).json({ error: 'No valid user email provided' })
-    return
-  }
   if (!courseName) {
     res.status(400).json({ error: 'No valid course name provided' })
+    return
+  }
+
+  // user_identifier already resolved
+
+  if (!user_identifier) {
+    res.status(400).json({ error: 'No valid user identifier provided' })
     return
   }
 
@@ -46,20 +51,22 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
             select 1
             from ${conversationsTable} c
             where c.id = ${messages.conversation_id}
-              and c.user_email = ${userEmail}
-          )`
-        )
+              and c.user_email = ${user_identifier}
+          )`,
+        ),
       )
-      .returning({ id: messages.id });
+      .returning({ id: messages.id })
 
     if (result.length === 0) {
-      return res.status(403).json({ error: 'Not allowed to delete the message' });
+      return res
+        .status(403)
+        .json({ error: 'Not allowed to delete the message' })
     }
 
-    return res.status(200).json({ message: 'Messages deleted successfully' });
+    return res.status(200).json({ message: 'Messages deleted successfully' })
   } catch (error) {
     res.status(500).json({ error: (error as Error).message })
   }
 }
 
-export default withCourseAccessFromRequest('any')(handler)
+export default withPublicCourseAccess()(handler)

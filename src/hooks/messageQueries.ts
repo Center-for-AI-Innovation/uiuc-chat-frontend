@@ -17,6 +17,7 @@ export function useDeleteMessages(user_email: string, course_name: string) {
       deleteMessagesFromServer(
         deletedMessages.map((message) => message.id) || [],
         course_name,
+        user_email,
       ),
     onMutate: async ({
       convoId,

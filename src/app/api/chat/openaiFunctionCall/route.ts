@@ -6,7 +6,7 @@ import type {
 import { type Conversation } from '~/types/chat'
 import { type AuthenticatedRequest } from '~/utils/appRouterAuth'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
-import { withCourseAccessFromRequest } from '~/app/api/authorization'
+import { withPublicCourseAccess } from '~/app/api/authorization'
 
 // Change runtime to edge
 export const runtime = 'nodejs'
@@ -159,4 +159,4 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
   }
 }
 
-export const POST = withCourseAccessFromRequest('any')(handler)
+export const POST = withPublicCourseAccess()(handler)
