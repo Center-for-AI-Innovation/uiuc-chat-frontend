@@ -5,10 +5,8 @@ import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
 
 import { useTranslation } from 'next-i18next'
 
-import {
-  generateRandomString,
-  programmingLanguages,
-} from '@/utils/app/codeblock'
+import { programmingLanguages } from '@/utils/app/codeblock'
+import { generateSecureRandomString } from '@/utils/cryptoRandom'
 
 interface Props {
   language: string
@@ -34,8 +32,9 @@ export const CodeBlock: FC<Props> = memo(({ language, value }) => {
   }
   const downloadAsFile = () => {
     const fileExtension = programmingLanguages[language] || '.file'
-    const suggestedFileName = `file-${generateRandomString(
+    const suggestedFileName = `file-${generateSecureRandomString(
       3,
+      undefined,
       true,
     )}${fileExtension}`
     const fileName = window.prompt(

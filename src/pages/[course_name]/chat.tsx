@@ -13,6 +13,7 @@ import { montserrat_heading } from 'fonts'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
+import { generateAnonymousUserId } from '~/utils/cryptoRandom'
 
 const ChatPage: NextPage = () => {
   const auth = useAuth()
@@ -144,11 +145,7 @@ const ChatPage: NextPage = () => {
                 // Generate a unique identifier for unauthenticated users
                 let anonymousId = localStorage.getItem('anonymous_user_id')
                 if (!anonymousId) {
-                  anonymousId =
-                    'anon_' +
-                    Math.random().toString(36).substr(2, 9) +
-                    '_' +
-                    Date.now()
+                  anonymousId = generateAnonymousUserId()
                   localStorage.setItem('anonymous_user_id', anonymousId)
                 }
                 setCurrentEmail(anonymousId)
