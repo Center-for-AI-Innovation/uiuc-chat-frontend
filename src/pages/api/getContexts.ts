@@ -1,9 +1,9 @@
 import { type NextApiResponse } from 'next'
 import { type AuthenticatedRequest } from '~/utils/authMiddleware'
-import { withCourseAccessFromRequest } from '~/pages/api/authorization'
+import { withPublicCourseAccess } from '~/pages/api/authorization'
 import fetchContextsFromBackend from '~/pages/util/fetchContexts'
 
-export default withCourseAccessFromRequest('any')(handler)
+export default withPublicCourseAccess()(handler)
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {

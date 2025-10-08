@@ -1,6 +1,6 @@
 // ~/src/pages/api/UIUC-api/getCourseMetadata.ts
 import { type NextApiResponse } from 'next'
-import { withCourseAccessFromRequest } from '~/pages/api/authorization'
+import { withPublicCourseAccess } from '~/pages/api/authorization'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { ensureRedisConnected } from '~/utils/redisClient'
@@ -23,7 +23,7 @@ export const getCourseMetadata = async (
   }
 }
 
-export default withCourseAccessFromRequest('any')(handler)
+export default withPublicCourseAccess()(handler)
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const course_name = req.query.course_name as string
