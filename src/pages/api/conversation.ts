@@ -1,5 +1,10 @@
-import { NextApiRequest, NextApiResponse } from 'next'
-import { db, messages, conversations as conversationsTable } from '~/db/dbClient'
+import { NextApiResponse } from 'next'
+import {
+  db,
+  messages,
+  conversations as conversationsTable,
+} from '~/db/dbClient'
+import { AuthenticatedRequest } from '~/utils/authMiddleware'
 import {
   type Conversation as ChatConversation,
   type Message as ChatMessage,
@@ -8,16 +13,16 @@ import {
   type Role,
   type UIUCTool,
 } from '@/types/chat'
-import { Database, Json } from 'database.types'
-import { v4 as uuidv4, validate as isUUID  } from 'uuid'
+import { Database } from 'database.types'
+import { v4 as uuidv4, validate as isUUID } from 'uuid'
 import {
   AllSupportedModels,
   type GenericSupportedModel,
 } from '~/utils/modelProviders/LLMProvider'
 import { sanitizeText } from '@/utils/sanitization'
-import { inArray, eq, and, isNull, desc, sql, asc, gt } from 'drizzle-orm'
-import { NewConversations, NewMessages } from '~/db/schema'
-
+import { inArray, eq, and, isNull, sql, gt } from 'drizzle-orm'
+import { NewConversations } from '~/db/schema'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
 export const config = {
   api: {
@@ -116,10 +121,10 @@ export function convertDBToChatConversation(
 
       const feedbackObj = msg.feedback
         ? {
-            isPositive: msg.feedback.feedback_is_positive,
-            category: msg.feedback.feedback_category,
-            details: msg.feedback.feedback_details,
-          }
+          isPositive: msg.feedback.feedback_is_positive,
+          category: msg.feedback.feedback_category,
+          details: msg.feedback.feedback_details,
+        }
         : undefined
 
       // Process contexts to ensure both page number fields are preserved
@@ -212,10 +217,10 @@ export function convertChatToDBMessage(
           // Sanitize and truncate text to 100 characters and add ellipsis if needed
           text: context.text
             ? sanitizeText(
-                context.text.length > 100
-                  ? context.text.slice(0, 100) + '...'
-                  : context.text,
-              )
+              context.text.length > 100
+                ? context.text.slice(0, 100) + '...'
+                : context.text,
+            )
             : '',
         }
 
@@ -259,17 +264,17 @@ export function convertChatToDBMessage(
   }
 }
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const { method } = req
+  const user_email = req.user?.email as string | undefined
+  if (!user_email) {
+    res.status(400).json({ error: 'No valid email address in token' })
+    return
+  }
 
   switch (method) {
     case 'POST':
-      const {
-        conversation,
-      }: { conversation: ChatConversation } = req.body
+      const { conversation }: { conversation: ChatConversation } = req.body
       try {
         // Convert conversation to DB type
         const dbConversation = convertChatToDBConversation(conversation)
@@ -278,7 +283,7 @@ export default async function handler(
           // Return success without saving - no need to throw an error
           return res.status(200).json({ message: 'No messages to save' })
         }
-        
+
         // Create a correctly typed conversation object for DrizzleORM
         const conversationData: NewConversations = {
           id: dbConversation.id,
@@ -286,16 +291,24 @@ export default async function handler(
           model: dbConversation.model,
           prompt: dbConversation.prompt,
           temperature: dbConversation.temperature,
-          user_email: dbConversation.user_email,
+          user_email: req.user?.email || null,
           project_name: dbConversation.project_name,
-          folder_id: isUUID(dbConversation.folder_id ?? '') ? dbConversation.folder_id : null,
-          created_at: dbConversation.created_at ? new Date(dbConversation.created_at) : new Date(),
-          updated_at: dbConversation.updated_at ? new Date(dbConversation.updated_at) : new Date()
-        };
+          folder_id: isUUID(dbConversation.folder_id ?? '')
+            ? dbConversation.folder_id
+            : null,
+          created_at: dbConversation.created_at
+            ? new Date(dbConversation.created_at)
+            : new Date(),
+          updated_at: dbConversation.updated_at
+            ? new Date(dbConversation.updated_at)
+            : new Date(),
+        }
 
         // Save conversation to DB using DrizzleORM
         try {
-          await db.insert(conversationsTable).values(conversationData)
+          await db
+            .insert(conversationsTable)
+            .values(conversationData)
             .onConflictDoUpdate({
               target: conversationsTable.id,
               set: {
@@ -303,15 +316,15 @@ export default async function handler(
                 model: dbConversation.model,
                 prompt: dbConversation.prompt,
                 temperature: dbConversation.temperature,
-                user_email: dbConversation.user_email,
+                user_email: req.user?.email || null,
                 project_name: dbConversation.project_name,
                 folder_id: dbConversation.folder_id,
                 updated_at: new Date(),
-              }
-            });
+              },
+            })
         } catch (error) {
-          console.error('Error insert conversation to db:', error);
-          throw error;
+          console.error('Error insert conversation to db:', error)
+          throw error
         }
 
         // Check for edited messages and get their existing versions
@@ -324,22 +337,22 @@ export default async function handler(
           .where(
             and(
               inArray(messages.id, messageIds),
-              eq(messages.conversation_id, conversation.id)
-            )
-          );
+              eq(messages.conversation_id, conversation.id),
+            ),
+          )
 
         // Find any messages that were edited by comparing content
         const editedMessages = existingMessages?.filter((existingMsg) => {
           const newMsg = conversation.messages.find(
-            (m) => m.id === existingMsg.id.toString()
+            (m) => m.id === existingMsg.id.toString(),
           )
-          if (!newMsg) return false;
-          
-          const newDbMsg = convertChatToDBMessage(newMsg, conversation.id);
+          if (!newMsg) return false
+
+          const newDbMsg = convertChatToDBMessage(newMsg, conversation.id)
           return (
             existingMsg.content_text !== newDbMsg.content_text ||
             JSON.stringify(existingMsg.contexts) !==
-              JSON.stringify(newDbMsg.contexts)
+            JSON.stringify(newDbMsg.contexts)
           )
         })
 
@@ -347,8 +360,8 @@ export default async function handler(
         if (editedMessages && editedMessages.length > 0) {
           // Find the earliest edited message timestamp
           const earliestEditTime = Math.min(
-            ...editedMessages.map((m) => 
-              m.created_at ? new Date(m.created_at).getTime() : Date.now()
+            ...editedMessages.map((m) =>
+              m.created_at ? new Date(m.created_at).getTime() : Date.now(),
             ),
           )
 
@@ -360,9 +373,9 @@ export default async function handler(
               .where(
                 and(
                   eq(sql`${messages.conversation_id}::text`, conversation.id),
-                  gt(messages.created_at, new Date(earliestEditTime))
-                )
-              );
+                  gt(messages.created_at, new Date(earliestEditTime)),
+                ),
+              )
           } catch (error) {
             console.error('Error deleting subsequent messages:', error)
             throw error
@@ -374,9 +387,11 @@ export default async function handler(
         const dbMessages = conversation.messages.map((message, index) => {
           // If the message wasn't edited, preserve its original timestamp
           const existingMessage = existingMessages?.find(
-            (m) => m.id.toString() === message.id
+            (m) => m.id.toString() === message.id,
           )
-          const wasEdited = editedMessages?.some((m) => m.id.toString() === message.id)
+          const wasEdited = editedMessages?.some(
+            (m) => m.id.toString() === message.id,
+          )
 
           let created_at
           if (existingMessage && !wasEdited) {
@@ -393,37 +408,40 @@ export default async function handler(
         })
 
         // Sort messages by created_at before upserting to ensure consistent order
-        dbMessages.sort(
-          (a, b) => {
-            const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
-            const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
-            return aTime - bTime;
-          }
-        )
+        dbMessages.sort((a, b) => {
+          const aTime = a.created_at ? new Date(a.created_at).getTime() : 0
+          const bTime = b.created_at ? new Date(b.created_at).getTime() : 0
+          return aTime - bTime
+        })
 
         // Insert messages using DrizzleORM
         for (const message of dbMessages) {
-           if (!isUUID(message.id)) {
-              throw new Error(`Invalid UUID for message.id: ${message.id}`);
-            }
+          if (!isUUID(message.id)) {
+            throw new Error(`Invalid UUID for message.id: ${message.id}`)
+          }
 
           // Convert string dates to Date objects for DrizzleORM and ensure ID is a number
           const messageForInsert = {
             ...message,
             id: message.id,
-            created_at: message.created_at ? new Date(message.created_at) : new Date(),
-            updated_at: message.updated_at ? new Date(message.updated_at) : new Date(),
-          };
-          try{
-            await db.insert(messages).values(messageForInsert as any)
-            .onConflictDoUpdate({
-              target: messages.id,
-              set: messageForInsert as any
-            });
+            created_at: message.created_at
+              ? new Date(message.created_at)
+              : new Date(),
+            updated_at: message.updated_at
+              ? new Date(message.updated_at)
+              : new Date(),
           }
-          catch (error) {
-            console.error('Error inserting message to db:', error);
-            throw error;
+          try {
+            await db
+              .insert(messages)
+              .values(messageForInsert as any)
+              .onConflictDoUpdate({
+                target: messages.id,
+                set: messageForInsert as any,
+              })
+          } catch (error) {
+            console.error('Error inserting message to db:', error)
+            throw error
           }
         }
 
@@ -437,17 +455,12 @@ export default async function handler(
       break
 
     case 'GET':
-      const user_email = req.query.user_email as string
       const searchTerm = req.query.searchTerm as string
       const courseName = req.query.courseName as string
       const pageParam = parseInt(req.query.pageParam as string, 0)
       // Search term is optional
       if (!user_email || !courseName || isNaN(pageParam)) {
-        console.log('first boolean:', !user_email)
-        console.log('second boolean:', !searchTerm)
-        console.log('third boolean:', !courseName)
-        console.log('fourth boolean:', isNaN(pageParam))
-        console.log('Invalid query parameters:', req.query)
+        console.error('Invalid query parameters:', req.query)
         res.status(400).json({ error: 'Invalid query parameters' })
         return
       }
@@ -457,39 +470,42 @@ export default async function handler(
         const offset = pageParam * pageSize
 
         // Execute the SQL query directly using db.execute
-        const result = await db.execute<{search_conversations_v3: { conversations: any[], total_count: number }}>(sql`
+        const result = await db.execute<{
+          search_conversations_v3: { conversations: any[]; total_count: number }
+        }>(sql`
           SELECT * FROM search_conversations_v3(
             ${user_email},
             ${courseName},
             ${searchTerm || null},
             ${pageSize},
             ${offset}
-          );
-        `);
-        
+               );
+        `)
+
         // Parse the result - handle potential different result structures
-        const sqlResult = result[0]?.search_conversations_v3;
-        
+        const sqlResult = result[0]?.search_conversations_v3
+
         // Need to properly parse the result which might be a string
-        let parsedData: { conversations: any[], total_count: number };
-        
+        let parsedData: { conversations: any[]; total_count: number }
+
         if (typeof sqlResult === 'string') {
           // If the result is a JSON string
-          parsedData = JSON.parse(sqlResult);
+          parsedData = JSON.parse(sqlResult)
         } else {
           // If the result is already an object
-          parsedData = sqlResult as { conversations: any[], total_count: number };
+          parsedData = sqlResult as {
+            conversations: any[]
+            total_count: number
+          }
         }
-        
-        const count = parsedData?.total_count || 0;
-        const conversations = parsedData?.conversations || [];
 
-        const fetchedConversations = conversations.map(
-          (conv: any) => {
-            const convMessages = conv.messages || []
-            return convertDBToChatConversation(conv, convMessages)
-          },
-        )
+        const count = parsedData?.total_count || 0
+        const conversations = parsedData?.conversations || []
+
+        const fetchedConversations = conversations.map((conv: any) => {
+          const convMessages = conv.messages || []
+          return convertDBToChatConversation(conv, convMessages)
+        })
 
         const nextCursor =
           count &&
@@ -514,44 +530,54 @@ export default async function handler(
     case 'DELETE':
       const {
         id,
-        user_email: userEmail,
         course_name,
       }: {
         id?: string
-        user_email?: string
         course_name?: string
       } = req.body as {
         id?: string
-        user_email?: string
         course_name?: string
       }
 
       try {
-        if (id) {
-          // Delete single conversation using DrizzleORM
-          await db
-            .delete(conversationsTable)
-            .where(eq(conversationsTable.id, id));
-        } else if (userEmail && course_name) {
-          // Delete all conversations that are not in folders
-          await db
+        if (id && user_email) {
+          // Delete single conversation, but only if it belongs to the current user
+          const deleted = await db
             .delete(conversationsTable)
             .where(
               and(
-                eq(conversationsTable.user_email, userEmail),
+                eq(conversationsTable.id, id),
+                eq(conversationsTable.user_email, user_email),
+              ),
+            )
+            .returning({ id: conversationsTable.id })
+          if (deleted.length === 0) {
+            return res.status(403).json({ error: 'Not allowed to delete this conversation' })
+          }
+        } else if (user_email && course_name) {
+          // Delete all conversations for this user/course that are not in folders
+          const deleted = await db
+            .delete(conversationsTable)
+            .where(
+              and(
+                eq(conversationsTable.user_email, user_email),
                 eq(conversationsTable.project_name, course_name),
-                isNull(conversationsTable.folder_id)
-              )
-            );
+                isNull(conversationsTable.folder_id),
+              ),
+            ).returning({ id: conversationsTable.id })
+          if (deleted.length === 0) {
+            return res.status(403).json({ error: 'Not allowed to delete all conversations' })
+          }
         } else {
-          res.status(400).json({ error: 'Invalid request parameters' })
+          res
+            .status(400)
+            .json({ error: 'Invalid user email or invalid request parameters' })
           return
         }
-
-        res.status(200).json({ message: 'Conversation deleted successfully' })
-      } catch (error) {
-        res.status(500).json({ error: 'Error deleting conversation' })
-        console.error('Error deleting conversation:', error)
+        res.status(200).json({ success: true })
+      } catch (err) {
+        console.error('Error deleting conversations:', err)
+        res.status(500).json({ error: 'Internal server error' })
       }
       break
 
@@ -560,3 +586,5 @@ export default async function handler(
       res.status(405).end(`Method ${method} Not Allowed`)
   }
 }
+
+export default withCourseAccessFromRequest('any')(handler)

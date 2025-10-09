@@ -210,7 +210,6 @@ export const Chat = memo(
 
     const deleteMessagesMutation = useDeleteMessages(
       currentEmail,
-      queryClient,
       courseName,
     )
 

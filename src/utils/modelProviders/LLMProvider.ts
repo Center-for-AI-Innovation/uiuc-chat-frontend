@@ -157,7 +157,7 @@ export const ReasoningCapableModels: Set<
   OpenAIModelID.o3,
   OpenAIModelID.o3_mini,
   OpenAIModelID.o4_mini,
-  OpenAIModelID.GPT_4_1,
+  // OpenAIModelID.GPT_4_1,
   // Add GPT-5 family
   OpenAIModelID.GPT_5_thinking,
   OllamaModelIDs.DEEPSEEK_R1_14b_qwen_fp16,
@@ -197,7 +197,6 @@ export interface GenericSupportedModel {
   enabled: boolean
   parameterSize?: string
   default?: boolean
-  temperature?: number
 }
 
 export interface BaseLLMProvider {

@@ -1,10 +1,11 @@
-import { AuthProvider } from 'react-oidc-context'
+import { AuthProvider, useAuth } from 'react-oidc-context'
 import React, { type ReactNode, useEffect, useState } from 'react'
 import { WebStorageStateStore } from 'oidc-client-ts'
 import { getKeycloakBaseUrl } from '~/utils/authHelpers'
 import Link from 'next/link'
 import { montserrat_heading } from '../../fonts'
 import { Flex, Title } from '@mantine/core'
+import { AuthCookie } from '~/providers/AuthCookie'
 
 interface AuthProviderProps {
   children: ReactNode
@@ -84,6 +85,8 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
 
         sessionStorage.removeItem('auth_redirect_path')
         window.location.replace(redirectPath)
+        // TODO: This doesn't work even though it's recommended in the react-oidc-context docs
+        // window.history.replaceState({}, document.title, redirectPath)
       }
     },
   })
@@ -95,6 +98,14 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
       const searchParams = new URLSearchParams(window.location.search)
       setIsAuthCallback(searchParams.has('code') && searchParams.has('state'))
       setIsMounted(true)
+
+      // const cookieStore = new CookieStorage({
+      //   prefix: '',
+      //   expiresDays: 1,
+      //   sameSite: 'lax', // if your IdP is on another domain AND you use iframe silent renew, use "none"
+      //   secure: window.location.protocol === 'https:',
+      // })
+      // const cookieStore = new CookieStorage()
 
       setOidcConfig((prev) => ({
         ...prev,
@@ -127,7 +138,9 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
     // Function to find and attach listeners to login buttons
     const attachListeners = () => {
       // Find login buttons by commonly used selectors
-      const loginButtons = document.querySelectorAll('.login-btn, [data-login], button[type="login"]')
+      const loginButtons = document.querySelectorAll(
+        '.login-btn, [data-login], button[type="login"]',
+      )
       loginButtons.forEach((button) => {
         button.addEventListener('click', handleLoginClick)
       })
@@ -144,11 +157,18 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
             if (node.nodeType === Node.ELEMENT_NODE) {
               const element = node as Element
               // Check if the added element is a login button
-              if (element.matches && element.matches('.login-btn, [data-login], button[type="login"]')) {
+              if (
+                element.matches &&
+                element.matches(
+                  '.login-btn, [data-login], button[type="login"]',
+                )
+              ) {
                 element.addEventListener('click', handleLoginClick)
               }
               // Check if the added element contains login buttons
-              const loginButtons = element.querySelectorAll('.login-btn, [data-login], button[type="login"]')
+              const loginButtons = element.querySelectorAll(
+                '.login-btn, [data-login], button[type="login"]',
+              )
               loginButtons.forEach((button) => {
                 button.addEventListener('click', handleLoginClick)
               })
@@ -166,8 +186,10 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
 
     return () => {
       // Clean up event listeners and observer on unmount
-      const loginButtons = document.querySelectorAll('.login-btn, [data-login], button[type="login"]')
-      loginButtons.forEach(button => {
+      const loginButtons = document.querySelectorAll(
+        '.login-btn, [data-login], button[type="login"]',
+      )
+      loginButtons.forEach((button) => {
         button.removeEventListener('click', handleLoginClick)
       })
       observer.disconnect()
@@ -178,42 +200,44 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
 
   return (
     <AuthProvider {...oidcConfig}>
-      {/*If we’re on the callback URL, render a handoff screen instead of the app.*/}
-      {isAuthCallback ? (
-        <>
-          <main className="justify-center; course-page-main flex min-h-screen flex-col items-center">
-            <div className="container flex flex-col items-center justify-center gap-8 px-4 py-8 ">
-              <Link href="/">
-                <h2
-                  className={`text-5xl font-extrabold tracking-tight text-white sm:text-[5rem] ${montserrat_heading.variable} font-montserratHeading`}
-                >
-                  {' '}
-                  <span className="${inter.style.fontFamily} mr-2 text-[--illinois-orange]">
-                Illinois
-              </span>
-                  <span className="${inter.style.fontFamily} text-[--foreground]">
-                Chat
-              </span>{' '}
-                </h2>
-              </Link>
-            </div>
-            <div className="items-left container flex flex-col justify-center gap-2 py-0">
-              <Flex direction="column" align="center" justify="center">
-                <Title
-                  className={`${montserrat_heading.variable} font-montserratHeading text-[--foreground]`}
-                  order={2}
-                  p="xl"
-                >
-                  {' '}
-                  Signing you in, please wait...
-                </Title>
-              </Flex>
-            </div>
-          </main>
-        </>
-      ) : (
-        children
-      )}
+      <AuthCookie>
+        {/*If we’re on the callback URL, render a handoff screen instead of the app.*/}
+        {isAuthCallback ? (
+          <>
+            <main className="justify-center; course-page-main flex min-h-screen flex-col items-center">
+              <div className="container flex flex-col items-center justify-center gap-8 px-4 py-8 ">
+                <Link href="/">
+                  <h2
+                    className={`text-5xl font-extrabold tracking-tight text-white sm:text-[5rem] ${montserrat_heading.variable} font-montserratHeading`}
+                  >
+                    {' '}
+                    <span className="${inter.style.fontFamily} mr-2 text-[--illinois-orange]">
+                      Illinois
+                    </span>
+                    <span className="${inter.style.fontFamily} text-[--foreground]">
+                      Chat
+                    </span>{' '}
+                  </h2>
+                </Link>
+              </div>
+              <div className="items-left container flex flex-col justify-center gap-2 py-0">
+                <Flex direction="column" align="center" justify="center">
+                  <Title
+                    className={`${montserrat_heading.variable} font-montserratHeading text-[--foreground]`}
+                    order={2}
+                    p="xl"
+                  >
+                    {' '}
+                    Signing you in, please wait...
+                  </Title>
+                </Flex>
+              </div>
+            </main>
+          </>
+        ) : (
+          children
+        )}
+      </AuthCookie>
     </AuthProvider>
   )
 }

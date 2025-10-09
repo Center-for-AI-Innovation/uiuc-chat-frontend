@@ -1,15 +1,14 @@
 // upsertCourseMetadata.ts
 import { type CourseMetadataOptionalForUpsert } from '~/types/courseMetadata'
-import type { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiResponse } from 'next'
+import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { encrypt, isEncrypted } from '~/utils/crypto'
 import { getCourseMetadata } from './getCourseMetadata'
 import { ensureRedisConnected } from '~/utils/redisClient'
 import { superAdmins } from '~/utils/superAdmins'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const { courseName, courseMetadata } = req.body as {
     courseName: string
     courseMetadata: CourseMetadataOptionalForUpsert
@@ -26,12 +25,6 @@ export default async function handler(
 
     // Combine the existing metadata with the new metadata, prioritizing the new values (order matters!)
     const combined_metadata = { ...existing_metadata, ...courseMetadata }
-
-    console.log('-----------------------------------------')
-    console.log('EXISTING course metadata:', existing_metadata)
-    console.log('passed into upsert metadata:', courseMetadata)
-    console.log('FINAL COMBINED course metadata:', combined_metadata)
-    console.log('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
 
     // Check if combined_metadata doesn't have anything in the field course_admins
     if (
@@ -73,3 +66,5 @@ export default async function handler(
     return res.status(500).json({ success: false, error: error })
   }
 }
+
+export default withCourseOwnerOrAdminAccess()(handler)

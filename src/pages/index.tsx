@@ -8,6 +8,7 @@ import { ArrowNarrowRight, ExternalLink, Link } from 'tabler-icons-react'
 import { doto_font, montserrat_heading, montserrat_paragraph } from 'fonts'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 import { LandingPageHeader } from '~/components/UIUC-Components/navbars/GlobalHeader'
+import router from 'next/router'
 
 // Typing animation component
 const TypingAnimation: React.FC = () => {
@@ -191,29 +192,14 @@ const Home: NextPage = () => {
                 />
               ) : !useIllinoisChatConfig ? (
                 <>
-                  Heads up: we’ve rebranded to Illinois Chat — please visit{' '}
+                  Heads up: we’ve rebranded to Illinois Chat — For the official
+                  version, please visit{' '}
                   <a href="https://chat.illinois.edu" className="underline">
                     chat.illinois.edu
                   </a>
                 </>
               ) : null}
             </span>
-
-            {/*1. If useIllinoisChatConfig && IllinoisChatBannerContent → render HTML from IllinoisChatBannerContent*/}
-            {/*2. If !useIllinoisChatConfig → render default "Heads up" banner*/}
-            {/*3. Otherwise → render nothing*/}
-            {useIllinoisChatConfig && IllinoisChatBannerContent ? (
-              <div
-                dangerouslySetInnerHTML={{ __html: IllinoisChatBannerContent }}
-              />
-            ) : !useIllinoisChatConfig ? (
-              <>
-                Heads up: we’ve rebranded to Illinois Chat — please visit{' '}
-                <a href="https://chat.illinois.edu" className="underline">
-                  chat.illinois.edu
-                </a>
-              </>
-            ) : null}
           </div>
         </div>
       </div>
@@ -264,8 +250,10 @@ const Home: NextPage = () => {
                   color: 'var(--illinois-white)',
                 }}
                 radius="sm"
-                component="a"
-                href="/chat"
+                onClick={() => {
+                  // Use Next.js router to navigate
+                  router.push('/chat')
+                }}
               >
                 Try it out{' '}
                 <ArrowNarrowRight size={32} strokeWidth={1} color={'white'} />
@@ -307,14 +295,13 @@ const Home: NextPage = () => {
 
           {!useIllinoisChatConfig && (
             <div className="mt-12 w-[100vw] rounded-lg bg-[--dashboard-background-faded] p-8 pb-14">
-              <div className="mb-6 w-full pt-8 text-center">
+              <div className="mb-0 w-full text-center">
                 <h2
                   className={`
-                  pt-12
                   text-2xl font-bold sm:pt-2 
                   ${montserrat_heading.variable} font-montserratHeading
                 `}
-                  style={{ color: 'var(--illinois-blue)' }}
+                  style={{ color: 'var(--foreground)' }}
                 >
                   Flagship Chatbots
                 </h2>
@@ -328,8 +315,10 @@ const Home: NextPage = () => {
                 </p>
               </div>
 
-              <div className="w-full max-w-5xl">
-                <FlagshipChatbots />
+              <div className="w-full">
+                <div className="ml-auto mr-auto max-w-5xl">
+                  <FlagshipChatbots />
+                </div>
               </div>
             </div>
           )}

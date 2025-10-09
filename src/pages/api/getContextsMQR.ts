@@ -1,7 +1,10 @@
+import { type NextApiResponse } from 'next'
+import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import axios, { type AxiosResponse } from 'axios'
 import { type ContextWithMetadata } from '~/types/chat'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
-export default async function handler(req: any, res: any) {
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
@@ -52,40 +55,4 @@ export default async function handler(req: any, res: any) {
   }
 }
 
-// Helper function for backward compatibility
-export const fetchMQRContexts = async (
-  course_name: string,
-  search_query: string,
-  token_limit = 6000,
-  doc_groups: string[] = [],
-  conversation_id: string,
-): Promise<ContextWithMetadata[]> => {
-  try {
-    const params = new URLSearchParams({
-      course_name,
-      search_query,
-      token_limit: token_limit.toString(),
-    })
-
-    // Handle doc_groups array
-    doc_groups.forEach((group) => params.append('doc_groups', group))
-
-    params.append('conversation_id', conversation_id)
-    
-    const response = await fetch(`/api/getContextsMQR?${params.toString()}`)
-
-    if (!response.ok) {
-      console.error(
-        'Failed to fetch MQR contexts. Err status:',
-        response.status,
-      )
-      return []
-    }
-
-    const data: ContextWithMetadata[] = await response.json()
-    return data
-  } catch (error) {
-    console.error(error)
-    return []
-  }
-}
+export default withCourseAccessFromRequest('any')(handler)

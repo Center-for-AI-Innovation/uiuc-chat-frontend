@@ -1,11 +1,16 @@
+import { type NextApiResponse } from 'next'
+import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 // src/pages/api/UIUC-api/getProjectStats.ts
 import { getBackendUrl } from '~/utils/apiUtils'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
-export default async function handler(req: any, res: any) {
-  const { project_name } = req.query
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
+  const { project_name } = req.body
 
   if (!project_name) {
-    return res.status(400).json({ error: 'Missing required project_name parameter' })
+    return res
+      .status(400)
+      .json({ error: 'Missing required project_name parameter' })
   }
 
   try {
@@ -14,8 +19,8 @@ export default async function handler(req: any, res: any) {
     )
 
     if (!response.ok) {
-      return res.status(response.status).json({ 
-        error: `Failed to fetch data: ${response.statusText}` 
+      return res.status(response.status).json({
+        error: `Failed to fetch data: ${response.statusText}`,
       })
     }
 
@@ -29,6 +34,8 @@ export default async function handler(req: any, res: any) {
     })
   }
 }
+
+export default withCourseOwnerOrAdminAccess()(handler)
 
 export async function getProjectStats(project_name: string) {
   try {

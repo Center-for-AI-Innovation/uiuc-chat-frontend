@@ -1,7 +1,6 @@
-import { NextApiRequest, NextApiResponse } from 'next'
-import { db } from '~/db/dbClient'
-import posthog from 'posthog-js'
-import { documentsInProgress } from '~/db/schema'
+import { type NextApiResponse } from 'next'
+import { type AuthenticatedRequest } from '~/utils/authMiddleware'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
 type IngestResponse = {
   task_id?: string
@@ -9,7 +8,7 @@ type IngestResponse = {
 }
 
 const handler = async (
-  req: NextApiRequest,
+  req: AuthenticatedRequest,
   res: NextApiResponse<IngestResponse>,
 ) => {
   try {
@@ -20,13 +19,15 @@ const handler = async (
       })
     }
 
-    const { uniqueFileName, courseName, readableFilename } = req.body
+    const { uniqueFileName, courseName, readableFilename, forceEmbeddings } =
+      req.body
 
     console.log(
       '👉 Submitting to ingest queue:',
       uniqueFileName,
       courseName,
       readableFilename,
+      forceEmbeddings,
     )
 
     if (!uniqueFileName || !courseName || !readableFilename) {
@@ -48,6 +49,7 @@ const handler = async (
         course_name: courseName,
         readable_filename: readableFilename,
         s3_paths: s3_filepath,
+        force_embeddings: forceEmbeddings,
       }),
     })
 
@@ -65,4 +67,4 @@ const handler = async (
   }
 }
 
-export default handler
+export default withCourseOwnerOrAdminAccess()(handler)

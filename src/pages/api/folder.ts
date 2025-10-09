@@ -1,10 +1,13 @@
-import { NextApiRequest, NextApiResponse } from 'next'
+import { type NextApiResponse } from 'next'
+import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { db, folders } from '~/db/dbClient'
-import { FolderInterface, FolderWithConversation } from '@/types/folder'
-import { Database } from 'database.types'
-import { convertDBToChatConversation, DBConversation } from './conversation'
-import { NewFolders, Folders } from '~/db/schema'
-import { eq, desc } from 'drizzle-orm'
+import { type FolderWithConversation } from '@/types/folder'
+import { type Database } from 'database.types'
+import { convertDBToChatConversation } from './conversation'
+import { type NewFolders } from '~/db/schema'
+import { eq, desc, and } from 'drizzle-orm'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
+
 
 type Folder = Database['public']['Tables']['folders']['Row']
 
@@ -25,6 +28,8 @@ export function convertDBFolderToChatFolder(
   }
 }
 
+export default withCourseAccessFromRequest('any')(handler)
+
 export function convertChatFolderToDBFolder(
   folder: FolderWithConversation,
   email: string,
@@ -39,21 +44,21 @@ export function convertChatFolderToDBFolder(
   }
 }
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const { method } = req
+  const user_email = req.user?.email as string | undefined
+  if (!user_email) {
+    res.status(400).json({ error: 'No valid email address in token' })
+    return
+  }
 
   switch (method) {
     case 'POST':
       const {
         folder,
-        email,
-      }: { folder: FolderWithConversation; email: string } = req.body
+      }: { folder: FolderWithConversation; } = req.body
       //   Convert folder to DB type
-      const dbFolder = convertChatFolderToDBFolder(folder, email)
+      const dbFolder = convertChatFolderToDBFolder(folder, user_email)
 
       try {
         // Insert or update folder using DrizzleORM
@@ -66,25 +71,21 @@ export default async function handler(
               name: dbFolder.name,
               type: dbFolder.type,
               user_email: dbFolder.user_email,
-              updated_at: new Date()
-            }
-          });
+              updated_at: new Date(),
+            },
+          })
 
         res.status(200).json({ message: 'Folder saved successfully' })
       } catch (error) {
         console.error('Error saving folder:', error)
-        res.status(500).json({ error: `Failed to save folder: ${error instanceof Error ? error.message : String(error)}` })
+        res.status(500).json({
+          error: `Failed to save folder: ${error instanceof Error ? error.message : String(error)}`,
+        })
       }
       break
 
     case 'GET':
-      const { user_email } = req.query
       try {
-        if (!user_email || typeof user_email !== 'string') {
-          res.status(400).json({ error: 'No valid email address provided' })
-          return
-        }
-
         // Query folders and their related conversations and messages using DrizzleORM
         const fetchedFolders = await db.query.folders.findMany({
           where: eq(folders.user_email, user_email),
@@ -104,9 +105,9 @@ export default async function handler(
                     final_prompt_engineered_message: true,
                     response_time_sec: true,
                     conversation_id: true,
-                    created_at: true
-                  }
-                }
+                    created_at: true,
+                  },
+                },
               },
               columns: {
                 id: true,
@@ -116,25 +117,28 @@ export default async function handler(
                 temperature: true,
                 folder_id: true,
                 user_email: true,
-                project_name: true
-              }
-            }
-          }
-        });
+                project_name: true,
+              },
+            },
+          },
+        })
 
         // Convert the fetched data to match the expected format
-        const formattedFolders = fetchedFolders.map(folder => {
-          const conversations = folder.conversations || [];
+        const formattedFolders = fetchedFolders.map((folder) => {
+          const conversations = folder.conversations || []
           // Convert Date objects to ISO strings before passing to convertDBFolderToChatFolder
           const folderWithStringDates = {
             ...folder,
             created_at: folder.created_at.toISOString(),
-            updated_at: folder.updated_at?.toISOString() || null
-          };
-          return convertDBFolderToChatFolder(folderWithStringDates, conversations);
-        });
+            updated_at: folder.updated_at?.toISOString() || null,
+          }
+          return convertDBFolderToChatFolder(
+            folderWithStringDates,
+            conversations,
+          )
+        })
 
-        res.status(200).json(formattedFolders);
+        res.status(200).json(formattedFolders)
       } catch (error) {
         res.status(500).json({ error: 'Error fetching folders' })
         console.error('Error fetching folders:', error)
@@ -146,11 +150,25 @@ export default async function handler(
       }
       try {
         // Delete folder
-        await db
-          .delete(folders)
-          .where(eq(folders.id, deletedFolderId))
-        
-        res.status(200).json({ message: 'Folder deleted successfully' })
+        if (deletedFolderId && user_email) {
+          const deleted = await db.delete(folders).where(
+            and(
+              eq(folders.id, deletedFolderId),
+              eq(folders.user_email, user_email),
+            ),
+          )
+          .returning({ id: folders.id });
+
+          if (deleted.length === 0) {
+            return res.status(403).json({ error: 'Not allowed to delete this folder' });
+          }
+          res.status(200).json({ message: 'Folder deleted successfully' })
+        } else {
+          res
+            .status(400)
+            .json({ error: 'Invalid user email or invalid request parameters' })
+          return
+        }
       } catch (error) {
         res.status(500).json({ error: 'Error deleting folder' })
         console.error('Error deleting folder:', error)

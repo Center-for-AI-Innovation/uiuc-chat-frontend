@@ -38,11 +38,11 @@ export const getKeycloakBaseUrl = () => {
 }
 
 // backend
-export function getKeycloakBaseFromHost(hostname: string, protocol: string): string {
+export function getKeycloakBaseFromHost(hostname: string|undefined): string {
   if (process.env.NEXT_PUBLIC_KEYCLOAK_URL && process.env.NEXT_PUBLIC_KEYCLOAK_URL.trim() !== '') {
     return process.env.NEXT_PUBLIC_KEYCLOAK_URL;
   }
   if (hostname === 'localhost') return 'http://localhost:55612/auth/';
   if (hostname === 'uiuc.chat') return 'https://login.uiuc.chat/';
-  return `${protocol}://${hostname}/keycloak/`;
+  return `https://${hostname}/keycloak/`;
 }

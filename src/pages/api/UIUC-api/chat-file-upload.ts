@@ -1,8 +1,14 @@
-import { NextApiRequest, NextApiResponse } from 'next'
-import { db, conversations as conversationsTable, fileUploads } from '~/db/dbClient'
+import { type NextApiResponse } from 'next'
+import { type AuthenticatedRequest } from '~/utils/authMiddleware'
+import {
+  db,
+  conversations as conversationsTable,
+  fileUploads,
+} from '~/db/dbClient'
 import { v4 as uuidv4 } from 'uuid'
 import { getBackendUrl } from '~/utils/apiUtils'
 import { eq } from 'drizzle-orm'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
 type ChatFileUploadResponse = {
   success?: boolean
@@ -14,7 +20,7 @@ type ChatFileUploadResponse = {
 }
 
 const handler = async (
-  req: NextApiRequest,
+  req: AuthenticatedRequest,
   res: NextApiResponse<ChatFileUploadResponse>,
 ) => {
   try {
@@ -25,8 +31,15 @@ const handler = async (
       })
     }
 
-    const { conversationId, courseName, user_id, s3Key, fileName, fileType, model } =
-      req.body
+    const {
+      conversationId,
+      courseName,
+      user_id,
+      s3Key,
+      fileName,
+      fileType,
+      model,
+    } = req.body
 
     // Validate required parameters
     if (!conversationId || !courseName || !user_id || !s3Key || !fileName) {
@@ -39,7 +52,10 @@ const handler = async (
 
     // 1. Verify conversation exists
     const existingConv = await db
-      .select({ id: conversationsTable.id, user_email: conversationsTable.user_email })
+      .select({
+        id: conversationsTable.id,
+        user_email: conversationsTable.user_email,
+      })
       .from(conversationsTable)
       .where(eq(conversationsTable.id, conversationId))
       .limit(1)
@@ -101,28 +117,21 @@ const handler = async (
     const backendUrl = getBackendUrl()
     //const backendUrl = 'http://localhost:8000';
 
-    const response = await fetch(
-      //'https://flask-production-751b.up.railway.app/process-chat-file',
-      //'http://localhost:8000/process-chat-file',
-      //'https://flask-pr-316.up.railway.app/process-chat-file',
-      //`${process.env.RAILWAY_URL}/process-chat-file`,
-      `${backendUrl}/process-chat-file`,
-      {
-        method: 'POST',
-        headers: {
-          Accept: '*/*',
-          'Accept-Encoding': 'gzip, deflate',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          conversation_id: conversationId,
-          s3_path: s3_filepath,
-          readable_filename: fileName,
-          user_id: userEmail,
-          course_name: courseName,
-        }),
+    const response = await fetch(`${backendUrl}/process-chat-file`, {
+      method: 'POST',
+      headers: {
+        Accept: '*/*',
+        'Accept-Encoding': 'gzip, deflate',
+        'Content-Type': 'application/json',
       },
-    )
+      body: JSON.stringify({
+        conversation_id: conversationId,
+        s3_path: s3_filepath,
+        readable_filename: fileName,
+        user_id: userEmail,
+        course_name: courseName,
+      }),
+    })
 
     if (!response.ok) {
       console.error(
@@ -186,4 +195,4 @@ const handler = async (
   }
 }
 
-export default handler
+export default withCourseAccessFromRequest('any')(handler)

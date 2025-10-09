@@ -35,6 +35,7 @@ export const fetchImageDescription = async (
   // Construct the body for the chat API request
   const imageBody: ImageBody = {
     contentArray,
+    course_name,
     llmProviders: llmProviders,
     model: updatedConversation.model,
   }

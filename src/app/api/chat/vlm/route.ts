@@ -1,14 +1,16 @@
+import { createOpenAI } from '@ai-sdk/openai'
 import { generateText, streamText } from 'ai'
 import { NextResponse } from 'next/server'
-import { createOpenAI } from '@ai-sdk/openai'
 import { convertConversationToCoreMessagesWithoutSystem } from '~/utils/apiUtils'
+import { type AuthenticatedRequest } from '~/utils/appRouterAuth'
+import { withCourseAccessFromRequest } from '~/app/api/authorization'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 export const revalidate = 0
 
-export async function POST(req: Request) {
+async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
   try {
     const { conversation, stream } = await req.json()
 
@@ -31,7 +33,11 @@ export async function POST(req: Request) {
         temperature: conversation.temperature,
         messages,
       })
-      return result.toTextStreamResponse()
+      const response = result.toTextStreamResponse()
+      return new NextResponse(response.body, {
+        status: response.status,
+        headers: response.headers,
+      })
     } else {
       const result = await generateText({
         model: openai(conversation.model.id) as any,
@@ -54,3 +60,5 @@ export async function POST(req: Request) {
     }
   }
 }
+
+export const POST = withCourseAccessFromRequest('any')(handler)

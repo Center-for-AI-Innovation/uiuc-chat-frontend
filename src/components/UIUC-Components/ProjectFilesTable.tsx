@@ -46,7 +46,7 @@ import {
   useGetDocumentGroups,
   useRemoveFromDocGroup,
 } from '~/hooks/docGroupsQueries'
-import { handleExport } from '~/pages/api/UIUC-api/exportAllDocuments'
+import handleExport from '~/pages/util/handleExport'
 import { fetchPresignedUrl } from '~/utils/apiUtils'
 import { LoadingSpinner } from './LoadingSpinner'
 import { showToastOnUpdate } from './MakeQueryAnalysisPage'
