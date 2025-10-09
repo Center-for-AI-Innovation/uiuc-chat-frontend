@@ -43,6 +43,7 @@ import HomeContext from '~/pages/api/home/home.context'
 import { fetchPresignedUrl } from '~/utils/apiUtils'
 import { CodeBlock } from '../Markdown/CodeBlock'
 import { MemoizedReactMarkdown } from '../Markdown/MemoizedReactMarkdown'
+import { generateSecureKey } from '~/utils/cryptoRandom'
 import { LoadingSpinner } from '../UIUC-Components/LoadingSpinner'
 import SourcesSidebar from '../UIUC-Components/SourcesSidebar'
 import { ImagePreview } from './ImagePreview'
@@ -1225,7 +1226,7 @@ export const ChatMessage = memo(
 
                   return !inline ? (
                     <CodeBlock
-                      key={Math.random()}
+                      key={generateSecureKey()}
                       language={(match && match[1]) || ''}
                       value={String(children).replace(/\n$/, '')}
                       style={{
