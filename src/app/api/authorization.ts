@@ -30,7 +30,7 @@ export function hasCourseAccess(
   courseMetadata: CourseMetadata,
 ): boolean {
   // Check if user is admin
-  if (user.realm_access?.roles?.includes('admin')) {
+  if (courseMetadata.course_admins?.includes(user.email)) {
     return true
   }
 
@@ -173,7 +173,7 @@ export function withCourseAccessFromRequest(
         // Check specific access level
         if (
           requiredAccess === 'admin' &&
-          !req.user.realm_access?.roles?.includes('admin')
+          !courseMetadata.course_admins?.includes(req.user.email)
         ) {
           return new NextResponse(
             JSON.stringify({
