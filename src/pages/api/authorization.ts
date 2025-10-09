@@ -229,61 +229,6 @@ export function withCourseOwnerOrAdminAccess() {
   }
 }
 
-// Middleware that allows unauthenticated access for public courses
-export function withPublicCourseAccess() {
-  return function (
-    handler: (
-      req: AuthenticatedRequest,
-      res: NextApiResponse,
-    ) => Promise<void> | void,
-  ) {
-    return async (req: AuthenticatedRequest, res: NextApiResponse) => {
-      const courseName = extractCourseName(req)
-      if (!courseName) {
-        return res.status(400).json({
-          error: 'Course name required',
-          message:
-            'Course name must be provided in query params, body, or headers',
-        })
-      }
-
-      // Get course metadata
-      const courseMetadata = await getCourseMetadata(courseName)
-      if (!courseMetadata) {
-        return res.status(404).json({
-          error: 'Course not found',
-          message: `Course '${courseName}' does not exist`,
-        })
-      }
-
-      // For public courses, allow unauthenticated access
-      if (!courseMetadata.is_private) {
-        // Add course context to request
-        req.courseName = courseName
-        return await handler(req, res)
-      }
-
-      // For private courses, require authentication
-      if (!req.user) {
-        return res.status(401).json({ error: 'User not authenticated' })
-      }
-
-      // Check if user has access to the private course
-      if (!hasCourseAccess(req.user, courseMetadata)) {
-        return res.status(403).json({
-          error: 'Access denied',
-          message: `You don't have access to course '${courseName}'`,
-        })
-      }
-
-      // Add course context to request
-      req.courseName = courseName
-
-      return await handler(req, res)
-    }
-  }
-}
-
 // Utility function to extract course name from request (query params, body, or headers)
 export function extractCourseName(req: NextApiRequest): string | null {
   // Try to get course name from various sources
@@ -343,11 +288,7 @@ export function withCourseAccessFromRequest(
       res: NextApiResponse,
     ) => Promise<void> | void,
   ) {
-    return withAuth(async (req: AuthenticatedRequest, res: NextApiResponse) => {
-      if (!req.user) {
-        return res.status(401).json({ error: 'User not authenticated' })
-      }
-
+    return async (req: AuthenticatedRequest, res: NextApiResponse) => {
       // Extract course name from request
       const courseName = extractCourseName(req)
       if (!courseName) {
@@ -367,21 +308,40 @@ export function withCourseAccessFromRequest(
         })
       }
 
-      // Determine required access for this HTTP method
-      const method = (req.method || 'GET').toUpperCase() as Method
-      const requiredLevel: AccessLevel =
-        typeof access === 'string' ? access : (access[method] ?? 'any')
-
-      // Check access
-      if (!hasAccessForLevel(requiredLevel, req.user, courseMetadata)) {
-        const label = requiredLevel
-        return res.status(403).json({
-          error: 'Access denied',
-          message: `This ${method} action requires ${label} access to course '${courseName}'`,
-        })
+      // For public courses, allow unauthenticated access
+      if (!courseMetadata.is_private) {
+        // Add course context to request
+        req.courseName = courseName
+        return await handler(req, res)
       }
 
-      return handler(req, res)
-    })
+      // For private courses, require authentication and access check
+      return withAuth(
+        async (req: AuthenticatedRequest, res: NextApiResponse) => {
+          if (!req.user) {
+            return res.status(401).json({ error: 'User not authenticated' })
+          }
+
+          // Determine required access for this HTTP method
+          const method = (req.method || 'GET').toUpperCase() as Method
+          const requiredLevel: AccessLevel =
+            typeof access === 'string' ? access : (access[method] ?? 'any')
+
+          // Check access
+          if (!hasAccessForLevel(requiredLevel, req.user, courseMetadata)) {
+            const label = requiredLevel
+            return res.status(403).json({
+              error: 'Access denied',
+              message: `This ${method} action requires ${label} access to course '${courseName}'`,
+            })
+          }
+
+          // Add course context to request
+          req.courseName = courseName
+
+          return await handler(req, res)
+        },
+      )(req, res)
+    }
   }
 }

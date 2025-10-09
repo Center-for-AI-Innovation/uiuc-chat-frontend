@@ -123,31 +123,6 @@ export function withCourseAccessFromRequest(
         )
       }
 
-      // Check if course is private
-      if (courseMetadata.is_private) {
-        // Private course - require authentication
-        if (!req.user) {
-          return new NextResponse(
-            JSON.stringify({ error: 'User not authenticated' }),
-            { status: 401 },
-          )
-        }
-
-        // Check course access
-        if (!hasCourseAccess(req.user, courseMetadata)) {
-          return new NextResponse(
-            JSON.stringify({
-              error: 'Access denied',
-              message: `You don't have access to course '${courseName}'`,
-            }),
-            { status: 403 },
-          )
-        }
-      } else {
-        // Public course - allow unauthenticated access
-        // No additional checks needed
-      }
-
       // Determine required access level for this request
       const method = req.method as
         | 'GET'
@@ -160,118 +135,68 @@ export function withCourseAccessFromRequest(
       const requiredAccess =
         typeof access === 'string' ? access : access[method] || 'any'
 
-      // If access level is 'any', no further checks needed
-      if (requiredAccess === 'any') {
-        // Attach course context for downstream handler
-        ;(req as any).courseName = courseName
-        return handler(req)
-      }
-
-      // For 'admin' or 'owner' access, require authentication
-      if (!req.user) {
-        return new NextResponse(
-          JSON.stringify({ error: 'User not authenticated' }),
-          { status: 401 },
-        )
-      }
-
-      // Check specific access level
-      if (
-        requiredAccess === 'admin' &&
-        !req.user.realm_access?.roles?.includes('admin')
-      ) {
-        return new NextResponse(
-          JSON.stringify({
-            error: 'Access denied',
-            message: 'This action requires admin access',
-          }),
-          { status: 403 },
-        )
-      }
-
-      if (
-        requiredAccess === 'owner' &&
-        req.user.email !== courseMetadata.course_owner
-      ) {
-        return new NextResponse(
-          JSON.stringify({
-            error: 'Access denied',
-            message: 'This action requires course owner access',
-          }),
-          { status: 403 },
-        )
-      }
-
-      // Attach course context for downstream handler
-      ;(req as any).courseName = courseName
-
-      return handler(req)
-    }
-  }
-}
-
-// Middleware that allows unauthenticated access for public courses
-export function withPublicCourseAccess() {
-  return function (
-    handler: (
-      req: AuthenticatedRequest,
-    ) => Promise<NextResponse> | NextResponse,
-  ) {
-    return async (req: AuthenticatedRequest) => {
-      const courseName = await extractCourseName(req)
-      if (!courseName) {
-        return new NextResponse(
-          JSON.stringify({
-            error: 'Course name required',
-            message:
-              'Course name must be provided in query params, body, or headers',
-          }),
-          { status: 400 },
-        )
-      }
-
-      // Get course metadata
-      const courseMetadata = await getCourseMetadata(courseName)
-      if (!courseMetadata) {
-        return new NextResponse(
-          JSON.stringify({
-            error: 'Course not found',
-            message: `Course '${courseName}' does not exist`,
-          }),
-          { status: 404 },
-        )
-      }
-
-      // For public courses, allow unauthenticated access
-      if (!courseMetadata.is_private) {
+      // For public courses, allow unauthenticated access if access level is 'any'
+      if (!courseMetadata.is_private && requiredAccess === 'any') {
         // Add course context to request
         ;(req as any).courseName = courseName
         return await handler(req)
       }
 
-      // For private courses, require authentication
-      if (!req.user) {
-        return new NextResponse(
-          JSON.stringify({ error: 'User not authenticated' }),
-          { status: 401 },
-        )
-      }
+      // For private courses or higher access levels, require authentication
+      return withAppRouterAuth(async (req: AuthenticatedRequest) => {
+        if (!req.user) {
+          return new NextResponse(
+            JSON.stringify({ error: 'User not authenticated' }),
+            { status: 401 },
+          )
+        }
 
-      // Check if user has access to the private course
-      if (!hasCourseAccess(req.user, courseMetadata)) {
-        return new NextResponse(
-          JSON.stringify({
-            error: 'Access denied',
-            message: `You don't have access to course '${courseName}'`,
-          }),
-          { status: 403 },
-        )
-      }
+        // Check course access for private courses
+        if (
+          courseMetadata.is_private &&
+          !hasCourseAccess(req.user, courseMetadata)
+        ) {
+          return new NextResponse(
+            JSON.stringify({
+              error: 'Access denied',
+              message: `You don't have access to course '${courseName}'`,
+            }),
+            { status: 403 },
+          )
+        }
 
-      // Add course context to request
-      ;(req as any).courseName = courseName
+        // Check specific access level
+        if (
+          requiredAccess === 'admin' &&
+          !req.user.realm_access?.roles?.includes('admin')
+        ) {
+          return new NextResponse(
+            JSON.stringify({
+              error: 'Access denied',
+              message: 'This action requires admin access',
+            }),
+            { status: 403 },
+          )
+        }
 
-      return await handler(req)
+        if (
+          requiredAccess === 'owner' &&
+          req.user.email !== courseMetadata.course_owner
+        ) {
+          return new NextResponse(
+            JSON.stringify({
+              error: 'Access denied',
+              message: 'This action requires course owner access',
+            }),
+            { status: 403 },
+          )
+        }
+
+        // Add course context to request
+        ;(req as any).courseName = courseName
+
+        return await handler(req)
+      })(req)
     }
   }
 }

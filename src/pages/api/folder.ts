@@ -6,7 +6,7 @@ import { type Database } from 'database.types'
 import { convertDBToChatConversation } from './conversation'
 import { type NewFolders } from '~/db/schema'
 import { eq, desc, and } from 'drizzle-orm'
-import { withPublicCourseAccess } from '~/pages/api/authorization'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 import { getUserIdentifier } from '~/pages/api/_utils/userIdentifier'
 
 type Folder = Database['public']['Tables']['folders']['Row']
@@ -28,7 +28,7 @@ export function convertDBFolderToChatFolder(
   }
 }
 
-export default withPublicCourseAccess()(handler)
+export default withCourseAccessFromRequest('any')(handler)
 
 export function convertChatFolderToDBFolder(
   folder: FolderWithConversation,

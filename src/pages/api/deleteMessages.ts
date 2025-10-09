@@ -6,7 +6,7 @@ import {
   messages,
 } from '~/db/dbClient'
 import { and, inArray, sql } from 'drizzle-orm'
-import { withPublicCourseAccess } from '~/pages/api/authorization'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 import { getUserIdentifier } from '~/pages/api/_utils/userIdentifier'
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
@@ -69,4 +69,4 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   }
 }
 
-export default withPublicCourseAccess()(handler)
+export default withCourseAccessFromRequest('any')(handler)

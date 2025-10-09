@@ -6,7 +6,7 @@ import { RunTree } from 'langsmith'
 import { sanitizeForLogging } from '@/utils/sanitization'
 import { llmConvoMonitor } from '~/db/schema'
 import { getBackendUrl } from '~/utils/apiUtils'
-import { withPublicCourseAccess } from '~/pages/api/authorization'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
 export const config = {
   api: {
@@ -150,4 +150,4 @@ const logConversation = async (
   return res.status(200).json({ success: true })
 }
 
-export default withPublicCourseAccess()(logConversation)
+export default withCourseAccessFromRequest('any')(logConversation)
