@@ -18,6 +18,7 @@ export async function handleFunctionCall(
   imageDescription: string,
   selectedConversation: Conversation,
   openaiKey: string,
+  course_name: string,
   base_url?: string,
 ): Promise<UIUCTool[]> {
   try {
@@ -38,6 +39,7 @@ export async function handleFunctionCall(
         imageUrls: imageUrls,
         imageDescription: imageDescription,
         openaiKey: openaiKey,
+        course_name: course_name,
       }),
     })
 
@@ -207,6 +209,7 @@ export async function handleToolsServer(
       imageDescription,
       selectedConversation,
       openaiKey,
+      projectName,
       base_url,
     )
 
@@ -542,7 +545,6 @@ export async function fetchTools(
         throw new Error("Failed to fetch Project's N8N API key")
       }
       api_key = await response.json()
-
     } catch (error) {
       console.error('Error fetching N8N API key:', error)
       return []
@@ -564,7 +566,7 @@ export async function fetchTools(
   if (isClientSide) {
     // Client-side: use our API route
     response = await fetch(
-      `/api/UIUC-api/getN8nWorkflows?api_key=${api_key}&limit=${limit}&pagination=${parsedPagination}`,
+      `/api/UIUC-api/getN8nWorkflows?api_key=${api_key}&limit=${limit}&pagination=${parsedPagination}&course_name=${course_name}`,
     )
   } else {
     // Server-side: use direct backend call
