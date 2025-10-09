@@ -215,7 +215,7 @@ const ChatPage: NextPage = () => {
       {!isLoading &&
         !auth.isLoading &&
         router.isReady &&
-        (currentEmail !== undefined || !courseMetadata?.is_private) &&
+        currentEmail !== undefined &&
         courseMetadata && (
           <Home
             current_email={currentEmail || ''}
