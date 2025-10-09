@@ -1,7 +1,8 @@
 import {
   type QueryClient,
   useInfiniteQuery,
-  useMutation, useQuery,
+  useMutation,
+  useQuery,
 } from '@tanstack/react-query'
 import { type Conversation, type ConversationPage } from '~/types/chat'
 import { type FolderWithConversation } from '~/types/folder'
@@ -10,7 +11,7 @@ import {
   deleteConversationFromServer,
   fetchConversationHistory,
   saveConversationToServer,
-  fetchLastConversation
+  fetchLastConversation,
 } from '~/utils/app/conversation'
 
 export function useFetchConversationHistory(
@@ -19,36 +20,43 @@ export function useFetchConversationHistory(
   courseName: string | undefined,
 ) {
   // Ensure searchTerm is initialized even if undefined
-  const normalizedSearchTerm = searchTerm || '';
-  
-  // Move the type checking outside of Boolean to handle each case explicitly
-  const isValidEmail = typeof user_email === 'string' && user_email.length > 0
+  const normalizedSearchTerm = searchTerm || ''
+
+  // For public courses, allow unauthenticated access
   const isValidCourse = typeof courseName === 'string' && courseName.length > 0
-  const isEnabled = isValidEmail && isValidCourse
+  const isEnabled = isValidCourse // Remove email requirement for public courses
 
   return useInfiniteQuery({
     queryKey: ['conversationHistory', courseName, normalizedSearchTerm],
     queryFn: ({ pageParam = 0 }) => {
       // Additional runtime check to prevent invalid calls
-      if (!isValidEmail || !isValidCourse) {
-        throw new Error('Invalid email or course name');
+      if (!isValidCourse) {
+        throw new Error('Invalid course name')
       }
-      return fetchConversationHistory(normalizedSearchTerm, courseName!, pageParam);
+      return fetchConversationHistory(
+        normalizedSearchTerm,
+        courseName!,
+        pageParam,
+        user_email,
+      )
     },
     initialPageParam: 0,
     enabled: isEnabled,
     getNextPageParam: (lastPage: ConversationPage | undefined) => {
-      if (!lastPage) return null;
-      return lastPage.nextCursor ?? null;
+      if (!lastPage) return null
+      return lastPage.nextCursor ?? null
     },
     refetchInterval: 20_000,
   })
 }
 
-export function useFetchLastConversation(courseName: string) {
+export function useFetchLastConversation(
+  courseName: string,
+  userEmail?: string,
+) {
   return useQuery<Conversation | null>({
-    queryKey: ['lastConversation', courseName],
-    queryFn: () => fetchLastConversation(courseName),
+    queryKey: ['lastConversation', courseName, userEmail],
+    queryFn: () => fetchLastConversation(courseName, userEmail),
     enabled: !!courseName, // don’t run until courseName is truthy
   })
 }
@@ -197,7 +205,11 @@ export function useDeleteConversation(
   return useMutation({
     mutationKey: ['deleteConversation', user_email, course_name],
     mutationFn: async (deleteConversation: Conversation) =>
-      deleteConversationFromServer(deleteConversation.id, course_name),
+      deleteConversationFromServer(
+        deleteConversation.id,
+        course_name,
+        deleteConversation.userEmail || user_email,
+      ),
     onMutate: async (deletedConversation: Conversation) => {
       // Step 1: Cancel the query to prevent it from refetching
       await queryClient.cancelQueries({
@@ -268,7 +280,7 @@ export function useDeleteAllConversations(
   return useMutation({
     mutationKey: ['deleteAllConversations', user_email, course_name],
     mutationFn: async () =>
-      deleteAllConversationsFromServer(course_name),
+      deleteAllConversationsFromServer(course_name, user_email),
     onMutate: async () => {
       // Step 1: Cancel the query to prevent it from refetching
       await queryClient.cancelQueries({
