@@ -44,6 +44,11 @@ export function hasCourseAccess(
     return true
   }
 
+  // check if all logged in users have access
+  if (courseMetadata.allow_logged_in_users) {
+    return true
+  }
+
   return false
 }
 
