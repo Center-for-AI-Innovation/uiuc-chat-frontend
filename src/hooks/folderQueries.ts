@@ -1,8 +1,4 @@
-import {
-  type QueryClient,
-  useMutation,
-  useQuery,
-} from '@tanstack/react-query'
+import { type QueryClient, useMutation, useQuery } from '@tanstack/react-query'
 import {
   type FolderInterface,
   type FolderWithConversation,
@@ -18,7 +14,8 @@ import {
 export function useFetchFolders(user_email: string, course_name: string) {
   return useQuery({
     queryKey: ['folders', course_name],
-    queryFn: async () => (user_email ? fetchFolders(course_name) : []),
+    queryFn: async () =>
+      user_email ? fetchFolders(course_name, user_email) : [],
     enabled: !!user_email,
     refetchInterval: 20_000,
   })
@@ -32,14 +29,15 @@ export function useCreateFolder(
   return useMutation({
     mutationKey: ['createFolder', user_email, course_name],
     mutationFn: async (newFolder: FolderWithConversation) =>
-      saveFolderToServer(newFolder, course_name),
+      saveFolderToServer(newFolder, course_name, user_email),
     onMutate: async (newFolder: FolderWithConversation) => {
       await queryClient.cancelQueries({ queryKey: ['folders', course_name] })
 
       queryClient.setQueryData(
         ['folders', course_name],
-        (oldData: FolderInterface[]) => {
-          return [newFolder, ...oldData]
+        (oldData: FolderInterface[] | undefined) => {
+          const safeOld = Array.isArray(oldData) ? oldData : []
+          return [newFolder, ...safeOld]
         },
       )
 
@@ -68,14 +66,15 @@ export function useUpdateFolder(
   return useMutation({
     mutationKey: ['updateFolder', user_email, course_name],
     mutationFn: async (folder: FolderWithConversation) =>
-      saveFolderToServer(folder, course_name),
+      saveFolderToServer(folder, course_name, user_email),
     onMutate: async (updatedFolder: FolderWithConversation) => {
       await queryClient.cancelQueries({ queryKey: ['folders', course_name] })
 
       queryClient.setQueryData(
         ['folders', course_name],
-        (oldData: FolderWithConversation[]) => {
-          return oldData.map((f: FolderWithConversation) => {
+        (oldData: FolderWithConversation[] | undefined) => {
+          const safeOld = Array.isArray(oldData) ? oldData : []
+          return safeOld.map((f: FolderWithConversation) => {
             if (f.id === updatedFolder.id) {
               return updatedFolder
             }
@@ -112,14 +111,15 @@ export function useDeleteFolder(
   return useMutation({
     mutationKey: ['deleteFolder', user_email, course_name],
     mutationFn: async (deletedFolder: FolderWithConversation) =>
-      deleteFolderFromServer(deletedFolder, course_name),
+      deleteFolderFromServer(deletedFolder, course_name, user_email),
     onMutate: async (deletedFolder: FolderWithConversation) => {
       await queryClient.cancelQueries({ queryKey: ['folders', course_name] })
 
       queryClient.setQueryData(
         ['folders', course_name],
-        (oldData: FolderWithConversation[]) => {
-          return oldData.filter(
+        (oldData: FolderWithConversation[] | undefined) => {
+          const safeOld = Array.isArray(oldData) ? oldData : []
+          return safeOld.filter(
             (f: FolderWithConversation) => f.id !== deletedFolder.id,
           )
         },
