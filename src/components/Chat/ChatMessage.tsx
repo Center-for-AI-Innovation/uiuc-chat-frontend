@@ -995,13 +995,10 @@ export const ChatMessage = memo(
             pageNumber = '#' + hashPart
           }
 
-          // Only process S3 URLs
+          // Only process presigned URLs
           try {
             const url = new URL(baseUrl)
-            if (
-              !url.hostname.includes('s3') &&
-              !url.hostname.includes('amazonaws')
-            ) {
+            if (!url.searchParams.has('X-Amz-Signature')) {
               continue
             }
 
@@ -1051,7 +1048,9 @@ export const ChatMessage = memo(
 
         // Is it actually an S3 presigned link?
         const isS3Presigned = urlObject.searchParams.has('X-Amz-Signature')
+
         if (!isS3Presigned) {
+          // Not a presigned URL; nothing to refresh
           return originalLink
         }
 
@@ -1406,15 +1405,44 @@ export const ChatMessage = memo(
       const isValidCitation =
         isCitationByTitle || isCitationByContent || isOldFormatCitation
 
+      const [currentHref, setCurrentHref] = useState<string | undefined>(href)
+
       const handleClick = useCallback(
-        (e: React.MouseEvent) => {
+        async (e: React.MouseEvent) => {
           e.stopPropagation()
           e.preventDefault()
-          if (href) {
-            window.open(href, '_blank')?.focus()
+
+          const targetHref = currentHref || href
+          if (!targetHref) return
+
+          try {
+            // Preserve any hash (e.g., #page=12)
+            const parts = targetHref.split('#')
+            const base = parts[0] ?? targetHref
+            const hash = parts.length > 1 ? parts.slice(1).join('#') : undefined
+            let finalUrl = targetHref
+
+            // Attempt to refresh expired presigned URLs
+            const urlObj = new URL(base)
+            const isPresigned = urlObj.searchParams.has('X-Amz-Signature')
+
+            if (isPresigned) {
+              const refreshedBase = await refreshS3LinkIfExpired(
+                base,
+                courseName,
+              )
+              finalUrl = hash ? `${refreshedBase}#${hash}` : refreshedBase
+              setCurrentHref(finalUrl)
+            }
+
+            window.open(finalUrl, '_blank')?.focus()
+          } catch (clickErr) {
+            console.error('Failed to open link:', clickErr)
+            // Fallback to original behavior
+            window.open(targetHref, '_blank')?.focus()
           }
         },
-        [href],
+        [currentHref, href],
       )
 
       // Reference to the link element
@@ -1458,7 +1486,7 @@ export const ChatMessage = memo(
 
       const commonProps = {
         id: 'styledLink',
-        href,
+        href: currentHref,
         target: '_blank',
         rel: 'noopener noreferrer',
         onMouseUp: handleClick,
