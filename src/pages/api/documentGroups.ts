@@ -12,7 +12,7 @@ import {
 } from '~/db/dbHelpers'
 
 import { addDocumentsToDocGroupQdrant } from '~/utils/qdrantUtils'
-import { withPublicCourseAccess } from '~/pages/api/authorization'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
 interface RequestBody {
   action:
@@ -179,4 +179,4 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   }
 }
 
-export default withPublicCourseAccess()(handler)
+export default withCourseAccessFromRequest('any')(handler)
