@@ -12,7 +12,19 @@ export async function getCourseMetadata(
   try {
     const redisClient = await ensureRedisConnected()
     const rawMetadata = await redisClient.hGet('course_metadatas', courseName)
-    return rawMetadata ? (JSON.parse(rawMetadata) as CourseMetadata) : null
+    if (!rawMetadata) return null
+    const parsed = JSON.parse(rawMetadata) as CourseMetadata
+
+    // Normalize legacy string booleans to true booleans
+    const meta: any = { ...parsed }
+    if (typeof meta.is_private === 'string') {
+      meta.is_private = meta.is_private.toLowerCase() === 'true'
+    }
+    if (typeof meta.allow_logged_in_users === 'string') {
+      meta.allow_logged_in_users =
+        meta.allow_logged_in_users.toLowerCase() === 'true'
+    }
+    return meta as CourseMetadata
   } catch (error) {
     console.error('Error fetching course metadata:', error)
     return null

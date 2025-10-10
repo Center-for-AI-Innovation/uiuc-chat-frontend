@@ -186,6 +186,15 @@ export async function fetchCourseMetadata(course_name: string): Promise<any> {
         data.course_metadata.is_private.toLowerCase() === 'true'
     }
 
+    // Coerce legacy string values to boolean for allow_logged_in_users
+    if (
+      data.course_metadata &&
+      typeof data.course_metadata.allow_logged_in_users === 'string'
+    ) {
+      data.course_metadata.allow_logged_in_users =
+        data.course_metadata.allow_logged_in_users.toLowerCase() === 'true'
+    }
+
     return data.course_metadata
   } catch (error) {
     console.error('Error fetching course metadata', { course_name, error })

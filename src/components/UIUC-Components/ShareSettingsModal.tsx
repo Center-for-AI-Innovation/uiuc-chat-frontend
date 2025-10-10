@@ -5,6 +5,7 @@ import {
   IconLockOpen,
   IconCopy,
   IconCheck,
+  IconUsers,
 } from '@tabler/icons-react'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import EmailListAccordion from './EmailListAccordion'
@@ -53,6 +54,7 @@ export default function ShareSettingsModal({
 
   // Rest of the modal state
   const isPrivate = metadata?.is_private || false
+  const allowLoggedInUsers = metadata?.allow_logged_in_users || false
   const shareUrl = `${window.location.origin}/${projectName}`
   const [isCopied, setIsCopied] = useState(false)
 
@@ -85,6 +87,23 @@ export default function ShareSettingsModal({
       ['courseMetadata', course_name],
       new_course_metadata,
     )
+  }
+
+  const handleAllowLoggedInUsersChange = async () => {
+    const newValue = !allowLoggedInUsers
+    const updatedMetadata: CourseMetadata = {
+      ...metadata,
+      allow_logged_in_users: newValue,
+    }
+
+    // Update local state immediately
+    setMetadata(updatedMetadata)
+
+    // Update cache immediately
+    queryClient.setQueryData(['courseMetadata', projectName], updatedMetadata)
+
+    // Make API call
+    await callSetCourseMetadata(projectName, updatedMetadata)
   }
 
   /**
@@ -220,6 +239,49 @@ export default function ShareSettingsModal({
                   />
                 </button>)}
 
+              </div>
+            </div>
+
+            {/* Allow logged-in users toggle */}
+            <div className="rounded-lg bg-[--background-faded] p-4 transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                    allowLoggedInUsers ? 'bg-[--dashboard-button]' : 'bg-[--modal]'
+                  }`}>
+                    <IconUsers className={`h-5 w-5 ${
+                      allowLoggedInUsers
+                        ? 'text-[--dashboard-button-foreground]'
+                        : 'text-[--foreground-faded]'
+                    }`} />
+                  </div>
+                  <div>
+                    <p
+                      className={`${montserrat_heading.variable} font-montserratHeading text-sm font-medium`}
+                    >
+                      Allow logged-in users
+                    </p>
+                    <p
+                      className={`${montserrat_paragraph.variable} font-montserratParagraph text-xs`}
+                    >
+                      Any signed-in user can view; only admins can edit
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleAllowLoggedInUsersChange}
+                  className={`relative h-6 w-11 rounded-full transition-colors duration-300 ${
+                    allowLoggedInUsers
+                      ? 'bg-[--dashboard-button]'
+                      : 'bg-[--background-dark]'
+                  }`}
+                >
+                  <span
+                    className={`absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full bg-[--dashboard-button-foreground] shadow-md transition-transform duration-300 ${
+                      allowLoggedInUsers ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
               </div>
             </div>
 
