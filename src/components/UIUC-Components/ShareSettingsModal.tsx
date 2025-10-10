@@ -91,9 +91,12 @@ export default function ShareSettingsModal({
 
   const handleAllowLoggedInUsersChange = async () => {
     const newValue = !allowLoggedInUsers
+    // If enabling the switch, ensure the project becomes private so the setting has effect
+    const shouldForcePrivate = newValue && !isPrivate
     const updatedMetadata: CourseMetadata = {
       ...metadata,
       allow_logged_in_users: newValue,
+      ...(shouldForcePrivate ? { is_private: true } : {}),
     }
 
     // Update local state immediately
@@ -259,7 +262,7 @@ export default function ShareSettingsModal({
                     <p
                       className={`${montserrat_heading.variable} font-montserratHeading text-sm font-medium`}
                     >
-                      Allow logged-in users
+                      Allow any logged in users
                     </p>
                     <p
                       className={`${montserrat_paragraph.variable} font-montserratParagraph text-xs`}
