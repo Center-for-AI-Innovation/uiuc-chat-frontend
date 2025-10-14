@@ -1,5 +1,4 @@
 import posthog from 'posthog-js'
-import { generateAnonymousUserId } from '~/utils/cryptoRandom'
 
 export function createHeaders(userEmail?: string): HeadersInit {
   const headers: HeadersInit = {
@@ -12,7 +11,7 @@ export function createHeaders(userEmail?: string): HeadersInit {
     return headers
   }
 
-  // Fallbacks for first page load or public bots where email may not be ready yet
+  // Fallback only to PostHog distinct id; avoid generating any custom ids
   if (typeof window !== 'undefined') {
     try {
       // Try PostHog distinct id
@@ -23,21 +22,6 @@ export function createHeaders(userEmail?: string): HeadersInit {
       }
     } catch (_) {
       // ignore
-    }
-
-    try {
-      // Use a persisted anonymous id if available
-      let anon = localStorage.getItem('anonymous_user_id') || ''
-      if (!anon || anon.trim() === '') {
-        // Generate and persist an anonymous id to stabilize the identifier across requests
-        anon = generateAnonymousUserId()
-        localStorage.setItem('anonymous_user_id', anon)
-      }
-      if (anon && anon.trim() !== '') {
-        headers['x-posthog-id'] = anon
-      }
-    } catch (_) {
-      // ignore storage errors
     }
   }
 
