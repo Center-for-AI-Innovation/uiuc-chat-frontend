@@ -1,4 +1,4 @@
-FROM node:18-alpine AS builder
+FROM oven/bun:1.3.0-alpine AS builder
 
 WORKDIR /app
 
@@ -7,7 +7,8 @@ RUN apk add --no-cache python3 py3-pip make g++
 
 # Copy package manifests and install all dependencies (including dev)
 COPY package*.json ./
-RUN npm install
+COPY bun.lock ./
+RUN bun install --frozen-lockfile
 
 # Copy over the entire repo
 COPY . .
@@ -35,10 +36,10 @@ ENV NEXT_PUBLIC_POSTHOG_KEY=$NEXT_PUBLIC_POSTHOG_KEY
 ENV NEXT_PUBLIC_POSTHOG_HOST=$NEXT_PUBLIC_POSTHOG_HOST
 
 # Build Next.js production assets
-RUN npm run build:self-hosted
+RUN bun run build:self-hosted
 
 # ---- 2) Runner Stage ----
-FROM node:18-alpine AS runner
+FROM oven/bun:1.3.0-alpine AS runner
 
 WORKDIR /app
 
@@ -58,4 +59,4 @@ ENV NODE_ENV=production
 EXPOSE 3000
 
 # Start Next.js in production mode
-CMD ["npm", "run", "start"]
+CMD ["bun", "run", "start"]
