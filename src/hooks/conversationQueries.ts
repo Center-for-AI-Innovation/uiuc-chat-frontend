@@ -25,7 +25,7 @@ export function useFetchConversationHistory(
   // For public courses, allow unauthenticated access
   const isValidCourse = typeof courseName === 'string' && courseName.length > 0
   const isEnabled = isValidCourse // Remove email requirement for public courses
-  console.log(courseName)
+
   return useInfiniteQuery({
     queryKey: ['conversationHistory', courseName, normalizedSearchTerm],
     queryFn: ({ pageParam = 0 }) => {

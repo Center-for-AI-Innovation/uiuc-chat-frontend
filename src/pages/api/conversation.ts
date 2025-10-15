@@ -568,7 +568,6 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
         })
 
         // Insert messages using DrizzleORM
-        let lastMessageId: string | null = null
         for (const message of dbMessages) {
           if (!isUUID(message.id)) {
             throw new Error(`Invalid UUID for message.id: ${message.id}`)
@@ -593,7 +592,6 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
                 target: messages.id,
                 set: messageForInsert as any,
               })
-            lastMessageId = message.id.toString() // track the last message added
           } catch (error) {
             console.error('Error inserting message to db:', error)
             throw error
@@ -602,7 +600,6 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
 
         res.status(200).json({
           message: 'Conversation saved successfully',
-          lastMessageId: lastMessageId,
         })
       } catch (error) {
         res
