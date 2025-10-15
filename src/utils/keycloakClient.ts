@@ -101,7 +101,7 @@ export function getJwksUri(keycloakBaseUrl: string): string {
 export async function getOpenIdConfig(keycloakBaseUrl: string): Promise<any> {
   try {
     const response = await fetch(
-      `${keycloakBaseUrl}realms/${KEYCLOAK_REALM}/.well-known/openid_configuration`,
+      `${keycloakBaseUrl}realms/${KEYCLOAK_REALM}/.well-known/openid-configuration`,
     )
 
     if (!response.ok) {

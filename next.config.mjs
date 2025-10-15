@@ -18,7 +18,7 @@ const config = {
       sizeLimit: '100mb',
     },
   },
-  webpack(config) {
+  webpack(config, { isServer }) {
     // Merge existing experiments with the required ones
     config.experiments = {
       ...(config.experiments || {}),
@@ -34,6 +34,14 @@ const config = {
         /node_modules\/next\/dist\/build\/webpack\/loaders\/next-middleware-wasm-loader\.js/,
       type: 'webassembly/async',
     })
+
+    // Handle ESM modules that cause issues
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      net: false,
+      tls: false,
+    };
 
     return config
   },
@@ -64,6 +72,7 @@ const config = {
   experimental: {
     esmExternals: false, // To make certain packages work with the /pages router.
   },
+  transpilePackages: ['@aws-sdk/core', '@aws-sdk/client-bedrock-runtime', '@ai-sdk/amazon-bedrock'],
   async headers() {
     return [
       {

@@ -52,21 +52,38 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
   const [isMounted, setIsMounted] = useState(false)
   const [isAuthCallback, setIsAuthCallback] = useState(false)
 
+  // Get configuration directly from environment variables
+  const keycloakUrl = process.env.NEXT_PUBLIC_KEYCLOAK_URL || 'http://localhost:30081/'
+  // Ensure base URL includes '/auth/' segment required by Keycloak
+  const normalizedKeycloakBase = keycloakUrl.endsWith('/auth/')
+    ? keycloakUrl
+    : (keycloakUrl.endsWith('/') ? `${keycloakUrl}auth/` : `${keycloakUrl}/auth/`)
+  const keycloakRealm = process.env.NEXT_PUBLIC_KEYCLOAK_REALM || 'illinois_chat_realm'
+  const keycloakClientId = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'uiuc-chat-client'
+  
+  const authority = `${normalizedKeycloakBase}realms/${keycloakRealm}`
+  console.log('[KeycloakProvider] Using direct config:', { keycloakUrl: normalizedKeycloakBase, keycloakRealm, authority })
+
   const [oidcConfig, setOidcConfig] = useState({
-    authority: (() => {
-      const baseUrl = getKeycloakBaseUrl();
-      const realm = process.env.NEXT_PUBLIC_KEYCLOAK_REALM;
-      const authority = `${baseUrl}realms/${realm}`;
-      console.log('[KeycloakProvider] Constructing authority:', { baseUrl, realm, authority });
-      return authority;
-    })(),
-    client_id: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'uiucchat',
+    authority,
+    client_id: keycloakClientId,
     redirect_uri: '',
     silent_redirect_uri: '',
     post_logout_redirect_uri: '',
     scope: 'openid profile email',
     response_type: 'code',
     loadUserInfo: true,
+    // Provide static metadata to avoid CORS on discovery
+    metadata: {
+      issuer: authority,
+      authorization_endpoint: `${authority}/protocol/openid-connect/auth`,
+      token_endpoint: `${authority}/protocol/openid-connect/token`,
+      userinfo_endpoint: `${authority}/protocol/openid-connect/userinfo`,
+      jwks_uri: `${authority}/protocol/openid-connect/certs`,
+      end_session_endpoint: `${authority}/protocol/openid-connect/logout`,
+      revocation_endpoint: `${authority}/protocol/openid-connect/revoke`,
+      introspection_endpoint: `${authority}/protocol/openid-connect/token/introspect`,
+    },
     onSigninCallback: async () => {
       if (typeof window !== 'undefined') {
         let redirectPath = sessionStorage.getItem('auth_redirect_path') || '/'

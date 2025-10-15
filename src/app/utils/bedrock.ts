@@ -1,6 +1,7 @@
 import type { Conversation } from '~/types/chat'
 import type { BedrockProvider } from '~/utils/modelProviders/LLMProvider'
-import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock'
+// Temporarily disabled due to build issues
+// import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 import { type CoreMessage, generateText, streamText } from 'ai'
 import { NextResponse } from 'next/server'
@@ -25,46 +26,8 @@ export async function runBedrockChat(
       )
     }
 
-    const bedrock = createAmazonBedrock({
-      bedrockOptions: {
-        region: bedrockProvider.region,
-        credentials: {
-          accessKeyId: await decryptKeyIfNeeded(bedrockProvider.accessKeyId),
-          secretAccessKey: await decryptKeyIfNeeded(
-            bedrockProvider.secretAccessKey,
-          ),
-          sessionToken: undefined,
-        },
-      },
-    })
-
-    if (conversation.messages.length === 0) {
-      throw new Error('Conversation messages array is empty')
-    }
-    const commonParams = {
-      model: bedrock(conversation.model.id),
-      messages: convertConversationToBedrockFormat(conversation),
-      temperature: conversation.temperature,
-      maxTokens: 4096,
-      type: 'text-delta' as const,
-      tools: {},
-      toolChoice: undefined,
-    }
-
-    if (stream) {
-      const result = await streamText({
-        ...commonParams,
-        messages: commonParams.messages.map((msg) => ({
-          role: msg.role === 'tool' ? 'tool' : msg.role,
-          content: msg.content,
-        })) as CoreMessage[],
-      })
-      return result.toTextStreamResponse()
-    } else {
-      const result = await generateText(commonParams)
-      const choices = [{ message: { content: result.text } }]
-      return NextResponse.json({ choices })
-    }
+    // Temporarily disabled due to build issues
+    throw new Error('AWS Bedrock functionality temporarily disabled')
   } catch (error) {
     console.error('Error in runBedrockChat:', error)
     throw error
