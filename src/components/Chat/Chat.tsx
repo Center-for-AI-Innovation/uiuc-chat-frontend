@@ -434,7 +434,10 @@ export const Chat = memo(
             key: 'messages',
             value: updatedConversation.messages,
           })
-          updateConversationMutation.mutate(updatedConversation)
+          updateConversationMutation.mutate({
+            conversation: updatedConversation,
+            message: message,
+          })
           homeDispatch({ field: 'loading', value: true })
           homeDispatch({ field: 'messageIsStreaming', value: true })
           const controller = new AbortController()
@@ -1195,7 +1198,25 @@ export const Chat = memo(
                 key: 'messages',
                 value: updatedConversation.messages,
               })
-              updateConversationMutation.mutate(updatedConversation)
+              // Here, we want to persist the full streamed assistant message, not the initial user message.
+              // Retrieve the last message in updatedConversation.messages, which contains the streamed LLM response.
+              const streamedAssistantMessage =
+                updatedConversation.messages?.[
+                  updatedConversation.messages.length - 1
+                ] ?? message
+
+              if (streamedAssistantMessage.role === 'assistant') {
+                updateConversationMutation.mutate({
+                  conversation: updatedConversation,
+                  message: streamedAssistantMessage,
+                })
+              } else {
+                // Fallback: do not trigger mutation if it's not an assistant message
+                console.warn(
+                  'Attempted to persist a non-assistant message after stream:',
+                  streamedAssistantMessage,
+                )
+              }
               console.debug(
                 'updatedConversation after mutation:',
                 updatedConversation,
