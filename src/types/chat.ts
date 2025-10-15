@@ -47,6 +47,22 @@ export interface Message {
   queryRewriteText?: string
 }
 
+export interface ConversationMeta {
+  id: string
+  name: string
+  modelId: string
+  prompt: string
+  temperature: number
+  projectName?: string
+  folderId: string | null
+}
+
+export interface SaveConversationDelta {
+  conversation: ConversationMeta
+  messagesDelta: Message[]
+  earliestEditedMessageId?: string
+}
+
 export type MessageFeedback = {
   isPositive: boolean | null
   category: string | null

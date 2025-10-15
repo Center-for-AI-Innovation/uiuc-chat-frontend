@@ -4,7 +4,7 @@ import {
   useMutation,
   useQuery,
 } from '@tanstack/react-query'
-import { type Conversation, type ConversationPage } from '~/types/chat'
+import { Message, type Conversation, type ConversationPage } from '~/types/chat'
 import { type FolderWithConversation } from '~/types/folder'
 import {
   deleteAllConversationsFromServer,
@@ -25,7 +25,7 @@ export function useFetchConversationHistory(
   // For public courses, allow unauthenticated access
   const isValidCourse = typeof courseName === 'string' && courseName.length > 0
   const isEnabled = isValidCourse // Remove email requirement for public courses
-
+  console.log(courseName)
   return useInfiniteQuery({
     queryKey: ['conversationHistory', courseName, normalizedSearchTerm],
     queryFn: ({ pageParam = 0 }) => {
@@ -69,9 +69,12 @@ export function useUpdateConversation(
   // console.log('useUpdateConversation with user_email: ', user_email)
   return useMutation({
     mutationKey: ['updateConversation', user_email, course_name],
-    mutationFn: async (conversation: Conversation) =>
-      saveConversationToServer(conversation, course_name),
-    onMutate: async (updatedConversation: Conversation) => {
+    mutationFn: async (vars: {
+      conversation: Conversation
+      message: Message | null
+    }) =>
+      saveConversationToServer(vars.conversation, course_name, vars.message),
+    onMutate: async ({ conversation: updatedConversation }) => {
       // console.log('Mutation from useUpdateConversation: ', updatedConversation)
       // A mutation is about to happen!
       // Optimistically update the conversation
