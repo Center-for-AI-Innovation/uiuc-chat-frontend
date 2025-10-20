@@ -38,7 +38,6 @@ import {
 } from '~/utils/modelProviders/LLMProvider'
 import { buildPrompt } from '~/app/utils/buildPromptUtils'
 import { type AuthContextProps } from 'react-oidc-context'
-import { selectBestTemperature } from '~/components/Chat/Temperature'
 
 /**
  * The chat API endpoint for handling chat requests and streaming/non streaming responses.
@@ -202,11 +201,18 @@ export default async function chat(
   let searchQuery = constructSearchQuery(messages)
   let imgDesc = ''
 
-  const selectedConversationString = localStorage.getItem('selectedConversation')
-  let selectedConversation: Conversation | undefined = undefined
-  if (selectedConversationString) {
-      selectedConversation = JSON.parse(selectedConversationString)
-  }
+  const defaultModel = Object.values(llmProviders)
+    .filter((provider) => provider.enabled)
+    .flatMap((provider) => provider.models || [])
+    .find((model) => model.default)
+
+  // if temperature in the body is set as undefined; use the default model temperature
+  const chatFinalTemperature = temperature !== undefined
+        ? temperature
+        : (defaultModel?.temperature !== undefined
+          ? defaultModel.temperature
+          : 0.1)
+  console.log(chatFinalTemperature);
 
   // Construct the conversation object
   const conversation: Conversation = {
@@ -221,7 +227,7 @@ export default async function chat(
           (messages.filter((message) => message.role === 'system')[0]
             ?.content as string))
         : DEFAULT_SYSTEM_PROMPT,
-    temperature: selectBestTemperature(undefined, selectedConversation, llmProviders),
+    temperature: chatFinalTemperature,
     folderId: null,
     userEmail: email,
   }
@@ -230,8 +236,8 @@ export default async function chat(
   // Check if the content is an array and filter out image content
   const imageContent = Array.isArray(lastMessage.content)
     ? (lastMessage.content as Content[]).filter(
-        (content) => content.type === 'image_url',
-      )
+      (content) => content.type === 'image_url',
+    )
     : []
 
   const imageUrls = imageContent.map(
