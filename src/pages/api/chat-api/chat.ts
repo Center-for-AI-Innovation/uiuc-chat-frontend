@@ -208,11 +208,10 @@ export default async function chat(
 
   // if temperature in the body is set as undefined; use the default model temperature
   const chatFinalTemperature = temperature !== undefined
-        ? temperature
-        : (defaultModel?.temperature !== undefined
-          ? defaultModel.temperature
-          : 0.1)
-  console.log(chatFinalTemperature);
+    ? temperature
+    : (defaultModel?.temperature !== undefined
+      ? defaultModel.temperature
+      : 0.1)
 
   // Construct the conversation object
   const conversation: Conversation = {
